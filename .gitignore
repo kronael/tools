@@ -1,0 +1,10 @@
+# Claude settings (personal)
+.claude/
+*/.claude/
+
+# Media files
+*.mp3
+*.mp4
+*.wav
+*.avi
+*.mov

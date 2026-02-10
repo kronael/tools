@@ -4,7 +4,7 @@ Collection of command-line utilities.
 
 ## Tools
 
-- [gb](gb/) - Smart git branch switcher with fzf
+- [gt](gt/) - Git tools: smart branch switcher and push helper
 
 ## Installation
 

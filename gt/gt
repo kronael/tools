@@ -1,0 +1,226 @@
+#!/bin/bash
+
+# gt - Git tools
+# Busybox-style: symlinks (gco, gto, gtp, gtr) detect invocation name
+
+# ── Shared helpers ──────────────────────────────────────────────────
+
+dedupe(){ awk '!seen[$0]++'; }
+strip_origin(){ sed 's|^origin/||'; }
+
+recent(){
+    git reflog --format='%gs' --all \
+        | grep -oP 'checkout: moving from .* to \K.*' \
+        | dedupe \
+        | head -50
+}
+
+all(){
+    git for-each-ref --sort=-committerdate \
+        --format='%(refname:short)' refs/heads refs/remotes
+}
+
+branches(){ { recent; all; } | strip_origin | dedupe; }
+
+clean_branch(){
+    local b=$1
+    while [[ "$b" =~ ^(origin/|refs/|heads/|remotes/) ]]; do
+        b=${b#origin/}; b=${b#refs/}
+        b=${b#heads/}; b=${b#remotes/}
+    done
+    echo "$b"
+}
+
+get_current_branch(){
+    local head=HEAD
+    while :; do
+        local this=$(git name-rev --name-only $head 2>/dev/null)
+        [[ "$this" != "undefined" && -n "$this" ]] && break
+        head+=^
+    done
+    clean_branch "$this"
+}
+
+# fzf with auto-select unless ? is passed
+pick_branch(){
+    if [[ "$1" == "?" ]]; then
+        branches | fzf --height=40%
+    else
+        branches | fzf --height=40% --select-1 --exit-0 \
+            --query="$1"
+    fi
+}
+
+# ── Subcommands ─────────────────────────────────────────────────────
+
+cmd_checkout(){
+    # Parse flags
+    while [[ "${1:-}" =~ ^- ]]; do
+        case "$1" in
+            -u) local fetch=1; shift ;;
+            -n) local dryrun=1; shift ;;
+            -h|--help)
+                cat <<EOF
+gt checkout - Smart branch checkout with fzf
+
+Usage: gt checkout [-u] [-n] [pattern]
+Flags: -u fetch first, -n dry-run, ? force interactive
+Examples: gco apm, gto workers, gco -n apm, gco ?
+EOF
+                exit 0 ;;
+            *) echo "error: unknown flag: $1"; exit 1 ;;
+        esac
+    done
+
+    # Select branch
+    local branch=$(pick_branch "$1")
+    [[ -z "$branch" ]] && {
+        echo "error: no branch selected"; exit 1
+    }
+
+    # Execute
+    if [[ ${dryrun:-} ]]; then
+        echo "origin/$branch"
+    else
+        [[ ${fetch:-} ]] && git fetch
+        git checkout "origin/$branch"
+    fi
+}
+
+cmd_push(){
+    # Parse flags
+    while [[ "${1:-}" == -[nh] || "${1:-}" == --help ]]; do
+        case "$1" in
+            -n) local dryrun=1; shift ;;
+            -h|--help)
+                cat <<EOF
+gt push - Smart push to origin
+
+Usage: gt push [-n] [branch[:commit]] [git-push-flags]
+Flags: -n dry-run, ? interactive selection
+Examples: gtp, gtp -n, gt p my-branch -f,
+          gt p my-branch:abc123
+EOF
+                exit 0 ;;
+        esac
+    done
+
+    # Determine branch and commit
+    local branch commit
+    if [[ -z "${1:-}" ]]; then
+        branch=$(get_current_branch)
+        commit="HEAD"
+    elif [[ "$1" == "?" ]]; then
+        branch=$(pick_branch "?")
+        [[ -z "$branch" ]] && exit 1
+        commit="HEAD"; shift
+    else
+        branch=${1%:*}
+        branch=$(clean_branch "$branch")
+        commit=${1#*:}
+        [[ "$commit" == "$1" ]] && commit="HEAD"
+        shift
+    fi
+
+    # Validate
+    [[ -z "$branch" || "$branch" == "undefined" ]] && {
+        echo "error: could not determine branch"
+        echo "usage: gt push [branch] or gt push ?"
+        exit 1
+    }
+
+    # Execute
+    if [[ ${dryrun:-} ]]; then
+        echo "git push origin $@ $commit:refs/heads/$branch"
+    else
+        git push origin "$@" "$commit:refs/heads/$branch"
+    fi
+}
+
+cmd_rebase(){
+    # Parse flags
+    while [[ "${1:-}" =~ ^- ]]; do
+        case "$1" in
+            -u) local fetch=1; shift ;;
+            -n) local dryrun=1; shift ;;
+            -h|--help)
+                cat <<EOF
+gt rebase - Smart interactive rebase on origin branch
+
+Usage: gt rebase [-u] [-n] [pattern]
+Flags: -u fetch first, -n dry-run, ? force interactive
+Examples: gtr main, gt r main, gt r -u main, gt r ?
+EOF
+                exit 0 ;;
+            *) echo "error: unknown flag: $1"; exit 1 ;;
+        esac
+    done
+
+    # Select branch
+    local branch=$(pick_branch "$1")
+    [[ -z "$branch" ]] && {
+        echo "error: no branch selected"; exit 1
+    }
+
+    # Execute
+    if [[ ${dryrun:-} ]]; then
+        echo "origin/$branch"
+    else
+        [[ ${fetch:-} ]] && git fetch
+        git rebase -i "origin/$branch"
+    fi
+}
+
+# ── Install ──────────────────────────────────────────────────────────
+
+cmd_install(){
+    local dir=$(dirname "$(readlink -f "$0")")
+    local symlinks=(gco gto gtp gtr)
+    for s in "${symlinks[@]}"; do
+        ln -sf gt "$dir/$s"
+        echo "  $dir/$s -> gt"
+    done
+    echo "installed ${#symlinks[@]} symlinks"
+}
+
+# ── Dispatch ────────────────────────────────────────────────────────
+
+usage(){
+    cat <<EOF
+gt - Git tools
+
+Usage:
+  gt checkout [pattern]  Smart branch checkout (alias: gt co, gco)
+  gt push [branch]       Smart push to origin (alias: gt p, gtp)
+  gt rebase [pattern]    Smart rebase -i on origin (alias: gt r, gtr)
+  gt install             Create symlinks (gco, gto, gtp, gtr)
+
+Flags: -u fetch, -n dry-run, ? force interactive
+
+Busybox-style:
+  gco apm       checkout         gto apm    checkout -u (fetch)
+  gtp branch    push             gtr main   rebase -u (fetch)
+EOF
+    exit 1
+}
+
+# Busybox-style: detect how we were called
+case "$(basename "$0")" in
+    gco)  cmd_checkout "$@"; exit ;;
+    gto) cmd_checkout -u "$@"; exit ;;
+    gtp)  cmd_push "$@"; exit ;;
+    gtr) cmd_rebase -u "$@"; exit ;;
+esac
+
+# Normal invocation: gt <cmd> [args]
+cmd=${1:-}
+shift 2>/dev/null
+
+case "$cmd" in
+    co|checkout) cmd_checkout "$@" ;;
+    p|push)      cmd_push "$@" ;;
+    r|rebase)    cmd_rebase "$@" ;;
+    install)     cmd_install ;;
+    -h|--help|help|"") usage ;;
+    *) echo "error: unknown command: $cmd"; usage ;;
+esac
