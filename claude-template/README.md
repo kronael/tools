@@ -14,19 +14,21 @@ Auto-activating skills + specialized agents for Claude Code.
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 5 specialized agents
-└── skills/        # 10 auto-activating skills
+├── commands/      # 5 slash commands
+└── skills/        # 15 auto-activating skills
 ```
 
 ## Skills
 
 Auto-activate based on file context:
 - **Languages**: go, rust, python, typescript, sql
-- **Domain**: data, service, cli, infrastructure, trader
+- **Services**: trader, data, service, cli, infrastructure, builder
+- **Development**: commit, refine, ship, wisdom
 
 ## Agents
 
+- **distill**: Extract key points from long content
 - **improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
-- **refine**: Orchestrates improve + readme
-- **visual**: Render-inspect-adjust for SVG/UI
 - **learn**: Extract patterns from history into skills
 - **readme**: Sync README/ARCHITECTURE with code
+- **visual**: Render-inspect-adjust for SVG/UI

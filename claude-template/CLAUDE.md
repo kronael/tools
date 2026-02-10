@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code configuration: 5 agents, 10 auto-activating skills.
+Claude Code configuration: 5 agents, 15 auto-activating skills.
 
 ## Structure
 
@@ -9,7 +9,7 @@ global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
 ├── agents/            # 5 specialized task agents
 ├── commands/          # 5 slash commands (/improve, /refine, etc.)
-├── skills/            # 10 auto-activating skills
+├── skills/            # 15 auto-activating skills
 └── settings.json      # Shared Claude Code settings
 ```
 
@@ -47,15 +47,15 @@ ALWAYS backup before overwriting
 
 ## Components
 
-**Agents** (5): improve, refine, visual, learn, readme
+**Agents** (5): distill, improve, learn, readme, visual
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Skills** (10): go, rust, python, typescript, sql, data, service, cli,
-infrastructure, trader
+**Skills** (15): builder, cli, commit, data, go, infrastructure, python,
+refine, rust, service, ship, sql, trader, typescript, wisdom
 
 ## Working on This Repo
 
-ALWAYS keep files under 200 lines
-ALWAYS use ALWAYS/NEVER/SHOULD statements
-ALWAYS test changes by installing then using in real project
+- ALWAYS keep files under 200 lines
+- ALWAYS use ALWAYS/NEVER/SHOULD statements
+- ALWAYS test changes by installing then using in real project

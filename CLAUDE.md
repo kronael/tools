@@ -11,7 +11,7 @@ Meta-repository for Claude Code configuration:
 ## Installation
 
 ```bash
-cd claude/claude-template
+cd claude-template
 # Say "install"
 ```
 
@@ -20,18 +20,19 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 ## claude-template/
 
 **Agents** (5):
+- **distill**: Extract key points from long content
 - **improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
-- **refine**: Orchestrates improve + readme
-- **visual**: Render-inspect-adjust for SVG/UI
 - **learn**: Extract patterns from history into skills
 - **readme**: Sync README/ARCHITECTURE with code
+- **visual**: Render-inspect-adjust for SVG/UI
 
-**Skills** (12) - auto-activate based on file context:
+**Skills** (15):
 - Languages: rust, python, typescript, go, sql
-- Services: trader, collector, service, cli
-- Other: testing, builder, infrastructure
+- Services: trader, data, service
+- Tools: cli, builder, infrastructure
+- Workflow: commit, refine, ship, wisdom
 
-**Commands** (3): /refine, /learn, /visual
+**Commands** (5): /improve, /learn, /readme, /refine, /visual
 
 ## usage-patterns/
 
@@ -46,5 +47,3 @@ Analysis of 57 production projects (1.3MB logs). Top patterns:
 - ALWAYS keep files under 200 lines
 - ALWAYS use ALWAYS/NEVER/SHOULD statements
 - Focus on non-obvious patterns LLMs fail to grasp
-- NEVER use `git commit --amend` - make new commits instead
-- NEVER add Co-Authored-By to commits
