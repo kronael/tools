@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship project from specs to completion. Outer loop orchestrator, specs scanning, component dependencies, .ship/PROGRESS.md, critique cycles.
+description: Ship project from specs to completion. Outer loop orchestrator, specs scanning, component dependencies, PROGRESS.md, critique cycles.
 user-invocable: true
 ---
 
@@ -9,7 +9,7 @@ user-invocable: true
 Outer orchestration loop: specs → components → completion.
 Reads spec directory, identifies components and their
 dependencies, progressively builds each one using /build,
-updates .ship/PROGRESS.md after each phase, and launches a
+updates PROGRESS.md after each phase, and launches a
 critique of progress and readiness.
 
 ## Workflow
@@ -20,7 +20,7 @@ critique of progress and readiness.
 3. **Phase Loop** — for each component in order:
    a. Generate build plan from spec
    b. Execute via /build (inner loop)
-   c. Update .ship/PROGRESS.md with completion %
+   c. Update PROGRESS.md with completion %
    d. Launch critique of progress + readiness
    e. If critique finds issues, generate fix plan, /build
 4. **Final Audit** — full spec compliance check
@@ -33,7 +33,7 @@ critique of progress and readiness.
 ```
 
 - specs-dir: path to specs (default: specs/)
-- -c: continue from .ship/PROGRESS.md state
+- -c: continue from PROGRESS.md state
 - -p: build only specific component
 
 ## Spec Scanning
@@ -60,7 +60,7 @@ For each component:
 5. After build completes:
    a. Run tests for component
    b. Count spec requirements vs implemented
-   c. Update .ship/PROGRESS.md: component %, test count
+   c. Update PROGRESS.md: component %, test count
    d. Spawn critique agent (spec compliance review)
 
 ## Critique (per phase)
@@ -90,7 +90,7 @@ Store critique in .ship/critique-{component}.md.
 If critique finds gaps > 10%, generate fix plan and
 re-run /build for that component.
 
-## .ship/PROGRESS.md Format
+## PROGRESS.md Format
 
 ```markdown
 # Progress
@@ -117,7 +117,7 @@ re-run /build for that component.
 ## Rules
 
 - NEVER implement yourself — delegate via /build
-- Update .ship/PROGRESS.md after EVERY phase
+- Update PROGRESS.md after EVERY phase
 - Critique after EVERY phase (not optional)
 - Commit after each component (not at end)
 - If critique finds >10% gap, re-plan and re-build
