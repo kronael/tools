@@ -29,10 +29,53 @@ COMMIT_RULES = """Commit rules:
 - Format: "[section] Message"
 Invoke /commit agent."""
 
-AGENTS = [
-    (r"\b(ship|build|deliver|implement|feature)\b", "/ship"),
-    (r"\b(refine|finalize|finish|complete|wrap.?up|polish|improve|enhance|cleanup|refactor|optimize)\b", "/refine"),
-]
+# Exact keyword → agent mapping (1:1, specific)
+AGENT_KEYWORDS = {
+    "ship": "/ship",
+    "refine": "/refine",
+    "readme": "/readme",
+    "learn": "/learn",
+    "improve": "/improve",
+    "visual": "/visual",
+    "commit": "/commit",
+}
+
+
+def edit_distance(a, b):
+    """Levenshtein distance between two strings."""
+    if len(a) < len(b):
+        return edit_distance(b, a)
+    if not b:
+        return len(a)
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a):
+        curr = [i + 1]
+        for j, cb in enumerate(b):
+            cost = 0 if ca == cb else 1
+            curr.append(min(curr[j] + 1, prev[j + 1] + 1, prev[j] + cost))
+        prev = curr
+    return prev[-1]
+
+
+def fuzzy_match(word, keywords, max_dist=2):
+    """Match word against keywords with edit distance tolerance."""
+    word = word.lower()
+    # Exact match first
+    if word in keywords:
+        return keywords[word]
+    # Fuzzy: only for words >= 4 chars (avoid false positives)
+    if len(word) < 4:
+        return None
+    for kw, agent in keywords.items():
+        if len(kw) < 4:
+            continue
+        dist = edit_distance(word, kw)
+        # Allow dist=1 for short words (4-5), dist=2 for longer
+        allowed = 1 if len(kw) <= 5 else max_dist
+        if dist <= allowed:
+            return agent
+    return None
+
 
 # Skip if prompt is about hooks, agents, or meta-instructions
 META_PATTERNS = [
@@ -50,15 +93,18 @@ parts = []
 if re.search(r"\b(todo|readme|changelog|spec|architecture)\b|\.md\b", prompt, re.IGNORECASE):
     parts.append(DOCS_RULES)
 
-# Check commit (special case with rules)
-if re.search(r"\b(commit|save|checkpoint)\b", prompt, re.IGNORECASE):
+# Extract words and fuzzy-match against agent keywords
+words = re.findall(r"\b[a-zA-Z]{3,}\b", prompt)
+matched_agent = None
+for word in words:
+    matched_agent = fuzzy_match(word, AGENT_KEYWORDS)
+    if matched_agent:
+        break
+
+if matched_agent == "/commit":
     parts.append(COMMIT_RULES)
-else:
-    # Check agent keywords
-    for pattern, agent in AGENTS:
-        if re.search(pattern, prompt, re.IGNORECASE):
-            parts.append(f"Invoke {agent} agent.")
-            break
+elif matched_agent:
+    parts.append(f"Invoke {matched_agent} agent.")
 
 if parts:
     print(json.dumps({"ok": True, "systemMessage": "\n\n".join(parts)}))
