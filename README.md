@@ -4,7 +4,7 @@ Claude Code configuration and usage patterns.
 
 ## Contents
 
-**[claude-template/](claude-template/)** - 15 skills, 5 agents, 8 commands for
+**[claude-template/](claude-template/)** - 16 skills, 5 agents, 9 commands for
 Claude Code. Open Claude Code there and say "install".
 
 **[usage-patterns/](usage-patterns/)** - 12 usage patterns extracted from 57

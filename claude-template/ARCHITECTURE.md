@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code configuration: 5 agents, 8 commands, 15 auto-activating skills.
+Claude Code configuration: 5 agents, 9 commands, 16 auto-activating skills.
 Install by opening Claude Code here and saying "install".
 
 ## Components
@@ -15,13 +15,13 @@ Install by opening Claude Code here and saying "install".
 - Quality: improve, visual, learn
 - Utilities: readme, distill
 
-**commands/** (8): Slash commands
-- /build, /distill, /improve, /learn, /readme, /refine, /ship, /visual
+**commands/** (9): Slash commands
+- /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
 
-**skills/** (15): Auto-activating skills
+**skills/** (16): Auto-activating skills
 - Languages: go, python, rust, sql, typescript
 - Services: cli, data, ops, service, trader
-- Workflow: build, commit, refine, ship, wisdom
+- Workflow: build, commit, refine, ship, tweet, wisdom
 
 ## Installation Flow
 

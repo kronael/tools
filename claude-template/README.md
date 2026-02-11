@@ -14,8 +14,8 @@ Auto-activating skills + specialized agents for Claude Code.
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 5 specialized agents
-├── commands/      # 8 slash commands
-└── skills/        # 15 auto-activating skills
+├── commands/      # 9 slash commands
+└── skills/        # 16 auto-activating skills
 ```
 
 ## Skills
@@ -23,7 +23,7 @@ Auto-activating skills + specialized agents for Claude Code.
 Auto-activate based on file context:
 - **Languages**: go, python, rust, sql, typescript
 - **Services**: cli, data, ops, service, trader
-- **Workflow**: build, commit, refine, ship, wisdom
+- **Workflow**: build, commit, refine, ship, tweet, wisdom
 
 ## Agents
 
@@ -35,13 +35,14 @@ Auto-activate based on file context:
 
 ## Commands
 
-- **/ship**: Outer loop - specs → components → /build → critique
 - **/build**: Inner loop - plan → stages → workers → judge
-- **/refine**: Checkpoint → /improve → /readme → commit
-- **/improve**: Code quality pass (DO-CRITICIZE-EVALUATE-IMPROVE)
-- **/readme**: Update README/ARCHITECTURE/CHANGELOG
-- **/learn**: Extract patterns from history
 - **/distill**: Extract key points from long content
+- **/improve**: Code quality pass (DO-CRITICIZE-EVALUATE-IMPROVE)
+- **/learn**: Extract patterns from history
+- **/readme**: Update README/ARCHITECTURE/CHANGELOG
+- **/refine**: Checkpoint → /improve → /readme → commit
+- **/ship**: Outer loop - specs → components → /build → critique
+- **/tweet**: Share work on social media
 - **/visual**: UI/styling adjustments
 
 See [WORKFLOW.md](WORKFLOW.md) for agent hierarchy and [ARCHITECTURE.md](ARCHITECTURE.md) for design.

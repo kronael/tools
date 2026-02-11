@@ -38,6 +38,7 @@ AGENT_KEYWORDS = {
     "improve": "/improve",
     "visual": "/visual",
     "distill": "/distill",
+    "tweet": "/tweet",
 }
 
 

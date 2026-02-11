@@ -19,11 +19,11 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 ## Components
 
-**Commands** (7): /build, /improve, /learn, /readme, /refine, /ship, /visual
+**Commands** (9): /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
 
 **Agents** (5): distill, improve, learn, readme, visual
 
-**Skills** (15): build, cli, commit, data, go, ops, python, refine, rust, service, ship, sql, trader, typescript, wisdom
+**Skills** (16): build, cli, commit, data, go, ops, python, refine, rust, service, ship, sql, trader, tweet, typescript, wisdom
 
 ## Working on This Repo
 
