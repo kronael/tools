@@ -1,16 +1,27 @@
 # Agent Workflow Hierarchy
 
 ```
-/ship (top-level orchestrator)
+/ship (outer loop: specs → components → completion)
   │
-  ├── Plan stages from spec
-  ├── Execute stages (parallel where possible)
-  ├── Per-stage: spawn worker agents
-  │     └── /improve (per-stage quality)
-  ├── Judge results
-  └── /refine (final pass)
+  ├── Scan specs, topological sort components
+  ├── For each component:
+  │     ├── Generate build plan from spec
+  │     ├── /build (inner loop)
+  │     ├── Update PROGRESS.md
+  │     ├── Critique (spec compliance review)
+  │     └── Fix gaps if >10% (max 2 rounds)
+  ├── Final audit
+  └── Ship summary
 
-/refine (finalization orchestrator)
+/build (inner loop: plan → stages → workers → commit)
+  │
+  ├── Parse plan from .claude/plans/
+  ├── Spawn parallel workers per stage
+  ├── Judge loop: poll, retry (max 3), error isolation
+  ├── Refinement round (max 1)
+  └── Single commit at end
+
+/refine (finalization pass)
   │
   ├── Checkpoint (commit current state)
   ├── Validate (build/test)
@@ -34,7 +45,7 @@
 
 /visual (UI/styling)
   │
-  └── Render → inspect → criticize → adjust (one thing at a time)
+  └── Render → inspect → criticize → adjust (one thing)
 
 /commit (git workflow)
   │
@@ -45,7 +56,8 @@
 
 | Goal | Agent | Example |
 |------|-------|---------|
-| Build feature from spec | /ship | "ship the auth feature" |
+| Build project from specs | /ship | "ship from specs/" |
+| Execute a plan file | /build | "build auth-feature" |
 | Polish before PR | /refine | "refine this" |
 | Fix specific code issue | /improve | "improve error handling" |
 | Update docs | /readme | "readme" |
@@ -53,10 +65,19 @@
 | Fix UI/styling | /visual | "visual" |
 | Save progress | /commit | "commit" |
 
-## Hierarchy Rules
+## Hierarchy
 
-- /ship delegates to /improve and /refine
+- /ship delegates to /build (per component)
+- /build delegates to /improve, /readme, /visual (per stage)
 - /refine delegates to /improve and /readme
 - /improve, /readme, /learn, /visual, /commit are leaf agents
-- NEVER invoke /improve manually if /refine covers the scope
-- Use /ship for multi-stage work, /refine for single-pass polish
+
+## Key Differences
+
+| | /ship | /build | /refine |
+|---|---|---|---|
+| Input | specs directory | plan file | existing code |
+| Scope | whole project | single feature | current changes |
+| Commits | per component | single at end | single at end |
+| Critique | after each phase | no | no |
+| State | PROGRESS.md | build-state.md | none |

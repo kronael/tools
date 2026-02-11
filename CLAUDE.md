@@ -26,13 +26,12 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 - **readme**: Sync README/ARCHITECTURE with code
 - **visual**: Render-inspect-adjust for SVG/UI
 
-**Skills** (14):
-- Languages: rust, python, typescript, go, sql
-- Services: trader, data, service, cli
-- Ops: ops
-- Workflow: commit, refine, ship, wisdom
+**Skills** (15):
+- Languages: go, python, rust, sql, typescript
+- Services: cli, data, ops, service, trader
+- Workflow: build, commit, refine, ship, wisdom
 
-**Commands** (5): /improve, /learn, /readme, /refine, /visual
+**Commands** (7): /build, /improve, /learn, /readme, /refine, /ship, /visual
 
 ## usage-patterns/
 

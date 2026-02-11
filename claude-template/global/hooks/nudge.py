@@ -32,6 +32,7 @@ Invoke /commit agent."""
 # Exact keyword → agent mapping (1:1, specific)
 AGENT_KEYWORDS = {
     "ship": "/ship",
+    "build": "/build",
     "refine": "/refine",
     "readme": "/readme",
     "learn": "/learn",
