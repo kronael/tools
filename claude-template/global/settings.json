@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/context.py",
+            "command": "python3 ~/.claude/hooks/local.py",
             "timeout": 3000
           },
           {
