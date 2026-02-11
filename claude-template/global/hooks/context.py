@@ -33,7 +33,8 @@ for path in [
 ]:
     if os.path.isfile(path):
         try:
-            content = open(path).read().strip()
+            with open(path) as f:
+                content = f.read().strip()
             if content:
                 parts.append(content)
         except OSError:

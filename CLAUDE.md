@@ -48,5 +48,5 @@ When syncing claude-template/global/ to other assistants repos or ~/.claude/:
 - NEVER include org-specific repo names or private project references
 - NEVER include secrets, API keys, or credential file paths
 - Local/private content belongs in ~/.claude/LOCAL.md (auto-injected by context hook)
-- generic/CLAUDE.md references LOCAL.md for sync paths — NEVER hardcode them
+- global/CLAUDE.md references LOCAL.md for sync paths — NEVER hardcode them
 - The /srv paths with ${PREFIX:-} variable substitution are OK (generic pattern)
