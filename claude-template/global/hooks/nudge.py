@@ -21,7 +21,13 @@ DOCS_RULES = """Documentation naming rules:
 - Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
-COMMIT_RULES = """Commit skill active. See global CLAUDE.md for rules."""
+COMMIT_RULES = """Commit rules:
+- NEVER git add -A
+- NEVER git commit --amend
+- NEVER add Co-Authored-By
+- Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
+- Format: "[section] Message"
+Invoke /commit skill."""
 
 AGENT_KEYWORDS = {
     "ship": "/ship",
