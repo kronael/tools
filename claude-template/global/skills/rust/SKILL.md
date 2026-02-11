@@ -47,6 +47,12 @@ use tracing::{info, debug};
 - ALWAYS set panic handler to exit(0) on any thread panic:
   `std::panic::set_hook(Box::new(|_| std::process::exit(0)));`
 
+## Non-Workspace Repos
+
+ALWAYS scan Cargo.toml independently, NEVER assume workspace.members:
+- Repos with multiple disconnected Rust projects need per-project scanning
+- Each has own Cargo.toml, no workspace umbrella
+
 ## Development Workflow
 
 - `cargo check` fastest for error checking (no codegen)

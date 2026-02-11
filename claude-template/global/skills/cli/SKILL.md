@@ -142,57 +142,10 @@ RUST_LOG=debug ./main cfg/test/config.toml
 **NEVER use production configs in tests**
 **ALWAYS use temporary directories for test outputs**
 
-## Development Checklist
+## Pitfalls
 
-**Argument Parsing**:
-- Help message (-h, --help)
-- Version flag (--version)
-- Verbose flag (-v, --verbose)
-- Configuration file argument
-- Example usage in help
-
-**Configuration**:
-- TOML schema with comments
-- Environment variable overrides
-- Secrets isolation (not in git)
-- Path expansion (${PREFIX})
-- Validation on load
-
-**Output**:
-- Structured logging (key=value)
-- Different log levels (error/warn/info/debug)
-- Clean error messages
-- Proper exit codes
-
-**Installation**:
-- make install target
-- make link target (for development)
-- README with installation steps
-
-**Process Management**:
-- Graceful shutdown (SIGTERM/SIGINT)
-- PID file tracking (dev only)
-- Cleanup on exit
-
-**Testing**:
-- Test with various configs
-- Test error conditions
-- Integration tests with real operations
-- Dry-run mode available
-
-## Common Pitfalls
-
-**NEVER**:
-- Assume file existence (validate first)
-- Write secrets to logs
-- Skip input validation
-- Use killall (kill by PID)
-- Hardcode paths (use ${PREFIX})
-- Ignore signals (handle SIGTERM/SIGINT)
-
-**ALWAYS**:
-- Validate all inputs
-- Handle errors gracefully
-- Provide clear help messages
-- Test with real data
-- Document environment variables
+- NEVER assume file existence (validate first)
+- NEVER write secrets to logs
+- NEVER hardcode paths (use ${PREFIX})
+- ALWAYS provide dry-run mode for destructive operations
+- ALWAYS document environment variables in --help

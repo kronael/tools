@@ -15,14 +15,14 @@ Auto-activating skills + specialized agents for Claude Code.
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 5 specialized agents
 ├── commands/      # 5 slash commands
-└── skills/        # 15 auto-activating skills
+└── skills/        # 14 auto-activating skills
 ```
 
 ## Skills
 
 Auto-activate based on file context:
 - **Languages**: go, rust, python, typescript, sql
-- **Services**: trader, data, service, cli, infrastructure, builder
+- **Services**: trader, data, service, cli, ops
 - **Development**: commit, refine, ship, wisdom
 
 ## Agents
