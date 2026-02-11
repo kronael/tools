@@ -57,8 +57,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Claude finished. Check git diff --stat. Is this a good commit point? (task complete, cohesive changes). Return JSON: {\"ok\": true, \"nudge\": \"Use /commit now.\"} or {\"ok\": true, \"pass\": true}",
-            "optional": true
+            "prompt": "Check git diff --stat. If changes form a cohesive chunk, return {\"ok\": false, \"reason\": \"Use /commit.\"}. Otherwise return {\"ok\": true}"
           }
         ]
       }
