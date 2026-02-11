@@ -20,8 +20,19 @@
     ],
     "defaultMode": "default"
   },
-  "model": "haiku",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/local.py",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
@@ -41,11 +52,6 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/nudge.py",
-            "timeout": 3000
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/context.py",
             "timeout": 3000
           }
         ]

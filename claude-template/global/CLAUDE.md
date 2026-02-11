@@ -49,7 +49,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Single import per line (cleaner git diffs)
 
 ### TypeScript
-- Use const f (args): result => { ... } for functions instead of function keyword where this is sufficient
+- ALWAYS use `function` keyword for top-level functions where possible
+- Arrow functions only for callbacks and inline lambdas
 - Adhere to gst lint rules
 - Match existing style when changing code
 
