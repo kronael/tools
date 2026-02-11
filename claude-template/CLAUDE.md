@@ -63,6 +63,8 @@ repo names, secrets references, or org-specific content not in source:
 **Skills** (16): build, cli, commit, data, go, ops, python, refine, rust,
 service, ship, sql, trader, tweet, typescript, wisdom
 
+**Hooks** (5): nudge (keyword->agent routing), context (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
+
 ## Working on This Repo
 
 - ALWAYS keep files under 200 lines
