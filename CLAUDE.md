@@ -19,7 +19,7 @@ Optimized for **MAX INFLOW of information**, not outflow or ease of use.
 - **No visual cruft**: Minimal UI, no decorations, just function
 - **Scriptable**: Composable bash scripts, no fat dependencies
 
-**Tools**: `gt` (git tools)
+**Tools**: `rig` (ripgit)
 
 ## Tools Structure
 
@@ -36,30 +36,35 @@ tool/
 - `make install` - installs the tool
 - `make clean` - removes the tool
 
-## gt - Git Tools
+## rig - ripgit
 
-Single busybox-style script (`gt/gt`). Symlinks detect
+Single busybox-style script (`rig/rig`). Symlinks detect
 invocation name and dispatch to subcommands.
 
 ```bash
-gt co [pattern]    # Branch checkout (gco, gto=fetch+checkout)
-gt p [branch]      # Push to origin (gtp)
-gt r [pattern]     # Rebase -i on origin (gtr=fetch+rebase)
-gt install         # Create symlinks in script's directory
+rig co [pattern]   # Checkout origin/branch, detached (rio)
+rig p [branch]     # Push HEAD to origin/branch (rip)
+rig r [pattern]    # Rebase -i on origin/branch (rir)
+rig m [pattern]    # Merge origin/branch (rim)
+rig install        # Create symlinks in script's directory
 ```
 
-**Symlinks**: `gco`, `gto` (checkout -u), `gtp`, `gtr` (rebase -u)
+**Symlinks**: `rio` (checkout), `rip` (push), `rir` (rebase),
+`rim` (merge). All fetch by default.
 
-**Shared flags**: `-u` fetch first, `-n` dry-run, `?` force fzf
+**Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
 
-**gt checkout**: fzf fuzzy match, recent branches first (reflog),
-strips `origin/`, auto-selects single match.
+**rig checkout**: fzf fuzzy match, recent branches first (reflog),
+strips `origin/`, auto-selects single match, checks out detached.
 
-**gt push**: auto-detects current branch, strips all prefixes,
+**rig push**: auto-detects current branch, strips all prefixes,
 supports `branch:commit`, forwards git push flags.
 
-**gt rebase**: same branch selection as checkout, runs
+**rig rebase**: same branch selection as checkout, runs
 `git rebase -i origin/<branch>`.
+
+**rig merge**: same branch selection, runs
+`git merge origin/<branch>`.
 
 **Implementation**: helpers at top, flags parsed, then main logic.
 Clear sections: # Parse flags, # Select branch, # Execute.

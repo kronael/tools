@@ -4,7 +4,7 @@ Collection of command-line utilities.
 
 ## Tools
 
-- [gt](gt/) - Git tools: smart branch switcher and push helper
+- [rig](rig/) - ripgit: smart branch checkout, push, rebase, merge
 
 ## Installation
 

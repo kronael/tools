@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# gt - Git tools
-# Busybox-style: symlinks (gco, gto, gtp, gtr) detect invocation name
+# rig - ripgit: git tools
+# Busybox-style: symlinks (rio, rip, rir, rim) detect
+# invocation name and dispatch to subcommands.
+# All commands fetch by default. -z/--offline suppresses.
 
 # ── Shared helpers ──────────────────────────────────────────────────
 
@@ -55,17 +57,18 @@ pick_branch(){
 
 cmd_checkout(){
     # Parse flags
+    local fetch=1
     while [[ "${1:-}" =~ ^- ]]; do
         case "$1" in
-            -u) local fetch=1; shift ;;
+            -z|--offline) fetch=; shift ;;
             -n) local dryrun=1; shift ;;
             -h|--help)
                 cat <<EOF
-gt checkout - Smart branch checkout with fzf
+rig checkout - Smart branch checkout with fzf
 
-Usage: gt checkout [-u] [-n] [pattern]
-Flags: -u fetch first, -n dry-run, ? force interactive
-Examples: gco apm, gto workers, gco -n apm, gco ?
+Usage: rig checkout [-z] [-n] [pattern]
+Flags: -z offline (no fetch), -n dry-run, ? force fzf
+Examples: rio apm, rio -z apm, rio -n apm, rio ?
 EOF
                 exit 0 ;;
             *) echo "error: unknown flag: $1"; exit 1 ;;
@@ -82,7 +85,7 @@ EOF
     if [[ ${dryrun:-} ]]; then
         echo "origin/$branch"
     else
-        [[ ${fetch:-} ]] && git fetch
+        [[ $fetch ]] && git fetch
         git checkout "origin/$branch"
     fi
 }
@@ -94,12 +97,12 @@ cmd_push(){
             -n) local dryrun=1; shift ;;
             -h|--help)
                 cat <<EOF
-gt push - Smart push to origin
+rig push - Smart push to origin
 
-Usage: gt push [-n] [branch[:commit]] [git-push-flags]
+Usage: rig push [-n] [branch[:commit]] [git-push-flags]
 Flags: -n dry-run, ? interactive selection
-Examples: gtp, gtp -n, gt p my-branch -f,
-          gt p my-branch:abc123
+Examples: rip, rip -n, rig p my-branch -f,
+          rig p my-branch:abc123
 EOF
                 exit 0 ;;
         esac
@@ -125,7 +128,7 @@ EOF
     # Validate
     [[ -z "$branch" || "$branch" == "undefined" ]] && {
         echo "error: could not determine branch"
-        echo "usage: gt push [branch] or gt push ?"
+        echo "usage: rig push [branch] or rig push ?"
         exit 1
     }
 
@@ -139,17 +142,18 @@ EOF
 
 cmd_rebase(){
     # Parse flags
+    local fetch=1
     while [[ "${1:-}" =~ ^- ]]; do
         case "$1" in
-            -u) local fetch=1; shift ;;
+            -z|--offline) fetch=; shift ;;
             -n) local dryrun=1; shift ;;
             -h|--help)
                 cat <<EOF
-gt rebase - Smart interactive rebase on origin branch
+rig rebase - Smart interactive rebase on origin branch
 
-Usage: gt rebase [-u] [-n] [pattern]
-Flags: -u fetch first, -n dry-run, ? force interactive
-Examples: gtr main, gt r main, gt r -u main, gt r ?
+Usage: rig rebase [-z] [-n] [pattern]
+Flags: -z offline (no fetch), -n dry-run, ? force fzf
+Examples: rir main, rig r main, rir -z main, rir ?
 EOF
                 exit 0 ;;
             *) echo "error: unknown flag: $1"; exit 1 ;;
@@ -166,8 +170,43 @@ EOF
     if [[ ${dryrun:-} ]]; then
         echo "origin/$branch"
     else
-        [[ ${fetch:-} ]] && git fetch
+        [[ $fetch ]] && git fetch
         git rebase -i "origin/$branch"
+    fi
+}
+
+cmd_merge(){
+    # Parse flags
+    local fetch=1
+    while [[ "${1:-}" =~ ^- ]]; do
+        case "$1" in
+            -z|--offline) fetch=; shift ;;
+            -n) local dryrun=1; shift ;;
+            -h|--help)
+                cat <<EOF
+rig merge - Smart merge from origin branch
+
+Usage: rig merge [-z] [-n] [pattern]
+Flags: -z offline (no fetch), -n dry-run, ? force fzf
+Examples: rim main, rig m main, rim -z main, rim ?
+EOF
+                exit 0 ;;
+            *) echo "error: unknown flag: $1"; exit 1 ;;
+        esac
+    done
+
+    # Select branch
+    local branch=$(pick_branch "$1")
+    [[ -z "$branch" ]] && {
+        echo "error: no branch selected"; exit 1
+    }
+
+    # Execute
+    if [[ ${dryrun:-} ]]; then
+        echo "origin/$branch"
+    else
+        [[ $fetch ]] && git fetch
+        git merge "origin/$branch"
     fi
 }
 
@@ -175,10 +214,10 @@ EOF
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(gco gto gtp gtr)
+    local symlinks=(rio rip rir rim)
     for s in "${symlinks[@]}"; do
-        ln -sf gt "$dir/$s"
-        echo "  $dir/$s -> gt"
+        ln -sf rig "$dir/$s"
+        echo "  $dir/$s -> rig"
     done
     echo "installed ${#symlinks[@]} symlinks"
 }
@@ -187,32 +226,33 @@ cmd_install(){
 
 usage(){
     cat <<EOF
-gt - Git tools
+rig - ripgit: git tools
 
 Usage:
-  gt checkout [pattern]  Smart branch checkout (alias: gt co, gco)
-  gt push [branch]       Smart push to origin (alias: gt p, gtp)
-  gt rebase [pattern]    Smart rebase -i on origin (alias: gt r, gtr)
-  gt install             Create symlinks (gco, gto, gtp, gtr)
+  rig checkout [pattern]  Fetch + checkout origin (rio)
+  rig push [branch]       Push HEAD to origin (rip)
+  rig rebase [pattern]    Fetch + rebase -i origin (rir)
+  rig merge [pattern]     Fetch + merge origin (rim)
+  rig install             Create symlinks (rio, rip, rir, rim)
 
-Flags: -u fetch, -n dry-run, ? force interactive
+Flags: -z offline (no fetch), -n dry-run, ? force fzf
 
-Busybox-style:
-  gco apm       checkout         gto apm    checkout -u (fetch)
-  gtp branch    push             gtr main   rebase -u (fetch)
+Symlinks:
+  rio apm     fetch + checkout    rip branch   push
+  rir main    fetch + rebase -i   rim main     fetch + merge
 EOF
     exit 1
 }
 
 # Busybox-style: detect how we were called
 case "$(basename "$0")" in
-    gco)  cmd_checkout "$@"; exit ;;
-    gto) cmd_checkout -u "$@"; exit ;;
-    gtp)  cmd_push "$@"; exit ;;
-    gtr) cmd_rebase -u "$@"; exit ;;
+    rio) cmd_checkout "$@"; exit ;;
+    rip) cmd_push "$@"; exit ;;
+    rir) cmd_rebase "$@"; exit ;;
+    rim) cmd_merge "$@"; exit ;;
 esac
 
-# Normal invocation: gt <cmd> [args]
+# Normal invocation: rig <cmd> [args]
 cmd=${1:-}
 shift 2>/dev/null
 
@@ -220,6 +260,7 @@ case "$cmd" in
     co|checkout) cmd_checkout "$@" ;;
     p|push)      cmd_push "$@" ;;
     r|rebase)    cmd_rebase "$@" ;;
+    m|merge)     cmd_merge "$@" ;;
     install)     cmd_install ;;
     -h|--help|help|"") usage ;;
     *) echo "error: unknown command: $cmd"; usage ;;
