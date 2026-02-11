@@ -14,7 +14,7 @@ Auto-activating skills + specialized agents for Claude Code.
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 5 specialized agents
-├── commands/      # 7 slash commands
+├── commands/      # 8 slash commands
 └── skills/        # 15 auto-activating skills
 ```
 
@@ -41,6 +41,7 @@ Auto-activate based on file context:
 - **/improve**: Code quality pass (DO-CRITICIZE-EVALUATE-IMPROVE)
 - **/readme**: Update README/ARCHITECTURE/CHANGELOG
 - **/learn**: Extract patterns from history
+- **/distill**: Extract key points from long content
 - **/visual**: UI/styling adjustments
 
 See [WORKFLOW.md](WORKFLOW.md) for agent hierarchy and [ARCHITECTURE.md](ARCHITECTURE.md) for design.

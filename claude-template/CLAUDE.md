@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code configuration: 5 agents, 15 auto-activating skills, 7 commands.
+Claude Code configuration: 5 agents, 15 auto-activating skills, 8 commands.
 
 ## Structure
 
@@ -8,7 +8,7 @@ Claude Code configuration: 5 agents, 15 auto-activating skills, 7 commands.
 global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
 ├── agents/            # 5 specialized task agents
-├── commands/          # 7 slash commands (/build, /improve, /learn, /readme, /refine, /ship, /visual)
+├── commands/          # 8 slash commands (/build, /distill, /improve, /learn, /readme, /refine, /ship, /visual)
 ├── skills/            # 15 auto-activating skills
 └── settings.json      # Shared Claude Code settings
 ```
@@ -47,7 +47,7 @@ ALWAYS backup before overwriting
 
 ## Components
 
-**Commands** (7): /build, /improve, /learn, /readme, /refine, /ship, /visual
+**Commands** (8): /build, /distill, /improve, /learn, /readme, /refine, /ship, /visual
 
 **Agents** (5): distill, improve, learn, readme, visual
 
