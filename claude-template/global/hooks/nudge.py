@@ -49,7 +49,7 @@ if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
 parts = []
 
 # Context: docs naming convention
-if re.search(r"\b(todo|readme|changelog|spec|architecture)\b", prompt, re.IGNORECASE):
+if re.search(r"\b(todo|readme|changelog|spec|architecture)\b|\.md\b", prompt, re.IGNORECASE):
     parts.append(DOCS_RULES)
 
 # Check commit (special case with rules)
