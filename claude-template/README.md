@@ -32,3 +32,15 @@ Auto-activate based on file context:
 - **learn**: Extract patterns from history into skills
 - **readme**: Sync README/ARCHITECTURE with code
 - **visual**: Render-inspect-adjust for SVG/UI
+
+## Commands
+
+- **/ship**: Outer loop - specs → components → /build → critique
+- **/build**: Inner loop - plan → stages → workers → judge
+- **/refine**: Checkpoint → /improve → /readme → commit
+- **/improve**: Code quality pass (DO-CRITICIZE-EVALUATE-IMPROVE)
+- **/readme**: Update README/ARCHITECTURE/CHANGELOG
+- **/learn**: Extract patterns from history
+- **/visual**: UI/styling adjustments
+
+See [WORKFLOW.md](WORKFLOW.md) for agent hierarchy and [ARCHITECTURE.md](ARCHITECTURE.md) for design.

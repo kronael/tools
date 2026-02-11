@@ -77,7 +77,7 @@ Workers are isolated. Failed stages don't block others.
 
 ## State File
 
-`.ship/build-state-{plan-name}.md` — markdown:
+`.ship/build-state-{plan-name}.md` — markdown (ephemeral state):
 
 ```markdown
 # Build: Feature Name

@@ -46,10 +46,6 @@
 /visual (UI/styling)
   │
   └── Render → inspect → criticize → adjust (one thing)
-
-/commit (git workflow)
-  │
-  └── Status → diff → stage → commit "[section] Message"
 ```
 
 ## When to Use What
@@ -63,14 +59,13 @@
 | Update docs | /readme | "readme" |
 | Extract learnings | /learn | "learn from this session" |
 | Fix UI/styling | /visual | "visual" |
-| Save progress | /commit | "commit" |
 
 ## Hierarchy
 
 - /ship delegates to /build (per component)
 - /build delegates to /improve, /readme, /visual (per stage)
 - /refine delegates to /improve and /readme
-- /improve, /readme, /learn, /visual, /commit are leaf agents
+- /improve, /readme, /learn, /visual are leaf commands
 
 ## Key Differences
 
@@ -80,4 +75,4 @@
 | Scope | whole project | single feature | current changes |
 | Commits | per component | single at end | single at end |
 | Critique | after each phase | no | no |
-| State | PROGRESS.md | .ship/build-state.md | none |
+| State | PROGRESS.md | .ship/build-state-{plan}.md | none |

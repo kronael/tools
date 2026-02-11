@@ -17,29 +17,13 @@ cd claude-template
 
 Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
-## claude-template/
-
-**Agents** (5):
-- **distill**: Extract key points from long content
-- **improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
-- **learn**: Extract patterns from history into skills
-- **readme**: Sync README/ARCHITECTURE with code
-- **visual**: Render-inspect-adjust for SVG/UI
-
-**Skills** (15):
-- Languages: go, python, rust, sql, typescript
-- Services: cli, data, ops, service, trader
-- Workflow: build, commit, refine, ship, wisdom
+## Components
 
 **Commands** (7): /build, /improve, /learn, /readme, /refine, /ship, /visual
 
-## usage-patterns/
+**Agents** (5): distill, improve, learn, readme, visual
 
-Analysis of 57 production projects (1.3MB logs). Top patterns:
-- Iterative debugging: short commands ("fix it", "continue", "commit")
-- Criticism-driven: request harsh criticism before PRs
-- Integration tests: skip mocks, test real data flows
-- Config-first: TOML config before implementation
+**Skills** (15): build, cli, commit, data, go, ops, python, refine, rust, service, ship, sql, trader, typescript, wisdom
 
 ## Working on This Repo
 

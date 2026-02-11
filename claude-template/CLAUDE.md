@@ -47,9 +47,9 @@ ALWAYS backup before overwriting
 
 ## Components
 
-**Agents** (5): distill, improve, learn, readme, visual
-
 **Commands** (7): /build, /improve, /learn, /readme, /refine, /ship, /visual
+
+**Agents** (5): distill, improve, learn, readme, visual
 
 **Skills** (15): build, cli, commit, data, go, ops, python, refine, rust,
 service, ship, sql, trader, typescript, wisdom
