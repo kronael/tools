@@ -43,6 +43,13 @@ get_current_branch(){
     clean_branch "$this"
 }
 
+# true if arg resolves to a commit but isn't a known branch
+is_commit_not_branch(){
+    git rev-parse --verify "$1^{commit}" &>/dev/null \
+        && ! git show-ref --verify --quiet "refs/heads/$1" \
+        && ! git show-ref --verify --quiet "refs/remotes/origin/$1"
+}
+
 # fzf with auto-select unless ? is passed
 pick_branch(){
     if [[ "$1" == "?" ]]; then
@@ -92,7 +99,7 @@ EOF
 
 cmd_push(){
     # Parse flags
-    while [[ "${1:-}" == -[nh] || "${1:-}" == --help ]]; do
+    while [[ "${1:-}" =~ ^- ]]; do
         case "$1" in
             -n) local dryrun=1; shift ;;
             -h|--help)
@@ -105,25 +112,26 @@ Examples: rip, rip -n, rig p my-branch -f,
           rig p my-branch:abc123
 EOF
                 exit 0 ;;
+            *) break ;;
         esac
     done
 
-    # Determine branch and commit
-    local branch commit
-    if [[ -z "${1:-}" ]]; then
-        branch=$(get_current_branch)
-        commit="HEAD"
-    elif [[ "$1" == "?" ]]; then
-        branch=$(pick_branch "?")
-        [[ -z "$branch" ]] && exit 1
-        commit="HEAD"; shift
-    else
-        branch=${1%:*}
-        branch=$(clean_branch "$branch")
-        commit=${1#*:}
-        [[ "$commit" == "$1" ]] && commit="HEAD"
-        shift
-    fi
+    # Select branch and commit
+    local branch commit="HEAD"
+    case "${1:-}" in
+        "")  branch=$(get_current_branch) ;;
+        "?") branch=$(pick_branch "?")
+             [[ -z "$branch" ]] && exit 1; shift ;;
+        *:*) branch=$(clean_branch "${1%:*}")
+             commit=${1#*:}; shift ;;
+        *)   if is_commit_not_branch "$1"; then
+                 echo "warn: '$1' looks like a commit, not a branch"
+                 echo "      use branch:commit syntax to push a specific commit"
+                 branch=$(get_current_branch)
+             else
+                 branch=$(clean_branch "$1")
+             fi; shift ;;
+    esac
 
     # Validate
     [[ -z "$branch" || "$branch" == "undefined" ]] && {
