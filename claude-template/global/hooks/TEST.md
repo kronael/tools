@@ -69,17 +69,17 @@ echo '{"prompt": "recap_session"}' | python3 ~/.claude/hooks/local.py
 
 ---
 
-### 4. Keyword Priority Bug (Fixed: /visual before /improve)
+### 4. Keyword Routing (fuzzy match)
 
 ```bash
-# "fix styling" → should trigger /visual (not /improve)
-echo '{"prompt": "fix styling"}' | python3 ~/.claude/hooks/nudge.py | grep -q "/visual" && echo "✓ PASS"
+# "improve code" → should trigger @improve
+echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/nudge.py | grep -q "@improve" && echo "✓ PASS"
 
-# "fix ui" → should trigger /visual (not /improve)
-echo '{"prompt": "fix ui"}' | python3 ~/.claude/hooks/nudge.py | grep -q "/visual" && echo "✓ PASS"
+# "visual" → should trigger @visual
+echo '{"prompt": "visual"}' | python3 ~/.claude/hooks/nudge.py | grep -q "@visual" && echo "✓ PASS"
 
-# "improve code" → should still trigger /improve
-echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/nudge.py | grep -q "/improve" && echo "✓ PASS"
+# "ship" → should trigger /ship
+echo '{"prompt": "ship"}' | python3 ~/.claude/hooks/nudge.py | grep -q "/ship" && echo "✓ PASS"
 ```
 
 **Expected:** All three commands print "✓ PASS"
@@ -141,13 +141,13 @@ echo '{"tool_name": "Task", "tool_input": {"command": "something"}}' | \
 ```
 
 ### nudge.py
-- Injects agent hints for commit/improve/refine/readme/learn/visual
-- Pattern priority: visual > readme > learn > refine > improve
+- Routes keywords to agents (fuzzy match): commands or @agents
+- Fuzzy keyword matching routes to /commands or @agents
 - Should NOT crash on null/invalid prompts
 
 ```bash
-# Should inject /visual hint (not /improve)
-echo '{"prompt": "fix styling issue"}' | python3 ~/.claude/hooks/nudge.py
+# Should inject @improve hint (fuzzy match on "fix" doesn't match, but "styling" doesn't either)
+echo '{"prompt": "improve styling"}' | python3 ~/.claude/hooks/nudge.py
 
 # Should inject commit rules
 echo '{"prompt": "save progress"}' | python3 ~/.claude/hooks/nudge.py

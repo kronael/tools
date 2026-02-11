@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code configuration: 5 agents, 9 commands, 16 auto-activating skills.
+Claude Code configuration: 7 agents, 4 commands, 20 auto-activating skills.
 Install by opening Claude Code here and saying "install".
 
 ## Components
@@ -11,16 +11,17 @@ Install by opening Claude Code here and saying "install".
 
 **CLAUDE.md**: Universal development principles
 
-**agents/** (5): Specialized task agents
-- Quality: improve, visual, learn
-- Utilities: readme, distill
+**agents/** (7): Specialized task agents
+- Quality: @improve, @visual, @learn
+- Utilities: @readme, @distill, @research, @refine
 
-**commands/** (9): Slash commands
-- /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
+**commands/** (4): Slash commands
+- /build, /refine, /ship, /tweet
 
-**skills/** (16): Auto-activating skills
+**skills/** (20): Auto-activating skills
 - Languages: go, python, rust, sql, typescript
-- Services: cli, data, ops, service, trader
+- Services: cli, collector, data, ops, service, trader
+- Infrastructure: builder, infrastructure, testing
 - Workflow: build, commit, refine, ship, tweet, wisdom
 
 ## Installation Flow
@@ -55,12 +56,12 @@ See [WORKFLOW.md](WORKFLOW.md) for complete hierarchy and usage guide.
 ```
 /ship (outer loop)
   └─> /build (inner loop) per component
-        └─> /improve, /readme, /visual (per stage)
+        └─> @improve, @readme, @visual (per stage)
 
 /refine
-  └─> /improve, /readme
+  └─> @improve, @readme
 
-/improve, /readme, /learn, /visual (leaf commands)
+@improve, @readme, @learn, @visual, @distill, @research (leaf agents)
 ```
 
 ## Ship/Build Split
@@ -85,7 +86,7 @@ See [WORKFLOW.md](WORKFLOW.md) for complete hierarchy and usage guide.
 
 - **Auto-activation**: Skills match on file context
 - **Lazy loading**: Skill content loaded when activated
-- **Progressive refinement**: /learn improves skills from usage
+- **Progressive refinement**: @learn improves skills from usage
 - **Safe updates**: /install compares, asks, backs up
 - **State separation**: Ship state in root (PROGRESS.md), build state in .ship/
-- **Clean delegation**: /ship → /build → leaf commands (improve/readme/visual)
+- **Clean delegation**: /ship → /build → leaf agents (@improve/@readme/@visual)

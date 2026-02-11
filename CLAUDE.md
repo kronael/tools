@@ -31,7 +31,7 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 - /ship is the outer loop: specs -> components -> completion
 - /build is the inner loop: plan -> parallel workers -> commit
-- /refine delegates to /improve + /readme for finalization
+- @refine delegates to @improve + @readme for finalization
 - Nudge hook uses fuzzy matching (edit distance) to route prompts to agents
 - See [WORKFLOW.md](claude-template/WORKFLOW.md) for agent hierarchy
 

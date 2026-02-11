@@ -72,13 +72,15 @@ DETECTORS = [
 2. First match wins - emit system message
 3. No match - pass-through
 
-**Agent patterns:**
+**Agent keywords** (fuzzy matched via edit distance):
 ```python
-AGENTS = [
-    (r"\b(improve|enhance|fix|...)\b", "/improve"),
-    (r"\b(refine|finalize|...)\b", "/refine"),
-    # ... more patterns
-]
+AGENT_KEYWORDS = {
+    "ship": "/ship", "build": "/build",
+    "refine": "/refine", "tweet": "/tweet",
+    "readme": "@readme", "learn": "@learn",
+    "improve": "@improve", "visual": "@visual",
+    "distill": "@distill", "research": "@research",
+}
 ```
 
 ### local.py (UserPromptSubmit)
@@ -101,7 +103,7 @@ Contains:
 - Event type and timestamp
 - Session ID and working directory
 - Prompts for pattern extraction
-- Pointer to /learn agent
+- Pointer to @learn agent
 
 ## Data Flow
 
@@ -139,7 +141,7 @@ stdin (JSON):
 
 stdout (JSON):
 {
-  "systemMessage": "Invoke /improve agent."
+  "systemMessage": "Invoke @improve."
 }
 ```
 

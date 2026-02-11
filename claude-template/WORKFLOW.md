@@ -25,25 +25,25 @@
   │
   ├── Checkpoint (commit current state)
   ├── Validate (build/test)
-  ├── /improve (code quality)
-  ├── /readme (documentation)
+  ├── @improve (code quality)
+  ├── @readme (documentation)
   ├── Verify (final build/test)
   └── Commit [refined]
 
-/improve (code quality, single pass)
+@improve (code quality, single pass)
   │
   └── DO → CRITICIZE → EVALUATE → IMPROVE → VERIFY
       (3-5 iterations max)
 
-/readme (documentation sync)
+@readme (documentation sync)
   │
   └── Update README, ARCHITECTURE, CHANGELOG, CLAUDE.md
 
-/learn (pattern extraction)
+@learn (pattern extraction)
   │
   └── Extract patterns from history → write SKILL.md
 
-/visual (UI/styling)
+@visual (UI/styling)
   │
   └── Render → inspect → criticize → adjust (one thing)
 ```
@@ -55,17 +55,17 @@
 | Build project from specs | /ship | "ship from specs/" |
 | Execute a plan file | /build | "build auth-feature" |
 | Polish before PR | /refine | "refine this" |
-| Fix specific code issue | /improve | "improve error handling" |
-| Update docs | /readme | "readme" |
-| Extract learnings | /learn | "learn from this session" |
-| Fix UI/styling | /visual | "visual" |
+| Fix specific code issue | @improve | "improve error handling" |
+| Update docs | @readme | "readme" |
+| Extract learnings | @learn | "learn from this session" |
+| Fix UI/styling | @visual | "visual" |
 
 ## Hierarchy
 
 - /ship delegates to /build (per component)
-- /build delegates to /improve, /readme, /visual (per stage)
-- /refine delegates to /improve and /readme
-- /improve, /readme, /learn, /visual are leaf commands
+- /build delegates to @improve, @readme, @visual (per stage)
+- /refine delegates to @improve and @readme
+- @improve, @readme, @learn, @visual are leaf agents
 
 ## Key Differences
 

@@ -41,16 +41,22 @@ pytest
 
 Expands keywords in prompts to agent invocations.
 
-| Keywords | Agent |
-|----------|-------|
-| improve, enhance, fix, cleanup, refactor, optimize, polish | /improve |
-| refine, finalize, finish, complete, ship, wrap-up | /refine |
-| readme, docs, documentation, document, arch | /readme |
-| learn, extract, pattern, skill | /learn |
-| visual, ui, styling, css, layout | /visual |
-| commit, save, checkpoint | /commit |
+| Keyword | Route |
+|---------|-------|
+| ship | /ship |
+| build | /build |
+| refine | /refine |
+| tweet | /tweet |
+| readme | @readme |
+| learn | @learn |
+| improve | @improve |
+| visual | @visual |
+| distill | @distill |
+| research | @research |
 
-**Example:** "improve the error handling" triggers `/improve` agent.
+Uses fuzzy matching (edit distance) for typo tolerance.
+
+**Example:** "improve the error handling" triggers `@improve` agent.
 
 ### LOCAL.md Injection (local.py)
 
@@ -71,7 +77,7 @@ Re-injects key CLAUDE.md rules on compaction triggers.
 Generates session reports on PreCompact and SessionEnd events.
 
 Reports saved to `~/.claude/flow-reports/` with timestamp and event type.
-Run `/learn` to analyze and extract patterns into skills.
+Run @learn to analyze and extract patterns into skills.
 
 ### Commit Nudge (Stop hook)
 

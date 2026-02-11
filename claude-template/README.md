@@ -13,36 +13,34 @@ Auto-activating skills + specialized agents for Claude Code.
 ```
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
-├── agents/        # 5 specialized agents
-├── commands/      # 9 slash commands
-└── skills/        # 16 auto-activating skills
+├── agents/        # 7 specialized agents
+├── commands/      # 4 slash commands
+└── skills/        # 20 auto-activating skills
 ```
 
 ## Skills
 
 Auto-activate based on file context:
 - **Languages**: go, python, rust, sql, typescript
-- **Services**: cli, data, ops, service, trader
+- **Services**: cli, collector, data, ops, service, trader
+- **Infrastructure**: builder, infrastructure, testing
 - **Workflow**: build, commit, refine, ship, tweet, wisdom
 
-## Agents
+## Agents (7)
 
-- **distill**: Extract key points from long content
-- **improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
-- **learn**: Extract patterns from history into skills
-- **readme**: Sync README/ARCHITECTURE with code
-- **visual**: Render-inspect-adjust for SVG/UI
+- **@distill**: Extract key points from long content
+- **@improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
+- **@learn**: Extract patterns from history into skills
+- **@readme**: Sync README/ARCHITECTURE with code
+- **@refine**: Checkpoint → @improve → @readme → commit
+- **@research**: Research and knowledge synthesis
+- **@visual**: Render-inspect-adjust for SVG/UI
 
-## Commands
+## Commands (4)
 
 - **/build**: Inner loop - plan → stages → workers → judge
-- **/distill**: Extract key points from long content
-- **/improve**: Code quality pass (DO-CRITICIZE-EVALUATE-IMPROVE)
-- **/learn**: Extract patterns from history
-- **/readme**: Update README/ARCHITECTURE/CHANGELOG
-- **/refine**: Checkpoint → /improve → /readme → commit
+- **/refine**: Finalization - @improve → @readme → commit
 - **/ship**: Outer loop - specs → components → /build → critique
 - **/tweet**: Share work on social media
-- **/visual**: UI/styling adjustments
 
 See [WORKFLOW.md](WORKFLOW.md) for agent hierarchy and [ARCHITECTURE.md](ARCHITECTURE.md) for design.

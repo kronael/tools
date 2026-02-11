@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 16 skills, 5 agents, 9 commands, 5 hooks.
+Claude Code configuration: 20 skills, 7 agents, 4 commands, 5 hooks.
 
 ## Contents
 
@@ -25,9 +25,9 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 /ship (outer loop: specs → components)
   └── /build (inner loop: plan → parallel workers → commit)
 
-/refine (finalization: /improve + /readme)
+/refine (finalization: @improve + @readme)
 
-/improve, /readme, /learn, /visual, /distill (leaf agents)
+@improve, @readme, @learn, @visual, @distill, @research (leaf agents)
 ```
 
 Nudge hook routes prompts to agents via fuzzy keyword matching.
