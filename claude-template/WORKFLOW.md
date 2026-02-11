@@ -7,7 +7,7 @@
   ├── For each component:
   │     ├── Generate build plan from spec
   │     ├── /build (inner loop)
-  │     ├── Update PROGRESS.md
+  │     ├── Update .ship/PROGRESS.md
   │     ├── Critique (spec compliance review)
   │     └── Fix gaps if >10% (max 2 rounds)
   ├── Final audit
@@ -80,4 +80,4 @@
 | Scope | whole project | single feature | current changes |
 | Commits | per component | single at end | single at end |
 | Critique | after each phase | no | no |
-| State | PROGRESS.md | build-state.md | none |
+| State | .ship/PROGRESS.md | .ship/build-state.md | none |

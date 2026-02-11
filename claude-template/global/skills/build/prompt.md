@@ -21,7 +21,7 @@ If uncommitted changes, /commit first.
 ### Step 2: Load Plan
 
 Parse options: plan-name, -c (continue), -w N, -n.
-State file: ./tmp/build-state-{plan-name}.md
+State file: .ship/build-state-{plan-name}.md
 
 If -c and state exists: read state, reset RUNNING
 stages to PENDING, skip to Step 4.
