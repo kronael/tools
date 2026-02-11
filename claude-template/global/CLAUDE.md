@@ -131,6 +131,4 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
-- ALWAYS sync ~/.claude/ changes with assistants repos:
-  - ~/wk/mnde/marinade-assistants/global/
-  - ~/wk/tools/assistants/claude-template/global/
+- ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)

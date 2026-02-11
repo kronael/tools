@@ -28,22 +28,19 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 ## Validation
 - ALWAYS validate external I/O with class-validator when practical
 - Never trust external APIs, user input, or database results with `as Type`
-- Use `validateAndReturn()` from @marinade.finance/cli-common:
+- Use class-validator + class-transformer for runtime validation:
   ```typescript
-  import { validateAndReturn } from '@marinade.finance/cli-common'
-  import { IsString, Type, ValidateNested } from 'class-validator'
+  import { IsString, ValidateNested, Type } from 'class-validator'
+  import { plainToInstance } from 'class-transformer'
 
   class ApiResponse {
     @IsString()
     status: string
   }
-
-  const data = await response.json()
-  const validated = await validateAndReturn(data, ApiResponse)
   ```
 - For nested objects use `@Type(() => NestedClass)` and `@ValidateNested()`
 - Internal data (already validated) can skip validation
-- See TYPESCRIPT_COMMON_REFERENCE.md for available utilities
+- If project has a validate-and-return helper, prefer it over raw transforms
 
 ## Frontend Stack
 

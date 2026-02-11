@@ -45,6 +45,15 @@ NEVER delete files not in source
 NEVER modify files user chose to skip
 ALWAYS backup before overwriting
 
+### LOCAL.md Handling
+
+During install, if destination ~/.claude/CLAUDE.md contains local paths,
+repo names, secrets references, or org-specific content not in source:
+1. Extract those lines to ~/.claude/LOCAL.md (create if needed)
+2. Inform user what was extracted
+3. NEVER overwrite LOCAL.md — it's user-maintained
+4. context.py hook auto-injects LOCAL.md on every prompt
+
 ## Components
 
 **Commands** (9): /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
