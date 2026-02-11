@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Commit changes using haiku model
+description: Git commits. git status, git diff, git add, staging files, commit messages, [section] format, haiku agent delegation.
 user-invocable: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: typescript
-description: TypeScript development patterns. Use when working on .ts/.tsx files, package.json, or TypeScript/Node.js projects.
+description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, Bun, Tailwind, class-validator, Playwright, arrow functions.
 ---
 
 # TypeScript Style

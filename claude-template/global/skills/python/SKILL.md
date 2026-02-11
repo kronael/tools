@@ -1,6 +1,6 @@
 ---
 name: python
-description: Python development patterns. Use when working on .py files, pyproject.toml, or Python projects.
+description: Python development. .py files, pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations.
 ---
 
 # Python

@@ -1,6 +1,6 @@
 ---
 name: service
-description: API service patterns. Use when building REST APIs, web backends, microservices.
+description: REST APIs and web services. /health, /ready, versioned paths (/v1/), caching, validation before persistence, microservices.
 ---
 
 # Service/API

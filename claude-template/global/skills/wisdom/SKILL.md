@@ -1,6 +1,6 @@
 ---
 name: wisdom
-description: Writing SKILL.md and CLAUDE.md files. Use when creating or updating skills, project instructions, or wisdom files.
+description: Creating SKILL.md and CLAUDE.md. ALWAYS/NEVER statements, skill creation, project instructions, YAML frontmatter, wisdom files.
 ---
 
 # Wisdom Skill

@@ -1,6 +1,6 @@
 ---
 name: data
-description: Data collection patterns. Use when building collectors, scrapers, ETL pipelines, API integrations.
+description: Data collectors and ETL. asyncio, state.json, Redis, deduplication, LeakyBucket, backfill, scrapers, API integrations, aiohttp.
 ---
 
 # Data Collection

@@ -1,6 +1,6 @@
 ---
 name: trader
-description: Trading bot patterns. Use when working on trading bots, order management, exchange APIs, position tracking.
+description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config.
 ---
 
 # Trader

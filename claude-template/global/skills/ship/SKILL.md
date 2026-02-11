@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship multi-stage feature from plan
+description: Multi-stage feature delivery. Executes plans from .claude/plans/, orchestrates subagents, parallel execution, ship-state.json tracking.
 user-invocable: true
 ---
 

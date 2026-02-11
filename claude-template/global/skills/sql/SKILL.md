@@ -1,6 +1,6 @@
 ---
 name: sql
-description: SQL patterns. Use when writing SQL queries, migrations, or database schemas.
+description: SQL queries and schemas. JOIN USING, column aliases without AS, migrations, schema changes, database design.
 ---
 
 # SQL

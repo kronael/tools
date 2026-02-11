@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Refine, finalize, ship code
+description: Code refinement and finalization. Orchestrates improve + readme agents, validates, tests, commits [refined] changes, polishes code.
 user-invocable: true
 ---
 

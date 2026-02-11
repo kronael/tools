@@ -1,6 +1,6 @@
 ---
 name: ops
-description: Operations patterns. Use when working on Dockerfiles, deployment, Ansible, monitoring, logging, process management, CI/CD.
+description: DevOps and deployment. Dockerfile, Docker multi-stage, Prometheus, RUST_LOG, systemd, PID files, env.toml, GitHub Actions, monitoring.
 ---
 
 # Ops

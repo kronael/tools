@@ -1,6 +1,6 @@
 ---
 name: cli
-description: CLI tool patterns. Use when building command-line tools, argument parsing, process control.
+description: CLI tools. argparse, click, clap, --help, exit codes, signal handling, SIGTERM, SIGINT, config precedence, interactive prompts.
 ---
 
 # CLI Style

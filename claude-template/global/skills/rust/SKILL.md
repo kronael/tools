@@ -1,6 +1,6 @@
 ---
 name: rust
-description: Rust development patterns. Use when working on .rs files, Cargo.toml, or Rust projects. Covers imports, concurrency, state management, testcontainers.
+description: Rust development. .rs files, Cargo.toml, tokio, DashMap, tracing, cargo clippy, core_affinity, testcontainers, enum states.
 ---
 
 # Rust

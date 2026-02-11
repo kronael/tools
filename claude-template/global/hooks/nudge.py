@@ -15,6 +15,12 @@ prompt = data.get("prompt") or ""
 if not isinstance(prompt, str):
     sys.exit(0)
 
+DOCS_RULES = """Documentation naming rules:
+- UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
+- Organized in directories: use lowercase (specs/multi-tenancy.md, todos/general.md, plans/migration.md)
+- Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
+- NEVER use lowercase for root documentation files (todo.md, readme.md)"""
+
 COMMIT_RULES = """Commit rules:
 - NEVER git add -A
 - NEVER git commit --amend
@@ -40,14 +46,23 @@ META_PATTERNS = [
 if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
     sys.exit(0)
 
-# Check commit first (special case with rules)
-if re.search(r"\b(commit|save|checkpoint)\b", prompt, re.IGNORECASE):
-    print(json.dumps({"ok": True, "systemMessage": COMMIT_RULES}))
-    sys.exit(0)
+parts = []
 
-for pattern, agent in AGENTS:
-    if re.search(pattern, prompt, re.IGNORECASE):
-        print(json.dumps({"ok": True, "systemMessage": f"Invoke {agent} agent."}))
-        break
+# Context: docs naming convention
+if re.search(r"\b(todo|readme|changelog|spec|architecture)\b", prompt, re.IGNORECASE):
+    parts.append(DOCS_RULES)
+
+# Check commit (special case with rules)
+if re.search(r"\b(commit|save|checkpoint)\b", prompt, re.IGNORECASE):
+    parts.append(COMMIT_RULES)
+else:
+    # Check agent keywords
+    for pattern, agent in AGENTS:
+        if re.search(pattern, prompt, re.IGNORECASE):
+            parts.append(f"Invoke {agent} agent.")
+            break
+
+if parts:
+    print(json.dumps({"ok": True, "systemMessage": "\n\n".join(parts)}))
 
 sys.exit(0)

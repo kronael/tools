@@ -1,6 +1,6 @@
 ---
 name: go
-description: Go development patterns. Use when working on .go files, go.mod, or Go projects.
+description: Go development. .go files, go.mod, *_test.go, testing.Short, goroutines, go test.
 ---
 
 # Go
