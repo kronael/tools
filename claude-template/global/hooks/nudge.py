@@ -30,10 +30,8 @@ COMMIT_RULES = """Commit rules:
 Invoke /commit agent."""
 
 AGENTS = [
-    (r"\b(readme|docs|documentation|document|arch)\b", "/readme"),
-    (r"\b(learn|extract|pattern|skill)\b", "/learn"),
-    (r"\b(refine|finalize|finish|complete|ship|wrap.?up)\b", "/refine"),
-    (r"\b(improve|enhance|fix|cleanup|refactor|optimize|polish)\b", "/improve"),
+    (r"\b(ship|build|deliver|implement|feature)\b", "/ship"),
+    (r"\b(refine|finalize|finish|complete|wrap.?up|polish|improve|enhance|cleanup|refactor|optimize)\b", "/refine"),
 ]
 
 # Skip if prompt is about hooks, agents, or meta-instructions
