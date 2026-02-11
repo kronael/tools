@@ -1,15 +1,15 @@
 # CLAUDE.md
 
-Claude Code configuration: 5 agents, 16 auto-activating skills, 9 commands.
+Claude Code configuration: 7 agents, 20 auto-activating skills, 4 commands.
 
 ## Structure
 
 ```
 global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
-├── agents/            # 5 specialized task agents
-├── commands/          # 9 slash commands (/build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual)
-├── skills/            # 16 auto-activating skills
+├── agents/            # 7 specialized task agents
+├── commands/          # 4 slash commands (/build, /refine, /ship, /tweet)
+├── skills/            # 20 auto-activating skills
 └── settings.json      # Shared Claude Code settings
 ```
 
@@ -56,12 +56,13 @@ repo names, secrets references, or org-specific content not in source:
 
 ## Components
 
-**Commands** (9): /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
+**Commands** (4): /build, /refine, /ship, /tweet
 
-**Agents** (5): distill, improve, learn, readme, visual
+**Agents** (7): @distill, @improve, @learn, @readme, @refine, @research, @visual
 
-**Skills** (16): build, cli, commit, data, go, ops, python, refine, rust,
-service, ship, sql, trader, tweet, typescript, wisdom
+**Skills** (20): build, builder, cli, collector, commit, data, go,
+infrastructure, ops, python, refine, rust, service, ship, sql, testing,
+trader, tweet, typescript, wisdom
 
 **Hooks** (5): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
 

@@ -33,12 +33,12 @@ AGENT_KEYWORDS = {
     "ship": "/ship",
     "build": "/build",
     "refine": "/refine",
-    "readme": "/readme",
-    "learn": "/learn",
-    "improve": "/improve",
-    "visual": "/visual",
-    "distill": "/distill",
     "tweet": "/tweet",
+    "readme": "@readme",
+    "learn": "@learn",
+    "improve": "@improve",
+    "visual": "@visual",
+    "distill": "@distill",
 }
 
 

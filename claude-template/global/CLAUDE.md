@@ -98,6 +98,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER skip pre-commit checks
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
+- **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
 
 ## Docker
 - Multi-stage: deps in base, compile in build, runtime only in final

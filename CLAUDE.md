@@ -19,11 +19,11 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 ## Components
 
-**Commands** (9): /build, /distill, /improve, /learn, /readme, /refine, /ship, /tweet, /visual
+**Commands** (4): /build, /refine, /ship, /tweet
 
-**Agents** (5): distill, improve, learn, readme, visual
+**Agents** (7): @distill, @improve, @learn, @readme, @refine, @research, @visual
 
-**Skills** (16): build, cli, commit, data, go, ops, python, refine, rust, service, ship, sql, trader, tweet, typescript, wisdom
+**Skills** (20): build, builder, cli, collector, commit, data, go, infrastructure, ops, python, refine, rust, service, ship, sql, testing, trader, tweet, typescript, wisdom
 
 **Hooks** (5): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
 
