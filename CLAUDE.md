@@ -25,7 +25,7 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Skills** (16): build, cli, commit, data, go, ops, python, refine, rust, service, ship, sql, trader, tweet, typescript, wisdom
 
-**Hooks** (5): nudge (keyword->agent routing), context (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
+**Hooks** (5): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
 
 ## Architecture
 
@@ -47,6 +47,6 @@ When syncing claude-template/global/ to other assistants repos or ~/.claude/:
 - NEVER include local paths (~/wk/..., /home/user/...)
 - NEVER include org-specific repo names or private project references
 - NEVER include secrets, API keys, or credential file paths
-- Local/private content belongs in ~/.claude/LOCAL.md (auto-injected by context hook)
+- Local/private content belongs in ~/.claude/LOCAL.md (auto-injected by local.py hook)
 - global/CLAUDE.md references LOCAL.md for sync paths — NEVER hardcode them
 - The /srv paths with ${PREFIX:-} variable substitution are OK (generic pattern)

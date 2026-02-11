@@ -28,7 +28,7 @@ echo "" | python3 ~/.claude/hooks/redirect.py
 echo "{bad json}" | python3 ~/.claude/hooks/nudge.py
 
 # Array instead of dict
-echo "[]" | python3 ~/.claude/hooks/context.py
+echo "[]" | python3 ~/.claude/hooks/local.py
 
 # Incomplete JSON
 echo "{incomplete" | python3 ~/.claude/hooks/learn.py
@@ -59,10 +59,10 @@ echo '{"tool_input": {"command": {"nested": "dict"}}}' | python3 ~/.claude/hooks
 
 ```bash
 # "thecontinueword" should NOT inject rules (word boundary fix)
-echo '{"prompt": "thecontinueword"}' | python3 ~/.claude/hooks/context.py
+echo '{"prompt": "thecontinueword"}' | python3 ~/.claude/hooks/local.py
 
 # "recap_session" should NOT inject rules (word boundary fix)
-echo '{"prompt": "recap_session"}' | python3 ~/.claude/hooks/context.py
+echo '{"prompt": "recap_session"}' | python3 ~/.claude/hooks/local.py
 ```
 
 **Expected:** Exit code 0, no `systemMessage` output
@@ -90,13 +90,13 @@ echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/nudge.py | grep -q "
 
 ```bash
 # "dont continue" should NOT inject rules
-echo '{"prompt": "dont continue"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
+echo '{"prompt": "dont continue"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
 
 # "don't continue" should NOT inject rules
-echo '{"prompt": "don't continue"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
+echo '{"prompt": "don't continue"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
 
 # "never recap" should NOT inject rules
-echo '{"prompt": "never recap"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
+echo '{"prompt": "never recap"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
 ```
 
 **Expected:** All three commands print "✓ PASS"
@@ -107,16 +107,16 @@ echo '{"prompt": "never recap"}' | python3 ~/.claude/hooks/context.py | grep -q 
 
 ```bash
 # "continue" → SHOULD inject rules
-echo '{"prompt": "continue"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✓ PASS"
+echo '{"prompt": "continue"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
 
 # "recap" → SHOULD inject rules
-echo '{"prompt": "recap"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✓ PASS"
+echo '{"prompt": "recap"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
 
 # "where were we" → SHOULD inject rules
-echo '{"prompt": "where were we"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✓ PASS"
+echo '{"prompt": "where were we"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
 
 # "what's next" → SHOULD inject rules
-echo '{"prompt": "what's next"}' | python3 ~/.claude/hooks/context.py | grep -q "systemMessage" && echo "✓ PASS"
+echo '{"prompt": "what's next"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
 ```
 
 **Expected:** All four commands print "✓ PASS"
@@ -153,17 +153,17 @@ echo '{"prompt": "fix styling issue"}' | python3 ~/.claude/hooks/nudge.py
 echo '{"prompt": "save progress"}' | python3 ~/.claude/hooks/nudge.py
 ```
 
-### context.py
+### local.py
 - Re-injects development rules on session continuation
 - Uses word boundaries (not substring matching)
 - Respects negation ("don't continue")
 
 ```bash
 # Should inject rules
-echo '{"prompt": "continue with implementation"}' | python3 ~/.claude/hooks/context.py
+echo '{"prompt": "continue with implementation"}' | python3 ~/.claude/hooks/local.py
 
 # Should NOT inject (negation)
-echo '{"prompt": "don't continue"}' | python3 ~/.claude/hooks/context.py
+echo '{"prompt": "don't continue"}' | python3 ~/.claude/hooks/local.py
 ```
 
 ### learn.py
@@ -213,9 +213,9 @@ If a test fails, run it individually with output:
 
 ```bash
 # See full output (not just pass/fail)
-echo '{"prompt": "test"}' | python3 ~/.claude/hooks/context.py | jq .
+echo '{"prompt": "test"}' | python3 ~/.claude/hooks/local.py | jq .
 
 # Check exit code
-echo '{"prompt": "test"}' | python3 ~/.claude/hooks/context.py
+echo '{"prompt": "test"}' | python3 ~/.claude/hooks/local.py
 echo "Exit code: $?"
 ```

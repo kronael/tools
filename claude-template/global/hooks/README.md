@@ -52,7 +52,7 @@ Expands keywords in prompts to agent invocations.
 
 **Example:** "improve the error handling" triggers `/improve` agent.
 
-### Context Re-injection (context.py)
+### LOCAL.md Injection (local.py)
 
 Re-injects key CLAUDE.md rules on compaction triggers.
 
@@ -85,7 +85,7 @@ Haiku prompt at natural breakpoints suggests committing if changes are cohesive.
     toolchain.py    # Toolchain detection
   redirect.py       # PreToolUse: command redirect
   nudge.py          # UserPromptSubmit: keyword expansion
-  context.py        # UserPromptSubmit: context re-injection
+  local.py          # UserPromptSubmit: LOCAL.md injection
   learn.py          # PreCompact/SessionEnd: flow reports
 ```
 

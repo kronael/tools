@@ -6,7 +6,7 @@
 User Prompt ──> UserPromptSubmit hooks ──> Claude
                     │
                     ├── nudge.py (keyword → agent)
-                    └── context.py (rule injection)
+                    └── local.py (rule injection)
 
 Claude ──> PreToolUse[Bash] ──> redirect.py ──> Execute
                                     │
@@ -81,7 +81,7 @@ AGENTS = [
 ]
 ```
 
-### context.py (UserPromptSubmit)
+### local.py (UserPromptSubmit)
 
 **Input:** User prompt
 **Output:** System message with rules (on trigger)
@@ -170,7 +170,7 @@ Haiku model returns `{"nudge": "..."}` or `{"pass": true}`.
 
 - redirect.py: 5000ms
 - nudge.py: 3000ms
-- context.py: 3000ms
+- local.py: 3000ms
 - learn.py: 10000ms
 
 ## Error Handling
@@ -188,6 +188,6 @@ Add new toolchains in `toolchain.py`:
 Add new agents in `nudge.py`:
 1. Add pattern and agent path to AGENTS list
 
-Add new triggers in `context.py`:
+Add new triggers in `local.py`:
 1. Add keyword to triggers list
 2. Optionally modify RULES content

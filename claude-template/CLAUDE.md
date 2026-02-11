@@ -52,7 +52,7 @@ repo names, secrets references, or org-specific content not in source:
 1. Extract those lines to ~/.claude/LOCAL.md (create if needed)
 2. Inform user what was extracted
 3. NEVER overwrite LOCAL.md — it's user-maintained
-4. context.py hook auto-injects LOCAL.md on every prompt
+4. local.py hook auto-injects LOCAL.md on every prompt
 
 ## Components
 
@@ -63,7 +63,7 @@ repo names, secrets references, or org-specific content not in source:
 **Skills** (16): build, cli, commit, data, go, ops, python, refine, rust,
 service, ship, sql, trader, tweet, typescript, wisdom
 
-**Hooks** (5): nudge (keyword->agent routing), context (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
+**Hooks** (5): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
 
 ## Working on This Repo
 
