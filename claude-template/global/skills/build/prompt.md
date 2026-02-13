@@ -21,13 +21,20 @@ If uncommitted changes, /commit first.
 ### Step 2: Load Plan
 
 Parse options: plan-name, -c (continue), -w N, -n.
-State file: .ship/build-state-{plan-name}.md
+
+**Directories** (create if missing, both gitignored):
+- `.build/plans/` - build plans
+- `.build/state/` - build state
+
+**Files**:
+- Plan: `.build/plans/{plan-name}.md`
+- State: `.build/state/build-state-{plan-name}.md`
 
 If -c and state exists: read state, reset RUNNING
 stages to PENDING, skip to Step 4.
 
-Otherwise: read .claude/plans/{plan-name}.md, extract
-feature context (name, framework, goal) and stages.
+Otherwise: read `.build/plans/{plan-name}.md`,
+extract feature context (name, framework, goal) and stages.
 Write initial state file.
 
 ### Step 3: Parse Stages
