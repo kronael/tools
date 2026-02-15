@@ -22,7 +22,8 @@ use tracing::{info, debug};
 
 ## Design Patterns
 
-- Never use accessor methods; access fields directly with interior mutability
+- Prefer direct field access over getters/setters for simple structs
+- Use interior mutability (Cell/RefCell/Mutex) when shared refs need mutation
 - FxDashMap fastest for concurrent access (but no locks best)
 
 ## State Management
@@ -58,3 +59,10 @@ ALWAYS scan Cargo.toml independently, NEVER assume workspace.members:
 - `cargo check` fastest for error checking (no codegen)
 - Debug builds ~3x faster than release (6s vs 20s)
 - Better error messages and stack traces in debug
+
+## Async
+
+- tokio runtime for async I/O, NEVER mix blocking in async context
+- Use `tokio::spawn` for concurrent tasks, `JoinSet` for managing groups
+- `spawn_blocking` for CPU-heavy work inside async context
+- ALWAYS use `select!` with cancellation tokens for graceful shutdown

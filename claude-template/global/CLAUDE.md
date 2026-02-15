@@ -53,7 +53,6 @@ operations, zero composition. Encapsulate I/O, expose information.
 ### TypeScript
 - ALWAYS use `function` keyword for top-level functions where possible
 - Arrow functions only for callbacks and inline lambdas
-- Adhere to gst lint rules
 - Match existing style when changing code
 
 ## Design Patterns
@@ -96,8 +95,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Testing
 - ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
 - `make test`: fast unit tests (<5s), `make smoke`: all (~80s)
-- Unit tests: `*_test.go`, `test_*.py` next to code
-- Integration tests: dedicated `tests/` directory
+- Unit tests next to code, integration tests in `tests/` directory
 - NEVER skip pre-commit checks
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
