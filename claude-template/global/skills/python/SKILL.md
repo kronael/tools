@@ -11,8 +11,7 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - `Type | None` not `Optional[Type]`
 
 ## Async
-- NEVER manually close async context managers (asyncpg pool.close() during
-  active queries corrupts connections; let context manager handle cleanup)
+- NEVER manually close async context managers (corrupts asyncpg)
 - Return batches, not yield individual items
 
 ## Stack
@@ -36,12 +35,8 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
 
-## Footguns
-- NEVER use mutable default arguments (`def f(items=[])` shares across calls)
-- NEVER use threading for I/O concurrency (GIL + asyncio is the stack)
-- NEVER modify `sys.path` from scripts
-
 ## Style
+- Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
 
 ## Build
