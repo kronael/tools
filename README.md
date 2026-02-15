@@ -90,6 +90,30 @@ Auto-activate based on file context. No setup needed per project.
 | **/ship** | Outer loop: specs, components, /build, critique |
 | **/tweet** | Share work on social media |
 
+### /ship — Spec-Driven Delivery
+
+Reads specs/, topological-sorts components by dependency, delegates each
+to /build, tracks progress in PROGRESS.md. After every phase a critique
+agent scores completeness — if gaps exceed 10%, it re-builds. Autonomous
+outer loop that turns a specs/ directory into a shipped project.
+
+```
+specs/ → dependency order → for each component:
+  plan → /build → PROGRESS.md → critique → fix gaps
+→ final audit → ship summary
+```
+
+### /refine — Polish Before PR
+
+Seven-step finalization pass. Checkpoints current state, validates
+build/test, delegates code improvement to @improve and documentation to
+@readme, verifies again, commits `[refined]`. Never does improvement
+work itself — pure orchestration.
+
+```
+checkpoint → validate → @improve → @readme → verify → commit [refined]
+```
+
 ## Agent Hierarchy
 
 ```
