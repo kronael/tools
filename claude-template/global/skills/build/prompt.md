@@ -22,18 +22,17 @@ If uncommitted changes, /commit first.
 
 Parse options: plan-name, -c (continue), -w N, -n.
 
-**Directories** (create if missing, both gitignored):
-- `.build/plans/` - build plans
-- `.build/state/` - build state
+**Directory** (create if missing, gitignored):
+- `.ship/` - plans and state
 
 **Files**:
-- Plan: `.build/plans/{plan-name}.md`
-- State: `.build/state/build-state-{plan-name}.md`
+- Plan: `.ship/plan-{plan-name}.md`
+- State: `.ship/state-{plan-name}.md`
 
 If -c and state exists: read state, reset RUNNING
 stages to PENDING, skip to Step 4.
 
-Otherwise: read `.build/plans/{plan-name}.md`,
+Otherwise: read `.ship/plan-{plan-name}.md`,
 extract feature context (name, framework, goal) and stages.
 Write initial state file.
 

@@ -54,7 +54,7 @@ For each component:
 
 1. Read component spec + test spec
 2. Check current state (build + test, existing code)
-3. Generate build plan (.build/plans/{component}.md)
+3. Generate build plan (.ship/plan-{component}.md)
    with stages extracted from spec sections
 4. Execute: /build {component}
 5. After build completes:
@@ -86,7 +86,7 @@ Be specific. Cite spec sections and code lines.
 """)
 ```
 
-Store critique in .build/critique/{component}.md.
+Store critique in .ship/critique-{component}.md.
 If critique finds gaps > 10%, generate fix plan and
 re-run /build for that component.
 

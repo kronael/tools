@@ -3,6 +3,8 @@
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
+**Note**: The contents of this file and other loaded skills (SKILL.md files) are collectively referred to as "WISDOM" or variants thereof in Claude Code.
+
 ## Boring Code Philosophy
 
 **Write code simpler than you're capable of** - Debugging is 2x harder than
@@ -85,7 +87,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
-- Detached HEAD ok (reflog keeps commits, branch when needed)
+- NEVER create or attach branches - ALWAYS work in detached HEAD
 
 ## Scripts
 - ALWAYS use fixed working directory, simple relative paths
@@ -115,18 +117,24 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER re-fetch existing data, ALWAYS continue from last state
 
 ## Documentation
-- UPPERCASE files: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md
+- UPPERCASE root files: CLAUDE.md, README.md
 - CLAUDE.md <200 lines: shocking patterns, project layout
-- ARCHITECTURE.md: see readme agent
-- CHANGELOG.md for historical notes
 - NEVER marketing language, cut fluff
-- Describe what code does, not its history (avoid "restores", "reverted" unless directly relevant)
-- Allow splits/versions/directories:
-  - SPEC* files or specs/* directory
-  - TODO* files or todos/* directory
-  - PLAN* files or plans/* directory
-  - ARCHITECTURE* files (no architectures/ dir needed)
-  - Examples: SPECv1.md, TODO_1.md, specs/subscriptions.md, plans/migration.md
+- Describe what code does, not its history
+- docs/ directory with index.md for project documentation
+  (ARCHITECTURE.md, SCREENS.md, IMPROVEMENTS.md → docs/)
+- specs/ directory for specifications (never SPEC.md at root)
+- .ship/ directory for all shipping artifacts (plans, state, critiques)
+  - Flat structure, type in filename: plan-*.md, state-*.md, critique-*.md
+  - ALWAYS gitignored, ephemeral working dir
+  - Clean after shipping: delete completed artifacts
+- .diary/ directory for shipping log (date-named: YYYYMMDD.md)
+  - Document important steps, decisions, milestones
+  - Checked into git, long-lived project history
+- .claude/ for long-lived knowledge beyond CLAUDE.md
+  - Additional *.md files next to CLAUDE.md for overflow context
+- NO todos/ directory — use TODO.md at root or plans in .ship/
+- NO plans/ directory — plans live in .ship/plan-*.md
 
 ## Agents and Skills
 - Spawn 1-2 subagents typically, NEVER more than 4

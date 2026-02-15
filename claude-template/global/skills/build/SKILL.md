@@ -1,6 +1,6 @@
 ---
 name: build
-description: Build multi-stage feature from plan. Planner-Worker-Judge, .build/ dirs, parallel subagents, XML results.
+description: Build multi-stage feature from plan. Planner-Worker-Judge, .ship/ dirs, parallel subagents, XML results.
 user-invocable: true
 ---
 
@@ -30,15 +30,15 @@ Judge Loop (poll completed workers)
 /build <plan-name> [-c] [-w N] [-n]
 ```
 
-- plan-name: file in .build/plans/ (no .md)
+- plan-name: file in .ship/ (no .md, no plan- prefix)
 - -c: continue from state file (RUNNING → PENDING)
 - -w N: max parallel workers (default: 4)
 - -n: skip refinement loop
 
 **Directory Structure:**
-- Plans: `.build/plans/{plan-name}.md` (project-local)
-- State: `.build/state/build-state-{plan-name}.md` (ephemeral)
-- Both gitignored, create dirs if missing (mkdir -p)
+- Plans: `.ship/plan-{plan-name}.md` (project-local)
+- State: `.ship/state-{plan-name}.md` (ephemeral)
+- Both gitignored, create .ship/ if missing (mkdir -p)
 
 ## Plan Structure
 
@@ -82,7 +82,7 @@ Workers are isolated. Failed stages don't block others.
 
 ## State File
 
-`.build/state/build-state-{plan-name}.md` — markdown (ephemeral state):
+`.ship/state-{plan-name}.md` — markdown (ephemeral state):
 
 ```markdown
 # Build: Feature Name

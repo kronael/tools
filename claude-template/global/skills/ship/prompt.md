@@ -52,7 +52,7 @@ Run tests, read existing code to understand what's done.
 
 **4.2 Generate Build Plan**
 Read the component spec + test spec. Create a build
-plan at .build/plans/{component}.md with stages
+plan at .ship/plan-{component}.md with stages
 extracted from spec sections that aren't yet implemented.
 
 **4.3 Execute Build**
@@ -81,7 +81,7 @@ Report: coverage %, gaps, issues, readiness.
 """)
 ```
 
-Store result in .build/critique/{component}.md.
+Store result in .ship/critique-{component}.md.
 
 **4.6 Fix Gaps (if needed)**
 If critique shows >10% gap:
