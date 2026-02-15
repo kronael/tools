@@ -18,7 +18,33 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
   - Good: `interface CalcResult { value: number; equity: number }` then typed function
 - Skip for trivial cases or test code where overhead isn't justified
 
+### Control Flow
+- ALWAYS use braces for if-statement bodies (NEVER single-line returns):
+  ```typescript
+  // WRONG
+  if (!value) return null
+
+  // CORRECT
+  if (!value) {
+    return null
+  }
+  ```
+
+### Array Operations
+- Be wary and generally discouraged from using spread operator `[...]`
+- Methods like `filter()`, `map()`, `slice()` already create new arrays
+- Only use spread when actually needed for immutability:
+  ```typescript
+  // WRONG - filter() already creates new array
+  const sorted = [...validators].filter(v => v.active).sort(compare)
+
+  // CORRECT
+  const sorted = validators.filter(v => v.active).sort(compare)
+  ```
+
 ## Design
+- NEVER use `arr.push(...otherArr)` — blows call stack at >65k items.
+  Use `flatMap`, `flat`, `concat`, or a loop instead
 - Never use methods just for grouping; use modules instead
 - Inline single-use one-liners; don't wrap `x?.map(fn)` in a function
 - Avoid IIFEs in object literals; define values beforehand if needed
@@ -28,19 +54,22 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 ## Validation
 - ALWAYS validate external I/O with class-validator when practical
 - Never trust external APIs, user input, or database results with `as Type`
-- Use class-validator + class-transformer for runtime validation:
+- Use `validateAndReturn()` from @marinade.finance/cli-common:
   ```typescript
-  import { IsString, ValidateNested, Type } from 'class-validator'
-  import { plainToInstance } from 'class-transformer'
+  import { validateAndReturn } from '@marinade.finance/cli-common'
+  import { IsString, Type, ValidateNested } from 'class-validator'
 
   class ApiResponse {
     @IsString()
     status: string
   }
+
+  const data = await response.json()
+  const validated = await validateAndReturn(data, ApiResponse)
   ```
 - For nested objects use `@Type(() => NestedClass)` and `@ValidateNested()`
 - Internal data (already validated) can skip validation
-- If project has a validate-and-return helper, prefer it over raw transforms
+- See TYPESCRIPT_COMMON_REFERENCE.md for available utilities
 
 ## Frontend Stack
 

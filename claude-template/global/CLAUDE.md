@@ -117,13 +117,15 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER re-fetch existing data, ALWAYS continue from last state
 
 ## Documentation
-- UPPERCASE root files: CLAUDE.md, README.md
+- UPPERCASE root files: CLAUDE.md, README.md, ARCHITECTURE.md,
+  SPEC.md, PLAN.md, TODO.md
+- Simple case: single file at root (SPEC.md, TODO.md, PLAN.md)
+- Complex case: directory with lowercase files (specs/, docs/)
 - CLAUDE.md <200 lines: shocking patterns, project layout
 - NEVER marketing language, cut fluff
 - Describe what code does, not its history
-- docs/ directory with index.md for project documentation
-  (ARCHITECTURE.md, SCREENS.md, IMPROVEMENTS.md → docs/)
-- specs/ directory for specifications (never SPEC.md at root)
+- docs/ directory for project documentation (architecture, improvements)
+- specs/ directory for specifications, named by content
 - .ship/ directory for all shipping artifacts (plans, state, critiques)
   - Flat structure, type in filename: plan-*.md, state-*.md, critique-*.md
   - ALWAYS gitignored, ephemeral working dir

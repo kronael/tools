@@ -23,7 +23,7 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "",
+        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Check git diff --stat. If changes form a cohesive chunk, return {\"ok\": false, \"reason\": \"Use /commit.\"}. Otherwise return {\"ok\": true}"
+            "prompt": "Check git diff --stat. If changes form a cohesive chunk, respond with JSON: {\"ok\": false, \"reason\": \"Use /commit.\"}. If no changes or incomplete work, respond with JSON: {\"ok\": true}"
           }
         ]
       }

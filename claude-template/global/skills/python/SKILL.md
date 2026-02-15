@@ -39,8 +39,18 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
 
+## Build
+- uv for package management, pyright for type checking
+- pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
+- `make right`: pyright only (run manually, not in pre-commit)
+- `make test`: pytest
+
 ## Testing
 - Test files: `test_*.py` next to code
 - Testcontainers: centralize in `conftest.py`
 - ALWAYS use `python -m pytest` not `pytest` directly (ensures proper package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
+
+## Subprocesses
+- `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leaking to children)
+- Kill process groups: `os.killpg(os.getpgid(proc.pid), signal.SIGKILL)`

@@ -151,6 +151,14 @@ RIGHT: ewma_new = alpha * value + (1 - alpha) * ewma_old
 **Async cleanup**: NEVER manually .close() async context managers.
 Trust context managers. Protocol errors = connection state corruption.
 
+## Ansible
+
+- Roles for common services (docker, nginx, grafana, rsyslog)
+- Host-specific variables in host_vars/
+- Secrets in ansible-vault encrypted files
+- Idempotent tasks (safe to re-run)
+- Tags for selective deployment
+
 ## Deployment
 
 - Git-ops: config in git, changes via PRs, automated sync
