@@ -1,7 +1,7 @@
 ---
 name: refine
 description: Refine, finalize, finish, complete, wrap up, review code, ship it.
-tools: Read, Write, Edit, Glob, Grep, Bash, BashOutput, KillShell, TodoWrite, Task, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, Bash, Task(improve, readme), WebSearch, WebFetch
 ---
 
 # Refine Agent

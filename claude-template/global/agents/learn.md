@@ -2,6 +2,7 @@
 name: learn
 description: Learn, extract patterns, analyze history, create or update skills.
 tools: Read, Write, Edit, Glob, Grep, Bash
+memory: user
 ---
 
 # Learn Agent

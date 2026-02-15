@@ -1,7 +1,7 @@
 ---
 name: improve
 description: Improve, enhance, fix, cleanup, refactor, optimize, polish code quality.
-tools: Read, Write, Edit, Glob, Grep, Bash, BashOutput, KillShell, TodoWrite, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 ---
 
 # Improve Agent

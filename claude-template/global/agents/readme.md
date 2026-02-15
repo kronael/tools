@@ -1,7 +1,7 @@
 ---
 name: readme
 description: Update readme, docs, documentation, architecture files.
-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 ---
 
 # Document Agent

@@ -1,7 +1,8 @@
 ---
 name: distill
 description: Extract essence through recursive summarization using 5/3 approach
-tools: Read, Glob, Grep, Write, Edit, TodoWrite
+tools: Read, Glob, Grep, Write, Edit
+model: haiku
 ---
 
 # Distill Agent

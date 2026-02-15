@@ -1,7 +1,7 @@
 ---
 name: visual
 description: Visual, UI, styling, CSS, layout, design, render improvements.
-tools: Read, Write, Edit, Glob, Grep, Bash, BashOutput, KillShell, TodoWrite, Task, WebSearch, WebFetch
+tools: Read, Write, Edit, Glob, Grep, Bash, Task, WebSearch, WebFetch
 ---
 
 # Visual Agent
