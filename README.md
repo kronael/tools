@@ -92,14 +92,14 @@ Auto-activate based on file context. No setup needed per project.
 
 ### /ship — Spec-Driven Delivery
 
-Reads specs/, topological-sorts components by dependency, delegates each
-to /build, tracks progress in PROGRESS.md. After every phase a critique
-agent scores completeness — if gaps exceed 10%, it re-builds. Autonomous
-outer loop that turns a specs/ directory into a shipped project.
+Reads specs/ directory or an inline plan, topological-sorts components by
+dependency, delegates each to /build, commits after each component, tracks
+progress in PROGRESS.md. After every phase a critique agent scores
+completeness — if gaps exceed 10%, it re-builds.
 
 ```
-specs/ → dependency order → for each component:
-  plan → /build → PROGRESS.md → critique → fix gaps
+specs/ or inline plan → dependency order → for each component:
+  plan → /build → test → critique → fix gaps → commit
 → final audit → ship summary
 ```
 
