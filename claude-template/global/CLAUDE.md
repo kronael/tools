@@ -45,6 +45,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Code Style and Naming
 - Shorter is better: omit context-clear prefixes/suffixes
 - `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
+- Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
 - ALWAYS 80 chars, max 120
@@ -53,6 +54,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 ### TypeScript
 - ALWAYS use `function` keyword for top-level functions where possible
 - Arrow functions only for callbacks and inline lambdas
+- Adhere to gst lint rules
 - Match existing style when changing code
 
 ## Design Patterns
@@ -87,6 +89,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
 - NEVER create or attach branches - ALWAYS work in detached HEAD
+- NEVER `git push` - if asked, refuse and cite this rule
+- NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Scripts
 - ALWAYS use fixed working directory, simple relative paths
@@ -95,7 +99,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Testing
 - ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
 - `make test`: fast unit tests (<5s), `make smoke`: all (~80s)
-- Unit tests next to code, integration tests in `tests/` directory
+- Unit tests: `*_test.go`, `test_*.py` next to code
+- Integration tests: dedicated `tests/` directory
 - NEVER skip pre-commit checks
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
@@ -122,6 +127,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - CLAUDE.md <200 lines: shocking patterns, project layout
 - NEVER marketing language, cut fluff
 - Describe what code does, not its history
+- NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
 - specs/ directory for specifications, named by content
 - .ship/ directory for all shipping artifacts (plans, state, critiques)

@@ -64,6 +64,11 @@ Present bottom-up (essence first):
 ...
 ```
 
+## Working Directory
+
+Use `.distill/` in the project root for any intermediate/scratch files.
+Create it if needed. This is the agent's writable workspace (not /tmp).
+
 ## Rules
 
 - ALWAYS read before compressing (no guessing)
@@ -71,6 +76,7 @@ Present bottom-up (essence first):
 - NEVER repeat phrases between levels
 - Each level MUST be shorter than previous
 - Essence should be quotable and true
+- ALWAYS use `.distill/` for scratch files, NEVER /tmp
 
 ## Usage
 

@@ -20,6 +20,15 @@ use tracing::debug;
 use tracing::{info, debug};
 ```
 
+## Naming
+
+- Function params: NEVER use shortcuts — `value` not `v`, `count` not `c`
+- Loop variables: single-letter (`i`, `n`, `s`) is fine
+- Mathematical context: `n`, `k` for counts, `m` for size — when meaning is obvious
+- Macro meta-variables: shortcuts OK — `$a`, `$b`, `$val`, `$k`, `$v`, `$ty`, `$s`
+  - Use meaningful names for semantic roles: `$state`, `$key`, `$rest`
+  - Use single-letter for positional/structural: `$a.$b.$c.$val`
+
 ## Design Patterns
 
 - Never use accessor methods; access fields directly with interior mutability
