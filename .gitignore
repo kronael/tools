@@ -2,12 +2,31 @@
 *~
 *.swp
 *.swo
-.vscode/
-.idea/
+.vscode
+.idea
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Dotfiles (sandbox stubs)
+.bash_profile
+.bashrc
+.zshrc
+.zprofile
+.profile
+.gitconfig
+.gitmodules
+.mcp.json
+.ripgreprc
+.claude/
+
+# Git stubs
+HEAD
+config
+hooks
+objects
+refs
 
 # Project
 tmp/
