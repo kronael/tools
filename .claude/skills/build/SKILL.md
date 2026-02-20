@@ -1,16 +1,17 @@
 ---
 name: build
-description: Build multi-stage feature from plan. Planner-Worker-Judge, .ship/ dirs, parallel subagents, XML results.
+description: Build multi-stage feature from plan
 user-invocable: true
 ---
 
 # Build Skill (Inner Loop)
 
-Executes a plan file via Planner-Worker-Judge pattern.
-Delegates all implementation to subagent workers. Judge
-monitors, retries failures, runs refinement, commits result.
+Executes a plan file via Planner-Worker-Judge pattern
+(demiurg architecture). Delegates all implementation to
+subagent workers. Judge monitors, retries failures,
+runs refinement, commits result.
 
-## Architecture
+## Architecture (from demiurg)
 
 ```
 Load Plan → Parse Stages → Init State
@@ -30,15 +31,10 @@ Judge Loop (poll completed workers)
 /build <plan-name> [-c] [-w N] [-n]
 ```
 
-- plan-name: file in .ship/ (no .md, no plan- prefix)
+- plan-name: file in .claude/plans/ (no .md)
 - -c: continue from state file (RUNNING → PENDING)
 - -w N: max parallel workers (default: 4)
 - -n: skip refinement loop
-
-**Directory Structure:**
-- Plans: `.ship/plan-{plan-name}.md` (project-local)
-- State: `.ship/state-{plan-name}.md` (ephemeral)
-- Both gitignored, create .ship/ if missing (mkdir -p)
 
 ## Plan Structure
 
@@ -82,7 +78,7 @@ Workers are isolated. Failed stages don't block others.
 
 ## State File
 
-`.ship/state-{plan-name}.md` — markdown (ephemeral state):
+`./tmp/build-state-{plan-name}.md` — markdown:
 
 ```markdown
 # Build: Feature Name
@@ -101,7 +97,7 @@ Retries: 0
 Stage states: pending → running → completed|failed.
 On -c: running stages reset to pending.
 
-## Retry Logic
+## Retry Logic (demiurg pattern)
 
 - Failed stages retried up to 3 times
 - On retry: reset to PENDING, increment retries
@@ -115,7 +111,7 @@ After all stages done, Judge runs ONE refine round:
 1. Spawn improve agent with all changed files
 2. Wisdom checklist: 80 char, single imports, no
    dead code, no over-engineering, lowercase logging
-3. Judge verifies: build + test pass
+3. Judge verifies: cargo check + cargo test
 4. Max 1 refinement round
 
 If refine produces no changes AND failures exist,

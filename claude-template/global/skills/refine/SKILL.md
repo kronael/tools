@@ -8,11 +8,24 @@ user-invocable: true
 
 Orchestrates code refinement. Runs in main context for full conversation visibility.
 
+## Theme: Simplify First
+
+**Primary objective**: make the code simpler while preserving all functionality.
+
+- Remove dead code, redundant checks, unnecessary abstractions
+- Collapse multi-line logic that reads as clearly on one line
+- Prefer plain functions over classes when no state is held
+- Delete helpers used only once — inline them
+- Cut comments that restate code; keep only non-obvious intent
+- Fewer moving parts → fewer bugs; smaller surface → easier to test
+
 ## Workflow
 
 1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "[checkpoint]")`
 2. **Validate** - run build/test, fix failures
 3. **Improve** - spawn improve agent via `Task(prompt, agent="improve")`
+   - Lead with: "Simplify this code: remove redundancy, collapse verbosity,
+     delete dead paths. Keep all tests passing."
 4. **Document** - spawn readme agent via `Task(prompt, agent="readme")`
 5. **Verify** - final build/test
 6. **Commit** - if changes, invoke `Skill(commit, "[refined]")`

@@ -1,5 +1,5 @@
 You are executing the BUILD skill -- the inner loop of
-the Planner-Worker-Judge architecture.
+the demiurg Planner-Worker-Judge architecture.
 
 ## Your Role: The Judge
 
@@ -21,19 +21,13 @@ If uncommitted changes, /commit first.
 ### Step 2: Load Plan
 
 Parse options: plan-name, -c (continue), -w N, -n.
-
-**Directory** (create if missing, gitignored):
-- `.ship/` - plans and state
-
-**Files**:
-- Plan: `.ship/plan-{plan-name}.md`
-- State: `.ship/state-{plan-name}.md`
+State file: ./tmp/build-state-{plan-name}.md
 
 If -c and state exists: read state, reset RUNNING
 stages to PENDING, skip to Step 4.
 
-Otherwise: read `.ship/plan-{plan-name}.md`,
-extract feature context (name, framework, goal) and stages.
+Otherwise: read .claude/plans/{plan-name}.md, extract
+feature context (name, framework, goal) and stages.
 Write initial state file.
 
 ### Step 3: Parse Stages
@@ -83,7 +77,7 @@ Stage 3/5: Feature B [pending] (blocked by 2)
 Spawn improve agent with ALL changed files:
 ```
 Read each file. Fix: 80 char lines, single imports,
-dead code, over-engineering. Run build + test.
+dead code, over-engineering. Run cargo check + test.
 ```
 
 Judge verifies result. Max 1 refinement round.
@@ -93,7 +87,10 @@ generate fix stages from error messages, execute them.
 
 ### Step 6: Final Validation
 
-Run build and test for affected code.
+```bash
+cargo check --workspace
+cargo test -p <affected-crates>
+```
 
 ### Step 7: Commit
 

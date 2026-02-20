@@ -1,0 +1,11 @@
+# AI Assistant Principles for writing and testing Python code
+
+> **Note:** These guidelines apply only when writing and modifying Python code, not other types of files.
+
+## tests
+
+- use pytest and unittest MagicMock configured in fixtures as opposed to mock
+  classes where possible
+
+- put the tests into directory named "tests" which is a subdirectory of the module
+  directory the test covers
