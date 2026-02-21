@@ -9,14 +9,12 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 - Arrow functions: `const f = (args): result => { ... }`
 - Avoid `function` keyword where arrow functions suffice
 - Match existing code style when changing code
-- Prefer named interfaces/types over inline object types
+- ALWAYS name types — NEVER use inline/anonymous object types (tests exempt)
   - Bad: `cache.get<{ status: number; message: string }>()`
   - Good: `interface CachedError { status: number; message: string }` then `cache.get<CachedError>()`
-- Minimize type proliferation: reuse existing types, consolidate similar shapes
-- Prefer named functions over anonymous for complex return types
   - Bad: `const calc = (): { value: number; equity: number } => ...`
-  - Good: `interface CalcResult { value: number; equity: number }` then typed function
-- Skip for trivial cases or test code where overhead isn't justified
+  - Good: `interface CalcResult { ... }` then typed function
+- Minimize type proliferation: reuse existing types, consolidate similar shapes
 
 ### Control Flow
 - ALWAYS use braces for if-statement bodies (NEVER single-line returns):

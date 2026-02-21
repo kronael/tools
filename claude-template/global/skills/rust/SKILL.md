@@ -39,6 +39,7 @@ use tracing::{info, debug};
 - Use explicit enum states, not implicit flags
 - Document state transitions with edge cases
 - Document lock acquisition order to prevent deadlocks
+- DB status/type columns as smallint, `#[repr(i16)]` enum in code
 
 ## Testing
 

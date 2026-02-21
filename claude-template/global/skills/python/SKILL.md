@@ -9,6 +9,7 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - `dict[str, float]` not `Dict[str, float]`
 - `list[str]` not `List[str]`
 - `Type | None` not `Optional[Type]`
+- Be concrete: `list[dict]` or `-> list:` is not acceptable when `list[Row]` or `list[Fill]` is trivial
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)
@@ -35,9 +36,14 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
 
+## Logging
+- `log = logging.getLogger(__name__)` at module level, or `WithLogger` mixin for classes
+- ALWAYS name the variable `log`
+
 ## Style
 - Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
+- NEVER use `contextlib.suppress` — use `try/except/pass` (simpler, clearer)
 
 ## Build
 - uv for package management, pyright for type checking
