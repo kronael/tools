@@ -46,6 +46,7 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 ## Style
 - Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
+- Boolean methods/functions: `is_` or `has_` prefix (`is_ready()`, `has_positions()`)
 - NEVER use `contextlib.suppress` — use `try/except/pass` (simpler, clearer)
 
 ## Build
