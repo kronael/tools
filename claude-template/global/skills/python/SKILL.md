@@ -12,6 +12,9 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - Be concrete: `list[dict]` or `-> list:` is not acceptable when `list[Row]` or `list[Fill]` is trivial
 
 ## Async
+- ALL code is single-threaded asyncio — NEVER use threads
+- Exception: wrapping blocking external libraries with no async alternative
+- If threads exist, project CLAUDE.md must document where and why
 - NEVER manually close async context managers (corrupts asyncpg)
 - Return batches, not yield individual items
 
