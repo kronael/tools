@@ -9,12 +9,8 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - `dict[str, float]` not `Dict[str, float]`
 - `list[str]` not `List[str]`
 - `Type | None` not `Optional[Type]`
-- Be concrete: `list[dict]` or `-> list:` is not acceptable when `list[Row]` or `list[Fill]` is trivial
 
 ## Async
-- ALL code is single-threaded asyncio — NEVER use threads
-- Exception: wrapping blocking external libraries with no async alternative
-- If threads exist, project CLAUDE.md must document where and why
 - NEVER manually close async context managers (corrupts asyncpg)
 - Return batches, not yield individual items
 
@@ -40,14 +36,16 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
 
 ## Logging
-- `log = logging.getLogger(__name__)` at module level, or `WithLogger` mixin for classes
-- ALWAYS name the variable `log`
+- `log = logging.getLogger(__name__)` at module or class level
+- ALWAYS name the variable `log` (modules, classes, everywhere)
 
 ## Style
 - Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
-- Boolean methods/functions: `is_` or `has_` prefix (`is_ready()`, `has_positions()`)
-- NEVER use `contextlib.suppress` — use `try/except/pass` (simpler, clearer)
+- NEVER use `global` keyword except in trivial scripts or when
+  truly unavoidable (signal handlers). Pass state explicitly
+- NEVER multi-assign tuples: `a, b, c = x, y, z`. Assign each
+  variable on its own line
 
 ## Build
 - uv for package management, pyright for type checking

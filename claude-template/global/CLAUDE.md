@@ -127,6 +127,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - CLAUDE.md <200 lines: shocking patterns, project layout
 - NEVER marketing language, cut fluff
 - Describe what code does, not its history
+- NEVER add comments unless the behavior is shocking and not apparent from code or logging
 - NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
 - specs/ directory for specifications, named by content
