@@ -62,8 +62,9 @@
         "matcher": "",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Check git diff --stat. If changes form a cohesive chunk, respond with JSON: {\"ok\": false, \"reason\": \"Use /commit.\"}. If no changes or incomplete work, respond with JSON: {\"ok\": true}"
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/stop.py",
+            "timeout": 10
           }
         ]
       }

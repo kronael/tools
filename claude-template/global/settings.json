@@ -45,8 +45,9 @@
         "matcher": "",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Run git status --short and git diff --stat. Respond with ONLY a JSON object. If there are pending uncommitted changes: {\"ok\":false,\"reason\":\"There are pending changes. Mention them and suggest /commit.\"}. If working tree is clean: {\"ok\":true}."
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/stop.py",
+            "timeout": 10
           }
         ]
       }
