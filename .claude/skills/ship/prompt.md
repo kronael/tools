@@ -1,63 +1,55 @@
 You are executing the SHIP skill -- the outer orchestration
 loop that builds a project from specifications to completion.
 
-## STOP — Read Before Doing Anything
-
-You are an ORCHESTRATOR. You coordinate, you do NOT implement.
-If you find yourself writing code (Edit, Write to source files),
-you are violating the protocol. STOP and delegate to /build.
-
-The protocol is non-negotiable:
-  plan → /build → test → critique → fix → commit
-Skipping ANY step (especially critique) is a failure.
-
 ## Your Role: Orchestrator
 
 You coordinate the full build cycle:
-Specs → Plan → Build → Test → Critique → Iterate
+Specs -> Plan -> Build -> Test -> Critique -> Iterate
 
 You NEVER implement code yourself. You:
-1. Read specs/plans to understand what needs building
+1. Read specs to understand what needs building
 2. Generate build plans for each component
 3. Delegate building to /build (inner loop)
-4. Run tests after each build
-5. Update PROGRESS.md with results
-6. Launch critique agents to assess readiness
-7. Iterate on gaps until components ship
-8. Commit after each component
+4. Update PROGRESS.md with results
+5. Launch critique agents to assess readiness
+6. Iterate on gaps until components ship
 
 ## Instructions
 
-### Step 0: Determine Input Mode
-
-Check if specs exist in a directory OR if a plan was
-provided inline (user message, plan mode, context):
-
-```
-If specs dir exists:  → Step 1 (normal mode)
-If inline plan:       → Write to .ship/plan-*.md first,
-                        then proceed with Step 1
-```
-
-ALWAYS materialize the plan as files before building.
-
 ### Step 1: Load State
 
-Check .ship/PROGRESS.md for current state.
+Check PROGRESS.md for current state:
+```bash
+cat PROGRESS.md 2>/dev/null || echo "Fresh start"
+```
+
 If continuing (-c flag), resume from last incomplete
 component. Otherwise, start from first in topo order.
 
 ### Step 2: Scan Specs
 
-Read the specs directory (default: specs/) or .ship/:
-Map specs/plans to components using naming convention.
-Unknown specs logged and skipped.
+Read the specs directory (default: specs/v1/):
+```bash
+ls specs/v1/*.md
+```
+
+Map specs to components using convention:
+- ORDERBOOK.md -> rsx-book
+- RISK.md -> rsx-risk
+- (etc, see SKILL.md mapping)
 
 ### Step 3: Determine Build Order
 
-Topological sort based on dependencies. Extract from
-project structure (imports, manifest files). Skip
-components already at 100% in PROGRESS.md.
+Topological sort based on crate dependencies:
+1. rsx-types (foundation)
+2. rsx-book, rsx-dxs (depend on types)
+3. rsx-matching (depends on book)
+4. rsx-risk (depends on types, dxs)
+5. rsx-gateway (depends on types, dxs)
+6. rsx-marketdata (depends on book)
+7. rsx-mark (depends on types)
+
+Skip components already at 100% in PROGRESS.md.
 If -p flag given, build only that component.
 
 ### Step 4: Phase Loop
@@ -65,11 +57,14 @@ If -p flag given, build only that component.
 For each component in build order:
 
 **4.1 Assess Current State**
-Run tests, read existing code to understand what's done.
+```bash
+cargo test -p {crate} 2>&1 | tail -5
+```
+Read existing code to understand what's done.
 
 **4.2 Generate Build Plan**
 Read the component spec + test spec. Create a build
-plan at .ship/plan-{component}.md with stages
+plan at .claude/plans/{component}.md with stages
 extracted from spec sections that aren't yet implemented.
 
 **4.3 Execute Build**
@@ -80,43 +75,46 @@ Invoke /build with the plan:
 
 Wait for completion.
 
-**4.4 Run Tests**
-Run tests for the component. Record pass/fail counts.
-
-**4.5 Update PROGRESS.md**
+**4.4 Update PROGRESS.md**
 After build completes:
-- Record test results
+- Run cargo test -p {crate}, count tests
 - Estimate spec coverage (requirements met / total)
 - Update the component row in PROGRESS.md
 - Note what was built in "Last Phase" section
 
-**4.6 Critique (MANDATORY — never skip)**
+**4.5 Critique**
 Spawn an Explore agent to critique the component:
 
 ```
 Task(subagent_type="Explore", prompt="""
 Critique {component} against spec.
-Read: specs/{SPEC}.md, {source}, {tests}
+Read: specs/v1/{SPEC}.md, {crate}/src/*.rs,
+      {crate}/tests/*.rs
 Report: coverage %, gaps, issues, readiness.
 """)
 ```
 
-Store result in .ship/critique-{component}.md.
+Store result in ./tmp/critique-{component}.md.
 
-**4.7 Fix Gaps (if needed)**
+**4.6 Fix Gaps (if needed)**
 If critique shows >10% gap:
 - Generate fix plan from critique
 - Run /build with fix plan
 - Max 2 fix rounds per component
 
-**4.8 Commit**
+**4.7 Commit**
 ```
 /commit
 ```
 
 ### Step 5: Final Audit
 
-After all components built, run full build + test.
+After all components built, run full workspace check:
+```bash
+cargo check --workspace
+cargo test --workspace
+```
+
 Spawn final critique agent across all components.
 
 ### Step 6: Ship Summary
@@ -125,7 +123,7 @@ Spawn final critique agent across all components.
 Ship Complete
 
 Components: N built, M at 100%
-Tests: N total
+Tests: N total across all crates
 Coverage: N% average spec compliance
 
 Remaining gaps:
@@ -145,5 +143,3 @@ Next steps:
 6. Skip 100% components
 7. Topological build order
 8. Brief status updates, no verbosity
-9. Inline plans get written to .ship/ first
-10. If tempted to skip critique: DON'T
