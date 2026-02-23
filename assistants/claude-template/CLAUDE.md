@@ -54,6 +54,7 @@ When user says "install":
 
 NEVER delete files not in source
 NEVER modify files user chose to skip
+NEVER sync skipDangerousModePermissionPrompt from ~/.claude/ back to template
 ALWAYS backup before overwriting
 
 ### LOCAL.md Handling
