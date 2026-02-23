@@ -83,7 +83,7 @@ AGENT_KEYWORDS = {
     "refine": "/refine", "tweet": "/tweet",
     "readme": "@readme", "learn": "@learn",
     "improve": "@improve", "visual": "@visual",
-    "distill": "@distill", "research": "@research",
+    "distill": "@distill",
 }
 ```
 

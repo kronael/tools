@@ -13,7 +13,7 @@ Auto-activating skills + specialized agents for Claude Code.
 ```
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
-├── agents/        # 8 specialized agents
+├── agents/        # 7 specialized agents
 ├── commands/      # 5 slash commands
 └── skills/        # 16 auto-activating skills
 ```
@@ -26,15 +26,13 @@ Auto-activate based on file context:
 - **Infrastructure**: testing
 - **Workflow**: commit, refine, tweet, wisdom
 
-## Agents (8)
+## Agents (6)
 
-- **@deep-research**: Multi-round web research with source synthesis
 - **@distill**: Extract key points from long content
 - **@improve**: DO-CRITICIZE-EVALUATE-IMPROVE loop
 - **@learn**: Extract patterns from history into skills
 - **@readme**: Sync README/ARCHITECTURE with code
 - **@refine**: Checkpoint → @improve → @readme → commit
-- **@research**: Research and knowledge synthesis
 - **@visual**: Render-inspect-adjust for SVG/UI
 
 ## Commands (5)

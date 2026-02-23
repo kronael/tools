@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-Claude Code configuration: 8 agents, 16 auto-activating skills, 5 commands.
+Claude Code configuration: 6 agents, 16 auto-activating skills, 5 commands.
 
 ## Structure
 
 ```
 global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
-├── agents/            # 8 specialized task agents
+├── agents/            # 6 specialized task agents
 ├── commands/          # 5 slash commands (/improve, /learn, /readme, /refine, /visual)
 ├── skills/            # 16 auto-activating skills
 └── settings.json      # Shared Claude Code settings
@@ -69,7 +69,7 @@ repo names, secrets references, or org-specific content not in source:
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
+**Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
 **Skills** (16): bash, cli, commit, data, go, ops, python, refine,
 rust, service, sql, testing, trader, tweet, typescript, wisdom

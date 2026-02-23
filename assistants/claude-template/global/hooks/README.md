@@ -52,7 +52,6 @@ Expands keywords in prompts to agent invocations.
 | improve | @improve |
 | visual | @visual |
 | distill | @distill |
-| research | @research |
 
 Uses fuzzy matching (edit distance) for typo tolerance.
 

@@ -50,8 +50,8 @@ Claude Code configuration in `assistants/`.
 commit, data, go, ops, python, refine, rust, service, sql,
 testing, trader, tweet, typescript, wisdom)
 
-**Agents** (8): @distill, @improve, @learn, @readme, @refine,
-@research, @deep-research, @visual
+**Agents** (6): @distill, @improve, @learn, @readme,
+@refine, @visual
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code configuration: 8 agents, 5 commands, 16 auto-activating skills.
+Claude Code configuration: 6 agents, 5 commands, 16 auto-activating skills.
 Install by opening Claude Code here and saying "install".
 
 ## Components
@@ -11,9 +11,9 @@ Install by opening Claude Code here and saying "install".
 
 **CLAUDE.md**: Universal development principles
 
-**agents/** (8): Specialized task agents
+**agents/** (6): Specialized task agents
 - Quality: @improve, @visual, @learn
-- Research: @deep-research, @research, @distill
+- Research: @distill (built-in @deep-research also available)
 - Utilities: @readme, @refine
 
 **commands/** (5): Slash commands
@@ -56,7 +56,7 @@ See [WORKFLOW.md](WORKFLOW.md) for complete hierarchy and usage guide.
 /refine
   └─> @improve, @readme
 
-@deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual (leaf agents)
+@distill, @improve, @learn, @readme, @refine, @visual (leaf agents)
 ```
 
 ## Design Principles

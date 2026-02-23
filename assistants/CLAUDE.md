@@ -21,7 +21,7 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
+**Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
 **Skills** (16): bash, cli, commit, data, go, ops, python, refine, rust, service, sql, testing, trader, tweet, typescript, wisdom
 

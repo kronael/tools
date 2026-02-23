@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 16 skills, 8 agents, 5 commands, 7 hooks.
+Claude Code configuration: 16 skills, 6 agents, 5 commands, 7 hooks.
 
 ## Why Skills?
 
@@ -68,17 +68,15 @@ Auto-activate based on file context. No setup needed per project.
 | **tweet** | /tweet | Dense threads, no fluff, personal framing |
 | **wisdom** | SKILL.md, CLAUDE.md | ALWAYS/NEVER statements, YAML frontmatter |
 
-## Agents (8)
+## Agents (6)
 
 | Agent | Purpose |
 |-------|---------|
-| **@deep-research** | Multi-round web research with source synthesis |
 | **@distill** | Extract key points from long content |
 | **@improve** | DO-CRITICIZE-EVALUATE-IMPROVE loop |
 | **@learn** | Extract patterns from history into skills |
 | **@readme** | Sync README/ARCHITECTURE with code |
 | **@refine** | Checkpoint, @improve, @readme, commit |
-| **@research** | Research and knowledge synthesis |
 | **@visual** | Render-inspect-adjust for SVG/UI |
 
 ## Commands (5)
@@ -107,7 +105,7 @@ checkpoint → validate → @improve → @readme → verify → commit [refined]
 ```
 /refine (finalization: @improve + @readme)
 
-@deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual (leaf agents)
+@distill, @improve, @learn, @readme, @refine, @visual (leaf agents)
 ```
 
 Nudge hook routes prompts to agents via fuzzy keyword matching.
