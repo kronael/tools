@@ -60,6 +60,27 @@
 | Extract learnings | @learn | "learn from this session" |
 | Fix UI/styling | @visual | "visual" |
 
+## Commit Workflow
+
+```
+stop.py (Stop hook)
+  │
+  ├── git status --porcelain
+  ├── No changes → exit silently
+  └── Changes exist → block: "consider /commit"
+        │
+        /commit (commit skill)
+          │
+          ├── git status + git diff + git log
+          ├── Validate cohesion:
+          │     ├── Single feature, fix, or refactor?
+          │     ├── Related files (not scattered)?
+          │     └── Complete work (not half-done)?
+          ├── NOT cohesive → report and stop
+          ├── Cohesive → stage + commit [section] Message
+          └── NEVER push, NEVER amend
+```
+
 ## Hierarchy
 
 - /ship delegates to /build (per component)

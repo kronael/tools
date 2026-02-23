@@ -79,9 +79,16 @@ Generates session reports on PreCompact and SessionEnd events.
 Reports saved to `~/.claude/flow-reports/` with timestamp and event type.
 Run @learn to analyze and extract patterns into skills.
 
-### Commit Nudge (Stop hook)
+### Commit Nudge (stop.py)
 
-Haiku prompt at natural breakpoints suggests committing if changes are cohesive.
+Runs on Stop event. Checks `git status --porcelain` — if uncommitted
+changes exist, blocks with "consider /commit". No LLM call, pure script.
+
+**Flow:** stop.py blocks → user/LLM sees nudge → /commit skill validates
+→ only commits if changes form cohesive chunk (single feature/fix,
+related files, complete work). See commit skill for validation rules.
+
+NEVER pushes. Commit is local-only.
 
 ## File Structure
 
@@ -93,6 +100,7 @@ Haiku prompt at natural breakpoints suggests committing if changes are cohesive.
   nudge.py          # UserPromptSubmit: keyword expansion
   local.py          # UserPromptSubmit: LOCAL.md injection
   learn.py          # PreCompact/SessionEnd: flow reports
+  stop.py           # Stop: commit nudge if uncommitted changes
 ```
 
 ## Hook Configuration
