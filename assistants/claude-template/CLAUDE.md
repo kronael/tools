@@ -26,20 +26,31 @@ global/                 # Installs to ~/.claude/
 
 When user says "install":
 
-1. **Inventory** - List files in global/ and their destinations in ~/.claude/
-2. **Compare** - For each destination:
-   - New: will install
-   - Identical: skip
-   - Modified: show diff summary, ask user (Overwrite/Skip/Diff)
-3. **Backup** - Before overwriting, copy to ~/.claude/backup/
-4. **Install** - Copy approved files
-5. **Report** - Summary: X new, Y updated, Z unchanged
+1. **Inventory** — list files in global/ and destinations in ~/.claude/
+2. **Categorize** each file by sync strategy (see below)
+3. **Compare** — for each destination, show diff if modified
+4. **Ask** — present summary, let user approve per-category
+5. **Backup** — before overwriting, copy to ~/.claude/backup/
+6. **Install** — copy approved files
+7. **Report** — summary: X new, Y updated, Z unchanged
 
-Source → Destination:
-- global/CLAUDE.md → ~/.claude/CLAUDE.md
+### Sync Strategies
+
+**Replace** (always overwrite with fresh version):
 - global/agents/*.md → ~/.claude/agents/
 - global/commands/*.md → ~/.claude/commands/
 - global/skills/*/ → ~/.claude/skills/
+- global/hooks/*.py → ~/.claude/hooks/
+- global/hooks/lib/ → ~/.claude/hooks/lib/
+
+**Merge** (show diff, ask what to keep):
+- global/CLAUDE.md → ~/.claude/CLAUDE.md
+- global/settings.json → ~/.claude/settings.json
+
+**Never touch** (user-maintained):
+- ~/.claude/settings.local.json
+- ~/.claude/LOCAL.md
+- ~/.claude/CLAUDE.local.md (project-level)
 
 NEVER delete files not in source
 NEVER modify files user chose to skip
@@ -52,7 +63,7 @@ repo names, secrets references, or org-specific content not in source:
 1. Extract those lines to ~/.claude/LOCAL.md (create if needed)
 2. Inform user what was extracted
 3. NEVER overwrite LOCAL.md — it's user-maintained
-4. local.py hook auto-injects LOCAL.md on every prompt
+4. local.py hook auto-injects LOCAL.md on first prompt + pre-compaction
 
 ## Components
 

@@ -30,12 +30,10 @@ Install by opening Claude Code here and saying "install".
 ```
 From this directory, say "install"
 
-Process:
-  1. Compare global/* with ~/.claude/
-  2. New files: install directly
-  3. Modified: ask user (overwrite/skip/diff)
-  4. Backup to ~/.claude/backup/
-  5. Report summary
+Sync strategies:
+  Replace:    agents/, commands/, skills/, hooks/ (fresh copy)
+  Merge:      CLAUDE.md, settings.json (diff, ask)
+  Never touch: settings.local.json, LOCAL.md
 ```
 
 ## Runtime Flow
