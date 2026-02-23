@@ -16,7 +16,8 @@ global/                 # Installs to ~/.claude/
 ## Settings
 
 `global/settings.json` — shared config (tracked):
-- sandbox enabled + autoAllowBashIfSandboxed
+- bypass mode (skipDangerousModePermissionPrompt)
+- no sandbox
 - LSP plugins (rust-analyzer, pyright, gopls, typescript)
 - Task(*) auto-allow for agent launches
 

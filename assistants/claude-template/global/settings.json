@@ -93,14 +93,7 @@
     "gopls-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true
   },
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true,
-    "excludedCommands": [
-      "git",
-      "uv"
-    ]
-  },
   "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
   "effortLevel": "low"
 }
