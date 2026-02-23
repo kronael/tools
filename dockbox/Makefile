@@ -7,7 +7,7 @@
 
 IMAGE := dockbox
 UID := $(shell id -u)
-TZ := $(shell cat /etc/timezone 2>/dev/null || echo UTC)
+TZ := $(shell date +%Z 2>/dev/null || echo UTC)
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 PREFIX := $(HOME)/.local/bin
 

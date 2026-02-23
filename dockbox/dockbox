@@ -95,7 +95,7 @@ for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
     [[ -f "$rc" ]] || continue
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
-        rcargs+=($line)
+        rcargs+=("$line")
     done < "$rc"
 done
 
@@ -112,5 +112,5 @@ exec docker run -it --rm \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
-    "$IMAGE" \
+    -- "$IMAGE" \
     "${cmd[@]}"
