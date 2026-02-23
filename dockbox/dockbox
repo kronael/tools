@@ -37,6 +37,10 @@ Mounts (automatic):
 
 Project dirs are mounted at exact paths with read-write.
 Default command: claude
+
+Configuration (~/.dockboxrc and .dockboxrc in project dir):
+    Extra docker args, one per line. # comments, blank lines ok.
+    Global rc applies first, project rc appends.
 EOF
     exit 0
 fi
@@ -85,6 +89,20 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
+# Load .dockboxrc files (global then project)
+rcargs=()
+for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
+    [[ -f "$rc" ]] || continue
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        rcargs+=($line)
+    done < "$rc"
+done
+
+# Overmount project .dockboxrc so container can't modify it
+[[ -f "$workdir/.dockboxrc" ]] && \
+    mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
+
 # Kill existing container if running
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
@@ -92,6 +110,7 @@ exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     -e HOME=/home/claude \
     "${mounts[@]}" \
+    "${rcargs[@]}" \
     -w "$workdir" \
     "$IMAGE" \
     "${cmd[@]}"

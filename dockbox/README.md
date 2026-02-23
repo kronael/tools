@@ -5,7 +5,7 @@ Dockerized Claude Code with isolated filesystem access.
 ## Build
 
 ```bash
-make image              # builds with your UID
+make image              # builds with your UID and TZ
 make image UID=1001     # custom UID
 ```
 
@@ -15,7 +15,8 @@ remain accessible with correct permissions.
 ## Install
 
 ```bash
-make install            # installs dockbox to /usr/local/bin
+make install            # installs dockbox to ~/.local/bin
+make clean              # remove binary and docker image
 ```
 
 ## Usage
@@ -27,6 +28,17 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
 dockbox . -- bash                 # run bash instead
 dockbox . -- claude --help        # pass args to claude
 ```
+
+## Configuration
+
+Extra docker args via `.dockboxrc` files (one arg per line, `#` comments):
+
+- `~/.dockboxrc` — global defaults (e.g. `--gpus all`)
+- `.dockboxrc` in project dir — per-project overrides
+
+Both are optional. Global applies first, project appends. The
+project `.dockboxrc` is overmounted with `/dev/null` inside the
+container so the boxed agent can't modify it.
 
 ## Mounts
 
