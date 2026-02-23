@@ -32,6 +32,8 @@ use tracing::{info, debug};
 
 - Never use accessor methods; access fields directly with interior mutability
 - FxDashMap fastest for concurrent access (but no locks best)
+- Semaphore for concurrency control (limit parallel tasks)
+- Arc<Self> when spawned tasks need self reference
 
 ## State Management
 
