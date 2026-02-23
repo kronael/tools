@@ -8,7 +8,7 @@ help:
 	@echo "make install  - build image + install dockbox to /usr/local/bin"
 
 image:
-	docker build --build-arg UID=$(UID) -t $(IMAGE) .
+	sudo docker build --build-arg UID=$(UID) -t $(IMAGE) .
 
 install: image
-	install -m 755 dockbox /usr/local/bin/
+	sudo install -m 755 dockbox /usr/local/bin/
