@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code configuration: 8 agents, 16 auto-activating skills, 5 commands.
+Claude Code configuration: 8 agents, 15 auto-activating skills, 5 commands.
 
 ## Structure
 
@@ -60,8 +60,8 @@ repo names, secrets references, or org-specific content not in source:
 
 **Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
 
-**Skills** (16): cli, commit, data, go, infrastructure, ops, python,
-refine, rust, service, sql, testing, trader, tweet, typescript, wisdom
+**Skills** (15): cli, commit, data, go, ops, python, refine, rust,
+service, sql, testing, trader, tweet, typescript, wisdom
 
 **Hooks** (6): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification)
 

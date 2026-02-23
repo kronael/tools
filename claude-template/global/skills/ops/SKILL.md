@@ -1,6 +1,6 @@
 ---
 name: ops
-description: DevOps and deployment. Dockerfile, Docker multi-stage, Prometheus, RUST_LOG, systemd, PID files, env.toml, GitHub Actions, monitoring.
+description: DevOps and deployment. Dockerfile, Docker multi-stage, Prometheus, RUST_LOG, systemd, PID files, env.toml, GitHub Actions, monitoring, Ansible.
 ---
 
 # Ops
@@ -132,32 +132,42 @@ DomainError         # Model validation
 - Logs: ./log/ (local) or syslog (production)
 - NEVER use global /tmp/ for state
 
-## Concurrency Patterns
-
-**Single goroutine (Go)**: one goroutine processes all state, direct
-access (no locks), deterministic order, fails fast on conflicts.
-
-**Async/await (Rust)**: tokio runtime, Semaphore for concurrency
-control, Arc<Self> for spawned tasks needing self.
-
 ## Anti-Patterns
 
-**Window-based calculations**:
-```
-WRONG: window = [last_100_values]; ewma = calculate(window)
-RIGHT: ewma_new = alpha * value + (1 - alpha) * ewma_old
-```
-
-**Async cleanup**: NEVER manually .close() async context managers.
-Trust context managers. Protocol errors = connection state corruption.
+- Window calculations: use EWMA (alpha * val + (1-alpha) * prev), not sliding windows
+- NEVER manually .close() async context managers — trust context managers
 
 ## Ansible
 
 - Roles for common services (docker, nginx, grafana, rsyslog)
 - Host-specific variables in host_vars/
 - Secrets in ansible-vault encrypted files
-- Idempotent tasks (safe to re-run)
-- Tags for selective deployment
+- Idempotent tasks (safe to re-run), tags for selective deployment
+
+### docker-service Role
+
+Containers MUST have either `./main` executable or `python -m main`.
+Ansible entrypoint: `[[ -x ./main ]] && exec ./main $args $cfg || exec python -m main $args $cfg`
+
+**Naming**: service names use underscores (`funding_report`), image
+names use dashes (`funding-report`). Ansible converts between them.
+
+**Network**: `--network=host` (no port mapping). EXPOSE for docs only.
+
+**Config**: `/cfg/<server>/<service>.toml` passed as last argument.
+
+**Volumes**: `/srv/spool/<name>` (persistent), `/srv/run/<name>` (runtime).
+
+**host_vars service definition**:
+```yaml
+service:
+  - image: my-service              # Long-running
+  - image: my-timer                # Cron timer
+    minute: "*/5"
+    timeout: 600
+  - image: my-calendar             # Systemd calendar timer
+    oncalendar: "daily"
+```
 
 ## Deployment
 
