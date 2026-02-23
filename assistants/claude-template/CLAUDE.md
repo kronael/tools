@@ -51,6 +51,11 @@ When user says "install":
 - ~/.claude/LOCAL.md
 - ~/.claude/CLAUDE.local.md (project-level)
 
+**Overlay** (org repos add after base install):
+- Org-specific skills → ~/.claude/skills/<org>/
+- Installed separately: `cp -r skills/<org> ~/.claude/skills/`
+- NEVER included in base — org content lives in overlay repos
+
 NEVER delete files not in source
 NEVER modify files user chose to skip
 NEVER sync skipDangerousModePermissionPrompt from ~/.claude/ back to template

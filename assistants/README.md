@@ -122,6 +122,20 @@ Nudge hook routes prompts to agents via fuzzy keyword matching.
 | **stop** | Stop event | Commit nudge if uncommitted changes |
 | **context** | prompt submit | Manages context |
 
+## Org Overlays
+
+Org-specific skills live in separate repos layered on top of this base
+install. The base never contains org-specific content (repo links,
+package refs, internal URLs).
+
+**Pattern:**
+1. Install base (this repo)
+2. Clone org overlay repo
+3. Copy org skills: `cp -r skills/<org> ~/.claude/skills/`
+
+Base install NEVER deletes skills not in source, so org skills persist
+across updates.
+
 ## References
 
 - [WORKFLOW.md](claude-template/WORKFLOW.md) - agent hierarchy
