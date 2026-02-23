@@ -16,7 +16,6 @@ global/                 # Installs to ~/.claude/
 ## Settings
 
 `global/settings.json` — shared config (tracked):
-- sandbox enabled + autoAllowBashIfSandboxed
 - LSP plugins (rust-analyzer, pyright, gopls, typescript)
 - Task(*) auto-allow for agent launches
 
@@ -54,6 +53,7 @@ When user says "install":
 
 NEVER delete files not in source
 NEVER modify files user chose to skip
+NEVER sync skipDangerousModePermissionPrompt from ~/.claude/ back to template
 ALWAYS backup before overwriting
 
 ### LOCAL.md Handling
