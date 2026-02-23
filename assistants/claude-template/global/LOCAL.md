@@ -8,5 +8,5 @@ NEVER checked into git. NEVER synced to template repos.
 Sync ~/.claude/ changes back to the assistants template:
 
 ```
-~/.claude/ => ~/app/tools/assistants/claude-template/global/
+~/.claude/ => <path-to-assistants>/claude-template/global/
 ```
