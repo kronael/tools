@@ -1,0 +1,97 @@
+#!/bin/bash
+# dockbox - spawn dockerized claude code with isolated permissions
+# Usage: dockbox [options] [dirs...] [-- command...]
+
+set -euo pipefail
+
+IMAGE="dockbox"
+CONTAINER_NAME="dockbox"
+
+# Claude config mounts (rw needed for debug, todos, statsig, etc.)
+CLAUDE_MOUNTS=(
+    "$HOME/.claude:/home/claude/.claude:rw"
+    "$HOME/.claude.json:/tmp/host-claude.json:ro"
+    "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
+)
+
+# Other read-only mounts
+READONLY_MOUNTS=(
+    "/etc/localtime:/etc/localtime:ro"
+)
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    cat <<EOF
+Usage: dockbox [dirs...] [-- command...]
+
+Examples:
+    dockbox                           # current dir, runs claude
+    dockbox ~/wk/project              # mount project, runs claude
+    dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
+    dockbox . -- bash                 # run bash instead
+    dockbox . -- claude --help        # pass args to claude
+
+Mounts (automatic):
+    ~/.claude            -> /home/claude/.claude (rw)
+    ~/.claude.json       -> copied at startup (ephemeral)
+    ~/.dockbox_history   -> /home/claude/.zsh_history (rw)
+
+Project dirs are mounted at exact paths with read-write.
+Default command: claude
+EOF
+    exit 0
+fi
+
+# Parse dirs and command
+dirs=()
+cmd=()
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--" ]]; then
+        shift
+        cmd=("$@")
+        break
+    fi
+    dirs+=("$1")
+    shift
+done
+
+# Default to current directory
+[[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
+
+# Default command is claude
+[[ ${#cmd[@]} -eq 0 ]] && cmd=(claude)
+
+mounts=()
+workdir=""
+
+# Ensure history file exists
+[[ -f "$HOME/.dockbox_history" ]] || touch "$HOME/.dockbox_history"
+
+# Add Claude config mounts
+for m in "${CLAUDE_MOUNTS[@]}"; do
+    src="${m%%:*}"
+    [[ -e "$src" ]] && mounts+=(-v "$m")
+done
+
+# Add read-only mounts
+for m in "${READONLY_MOUNTS[@]}"; do
+    src="${m%%:*}"
+    [[ -e "$src" ]] && mounts+=(-v "$m")
+done
+
+# Add project directories as read-write at exact same paths
+for dir in "${dirs[@]}"; do
+    dir="$(cd "$dir" && pwd)"
+    mounts+=(-v "$dir:$dir:rw")
+    workdir="$dir"
+done
+
+# Kill existing container if running
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+exec docker run -it --rm \
+    --name "$CONTAINER_NAME" \
+    -e HOME=/home/claude \
+    "${mounts[@]}" \
+    -w "$workdir" \
+    "$IMAGE" \
+    "${cmd[@]}"
