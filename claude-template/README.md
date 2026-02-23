@@ -1,5 +1,7 @@
 # Claude Code Template
 
+> **Moved to [kronael/tools/assistants](https://github.com/kronael/tools)**
+
 Auto-activating skills + specialized agents for Claude Code.
 
 ## Install
@@ -15,7 +17,7 @@ Auto-activating skills + specialized agents for Claude Code.
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 8 specialized agents
 ├── commands/      # 5 slash commands
-└── skills/        # 16 auto-activating skills
+└── skills/        # 15 auto-activating skills
 ```
 
 ## Skills
@@ -23,7 +25,7 @@ Auto-activating skills + specialized agents for Claude Code.
 Auto-activate based on file context:
 - **Languages**: go, python, rust, sql, typescript
 - **Services**: cli, data, ops, service, trader
-- **Infrastructure**: infrastructure, testing
+- **Infrastructure**: testing
 - **Workflow**: commit, refine, tweet, wisdom
 
 ## Agents (8)
