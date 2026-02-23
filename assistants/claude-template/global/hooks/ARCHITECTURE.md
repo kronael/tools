@@ -6,15 +6,19 @@
 User Prompt ──> UserPromptSubmit hooks ──> Claude
                     │
                     ├── nudge.py (keyword → agent)
-                    └── local.py (rule injection)
+                    └── local.py (LOCAL.md on first prompt)
 
 Claude ──> PreToolUse[Bash] ──> redirect.py ──> Execute
                                     │
                                     └── toolchain.py (detection)
 
-Claude stops ──> Stop hook ──> Haiku prompt (commit nudge)
+Claude stops ──> Stop hook ──> commit nudge
 
-Session end ──> PreCompact/SessionEnd ──> learn.py ──> Flow report
+Compaction ──> PreCompact ──> local.py (LOCAL.md + RULES)
+                           ──> learn.py (flow report)
+                           ──> reclaude.py (session restore)
+
+Session end ──> SessionEnd ──> learn.py ──> Flow report
 ```
 
 ## Components
@@ -83,14 +87,15 @@ AGENT_KEYWORDS = {
 }
 ```
 
-### local.py (UserPromptSubmit)
+### local.py (UserPromptSubmit + PreCompact)
 
-**Input:** User prompt
-**Output:** System message with rules (on trigger)
+**Input:** User prompt or compaction event
+**Output:** System message with LOCAL.md content and/or rules
 
-**Triggers:** continue, where were we, what's next, recap
+**Fires on:** first prompt per session, PreCompact, continue/recap keywords
 
-Injects subset of CLAUDE.md rules to counteract context loss from compaction.
+Uses `.claude/tmp/local-{session_id}` state file to gate first-prompt
+injection. On PreCompact, always injects LOCAL.md + RULES.
 
 ### learn.py (PreCompact/SessionEnd)
 

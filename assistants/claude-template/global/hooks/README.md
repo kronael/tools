@@ -60,17 +60,12 @@ Uses fuzzy matching (edit distance) for typo tolerance.
 
 ### LOCAL.md Injection (local.py)
 
-Re-injects key CLAUDE.md rules on compaction triggers.
+Injects LOCAL.md at session start (first prompt) and before compaction.
+Re-injects key rules on continue/recap keywords.
 
-**Triggers:** "continue", "where were we", "what's next", "recap"
+**Fires on:** first prompt per session, PreCompact, continue/recap keywords
 
-**Injected rules:**
-- Use make for build/lint/test
-- Build/test every ~50 lines
-- Never improve beyond what's asked
-- Never use `git add -A`
-- Never use `git commit --amend`
-- Never add Co-Authored-By
+**State:** `.claude/tmp/local-{session_id}` tracks first prompt
 
 ### Flow Reports (learn.py)
 
