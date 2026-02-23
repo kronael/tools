@@ -16,7 +16,6 @@ global/                 # Installs to ~/.claude/
 ## Settings
 
 `global/settings.json` — shared config (tracked):
-- no sandbox (bypass is local-only via settings.local.json)
 - LSP plugins (rust-analyzer, pyright, gopls, typescript)
 - Task(*) auto-allow for agent launches
 
