@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Create claude user with configurable uid to match host user
 ARG UID=1000
-RUN userdel -r node && \
+RUN userdel -rf node 2>/dev/null; \
   useradd -m -s /bin/zsh -u $UID claude && \
   mkdir -p /usr/local/share/npm-global && \
   chown -R claude:claude /usr/local/share
