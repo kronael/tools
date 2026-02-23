@@ -2,43 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Themes
+## Repository
 
-Tools are organized by design philosophy tangents.
+Two sections: CLI tools (`rig/`) and Claude Code configuration
+(`assistants/`).
 
-### Ratpoison (MAX INFLOW)
+## Tools
 
-Optimized for **MAX INFLOW of information**, not outflow or ease of use.
+Each tool lives in its own directory with an executable, Makefile
+(`install`/`clean` targets), and README. Installs to `~/.local/bin/`.
 
-**Ratpoison** is a keyboard-only window manager. Tools in this tangent:
-- **Optimized for input speed**: Get information INTO the computer fast
-- **Tools come to the terminal**: Stay in your app, don't navigate away
-- **Minimal navigation**: Direct command execution, no split across difficult-to-navigate apps
-- **Single-purpose**: One tool, one task, easy to invoke
-- **Keyboard-driven**: fzf, number keys, single-letter shortcuts
-- **No visual cruft**: Minimal UI, no decorations, just function
-- **Scriptable**: Composable bash scripts, no fat dependencies
+### Ratpoison Design Philosophy
 
-**Tools**: `rig` (ripgit)
+Optimized for **MAX INFLOW of information**: keyboard-driven, stays
+in terminal, single-purpose, scriptable, no visual cruft. Named after
+the keyboard-only window manager.
 
-## Tools Structure
+### rig - ripgit
 
-Each tool lives in its own directory with:
-```
-tool/
-├── tool           # Main executable (bash script)
-├── Makefile       # install/clean targets
-└── README.md      # Usage and examples
-```
-
-**Installation pattern**:
-- Installs to `~/.local/bin/`
-- `make install` - installs the tool
-- `make clean` - removes the tool
-
-## rig - ripgit
-
-Single busybox-style script (`rig/rig`). Symlinks detect
+Single busybox-style bash script (`rig/rig`). Symlinks detect
 invocation name and dispatch to subcommands.
 
 ```bash
@@ -49,72 +31,57 @@ rig m [pattern]    # Merge origin/branch (rim)
 rig install        # Create symlinks in script's directory
 ```
 
-**Symlinks**: `rio` (checkout), `rip` (push), `rir` (rebase),
-`rim` (merge). All fetch by default.
-
 **Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
 
-**rig checkout**: fzf fuzzy match, recent branches first (reflog),
-strips `origin/`, auto-selects single match, checks out detached.
-
-**rig push**: auto-detects current branch, strips all prefixes,
-supports `branch:commit`, forwards git push flags.
-
-**rig rebase**: same branch selection as checkout, runs
-`git rebase -i origin/<branch>`.
-
-**rig merge**: same branch selection, runs
-`git merge origin/<branch>`.
-
 **Implementation**: helpers at top, flags parsed, then main logic.
-Clear sections: # Parse flags, # Select branch, # Execute.
+Clear sections: `# Parse flags`, `# Select branch`, `# Execute`.
 
-## Coding Philosophy: Write Boring Code
+## Assistants
 
-**"Debugging is twice as hard as writing the code. If you write the code as cleverly as possible, you are, by definition, not smart enough to debug it."** - Brian Kernighan
+Claude Code configuration in `assistants/`.
 
-All code follows "boring code" principles:
+- **claude-template/**: Skills, agents, commands, hooks — say
+  "install" to deploy to `~/.claude/`
+- **usage-patterns/**: 12 usage patterns extracted from 57 projects
 
-**Readability > Performance > Cleverness**
-- Simple, straightforward logic
-- Obvious flow from top to bottom
-- Comments mark sections, not complex logic
-- If it needs a comment to explain, simplify the code
+### Components
 
-**Predictable and Consistent**
-- Same patterns throughout
-- One way to do things, not many
-- Consistent naming, formatting, structure
-- No surprises, no clever tricks
+**Skills** (15): auto-activate based on file context (go, python,
+rust, typescript, sql, cli, service, data, ops, trader, testing,
+commit, refine, tweet, wisdom)
 
-**Easy to Debug**
-- Linear flow, minimal branching
-- Clear variable names describe content
-- Functions do one thing
-- Error messages show what failed and why
+**Agents** (8): @distill, @improve, @learn, @readme, @refine,
+@research, @deep-research, @visual
 
-**Avoid STUPID code**:
-- **S**ingleton abuse
-- **T**ight coupling
-- **U**ntestability
-- **P**remature optimization
-- **I**ndescriptive naming
-- **D**uplication
+**Commands** (5): /improve, /learn, /readme, /refine, /visual
+
+**Hooks** (6): nudge (keyword->agent routing), local (rule
+injection), redirect (toolchain mapping), learn (flow reports),
+reclaude (session restore), stop (prompt classification)
+
+### Sync Rules
+
+When syncing `claude-template/global/` to `~/.claude/`:
+- NEVER include local paths, org-specific refs, or secrets
+- Local content belongs in `~/.claude/LOCAL.md`
+
+## Coding Philosophy
+
+**"Debugging is twice as hard as writing the code."** - Kernighan
+
+- Readability > Performance > Cleverness
+- Linear flow, minimal branching, one way to do things
+- Helper functions at top, main logic at bottom
+- Section comments: `# Parse flags`, `# Execute`
+- POSIX-compatible bash, `[[ ]]` for conditions
+- ALWAYS keep files under 200 lines
 
 ## Development
 
-**Adding new tools**:
-1. Create `toolname/` directory
-2. Add executable script, Makefile, README.md
-3. Follow ratpoison principles (keyboard-first, minimal)
-4. Follow boring code principles (simple, predictable)
-5. Update main README.md
+**Adding tools**: create `toolname/` with executable, Makefile,
+README. Follow ratpoison + boring code principles. Update root
+README.
 
-**Bash style**:
-- Helper functions at top, main logic at bottom
-- Clear section comments: # Parse flags, # Execute
-- Use functions for reusable logic
-- Pipe-based composition (dedupe, strip, fzf)
-- POSIX-compatible where possible
-- Short, descriptive function names
-- [[ ]] for conditions, { } for grouping
+**Working on assistants**: ALWAYS use ALWAYS/NEVER statements.
+Focus on non-obvious patterns LLMs fail to grasp. Test by
+installing then using in a real project.

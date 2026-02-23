@@ -1,7 +1,5 @@
 # Claude Code Template
 
-> **Moved to [kronael/tools/assistants](https://github.com/kronael/tools)**
-
 Auto-activating skills + specialized agents for Claude Code.
 
 ## Install
