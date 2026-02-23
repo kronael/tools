@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code configuration: 7 agents, 4 commands, 20 auto-activating skills.
+Claude Code configuration: 8 agents, 5 commands, 16 auto-activating skills.
 Install by opening Claude Code here and saying "install".
 
 ## Components
@@ -11,18 +11,19 @@ Install by opening Claude Code here and saying "install".
 
 **CLAUDE.md**: Universal development principles
 
-**agents/** (7): Specialized task agents
+**agents/** (8): Specialized task agents
 - Quality: @improve, @visual, @learn
-- Utilities: @readme, @distill, @research, @refine
+- Research: @deep-research, @research, @distill
+- Utilities: @readme, @refine
 
-**commands/** (4): Slash commands
-- /build, /refine, /ship, /tweet
+**commands/** (5): Slash commands
+- /improve, /learn, /readme, /refine, /visual
 
-**skills/** (20): Auto-activating skills
+**skills/** (16): Auto-activating skills
 - Languages: go, python, rust, sql, typescript
-- Services: cli, collector, data, ops, service, trader
-- Infrastructure: builder, infrastructure, testing
-- Workflow: build, commit, refine, ship, tweet, wisdom
+- Services: cli, data, ops, service, trader
+- Infrastructure: infrastructure, testing
+- Workflow: commit, refine, tweet, wisdom
 
 ## Installation Flow
 
@@ -54,33 +55,11 @@ Process:
 See [WORKFLOW.md](WORKFLOW.md) for complete hierarchy and usage guide.
 
 ```
-/ship (outer loop)
-  └─> /build (inner loop) per component
-        └─> @improve, @readme, @visual (per stage)
-
 /refine
   └─> @improve, @readme
 
-@improve, @readme, @learn, @visual, @distill, @research (leaf agents)
+@deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual (leaf agents)
 ```
-
-## Ship/Build Split
-
-**ship skill** (outer loop):
-- Reads specs from directory
-- Topological sort for component dependencies
-- Generates build plan per component
-- Delegates to /build
-- Critique loop: spec compliance review, fix gaps if >10% (max 2 rounds)
-- State persists to PROGRESS.md (root)
-
-**build skill** (inner loop):
-- Reads plan from .claude/plans/
-- Spawns parallel workers per stage
-- Judge loop: polls workers, retries (max 3), error isolation
-- Optional refinement round (max 1)
-- Single commit at end
-- State persists to .ship/build-state-{plan}.md
 
 ## Design Principles
 

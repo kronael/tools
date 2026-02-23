@@ -19,20 +19,19 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 ## Components
 
-**Commands** (4): /build, /refine, /ship, /tweet
+**Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Agents** (7): @distill, @improve, @learn, @readme, @refine, @research, @visual
+**Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
 
-**Skills** (20): build, builder, cli, collector, commit, data, go, infrastructure, ops, python, refine, rust, service, ship, sql, testing, trader, tweet, typescript, wisdom
+**Skills** (16): cli, commit, data, go, infrastructure, ops, python, refine, rust, service, sql, testing, trader, tweet, typescript, wisdom
 
-**Hooks** (5): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore)
+**Hooks** (6): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification)
 
 ## Architecture
 
-- /ship is the outer loop: specs -> components -> completion
-- /build is the inner loop: plan -> parallel workers -> commit
 - @refine delegates to @improve + @readme for finalization
 - Nudge hook uses fuzzy matching (edit distance) to route prompts to agents
+- Commands are thin launchers for corresponding agents
 - See [WORKFLOW.md](claude-template/WORKFLOW.md) for agent hierarchy
 
 ## Working on This Repo

@@ -2,6 +2,8 @@
 
 Extracted from 1.3MB of production logs analyzing 57 projects.
 
+See `reference/` for distilled guides: BUILDERS.md, CLI.md, INFRASTRUCTURE.md, patterns_final.md.
+
 ## TL;DR - Start Here
 
 **Top 3 to try immediately**:
