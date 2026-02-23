@@ -1,0 +1,37 @@
+# Editor
+*~
+*.swp
+*.swo
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dotfiles (sandbox stubs)
+.bash_profile
+.bashrc
+.zshrc
+.zprofile
+.profile
+.gitconfig
+.gitmodules
+.mcp.json
+.ripgreprc
+.claude/
+
+# Git stubs
+HEAD
+config
+hooks
+objects
+refs
+
+# Project
+tmp/
+log/
+dist/
+*.pyc
+__pycache__/
+node_modules/

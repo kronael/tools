@@ -1,0 +1,101 @@
+{
+  "permissions": {
+    "allow": [
+      "Task(*)",
+      "Skill(*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git add [^-]*)",
+      "Bash(git commit*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)*",
+      "Bash(rm -rf ~)*",
+      "Bash(chmod 777*)",
+      "Bash(git push*)",
+      "Bash(git pull*)",
+      "Bash(ssh *)",
+      "Bash(rsync *)"
+    ],
+    "defaultMode": "default"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/local.py",
+            "timeout": 3000
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/nudge.py",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/stop.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/learn.py",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/reclaude.py",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/learn.py",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": [
+      "git",
+      "uv"
+    ]
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "low"
+}
