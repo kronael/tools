@@ -46,18 +46,19 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (15): auto-activate based on file context (go, python,
-rust, typescript, sql, cli, service, data, ops, trader, testing,
-commit, refine, tweet, wisdom)
+**Skills** (18): auto-activate based on file context (bash, cli,
+commit, data, go, ops, python, refine, research, rust, service, sql,
+testing, trader, tweet, typescript, web, wisdom)
 
 **Agents** (8): @distill, @improve, @learn, @readme, @refine,
 @research, @deep-research, @visual
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Hooks** (6): nudge (keyword->agent routing), local (rule
+**Hooks** (7): nudge (keyword->agent routing), local (rule
 injection), redirect (toolchain mapping), learn (flow reports),
-reclaude (session restore), stop (prompt classification)
+reclaude (session restore), stop (prompt classification),
+context (context management)
 
 ### Sync Rules
 

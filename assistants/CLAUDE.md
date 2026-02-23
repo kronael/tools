@@ -23,9 +23,9 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
 
-**Skills** (15): cli, commit, data, go, ops, python, refine, rust, service, sql, testing, trader, tweet, typescript, wisdom
+**Skills** (18): bash, cli, commit, data, go, ops, python, refine, research, rust, service, sql, testing, trader, tweet, typescript, web, wisdom
 
-**Hooks** (6): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification)
+**Hooks** (7): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification), context (context management)
 
 ## Architecture
 

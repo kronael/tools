@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 20 skills, 7 agents, 4 commands, 5 hooks.
+Claude Code configuration: 18 skills, 7 agents, 4 commands, 7 hooks.
 
 ## Why Skills?
 
@@ -33,7 +33,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (20)
+## Skills (18)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -127,7 +127,7 @@ checkpoint → validate → @improve → @readme → verify → commit [refined]
 
 Nudge hook routes prompts to agents via fuzzy keyword matching.
 
-## Hooks (5)
+## Hooks (7)
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
@@ -136,6 +136,8 @@ Nudge hook routes prompts to agents via fuzzy keyword matching.
 | **redirect** | tool call | Maps toolchain commands |
 | **learn** | compact/end | Generates flow reports |
 | **reclaude** | session start | Restores session context |
+| **stop** | prompt submit | Classifies prompt type |
+| **context** | prompt submit | Manages context |
 
 ## References
 
