@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 18 skills, 7 agents, 4 commands, 7 hooks.
+Claude Code configuration: 16 skills, 8 agents, 5 commands, 7 hooks.
 
 ## Why Skills?
 
@@ -33,7 +33,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (18)
+## Skills (16)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -51,6 +51,7 @@ Auto-activate based on file context. No setup needed per project.
 
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
+| **bash** | .sh, shell scripts | POSIX patterns, signal handling |
 | **cli** | argparse, click, clap | Config precedence, exit codes, --json flag |
 | **service** | /health, /ready, /v1/ | Versioned paths, validate-before-persist, caching |
 | **data** | scrapers, ETL, feeds | LeakyBucket, state recovery, dedup, cache-first |
@@ -63,16 +64,15 @@ Auto-activate based on file context. No setup needed per project.
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
 | **commit** | /commit | Structured git flow, section markers, HEREDOC format |
-| **build** | /build | Planner-Worker-Judge, parallel stages, .ship/ state |
-| **ship** | /ship | Spec-driven outer loop, topological sort, critique |
 | **refine** | /refine | Delegates to @improve + @readme, never self-improves |
 | **tweet** | /tweet | Dense threads, no fluff, personal framing |
 | **wisdom** | SKILL.md, CLAUDE.md | ALWAYS/NEVER statements, YAML frontmatter |
 
-## Agents (7)
+## Agents (8)
 
 | Agent | Purpose |
 |-------|---------|
+| **@deep-research** | Multi-round web research with source synthesis |
 | **@distill** | Extract key points from long content |
 | **@improve** | DO-CRITICIZE-EVALUATE-IMPROVE loop |
 | **@learn** | Extract patterns from history into skills |
@@ -81,34 +81,22 @@ Auto-activate based on file context. No setup needed per project.
 | **@research** | Research and knowledge synthesis |
 | **@visual** | Render-inspect-adjust for SVG/UI |
 
-## Commands (4)
+## Commands (5)
 
 | Command | Role |
 |---------|------|
-| **/build** | Inner loop: plan, stages, parallel workers, judge |
+| **/improve** | Launch improve agent for code quality |
+| **/learn** | Launch learn agent to extract patterns |
+| **/readme** | Launch readme agent to update docs |
 | **/refine** | Finalization: @improve, @readme, commit |
-| **/ship** | Outer loop: specs, components, /build, critique |
-| **/tweet** | Share work on social media |
-
-### /ship — Spec-Driven Delivery
-
-Reads specs/ directory or an inline plan, topological-sorts components by
-dependency, delegates each to /build, commits after each component, tracks
-progress in PROGRESS.md. After every phase a critique agent scores
-completeness — if gaps exceed 10%, it re-builds.
-
-```
-specs/ or inline plan → dependency order → for each component:
-  plan → /build → test → critique → fix gaps → commit
-→ final audit → ship summary
-```
+| **/visual** | Launch visual agent for UI/styling |
 
 ### /refine — Polish Before PR
 
-Seven-step finalization pass. Checkpoints current state, validates
-build/test, delegates code improvement to @improve and documentation to
-@readme, verifies again, commits `[refined]`. Never does improvement
-work itself — pure orchestration.
+Checkpoints current state, validates build/test, delegates code
+improvement to @improve and documentation to @readme, verifies again,
+commits `[refined]`. Never does improvement work itself — pure
+orchestration.
 
 ```
 checkpoint → validate → @improve → @readme → verify → commit [refined]
@@ -117,12 +105,9 @@ checkpoint → validate → @improve → @readme → verify → commit [refined]
 ## Agent Hierarchy
 
 ```
-/ship (outer loop: specs -> components)
-  └── /build (inner loop: plan -> parallel workers -> commit)
-
 /refine (finalization: @improve + @readme)
 
-@improve, @readme, @learn, @visual, @distill, @research (leaf agents)
+@deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual (leaf agents)
 ```
 
 Nudge hook routes prompts to agents via fuzzy keyword matching.
@@ -132,11 +117,11 @@ Nudge hook routes prompts to agents via fuzzy keyword matching.
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | **nudge** | prompt submit | Routes keywords to matching agents |
-| **local** | session start | Injects LOCAL.md rules |
+| **local** | first prompt, PreCompact | Injects LOCAL.md + rules |
 | **redirect** | tool call | Maps toolchain commands |
 | **learn** | compact/end | Generates flow reports |
 | **reclaude** | session start | Restores session context |
-| **stop** | prompt submit | Classifies prompt type |
+| **stop** | Stop event | Commit nudge if uncommitted changes |
 | **context** | prompt submit | Manages context |
 
 ## References
@@ -144,10 +129,3 @@ Nudge hook routes prompts to agents via fuzzy keyword matching.
 - [WORKFLOW.md](claude-template/WORKFLOW.md) - agent hierarchy
 - [ARCHITECTURE.md](claude-template/ARCHITECTURE.md) - component details
 - [hooks ARCHITECTURE.md](claude-template/global/hooks/ARCHITECTURE.md) - hook system
-
-## See Also
-
-**[kronael/ship](https://github.com/kronael/ship)** - Autonomous coding
-agent that implements the planner-worker-judge pipeline as a standalone
-Python tool. Same architectural pattern as /ship and /build here, but as
-an independent tool consuming ~/.claude/skills/.
