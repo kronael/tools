@@ -82,7 +82,7 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
 # managed-settings has highest precedence, survives ~/.claude mount
 USER root
 RUN mkdir -p /etc/claude-code && \
-  echo '{"permissions":{"allow":["*"],"deny":[]},"defaultMode":"bypassPermissions"}' \
+  echo '{"defaultMode":"bypassPermissions"}' \
   > /etc/claude-code/managed-settings.json
 USER claude
 
