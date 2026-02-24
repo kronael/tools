@@ -5,7 +5,7 @@
 set -euo pipefail
 
 IMAGE="dockbox"
-CONTAINER_NAME="dockbox"
+# Set after dirs parsed
 
 # Claude config mounts (rw needed for debug, todos, statsig, etc.)
 CLAUDE_MOUNTS=(
@@ -88,6 +88,9 @@ for dir in "${dirs[@]}"; do
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
 done
+
+# Container name from project dir
+CONTAINER_NAME="dockbox-${workdir##*/}"
 
 # Load .dockboxrc files (global then project)
 rcargs=()
