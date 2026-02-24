@@ -105,6 +105,10 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
+# screenshot sharing: host /tmp/capture.png -> project capture.png
+[[ -f /tmp/capture.png ]] || touch /tmp/capture.png
+mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
+
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 rcargs=()

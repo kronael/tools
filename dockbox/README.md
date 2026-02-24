@@ -56,6 +56,7 @@ Automatic:
 - `~/.gnupg` -> `/home/claude/.gnupg` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
+- `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
 
@@ -70,7 +71,20 @@ All Claude Code permissions are bypassed inside the container
 
 ## Cookbook
 
+### Screenshot sharing
+
+Host `/tmp/capture.png` is auto-mounted as `capture.png` in the
+project root. Bind a hotkey on your host to capture:
+
+```bash
+maim -s /tmp/capture.png    # mouse-select region (Arch: pacman -S maim)
+```
+
+Then in dockbox Claude, reference `capture.png` — it auto-attaches.
+
 ### Share a host file
+
+Add to `~/.dockboxrc`:
 
 ```
 -v /tmp/data.csv:/tmp/data.csv:ro
