@@ -23,16 +23,14 @@ make clean              # remove binary and docker image
 ## Usage
 
 ```bash
-dockbox                           # current dir, claude in zsh
-dockbox -s nu ~/wk/project        # claude in nushell
+dockbox                           # current dir, runs claude
+dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
 dockbox -n mybox .                 # custom container name
-dockbox . -- bash                  # run command directly (no claude)
+dockbox . -- bash                  # run bash instead
 ```
 
-Default: auto-launches claude, drops to shell on exit. The container
-stays alive after claude exits. Use `-s` to pick shell (zsh/bash/nu),
-`--` to skip claude and run a command directly.
+Default command: claude. Use `--` to override.
 
 ## Configuration
 
@@ -72,5 +70,5 @@ All Claude Code permissions are bypassed inside the container
 - rust (via rustup)
 - python (via uv)
 - java/kotlin (via sdkman)
-- nushell (via cargo)
+- nushell (prebuilt binary)
 - node (npm, pnpm, bun, nvm)

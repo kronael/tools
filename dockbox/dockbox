@@ -16,18 +16,17 @@ MOUNTS=(
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     cat <<EOF
-Usage: dockbox [-n name] [-s shell] [dirs...] [-- command...]
+Usage: dockbox [-n name] [dirs...] [-- command...]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -s shell   Shell to use: zsh (default), bash, nu
 
 Examples:
-    dockbox                           # current dir, claude in zsh
-    dockbox -s nu ~/wk/project        # claude in nushell
+    dockbox                           # current dir, runs claude
+    dockbox ~/wk/project              # mount project
     dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
     dockbox -n mybox .                 # custom container name
-    dockbox . -- bash                  # run command directly (no claude)
+    dockbox . -- bash                  # run bash instead
 
 Mounts (automatic):
     ~/.claude            -> /home/claude/.claude (rw)
@@ -36,8 +35,7 @@ Mounts (automatic):
     ~/.dockbox_history   -> /home/claude/.zsh_history (rw)
 
 Project dirs are mounted at exact paths with read-write.
-Default: auto-launches claude, drops to shell on exit.
-Use -s to pick shell (zsh/bash/nu), -- to skip claude.
+Default command: claude
 
 Configuration (~/.dockboxrc and .dockboxrc in project dir):
     Extra docker args, one per line. # comments, blank lines ok.
@@ -48,26 +46,18 @@ fi
 
 # Parse flags, dirs, and command
 name_override=""
-shell=zsh
 dirs=()
 cmd=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -n) name_override="${2:?-n requires a name}"; shift 2 ;;
-        -s) shell="${2:?-s requires: zsh, bash, nu}"; shift 2 ;;
         --) shift; cmd=("$@"); break ;;
         *)  dirs+=("$1"); shift ;;
     esac
 done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-
-# Default: shell with auto-launch claude; explicit -- overrides
-autolaunch=""
-if [[ ${#cmd[@]} -eq 0 ]]; then
-    cmd=("$shell")
-    autolaunch=claude
-fi
+[[ ${#cmd[@]} -eq 0 ]] && cmd=(claude)
 
 mounts=()
 workdir=""
@@ -113,7 +103,6 @@ docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     -e HOME=/home/claude \
-    ${autolaunch:+-e DOCKBOX_CMD="$autolaunch"} \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
