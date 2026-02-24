@@ -36,6 +36,14 @@ rig install        # Create symlinks in script's directory
 **Implementation**: helpers at top, flags parsed, then main logic.
 Clear sections: `# Parse flags`, `# Select branch`, `# Execute`.
 
+### dockbox - Dockerized Claude Code sandbox
+
+Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated
+Docker container. Multi-directory mounts, per-project `.dockboxrc`
+config, all permissions bypassed (container is the sandbox).
+
+Makefile targets: `image` (build), `install` (build+install), `clean`.
+
 ## Assistants
 
 Claude Code configuration in `assistants/`.
