@@ -75,13 +75,10 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
 
 # Wrapper: copy host .claude.json at startup, ensure onboarding
 RUN mkdir -p /home/claude/.local/bin && \
-  cat > /home/claude/.local/bin/claude <<'WRAPPER' && \
-#!/bin/sh
-[ -f /tmp/host-claude.json ] && \
-  cp /tmp/host-claude.json /home/claude/.claude.json
-[ -f /home/claude/.claude.json ] || \
-  echo '{"hasCompletedOnboarding":true}' > /home/claude/.claude.json
-exec /home/claude/.bun/bin/claude "$@"
-WRAPPER
+  printf '#!/bin/sh\n\
+[ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
+[ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
+exec /home/claude/.bun/bin/claude "$@"\n' \
+  > /home/claude/.local/bin/claude && \
   chmod +x /home/claude/.local/bin/claude
 ENV PATH="/home/claude/.local/bin:$PATH"
