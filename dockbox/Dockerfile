@@ -78,15 +78,7 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @openai/codex \
   @mariozechner/pi-coding-agent
 
-# Bypass all permissions — container is the sandbox
-# managed-settings has highest precedence, survives ~/.claude mount
-USER root
-RUN mkdir -p /etc/claude-code && \
-  echo '{"defaultMode":"bypassPermissions"}' \
-  > /etc/claude-code/managed-settings.json
-USER claude
-
-# Wrapper: copy host .claude.json at startup, ensure onboarding
+# Wrapper: copy host .claude.json, bypass permissions (container is sandbox)
 RUN mkdir -p /home/claude/.local/bin && \
   printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
