@@ -47,6 +47,7 @@ container so the boxed agent can't modify it.
 Automatic:
 - `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime data
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
+- `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro) - host timezone
 
@@ -68,4 +69,5 @@ All Claude Code permissions are bypassed inside the container
 - rust (via rustup)
 - python (via uv)
 - java/kotlin (via sdkman)
+- nushell (via cargo)
 - node (npm, pnpm, bun, nvm)

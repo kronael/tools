@@ -63,6 +63,8 @@ RUN curl -sSL https://git.io/g-install | sh -s -- -y
 ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
 
+RUN cargo install nu
+
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/claude/.local/bin:$PATH"
 

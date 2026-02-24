@@ -9,6 +9,7 @@ IMAGE="dockbox"
 MOUNTS=(
     "$HOME/.claude:/home/claude/.claude:rw"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
+    "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
     "/etc/localtime:/etc/localtime:ro"
 )
@@ -31,6 +32,7 @@ Examples:
 Mounts (automatic):
     ~/.claude            -> /home/claude/.claude (rw)
     ~/.claude.json       -> copied at startup (ephemeral)
+    ~/.gitconfig         -> /home/claude/.gitconfig (ro)
     ~/.dockbox_history   -> /home/claude/.zsh_history (rw)
 
 Project dirs are mounted at exact paths with read-write.
