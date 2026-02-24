@@ -21,12 +21,16 @@ READONLY_MOUNTS=(
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     cat <<EOF
-Usage: dockbox [dirs...] [-- command...]
+Usage: dockbox [-n name] [dirs...] [-- command...]
+
+Options:
+    -n name    Override container name (default: dockbox-<project>)
 
 Examples:
     dockbox                           # current dir, runs claude
     dockbox ~/wk/project              # mount project, runs claude
     dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
+    dockbox -n mybox .                # custom container name
     dockbox . -- bash                 # run bash instead
     dockbox . -- claude --help        # pass args to claude
 
@@ -45,17 +49,16 @@ EOF
     exit 0
 fi
 
-# Parse dirs and command
+# Parse flags, dirs, and command
+name_override=""
 dirs=()
 cmd=()
 while [[ $# -gt 0 ]]; do
-    if [[ "$1" == "--" ]]; then
-        shift
-        cmd=("$@")
-        break
-    fi
-    dirs+=("$1")
-    shift
+    case "$1" in
+        -n) name_override="$2"; shift 2 ;;
+        --) shift; cmd=("$@"); break ;;
+        *)  dirs+=("$1"); shift ;;
+    esac
 done
 
 # Default to current directory
@@ -89,8 +92,8 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
-# Container name from project dir
-CONTAINER_NAME="dockbox-${workdir##*/}"
+# Container name from project dir or override
+CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 # Load .dockboxrc files (global then project)
 rcargs=()
@@ -106,7 +109,13 @@ done
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
-# Kill existing container if running
+# Check for existing container
+existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
+if [[ -n "$existing" ]]; then
+    echo "container '$CONTAINER_NAME' is already running" >&2
+    echo "use -n <name> to pick a different name, or stop it first" >&2
+    exit 1
+fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 exec docker run -it --rm \
