@@ -61,4 +61,6 @@ Uses `~/.claude/.credentials.json` from host (via the mounted `~/.claude` direct
 - claude, codex, pi (AI coding agents)
 - go (via g version manager)
 - rust (via rustup)
+- python (via uv)
+- java/kotlin (via sdkman)
 - node (npm, pnpm, bun, nvm)

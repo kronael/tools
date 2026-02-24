@@ -63,6 +63,12 @@ RUN curl -sSL https://git.io/g-install | sh -s -- -y
 ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
 
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/home/claude/.local/bin:$PATH"
+
+RUN curl -fsSL https://get.sdkman.io | bash
+ENV SDKMAN_DIR="/home/claude/.sdkman"
+
 RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @openai/codex \
   @mariozechner/pi-coding-agent
