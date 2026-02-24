@@ -88,3 +88,13 @@ exec /home/claude/.bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /home/claude/.local/bin/claude && \
   chmod +x /home/claude/.local/bin/claude
 ENV PATH="/home/claude/.local/bin:$PATH"
+
+# Entrypoint: auto-launch DOCKBOX_CMD then drop to shell
+RUN printf '#!/bin/sh\n\
+if [ -n "$DOCKBOX_CMD" ]; then\n\
+  $DOCKBOX_CMD || true\n\
+  unset DOCKBOX_CMD\n\
+fi\n\
+exec "$@"\n' > /home/claude/.local/bin/dockbox-entry && \
+  chmod +x /home/claude/.local/bin/dockbox-entry
+ENTRYPOINT ["dockbox-entry"]
