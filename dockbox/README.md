@@ -26,11 +26,15 @@ make clean              # remove binary and docker image
 dockbox                           # current dir, runs claude
 dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
-dockbox -n mybox .                 # custom container name
-dockbox . -- bash                  # run bash instead
+dockbox -n mybox .                # custom container name
+dockbox -e bash .                 # run bash instead
+dockbox -c                        # continue session
+dockbox ls                        # list dockbox containers
+dockbox rm [pattern]              # remove containers
+dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `--` to override.
+Default command: claude. Use `-e` to override.
 
 ## Configuration
 
@@ -49,6 +53,7 @@ Automatic:
 - `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
+- `~/.gnupg` -> `/home/claude/.gnupg` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 

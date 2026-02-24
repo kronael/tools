@@ -109,8 +109,9 @@ rim ?             # Interactive branch selection
 ## How It Works
 
 Single busybox-style script. Symlinks (`rio`, `rip`, `rir`, `rim`)
-are detected via `basename $0` and dispatched to the matching
-subcommand. All commands fetch by default; `-z` suppresses fetch.
+dispatch via `basename $0`. Checkout, rebase, and merge share a
+`cmd_branch_op` helper; push has its own handler. All commands
+fetch by default; `-z` suppresses fetch.
 
 Branch selection pipeline:
 1. Recent branches from reflog (last 50)

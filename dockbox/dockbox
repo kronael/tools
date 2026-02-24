@@ -12,76 +12,66 @@ MOUNTS=(
     "/etc/localtime:/etc/localtime:ro"
 )
 
-if [[ "${1:-}" == "ls" ]]; then
-    docker container ls -a --filter "name=^dockbox-" \
-        --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
-    exit 0
-fi
-
-if [[ "${1:-}" == "rm" ]]; then
-    pattern="${2:-}"
-    names=$(docker container ls -a --filter "name=^dockbox-" \
-        --format "{{.Names}}")
-    [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
-    if [[ -n "$pattern" ]]; then
-        names=$(echo "$names" | grep -F "$pattern" || true)
-        [[ -z "$names" ]] && { echo "no match for '$pattern'"; exit 0; }
-    fi
-    echo "$names" | while read -r n; do
-        docker rm -f "$n" && echo "removed $n"
-    done
-    exit 0
-fi
-
-if [[ "${1:-}" == "prune" ]]; then
-    hours="${2:-2160}"
-    cutoff=$(date -d "-${hours} hours" +%s 2>/dev/null) || \
-        cutoff=$(date -v-${hours}H +%s)
-    docker container ls -a --filter "name=^dockbox-" --filter "status=exited" \
-        --format "{{.Names}}\t{{.CreatedAt}}" | while IFS=$'\t' read -r name created; do
-        ts=$(date -d "$created" +%s 2>/dev/null) || \
-            ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" "$created" +%s)
-        if [[ "$ts" -lt "$cutoff" ]]; then
-            docker rm "$name" && echo "removed $name"
+case "${1:-}" in
+    ls)
+        docker container ls -a --filter "name=^dockbox-" \
+            --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
+        exit 0 ;;
+    rm)
+        pattern="${2:-}"
+        names=$(docker container ls -a --filter "name=^dockbox-" \
+            --format "{{.Names}}")
+        [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
+        if [[ -n "$pattern" ]]; then
+            names=$(echo "$names" | grep -F "$pattern" || true)
+            [[ -z "$names" ]] && {
+                echo "no match for '$pattern'"; exit 0
+            }
         fi
-    done
-    exit 0
-fi
-
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-    cat <<EOF
+        echo "$names" | while read -r n; do
+            docker rm -f "$n" && echo "removed $n"
+        done
+        exit 0 ;;
+    prune)
+        hours="${2:-2160}"
+        cutoff=$(date -d "-${hours} hours" +%s 2>/dev/null) || \
+            cutoff=$(date -v-${hours}H +%s)
+        docker container ls -a \
+            --filter "name=^dockbox-" --filter "status=exited" \
+            --format "{{.Names}}\t{{.CreatedAt}}" \
+            | while IFS=$'\t' read -r name created; do
+            ts=$(date -d "$created" +%s 2>/dev/null) || \
+                ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" \
+                    "$created" +%s)
+            [[ "$ts" -lt "$cutoff" ]] && \
+                docker rm "$name" && echo "removed $name"
+        done
+        exit 0 ;;
+    -h|--help)
+        cat <<EOF
 Usage: dockbox [options] [dirs...] [claude-args...]
-       dockbox ls
-       dockbox rm [pattern]
-       dockbox prune [hours]
+       dockbox ls | rm [pattern] | prune [hours]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
     -e cmd     Override entrypoint (default: claude)
 
 Examples:
-    dockbox                           # current dir, runs claude
+    dockbox                           # current dir
     dockbox ~/wk/project              # mount project
-    dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
-    dockbox -n mybox .                 # custom container name
-    dockbox -c                        # continue last session
+    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs
+    dockbox -n mybox .                # custom name
+    dockbox -c                        # continue session
     dockbox -e bash                   # run bash instead
 
-Mounts (automatic):
-    ~/.claude            -> /home/claude/.claude (rw)
-    ~/.claude.json       -> copied at startup (ephemeral)
-    ~/.gitconfig         -> /home/claude/.gitconfig (ro)
-    ~/.dockbox_history   -> /home/claude/.zsh_history (rw)
+Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
+        ~/.gitconfig (ro), ~/.dockbox_history (rw)
 
-Project dirs are mounted at exact paths with read-write.
-Default command: claude
-
-Configuration (~/.dockboxrc and .dockboxrc in project dir):
-    Extra docker args, one per line. # comments, blank lines ok.
-    Global rc applies first, project rc appends.
+Config: ~/.dockboxrc and .dockboxrc in project dir.
+        Extra docker args, one per line. # comments ok.
 EOF
-    exit 0
-fi
+        exit 0 ;;
+esac
 
 name_override=""
 entrypoint="claude"
@@ -91,10 +81,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         -n) name_override="${2:?-n requires a name}"; shift 2 ;;
         -e) entrypoint="${2:?-e requires a command}"; shift 2 ;;
-        /*)  dirs+=("$1"); shift ;;
-        .*)  dirs+=("$1"); shift ;;
-        ~*)  dirs+=("$1"); shift ;;
-        *)   claude_args+=("$1"); shift ;;
+        /*|./*|.|~*) dirs+=("$1"); shift ;;
+        *)           claude_args+=("$1"); shift ;;
     esac
 done
 
