@@ -23,13 +23,16 @@ make clean              # remove binary and docker image
 ## Usage
 
 ```bash
-dockbox                           # current dir, runs claude
-dockbox ~/wk/project              # mount project, runs claude
+dockbox                           # current dir, claude in zsh
+dockbox -s nu ~/wk/project        # claude in nushell
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
-dockbox -n mybox .                # custom container name
-dockbox . -- bash                 # run bash instead
-dockbox . -- claude --help        # pass args to claude
+dockbox -n mybox .                 # custom container name
+dockbox . -- bash                  # run command directly (no claude)
 ```
+
+Default: auto-launches claude, drops to shell on exit. The container
+stays alive after claude exits. Use `-s` to pick shell (zsh/bash/nu),
+`--` to skip claude and run a command directly.
 
 ## Configuration
 
@@ -45,17 +48,17 @@ container so the boxed agent can't modify it.
 ## Mounts
 
 Automatic:
-- `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime data
+- `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
-- `/etc/localtime` -> `/etc/localtime` (ro) - host timezone
+- `/etc/localtime` -> `/etc/localtime` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
 
 ## Authentication
 
-Uses `~/.claude/.credentials.json` from host (via the mounted `~/.claude` directory).
+Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 

@@ -63,7 +63,10 @@ RUN curl -sSL https://git.io/g-install | sh -s -- -y
 ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
 
-RUN cargo install nu
+ARG NU_VERSION=0.110.0
+RUN ARCH=$(uname -m) && \
+  curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
+  | tar xz --strip-components=1 -C /home/claude/.cargo/bin
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/claude/.local/bin:$PATH"
@@ -76,8 +79,12 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @mariozechner/pi-coding-agent
 
 # Bypass all permissions — container is the sandbox
-RUN echo '{"permissions":{"allow":["*"],"deny":[]},"defaultMode":"bypassPermissions"}' \
-  > /home/claude/.claude/settings.json
+# managed-settings has highest precedence, survives ~/.claude mount
+USER root
+RUN mkdir -p /etc/claude-code && \
+  echo '{"permissions":{"allow":["*"],"deny":[]},"defaultMode":"bypassPermissions"}' \
+  > /etc/claude-code/managed-settings.json
+USER claude
 
 # Wrapper: copy host .claude.json at startup, ensure onboarding
 RUN mkdir -p /home/claude/.local/bin && \
