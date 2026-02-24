@@ -70,19 +70,10 @@ All Claude Code permissions are bypassed inside the container
 
 ## Cookbook
 
-### X11 display sharing (screenshots, GUI)
-
-Add to `~/.dockboxrc`:
+### Share a host file
 
 ```
--e DISPLAY
--v /tmp/.X11-unix:/tmp/.X11-unix:ro
-```
-
-### Share a file with the container
-
-```
--v /tmp/capture.png:/tmp/capture.png:ro
+-v /tmp/data.csv:/tmp/data.csv:ro
 ```
 
 ### GPU passthrough
