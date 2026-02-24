@@ -1,7 +1,4 @@
 #!/bin/bash
-# dockbox - spawn dockerized claude code with isolated permissions
-# Usage: dockbox [options] [dirs...] [-- command...]
-
 set -euo pipefail
 
 IMAGE="dockbox"
@@ -44,7 +41,6 @@ EOF
     exit 0
 fi
 
-# Parse flags, dirs, and command
 name_override=""
 dirs=()
 cmd=()
@@ -69,7 +65,6 @@ for m in "${MOUNTS[@]}"; do
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
-# Project dirs mounted rw at exact host paths
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
@@ -78,7 +73,6 @@ done
 
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
-# Load .dockboxrc files (global then project)
 rcargs=()
 for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
     [[ -f "$rc" ]] || continue
@@ -88,7 +82,7 @@ for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
     done < "$rc"
 done
 
-# Overmount project .dockboxrc so container can't modify it
+# overmount so container can't modify project .dockboxrc
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 

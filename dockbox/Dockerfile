@@ -78,7 +78,7 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @openai/codex \
   @mariozechner/pi-coding-agent
 
-# Wrapper: copy host .claude.json, bypass permissions (container is sandbox)
+# claude wrapper: inject host credentials, skip permissions
 RUN mkdir -p /home/claude/.local/bin && \
   printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
