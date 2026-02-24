@@ -7,7 +7,7 @@ strip_origin(){ sed 's|^origin/||'; }
 
 recent(){
     git reflog --format='%gs' --all \
-        | grep -oP 'checkout: moving from .* to \K.*' \
+        | sed -n 's/checkout: moving from .* to //p' \
         | dedupe \
         | head -50
 }
