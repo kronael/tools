@@ -73,12 +73,16 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @openai/codex \
   @mariozechner/pi-coding-agent
 
+# Bypass all permissions — container is the sandbox
+RUN echo '{"permissions":{"allow":["*"],"deny":[]},"defaultMode":"bypassPermissions"}' \
+  > /home/claude/.claude/settings.json
+
 # Wrapper: copy host .claude.json at startup, ensure onboarding
 RUN mkdir -p /home/claude/.local/bin && \
   printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
 [ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
-exec /home/claude/.bun/bin/claude "$@"\n' \
+exec /home/claude/.bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /home/claude/.local/bin/claude && \
   chmod +x /home/claude/.local/bin/claude
 ENV PATH="/home/claude/.local/bin:$PATH"
