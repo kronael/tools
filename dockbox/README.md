@@ -7,6 +7,7 @@ Dockerized Claude Code with isolated filesystem access.
 ```bash
 make image              # builds with your UID and TZ
 make image UID=1001     # custom UID
+make image TZ=EST       # custom timezone (default: host TZ or UTC)
 ```
 
 The container user `claude` is created with your UID so mounted files
@@ -25,6 +26,7 @@ make clean              # remove binary and docker image
 dockbox                           # current dir, runs claude
 dockbox ~/wk/project              # mount project, runs claude
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
+dockbox -n mybox .                # custom container name
 dockbox . -- bash                 # run bash instead
 dockbox . -- claude --help        # pass args to claude
 ```
@@ -46,6 +48,7 @@ Automatic:
 - `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime data
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
+- `/etc/localtime` -> `/etc/localtime` (ro) - host timezone
 
 Project dirs are mounted at exact paths with read-write access.
 

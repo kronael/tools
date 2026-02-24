@@ -5,17 +5,11 @@
 set -euo pipefail
 
 IMAGE="dockbox"
-# Set after dirs parsed
 
-# Claude config mounts (rw needed for debug, todos, statsig, etc.)
-CLAUDE_MOUNTS=(
+MOUNTS=(
     "$HOME/.claude:/home/claude/.claude:rw"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
     "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
-)
-
-# Other read-only mounts
-READONLY_MOUNTS=(
     "/etc/localtime:/etc/localtime:ro"
 )
 
@@ -30,9 +24,9 @@ Examples:
     dockbox                           # current dir, runs claude
     dockbox ~/wk/project              # mount project, runs claude
     dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
-    dockbox -n mybox .                # custom container name
-    dockbox . -- bash                 # run bash instead
-    dockbox . -- claude --help        # pass args to claude
+    dockbox -n mybox .                 # custom container name
+    dockbox . -- bash                  # run bash instead
+    dockbox . -- claude --help         # pass args to claude
 
 Mounts (automatic):
     ~/.claude            -> /home/claude/.claude (rw)
@@ -55,44 +49,32 @@ dirs=()
 cmd=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -n) name_override="$2"; shift 2 ;;
+        -n) name_override="${2:?-n requires a name}"; shift 2 ;;
         --) shift; cmd=("$@"); break ;;
         *)  dirs+=("$1"); shift ;;
     esac
 done
 
-# Default to current directory
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-
-# Default command is claude
 [[ ${#cmd[@]} -eq 0 ]] && cmd=(claude)
 
 mounts=()
 workdir=""
 
-# Ensure history file exists
 [[ -f "$HOME/.dockbox_history" ]] || touch "$HOME/.dockbox_history"
 
-# Add Claude config mounts
-for m in "${CLAUDE_MOUNTS[@]}"; do
+for m in "${MOUNTS[@]}"; do
     src="${m%%:*}"
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
-# Add read-only mounts
-for m in "${READONLY_MOUNTS[@]}"; do
-    src="${m%%:*}"
-    [[ -e "$src" ]] && mounts+=(-v "$m")
-done
-
-# Add project directories as read-write at exact same paths
+# Project dirs mounted rw at exact host paths
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
 done
 
-# Container name from project dir or override
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 # Load .dockboxrc files (global then project)
@@ -109,11 +91,10 @@ done
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
-# Check for existing container
 existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
 if [[ -n "$existing" ]]; then
     echo "container '$CONTAINER_NAME' is already running" >&2
-    echo "use -n <name> to pick a different name, or stop it first" >&2
+    echo "use -n <name> or stop it first" >&2
     exit 1
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
