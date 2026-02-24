@@ -112,7 +112,7 @@ for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
     [[ -f "$rc" ]] || continue
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
-        rcargs+=("$line")
+        eval 'rcargs+=('"$line"')'
     done < "$rc"
 done
 

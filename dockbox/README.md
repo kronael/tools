@@ -38,7 +38,7 @@ Default command: claude. Use `-e` to override.
 
 ## Configuration
 
-Extra docker args via `.dockboxrc` files (one arg per line, `#` comments):
+Extra docker args via `.dockboxrc` files (bash-style, `#` comments):
 
 - `~/.dockboxrc` — global defaults (e.g. `--gpus all`)
 - `.dockboxrc` in project dir — per-project overrides
@@ -67,6 +67,29 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 All Claude Code permissions are bypassed inside the container
 (`--dangerously-skip-permissions`). The container itself is the sandbox.
+
+## Cookbook
+
+### X11 display sharing (screenshots, GUI)
+
+Add to `~/.dockboxrc`:
+
+```
+-e DISPLAY
+-v /tmp/.X11-unix:/tmp/.X11-unix:ro
+```
+
+### Share a file with the container
+
+```
+-v /tmp/capture.png:/tmp/capture.png:ro
+```
+
+### GPU passthrough
+
+```
+--gpus all
+```
 
 ## Included Tools
 
