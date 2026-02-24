@@ -176,4 +176,8 @@ dispatch(){
 
 # Busybox-style: detect invocation name, then subcommand
 name=$(basename "$0")
-[[ "$name" != "rig" ]] && dispatch "$name" "$@" || dispatch "${1:-}" "$@"
+if [[ "$name" != "rig" ]]; then
+    dispatch "$name" "$@"
+else
+    dispatch "${1:-}" "$@"
+fi
