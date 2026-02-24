@@ -56,6 +56,11 @@ Project dirs are mounted at exact paths with read-write access.
 
 Uses `~/.claude/.credentials.json` from host (via the mounted `~/.claude` directory).
 
+## Permissions
+
+All Claude Code permissions are bypassed inside the container
+(`--dangerously-skip-permissions`). The container itself is the sandbox.
+
 ## Included Tools
 
 - claude, codex, pi (AI coding agents)
