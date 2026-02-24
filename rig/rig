@@ -20,17 +20,22 @@ all(){
 branches(){ { recent; all; } | strip_origin | dedupe; }
 
 clean_branch(){
-    echo "$1" | sed -E 's#^(origin/|refs/|heads/|remotes/)+##'
+    echo "$1" | sed -E 's#^(origin/|refs/|heads/|remotes/|tags/)+##'
 }
 
 get_current_branch(){
-    local head=HEAD
-    while :; do
+    local head=HEAD i=0
+    while [[ $i -lt 50 ]]; do
         local this=$(git name-rev --name-only "$head" 2>/dev/null)
-        [[ "$this" != "undefined" && -n "$this" ]] && break
-        head+=^
+        if [[ -n "$this" && "$this" != "undefined" \
+            && ! "$this" =~ ^tags/ ]]; then
+            clean_branch "$this"
+            return
+        fi
+        head+=^; ((i++))
     done
-    clean_branch "$this"
+    echo "error: no branch found" >&2
+    return 1
 }
 
 is_commit_not_branch(){
