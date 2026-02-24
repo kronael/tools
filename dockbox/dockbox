@@ -132,6 +132,7 @@ docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     -e HOME=/home/claude \
+    -e TERM \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
