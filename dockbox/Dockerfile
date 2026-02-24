@@ -6,7 +6,7 @@ ENV TZ="$TZ"
 ARG CLAUDE_CODE_VERSION=latest
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  less git procps sudo fzf zsh man-db unzip gnupg2 gh \
+  less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq nano vim \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
