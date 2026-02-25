@@ -19,8 +19,9 @@ RUN userdel -rf node 2>/dev/null; \
 
 ENV DEVCONTAINER=true
 
-RUN mkdir -p /workspace /home/claude/.claude && \
-  chown -R claude:claude /workspace /home/claude/.claude
+RUN mkdir -p /workspace /home/claude/.claude /home/claude/.gnupg && \
+  chmod 700 /home/claude/.gnupg && \
+  chown -R claude:claude /workspace /home/claude/.claude /home/claude/.gnupg
 
 WORKDIR /workspace
 
