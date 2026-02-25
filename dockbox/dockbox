@@ -98,13 +98,10 @@ for m in "${MOUNTS[@]}"; do
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
-# gpg: forward agent socket + public keys (no private keys exposed)
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-if [[ -S "$gpg_sock" ]]; then
-    mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent:ro")
-    [[ -f "$HOME/.gnupg/pubring.kbx" ]] && \
-        mounts+=(-v "$HOME/.gnupg/pubring.kbx:/home/claude/.gnupg/pubring.kbx:ro")
-fi
+[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
+[[ -f "$HOME/.gnupg/pubring.kbx" ]] && \
+    mounts+=(-v "$HOME/.gnupg/pubring.kbx:/home/claude/.gnupg/pubring.kbx:ro")
 
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
