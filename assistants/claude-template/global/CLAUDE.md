@@ -48,7 +48,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
-- ALWAYS 80 chars, max 120
+- ALWAYS 100 chars, max 120
 - Single import per line (cleaner git diffs)
 
 ### TypeScript
