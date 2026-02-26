@@ -54,7 +54,7 @@ Automatic:
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
 - `gpg-agent socket` -> same path inside container
-- `~/.gnupg/pubring.kbx` -> `/home/claude/.gnupg/pubring.kbx` (ro)
+- `~/.gnupg/pubring.{kbx,gpg}` -> `/home/claude/.gnupg/` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)

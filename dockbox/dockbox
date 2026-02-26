@@ -99,9 +99,16 @@ for m in "${MOUNTS[@]}"; do
 done
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:$gpg_sock")
-[[ -f "$HOME/.gnupg/pubring.kbx" ]] && \
-    mounts+=(-v "$HOME/.gnupg/pubring.kbx:/home/claude/.gnupg/pubring.kbx:ro")
+if [[ -S "$gpg_sock" ]]; then
+    gpg_dir=$(dirname "$gpg_sock")
+    runtime_dir=$(dirname "$gpg_dir")
+    mounts+=(--tmpfs "$runtime_dir:uid=$(id -u),mode=700")
+    mounts+=(-v "$gpg_dir:$gpg_dir")
+fi
+for f in pubring.kbx pubring.gpg; do
+    [[ -f "$HOME/.gnupg/$f" ]] && \
+        mounts+=(-v "$HOME/.gnupg/$f:/home/claude/.gnupg/$f:ro")
+done
 
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
@@ -141,6 +148,7 @@ exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     -e HOME=/home/claude \
     -e TERM \
+    -e XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
