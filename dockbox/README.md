@@ -53,7 +53,7 @@ Automatic:
 - `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
-- `gpg-agent socket` -> `/home/claude/.gnupg/S.gpg-agent` (ro)
+- `gpg-agent socket` -> same path inside container
 - `~/.gnupg/pubring.kbx` -> `/home/claude/.gnupg/pubring.kbx` (ro)
 - `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)

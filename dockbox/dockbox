@@ -99,7 +99,7 @@ for m in "${MOUNTS[@]}"; do
 done
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
+[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:$gpg_sock")
 [[ -f "$HOME/.gnupg/pubring.kbx" ]] && \
     mounts+=(-v "$HOME/.gnupg/pubring.kbx:/home/claude/.gnupg/pubring.kbx:ro")
 
