@@ -54,6 +54,7 @@ Usage: dockbox [options] [dirs...] [claude-args...]
 Options:
     -n name    Override container name (default: dockbox-<project>)
     -e cmd     Override entrypoint (default: claude)
+    -H         Use host network
 
 Examples:
     dockbox                           # current dir
@@ -74,12 +75,14 @@ esac
 
 name_override=""
 entrypoint="claude"
+network=""
 dirs=()
 claude_args=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -n) name_override="${2:?-n requires a name}"; shift 2 ;;
         -e) entrypoint="${2:?-e requires a command}"; shift 2 ;;
+        -H) network="--network host"; shift ;;
         /*|./*|.|~*) dirs+=("$1"); shift ;;
         *)           claude_args+=("$1"); shift ;;
     esac
@@ -141,6 +144,7 @@ docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
+    $network \
     -e HOME=/home/claude \
     -e TERM \
     "${mounts[@]}" \
