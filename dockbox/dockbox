@@ -78,13 +78,19 @@ entrypoint="claude"
 network=""
 dirs=()
 claude_args=()
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -n) name_override="${2:?-n requires a name}"; shift 2 ;;
-        -e) entrypoint="${2:?-e requires a command}"; shift 2 ;;
-        -H) network="--network host"; shift ;;
-        /*|./*|.|~*) dirs+=("$1"); shift ;;
-        *)           claude_args+=("$1"); shift ;;
+while getopts ":n:e:H" opt; do
+    case "$opt" in
+        n) name_override="$OPTARG" ;;
+        e) entrypoint="$OPTARG" ;;
+        H) network="--network host" ;;
+        *) claude_args+=("-$OPTARG") ;;
+    esac
+done
+shift $((OPTIND - 1))
+for arg in "$@"; do
+    case "$arg" in
+        /*|./*|.|~*) dirs+=("$arg") ;;
+        *)           claude_args+=("$arg") ;;
     esac
 done
 
