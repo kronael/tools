@@ -102,6 +102,11 @@ workdir=""
 
 [[ -f "$HOME/.dockbox_history" ]] || touch "$HOME/.dockbox_history"
 
+# override settings.local.json inside container to bypass trust prompts
+_settings=$(mktemp)
+echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
+mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
+
 for m in "${MOUNTS[@]}"; do
     src="${m%%:*}"
     [[ -e "$src" ]] && mounts+=(-v "$m")
