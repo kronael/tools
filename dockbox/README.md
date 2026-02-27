@@ -1,6 +1,10 @@
 # dockbox
 
-Dockerized Claude Code with isolated filesystem access.
+Dockerized Claude Code for **operational usability** — not security isolation.
+The goal is a fully capable agent that can work across projects without
+polluting the host filesystem. Docker provides working directory scoping and
+a clean environment, not a security sandbox. The boxed agent has full access
+to your tools, config, and credentials — treat it as yourself in a container.
 
 ## Build
 
@@ -71,8 +75,9 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permissions are bypassed inside the container
-(`--dangerously-skip-permissions`). The container itself is the sandbox.
+All Claude Code permission prompts are bypassed (`--dangerously-skip-permissions`).
+This is intentional — the use case is a trusted agent doing real work, not
+untrusted code execution. If you need security isolation, this is not the tool.
 
 ## Cookbook
 
