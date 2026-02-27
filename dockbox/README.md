@@ -50,7 +50,7 @@ container so the boxed agent can't modify it.
 ## Mounts
 
 Automatic:
-- `~/.claude` -> `/home/claude/.claude` (rw) - credentials and runtime
+- `~/.claude` -> `/home/claude/.claude` (rw) - credentials, skills, settings
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
 - `gpg-agent socket` -> `/home/claude/.gnupg/S.gpg-agent`
@@ -60,6 +60,10 @@ Automatic:
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
+
+`~/.claude` is rw so the boxed agent can update skills, settings, and
+memory just like a normal session. This is intentional — treat the
+container as a full peer that should continuously improve shared config.
 
 ## Authentication
 
