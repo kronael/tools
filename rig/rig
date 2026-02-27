@@ -144,7 +144,7 @@ EOF
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(rio rip rir rim)
+    local symlinks=(rco rip rir rim)
     for s in "${symlinks[@]}"; do
         ln -sf rig "$dir/$s"
         echo "  $dir/$s -> rig"
@@ -158,7 +158,7 @@ usage(){
     cat <<EOF
 rig - ripgit: git tools
 
-  rig co [pattern]   Checkout origin (rio)
+  rig co [pattern]   Checkout origin (rco)
   rig p [branch]     Push to origin (rip)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
@@ -171,7 +171,7 @@ EOF
 
 dispatch(){
     case "$1" in
-        co|checkout|rio) shift; cmd_branch_op checkout "$@" ;;
+        co|checkout|rco) shift; cmd_branch_op checkout "$@" ;;
         p|push|rip)      shift; cmd_push "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;

@@ -19,10 +19,10 @@ rig is designed for upstream-only branches. You never create local
 branches - you work directly on detached HEAD from origin:
 
 ```bash
-rio feature         # fetch + checkout origin/feature (detached)
+rco feature         # fetch + checkout origin/feature (detached)
 # ... make changes, commit ...
 rip feature         # push HEAD to origin/feature
-rio main            # fetch + checkout origin/main (detached)
+rco main            # fetch + checkout origin/main (detached)
 rim feature         # fetch + merge origin/feature into current
 rip main            # push result to origin/main
 ```
@@ -30,7 +30,7 @@ rip main            # push result to origin/main
 **Rebase before push** (clean history):
 
 ```bash
-rio feature         # fetch + checkout origin/feature (detached)
+rco feature         # fetch + checkout origin/feature (detached)
 # ... make changes, commit ...
 rir main            # fetch + rebase -i on origin/main
 rip feature         # push rebased HEAD to origin/feature
@@ -44,7 +44,7 @@ maintain, no tracking to configure, no stale branches to clean up.
 
 | Command | Symlink | Action |
 |---------|---------|--------|
-| `rig checkout` / `rig co` | `rio` | Fetch + checkout origin/branch (detached) |
+| `rig checkout` / `rig co` | `rco` | Fetch + checkout origin/branch (detached) |
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
@@ -67,14 +67,14 @@ Installs to `~/.local/bin/`.
 
 ## Usage
 
-### Checkout (rio)
+### Checkout (rco)
 
 ```bash
-rio apm           # Fetch + checkout best match for "apm"
-rio -z apm        # Offline: checkout without fetching
-rio -n apm        # Dry-run: show which branch matches
-rio ?             # Force interactive fzf selection
-rio               # Open fzf, type to filter, Enter to checkout
+rco apm           # Fetch + checkout best match for "apm"
+rco -z apm        # Offline: checkout without fetching
+rco -n apm        # Dry-run: show which branch matches
+rco ?             # Force interactive fzf selection
+rco               # Open fzf, type to filter, Enter to checkout
 ```
 
 ### Push (rip)
@@ -108,7 +108,7 @@ rim ?             # Interactive branch selection
 
 ## How It Works
 
-Single busybox-style script. Symlinks (`rio`, `rip`, `rir`, `rim`)
+Single busybox-style script. Symlinks (`rco`, `rip`, `rir`, `rim`)
 dispatch via `basename $0`. Checkout, rebase, and merge share a
 `cmd_branch_op` helper; push has its own handler. All commands
 fetch by default; `-z` suppresses fetch.

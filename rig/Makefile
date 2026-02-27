@@ -3,7 +3,7 @@
 install:
 	mkdir -p ~/.local/bin
 	install -m 755 rig ~/.local/bin/rig
-	ln -sf rig ~/.local/bin/rio
+	ln -sf rig ~/.local/bin/rco
 	ln -sf rig ~/.local/bin/rip
 	ln -sf rig ~/.local/bin/rir
 	ln -sf rig ~/.local/bin/rim
@@ -15,5 +15,5 @@ install:
 	rm -f ~/bin/gt ~/bin/gco ~/bin/gto ~/bin/gtp ~/bin/gtr
 
 clean:
-	rm -f ~/.local/bin/rig ~/.local/bin/rio
+	rm -f ~/.local/bin/rig ~/.local/bin/rco
 	rm -f ~/.local/bin/rip ~/.local/bin/rir ~/.local/bin/rim

@@ -24,7 +24,7 @@ Single busybox-style bash script (`rig/rig`). Symlinks detect
 invocation name and dispatch to subcommands.
 
 ```bash
-rig co [pattern]   # Checkout origin/branch, detached (rio)
+rig co [pattern]   # Checkout origin/branch, detached (rco)
 rig p [branch]     # Push HEAD to origin/branch (rip)
 rig r [pattern]    # Rebase -i on origin/branch (rir)
 rig m [pattern]    # Merge origin/branch (rim)
