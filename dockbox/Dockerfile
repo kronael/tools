@@ -75,6 +75,8 @@ RUN ARCH=$(uname -m) && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/claude/.local/bin:$PATH"
 
+RUN uv tool install pre-commit
+
 RUN curl -fsSL https://get.sdkman.io | bash
 ENV SDKMAN_DIR="/home/claude/.sdkman"
 
