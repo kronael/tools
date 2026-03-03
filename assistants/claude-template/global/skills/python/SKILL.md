@@ -40,6 +40,7 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - ALWAYS name the variable `log` (modules, classes, everywhere)
 
 ## Style
+- Exception variables: NEVER use `e` — use `ex` or a descriptive name (`exc`, `err`)
 - Never modify `sys.path` from scripts
 - Use `.get()` for dict existence checks
 - NEVER use `global` keyword except in trivial scripts or when
