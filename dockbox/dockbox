@@ -55,6 +55,7 @@ Options:
     -n name    Override container name (default: dockbox-<project>)
     -e cmd     Override entrypoint (default: claude)
     -H         Use host network
+    -A         Forward SSH agent
 
 Examples:
     dockbox                           # current dir
@@ -76,13 +77,15 @@ esac
 name_override=""
 entrypoint="claude"
 network=""
+ssh_agent=""
 dirs=()
 claude_args=()
-while getopts ":n:e:H" opt; do
+while getopts ":n:e:HA" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         e) entrypoint="$OPTARG" ;;
         H) network="--network host" ;;
+        A) ssh_agent=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -118,6 +121,12 @@ for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
         mounts+=(-v "$HOME/.gnupg/$f:/home/claude/.gnupg/$f:ro")
 done
+
+ssh_env=()
+if [[ -n "$ssh_agent" && -n "${SSH_AUTH_SOCK:-}" ]]; then
+    mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
+    ssh_env=(-e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
+fi
 
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
@@ -158,6 +167,7 @@ exec docker run -it --rm \
     $network \
     -e HOME=/home/claude \
     -e TERM \
+    "${ssh_env[@]}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
