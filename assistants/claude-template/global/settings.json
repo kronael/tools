@@ -104,6 +104,7 @@
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
   "env": {
-    "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION": "false"
+    "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION": "false",
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   }
 }
