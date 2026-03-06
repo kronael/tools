@@ -45,6 +45,10 @@ When user says "install":
 **Merge** (show diff, ask what to keep):
 - global/CLAUDE.md → ~/.claude/CLAUDE.md
 - global/settings.json → ~/.claude/settings.json
+  - ALWAYS show side-by-side comparison of permissions and restrictions
+  - ALWAYS ask which restrictions to apply (template is more restrictive)
+  - Template defaults: `defaultMode: "default"`, `sandbox.enabled: true`
+  - User may have relaxed settings — explicitly confirm before overwriting
 
 **Never touch** (user-maintained):
 - ~/.claude/settings.local.json
