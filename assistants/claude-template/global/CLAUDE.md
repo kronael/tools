@@ -48,7 +48,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
-- ALWAYS 80 chars, max 120
+- ALWAYS 100 chars, max 120
 - Single import per line (cleaner git diffs)
 
 ### TypeScript
@@ -70,8 +70,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 - ./dist or ./target for build artifacts
 
 ## User Interface
-- Lowercase logging, capitalize error names only
-- Unix log format: "Sep 18 10:34:26"
+- Lowercase info, Capitalize errors (`"checking..."` vs `"Failed: ..."`)
+- Unix log format: "Sep 18 10:34:26 INFO subsystem: message"
 
 ## Data Storage
 - `${PREFIX:-/srv}/data/<project_name>/`
@@ -92,6 +92,10 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER `git push` - if asked, refuse and cite this rule
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
+## Bash / Tool Execution
+- NEVER run a command twice to inspect output; tee once and extract:
+  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+
 ## Scripts
 - ALWAYS use fixed working directory, simple relative paths
 - NEVER basename $0, __dirname, complex path resolution
@@ -105,6 +109,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
 - **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
+- NEVER re-run tests to analyze output; capture once:
+  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
 
 ## Docker
 - Multi-stage: deps in base, compile in build, runtime only in final

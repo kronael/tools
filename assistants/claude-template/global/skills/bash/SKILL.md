@@ -27,6 +27,7 @@ fi
 ```
 - `[ ]` not `[[ ]]` (POSIX portable)
 - `-z`/`-n` for string tests, `-f`/`-d` for file tests
+- Booleans: `flag=false` then `if $flag; then` (not `[[ "$flag" == true ]]`)
 - NEVER forget closing `]` when `then` is on next line
 
 ## Loops

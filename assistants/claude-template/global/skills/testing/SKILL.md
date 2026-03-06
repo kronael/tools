@@ -1,9 +1,16 @@
 ---
 name: testing
-description: Testing patterns. Use when writing tests, setting up test infrastructure, testcontainers.
+description: Testing patterns. Use when writing tests, running tests, debugging or triaging
+  test failures, reading test output, testcontainers.
 ---
 
 # Testing
+
+## Diagnosing Failures
+
+- NEVER re-run tests to analyze output; capture once:
+  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+- For complex failures, delegate to a subagent with the log file path
 
 ## Philosophy
 

@@ -1,0 +1,175 @@
+#!/bin/bash
+set -euo pipefail
+
+IMAGE="dockbox"
+
+MOUNTS=(
+    "$HOME/.claude:/home/claude/.claude:rw"
+    "$HOME/.claude.json:/tmp/host-claude.json:ro"
+    "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
+    "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
+    "/etc/localtime:/etc/localtime:ro"
+)
+
+case "${1:-}" in
+    ls)
+        docker container ls -a --filter "name=^dockbox-" \
+            --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
+        exit 0 ;;
+    rm)
+        pattern="${2:-}"
+        names=$(docker container ls -a --filter "name=^dockbox-" \
+            --format "{{.Names}}")
+        [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
+        if [[ -n "$pattern" ]]; then
+            names=$(echo "$names" | grep -F "$pattern" || true)
+            [[ -z "$names" ]] && {
+                echo "no match for '$pattern'"; exit 0
+            }
+        fi
+        echo "$names" | while read -r n; do
+            docker rm -f "$n" && echo "removed $n"
+        done
+        exit 0 ;;
+    prune)
+        hours="${2:-2160}"
+        cutoff=$(date -d "-${hours} hours" +%s 2>/dev/null) || \
+            cutoff=$(date -v-${hours}H +%s)
+        docker container ls -a \
+            --filter "name=^dockbox-" --filter "status=exited" \
+            --format "{{.Names}}\t{{.CreatedAt}}" \
+            | while IFS=$'\t' read -r name created; do
+            ts=$(date -d "$created" +%s 2>/dev/null) || \
+                ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" \
+                    "$created" +%s)
+            [[ "$ts" -lt "$cutoff" ]] && \
+                docker rm "$name" && echo "removed $name"
+        done
+        exit 0 ;;
+    -h|--help)
+        cat <<EOF
+Usage: dockbox [options] [dirs...] [claude-args...]
+       dockbox ls | rm [pattern] | prune [hours]
+
+Options:
+    -n name    Override container name (default: dockbox-<project>)
+    -e cmd     Override entrypoint (default: claude)
+    -H         Use host network
+    -A         Forward SSH agent
+
+Examples:
+    dockbox                           # current dir
+    dockbox ~/wk/project              # mount project
+    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs
+    dockbox -n mybox .                # custom name
+    dockbox -c                        # continue session
+    dockbox -e bash                   # run bash instead
+
+Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
+        ~/.gitconfig (ro), ~/.dockbox_history (rw)
+
+Config: ~/.dockboxrc and .dockboxrc in project dir.
+        Extra docker args, one per line. # comments ok.
+EOF
+        exit 0 ;;
+esac
+
+name_override=""
+entrypoint="claude"
+network=""
+ssh_agent=""
+dirs=()
+claude_args=()
+while getopts ":n:e:HA" opt; do
+    case "$opt" in
+        n) name_override="$OPTARG" ;;
+        e) entrypoint="$OPTARG" ;;
+        H) network="--network host" ;;
+        A) ssh_agent=1 ;;
+        *) claude_args+=("-$OPTARG") ;;
+    esac
+done
+shift $((OPTIND - 1))
+for arg in "$@"; do
+    case "$arg" in
+        /*|./*|.|~*) dirs+=("$arg") ;;
+        *)           claude_args+=("$arg") ;;
+    esac
+done
+
+[[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
+cmd=("$entrypoint" "${claude_args[@]}")
+
+mounts=()
+workdir=""
+
+[[ -f "$HOME/.dockbox_history" ]] || touch "$HOME/.dockbox_history"
+
+for m in "${MOUNTS[@]}"; do
+    src="${m%%:*}"
+    [[ -e "$src" ]] && mounts+=(-v "$m")
+done
+
+# override settings.local.json after ~/.claude mount to bypass trust prompts
+_settings=$(mktemp)
+echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
+mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
+
+gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
+[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
+for f in pubring.kbx pubring.gpg; do
+    [[ -f "$HOME/.gnupg/$f" ]] && \
+        mounts+=(-v "$HOME/.gnupg/$f:/home/claude/.gnupg/$f:ro")
+done
+
+ssh_env=()
+if [[ -n "$ssh_agent" && -n "${SSH_AUTH_SOCK:-}" ]]; then
+    mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
+    ssh_env=(-e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
+fi
+
+for dir in "${dirs[@]}"; do
+    dir="$(cd "$dir" && pwd)"
+    mounts+=(-v "$dir:$dir:rw")
+    workdir="$dir"
+done
+
+# screenshot sharing: host /tmp/capture.png -> project capture.png
+[[ -f /tmp/capture.png ]] || touch /tmp/capture.png
+mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
+
+CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
+
+rcargs=()
+for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
+    [[ -f "$rc" ]] || continue
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        read -ra words <<< "$line"
+        rcargs+=("${words[@]}")
+    done < "$rc"
+done
+
+# overmount so container can't modify project .dockboxrc
+[[ -f "$workdir/.dockboxrc" ]] && \
+    mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
+
+existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
+if [[ -n "$existing" ]]; then
+    echo "container '$CONTAINER_NAME' is already running" >&2
+    echo "use -n <name> or stop it first" >&2
+    exit 1
+fi
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+exec docker run -it --rm \
+    --name "$CONTAINER_NAME" \
+    $network \
+    -e HOME=/home/claude \
+    -e TERM \
+    "${ssh_env[@]}" \
+    "${mounts[@]}" \
+    "${rcargs[@]}" \
+    -w "$workdir" \
+    -- "$IMAGE" \
+    "${cmd[@]}"

@@ -24,7 +24,7 @@ Single busybox-style bash script (`rig/rig`). Symlinks detect
 invocation name and dispatch to subcommands.
 
 ```bash
-rig co [pattern]   # Checkout origin/branch, detached (rio)
+rig co [pattern]   # Checkout origin/branch, detached (rco)
 rig p [branch]     # Push HEAD to origin/branch (rip)
 rig r [pattern]    # Rebase -i on origin/branch (rir)
 rig m [pattern]    # Merge origin/branch (rim)
@@ -36,6 +36,14 @@ rig install        # Create symlinks in script's directory
 **Implementation**: helpers at top, flags parsed, then main logic.
 Clear sections: `# Parse flags`, `# Select branch`, `# Execute`.
 
+### dockbox - Dockerized Claude Code sandbox
+
+Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated
+Docker container. Multi-directory mounts, per-project `.dockboxrc`
+config, all permissions bypassed (container is the sandbox).
+
+Makefile targets: `image` (build), `install` (build+install), `clean`.
+
 ## Assistants
 
 Claude Code configuration in `assistants/`.
@@ -46,12 +54,12 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (18): auto-activate based on file context (bash, cli,
-commit, data, go, ops, python, refine, research, rust, service, sql,
-testing, trader, tweet, typescript, web, wisdom)
+**Skills** (16): auto-activate based on file context (bash, cli,
+commit, data, go, ops, python, refine, rust, service, sql,
+testing, trader, tweet, typescript, wisdom)
 
-**Agents** (8): @distill, @improve, @learn, @readme, @refine,
-@research, @deep-research, @visual
+**Agents** (6): @distill, @improve, @learn, @readme,
+@refine, @visual
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 

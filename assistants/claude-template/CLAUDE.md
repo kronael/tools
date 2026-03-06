@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-Claude Code configuration: 8 agents, 18 auto-activating skills, 5 commands.
+Claude Code configuration: 6 agents, 16 auto-activating skills, 5 commands.
 
 ## Structure
 
 ```
 global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
-├── agents/            # 8 specialized task agents
+├── agents/            # 6 specialized task agents
 ├── commands/          # 5 slash commands (/improve, /learn, /readme, /refine, /visual)
 ├── skills/            # 16 auto-activating skills
 └── settings.json      # Shared Claude Code settings
@@ -16,7 +16,6 @@ global/                 # Installs to ~/.claude/
 ## Settings
 
 `global/settings.json` — shared config (tracked):
-- sandbox enabled + autoAllowBashIfSandboxed
 - LSP plugins (rust-analyzer, pyright, gopls, typescript)
 - Task(*) auto-allow for agent launches
 
@@ -52,8 +51,14 @@ When user says "install":
 - ~/.claude/LOCAL.md
 - ~/.claude/CLAUDE.local.md (project-level)
 
+**Overlay** (org repos add after base install):
+- Org-specific skills → ~/.claude/skills/<org>/
+- Installed separately: `cp -r skills/<org> ~/.claude/skills/`
+- NEVER included in base — org content lives in overlay repos
+
 NEVER delete files not in source
 NEVER modify files user chose to skip
+NEVER sync skipDangerousModePermissionPrompt from ~/.claude/ back to template
 ALWAYS backup before overwriting
 
 ### LOCAL.md Handling
@@ -69,11 +74,10 @@ repo names, secrets references, or org-specific content not in source:
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Agents** (8): @deep-research, @distill, @improve, @learn, @readme, @refine, @research, @visual
+**Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (18): bash, cli, commit, data, go, ops, python, refine,
-research, rust, service, sql, testing, trader, tweet, typescript, web,
-wisdom
+**Skills** (16): bash, cli, commit, data, go, ops, python, refine,
+rust, service, sql, testing, trader, tweet, typescript, wisdom
 
 **Hooks** (7): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification), context (context management)
 
