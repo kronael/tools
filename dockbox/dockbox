@@ -56,6 +56,7 @@ Options:
     -e cmd     Override entrypoint (default: claude)
     -H         Use host network
     -A         Forward SSH agent
+    -D         Mount Docker socket
 
 Examples:
     dockbox                           # current dir
@@ -78,14 +79,16 @@ name_override=""
 entrypoint="claude"
 network=""
 ssh_agent=""
+docker_sock=""
 dirs=()
 claude_args=()
-while getopts ":n:e:HA" opt; do
+while getopts ":n:e:HAD" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         e) entrypoint="$OPTARG" ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
+        D) docker_sock=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -114,6 +117,9 @@ done
 _settings=$(mktemp)
 echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
 mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
+
+[[ -n "$docker_sock" && -S /var/run/docker.sock ]] && \
+    mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
 [[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
