@@ -137,6 +137,10 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
 - specs/ directory for specifications, named by content
+  - Phase-spec format: `specs/{phase}/{id}-{name}.md` (e.g. `specs/1/01-type-strictification.md`)
+  - Phase = directory, major initiative (when to ship)
+  - ID = base58+0 serial within phase (0-9, then A-Z excl O/I, then a-z excl l): 01 02 … 09 0A …
+  - Each phase dir has `todo.md` — index of all specs in that phase to ship
 - .ship/ directory for all shipping artifacts (plans, state, critiques)
   - Flat structure, type in filename: plan-*.md, state-*.md, critique-*.md
   - ALWAYS gitignored, ephemeral working dir
