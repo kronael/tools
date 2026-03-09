@@ -168,6 +168,7 @@ if [[ -n "$existing" ]]; then
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
+trap '' TSTP
 exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     $network \
