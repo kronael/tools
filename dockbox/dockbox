@@ -56,7 +56,6 @@ Options:
     -e cmd     Override entrypoint (default: claude)
     -H         Use host network
     -A         Forward SSH agent
-    -D         Mount Docker socket
 
 Examples:
     dockbox                           # current dir
@@ -79,16 +78,14 @@ name_override=""
 entrypoint="claude"
 network=""
 ssh_agent=""
-docker_sock=""
 dirs=()
 claude_args=()
-while getopts ":n:e:HAD" opt; do
+while getopts ":n:e:HA" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         e) entrypoint="$OPTARG" ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
-        D) docker_sock=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -118,8 +115,11 @@ _settings=$(mktemp)
 echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
 mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
 
-[[ -n "$docker_sock" && -S /var/run/docker.sock ]] && \
+docker_gid_arg=""
+if [[ -S /var/run/docker.sock ]]; then
     mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
+    docker_gid_arg="--group-add $(stat -c %g /var/run/docker.sock)"
+fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
 [[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
@@ -172,6 +172,7 @@ trap '' TSTP
 exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     $network \
+    $docker_gid_arg \
     -e HOME=/home/claude \
     -e TERM \
     "${ssh_env[@]}" \
