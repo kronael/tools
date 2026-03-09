@@ -8,10 +8,16 @@ ARG CLAUDE_CODE_VERSION=latest
 RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
-  jq nano vim \
+  jq nano vim ca-certificates curl \
   libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
   libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 \
   libpango-1.0-0 libcairo2 libasound2 libxshmfence1 libxfixes3 \
+  && install -m 0755 -d /etc/apt/keyrings \
+  && curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc \
+  && chmod a+r /etc/apt/keyrings/docker.asc \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" \
+     > /etc/apt/sources.list.d/docker.list \
+  && apt-get update && apt-get install -y --no-install-recommends docker-ce-cli \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG UID=1000
