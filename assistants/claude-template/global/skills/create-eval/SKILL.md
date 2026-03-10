@@ -15,9 +15,7 @@ and generate improvement specs when issues are found.
 
 1. Read CLAUDE.md, README, specs/, ARCHITECTURE.md, docs/
 2. Identify what this project does and what "correct" means
-3. Ask user:
-   - What does healthy look like? What does broken look like?
-   - What are the known failure modes?
+3. Ask user about known failure modes
    - Logs: check ops skill, /srv/log, /var/log, or ask
 4. Write `.claude/skills/eval/SKILL.md` with:
    - Log locations and what to grep for
