@@ -15,7 +15,7 @@ Evaluate agent responses and save structured assessments.
 
 ## Storage
 
-Save evaluations to `eval/<topic>/YYYY-MM-DD.md` (project-local).
+Save evaluations to `eval/<topic>/YYYYMMDD.md` (project-local).
 
 Create topic directories as needed (e.g., `3dprint/`, `research/`, `code/`).
 
@@ -24,7 +24,7 @@ Create topic directories as needed (e.g., `3dprint/`, `research/`, `code/`).
 ```markdown
 # Evaluation: <Topic> (<agent>/<instance>)
 
-**Date**: YYYY-MM-DD
+**Date**: YYYYMMDD
 **Agent**: <agent name> (<instance>)
 **Task**: <one-line summary>
 
