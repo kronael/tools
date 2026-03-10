@@ -6,48 +6,17 @@ user-invocable: true
 
 # Create Eval
 
-Generate a project-specific `.claude/skills/eval/SKILL.md` by reading the project.
+Generate `.claude/skills/eval/SKILL.md` for the current project.
 
 ## Process
 
-1. ALWAYS read first: CLAUDE.md, README, specs/, ARCHITECTURE.md, docs/
-2. Identify what this project does — its core promises
-3. Ask user: "What does correct look like for this project?"
-4. Ask user: "What are the known failure modes?"
-5. Generate `.claude/skills/eval/SKILL.md` with:
-   - Project-specific verification steps (what to check)
-   - Project-specific pass/fail criteria
-   - Known gotchas and past failures
-   - Storage path: `eval/<topic>/YYYYMMDD.md`
-
-## Generated Eval Skill Structure
-
-```
-name: eval
-description: Evaluate agent responses for <project>.
-
-# Eval: <project>
-
-## What to Verify
-- <project-specific checks derived from docs>
-
-## Pass/Fail Criteria
-- <what PASS means for this project>
-- <what FAIL means for this project>
-
-## Known Gotchas
-- <from user answers and docs>
-
-## Rules
-- ALWAYS read CLAUDE.md before evaluating
-- ALWAYS verify file changes exist
-- ALWAYS run tests if available
-- NEVER score without evidence
-```
+1. Read CLAUDE.md, README, specs/, ARCHITECTURE.md, docs/
+2. Identify what this project does and what "correct" means
+3. Ask user until you understand pass/fail criteria and known failure modes
+4. Write `.claude/skills/eval/SKILL.md` — every line project-specific
 
 ## Rules
 
-- ALWAYS read project docs before generating — NEVER guess
-- ALWAYS ask user at least 2 questions before generating
-- NEVER copy generic criteria — every line must be project-specific
-- Output goes to `.claude/skills/eval/SKILL.md` in the project
+- ALWAYS read project docs before generating
+- NEVER include generic criteria — derive everything from the project
+- NEVER generate without asking the user first
