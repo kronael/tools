@@ -12,7 +12,7 @@ user-invocable: true
 2. Version bump — patch default, detect version file from project language (CLAUDE.md SHOULD define which)
 3. Changelog — move [Unreleased] to `[vX.Y.Z] — YYYYMMDD`, generate from git log if empty
 4. Docs alignment — spawn refine agent: update CLAUDE.md, README if version/stats changed
-5. Verify — `make lint`, tests pass
+5. Verify — `make test`, `make smoke` if available
 6. Commit version + changelog
 7. `git tag vX.Y.Z` — the tag IS the release
 8. Remind user to rebuild images and deploy
