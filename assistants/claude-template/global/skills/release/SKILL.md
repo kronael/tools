@@ -15,7 +15,6 @@ user-invocable: true
 5. Verify — `make test`, `make smoke` if available
 6. Commit version + changelog
 7. `git tag vX.Y.Z` — the tag IS the release
-8. Remind user to rebuild images and deploy
 
 ## Rules
 
