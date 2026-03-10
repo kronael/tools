@@ -1,64 +1,42 @@
 ---
 name: commit
-description: Git commits. git status, git diff, git add, staging files, commit messages, [section] format.
+description: Git commits. git status, git diff, commit messages, [section] format.
 user-invocable: true
 ---
 
 # Commit
 
-Run the git commit workflow directly (no subagent).
+## When
 
-## Optional Markers
+- `/commit`: ALWAYS proceed
+- Auto (hook): only if cohesive chunk (single fix/feat/refactor, related files, complete work)
+- Not cohesive: report and stop
 
-If args contains a marker, use the corresponding format:
-- `[checkpoint]` - prefix: `[checkpoint] Message`
-- `[refined]` - suffix: `[section] Message [refined]`
-- (none) - default: `[section] Message`
+## Format
 
-Section names: `fix`, `feat`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
+`[section] Message` — why not what, 1-2 sentences.
+Sections: fix, feat, refactor, docs, test, chore, perf, style
+
+Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] Message [refined]`
 
 ## Workflow
 
-1. Run `git status` (NEVER use -uall flag)
-2. Run `git diff` to see staged and unstaged changes
-3. Run `git log --oneline -5` to see recent commit style
-4. If no changes exist, stop and report "nothing to commit"
-5. Validate if commit is needed:
-   - If user explicitly invoked /commit: ALWAYS proceed
-   - If auto-suggested (from hook): check if changes form cohesive chunk:
-     * Single feature, fix, or refactor (not multiple unrelated changes)
-     * Related files (not scattered across unrelated modules)
-     * Complete work (not half-implemented or broken state)
-   - If NOT cohesive: list distinct changes, suggest separate commits, stop
-   - If cohesive: proceed to commit
-6. Analyze changes and draft a commit message:
-   - Summarize the nature (feature, fix, refactor, etc.)
-   - Use the FORMAT matching the marker above
-   - Focus on "why" not "what"
-   - Keep it concise (1-2 sentences)
-7. Stage relevant files with `git add` (avoid secrets like .env)
-8. Create the commit using HEREDOC format:
-   ```
-   git commit -m "$(cat <<'EOF'
-   Your message here
-   EOF
-   )"
-   ```
-9. Run `git status` to verify success
+1. `git status` + `git diff` + `git log --oneline -5`
+2. Decide commit or not
+3. Draft message
+4. Commit directly: `git commit -m "msg" -- file1 file2`
+5. If pre-commit reformats, retry once
+6. If index.lock: `rm -f .git/index.lock`, retry once
 
 ## Rules
 
-- ALWAYS commit when explicitly invoked by user
-- ONLY commit auto-suggestions if changes form cohesive chunk
-- Cohesive chunk = single feature, fix, or refactor; related files; complete work
-- Disparate changes → stage only one logical change, commit it, repeat
-- NEVER use git commit --amend
-- NEVER add Co-Authored-By lines
+- ALWAYS `git commit -m "msg" -- file1 file2` (direct, no staging)
+- ALWAYS commit whole files, list each explicitly
+- NEVER `git add` (commit directly with -- pathspec)
+- NEVER `git commit` without `-- file1 file2`
+- NEVER `git commit --amend`
+- NEVER `git commit -a`
+- NEVER `git stash`
+- NEVER Co-Authored-By
 - NEVER skip pre-commit hooks
-- If pre-commit fails and reformats, retry the commit once
-
-## Examples
-
-User: `/commit` -> regular commit with `[section] Message`
-Internal: `Skill(commit, "[checkpoint]")` -> `[checkpoint] Message`
-Internal: `Skill(commit, "[refined]")` -> `[section] Message [refined]`
+- Ignore other agents' uncommitted changes
