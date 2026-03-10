@@ -9,9 +9,9 @@ user-invocable: true
 ## Process
 
 1. Detect scope — `git log` since last tag
-2. Version bump — patch default, update `package.json`
-3. Changelog — move [Unreleased] to `[vX.Y.Z] — YYYY-MM-DD`, generate from git log if empty
-4. Docs alignment — spawn refine agent: CLAUDE.md modules, stats, `docs/kanipi.html` version
+2. Version bump — patch default, detect version file (package.json, Cargo.toml, pyproject.toml, VERSION)
+3. Changelog — move [Unreleased] to `[vX.Y.Z] — YYYYMMDD`, generate from git log if empty
+4. Docs alignment — spawn refine agent: update CLAUDE.md, README if version/stats changed
 5. Verify — `make lint`, tests pass
 6. Commit version + changelog
 7. `git tag vX.Y.Z` — the tag IS the release
