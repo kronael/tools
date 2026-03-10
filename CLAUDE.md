@@ -54,9 +54,10 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (16): auto-activate based on file context (bash, cli,
-commit, data, go, ops, python, refine, rust, service, sql,
-testing, trader, tweet, typescript, wisdom)
+**Skills** (20): auto-activate based on file context (bash, cli,
+commit, data, eval, go, ops, python, refine, release, rust,
+service, ship, specs, sql, testing, trader, tweet, typescript,
+wisdom)
 
 **Agents** (6): @distill, @improve, @learn, @readme,
 @refine, @visual
