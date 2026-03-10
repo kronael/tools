@@ -178,6 +178,7 @@ exec docker run -it --rm \
     $docker_gid_arg \
     -e HOME=/home/claude \
     -e TERM \
+    ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \
