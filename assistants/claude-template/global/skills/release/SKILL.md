@@ -20,7 +20,5 @@ user-invocable: true
 
 - ALWAYS `git tag vX.Y.Z` on the final commit
 - NEVER push (`git push`)
-- NEVER use `git add -A`
-- NEVER amend commits
 - Default to patch bump unless user says otherwise
 - No changes since last tag → "nothing to release", stop
