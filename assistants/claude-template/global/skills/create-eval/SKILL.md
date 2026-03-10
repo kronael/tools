@@ -8,12 +8,21 @@ user-invocable: true
 
 Generate `.claude/skills/eval/SKILL.md` for the current project.
 
+The eval skill runs periodically to read logs, verify correctness,
+and generate improvement specs when issues are found.
+
 ## Process
 
 1. Read CLAUDE.md, README, specs/, ARCHITECTURE.md, docs/
 2. Identify what this project does and what "correct" means
-3. Ask user until you understand pass/fail criteria and known failure modes
-4. Write `.claude/skills/eval/SKILL.md` — every line project-specific
+3. Ask user:
+   - Where are the logs? (./log, stdout, external)
+   - What does healthy look like? What does broken look like?
+   - What are the known failure modes?
+4. Write `.claude/skills/eval/SKILL.md` with:
+   - Log locations and what to grep for
+   - Health checks (pass/fail criteria from logs)
+   - When to generate improvement specs (to specs/ or .ship/)
 
 ## Rules
 
