@@ -9,7 +9,7 @@ user-invocable: true
 ## Process
 
 1. Detect scope — `git log` since last tag
-2. Version bump — patch default, detect version file (package.json, Cargo.toml, pyproject.toml, VERSION)
+2. Version bump — patch default, detect version file from project language (CLAUDE.md SHOULD define which)
 3. Changelog — move [Unreleased] to `[vX.Y.Z] — YYYYMMDD`, generate from git log if empty
 4. Docs alignment — spawn refine agent: update CLAUDE.md, README if version/stats changed
 5. Verify — `make lint`, tests pass
