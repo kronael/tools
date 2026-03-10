@@ -1,0 +1,27 @@
+---
+name: release
+description: Prepare a release. Version bump, changelog, docs alignment, git tag.
+user-invocable: true
+---
+
+# Release
+
+## Process
+
+1. Detect scope — `git log` since last tag
+2. Version bump — patch default, update `package.json`
+3. Changelog — move [Unreleased] to `[vX.Y.Z] — YYYY-MM-DD`, generate from git log if empty
+4. Docs alignment — spawn refine agent: CLAUDE.md modules, stats, `docs/kanipi.html` version
+5. Verify — `make lint`, tests pass
+6. Commit version + changelog
+7. `git tag vX.Y.Z` — the tag IS the release
+8. Remind user to rebuild images and deploy
+
+## Rules
+
+- ALWAYS `git tag vX.Y.Z` on the final commit
+- NEVER push (`git push`)
+- NEVER use `git add -A`
+- NEVER amend commits
+- Default to patch bump unless user says otherwise
+- No changes since last tag → "nothing to release", stop
