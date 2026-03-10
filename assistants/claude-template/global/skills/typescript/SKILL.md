@@ -9,6 +9,10 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 - Arrow functions: `const f = (args): result => { ... }`
 - Avoid `function` keyword where arrow functions suffice
 - Match existing code style when changing code
+- Single-letter vars (`v`, `d`) only in visually trivial one-line callbacks
+  (e.g., `arr.find(v => v.id === x)`); use descriptive names when body is
+  multi-statement or accesses nested properties
+- Prefer concrete named types over derived utility types when possible
 - ALWAYS name types — NEVER use inline/anonymous object types (tests exempt)
   - Bad: `cache.get<{ status: number; message: string }>()`
   - Good: `interface CachedError { status: number; message: string }` then `cache.get<CachedError>()`
@@ -17,14 +21,18 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
 
 ### Control Flow
-- ALWAYS use braces for if-statement bodies (NEVER single-line returns):
+- ALWAYS use braces for if-statement and for-loop bodies (NEVER single-line):
   ```typescript
   // WRONG
   if (!value) return null
+  for (const v of items) doSomething(v)
 
   // CORRECT
   if (!value) {
     return null
+  }
+  for (const v of items) {
+    doSomething(v)
   }
   ```
 
@@ -48,6 +56,10 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 - Avoid IIFEs in object literals; define values beforehand if needed
 - No JSDoc on self-explanatory functions (clear name + few lines = no comment)
 - Library barrel files (index.ts): use `export * from './module'` for re-exports
+
+## Logging
+- NestJS: built-in Logger (wraps Pino)
+- Standalone: Pino directly
 
 ## Validation
 - ALWAYS validate external I/O with class-validator when practical

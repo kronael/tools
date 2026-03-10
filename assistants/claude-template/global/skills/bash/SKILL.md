@@ -37,6 +37,8 @@ do
   ...
 done
 ```
+- Prefer `shopt -s globstar` + `**/*.ext` over `find` for file iteration
+- NEVER pipe into `while` when loop body sets variables (subshell loses state)
 
 ## Process
 - Kill by PID, never `killall` or `pkill -f`
