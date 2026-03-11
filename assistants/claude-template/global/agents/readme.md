@@ -116,7 +116,7 @@ Remove from CLAUDE.md if covered elsewhere:
 - Usage examples → README
 - Component descriptions → ARCHITECTURE
 - Architecture diagrams → ARCHITECTURE
-- Language-specific patterns → skills (rust, python, sql)
+- Language-specific patterns → skills (rs, py, sql)
 - Domain-specific patterns → skills (trader, collector)
 
 Keep in CLAUDE.md:

@@ -42,16 +42,16 @@ Auto-activate based on file context. No setup needed per project.
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
 | **go** | .go, go.mod | testing.Short(), test files next to code |
-| **python** | .py, pyproject.toml | Modern type hints, asyncpg direct, uv, pyright |
-| **rust** | .rs, Cargo.toml | FxDashMap, enum states, tracing, testcontainers |
-| **typescript** | .ts/.tsx, package.json | Arrow style, class-validator, Bun, Playwright |
+| **py** | .py, pyproject.toml | Modern type hints, asyncpg direct, uv, pyright |
+| **rs** | .rs, Cargo.toml | FxDashMap, enum states, tracing, testcontainers |
+| **ts** | .ts/.tsx, package.json | Arrow style, class-validator, Bun, Playwright |
 | **sql** | SQL queries, migrations | JOIN USING, no AS aliases, one migration per change |
 
 ### Domain Skills
 
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
-| **bash** | .sh, shell scripts | POSIX patterns, signal handling |
+| **sh** | .sh, shell scripts | POSIX patterns, signal handling |
 | **cli** | argparse, click, clap | Config precedence, exit codes, --json flag |
 | **service** | /health, /ready, /v1/ | Versioned paths, validate-before-persist, caching |
 | **data** | scrapers, ETL, feeds | LeakyBucket, state recovery, dedup, cache-first |

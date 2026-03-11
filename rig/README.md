@@ -116,5 +116,5 @@ fetch by default; `-z` suppresses fetch.
 Branch selection pipeline:
 1. Recent branches from reflog (last 50)
 2. All branches sorted by commit date
-3. Dedupe, strip `origin/` prefix
+3. Dedupe, strip `origin/` prefix, strip `~N`/`^N` suffixes
 4. Pipe to fzf for fuzzy matching

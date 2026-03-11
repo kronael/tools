@@ -20,8 +20,8 @@ Install by opening Claude Code here and saying "install".
 - /improve, /learn, /readme, /refine, /visual
 
 **skills/** (16): Auto-activating skills
-- Languages: go, python, rust, sql, typescript
-- Services: bash, cli, data, ops, service, trader
+- Languages: go, py, rs, sql, ts
+- Services: sh, cli, data, ops, service, trader
 - Infrastructure: testing
 - Workflow: commit, refine, tweet, wisdom
 
@@ -43,8 +43,8 @@ Sync strategies:
 2. Loads ~/.claude/CLAUDE.md (global)
 3. Loads ./CLAUDE.md (project)
 4. Skills auto-activate based on:
-   - File extensions (.rs -> rust)
-   - Config files (Cargo.toml -> rust)
+   - File extensions (.rs -> rs)
+   - Config files (Cargo.toml -> rs)
 5. Agents invoked explicitly or by delegation
 ```
 

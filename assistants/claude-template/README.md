@@ -21,8 +21,8 @@ Auto-activating skills + specialized agents for Claude Code.
 ## Skills
 
 Auto-activate based on file context:
-- **Languages**: go, python, rust, sql, typescript
-- **Services**: bash, cli, data, ops, service, trader
+- **Languages**: go, py, rs, sql, ts
+- **Services**: sh, cli, data, ops, service, trader
 - **Infrastructure**: testing
 - **Workflow**: commit, refine, tweet, wisdom
 
