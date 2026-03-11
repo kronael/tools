@@ -20,7 +20,7 @@ all(){
 branches(){ { recent; all; } | strip_origin | dedupe; }
 
 clean_branch(){
-    echo "$1" | sed -E 's#^(origin/|refs/|heads/|remotes/|tags/)+##'
+    echo "$1" | sed -E 's#^(origin/|refs/|heads/|remotes/|tags/)+##; s/[~^].*//'
 }
 
 get_current_branch(){
