@@ -1,5 +1,5 @@
 ---
-name: typescript
+name: ts
 description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, Bun, Tailwind, class-validator, Playwright, arrow functions.
 ---
 

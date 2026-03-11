@@ -1,5 +1,5 @@
 ---
-name: rust
+name: rs
 description: Rust development. .rs files, Cargo.toml, tokio, DashMap, tracing, cargo clippy, core_affinity, testcontainers, enum states.
 ---
 

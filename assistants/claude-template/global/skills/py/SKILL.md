@@ -1,5 +1,5 @@
 ---
-name: python
+name: py
 description: Python development. .py files, pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations.
 ---
 

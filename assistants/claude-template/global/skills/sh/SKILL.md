@@ -1,5 +1,5 @@
 ---
-name: bash
+name: sh
 description: Bash/shell scripting patterns. Use when writing .sh files, entrypoints, shell scripts.
 ---
 
