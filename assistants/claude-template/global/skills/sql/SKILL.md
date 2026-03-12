@@ -12,6 +12,7 @@ description: SQL queries and schemas. JOIN USING, column aliases without AS, mig
 - `WHERE enabled` not `WHERE enabled = true` (boolean columns are truthy)
 - `ON CONFLICT ... DO UPDATE SET` each assignment on new line
 - `RETURNING` on its own line
+- Scalar subqueries: `(\n  SELECT ...\n)` — open/close parens on own lines
 - CTEs: `WITH name AS (...)` stacked before main query
 
 ## Embedded SQL Formatting
@@ -19,6 +20,7 @@ description: SQL queries and schemas. JOIN USING, column aliases without AS, mig
 - Single column/condition: same line as keyword
 - Multiple columns/conditions: one per line, indented 2 spaces under keyword
 - Concatenated strings or triple-quoted — either fine
+- In raw/multiline strings, indent SQL to match surrounding code
 
 ```python
 # single-line clauses
