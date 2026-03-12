@@ -29,7 +29,7 @@ Section names: `fix`, `feat`, `refactor`, `docs`, `test`, `chore`, `perf`, `styl
      * Single feature, fix, or refactor (not multiple unrelated changes)
      * Related files (not scattered across unrelated modules)
      * Complete work (not half-implemented or broken state)
-   - If NOT cohesive: report analysis and stop
+   - If NOT cohesive: list distinct changes, suggest separate commits, stop
    - If cohesive: proceed to commit
 6. Analyze changes and draft a commit message:
    - Summarize the nature (feature, fix, refactor, etc.)
@@ -51,6 +51,7 @@ Section names: `fix`, `feat`, `refactor`, `docs`, `test`, `chore`, `perf`, `styl
 - ALWAYS commit when explicitly invoked by user
 - ONLY commit auto-suggestions if changes form cohesive chunk
 - Cohesive chunk = single feature, fix, or refactor; related files; complete work
+- Disparate changes → stage only one logical change, commit it, repeat
 - NEVER use git commit --amend
 - NEVER add Co-Authored-By lines
 - NEVER skip pre-commit hooks
