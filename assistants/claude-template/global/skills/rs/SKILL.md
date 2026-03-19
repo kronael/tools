@@ -1,13 +1,13 @@
 ---
 name: rs
-description: Rust development. .rs files, Cargo.toml, tokio, DashMap, tracing, cargo clippy, core_affinity, testcontainers, enum states.
+description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio, DashMap, cargo clippy, core_affinity, testcontainers, enum states.
 ---
 
 # Rust
 
-**TL;DR**: FxDashMap for concurrent maps. Enum states not flags. Document lock
-order. Debug builds default. testcontainers for integration tests. tracing for
-logging. Thread panic handler with exit(0).
+**TL;DR**: clap derive for CLIs, eyre for errors (anyhow if already present),
+tracing+EnvFilter for logging. FxDashMap for concurrent maps. Enum states not
+flags. Debug builds default. testcontainers for integration tests.
 
 ## Code Style Example
 
@@ -76,6 +76,47 @@ use tokio_postgres::Client as PostgresClient;  // ok if disambiguation is needed
 - ALWAYS set panic handler to exit(0) on any thread panic:
   `std::panic::set_hook(Box::new(|_| std::process::exit(0)));`
 
+## CLI with Clap
+
+- ALWAYS use derive API, never builder
+- ALWAYS short flags for common options: `-c`, `-v`, `-o`
+- Subcommands as enum variants with `#[command]`
+- TOML config as first positional arg (per global convention)
+
+```rust
+#[derive(Parser)]
+#[command(about = "Brief description")]
+struct Cli {
+    config: PathBuf,
+    #[arg(short, long)]
+    verbose: bool,
+    #[command(subcommand)]
+    cmd: Option<Cmd>,
+}
+
+#[derive(Subcommand)]
+enum Cmd {
+    Run,
+    Check,
+}
+```
+
+## Error Handling
+
+- ALWAYS `eyre` + `color-eyre` for new projects (superset of anyhow)
+- Keep `anyhow` if project already uses it — same API, not worth churn
+- Libraries: `thiserror` for typed errors exposed to consumers
+- ALWAYS `color_eyre::install()?` before tracing init
+- Use `.wrap_err("context")` not `.context()` (avoids trait ambiguity)
+
+## Tracing
+
+- ALWAYS `tracing` over `log` — structured, span-aware, async-compatible
+- ALWAYS `EnvFilter` via RUST_LOG: `tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env()).init()`
+- Structured fields: `info!(count = n, symbol, "processed")` not format strings
+- Name spans after the function: `#[instrument(skip(self))]`
+- NEVER `#[instrument]` on hot-path functions (overhead)
+
 ## Production Binary Patterns
 
 - `install_panic_handler()` in every binary — prints info to stderr, exits 1
@@ -85,15 +126,18 @@ use tokio_postgres::Client as PostgresClient;  // ok if disambiguation is needed
 - `defer!` for RAII cleanup guards
 
 ```rust
-fn main() {
-    install_panic_handler();
-    tracing_subscriber::fmt::init();
-    let config = load_config(); // panics ok at startup
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+    let cli = Cli::parse();
+    let config = load_config(&cli.config); // panics ok at startup
     loop {
         match run(&config) {
-            Ok(()) => break,
+            Ok(()) => break Ok(()),
             Err(e) => {
-                tracing::error!("crashed: {e}, restarting in 5s");
+                tracing::error!("crashed: {e:#}, restarting in 5s");
                 std::thread::sleep(Duration::from_secs(5));
             }
         }
