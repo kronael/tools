@@ -83,24 +83,6 @@ use tokio_postgres::Client as PostgresClient;  // ok if disambiguation is needed
 - Subcommands as enum variants with `#[command]`
 - TOML config as first positional arg (per global convention)
 
-```rust
-#[derive(Parser)]
-#[command(about = "Brief description")]
-struct Cli {
-    config: PathBuf,
-    #[arg(short, long)]
-    verbose: bool,
-    #[command(subcommand)]
-    cmd: Option<Cmd>,
-}
-
-#[derive(Subcommand)]
-enum Cmd {
-    Run,
-    Check,
-}
-```
-
 ## Error Handling
 
 - ALWAYS `eyre` + `color-eyre` for new projects (superset of anyhow)
@@ -111,10 +93,9 @@ enum Cmd {
 
 ## Tracing
 
-- ALWAYS `tracing` over `log` — structured, span-aware, async-compatible
-- ALWAYS `EnvFilter` via RUST_LOG: `tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env()).init()`
-- Structured fields: `info!(count = n, symbol, "processed")` not format strings
-- Name spans after the function: `#[instrument(skip(self))]`
+- ALWAYS `tracing` over `log`
+- ALWAYS import macros directly: `use tracing::info;` (not `use tracing::{info, debug};`)
+- ALWAYS `EnvFilter` from RUST_LOG for subscriber init
 - NEVER `#[instrument]` on hot-path functions (overhead)
 
 ## Production Binary Patterns
