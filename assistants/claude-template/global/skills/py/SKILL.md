@@ -57,6 +57,9 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - NEVER multi-assign tuples: `a, b, c = x, y, z`. Assign each
   variable on its own line
 
+## Package Structure
+- NEVER create empty `__init__.py` — only when it contains actual code (re-exports, registration)
+
 ## Build
 - uv for package management, pyright for type checking
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
