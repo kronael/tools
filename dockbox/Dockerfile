@@ -86,7 +86,7 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   agent-browser
 
 RUN bunx playwright install chromium
-RUN npx --yes puppeteer browsers install chrome
+RUN bunx puppeteer browsers install chrome
 
 # claude wrapper: inject host credentials, skip permissions
 RUN mkdir -p /home/claude/.local/bin && \
