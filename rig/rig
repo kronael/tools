@@ -142,11 +142,27 @@ EOF
     fi
 }
 
+# ── Status ───────────────────────────────────────────────────────────
+
+cmd_status(){
+    local branch=$(get_current_branch 2>/dev/null) || true
+    if [[ -z "$branch" ]]; then echo "(detached)"; return; fi
+    local a=$(git rev-list --count "origin/$branch..HEAD" 2>/dev/null || echo "?")
+    local b=$(git rev-list --count "HEAD..origin/$branch" 2>/dev/null || echo "?")
+    local t=""
+    [[ "$a" != "0" && "$a" != "?" ]] && t+="${a} ahead"
+    [[ "$b" != "0" && "$b" != "?" ]] && { [[ -n "$t" ]] && t+=", "; t+="${b} behind"; }
+    [[ -n "$t" ]] && echo "$branch  (origin/$branch, $t)" || echo "$branch"
+    git status --short -uno 2>/dev/null
+    local h=$(recent | head -5 | paste -sd '→' -)
+    [[ -n "$h" ]] && printf "\nRecent:\n  %s\n" "$h"
+}
+
 # ── Install ──────────────────────────────────────────────────────────
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(rco rip rir rim)
+    local symlinks=(rco rip rir rim rs)
     for s in "${symlinks[@]}"; do
         ln -sf rig "$dir/$s"
         echo "  $dir/$s -> rig"
@@ -164,6 +180,7 @@ rig - ripgit: git tools
   rig p [branch]     Push to origin (rip)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
+  rig s              Show branch, tracking, recent (rs)
   rig install        Create symlinks
 
 Flags: -z offline, -n dry-run, ? force fzf
@@ -177,6 +194,7 @@ dispatch(){
         p|push|rip)      shift; cmd_push "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
+        s|status|rs)     shift; cmd_status "$@" ;;
         install)         cmd_install ;;
         -h|--help|help|"") usage ;;
         *)  echo "error: unknown command: $1"; usage ;;
