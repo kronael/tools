@@ -7,6 +7,7 @@ install:
 	ln -sf rig ~/.local/bin/rip
 	ln -sf rig ~/.local/bin/rir
 	ln -sf rig ~/.local/bin/rim
+	ln -sf rig ~/.local/bin/rs
 	# clean old gt symlinks
 	rm -f ~/.local/bin/gt ~/.local/bin/gco ~/.local/bin/gto
 	rm -f ~/.local/bin/gtp ~/.local/bin/gtr
@@ -15,5 +16,5 @@ install:
 	rm -f ~/bin/gt ~/bin/gco ~/bin/gto ~/bin/gtp ~/bin/gtr
 
 clean:
-	rm -f ~/.local/bin/rig ~/.local/bin/rco
+	rm -f ~/.local/bin/rig ~/.local/bin/rco ~/.local/bin/rs
 	rm -f ~/.local/bin/rip ~/.local/bin/rir ~/.local/bin/rim
