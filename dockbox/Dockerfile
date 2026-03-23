@@ -9,9 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq nano vim docker.io clang libclang-dev libudev-dev \
-  libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-  libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 \
-  libpango-1.0-0 libcairo2 libasound2 libxshmfence1 libxfixes3 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG UID=1000
@@ -35,6 +32,10 @@ RUN ARCH=$(dpkg --print-architecture) && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
+
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN npx -y playwright install --with-deps chromium && \
+  chmod -R o+rx /opt/playwright-browsers
 
 USER claude
 
@@ -85,7 +86,6 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @mariozechner/pi-coding-agent \
   agent-browser
 
-RUN bunx playwright install chromium
 RUN bunx puppeteer browsers install chrome
 
 # claude wrapper: inject host credentials, skip permissions

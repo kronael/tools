@@ -109,6 +109,7 @@ Add to `~/.dockboxrc`:
 ## Included Tools
 
 - claude, codex, pi (AI coding agents)
+- agent-browser (headless browser automation via Playwright/Puppeteer)
 - go (via g version manager)
 - rust (via rustup)
 - python (via uv)
