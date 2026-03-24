@@ -20,10 +20,20 @@ Run directly in main context (no subagent).
 **Title**: `[type] Short imperative sentence` (max 72 chars)
 Types: `fix` `feat` `refactor` `docs` `chore`
 
-**Body**: plain prose, 2-4 sentences max
-- What changed and why
-- Any non-obvious approach decision
-- Nothing else
+**Body**: short lines, easy to read, not a single blob of text.
+Lead with the main point (what this PR is about).
+Then describe what was done in prose — no bullets.
+2-4 lines total.
+
+Example:
+```
+Extends dockbox with full headless browser support.
+Playwright installs as root with --with-deps, replacing 15 manually-listed Chrome libs.
+agent-browser CLI, playwright chromium, and puppeteer chrome are baked into the image.
+
+Also adds skills for browser automation, PR drafting,
+and a py rule against empty __init__.py files.
+```
 
 ## Rules
 
