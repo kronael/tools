@@ -12,9 +12,8 @@ Run directly in main context (no subagent).
 
 1. `git log main..HEAD --oneline` + `git diff main..HEAD --stat` to understand scope
 2. Draft title and body (see format below)
-3. Show draft, ask to confirm or tweak
-4. `gh pr create --title "..." --body "..."` — only if confirmed
-5. Print the PR URL — if `gh` unavailable, print text for copy-paste
+3. Show draft, ask if they want to tweak anything
+4. STOP — NEVER run `gh pr create` or open the PR
 
 ## Format
 
@@ -28,7 +27,7 @@ Types: `fix` `feat` `refactor` `docs` `chore`
 
 ## Rules
 
+- NEVER create the PR — output only, user runs `gh pr create` themselves
 - NEVER bullet-list changed files
 - NEVER add test plans, checklists, or boilerplate sections
 - NEVER start with "This PR..."
-- If `gh` is not available, print the text for copy-paste
