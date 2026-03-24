@@ -1,6 +1,6 @@
 ---
-name: pr-desc
-description: Create a PR with a short, clear description. Trigger on /pr-desc, "open a PR", "create PR", "write PR description".
+name: pr-draft
+description: Draft a short, clear PR description. Trigger on /pr-draft, "draft a PR", "write PR description", "PR description".
 user-invocable: true
 ---
 
