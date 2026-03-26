@@ -46,10 +46,8 @@ Makefile targets: `image` (build), `install` (build+install), `clean`.
 
 ### External tools (installed during assistants setup)
 
-- **ship** (`kronael/ship`): planner-worker-judge CLI for autonomous
-  feature delivery. Install: `uv tool install git+https://github.com/kronael/ship`
-- **agent-browser** (npm): headless browser automation CLI (playwright-based).
-  Install: `bun install -g agent-browser`. Skill bundled in template.
+- **ship** (`kronael/ship`): planner-worker-judge CLI for autonomous feature delivery
+- **agent-browser** (npm): headless browser automation CLI (playwright-based)
 
 ## Assistants
 
@@ -61,10 +59,9 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (19): auto-activate based on file context (sh, cli,
-commit, data, go, ops, py, refine, rs, service, sql,
-testing, trader, tweet, ts, wisdom, agent-browser,
-pr-draft, merge-trivial)
+**Skills** (21): auto-activate based on file context (agent-browser,
+cli, commit, data, go, merge-trivial, ops, pr-draft, py, recall,
+refine, rs, service, sh, sql, sub, testing, trader, ts, tweet, wisdom)
 
 **Agents** (6): @distill, @improve, @learn, @readme,
 @refine, @visual
