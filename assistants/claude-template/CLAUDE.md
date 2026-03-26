@@ -31,9 +31,12 @@ When user says "install":
 4. **Ask** — present summary, let user approve per-category
 5. **Backup** — before overwriting, copy to ~/.claude/backup/
 6. **Install** — copy approved files
-7. **External skills** — install skills that live with their tools:
-   - `uv tool install git+https://github.com/kronael/ship` (ship skill + CLI)
-8. **Report** — summary: X new, Y updated, Z unchanged
+7. **External tools** — install tools that bundle their own skills:
+   - `uv tool install git+https://github.com/kronael/ship` (ship: planner-worker-judge CLI + skill)
+   - `bun install -g agent-browser` (agent-browser: headless browser automation CLI)
+   - Check each: skip if already installed and up-to-date
+   - Ask user before installing (not everyone needs all tools)
+8. **Report** — summary: X new, Y updated, Z unchanged, X external tools
 
 ### Sync Strategies
 
