@@ -1,63 +1,58 @@
 ---
 name: specs
-description: Spec-driven development workflow. Use when working with specs/ directories, phase-based specs (1/, 2/, 3/...), TODO.md, or when asked to organize/prioritize work.
+description: How to write and manage kanipi specs.
 ---
 
-# Spec-Driven Development
+# Specs
 
-## Phase Scheme
+Design references in `specs/`. Master index: `specs/index.md`.
 
-Specs live in `specs/` organized by phase. Each milestone
-gets its own phase directory. Files use base58 prefixes
-(0-9, A-H, J-N, P-Z, a-k, m-z) for stable sort order.
+## Frontmatter
 
-```
-specs/1/   phase 1 — core gateway (shipped base)
-specs/2/   phase 2 — milestone 1 (permissions, capabilities)
-specs/3/   phase 3 — milestone 2 (channels, pipelines, memory)
-specs/4/   phase 4 — milestone 3 (media awareness)
-specs/5/   phase 5 — milestone 4 (evangelist)
-specs/6/   phase 6 — milestone 5 (cheerleader)
-specs/res/ resources (examples, research)
+Every spec file starts with YAML frontmatter:
+
+```yaml
+---
+status: shipped|partial|spec|planned|draft
+---
 ```
 
-Naming: `<phase>/<base58>-<topic>.md` e.g. `1/0-actions.md`,
-`2/5-permissions.md`. New specs get the next available prefix.
+Lifecycle: `draft` -> `spec` -> `partial` -> `shipped`.
+`reference` for analysis docs that don't ship.
 
-The user controls releases and tags. TODO.md may suggest which
-specs a version should cover, but the user decides what ships.
+## File naming
 
-## Workflow
+`<phase>/<base58>-<topic>.md` — base58 chars
+(0-9, A-H, J-N, P-Z, a-k, m-z) for stable sort.
 
-1. **Survey** — read TODO.md + scan specs/ dirs to understand current state
-2. **Spec first** — write `specs/<phase>/<prefix>-<name>.md` before implementing
-3. **Iterate** — specs start rough, get refined through discussion
-4. **Promote** — when a spec is partially shipped, note status at top
-5. **TODO.md** — single source of truth for what's next
+Phases:
 
-## Spec File Format
+- `specs/1/` core gateway (shipped)
+- `specs/2/` social channels (shipped)
+- `specs/3/` permissions, cleanup, gaps (active)
+- `specs/4/` dashboards, memory, products (deferred)
+- `specs/5/` agent extensions & workflows (future)
+- `specs/6/` products (deferred)
+- `specs/res/` resources (research, examples)
 
-```markdown
-# Feature Name
+## What specs SHOULD contain
 
-**Status**: not started | partial (what's done) | shipped
+- **Problem**: why this exists, what was wrong before
+- **Approach**: design decisions, tradeoffs, WHY this way
+- **Code pointers**: WHERE code lives and WHY it's there
+  (e.g. "`src/config.ts` — HOST\_\* exports computed at startup")
+- **Stubs are good**: file path + one sentence of WHY
 
-## Problem
-Why this exists.
+## What specs should NOT contain
 
-## Design
-How it works.
+- Step-by-step implementation details (read the code)
+- Code snippets that duplicate what's in the codebase
+- Completed checklists or TODO items
+- Comments about implementation order or timeline
 
-## Open Questions
-What's unresolved.
-```
+## After shipping
 
-Keep specs concise. No marketing. Describe what the system does,
-not what it could do. If a section has open questions, say so.
-
-## Rules
-
-- NEVER implement without a spec (even a rough one)
-- ALWAYS check TODO.md before starting work
-- Lower phases ship before higher phases
-- When shipping a spec, update TODO.md to mark it done
+1. Update frontmatter to `status: shipped`
+2. Trim implementation details — keep problem, design, WHY
+3. Keep code pointers (WHERE + WHY), remove HOW
+4. Update `specs/index.md` status column

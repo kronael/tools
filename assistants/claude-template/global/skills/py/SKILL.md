@@ -5,17 +5,10 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 
 # Python
 
-## Version
-- ALWAYS target Python 3.14+, use newest language features
-- `type Alias = int | str` (PEP 695 type aliases, not `TypeAlias`)
-- `type Point[T] = tuple[T, T]` for generic type aliases
-
 ## Type Annotations
 - `dict[str, float]` not `Dict[str, float]`
 - `list[str]` not `List[str]`
 - `Type | None` not `Optional[Type]`
-- NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime usage
-- NEVER use `default_factory=lambda: []` or `default_factory=list[int]` — use `default_factory=list` / `default_factory=dict` directly
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)

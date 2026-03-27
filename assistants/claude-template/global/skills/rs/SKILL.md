@@ -20,26 +20,8 @@ use tracing::debug;
 use tracing::{info, debug};
 ```
 
-## Import Aliases
-
-- NEVER use arbitrary `as` aliases to rename external types
-- Use the full path, or pick the canonical name from the crate
-- Renaming erases the origin and confuses readers
-
-```rust
-// WRONG — DbClient tells you nothing about the crate
-use tokio_postgres::Client as DbClient;
-
-// RIGHT — use the full type or a well-known conventional alias
-use tokio_postgres::Client;          // preferred: unambiguous
-use tokio_postgres::Client as PostgresClient;  // ok if disambiguation is needed
-```
-
 ## Naming
 
-- ALWAYS name functions with verbs unless trivially a constructor
-  - `collect_tx_summaries()` or `build_tx_summaries()` not `tx_summaries()`
-  - Nouns ok only when the function IS a constructor: `new()`, `from_str()`, etc.
 - Function params: NEVER use shortcuts — `value` not `v`, `count` not `c`
 - Loop variables: single-letter (`i`, `n`, `s`) is fine
 - Mathematical context: `n`, `k` for counts, `m` for size — when obvious
