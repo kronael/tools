@@ -24,10 +24,18 @@ clean_branch(){
 }
 
 get_current_branch(){
+    local branch
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+    if [[ -n "$branch" ]]; then
+        clean_branch "$branch"
+        return
+    fi
+    # detached HEAD — walk up to find a named ancestor (used by rco/rir/rim, not rip)
     local head=HEAD i=0
     while [[ $i -lt 50 ]]; do
         local this=$(git name-rev --name-only "$head" 2>/dev/null)
         if [[ -n "$this" && "$this" != "undefined" \
+            && "$this" != "HEAD" \
             && ! "$this" =~ ^tags/ ]]; then
             clean_branch "$this"
             return
