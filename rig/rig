@@ -36,18 +36,6 @@ get_current_branch(){
         clean_branch "$branch"
         return
     fi
-    # fall back: walk up to find a named ancestor (used by rco/rir/rim)
-    local head=HEAD i=0
-    while [[ $i -lt 50 ]]; do
-        local this=$(git name-rev --name-only "$head" 2>/dev/null)
-        if [[ -n "$this" && "$this" != "undefined" \
-            && "$this" != "HEAD" \
-            && ! "$this" =~ ^tags/ ]]; then
-            clean_branch "$this"
-            return
-        fi
-        head+=^; ((i++))
-    done
     echo "error: no branch found" >&2
     return 1
 }
@@ -197,7 +185,6 @@ dispatch(){
     esac
 }
 
-# Busybox-style: detect invocation name, then subcommand
 name=$(basename "$0")
 if [[ "$name" != "rig" ]]; then
     dispatch "$name" "$@"
