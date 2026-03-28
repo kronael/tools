@@ -26,16 +26,17 @@ clean_branch(){
 get_current_branch(){
     local branch
     branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-    if [[ -n "$branch" ]]; then
-        clean_branch "$branch"
-        return
-    fi
-    # detached HEAD — find the branch we checked out from via reflog
-    branch=$(git reflog | grep "checkout:" | head -1 | sed 's/.*moving from \([^ ]*\) to .*/\1/')
-    if [[ -n "$branch" && "$branch" != "HEAD" && ! "$branch" =~ ^[0-9a-f]{7,}$ ]]; then
-        clean_branch "$branch"
-        return
-    fi
+    [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
+    # detached HEAD — walk first-parent ancestry for a remote branch
+    local c="HEAD"
+    while git rev-parse --verify "$c" &>/dev/null; do
+        branch=$(git for-each-ref --points-at "$c" --format='%(refname:short)' \
+            refs/remotes/ | grep -v '/HEAD$' | head -1)
+        [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
+        # merge commit = ambiguous, bail to fzf
+        [[ $(git cat-file -p "$c" | grep -c '^parent ') -gt 1 ]] && break
+        c="$c^"
+    done
     echo "error: no branch found" >&2
     return 1
 }
@@ -115,7 +116,8 @@ EOF
     # Select branch and commit
     local branch commit="HEAD"
     case "${1:-}" in
-        "")  branch=$(get_current_branch) ;;
+        "")  branch=$(get_current_branch 2>/dev/null) || branch=$(pick_branch "?")
+             [[ -z "$branch" ]] && exit 1 ;;
         "?") branch=$(pick_branch "?")
              [[ -z "$branch" ]] && exit 1; shift ;;
         *:*) branch=$(clean_branch "${1%:*}")
