@@ -17,7 +17,15 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 4. **Document** - spawn `Task(prompt, agent="readme")`
 5. **Verify** - final build/test
 6. **Commit** - if changes, invoke `Skill(commit, "[refined]")`
-7. **Summary** - what changed, main impact, no fluff
+7. **Cleanup** - remove stale agent worktrees:
+   ```bash
+   for d in .claude/worktrees/*/; do
+     branch=$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null)
+     git worktree remove "$d" --force
+     [ -n "$branch" ] && git branch -D "$branch" 2>/dev/null
+   done
+   ```
+8. **Summary** - what changed, main impact, no fluff, not marketing
 
 ## Prompt Structure
 

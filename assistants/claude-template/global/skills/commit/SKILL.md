@@ -1,47 +1,42 @@
 ---
 name: commit
-description: Git commits. git status, git diff, git add, staging files, commit messages, [section] format.
+description: Git commits. git status, git diff, commit messages, [section] format.
 user-invocable: true
 ---
 
 # Commit
 
-Run the git commit workflow directly (no subagent).
+## When
 
-## Markers
+- `/commit`: ALWAYS proceed
+- Auto (hook): only if cohesive chunk (single fix/feat/refactor, related files, complete work)
+- Not cohesive: report and stop
 
-If args contains a marker, use the corresponding format:
-- `[checkpoint]` - prefix: `[checkpoint] Message`
-- `[refined]` - suffix: `[section] Message [refined]`
-- (none) - default: `[section] Message`
+## Format
 
-Section names: `fix`, `feat`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
+`[section] Message` — why not what, 1-2 sentences.
+Sections: fix, feat, refactor, docs, test, chore, perf, style
+
+Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] Message [refined]`
 
 ## Workflow
 
-1. `git status` (NEVER -uall), `git diff`, `git log --oneline -5`
-2. If no changes, stop: "nothing to commit"
-3. Cohesion check (skip if user explicitly invoked /commit):
-   - Single feature/fix/refactor, related files, complete work -> proceed
-   - Disparate changes -> list them, suggest separate commits, stop
-4. Draft message: format per marker, focus on "why", 1-2 sentences
-5. `git add` relevant files, commit with HEREDOC:
-   ```
-   git commit -m "$(cat <<'EOF'
-   Your message here
-   EOF
-   )"
-   ```
-6. `git status` to verify
+1. `git status` + `git diff` + `git log --oneline -5`
+2. Decide commit or not
+3. Draft message
+4. Commit directly: `git commit -m "msg" -- file1 file2`
+5. If pre-commit reformats, retry once
+6. If index.lock: `rm -f .git/index.lock`, retry once
 
 ## Rules
 
-- NEVER use git commit --amend
-- NEVER add Co-Authored-By lines
-- If pre-commit fails and reformats, retry once
-
-## Examples
-
-User: `/commit` -> regular commit with `[section] Message`
-Internal: `Skill(commit, "[checkpoint]")` -> `[checkpoint] Message`
-Internal: `Skill(commit, "[refined]")` -> `[section] Message [refined]`
+- ALWAYS `git commit -m "msg" -- file1 file2` (direct, no staging)
+- ALWAYS commit whole files, list each explicitly
+- NEVER `git add` (commit directly with -- pathspec)
+- NEVER `git commit` without `-- file1 file2`
+- NEVER `git commit --amend`
+- NEVER `git commit -a`
+- NEVER `git stash`
+- NEVER Co-Authored-By
+- NEVER skip pre-commit hooks
+- Ignore other agents' uncommitted changes

@@ -80,13 +80,17 @@ rco               # Open fzf, type to filter, Enter to checkout
 ### Push (rip)
 
 ```bash
-rip               # Push HEAD to current branch on origin
+rip               # Push HEAD to branch detected from reflog
 rip my-branch     # Push HEAD to origin/my-branch
 rip branch:abc123 # Push specific commit
 rip -n            # Dry-run
 rip ?             # Interactive branch selection
 rip my-branch -f  # Force push (flags forwarded to git push)
 ```
+
+In detached HEAD (the normal workflow), `rip` detects the current branch
+from reflog (`checkout: moving from X to ...`). Fails if no branch is found
+rather than pushing to `refs/heads/HEAD`.
 
 ### Rebase (rir)
 
@@ -112,6 +116,11 @@ Single busybox-style script. Symlinks (`rco`, `rip`, `rir`, `rim`)
 dispatch via `basename $0`. Checkout, rebase, and merge share a
 `cmd_branch_op` helper; push has its own handler. All commands
 fetch by default; `-z` suppresses fetch.
+
+Branch detection (`get_current_branch`):
+1. `git symbolic-ref --short HEAD` (attached HEAD)
+2. Reflog checkout entry: `checkout: moving from X to ...` (detached HEAD)
+3. Fails with error if neither resolves to a branch name
 
 Branch selection pipeline:
 1. Recent branches from reflog (last 50)

@@ -85,9 +85,10 @@ repo names, secrets references, or org-specific content not in source:
 
 **Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (22): agent-browser, cli, commit, data, go, merge-trivial,
-ops, pr-draft, py, recall, refine, rs, service, sh, sql, sub,
-testing, trader, ts, tsx, tweet, wisdom
+**Skills** (26): agent-browser, cli, commit, create-eval, data, go,
+merge-trivial, ops, pr-draft, py, recall, refine, release, rs,
+service, sh, ship, specs, sql, sub, testing, trader, ts, tsx, tweet,
+wisdom
 
 **Hooks** (7): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification), context (context management)
 

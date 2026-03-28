@@ -14,6 +14,7 @@ description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio
   - `collect_tx_summaries()` not `tx_summaries()`; nouns ok for `new()`, `from_str()`
 - Function params: NEVER shortcuts — `value` not `v`, `count` not `c`
 - Loop variables and math context: single-letter fine (`i`, `n`, `k`)
+- Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
 ## Design Patterns
 - Never accessor methods; access fields directly with interior mutability

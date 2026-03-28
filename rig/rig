@@ -24,16 +24,18 @@ clean_branch(){
 }
 
 get_current_branch(){
-    local head=HEAD i=0
-    while [[ $i -lt 50 ]]; do
-        local this=$(git name-rev --name-only "$head" 2>/dev/null)
-        if [[ -n "$this" && "$this" != "undefined" \
-            && ! "$this" =~ ^tags/ ]]; then
-            clean_branch "$this"
-            return
-        fi
-        head+=^; ((i++))
-    done
+    local branch
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+    if [[ -n "$branch" ]]; then
+        clean_branch "$branch"
+        return
+    fi
+    # detached HEAD — find the branch we checked out from via reflog
+    branch=$(git reflog | grep "checkout:" | head -1 | sed 's/.*moving from \([^ ]*\) to .*/\1/')
+    if [[ -n "$branch" && "$branch" != "HEAD" && ! "$branch" =~ ^[0-9a-f]{7,}$ ]]; then
+        clean_branch "$branch"
+        return
+    fi
     echo "error: no branch found" >&2
     return 1
 }
@@ -183,7 +185,6 @@ dispatch(){
     esac
 }
 
-# Busybox-style: detect invocation name, then subcommand
 name=$(basename "$0")
 if [[ "$name" != "rig" ]]; then
     dispatch "$name" "$@"
