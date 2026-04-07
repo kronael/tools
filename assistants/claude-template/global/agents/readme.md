@@ -109,7 +109,17 @@ Structure:
 
 Keep under 300 lines. Focus on relationships and flows, not implementation.
 
-### 5. Check Against Wisdom and Skills
+### 5. Verify Claims Against Code
+
+For every formula, variable name, function name, or constant referenced
+in docs: grep the codebase to confirm it exists and is used as described.
+If a doc references `foo()` doing X, read `foo()` to verify. Flag any
+discrepancy — ALWAYS fix doc to match code, not the reverse.
+
+NEVER trust existing doc text as ground truth. Treat every specific name
+or formula in docs as a claim to verify against source code.
+
+### 6. Check Against Wisdom and Skills
 
 Remove from CLAUDE.md if covered elsewhere:
 - Installation steps → README
