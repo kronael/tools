@@ -1,6 +1,6 @@
 ---
 name: specs
-description: How to write and manage kanipi specs.
+description: How to write and manage project specs.
 ---
 
 # Specs

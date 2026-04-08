@@ -14,7 +14,7 @@ information relevant to a question. Read-only.
 
 ### Step 1 — Determine project slug
 
-CWD e.g. `/home/onvos/app/kanipi` → slug `-home-onvos-app-kanipi`
+CWD e.g. `/home/user/app/myproject` → slug `-home-user-app-myproject`
 (replace `/` with `-`).
 
 ### Step 2 — Search stores

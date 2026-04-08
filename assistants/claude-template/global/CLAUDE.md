@@ -8,8 +8,8 @@ ALWAYS follow before answering:
    recent entries. Understand what was worked on, what decisions were made.
 2. **Read previous session** — if the user references prior work or context
    seems missing: `Glob` for `~/.claude/projects/<slug>/*.jsonl` (slug =
-   CWD path with `/` → `-`, e.g. `/home/onvos/app/kanipi` →
-   `-home-onvos-app-kanipi`). Sort by mtime, `Read` the most recent file.
+   CWD path with `/` → `-`, e.g. `/home/user/app/myproject` →
+   `-home-user-app-myproject`). Sort by mtime, `Read` the most recent file.
    Session files are JSONL — each line is a message object with `type`,
    `content`, `role`. Skim for decisions and context.
 3. **Check memory** — `~/.claude/projects/<slug>/memory/MEMORY.md` has
@@ -21,7 +21,7 @@ ALWAYS follow before answering:
 
 Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 - Slug: replace `/` with `-` in absolute path, e.g.
-  `/home/onvos/app/kanipi` → `-home-onvos-app-kanipi`
+  `/home/user/app/myproject` → `-home-user-app-myproject`
 - Sort by mtime for recency
 - Use `/recall-memories` skill to search diary + memory
 - Use `Glob` + `Read` to inspect a specific session directly

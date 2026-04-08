@@ -14,9 +14,9 @@ Path: `<cwd>/.diary/YYYYMMDD.md`. Append to today's entry; create if missing.
 ```markdown
 ---
 summary: |
-  Working on kanipi gateway. Main user: onvos.
+  Working on API gateway. Main focus: auth refactor.
   - twitter: cookies expired, needs refresh
-  - discord: DISCORD_BOT_TOKEN missing in marinade
+  - discord: bot token missing in staging
 ---
 
 ## 10:32

@@ -10,7 +10,7 @@ Multiple agents on same repo: staging collisions, lock races,
 accidental `git add .`. Also: existing redirects are hard rewrites
 — agent can't go around even with a good reason.
 
-See kanipi `specs/6/1-multi-agent-commits.md` for full research.
+See project specs for multi-agent commit research.
 
 ## Rules File
 
@@ -202,7 +202,7 @@ Global rules apply everywhere. Simpler than runtime detection.
 
 toolchain.py and lib/ can be removed after migration.
 
-## Sync to kanipi
+## Sync to agent SDK
 
 Port rules engine to agent-runner SDK PreToolUse hook. Rules
 could be:

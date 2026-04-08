@@ -29,9 +29,7 @@ description: TypeScript/Node.js. .ts/.tsx files, package.json, Next.js, React, B
 ## Validation
 - ALWAYS validate external I/O with class-validator when practical
 - NEVER trust external APIs/user input with `as Type`
-- Use `validateAndReturn()` from @marinade.finance/cli-common
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
-- See TYPESCRIPT_COMMON_REFERENCE.md for available utilities
 
 ## Frontend Stack
 

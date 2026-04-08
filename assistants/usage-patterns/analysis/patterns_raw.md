@@ -139,7 +139,7 @@ like ../project-name are common.
 **Example**:
 - "add it based on ../solana-unstake-auction-bot"
 - "study ../auction-bot"
-- "use the marinade data and augment by the stakes.csv"
+- "use the existing data and augment by the stakes.csv"
 **Source**: Both
 
 ## Pattern 15: Dockerfile Optimization Cycles
