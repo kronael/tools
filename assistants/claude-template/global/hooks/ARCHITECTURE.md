@@ -3,198 +3,133 @@
 ## Overview
 
 ```
-User Prompt ──> UserPromptSubmit hooks ──> Claude
-                    │
-                    ├── nudge.py (keyword → agent)
-                    └── local.py (LOCAL.md on first prompt)
+User Prompt ──> UserPromptSubmit ──> nudge.py    (keyword → command/agent)
+                                 ──> local.py    (LOCAL.md on first prompt)
+                                 ──> reclaude.py (RECLAUDE.md on first prompt)
 
-Claude ──> PreToolUse[Bash] ──> redirect.py ──> Execute
-                                    │
-                                    └── toolchain.py (detection)
+Claude stops ──> Stop ──> stop.py (commit + diary nudge)
 
-Claude stops ──> Stop hook ──> commit nudge
+Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
+                          ──> reclaude.py (RECLAUDE.md + preservation note)
+                          ──> learn.py    (flow report)
 
-Compaction ──> PreCompact ──> local.py (LOCAL.md + RULES)
-                           ──> learn.py (flow report)
-                           ──> reclaude.py (session restore)
-
-Session end ──> SessionEnd ──> learn.py ──> Flow report
+Session end ──> SessionEnd ──> learn.py (flow report)
 ```
 
 ## Components
 
-### toolchain.py
-
-Detects project toolchain and returns appropriate commands.
-
-**Detection order (priority):**
-1. Makefile - checks target exists in file
-2. Cargo.toml - Rust project
-3. go.mod - Go project
-4. Lockfile - pnpm-lock.yaml, yarn.lock, package-lock.json
-5. pyproject.toml - Python project (uv.lock for uv runner)
-
-**Command mappings:**
-
-| Action | Makefile | Cargo | Go | npm/yarn/pnpm | Python |
-|--------|----------|-------|----|--------------:|--------|
-| test | make test | cargo test | go test ./... | {pm} test | pytest |
-| build | make build | cargo build | go build ./... | {pm} run build | - |
-| lint | make lint | cargo clippy | go vet ./... | {pm} run lint | ruff check |
-| e2e | make e2e | cargo test --test '*' | go test -tags=e2e | {pm} run e2e | pytest tests/ |
-| smoke | make smoke | - | - | {pm} run smoke | pytest --smoke |
-
-### redirect.py (PreToolUse)
-
-**Input:** Bash tool_input from Claude
-**Output:** Modified command or pass-through
-
-**Flow:**
-1. Check escape hatch (`!` prefix) - exit if present
-2. Match command against DETECTORS regex list
-3. If match, get redirect from toolchain.py
-4. If redirect differs from original, return updated input
-5. Otherwise pass-through
-
-**Detectors:**
-```python
-DETECTORS = [
-    (r"^pytest\b", "test"),
-    (r"^cargo\s+test\b", "test"),
-    (r"^npm\s+test\b", "test"),
-    # ... more patterns
-]
-```
-
 ### nudge.py (UserPromptSubmit)
 
-**Input:** User prompt
-**Output:** System message with agent invocation
+**Input:** JSON with `prompt` field.
+**Output:** `{"ok": true, "systemMessage": "..."}` or silent exit.
 
 **Flow:**
-1. Match prompt against AGENTS patterns
-2. First match wins - emit system message
-3. No match - pass-through
+1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
+2. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
+   append `DOCS_RULES`.
+3. Tokenise prompt, fuzzy-match each word against `AGENT_KEYWORDS` by
+   edit distance (allowance scales with keyword length).
+4. If prompt contains `commit`, append `COMMIT_RULES` and short-circuit;
+   otherwise emit the first fuzzy-matched agent route.
 
-**Agent keywords** (fuzzy matched via edit distance):
-```python
-AGENT_KEYWORDS = {
-    "ship": "/ship", "build": "/build",
-    "refine": "/refine", "tweet": "/tweet",
-    "readme": "@readme", "learn": "@learn",
-    "improve": "@improve", "visual": "@visual",
-    "distill": "@distill",
-}
-```
+**Keyword table:** see README.md.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
-**Input:** User prompt or compaction event
-**Output:** System message with LOCAL.md content and/or rules
+**Input:** JSON with `prompt`, `hook_event`, `session_id`, `cwd`.
+**Output:** `{"ok": true, "systemMessage": "<content>"}` or silent.
 
-**Fires on:** first prompt per session, PreCompact, continue/recap keywords
+**Flow:**
+1. First prompt per session (tracked via `$cwd/.claude/tmp/local-{sid}`)
+   or `PreCompact` event → inject `~/.claude/LOCAL.md` and `$cwd/LOCAL.md`
+   contents.
+2. On continue/recap keywords (respecting negation), append `RULES`.
+3. On `PreCompact`, always append `RULES`.
 
-Uses `.claude/tmp/local-{session_id}` state file to gate first-prompt
-injection. On PreCompact, always injects LOCAL.md + RULES.
+### reclaude.py (UserPromptSubmit + PreCompact)
 
-### learn.py (PreCompact/SessionEnd)
+**Input:** JSON with `prompt`, `hook_event`.
+**Output:** `{"ok": true, "systemMessage": "<RECLAUDE.md>"}` or silent.
 
-**Input:** Hook event data
-**Output:** Markdown report file
+**Flow:**
+1. Reads `~/.claude/RECLAUDE.md`; silent exit if missing.
+2. Skip on negation (`don't continue`, etc).
+3. Inject on `PreCompact` or continue/recap keywords.
+4. On `PreCompact`, append a preservation note so the content survives
+   compaction.
 
-**Report location:** `~/.claude/flow-reports/{timestamp}-{event}.md`
+### learn.py (PreCompact + SessionEnd)
 
-Contains:
-- Event type and timestamp
-- Session ID and working directory
-- Prompts for pattern extraction
-- Pointer to @learn agent
+**Input:** JSON with `hook_event`, `session_id`, `cwd`.
+**Output:** Markdown file at `~/.claude/flow-reports/{ts}-{event}.md`
+plus a `systemMessage` confirming the write.
+
+The report is a template with session metadata and a prompt for the
+`@learn` agent to extract patterns into skills.
+
+### stop.py (Stop)
+
+**Input:** JSON with `cwd`, `stop_hook_active`.
+**Output:** `{"decision": "block", "reason": "..."}` or silent.
+
+**Flow:**
+1. Bail early if `stop_hook_active` is set (prevents recursion).
+2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
+   with `git diff --stat`.
+3. If `$cwd/.diary/` exists, check for today's `YYYYMMDD.md` (local time).
+   Missing or >1h stale → append a diary nudge.
+4. Block with the combined message if any nudges accumulated.
+
+Pure script, no LLM call. NEVER pushes.
 
 ## Data Flow
 
-### PreToolUse Hook
+### UserPromptSubmit
 
 ```
-stdin (JSON):
+stdin:
 {
-  "tool_name": "Bash",
-  "tool_input": {"command": "pytest"},
+  "prompt": "improve the error handling",
+  "hook_event": "UserPromptSubmit",
+  "session_id": "abc123",
   "cwd": "/project"
 }
 
-stdout (JSON) - redirect:
-{
-  "hookSpecificOutput": {
-    "hookEventName": "PreToolUse",
-    "permissionDecision": "allow",
-    "permissionDecisionReason": "Redirected: test",
-    "updatedInput": {"command": "make test"}
-  }
-}
-
-stdout - pass-through:
-(exit 0 with no output)
+stdout (nudge.py match):
+{"ok": true, "systemMessage": "Invoke @improve."}
 ```
 
-### UserPromptSubmit Hook
+### Stop
 
 ```
-stdin (JSON):
+stdin:
 {
-  "prompt": "improve the error handling"
+  "cwd": "/project",
+  "stop_hook_active": false
 }
 
-stdout (JSON):
+stdout (dirty tree + stale diary):
 {
-  "systemMessage": "Invoke @improve."
-}
-```
-
-### Stop Hook (Prompt Type)
-
-```json
-{
-  "type": "prompt",
-  "prompt": "Claude finished. Check git diff --stat. Is this a good commit point?"
+  "decision": "block",
+  "reason": "Uncommitted changes detected.\n <diff stat>\nConsider running /commit.\nDiary not updated in over an hour. Consider running /diary."
 }
 ```
-
-Haiku model returns `{"nudge": "..."}` or `{"pass": true}`.
-
-## Configuration
-
-### Hook Types
-
-1. **command** - Runs external script, reads stdout JSON
-2. **prompt** - Sends prompt to Haiku, uses response
-
-### Matchers
-
-- Empty string `""` - matches all
-- Tool name `"Bash"` - matches specific tool
-
-### Timeouts
-
-- redirect.py: 5000ms
-- nudge.py: 3000ms
-- local.py: 3000ms
-- learn.py: 10000ms
 
 ## Error Handling
 
-All hooks fail silently (exit 0) on errors to avoid breaking the session.
-Exceptions are caught and ignored in learn.py file writing.
+All hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError` and bail
+with `sys.exit(0)` so a broken payload never blocks the session. File I/O
+errors in `learn.py` and `local.py` are swallowed for the same reason.
 
 ## Extension Points
 
-Add new toolchains in `toolchain.py`:
-1. Add detection function (e.g., `has_cmake`)
-2. Add command mapping dict
-3. Add priority check in `get_redirect_command`
+**Add a new keyword route** — edit `AGENT_KEYWORDS` in `nudge.py` and the
+table in `README.md`.
 
-Add new agents in `nudge.py`:
-1. Add pattern and agent path to AGENTS list
+**Add a new stop nudge** — append to the `parts` list in `stop.py`. Keep
+checks cheap (no network, no LLM) and guard with a path/directory probe
+so the hook stays silent in projects that don't use the feature.
 
-Add new triggers in `local.py`:
-1. Add keyword to triggers list
-2. Optionally modify RULES content
+**Add a new injected file** — model it on `local.py`/`reclaude.py`: read
+on first prompt + `PreCompact`, respect negation, append rules on
+compaction.

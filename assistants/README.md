@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 16 skills, 6 agents, 5 commands, 7 hooks.
+Claude Code configuration: 25 skills, 6 agents, 5 commands, 5 hooks.
 
 ## Why Skills?
 
@@ -33,7 +33,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (16)
+## Skills (25)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -46,27 +46,36 @@ Auto-activate based on file context. No setup needed per project.
 | **rs** | .rs, Cargo.toml | FxDashMap, enum states, tracing, testcontainers |
 | **ts** | .ts/.tsx, package.json | Arrow style, class-validator, Bun, Playwright |
 | **sql** | SQL queries, migrations | JOIN USING, no AS aliases, one migration per change |
+| **sh** | .sh, shell scripts | POSIX patterns, signal handling |
 
 ### Domain Skills
 
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
-| **sh** | .sh, shell scripts | POSIX patterns, signal handling |
 | **cli** | argparse, click, clap | Config precedence, exit codes, --json flag |
 | **service** | /health, /ready, /v1/ | Versioned paths, validate-before-persist, caching |
 | **data** | scrapers, ETL, feeds | LeakyBucket, state recovery, dedup, cache-first |
 | **ops** | Dockerfile, systemd | Multi-stage builds, Prometheus, graceful shutdown |
 | **trader** | exchange APIs, WebSocket | State machines, paper trading, precision rounding |
 | **testing** | test infrastructure | Real APIs first, testcontainers, RAII cleanup |
+| **agent-browser** | browser automation | Headless playwright via CLI |
 
 ### Workflow Skills
 
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
 | **commit** | /commit | Structured git flow, section markers, HEREDOC format |
+| **pr-draft** | /pr-draft | Short, clear PR descriptions |
 | **refine** | /refine | Delegates to @improve + @readme, never self-improves |
+| **release** | /release | Version bump, changelog, git tag |
+| **ship** | /ship | Plan → build → judge pipeline |
+| **specs** | specs/*.md | Spec authoring and index |
 | **tweet** | /tweet | Dense threads, no fluff, personal framing |
 | **wisdom** | SKILL.md, CLAUDE.md | ALWAYS/NEVER statements, YAML frontmatter |
+| **diary** | /diary | Append to `.diary/YYYYMMDD.md` at end of work |
+| **create-eval** | /create-eval | Project-specific eval criteria |
+| **docs-audit** | /docs-audit | Multi-phase parallel doc audit |
+| **recall-memories** | /recall-memories | Search diary + memory + session history |
 
 ## Agents (6)
 
@@ -110,17 +119,15 @@ checkpoint → validate → @improve → @readme → verify → commit [refined]
 
 Nudge hook routes prompts to agents via fuzzy keyword matching.
 
-## Hooks (7)
+## Hooks (5)
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
-| **nudge** | prompt submit | Routes keywords to matching agents |
-| **local** | first prompt, PreCompact | Injects LOCAL.md + rules |
-| **redirect** | tool call | Maps toolchain commands |
-| **learn** | compact/end | Generates flow reports |
-| **reclaude** | session start | Restores session context |
-| **stop** | Stop event | Commit nudge if uncommitted changes |
-| **context** | prompt submit | Manages context |
+| **nudge** | UserPromptSubmit | Fuzzy-match keywords → command/agent route |
+| **local** | UserPromptSubmit, PreCompact | Inject LOCAL.md on first prompt + compaction |
+| **reclaude** | UserPromptSubmit, PreCompact | Inject RECLAUDE.md, preserve across compaction |
+| **learn** | PreCompact, SessionEnd | Write flow reports for @learn to process |
+| **stop** | Stop | Block with commit + diary nudges when dirty |
 
 ## Org Overlays
 

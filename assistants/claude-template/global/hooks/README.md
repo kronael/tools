@@ -1,7 +1,7 @@
 # Claude Code Hooks
 
-Hooks that extend Claude Code with smart command execution, keyword expansion,
-and session management.
+Hooks that extend Claude Code with keyword routing, session rule injection,
+and commit/diary nudges.
 
 ## Installation
 
@@ -10,91 +10,74 @@ Hooks are configured in `~/.claude/settings.json`. The hook scripts live in
 
 ## Features
 
-### Smart Command Redirect (redirect.py)
+### Keyword Routing (nudge.py)
 
-Detects test/build/lint commands and redirects to project's toolchain.
-
-**Detection priority:**
-1. Makefile (if target exists)
-2. Cargo (Rust)
-3. Go
-4. npm/yarn/pnpm (by lockfile)
-5. Python (uv or pytest)
-
-**Detected operations:**
-- `test` - test suite commands (pytest, cargo test, npm test, etc.)
-- `build` - build commands (cargo build, go build, npm run build, tsc)
-- `lint` - linter commands (clippy, go vet, ruff, npm run lint)
-- `e2e` - e2e/integration tests
-- `smoke` - extended test suites
-
-**Escape hatch:** Prefix command with `!` to bypass redirect.
-```bash
-# Redirected to make test (if Makefile exists)
-pytest
-
-# Runs pytest directly
-!pytest
-```
-
-### Keyword Expansion (nudge.py)
-
-Expands keywords in prompts to agent invocations.
+Fires on `UserPromptSubmit`. Detects keywords in the prompt (with fuzzy
+edit-distance matching) and emits a system message telling Claude to invoke
+the matching command or agent.
 
 | Keyword | Route |
 |---------|-------|
-| ship | /ship |
-| build | /build |
-| refine | /refine |
-| tweet | /tweet |
-| readme | @readme |
-| learn | @learn |
+| ship    | /ship |
+| build   | /build |
+| refine  | /refine |
+| tweet   | /tweet |
+| diary   | /diary |
+| readme  | @readme |
+| learn   | @learn |
 | improve | @improve |
-| visual | @visual |
+| visual  | @visual |
 | distill | @distill |
+| research | @research |
 
-Uses fuzzy matching (edit distance) for typo tolerance.
+Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on
+`todo|readme|changelog|spec|architecture|*.md` mentions.
 
-**Example:** "improve the error handling" triggers `@improve` agent.
+Meta prompts (hook/agent debugging) are detected and skipped so the hook
+does not interfere with hook maintenance itself.
 
 ### LOCAL.md Injection (local.py)
 
-Injects LOCAL.md at session start (first prompt) and before compaction.
-Re-injects key rules on continue/recap keywords.
+Fires on `UserPromptSubmit` and `PreCompact`. Injects `~/.claude/LOCAL.md`
+(and `$cwd/LOCAL.md` if present) on the first prompt of a session and on
+pre-compaction. Also re-injects a short `RULES` block on continue/recap
+keywords, respecting negation ("don't continue").
 
-**Fires on:** first prompt per session, PreCompact, continue/recap keywords
+**State:** `$cwd/.claude/tmp/local-{session_id}` tracks the first prompt.
 
-**State:** `.claude/tmp/local-{session_id}` tracks first prompt
+### RECLAUDE.md Injection (reclaude.py)
+
+Fires on `UserPromptSubmit` and `PreCompact`. Mirrors `local.py` but sources
+`~/.claude/RECLAUDE.md`. On `PreCompact`, appends a note instructing the
+model to preserve the wisdom across compaction.
 
 ### Flow Reports (learn.py)
 
-Generates session reports on PreCompact and SessionEnd events.
+Fires on `PreCompact` and `SessionEnd`. Writes a markdown report to
+`~/.claude/flow-reports/{timestamp}-{event}.md` with session metadata and
+a pointer to `@learn` for pattern extraction.
 
-Reports saved to `~/.claude/flow-reports/` with timestamp and event type.
-Run @learn to analyze and extract patterns into skills.
+### Commit + Diary Nudge (stop.py)
 
-### Commit Nudge (stop.py)
+Fires on `Stop`. Blocks with a reason message if either:
 
-Runs on Stop event. Checks `git status --porcelain` — if uncommitted
-changes exist, blocks with "consider /commit". No LLM call, pure script.
+- `git status --porcelain -uno` shows uncommitted changes → "consider /commit"
+- `$cwd/.diary/` exists and today's `YYYYMMDD.md` is missing or >1h stale
+  → "consider /diary"
 
-**Flow:** stop.py blocks → user/LLM sees nudge → /commit skill validates
-→ only commits if changes form cohesive chunk (single feature/fix,
-related files, complete work). See commit skill for validation rules.
-
-NEVER pushes. Commit is local-only.
+Pure script, no LLM call. NEVER pushes. Commit and diary writes are
+local-only and explicit.
 
 ## File Structure
 
 ```
 ~/.claude/hooks/
-  lib/
-    toolchain.py    # Toolchain detection
-  redirect.py       # PreToolUse: command redirect
-  nudge.py          # UserPromptSubmit: keyword expansion
-  local.py          # UserPromptSubmit: LOCAL.md injection
-  learn.py          # PreCompact/SessionEnd: flow reports
-  stop.py           # Stop: commit nudge if uncommitted changes
+  nudge.py       # UserPromptSubmit: keyword → command/agent
+  local.py       # UserPromptSubmit + PreCompact: LOCAL.md injection
+  reclaude.py    # UserPromptSubmit + PreCompact: RECLAUDE.md injection
+  learn.py       # PreCompact + SessionEnd: flow reports
+  stop.py        # Stop: commit + diary nudge
+  test_hooks.py  # Smoke tests
 ```
 
 ## Hook Configuration
@@ -104,13 +87,12 @@ In `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "PreToolUse": [{"matcher": "Bash", "hooks": [...]}],
     "UserPromptSubmit": [{"matcher": "", "hooks": [...]}],
-    "Stop": [{"matcher": "", "hooks": [...]}],
-    "PreCompact": [{"matcher": "", "hooks": [...]}],
-    "SessionEnd": [{"matcher": "", "hooks": [...]}]
+    "Stop":             [{"matcher": "", "hooks": [...]}],
+    "PreCompact":       [{"matcher": "", "hooks": [...]}],
+    "SessionEnd":       [{"matcher": "", "hooks": [...]}]
   }
 }
 ```
 
-See ARCHITECTURE.md for technical details.
+See ARCHITECTURE.md for per-hook data flow and TEST.md for the smoke tests.

@@ -34,6 +34,7 @@ AGENT_KEYWORDS = {
     "build": "/build",
     "refine": "/refine",
     "tweet": "/tweet",
+    "diary": "/diary",
     "readme": "@readme",
     "learn": "@learn",
     "improve": "@improve",

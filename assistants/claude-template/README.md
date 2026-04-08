@@ -13,18 +13,20 @@ Auto-activating skills + specialized agents for Claude Code.
 ```
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
-├── agents/        # 7 specialized agents
+├── agents/        # 6 specialized agents
 ├── commands/      # 5 slash commands
-└── skills/        # 16 auto-activating skills
+├── hooks/         # 5 UserPromptSubmit/Stop/PreCompact hooks
+└── skills/        # 25 auto-activating skills
 ```
 
 ## Skills
 
 Auto-activate based on file context:
-- **Languages**: go, py, rs, sql, ts
-- **Services**: sh, cli, data, ops, service, trader
+- **Languages**: go, py, rs, sh, sql, ts
+- **Services**: cli, data, ops, service, trader, agent-browser
 - **Infrastructure**: testing
-- **Workflow**: commit, refine, tweet, wisdom
+- **Workflow**: commit, create-eval, diary, docs-audit, pr-draft,
+  recall-memories, refine, release, ship, specs, tweet, wisdom
 
 ## Agents (6)
 

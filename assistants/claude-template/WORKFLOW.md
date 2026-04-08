@@ -60,25 +60,32 @@
 | Extract learnings | @learn | "learn from this session" |
 | Fix UI/styling | @visual | "visual" |
 
-## Commit Workflow
+## Commit + Diary Workflow
 
 ```
-stop.py (Stop hook)
+stop.py (Stop hook — pure script, no LLM)
   │
-  ├── git status --porcelain
-  ├── No changes → exit silently
-  └── Changes exist → block: "consider /commit"
+  ├── git status --porcelain -uno
+  │     ├── Clean → skip commit nudge
+  │     └── Dirty → append "consider /commit" + git diff --stat
+  │
+  ├── .diary/ directory exists?
+  │     ├── No → skip diary nudge
+  │     ├── Missing YYYYMMDD.md (local time) → "consider /diary"
+  │     └── Stale >1h → "consider /diary"
+  │
+  └── Any nudges → block with combined reason
         │
         /commit (commit skill)
-          │
           ├── git status + git diff + git log
-          ├── Validate cohesion:
-          │     ├── Single feature, fix, or refactor?
-          │     ├── Related files (not scattered)?
-          │     └── Complete work (not half-done)?
+          ├── Validate cohesion (single concern, related files, complete)
           ├── NOT cohesive → report and stop
           ├── Cohesive → stage + commit [section] Message
           └── NEVER push, NEVER amend
+        │
+        /diary (diary skill)
+          ├── Append `## HH:MM` entries to .diary/YYYYMMDD.md
+          └── Update YAML summary with open items
 ```
 
 ## Hierarchy

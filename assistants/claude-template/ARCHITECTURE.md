@@ -2,8 +2,9 @@
 
 ## Overview
 
-Claude Code configuration: 6 agents, 5 commands, 16 auto-activating skills.
-Install by opening Claude Code here and saying "install".
+Claude Code configuration: 6 agents, 5 commands, 25 auto-activating
+skills, 5 hooks. Install by opening Claude Code here and saying
+"install".
 
 ## Components
 
@@ -19,11 +20,19 @@ Install by opening Claude Code here and saying "install".
 **commands/** (5): Slash commands
 - /improve, /learn, /readme, /refine, /visual
 
-**skills/** (16): Auto-activating skills
-- Languages: go, py, rs, sql, ts
-- Services: sh, cli, data, ops, service, trader
+**skills/** (25): Auto-activating skills
+- Languages: go, py, rs, sh, sql, ts
+- Services: cli, data, ops, service, trader, agent-browser
 - Infrastructure: testing
-- Workflow: commit, refine, tweet, wisdom
+- Workflow: commit, create-eval, diary, docs-audit, pr-draft,
+  recall-memories, refine, release, ship, specs, tweet, wisdom
+
+**hooks/** (5): Lifecycle hooks
+- nudge (UserPromptSubmit: keyword → command/agent)
+- local (UserPromptSubmit + PreCompact: LOCAL.md injection)
+- reclaude (UserPromptSubmit + PreCompact: RECLAUDE.md injection)
+- learn (PreCompact + SessionEnd: flow report)
+- stop (Stop: commit + diary nudge)
 
 ## Installation Flow
 

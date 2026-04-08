@@ -59,20 +59,19 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (22): auto-activate based on file context (agent-browser,
-cli, commit, create-eval, data, go, ops, pr-draft, py, refine,
-release, rs, service, sh, ship, specs, sql, testing, trader, ts,
-tweet, wisdom)
+**Skills** (25): auto-activate based on file context (agent-browser,
+cli, commit, create-eval, data, diary, docs-audit, go, ops, pr-draft,
+py, recall-memories, refine, release, rs, service, sh, ship, specs,
+sql, testing, trader, ts, tweet, wisdom)
 
 **Agents** (6): @distill, @improve, @learn, @readme,
 @refine, @visual
 
 **Commands** (5): /improve, /learn, /readme, /refine, /visual
 
-**Hooks** (7): nudge (keyword->agent routing), local (rule
-injection), redirect (toolchain mapping), learn (flow reports),
-reclaude (session restore), stop (prompt classification),
-context (context management)
+**Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md
+injection), reclaude (RECLAUDE.md injection), learn (flow
+reports), stop (commit + diary nudge)
 
 ### Sync Rules
 

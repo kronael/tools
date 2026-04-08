@@ -23,14 +23,16 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (22): agent-browser, cli, commit, create-eval, data, go, ops, pr-draft, py, refine, release, rs, service, sh, ship, specs, sql, testing, trader, ts, tweet, wisdom
+**Skills** (25): agent-browser, cli, commit, create-eval, data, diary, docs-audit, go, ops, pr-draft, py, recall-memories, refine, release, rs, service, sh, ship, specs, sql, testing, trader, ts, tweet, wisdom
 
-**Hooks** (7): nudge (keyword->agent routing), local (rule injection on continue), redirect (toolchain command mapping), learn (flow reports on compact/end), reclaude (session restore), stop (prompt->command type classification), context (context management)
+**Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md injection on first prompt + compact), reclaude (RECLAUDE.md injection on first prompt + compact), learn (flow reports on compact/end), stop (commit + diary nudge on Stop)
 
 ## Architecture
 
 - @refine delegates to @improve + @readme for finalization
 - Nudge hook uses fuzzy matching (edit distance) to route prompts to agents
+- Stop hook runs a pure script — blocks on uncommitted changes and on
+  missing/stale diary entries (no LLM call)
 - Commands are thin launchers for corresponding agents
 - See [WORKFLOW.md](claude-template/WORKFLOW.md) for agent hierarchy
 
