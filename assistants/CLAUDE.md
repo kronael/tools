@@ -23,7 +23,7 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (29): agent-browser, cli, commit, create-eval, data, diary, docs-audit, go, merge-trivial, ops, pr-draft, py, recall, recall-memories, refine, release, rs, service, sh, ship, specs, sql, sub, testing, trader, ts, tsx, tweet, wisdom
+**Skills** (28): agent-browser, cli, commit, create-eval, data, diary, docs-audit, go, merge-trivial, ops, pr-draft, py, recall-memories, refine, release, rs, service, sh, ship, specs, sql, sub, testing, trader, ts, tsx, tweet, wisdom
 
 **Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md injection on first prompt + compact), reclaude (RECLAUDE.md injection on first prompt + compact), learn (flow reports on compact/end), stop (commit + diary nudge on Stop)
 
