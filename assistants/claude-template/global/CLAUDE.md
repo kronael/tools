@@ -1,5 +1,49 @@
 # Development Wisdom
 
+## Conversation Startup Protocol
+
+ALWAYS follow before answering:
+
+1. **Read project diary** — `Glob` for `<cwd>/.diary/*.md`, read the 2-3 most
+   recent entries. Understand what was worked on, what decisions were made.
+2. **Read previous session** — if the user references prior work or context
+   seems missing: `Glob` for `~/.claude/projects/<slug>/*.jsonl` (slug =
+   CWD path with `/` → `-`, e.g. `/home/onvos/app/kanipi` →
+   `-home-onvos-app-kanipi`). Sort by mtime, `Read` the most recent file.
+   Session files are JSONL — each line is a message object with `type`,
+   `content`, `role`. Skim for decisions and context.
+3. **Check memory** — `~/.claude/projects/<slug>/memory/MEMORY.md` has
+   persistent cross-session facts about the project and user.
+4. **Then act** — NEVER guess what was decided in a prior session without
+   checking. NEVER claim "no access to session history" without trying step 2.
+
+## Session History
+
+Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
+- Slug: replace `/` with `-` in absolute path, e.g.
+  `/home/onvos/app/kanipi` → `-home-onvos-app-kanipi`
+- Sort by mtime for recency
+- Use `/recall-memories` skill to search diary + memory
+- Use `Glob` + `Read` to inspect a specific session directly
+
+## Environment
+
+- `sudo` is available — use `sudo docker ...` for all docker commands
+
+## Response Style
+
+Be terse by default. Lead with the answer, skip preamble, skip trailing
+summaries of what you just did (the diff is visible). One-sentence replies
+are fine when accurate. Exceptions — only when explicitly asked or the
+task inherently requires it:
+
+- Generating content (writing specs, docs, prose, code explanations)
+- Multi-step planning the user asked to see
+- Root-cause analysis the user asked to walk through
+
+Never restate the user's request, never pad with transition words, never
+close with "Let me know if you need anything else."
+
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
@@ -79,6 +123,12 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Configuration
 - TOML as first CLI param, second for api keys
 
+## Bug Triage Protocol
+- When debugging or auditing a system, RECORD bugs in `bugs.md` at project root
+- NEVER fix bugs immediately just because you found them during a general check
+- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
+- `bugs.md` is the review queue — log it, move on, let the user prioritise
+
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
@@ -136,11 +186,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER add comments unless the behavior is shocking and not apparent from code or logging
 - NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
-- specs/ directory for specifications, named by content
-  - Phase-spec format: `specs/{phase}/{id}-{name}.md` (e.g. `specs/1/01-type-strictification.md`)
-  - Phase = directory, major initiative (when to ship)
-  - ID = base58+0 serial within phase (0-9, then A-Z excl O/I, then a-z excl l): 01 02 … 09 0A …
-  - Each phase dir has `todo.md` — index of all specs in that phase to ship
+- specs/ directory for specifications, named by content; `specs/index.md` for master index
 - .ship/ directory for all shipping artifacts (plans, state, critiques)
   - Flat structure, type in filename: plan-*.md, state-*.md, critique-*.md
   - ALWAYS gitignored, ephemeral working dir
@@ -148,6 +194,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - .diary/ directory for shipping log (date-named: YYYYMMDD.md)
   - Document important steps, decisions, milestones
   - Checked into git, long-lived project history
+  - ALWAYS use `/diary` skill to write diary entries after significant work
 - .claude/ for long-lived knowledge beyond CLAUDE.md
   - Additional *.md files next to CLAUDE.md for overflow context
 - NO todos/ directory — use TODO.md at root or plans in .ship/
@@ -159,3 +206,20 @@ operations, zero composition. Encapsulate I/O, expose information.
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
 - ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+
+### Skill discovery and reconciliation
+- Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
+- `/dispatch` scans all skill descriptions, matches to current task, and
+  reconciles prior work if a skill was discovered late
+- Do not continue producing outputs that contradict a known applicable skill
+
+### Cross-component refinement pattern (multi-agent)
+When doing a broad refinement/audit across a microservice repo:
+1. Group components into ≤4 buckets (related packages together)
+2. Spawn one subagent per bucket in parallel
+3. Each subagent: read all files in its bucket, report minimization +
+   orthogonalization opportunities (dead code, cross-boundary leaks,
+   unnecessary coupling between packages)
+4. Collect results, implement changes, build+test, commit [refined]
+- A "task" = one component-bucket × one concern (minimize OR orthogonalize)
+- Each subagent owns its bucket exclusively — no overlapping file sets
