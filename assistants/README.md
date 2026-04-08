@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 25 skills, 6 agents, 5 commands, 5 hooks.
+Claude Code configuration: 28 skills, 6 agents, 5 commands, 5 hooks.
 
 ## Why Skills?
 
@@ -33,7 +33,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (25)
+## Skills (28)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -45,6 +45,7 @@ Auto-activate based on file context. No setup needed per project.
 | **py** | .py, pyproject.toml | Modern type hints, asyncpg direct, uv, pyright |
 | **rs** | .rs, Cargo.toml | FxDashMap, enum states, tracing, testcontainers |
 | **ts** | .ts/.tsx, package.json | Arrow style, class-validator, Bun, Playwright |
+| **tsx** | .tsx, React components | React/JSX conventions |
 | **sql** | SQL queries, migrations | JOIN USING, no AS aliases, one migration per change |
 | **sh** | .sh, shell scripts | POSIX patterns, signal handling |
 
@@ -76,6 +77,8 @@ Auto-activate based on file context. No setup needed per project.
 | **create-eval** | /create-eval | Project-specific eval criteria |
 | **docs-audit** | /docs-audit | Multi-phase parallel doc audit |
 | **recall-memories** | /recall-memories | Search diary + memory + session history |
+| **merge-trivial** | /merge-trivial | Resolve trivial merge conflicts |
+| **sub** | /sub | Spawn subagents for bucketed work |
 
 ## Agents (6)
 

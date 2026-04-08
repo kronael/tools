@@ -1,10 +1,7 @@
 ---
 name: docs-audit
-description: Audit project documentation against actual codebase. Multi-phase parallel subagent pattern.
-triggers:
-  - audit docs
-  - docs vs code
-  - documentation critique
+description: Audit project documentation against actual codebase. Multi-phase parallel subagent pattern. Trigger on "audit docs", "docs vs code", "documentation critique".
+user-invocable: true
 ---
 
 # Docs Audit

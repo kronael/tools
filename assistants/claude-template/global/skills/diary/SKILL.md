@@ -2,7 +2,7 @@
 name: diary
 description: Record what matters in <cwd>/.diary/YYYYMMDD.md.
   Preferences and long-term patterns go to memory (tell the user).
-user_invocable: true
+user-invocable: true
 ---
 
 # Diary

@@ -1,7 +1,7 @@
 ---
 name: recall-memories
 description: Search diary, memory, and session history for relevant information.
-user_invocable: true
+user-invocable: true
 arg: <question>
 ---
 

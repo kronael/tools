@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code configuration: 6 agents, 25 auto-activating skills, 5 commands, 5 hooks.
+Claude Code configuration: 6 agents, 28 auto-activating skills, 5 commands, 5 hooks.
 
 ## Structure
 
@@ -9,7 +9,7 @@ global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
 ├── agents/            # 6 specialized task agents
 ├── commands/          # 5 slash commands (/improve, /learn, /readme, /refine, /visual)
-├── skills/            # 25 auto-activating skills
+├── skills/            # 28 auto-activating skills
 ├── hooks/             # 5 lifecycle hooks
 └── settings.json      # Shared Claude Code settings
 ```

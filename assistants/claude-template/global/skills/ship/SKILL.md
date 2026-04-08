@@ -1,6 +1,10 @@
+---
 name: ship
 description: Plan and ship a feature using the ship autonomous coding agent. Use when asked to build something substantial.
 user-invocable: true
+---
+
+# Ship
 
 ## Workflow
 
