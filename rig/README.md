@@ -80,7 +80,7 @@ rco               # Open fzf, type to filter, Enter to checkout
 ### Push (rip)
 
 ```bash
-rip               # Push HEAD to branch detected from reflog
+rip               # Push HEAD to auto-detected branch (or fzf if ambiguous)
 rip my-branch     # Push HEAD to origin/my-branch
 rip branch:abc123 # Push specific commit
 rip -n            # Dry-run
@@ -88,9 +88,10 @@ rip ?             # Interactive branch selection
 rip my-branch -f  # Force push (flags forwarded to git push)
 ```
 
-In detached HEAD (the normal workflow), `rip` detects the current branch
-from reflog (`checkout: moving from X to ...`). Fails if no branch is found
-rather than pushing to `refs/heads/HEAD`.
+In detached HEAD (the normal workflow), `rip` auto-detects the branch by
+walking first-parent ancestry until it finds a commit with a remote ref.
+Stops at merge commits (ambiguous parentage) and falls back to fzf
+selection when detection fails.
 
 ### Rebase (rir)
 
@@ -119,8 +120,9 @@ fetch by default; `-z` suppresses fetch.
 
 Branch detection (`get_current_branch`):
 1. `git symbolic-ref --short HEAD` (attached HEAD)
-2. Reflog checkout entry: `checkout: moving from X to ...` (detached HEAD)
-3. Fails with error if neither resolves to a branch name
+2. Walk first-parent ancestry, check each commit for a remote ref (detached HEAD)
+3. Stop at merge commits (ambiguous parentage)
+4. Fail with error if no remote ref found — `cmd_push` falls back to fzf
 
 Branch selection pipeline:
 1. Recent branches from reflog (last 50)

@@ -26,16 +26,17 @@ clean_branch(){
 get_current_branch(){
     local branch
     branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-    if [[ -n "$branch" ]]; then
-        clean_branch "$branch"
-        return
-    fi
-    # detached HEAD — find the branch we checked out from via reflog
-    branch=$(git reflog | grep "checkout:" | head -1 | sed 's/.*moving from \([^ ]*\) to .*/\1/')
-    if [[ -n "$branch" && "$branch" != "HEAD" && ! "$branch" =~ ^[0-9a-f]{7,}$ ]]; then
-        clean_branch "$branch"
-        return
-    fi
+    [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
+    # detached HEAD — walk first-parent ancestry for a remote branch
+    local c="HEAD"
+    while git rev-parse --verify "$c" &>/dev/null; do
+        branch=$(git for-each-ref --points-at "$c" --format='%(refname:short)' \
+            refs/remotes/ | grep -v '/HEAD$' | head -1)
+        [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
+        # merge commit = ambiguous ancestry, bail
+        [[ $(git rev-parse --verify "$c^2" 2>/dev/null) ]] && break
+        c="$c^"
+    done
     echo "error: no branch found" >&2
     return 1
 }
@@ -47,12 +48,9 @@ is_commit_not_branch(){
 }
 
 pick_branch(){
-    if [[ "$1" == "?" ]]; then
-        branches | fzf --height=40%
-    else
-        branches | fzf --height=40% --select-1 --exit-0 \
-            --query="$1"
-    fi
+    local args=(--height=40%)
+    [[ "$1" != "?" ]] && args+=(--select-1 --exit-0 --query="$1")
+    branches | fzf "${args[@]}"
 }
 
 # ── Subcommands ─────────────────────────────────────────────────────
@@ -115,7 +113,8 @@ EOF
     # Select branch and commit
     local branch commit="HEAD"
     case "${1:-}" in
-        "")  branch=$(get_current_branch) ;;
+        "")  branch=$(get_current_branch 2>/dev/null) || branch=$(pick_branch "?")
+             [[ -z "$branch" ]] && exit 1 ;;
         "?") branch=$(pick_branch "?")
              [[ -z "$branch" ]] && exit 1; shift ;;
         *:*) branch=$(clean_branch "${1%:*}")
@@ -123,14 +122,14 @@ EOF
         *)   if is_commit_not_branch "$1"; then
                  echo "warn: '$1' looks like a commit, not a branch"
                  echo "      use branch:commit syntax"
-                 branch=$(get_current_branch)
+                 branch=$(get_current_branch 2>/dev/null)
              else
                  branch=$(clean_branch "$1")
              fi; shift ;;
     esac
 
     # Validate
-    [[ -z "$branch" || "$branch" == "undefined" ]] && {
+    [[ -z "$branch" ]] && {
         echo "error: could not determine branch"
         echo "usage: rig push [branch] or rig push ?"
         exit 1

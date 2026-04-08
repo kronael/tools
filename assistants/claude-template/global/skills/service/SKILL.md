@@ -5,18 +5,6 @@ description: REST APIs and web services. /health, /ready, versioned paths (/v1/)
 
 # Service/API
 
-## Health Checks
-- Liveness: /health (process alive)
-- Readiness: /ready (dependencies ready)
-
-## API Design
+- Liveness: /health (process alive), Readiness: /ready (deps ready)
 - Versioned paths: /v1/, /v2/ (not query params)
-- Validation BEFORE persistence
-
-## Caching
-- NEVER hit external APIs per request
-- Continue from last state (don't re-download existing data)
-
-## Error Recovery
-- Fail fast on missing data (return 404)
-- Use last available data when current unavailable
+- Fail fast on missing data (404), use last available data when current unavailable

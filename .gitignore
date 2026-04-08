@@ -8,3 +8,7 @@
 *.wav
 *.avi
 *.mov
+
+# Cookies (secrets)
+cookies/
+tweetfeed_cookies/

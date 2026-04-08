@@ -109,7 +109,14 @@ Structure:
 
 Keep under 300 lines. Focus on relationships and flows, not implementation.
 
-### 5. Check Against Wisdom and Skills
+### 5. Verify Claims Against Code
+
+NEVER trust existing doc text as ground truth. For every variable name,
+function name, or constant referenced in docs: grep the codebase to
+confirm it exists and is used as described. If a doc references `foo()`
+doing X, read `foo()` to verify.
+
+### 6. Check Against Wisdom and Skills
 
 Remove from CLAUDE.md if covered elsewhere:
 - Installation steps → README
@@ -139,6 +146,7 @@ Target <200 lines.
 - ALWAYS keep docs under line limits (README 150, ARCHITECTURE 300,
   CLAUDE 200)
 - Use diagrams in ARCHITECTURE only if they clarify relationships
+- ALWAYS fix doc to match code, NEVER the reverse
 - You're documenting, not selling
 
 ## Documentation Files

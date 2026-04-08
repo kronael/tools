@@ -5,10 +5,8 @@ description: Trading bots. State machines, paper trading, WebSocket feeds, order
 
 # Trader
 
-For: Exchange trading bots with paper mode, WebSocket feeds, order management
-
 ## State Management
-- State machines: Waiting → Active → StopTake → Done
+- State machines: Waiting -> Active -> StopTake -> Done
 - Iterate symbols from config, not WebSocket positions
 - Track at three levels: global, ledger, open order count
 

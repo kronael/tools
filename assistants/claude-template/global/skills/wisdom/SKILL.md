@@ -5,55 +5,28 @@ description: Creating SKILL.md and CLAUDE.md. ALWAYS/NEVER statements, skill cre
 
 # Wisdom Skill
 
-Guidelines for writing effective SKILL.md and CLAUDE.md files.
-
-## Writing Good SKILL.md
+## SKILL.md Format
 
 ```yaml
 ---
 name: short-name
-description: Specific trigger context. When to activate. What file types or keywords.
+description: Specific trigger context. Keywords and file types for activation.
 ---
 ```
 
-- Description is critical - semantic matching activates skills
-- Content: ALWAYS/NEVER rules, patterns, code examples
-- NEVER prose, ALWAYS statements or examples
+- Description is critical — semantic matching activates skills
+- ALWAYS/NEVER rules and examples, NEVER prose paragraphs
 - Under 200 lines, link to supporting files if larger
+- NEVER add obvious code examples LLMs already know
 
-## Writing Good CLAUDE.md
+## CLAUDE.md Format
 
 - Project-specific only (skills handle general knowledge)
+- Under 200 lines, ALWAYS/NEVER statements
 - Architecture, state machines, external systems
-- Under 200 lines
-- ALWAYS/NEVER statements or examples, not prose
-
-## Format Rules
-
-- ALWAYS use ALWAYS/NEVER/MUST/SHOULD statements
-- NEVER write paragraphs of explanation
-- ALWAYS include concrete examples when helpful
-- NEVER duplicate content between skills
-- ALWAYS keep files under line limits (skills: 200, CLAUDE.md: 200)
-
-## Structure
-
-```
-SKILL.md structure:
-1. YAML frontmatter (name, description)
-2. One-line summary
-3. Rules as bullet points
-4. Examples (code blocks or inline)
-
-CLAUDE.md structure:
-1. TL;DR (one line)
-2. Sections with bullet points
-3. Examples for non-obvious patterns
-```
 
 ## Anti-patterns
 
-- NEVER write "This skill helps you..." marketing prose
-- NEVER duplicate global wisdom in project CLAUDE.md
-- NEVER use vague descriptions like "general utilities"
-- NEVER exceed line limits (refactor to separate files)
+- NEVER "This skill helps you..." marketing prose
+- NEVER duplicate content between skills or with global CLAUDE.md
+- NEVER vague descriptions like "general utilities"

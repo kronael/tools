@@ -5,10 +5,15 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 
 # Python
 
+## Version
+- ALWAYS target Python 3.14+, use newest language features
+- `type Alias = int | str` (PEP 695), not `TypeAlias`
+- `type Point[T] = tuple[T, T]` for generic type aliases
+
 ## Type Annotations
-- `dict[str, float]` not `Dict[str, float]`
-- `list[str]` not `List[str]`
-- `Type | None` not `Optional[Type]`
+- Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
+- NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
+- NEVER `default_factory=lambda: []` — use `default_factory=list`
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)
@@ -20,51 +25,35 @@ description: Python development. .py files, pyproject.toml, pytest, aiohttp, Fas
 - dataclasses over Pydantic when enough
 
 ## Named Data Structures
-- Prefer dataclass/NamedTuple over tuple[...] for return types
-- Minimize type proliferation: reuse existing types, consolidate similar shapes
-- Bad: `def calc() -> tuple[float, float]:`
-- Good:
-  ```python
-  @dataclass
-  class CalcResult:
-      real_value: float
-      equity: float
-  ```
-- Skip for trivial cases or test code where overhead isn't justified
+- Prefer dataclass/NamedTuple over bare tuples for return types
+- Skip for trivial cases or test code
 
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
 
 ## Logging
-- `log = logging.getLogger(__name__)` at module or class level
-- ALWAYS name the variable `log` (modules, classes, everywhere)
+- ALWAYS `log = logging.getLogger(__name__)` — variable ALWAYS named `log`
 
 ## Style
-- Exception variables: NEVER use `e` — use `ex` or a descriptive name (`exc`, `err`)
-- NEVER use ambiguous single-letter loop vars (`o`, `c`, `l`). Use
-  descriptive names: `for order in orders`, `for entry in entries`
-- Never modify `sys.path` from scripts
-- Use `.get()` for dict existence checks
-- NEVER use `global` keyword except in trivial scripts or when
-  truly unavoidable (signal handlers). Pass state explicitly
-- NEVER multi-assign tuples: `a, b, c = x, y, z`. Assign each
-  variable on its own line
+- Exception variables: NEVER `e` — use `ex`, `exc`, `err`
+- NEVER ambiguous single-letter loop vars (`o`, `c`, `l`) — use descriptive names
+- NEVER `sys.path` modification
+- NEVER `global` keyword except trivial scripts or signal handlers
+- NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
 
 ## Package Structure
-- NEVER create empty `__init__.py` — only when it contains actual code (re-exports, registration)
+- NEVER create empty `__init__.py` — only when it contains actual code
 
 ## Build
-- uv for package management, pyright for type checking
+- uv for packages, pyright for types
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
-- `make right`: pyright only (run manually, not in pre-commit)
-- `make test`: pytest
+- `make right`: pyright only (not in pre-commit)
 
 ## Testing
-- Test files: `test_*.py` next to code
-- Testcontainers: centralize in `conftest.py`
-- ALWAYS use `python -m pytest` not `pytest` directly (ensures proper package discovery)
+- ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
+- Testcontainers: centralize in `conftest.py`
 
 ## Subprocesses
-- `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leaking to children)
+- `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leak)
 - Kill process groups: `os.killpg(os.getpgid(proc.pid), signal.SIGKILL)`
