@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Claude Code configuration: 6 agents, 28 auto-activating skills, 5 commands, 5 hooks.
+Claude Code configuration: 6 agents, 32 auto-activating skills, 5 hooks.
 
 ## Structure
 
@@ -8,8 +8,7 @@ Claude Code configuration: 6 agents, 28 auto-activating skills, 5 commands, 5 ho
 global/                 # Installs to ~/.claude/
 ├── CLAUDE.md          # Global development wisdom
 ├── agents/            # 6 specialized task agents
-├── commands/          # 5 slash commands (/improve, /learn, /readme, /refine, /visual)
-├── skills/            # 28 auto-activating skills
+├── skills/            # 32 auto-activating skills (incl. /improve, /learn, /readme, /refine, /visual wrappers)
 ├── hooks/             # 5 lifecycle hooks
 └── settings.json      # Shared Claude Code settings
 ```
@@ -43,10 +42,8 @@ When user says "install":
 
 **Replace** (always overwrite with fresh version):
 - global/agents/*.md → ~/.claude/agents/
-- global/commands/*.md → ~/.claude/commands/
 - global/skills/*/ → ~/.claude/skills/
 - global/hooks/*.py → ~/.claude/hooks/
-- global/hooks/lib/ → ~/.claude/hooks/lib/
 
 **Merge** (show diff, ask what to keep):
 - global/CLAUDE.md → ~/.claude/CLAUDE.md
@@ -82,14 +79,15 @@ repo names, secrets references, or org-specific content not in source:
 
 ## Components
 
-**Commands** (5): /improve, /learn, /readme, /refine, /visual
-
 **Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (28): agent-browser, cli, commit, create-eval, data, diary,
-docs-audit, go, merge-trivial, ops, pr-draft, py, recall-memories,
-refine, release, rs, service, sh, ship, specs, sql, sub, testing,
-trader, ts, tsx, tweet, wisdom
+**Skills** (32): agent-browser, cli, commit, create-eval, data, diary,
+docs-audit, go, improve, learn, merge-trivial, ops, pr-draft, py,
+readme, recall-memories, refine, release, rs, service, sh, ship,
+specs, sql, sub, testing, trader, ts, tsx, tweet, visual, wisdom
+
+The improve/learn/readme/visual skills are user-invocable wrappers
+that launch their @-named agents (e.g. `/improve` → @improve).
 
 **Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md injection on first prompt + compact), reclaude (RECLAUDE.md injection on first prompt + compact), learn (flow reports on compact/end), stop (commit + diary nudge on Stop)
 

@@ -14,9 +14,8 @@ Auto-activating skills + specialized agents for Claude Code.
 ~/.claude/
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 6 specialized agents
-├── commands/      # 5 slash commands
 ├── hooks/         # 5 UserPromptSubmit/Stop/PreCompact hooks
-└── skills/        # 28 auto-activating skills
+└── skills/        # 32 auto-activating skills
 ```
 
 ## Skills
@@ -27,6 +26,7 @@ Auto-activate based on file context:
 - **Infrastructure**: testing
 - **Workflow**: commit, create-eval, diary, docs-audit, merge-trivial,
   pr-draft, recall-memories, refine, release, ship, specs, tweet, wisdom
+- **Agent launchers** (user-invocable): improve, learn, readme, visual
 
 ## Agents (6)
 
@@ -37,12 +37,14 @@ Auto-activate based on file context:
 - **@refine**: Checkpoint → @improve → @readme → commit
 - **@visual**: Render-inspect-adjust for SVG/UI
 
-## Commands (5)
+## Slash Commands
 
-- **/improve**: Launch improve agent for code quality
-- **/learn**: Launch learn agent to extract patterns
-- **/readme**: Launch readme agent to update docs
+Defined as user-invocable skills (not in `commands/`):
+
+- **/improve**: Launch @improve agent for code quality
+- **/learn**: Launch @learn agent to extract patterns
+- **/readme**: Launch @readme agent to update docs
 - **/refine**: Finalization - @improve → @readme → commit
-- **/visual**: Launch visual agent for UI/styling
+- **/visual**: Launch @visual agent for UI/styling
 
 See [WORKFLOW.md](WORKFLOW.md) for agent hierarchy and [ARCHITECTURE.md](ARCHITECTURE.md) for design.

@@ -1,6 +1,6 @@
 # Assistants
 
-Claude Code configuration: 28 skills, 6 agents, 5 commands, 5 hooks.
+Claude Code configuration: 32 skills, 6 agents, 5 hooks.
 
 ## Why Skills?
 
@@ -17,8 +17,8 @@ cleanup. Skills encode the lessons so every session starts informed.
 
 ## Contents
 
-**[claude-template/](claude-template/)** - Skills, agents, commands, and
-hooks for Claude Code. Open Claude Code there and say "install".
+**[claude-template/](claude-template/)** - Skills, agents, and hooks
+for Claude Code. Open Claude Code there and say "install".
 
 **[usage-patterns/](usage-patterns/)** - 12 usage patterns extracted from
 57 production projects (1.3MB logs).
@@ -33,7 +33,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (28)
+## Skills (32)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -79,6 +79,10 @@ Auto-activate based on file context. No setup needed per project.
 | **recall-memories** | /recall-memories | Search diary + memory + session history |
 | **merge-trivial** | /merge-trivial | Resolve trivial merge conflicts |
 | **sub** | /sub | Spawn subagents for bucketed work |
+| **improve** | /improve | Launch @improve agent (wrapper) |
+| **learn** | /learn | Launch @learn agent (wrapper) |
+| **readme** | /readme | Launch @readme agent (wrapper) |
+| **visual** | /visual | Launch @visual agent (wrapper) |
 
 ## Agents (6)
 
@@ -91,15 +95,18 @@ Auto-activate based on file context. No setup needed per project.
 | **@refine** | Checkpoint, @improve, @readme, commit |
 | **@visual** | Render-inspect-adjust for SVG/UI |
 
-## Commands (5)
+## Slash Commands
+
+Defined as user-invocable skills (the legacy `commands/` directory
+was retired). Each launches its corresponding `@`-named agent.
 
 | Command | Role |
 |---------|------|
-| **/improve** | Launch improve agent for code quality |
-| **/learn** | Launch learn agent to extract patterns |
-| **/readme** | Launch readme agent to update docs |
+| **/improve** | Launch @improve agent for code quality |
+| **/learn** | Launch @learn agent to extract patterns |
+| **/readme** | Launch @readme agent to update docs |
 | **/refine** | Finalization: @improve, @readme, commit |
-| **/visual** | Launch visual agent for UI/styling |
+| **/visual** | Launch @visual agent for UI/styling |
 
 ### /refine — Polish Before PR
 
@@ -126,7 +133,7 @@ Nudge hook routes prompts to agents via fuzzy keyword matching.
 
 | Hook | Trigger | Purpose |
 |------|---------|---------|
-| **nudge** | UserPromptSubmit | Fuzzy-match keywords → command/agent route |
+| **nudge** | UserPromptSubmit | Fuzzy-match keywords → agent route |
 | **local** | UserPromptSubmit, PreCompact | Inject LOCAL.md on first prompt + compaction |
 | **reclaude** | UserPromptSubmit, PreCompact | Inject RECLAUDE.md, preserve across compaction |
 | **learn** | PreCompact, SessionEnd | Write flow reports for @learn to process |

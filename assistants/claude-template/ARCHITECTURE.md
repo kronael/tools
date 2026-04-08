@@ -2,9 +2,8 @@
 
 ## Overview
 
-Claude Code configuration: 6 agents, 5 commands, 28 auto-activating
-skills, 5 hooks. Install by opening Claude Code here and saying
-"install".
+Claude Code configuration: 6 agents, 32 auto-activating skills,
+5 hooks. Install by opening Claude Code here and saying "install".
 
 ## Components
 
@@ -14,21 +13,23 @@ skills, 5 hooks. Install by opening Claude Code here and saying
 
 **agents/** (6): Specialized task agents
 - Quality: @improve, @visual, @learn
-- Research: @distill (built-in @deep-research also available)
+- Research: @distill
 - Utilities: @readme, @refine
 
-**commands/** (5): Slash commands
-- /improve, /learn, /readme, /refine, /visual
-
-**skills/** (28): Auto-activating skills
+**skills/** (32): Auto-activating skills
 - Languages: go, py, rs, sh, sql, ts, tsx
 - Domain: cli, data, ops, service, trader, agent-browser, sub
 - Infrastructure: testing
 - Workflow: commit, create-eval, diary, docs-audit, merge-trivial,
   pr-draft, recall-memories, refine, release, ship, specs, tweet, wisdom
+- Agent launchers (user-invocable): improve, learn, readme, visual
+
+The agent-launcher skills (improve/learn/readme/visual) provide
+slash-command invocation (`/improve`, `/learn`, etc.) that dispatches
+to their @-named agents via the Task tool.
 
 **hooks/** (5): Lifecycle hooks
-- nudge (UserPromptSubmit: keyword → command/agent)
+- nudge (UserPromptSubmit: keyword → agent)
 - local (UserPromptSubmit + PreCompact: LOCAL.md injection)
 - reclaude (UserPromptSubmit + PreCompact: RECLAUDE.md injection)
 - learn (PreCompact + SessionEnd: flow report)
@@ -40,7 +41,7 @@ skills, 5 hooks. Install by opening Claude Code here and saying
 From this directory, say "install"
 
 Sync strategies:
-  Replace:    agents/, commands/, skills/, hooks/ (fresh copy)
+  Replace:    agents/, skills/, hooks/ (fresh copy)
   Merge:      CLAUDE.md, settings.json (diff, ask)
   Never touch: settings.local.json, LOCAL.md
 ```

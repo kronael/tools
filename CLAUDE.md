@@ -53,21 +53,20 @@ Makefile targets: `image` (build), `install` (build+install), `clean`.
 
 Claude Code configuration in `assistants/`.
 
-- **claude-template/**: Skills, agents, commands, hooks — say
+- **claude-template/**: Skills, agents, hooks — say
   "install" to deploy to `~/.claude/`
 - **usage-patterns/**: 12 usage patterns extracted from 57 projects
 
 ### Components
 
-**Skills** (28): auto-activate based on file context (agent-browser,
-cli, commit, create-eval, data, diary, docs-audit, go, merge-trivial,
-ops, pr-draft, py, recall-memories, refine, release, rs, service, sh,
-ship, specs, sql, sub, testing, trader, ts, tsx, tweet, wisdom)
+**Skills** (32): auto-activate based on file context (agent-browser,
+cli, commit, create-eval, data, diary, docs-audit, go, improve,
+learn, merge-trivial, ops, pr-draft, py, readme, recall-memories,
+refine, release, rs, service, sh, ship, specs, sql, sub, testing,
+trader, ts, tsx, tweet, visual, wisdom)
 
 **Agents** (6): @distill, @improve, @learn, @readme,
 @refine, @visual
-
-**Commands** (5): /improve, /learn, /readme, /refine, /visual
 
 **Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md
 injection), reclaude (RECLAUDE.md injection), learn (flow
