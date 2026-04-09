@@ -1,10 +1,9 @@
 # dockbox
 
-Dockerized Claude Code for **operational usability** — not security isolation.
-The goal is a fully capable agent that can work across projects without
-polluting the host filesystem. Docker provides working directory scoping and
-a clean environment, not a security sandbox. The boxed agent has full access
-to your tools, config, and credentials — treat it as yourself in a container.
+A sandbox you actually use — full credentials, no permission prompts, mounts
+whatever you point at. Docker provides working directory scoping and a clean
+environment. The boxed agent has full access to your tools, config, and
+credentials — treat it as yourself in a container.
 
 ## Build
 
