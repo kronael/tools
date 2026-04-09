@@ -76,10 +76,11 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permission prompts are bypassed via `bypassPermissions` mode
-in `settings.local.json`. This is intentional — the use case is a trusted
-agent doing real work, not untrusted code execution. If you need security
-isolation, this is not the tool.
+All Claude Code permission prompts are bypassed two ways: `bypassPermissions`
+mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
+passed by the `claude` wrapper in the image. This is intentional — the use
+case is a trusted agent doing real work, not untrusted code execution. If you
+need security isolation, this is not the tool.
 
 ## Cookbook
 
@@ -96,10 +97,8 @@ Then in dockbox Claude, reference `capture.png` — it auto-attaches.
 
 ### Share a host file
 
-Add to `~/.dockboxrc`:
-
-```
--v /tmp/data.csv:/tmp/data.csv:ro
+```bash
+dockbox -v /tmp/data.csv ~/wk/project    # mounts at same path, ro
 ```
 
 ### GPU passthrough

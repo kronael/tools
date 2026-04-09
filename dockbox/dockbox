@@ -147,11 +147,9 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
-# -v <path> or -v <path>:rw — mount at same absolute path, ro by default
 for vol in "${extra_vols[@]}"; do
     mode="ro"
-    [[ "$vol" == *:rw ]] && { mode="rw"; vol="${vol%:rw}"; }
-    [[ "$vol" == *:ro ]] && { vol="${vol%:ro}"; }
+    [[ "$vol" == *:rw ]] && { mode="rw"; vol="${vol%:rw}"; } || vol="${vol%:ro}"
     src="$(cd "$vol" && pwd)"
     mounts+=(-v "$src:$src:$mode")
 done
