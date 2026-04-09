@@ -30,8 +30,8 @@ make clean              # remove binary and docker image
 dockbox                           # current dir, runs claude
 dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
-dockbox -v ~/wk/lib               # extra mount at same path (rw)
-dockbox -v ~/wk/lib:ro            # extra mount at same path (ro)
+dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
+dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -n mybox .                # custom container name
 dockbox -e bash .                 # run bash instead
 dockbox ls                        # list dockbox containers

@@ -54,7 +54,7 @@ Usage: dockbox [options] [dirs...] [claude-args...]
 Options:
     -n name    Override container name (default: dockbox-<project>)
     -e cmd     Override entrypoint (default: claude)
-    -v path    Extra mount at same path rw; path:ro for read-only
+    -v path    Extra mount at same path ro by default; path:rw for read-write
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -63,8 +63,8 @@ Examples:
     dockbox                           # current dir
     dockbox ~/wk/project              # mount project
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
-    dockbox -v ~/wk/lib               # extra mount rw
-    dockbox -v ~/wk/lib:ro            # extra mount ro
+    dockbox -v ~/wk/lib               # extra mount ro (default)
+    dockbox -v ~/wk/lib:rw            # extra mount rw
     dockbox -n mybox .                # custom name
     dockbox -e bash                   # run bash instead
 
@@ -147,11 +147,11 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
-# -v <path> or -v <path>:ro — mount at same absolute path inside container
+# -v <path> or -v <path>:rw — mount at same absolute path, ro by default
 for vol in "${extra_vols[@]}"; do
-    mode="rw"
-    [[ "$vol" == *:ro ]] && { mode="ro"; vol="${vol%:ro}"; }
-    [[ "$vol" == *:rw ]] && { vol="${vol%:rw}"; }
+    mode="ro"
+    [[ "$vol" == *:rw ]] && { mode="rw"; vol="${vol%:rw}"; }
+    [[ "$vol" == *:ro ]] && { vol="${vol%:ro}"; }
     src="$(cd "$vol" && pwd)"
     mounts+=(-v "$src:$src:$mode")
 done
