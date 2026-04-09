@@ -1,7 +1,7 @@
 # dockbox
 
-A sandbox you actually use — full credentials, no permission prompts, mounts
-whatever you point at. Docker provides working directory scoping and a clean
+A sandbox that is actually useful — full credentials, no permission prompts,
+mounts whatever you point at. Docker provides working directory scoping and a clean
 environment. The boxed agent has full access to your tools, config, and
 credentials — treat it as yourself in a container.
 
