@@ -48,6 +48,7 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
+| `rig status` / `rig s` | `rs` | Show branch, tracking info, recent history |
 
 **Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
 
@@ -109,6 +110,21 @@ rim main          # Fetch + merge origin/main
 rim -z main       # Offline: merge without fetching
 rim -n main       # Dry-run
 rim ?             # Interactive branch selection
+```
+
+### Status (rs)
+
+```bash
+rs                # Show current branch, ahead/behind, recent history
+```
+
+Output:
+```
+feature  (origin/feature, 3 ahead)
+ M src/main.rs
+
+Recent:
+  main → feature → bugfix → feature
 ```
 
 ## How It Works
