@@ -54,6 +54,7 @@ Usage: dockbox [options] [dirs...] [claude-args...]
 Options:
     -n name    Override container name (default: dockbox-<project>)
     -e cmd     Override entrypoint (default: claude)
+    -v path    Extra mount at same path rw; path:ro for read-only
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -61,9 +62,10 @@ Options:
 Examples:
     dockbox                           # current dir
     dockbox ~/wk/project              # mount project
-    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs
+    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
+    dockbox -v ~/wk/lib               # extra mount rw
+    dockbox -v ~/wk/lib:ro            # extra mount ro
     dockbox -n mybox .                # custom name
-    dockbox -c                        # continue session
     dockbox -e bash                   # run bash instead
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
@@ -81,11 +83,13 @@ network=""
 ssh_agent=""
 docker_sock=""
 dirs=()
+extra_vols=()
 claude_args=()
-while getopts ":n:e:HAD" opt; do
+while getopts ":n:e:v:HAD" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         e) entrypoint="$OPTARG" ;;
+        v) extra_vols+=("$OPTARG") ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
@@ -141,6 +145,24 @@ for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
+done
+
+# -v <path> or -v <path>:ro — mount at same location inside container
+for vol in "${extra_vols[@]}"; do
+    if [[ "$vol" == *:* && "${vol##*:}" != /* ]]; then
+        # has explicit mode suffix like :ro or :rw but no dest — expand src
+        src="${vol%%:*}"
+        mode="${vol##*:}"
+        src="$(cd "$src" && pwd)"
+        mounts+=(-v "$src:$src:$mode")
+    elif [[ "$vol" == *:/* ]]; then
+        # full docker spec with explicit dest: pass through as-is
+        mounts+=(-v "$vol")
+    else
+        # bare path, mount rw at same location
+        src="$(cd "$vol" && pwd)"
+        mounts+=(-v "$src:$src:rw")
+    fi
 done
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png

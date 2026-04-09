@@ -29,10 +29,11 @@ make clean              # remove binary and docker image
 ```bash
 dockbox                           # current dir, runs claude
 dockbox ~/wk/project              # mount project
-dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
+dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
+dockbox -v ~/wk/lib               # extra mount at same path (rw)
+dockbox -v ~/wk/lib:ro            # extra mount at same path (ro)
 dockbox -n mybox .                # custom container name
 dockbox -e bash .                 # run bash instead
-dockbox -c                        # continue session
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
@@ -75,9 +76,10 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permission prompts are bypassed (`--dangerously-skip-permissions`).
-This is intentional — the use case is a trusted agent doing real work, not
-untrusted code execution. If you need security isolation, this is not the tool.
+All Claude Code permission prompts are bypassed via `bypassPermissions` mode
+in `settings.local.json`. This is intentional — the use case is a trusted
+agent doing real work, not untrusted code execution. If you need security
+isolation, this is not the tool.
 
 ## Cookbook
 
