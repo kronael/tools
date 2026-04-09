@@ -147,22 +147,13 @@ for dir in "${dirs[@]}"; do
     workdir="$dir"
 done
 
-# -v <path> or -v <path>:ro — mount at same location inside container
+# -v <path> or -v <path>:ro — mount at same absolute path inside container
 for vol in "${extra_vols[@]}"; do
-    if [[ "$vol" == *:* && "${vol##*:}" != /* ]]; then
-        # has explicit mode suffix like :ro or :rw but no dest — expand src
-        src="${vol%%:*}"
-        mode="${vol##*:}"
-        src="$(cd "$src" && pwd)"
-        mounts+=(-v "$src:$src:$mode")
-    elif [[ "$vol" == *:/* ]]; then
-        # full docker spec with explicit dest: pass through as-is
-        mounts+=(-v "$vol")
-    else
-        # bare path, mount rw at same location
-        src="$(cd "$vol" && pwd)"
-        mounts+=(-v "$src:$src:rw")
-    fi
+    mode="rw"
+    [[ "$vol" == *:ro ]] && { mode="ro"; vol="${vol%:ro}"; }
+    [[ "$vol" == *:rw ]] && { vol="${vol%:rw}"; }
+    src="$(cd "$vol" && pwd)"
+    mounts+=(-v "$src:$src:$mode")
 done
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
