@@ -53,7 +53,8 @@ Usage: dockbox [options] [dirs...] [claude-args...]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -e cmd     Override entrypoint (default: claude)
+    -x cmd     Override entrypoint (default: claude)
+    -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -H         Use host network
     -A         Forward SSH agent
@@ -65,8 +66,9 @@ Examples:
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
+    dockbox -e GH_TOKEN               # forward env var
     dockbox -n mybox .                # custom name
-    dockbox -e bash                   # run bash instead
+    dockbox -x bash                   # run bash instead
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
@@ -84,11 +86,13 @@ ssh_agent=""
 docker_sock=""
 dirs=()
 extra_vols=()
+extra_env=()
 claude_args=()
-while getopts ":n:e:v:HAD" opt; do
+while getopts ":n:x:e:v:HAD" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
-        e) entrypoint="$OPTARG" ;;
+        x) entrypoint="$OPTARG" ;;
+        e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
@@ -190,6 +194,7 @@ exec docker run -it --rm \
     -e HOME=/home/claude \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
+    "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \

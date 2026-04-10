@@ -31,8 +31,9 @@ dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
+dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
-dockbox -e bash .                 # run bash instead
+dockbox -x bash .                 # run bash instead
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
