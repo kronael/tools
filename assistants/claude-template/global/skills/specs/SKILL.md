@@ -20,20 +20,25 @@ status: shipped|partial|spec|planned|draft
 Lifecycle: `draft` -> `spec` -> `partial` -> `shipped`.
 `reference` for analysis docs that don't ship.
 
-## File naming
+## File naming and ordering
 
-`<phase>/<base58>-<topic>.md` — base58 chars
-(0-9, A-H, J-N, P-Z, a-k, m-z) for stable sort.
+`<phase>/<N>-<topic>.md` — N is a plain integer, ordered within the phase.
 
-Phases:
+- Phases group related work: `specs/1/`, `specs/2/`, `specs/3/`, ...
+- N within a phase is sequential — next spec gets the next available number
+- To find the next N: `ls specs/<phase>/` and take max + 1
+- Phase directories are created as needed; no predefined list
 
-- `specs/1/` core gateway (shipped)
-- `specs/2/` social channels (shipped)
-- `specs/3/` permissions, cleanup, gaps (active)
-- `specs/4/` dashboards, memory, products (deferred)
-- `specs/5/` agent extensions & workflows (future)
-- `specs/6/` products (deferred)
-- `specs/res/` resources (research, examples)
+`specs/index.md` is the master table:
+
+```markdown
+| Spec | Status | Summary |
+|------|--------|---------|
+| [1/1-auth.md](1/1-auth.md) | shipped | JWT auth flow |
+| [2/1-webhooks.md](2/1-webhooks.md) | planned | Outbound webhooks |
+```
+
+Add a row when creating a spec. Update status when it ships.
 
 ## What specs SHOULD contain
 
