@@ -39,7 +39,7 @@ dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-e` to override.
+Default command: claude. Use `-x` to override.
 
 ## Configuration
 

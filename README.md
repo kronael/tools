@@ -6,6 +6,7 @@ Command-line utilities and Claude Code configuration.
 
 - [dockbox](dockbox/) - dockerized Claude Code sandbox
 - [rig](rig/) - ripgit: smart branch checkout, push, rebase, merge
+- [tw-fetch](tw-fetch/) - Twitter/X thread archiver
 
 ### External tools (installed during assistants setup)
 
