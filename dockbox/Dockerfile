@@ -86,6 +86,8 @@ RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   @mariozechner/pi-coding-agent \
   agent-browser
 
+RUN uv tool install git+https://github.com/kronael/ship
+
 RUN bunx puppeteer browsers install chrome
 
 # claude wrapper: inject host credentials, skip permissions
