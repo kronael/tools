@@ -72,6 +72,9 @@ cmd_branch_op(){
         esac
     done
 
+    # Fetch before selection so fzf shows current branches
+    [[ $fetch ]] && git fetch
+
     # Select branch
     local pattern="${1:-}"
     if [[ -z "$pattern" && ("$op" == "rebase" || "$op" == "merge") ]]; then
@@ -86,7 +89,6 @@ cmd_branch_op(){
     if [[ ${dryrun:-} ]]; then
         echo "origin/$branch"
     else
-        [[ $fetch ]] && git fetch
         case "$op" in
             checkout) git checkout "origin/$branch" ;;
             rebase)   git rebase -i "origin/$branch" ;;
