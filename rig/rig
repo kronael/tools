@@ -77,6 +77,7 @@ cmd_branch_op(){
 
     # Select branch
     local pattern="${1:-}"
+    pattern="${pattern#origin/}"
     if [[ -z "$pattern" && ("$op" == "rebase" || "$op" == "merge") ]]; then
         pattern=$(get_current_branch 2>/dev/null || true)
     fi
