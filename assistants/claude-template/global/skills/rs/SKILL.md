@@ -5,8 +5,9 @@ description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio
 
 # Rust
 
-## Import Aliases
+## Imports
 - NEVER arbitrary `as` aliases to rename external types
+- NEVER `use super::` — use `use crate::` for absolute paths
 - Use full path or canonical name; renaming erases origin
 
 ## Naming
