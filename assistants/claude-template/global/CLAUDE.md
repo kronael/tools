@@ -90,9 +90,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - Shorter is better: omit context-clear prefixes/suffixes
 - `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
 - Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
-- NEVER invent names when context already provides one — no SQL aliases
-  on single-column queries, no renaming imports, no intermediate bindings
-  that just rename something that already has a name
+- NEVER rename what already has a name (aliases, intermediate bindings, import renames)
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
 - ALWAYS 100 chars, max 120
