@@ -7,8 +7,9 @@ description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio
 
 ## Imports
 - NEVER arbitrary `as` aliases to rename external types
-- NEVER `use super::` — use `use crate::` for absolute paths
-- NEVER `use` inside function bodies unless tests/main demand it
+- NEVER `use super::`, NEVER local `use` inside function bodies
+  (exception: tests/main where scoping demands it)
+- ALWAYS `use crate::` for absolute paths
 - Use full path or canonical name; renaming erases origin
 
 ## Naming
