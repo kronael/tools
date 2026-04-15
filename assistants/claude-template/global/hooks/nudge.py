@@ -59,7 +59,7 @@ def edit_distance(a, b):
     return prev[-1]
 
 
-def fuzzy_match(word, keywords, max_dist=2):
+def fuzzy_match(word, keywords, max_dist=1):
     word = word.lower()
     if word in keywords:
         return keywords[word]
