@@ -31,7 +31,7 @@ get_current_branch(){
     local c="HEAD"
     while git rev-parse --verify "$c" &>/dev/null; do
         branch=$(git for-each-ref --points-at "$c" --format='%(refname:short)' \
-            refs/remotes/ | grep -v '/HEAD$' | head -1)
+            refs/remotes/ | grep '/' | grep -v '/HEAD$' | head -1)
         [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
         # merge commit = ambiguous ancestry, bail
         [[ $(git rev-parse --verify "$c^2" 2>/dev/null) ]] && break
