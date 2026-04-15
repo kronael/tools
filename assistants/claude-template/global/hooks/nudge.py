@@ -59,7 +59,7 @@ def edit_distance(a, b):
     return prev[-1]
 
 
-def fuzzy_match(word, keywords, max_dist=1):
+def fuzzy_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
@@ -69,8 +69,7 @@ def fuzzy_match(word, keywords, max_dist=1):
         if len(kw) < 4:
             continue
         dist = edit_distance(word, kw)
-        allowed = 1 if len(kw) <= 5 else max_dist
-        if dist <= allowed:
+        if dist <= max(1, len(kw) // 4):
             return agent
     return None
 
