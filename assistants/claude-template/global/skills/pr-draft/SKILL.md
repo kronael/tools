@@ -10,7 +10,11 @@ Run directly in main context (no subagent).
 
 ## Workflow
 
-1. `git log main..HEAD --oneline` + `git diff main..HEAD --stat` to understand scope
+1. Determine base branch:
+   - Try `git log main..HEAD --oneline` and `git log origin/main..HEAD --oneline`
+   - If both fail or are ambiguous, ask the user which branch to compare against
+   - Use whichever resolves (prefer `origin/main` over `main` if both exist)
+   - Run `git diff <base>..HEAD --stat` to understand scope
 2. Draft title and body (see format below)
 3. Show draft, ask if they want to tweak anything
 4. STOP — NEVER run `gh pr create` or open the PR
