@@ -59,6 +59,11 @@ over cleverness.
 Every line is a liability. Copy 2-3 times before abstracting. Design for
 replaceability.
 
+**Abstraction must reduce total complexity, not just line count** - If the
+helper introduces concepts absent from call sites (fn pointers, closures,
+generics, combinator chains), it's not simpler. Judge by cognitive overhead,
+not diff size.
+
 **Simple-mostly-right beats complex-fully-correct** - Implementation
 simplicity trumps perfection. A 50% solution that's simple spreads and
 evolves. Complexity, once embedded, cannot be removed.
