@@ -9,20 +9,22 @@ user-invocable: true
 ## When
 
 - `/commit`: ALWAYS proceed
-- Auto (hook): only if cohesive chunk (single fix/feat/refactor, related files, complete work)
-- Not cohesive: report and stop
+- Auto (hook): only if all dirty files form a single cohesive chunk AND no unrelated dirty files exist
+- Not cohesive: name the logical groups, stop — do not suggest a combined commit
 
 ## Format
 
 `[section] Message` — why not what, 1-2 sentences.
 Sections: fix, feat, refactor, docs, test, chore, perf, style
 
+Fixup: `fixup: <exact HEAD subject>` — use when the change is a correction to the immediately preceding commit.
+
 Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] Message [refined]`
 
 ## Workflow
 
 1. `git status` + `git diff` + `git log --oneline -5`
-2. Decide commit or not
+2. Decide commit or not; if correction to HEAD use `fixup:` format
 3. Draft message
 4. Commit directly: `git commit -m "msg" -- file1 file2`
 5. If pre-commit reformats, retry once
@@ -39,4 +41,5 @@ Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] M
 - NEVER `git stash`
 - NEVER Co-Authored-By
 - NEVER skip pre-commit hooks
+- NEVER suggest committing if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes
