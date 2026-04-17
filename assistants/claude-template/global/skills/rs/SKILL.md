@@ -19,6 +19,12 @@ description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio
 - Loop variables and math context: single-letter fine (`i`, `n`, `k`)
 - Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
+## Code Style
+- NEVER use iterator combinator chains for business logic calculations — use `if`/`let`/early return
+- NEVER `.filter().map().unwrap_or()` chains when a plain `if let Some(x) = ...` is clearer
+- Functional idioms (`.map()`, `.filter()`, `.fold()`) are fine for data transformation pipelines, NEVER for conditional calculations
+- When in doubt: write it with `if`, not with combinators
+
 ## Design Patterns
 - Never accessor methods; access fields directly with interior mutability
 - FxDashMap for concurrent access (but no locks best)
