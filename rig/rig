@@ -183,7 +183,7 @@ EOF
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(rco rip rir rim)
+    local symlinks=(rco rip rir rim riq)
     for s in "${symlinks[@]}"; do
         ln -sf rig "$dir/$s"
         echo "  $dir/$s -> rig"
@@ -201,7 +201,7 @@ rig - ripgit: git tools
   rig p [branch]     Push to origin (rip)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
-  rig sq             Squash fixup commits
+  rig sq             Squash fixup commits (riq)
   rig install        Create symlinks
 
 Flags: -z offline, -n dry-run, ? force fzf
@@ -215,7 +215,7 @@ dispatch(){
         p|push|rip)      shift; cmd_push "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
-        sq|fixup)        shift; cmd_fixup "$@" ;;
+        sq|fixup|riq)    shift; cmd_fixup "$@" ;;
         install)         cmd_install ;;
         -h|--help|help|"") usage ;;
         *)  echo "error: unknown command: $1"; usage ;;
