@@ -20,8 +20,9 @@ description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio
 - Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
 ## Code Style
-- NEVER combinator chains for calculations — use `if`/`let`/early return
-- `.map()`, `.filter()` ok for data pipelines, NEVER for conditional logic
+- NEVER use `.filter().map().unwrap_or()` as a disguised `if/else` — write `if`/`let` directly
+- `.filter()` filters collections; it is NOT a conditional branch
+- `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
 
 ## Design Patterns
 - Never accessor methods; access fields directly with interior mutability
