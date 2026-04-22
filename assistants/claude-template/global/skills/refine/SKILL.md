@@ -12,7 +12,7 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 
 1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "[checkpoint]")`
 2. **Validate** - run build/test, fix failures
-3. **Bucket + lenses** - group target files into ≤4 non-overlapping buckets. For each bucket, read a code sample and propose 3-5 lenses (viewpoints). Lenses MUST be orthogonal - no overlap in concern. User may override: `/refine <lens1,lens2,...>`.
+3. **Bucket + lenses** - group target files into ≤4 non-overlapping buckets. For each bucket, read a code sample and propose 3-5 lenses (viewpoints). Lenses MUST be orthogonal - no overlap in concern.
 4. **Review** - parallel read-only `Task(agent="improve")` per (bucket × lens). Prompt: "Lens: <X>. Files: <bucket>. Report findings only, NO edits."
 5. **Apply** - serial `Task(agent="improve")` per bucket with aggregated findings. Prompt ends: "Apply only if the result is simpler. Reject suggestions that add abstractions or cleverness."
 6. **Document** - spawn `Task(agent="readme")`
