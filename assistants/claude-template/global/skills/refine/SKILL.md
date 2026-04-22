@@ -12,12 +12,13 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 
 1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "[checkpoint]")`
 2. **Validate** - run build/test, fix failures
-3. **Improve** - spawn `Task(prompt, agent="improve")`
-   - Lead with: "Simplify this code: remove redundancy, collapse verbosity, delete dead paths. Keep all tests passing."
-4. **Document** - spawn `Task(prompt, agent="readme")`
-5. **Verify** - final build/test
-6. **Commit** - if changes, invoke `Skill(commit, "[refined]")`
-7. **Cleanup** - remove stale agent worktrees:
+3. **Bucket + lenses** - group target files into ≤4 non-overlapping buckets. For each bucket, read a code sample and propose 3-5 lenses (viewpoints). Lenses MUST be orthogonal - no overlap in concern. User may override: `/refine <lens1,lens2,...>`.
+4. **Review** - parallel read-only `Task(agent="improve")` per (bucket × lens). Prompt: "Lens: <X>. Files: <bucket>. Report findings only, NO edits."
+5. **Apply** - serial `Task(agent="improve")` per bucket with aggregated findings. Prompt ends: "Apply only if the result is simpler. Reject suggestions that add abstractions or cleverness."
+6. **Document** - spawn `Task(agent="readme")`
+7. **Verify** - final build/test
+8. **Commit** - if changes, invoke `Skill(commit, "[refined]")`
+9. **Cleanup** - remove stale agent worktrees:
    ```bash
    for d in .claude/worktrees/*/; do
      branch=$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -42,4 +43,4 @@ For readme agent: list what changed (file + one-line each).
 - NEVER do improvement work yourself - delegate to improve agent
 - NEVER summarize user intent - pass original request
 - Explicit scope > vague "review these files"
-- Run ALL 7 steps; skip commit only if no file changes
+- Run ALL 9 steps; skip commit only if no file changes
