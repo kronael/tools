@@ -123,7 +123,7 @@ done
 
 # override settings.local.json after ~/.claude mount to bypass trust prompts
 _settings=$(mktemp)
-echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
+echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
 mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
 
 docker_gid_arg=""
