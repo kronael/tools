@@ -1,6 +1,6 @@
 ---
 name: specs
-description: How to write and manage project specs.
+description: Write and manage design specs in specs/. USE when the user asks to spec something, document architecture, or plan a design-first deliverable. NOT for in-flight work (use ship) or one-off notes (use TaskCreate).
 ---
 
 # Specs

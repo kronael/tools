@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Plan and ship a feature using the ship autonomous coding agent. Use when asked to build something substantial.
+description: Ship multi-session work via the ship agent. Creates .ship/<NAME>/ with PROJECT + PLAN + PROGRESS + tasks.json. USE for work spanning >1 session with fixed acceptance. NOT for one-off edits, exploration, or <30min work — prefer TaskCreate.
 user-invocable: true
 ---
 
