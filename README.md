@@ -7,8 +7,10 @@ Command-line utilities and Claude Code configuration.
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
+- [tg-fetch](tg-fetch/) — Telegram channel/group archiver (telethon, TOML config)
+- [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 
-Each has its own Makefile. `cd <tool> && make install`.
+PEP 723 inline-deps Python scripts (`tg-fetch`, `dc-fetch`) run via `uv run main.py`. `dockbox` and `rig` have their own Makefile; `cd <tool> && make install`.
 
 External tools used by the Claude Code config:
 
