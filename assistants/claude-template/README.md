@@ -15,18 +15,22 @@ Auto-activating skills + specialized agents for Claude Code.
 ├── CLAUDE.md      # Universal development wisdom
 ├── agents/        # 6 specialized agents
 ├── hooks/         # 5 UserPromptSubmit/Stop/PreCompact hooks
-└── skills/        # 32 auto-activating skills
+└── skills/        # 34 auto-activating skills (see skills/README.md)
 ```
 
 ## Skills
 
 Auto-activate based on file context:
 - **Languages**: go, py, rs, sh, sql, ts, tsx
-- **Domain**: cli, data, ops, service, trader, agent-browser, sub
+- **Domain**: cli, data, ops, service, trader, agent-browser
 - **Infrastructure**: testing
 - **Workflow**: commit, create-eval, diary, docs-audit, merge-trivial,
   pr-draft, recall-memories, refine, release, ship, specs, tweet, wisdom
-- **Agent launchers** (user-invocable): improve, learn, readme, visual
+- **Shortcuts**: fin, sub
+- **Agent launchers** (user-invocable): distill, improve, learn, readme, visual
+
+See [skills/README.md](global/skills/README.md) for the rationale
+behind each family (memory, refinement, shortcuts, hooks).
 
 ## Agents (6)
 

@@ -2,8 +2,11 @@
 
 ## Overview
 
-Claude Code configuration: 6 agents, 32 auto-activating skills,
+Claude Code configuration: 6 agents, 34 auto-activating skills,
 5 hooks. Install by opening Claude Code here and saying "install".
+
+See [global/skills/README.md](global/skills/README.md) for the
+rationale behind each skill family (memory, refinement, shortcuts).
 
 ## Components
 
@@ -16,17 +19,18 @@ Claude Code configuration: 6 agents, 32 auto-activating skills,
 - Research: @distill
 - Utilities: @readme, @refine
 
-**skills/** (32): Auto-activating skills
+**skills/** (34): Auto-activating skills
 - Languages: go, py, rs, sh, sql, ts, tsx
-- Domain: cli, data, ops, service, trader, agent-browser, sub
+- Domain: cli, data, ops, service, trader, agent-browser
 - Infrastructure: testing
 - Workflow: commit, create-eval, diary, docs-audit, merge-trivial,
   pr-draft, recall-memories, refine, release, ship, specs, tweet, wisdom
-- Agent launchers (user-invocable): improve, learn, readme, visual
+- Shortcuts: fin, sub
+- Agent launchers (user-invocable): distill, improve, learn, readme, visual
 
-The agent-launcher skills (improve/learn/readme/visual) provide
-slash-command invocation (`/improve`, `/learn`, etc.) that dispatches
-to their @-named agents via the Task tool.
+The agent-launcher skills provide slash-command invocation (`/improve`,
+`/distill`, etc.) that dispatches to their @-named agents via the Task
+tool. The shortcut skills (`fin`, `sub`) macro frequent instructions.
 
 **hooks/** (5): Lifecycle hooks
 - nudge (UserPromptSubmit: keyword → agent)

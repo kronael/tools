@@ -21,10 +21,12 @@ Claude compares with existing ~/.claude/, shows diffs, asks before overwriting.
 
 **Agents** (6): @distill, @improve, @learn, @readme, @refine, @visual
 
-**Skills** (32): agent-browser, cli, commit, create-eval, data, diary, docs-audit, go, improve, learn, merge-trivial, ops, pr-draft, py, readme, recall-memories, refine, release, rs, service, sh, ship, specs, sql, sub, testing, trader, ts, tsx, tweet, visual, wisdom
+**Skills** (34): agent-browser, cli, commit, create-eval, data, diary, distill, docs-audit, fin, go, improve, learn, merge-trivial, ops, pr-draft, py, readme, recall-memories, refine, release, rs, service, sh, ship, specs, sql, sub, testing, trader, ts, tsx, tweet, visual, wisdom
 
-The improve/learn/readme/visual skills are user-invocable wrappers that
-launch their corresponding agents (`/improve` → @improve, etc.).
+The improve/learn/readme/visual/distill skills are user-invocable
+wrappers that launch their corresponding agents (`/improve` →
+@improve, etc.). See [skills/README.md](claude-template/global/skills/README.md)
+for the rationale behind each skill family.
 
 **Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md injection on first prompt + compact), reclaude (RECLAUDE.md injection on first prompt + compact), learn (flow reports on compact/end), stop (commit + diary nudge on Stop)
 

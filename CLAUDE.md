@@ -59,11 +59,11 @@ Claude Code configuration in `assistants/`.
 
 ### Components
 
-**Skills** (32): auto-activate based on file context (agent-browser,
-cli, commit, create-eval, data, diary, docs-audit, go, improve,
-learn, merge-trivial, ops, pr-draft, py, readme, recall-memories,
-refine, release, rs, service, sh, ship, specs, sql, sub, testing,
-trader, ts, tsx, tweet, visual, wisdom)
+**Skills** (34): auto-activate based on file context (agent-browser,
+cli, commit, create-eval, data, diary, distill, docs-audit, fin, go,
+improve, learn, merge-trivial, ops, pr-draft, py, readme,
+recall-memories, refine, release, rs, service, sh, ship, specs, sql,
+sub, testing, trader, ts, tsx, tweet, visual, wisdom)
 
 **Agents** (6): @distill, @improve, @learn, @readme,
 @refine, @visual

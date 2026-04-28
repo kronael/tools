@@ -1,6 +1,9 @@
 # Assistants
 
-Claude Code configuration: 32 skills, 6 agents, 5 hooks.
+Claude Code configuration: 34 skills, 6 agents, 5 hooks.
+
+See [skills/README.md](claude-template/global/skills/README.md) for the
+rationale behind each skill family (memory, refinement, shortcuts).
 
 ## Why Skills?
 
@@ -33,7 +36,7 @@ cd claude-template
 Claude compares with existing ~/.claude/, shows diffs, asks before
 overwriting.
 
-## Skills (32)
+## Skills (34)
 
 Auto-activate based on file context. No setup needed per project.
 
@@ -83,6 +86,8 @@ Auto-activate based on file context. No setup needed per project.
 | **learn** | /learn | Launch @learn agent (wrapper) |
 | **readme** | /readme | Launch @readme agent (wrapper) |
 | **visual** | /visual | Launch @visual agent (wrapper) |
+| **distill** | /distill | Launch @distill agent (wrapper) |
+| **fin** | /fin | Run-to-completion macro (no confirm prompts) |
 
 ## Agents (6)
 
