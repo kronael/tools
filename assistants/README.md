@@ -69,25 +69,32 @@ Auto-activate based on file context. No setup needed per project.
 | Skill | Activates on | What it teaches |
 |-------|-------------|-----------------|
 | **commit** | /commit | Structured git flow, section markers, HEREDOC format |
-| **pr-draft** | /pr-draft | Short, clear PR descriptions |
-| **refine** | /refine | Delegates to @improve + @readme, never self-improves |
-| **release** | /release | Version bump, changelog, git tag |
-| **ship** | /ship | Plan → build → judge pipeline |
-| **specs** | specs/*.md | Spec authoring and index |
-| **tweet** | /tweet | Dense threads, no fluff, personal framing |
-| **wisdom** | SKILL.md, CLAUDE.md | ALWAYS/NEVER statements, YAML frontmatter |
 | **diary** | /diary | Append to `.diary/YYYYMMDD.md` at end of work |
-| **create-eval** | /create-eval | Project-specific eval criteria |
-| **docs-audit** | /docs-audit | Multi-phase parallel doc audit |
 | **recall-memories** | /recall-memories | Search diary + memory + session history |
-| **merge-trivial** | /merge-trivial | Resolve trivial merge conflicts |
-| **sub** | /sub | Spawn subagents for bucketed work |
-| **improve** | /improve | Launch @improve agent (wrapper) |
-| **learn** | /learn | Launch @learn agent (wrapper) |
-| **readme** | /readme | Launch @readme agent (wrapper) |
-| **visual** | /visual | Launch @visual agent (wrapper) |
-| **distill** | /distill | Launch @distill agent (wrapper) |
+| **refine** | /refine | Delegates to @improve + @readme, never self-improves |
+| **ship** | /ship | Plan → build → judge pipeline |
+| **release** | /release | Version bump, changelog, git tag |
+| **pr-draft** | /pr-draft | Short, clear PR descriptions |
+| **merge-trivial** | /merge-trivial | Classify conflicts, resolve trivial unions |
+| **docs-audit** | /docs-audit | Multi-phase parallel doc audit |
+| **specs** | specs/*.md | Spec authoring and index |
+| **wisdom** | SKILL.md, CLAUDE.md | ALWAYS/NEVER statements, YAML frontmatter |
+| **create-eval** | /create-eval | Project-specific eval criteria |
+| **tweet** | /tweet | Dense threads, no fluff, personal framing |
+
+### Shortcuts and Agent Launchers
+
+Macros and wrappers for frequent invocations.
+
+| Skill | Invocation | Role |
+|-------|-----------|------|
 | **fin** | /fin | Run-to-completion macro (no confirm prompts) |
+| **sub** | /sub `<prompt>` | Fire-and-forget background subagent |
+| **improve** | /improve | Launch @improve agent |
+| **learn** | /learn | Launch @learn agent |
+| **readme** | /readme | Launch @readme agent |
+| **visual** | /visual | Launch @visual agent |
+| **distill** | /distill | Launch @distill agent |
 
 ## Agents (6)
 
@@ -99,19 +106,6 @@ Auto-activate based on file context. No setup needed per project.
 | **@readme** | Sync README/ARCHITECTURE with code |
 | **@refine** | Checkpoint, @improve, @readme, commit |
 | **@visual** | Render-inspect-adjust for SVG/UI |
-
-## Slash Commands
-
-Defined as user-invocable skills (the legacy `commands/` directory
-was retired). Each launches its corresponding `@`-named agent.
-
-| Command | Role |
-|---------|------|
-| **/improve** | Launch @improve agent for code quality |
-| **/learn** | Launch @learn agent to extract patterns |
-| **/readme** | Launch @readme agent to update docs |
-| **/refine** | Finalization: @improve, @readme, commit |
-| **/visual** | Launch @visual agent for UI/styling |
 
 ### /refine — Polish Before PR
 
@@ -160,6 +154,7 @@ across updates.
 
 ## References
 
+- [skills/README.md](claude-template/global/skills/README.md) - rationale per skill family
 - [WORKFLOW.md](claude-template/WORKFLOW.md) - agent hierarchy
 - [ARCHITECTURE.md](claude-template/ARCHITECTURE.md) - component details
-- [hooks ARCHITECTURE.md](claude-template/global/hooks/ARCHITECTURE.md) - hook system
+- [hooks/README.md](claude-template/global/hooks/README.md) - hook system

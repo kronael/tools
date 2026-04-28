@@ -14,7 +14,7 @@ Command-line utilities and Claude Code configuration.
 
 ## Assistants
 
-- [claude-template](assistants/claude-template/) - Skills, agents, commands, hooks for Claude Code
+- [claude-template](assistants/claude-template/) - Skills, agents, hooks for Claude Code
 - [usage-patterns](assistants/usage-patterns/) - 12 usage patterns extracted from 57 production projects
 
 ## Installation

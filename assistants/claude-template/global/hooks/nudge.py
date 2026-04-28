@@ -40,7 +40,6 @@ AGENT_KEYWORDS = {
     "improve": "@improve",
     "visual": "@visual",
     "distill": "@distill",
-    "research": "@research",
 }
 
 

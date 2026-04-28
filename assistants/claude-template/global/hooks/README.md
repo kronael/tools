@@ -28,7 +28,6 @@ the matching command or agent.
 | improve | @improve |
 | visual  | @visual |
 | distill | @distill |
-| research | @research |
 
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on
 `todo|readme|changelog|spec|architecture|*.md` mentions.
