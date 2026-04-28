@@ -32,6 +32,33 @@ identical.
 
 The procedure is documented in [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
 
+## Why hybrid (plugin + install step)
+
+A pure-plugin design would register skills/agents/hooks via
+`plugin.json` and skip the copy step. The hybrid design exists for
+two practical reasons that pure-plugin doesn't provide:
+
+**1. Two-way sync, not one-way push.** The bundle in `~/.claude/`
+is the user's working copy. They customize skills, fix bugs in
+hooks, add personal patterns. When they want to contribute back, they
+diff their `~/.claude/` against the source repo and PR the changes.
+A pure-plugin install is read-only — every edit is overwritten on
+update.
+
+**2. LLM-coordinated merges, not blind overrides.** The install step
+is an LLM following a procedure (`kronael-tools/install/SKILL.md`),
+not a blind `cp -r`. It diffs each destination, surfaces conflicts,
+extracts user-local content to `LOCAL.md`, asks before overwriting
+relaxed settings, preserves user-added skills (overlays, personal
+files), and never touches `settings.local.json` / `LOCAL.md` /
+`CLAUDE.local.md`. A pure-plugin update can't do any of that — it
+just replaces files.
+
+This is the basis of **evolvability and modularity** of the setup:
+the user's `~/.claude/` is a working surface, not a frozen artifact.
+The plugin system provides distribution and update detection; the
+install step provides the smart merge. Each layer does one thing.
+
 ## Sync strategies
 
 | Target | Strategy |
