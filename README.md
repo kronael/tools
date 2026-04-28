@@ -30,6 +30,12 @@ This repo is a [Claude Code plugin marketplace](.claude-plugin/marketplace.json)
 
 Or open Claude Code at the repo root and say **"install"** — it auto-loads `CLAUDE.md`, which dispatches to [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) (the single source of truth for the install procedure).
 
+### Why an install step (instead of pure plugin)
+
+The plugin distributes the bundle; the install step copies it into `~/.claude/` so it's *yours*. Two reasons this matters: **(1)** your `~/.claude/` becomes a working copy you can edit, customize, and PR back upstream — a pure-plugin install would overwrite your edits on every update. **(2)** the install step is an LLM running a procedure: it diffs before overwriting, asks about conflicts, extracts your local paths/secrets to `LOCAL.md`, and never touches `settings.local.json`. Plugin-only updates can't do that.
+
+This is the basis of evolvability — the bundle stays modular and user-owned. See [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--install-step) for the full rationale.
+
 ### What's in the bundle
 
 **Skills** auto-activate by file context (Rust → `/rs` patterns, Dockerfile → `/ops`, etc.) and provide workflow commands (`/commit`, `/ship`, `/refine`, `/diary`). The `global` skill carries development wisdom (startup protocol, terse response style, boring-code philosophy) and is installed as `~/.claude/CLAUDE.md`.
