@@ -1,11 +1,11 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/. Trigger when the user says "install kronael tools", "install the toolkit", "install" (in this repo), or runs /kronael-tools:install. Copies skills, agents, and hook scripts; merges hook wiring and recommended settings into ~/.claude/settings.json; installs the wisdom skill body into ~/.claude/CLAUDE.md (always-loaded). Run once per machine, then again on plugin updates.
+description: Install (or update) the Kronael toolkit into ~/.claude/. Trigger when the user says "install kronael", "install the toolkit", "install" (in this repo), or runs /kronael:install. Copies skills, agents, and hook scripts; merges hook wiring and recommended settings into ~/.claude/settings.json; installs the wisdom skill body into ~/.claude/CLAUDE.md (always-loaded). Run once per machine, then again on plugin updates.
 ---
 
 # Install Kronael toolkit
 
-Goal: deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael-tools:` prefix).
+Goal: deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael:` prefix).
 
 This is the single source of truth for the install procedure. `README.md`, `CLAUDE.md`, and `AGENTS.md` all defer to this file.
 
@@ -58,4 +58,4 @@ If they're missing, you're in the wrong directory — stop and ask.
 
 ## Update flow
 
-Re-run `/kronael-tools:install` (or "say install" in this repo) after `claude /plugin update` pulls a new version. Same steps; the backup directory grows but stays useful for rollback.
+Re-run `/kronael:install` (or "say install" in this repo) after `claude /plugin update` pulls a new version. Same steps; the backup directory grows but stays useful for rollback.

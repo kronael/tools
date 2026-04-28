@@ -6,8 +6,8 @@ Guidance for Claude Code when working in this repository.
 
 Three things live here:
 1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`) — each with its own Makefile.
-2. Claude Code plugin (`.claude-plugin/`, `t/`) — installer skill that deploys the bundle to `~/.claude/`.
-3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael-tools:install` copies. Same content also installs via the manual "say install" path.
+2. Claude Code plugin (`.claude-plugin/`, `kronael/`) — installer skill that deploys the bundle to `~/.claude/`.
+3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael:install` copies. Same content also installs via the manual "say install" path.
 
 ## CLI tools
 
@@ -39,10 +39,10 @@ Makefile: `image` (build), `install` (build+install), `clean`.
 
 Two install paths share the same source:
 
-- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools").
+- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael@kronael` → `/kronael:install` (or just say "install kronael").
 - **Manual**: open Claude Code at the repo root and say **"install"**.
 
-Both paths follow [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings, external tools). When the user says "install" in this repo, follow that skill.
+Both paths follow [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings, external tools). When the user says "install" in this repo, follow that skill.
 
 ### Source rules
 

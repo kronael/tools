@@ -24,11 +24,11 @@ This repo is a [Claude Code plugin marketplace](.claude-plugin/marketplace.json)
 
 ```
 /plugin marketplace add kronael/tools
-/plugin install kronael-tools@kronael-tools
-/kronael-tools:install
+/plugin install kronael@kronael
+/kronael:install
 ```
 
-Or open Claude Code at the repo root and say **"install"** — it auto-loads `CLAUDE.md`, which dispatches to [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) (the single source of truth for the install procedure).
+Or open Claude Code at the repo root and say **"install"** — it auto-loads `CLAUDE.md`, which dispatches to [`kronael/install/SKILL.md`](kronael/install/SKILL.md) (the single source of truth for the install procedure).
 
 ### Why an install step (instead of pure plugin)
 
@@ -53,7 +53,7 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 
 ```
 .claude-plugin/                    marketplace.json + plugin.json
-kronael-tools/install/SKILL.md     plugin-exposed install procedure (source of truth)
+kronael/install/SKILL.md     plugin-exposed install procedure (source of truth)
 skills/                            bundle copied to ~/.claude/skills/
 agents/                            bundle copied to ~/.claude/agents/
 hooks/                             bundle copied to ~/.claude/hooks/
@@ -74,12 +74,12 @@ usage-patterns/                    12 patterns extracted from production project
 | [skills/README.md](skills/README.md) | Skill rationale by family: memory, refinement, shortcuts |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
-| [kronael-tools/install/SKILL.md](kronael-tools/install/SKILL.md) | Install procedure (followed by both plugin and "say install") |
+| [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (followed by both plugin and "say install") |
 
 ### Working on this repo
 
 - ALWAYS keep files under 200 lines
 - ALWAYS use ALWAYS/NEVER statements in skill content
 - Focus on non-obvious patterns LLMs fail to grasp
-- Test by re-running `/kronael-tools:install` (or "say install") and using in a real project
+- Test by re-running `/kronael:install` (or "say install") and using in a real project
 - NEVER include local paths, org-specific refs, or secrets in source files (those go in `~/.claude/LOCAL.md`, auto-injected by the `local` hook)

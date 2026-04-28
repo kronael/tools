@@ -9,7 +9,7 @@ them accessible to agents that don't pick up `CLAUDE.md` automatically.
 ALWAYS read before making changes:
 
 1. Root `CLAUDE.md` — repo conventions and layout.
-2. [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — canonical install procedure (this file is the bash translation).
+2. [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — canonical install procedure (this file is the bash translation).
 3. Nearest nested `CLAUDE.md` for the area being changed (if any).
 
 NEVER ignore a `CLAUDE.md` because it says "Claude". These are project
@@ -21,8 +21,8 @@ conventions, not product-specific behavior.
    `dc-fetch/`, `clp/`. Each is independent. Adding a new tool: own
    dir, own Makefile (or PEP 723 inline-deps script), entry in
    `README.md`.
-2. **Claude Code plugin** — `.claude-plugin/` + `kronael-tools/install/`.
-   Only `/kronael-tools:install` is exposed; running it copies the
+2. **Claude Code plugin** — `.claude-plugin/` + `kronael/install/`.
+   Only `/kronael:install` is exposed; running it copies the
    bundle into `~/.claude/`. **You can't run this from Codex** — it's
    a Claude Code slash command. Use the manual path below instead.
 3. **Bundle** — `skills/`, `agents/`, `hooks/`, `settings-recommended.json`,

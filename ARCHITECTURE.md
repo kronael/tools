@@ -4,7 +4,7 @@
 
 ```
 .claude-plugin/         marketplace.json + plugin.json
-kronael-tools/install/  the only plugin-exposed skill — install procedure
+kronael/install/  the only plugin-exposed skill — install procedure
 skills/                 bundle — auto-activating skills (languages, workflow, domain)
 agents/                 bundle — specialized task agents
 hooks/                  bundle — lifecycle hook scripts (Python)
@@ -23,14 +23,14 @@ The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
 Both paths copy them into `~/.claude/`.
 
 **Plugin path** — Claude Code's marketplace clones this repo into its
-plugin cache. `/kronael-tools:install` reads the cached repo at
+plugin cache. `/kronael:install` reads the cached repo at
 `${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
 
 **Manual path** — User clones the repo themselves, opens Claude Code at
 the root, says "install". Source is `cwd`; the rest of the procedure is
 identical.
 
-The procedure is documented in [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
+The procedure is documented in [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
 
 ## Why hybrid (plugin + install step)
 
@@ -46,7 +46,7 @@ A pure-plugin install is read-only — every edit is overwritten on
 update.
 
 **2. LLM-coordinated merges, not blind overrides.** The install step
-is an LLM following a procedure (`kronael-tools/install/SKILL.md`),
+is an LLM following a procedure (`kronael/install/SKILL.md`),
 not a blind `cp -r`. It diffs each destination, surfaces conflicts,
 extracts user-local content to `LOCAL.md`, asks before overwriting
 relaxed settings, preserves user-added skills (overlays, personal

@@ -1,7 +1,7 @@
 {
-  "name": "kronael-tools",
-  "description": "Installer for the Kronael toolkit. Trigger by saying 'install kronael tools' or running /kronael-tools:install. Deploys language patterns (go/py/rs/ts/sql), workflow commands (commit, ship, refine, diary), wisdom skill, and lifecycle hooks (compaction preservation, prompt nudges, stop checks) into ~/.claude/.",
+  "name": "kronael",
+  "description": "Installer for the Kronael toolkit. Trigger by saying 'install kronael' or running /kronael:install. Deploys language patterns (go/py/rs/ts/sql), workflow commands (commit, ship, refine, diary), wisdom skill, and lifecycle hooks (compaction preservation, prompt nudges, stop checks) into ~/.claude/.",
   "version": "0.1.0",
   "author": { "name": "Ondrej Vostal" },
-  "skills": "./kronael-tools/"
+  "skills": "./kronael/"
 }
