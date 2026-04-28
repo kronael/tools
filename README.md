@@ -22,3 +22,9 @@ Command-line utilities and Claude Code configuration.
 Each tool has its own Makefile. Navigate to the tool directory and run `make install`.
 
 For Claude Code configuration, open `assistants/claude-template/` and say "install".
+
+## Daily Use
+
+See [COOKBOOK.md](COOKBOOK.md) for detached-HEAD recipes that combine
+rig, dockbox, and the assistants — start a feature, push, rebase,
+recover lost work, ship from spec.
