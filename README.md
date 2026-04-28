@@ -28,7 +28,7 @@ This repo is a [Claude Code plugin marketplace](.claude-plugin/marketplace.json)
 /kronael-tools:install
 ```
 
-Or install manually — see [INSTALL.md](INSTALL.md).
+Or open Claude Code at the repo root and say **"install"** — it auto-loads `CLAUDE.md`, which dispatches to [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) (the single source of truth for the install procedure).
 
 ### What's in the bundle
 
@@ -46,24 +46,29 @@ Or install manually — see [INSTALL.md](INSTALL.md).
 ### Layout
 
 ```
-.claude-plugin/         marketplace.json + plugin.json
-kronael-tools/install/SKILL.md   the only plugin-exposed skill (installer)
-skills/                 bundle copied to ~/.claude/skills/
-agents/                 bundle copied to ~/.claude/agents/
-hooks/                  bundle copied to ~/.claude/hooks/
-settings-recommended.json   merged into ~/.claude/settings.json
-RECLAUDE.md             template for ~/.claude/RECLAUDE.md
-INSTALL.md              manual install procedure
-ARCHITECTURE.md         component details
-WORKFLOW.md             agent hierarchy
-usage-patterns/         12 patterns extracted from production projects
+.claude-plugin/                    marketplace.json + plugin.json
+kronael-tools/install/SKILL.md     plugin-exposed install procedure (source of truth)
+skills/                            bundle copied to ~/.claude/skills/
+agents/                            bundle copied to ~/.claude/agents/
+hooks/                             bundle copied to ~/.claude/hooks/
+settings-recommended.json          merged into ~/.claude/settings.json
+RECLAUDE.md                        template for ~/.claude/RECLAUDE.md
+usage-patterns/                    12 patterns extracted from production projects
 ```
 
-### Daily use
+## Documentation
 
-See [COOKBOOK.md](COOKBOOK.md) for detached-HEAD recipes that combine
-rig, dockbox, and the toolkit — start a feature, push, rebase, recover
-lost work, ship from spec.
+| Doc | Purpose |
+|-----|---------|
+| [CLAUDE.md](CLAUDE.md) | Repo conventions for Claude Code (auto-loaded each session) |
+| [AGENTS.md](AGENTS.md) | Same conventions + bash install runbook for Codex / non-Claude agents |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, install paths, sync strategies, org overlays |
+| [WORKFLOW.md](WORKFLOW.md) | Agent hierarchy: `/ship` → `/build` → `/refine` → leaf agents |
+| [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `dockbox`, and the toolkit |
+| [skills/README.md](skills/README.md) | Skill rationale by family: memory, refinement, shortcuts |
+| [hooks/README.md](hooks/README.md) | Hook system overview |
+| [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
+| [kronael-tools/install/SKILL.md](kronael-tools/install/SKILL.md) | Install procedure (followed by both plugin and "say install") |
 
 ### Working on this repo
 

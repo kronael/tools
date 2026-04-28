@@ -4,15 +4,15 @@
 
 ```
 .claude-plugin/         marketplace.json + plugin.json
-kronael-tools/install/  the only plugin-exposed skill
+kronael-tools/install/  the only plugin-exposed skill — install procedure
 skills/                 bundle — auto-activating skills (languages, workflow, domain)
 agents/                 bundle — specialized task agents
 hooks/                  bundle — lifecycle hook scripts (Python)
 settings-recommended.json  user-side settings to merge into ~/.claude/settings.json
 RECLAUDE.md             template for ~/.claude/RECLAUDE.md (reclaude hook input)
-INSTALL.md              manual install procedure
 AGENTS.md               instructions for non-Claude agents (Codex)
 WORKFLOW.md             agent hierarchy and ship/build/refine workflows
+COOKBOOK.md             daily git recipes (detached HEAD with rig)
 usage-patterns/         design patterns extracted from production projects
 dockbox/, rig/, ...     standalone CLI tools (each independent)
 ```
@@ -29,6 +29,8 @@ plugin cache. `/kronael-tools:install` reads the cached repo at
 **Manual path** — User clones the repo themselves, opens Claude Code at
 the root, says "install". Source is `cwd`; the rest of the procedure is
 identical.
+
+The procedure is documented in [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
 
 ## Sync strategies
 
@@ -69,4 +71,20 @@ Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
 - `learn` — PreCompact + SessionEnd write flow reports for `@learn`
 - `stop` — Stop block on uncommitted changes / missing diary entries
 
-See `WORKFLOW.md` for the full agent hierarchy.
+See [`WORKFLOW.md`](WORKFLOW.md) for the full agent hierarchy,
+[`skills/README.md`](skills/README.md) for skill rationale by family
+(memory, refinement, shortcuts), and
+[`hooks/README.md`](hooks/README.md) +
+[`hooks/ARCHITECTURE.md`](hooks/ARCHITECTURE.md) for hook details.
+
+## Org overlays
+
+Org-specific skills live in separate repos layered on top of the base
+install:
+
+```
+cp -r <org-repo>/skills/<org> ~/.claude/skills/
+```
+
+The install procedure never deletes skills not in source — overlays
+persist across updates.

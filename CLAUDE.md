@@ -39,8 +39,10 @@ Makefile: `image` (build), `install` (build+install), `clean`.
 
 Two install paths share the same source:
 
-- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools"). The plugin exposes only the install skill (`kronael-tools/install/SKILL.md`); after running it, skills/agents/hooks live in `~/.claude/` (no prefix).
-- **Manual**: open Claude Code at the repo root, say "install" — see [INSTALL.md](INSTALL.md).
+- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools").
+- **Manual**: open Claude Code at the repo root and say **"install"**.
+
+Both paths follow [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings, external tools). When the user says "install" in this repo, follow that skill.
 
 ### Source rules
 

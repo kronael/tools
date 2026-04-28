@@ -9,7 +9,7 @@ them accessible to agents that don't pick up `CLAUDE.md` automatically.
 ALWAYS read before making changes:
 
 1. Root `CLAUDE.md` — repo conventions and layout.
-2. `INSTALL.md` — manual install procedure (canonical reference).
+2. [`kronael-tools/install/SKILL.md`](kronael-tools/install/SKILL.md) — canonical install procedure (this file is the bash translation).
 3. Nearest nested `CLAUDE.md` for the area being changed (if any).
 
 NEVER ignore a `CLAUDE.md` because it says "Claude". These are project
