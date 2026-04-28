@@ -44,7 +44,7 @@ Or install manually — see [INSTALL.md](INSTALL.md).
 
 ```
 .claude-plugin/         marketplace.json + plugin.json
-t/install/SKILL.md      the only plugin-exposed skill (installer)
+kronael-tools/install/SKILL.md   the only plugin-exposed skill (installer)
 skills/                 bundle copied to ~/.claude/skills/
 agents/                 bundle copied to ~/.claude/agents/
 hooks/                  bundle copied to ~/.claude/hooks/

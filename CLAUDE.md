@@ -42,14 +42,6 @@ Two install paths share the same source:
 - **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools"). The plugin exposes only the install skill (`kronael-tools/install/SKILL.md`); after running it, skills/agents/hooks live in `~/.claude/` (no prefix).
 - **Manual**: open Claude Code at the repo root, say "install" — see [INSTALL.md](INSTALL.md).
 
-### Components
-
-**Skills** auto-activate by file context. Wrappers (`/improve`, `/learn`, `/readme`, `/refine`, `/visual`) launch their `@`-named agents.
-
-**Agents**: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`, `@visual`.
-
-**Hooks**: `nudge` (keyword→agent routing), `local` (inject LOCAL.md), `reclaude` (re-inject rules across compaction), `learn` (flow reports), `stop` (commit + diary nudge).
-
 ### Source rules
 
 When editing bundle files:

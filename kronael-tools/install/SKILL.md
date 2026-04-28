@@ -5,7 +5,7 @@ description: Install (or update) the Kronael toolkit into ~/.claude/. Trigger wh
 
 # Install Kronael toolkit
 
-Goal: deploy the bundle from `${CLAUDE_PLUGIN_ROOT}/..` (the plugin source) into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work without a `kronael-tools:` prefix.
+Goal: deploy the bundle from `${CLAUDE_PLUGIN_ROOT}` (the cached plugin repo) into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael-tools:` prefix).
 
 ## What you'll do
 
@@ -19,7 +19,7 @@ Copy them to `~/.claude/`, merge settings, and write the wisdom file.
 
 ## Steps
 
-1. **Locate the bundle**. Plugin install root is `${CLAUDE_PLUGIN_ROOT}` (a cache copy of the repo). The bundle lives one level up at `${CLAUDE_PLUGIN_ROOT}/..` — verify by listing `skills/`, `agents/`, `hooks/`, `settings-recommended.json` are present.
+1. **Locate the bundle**. `${CLAUDE_PLUGIN_ROOT}` is the cached repo root — verify `skills/`, `agents/`, `hooks/`, `settings-recommended.json` are present there.
 
 2. **Backup**. Before overwriting anything, copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json}` to `~/.claude/backup/<timestamp>/`.
 
@@ -35,7 +35,7 @@ Copy them to `~/.claude/`, merge settings, and write the wisdom file.
    - **Permissions, sandbox, env** — show diff, ask user which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-6. **Report**: print a summary — X skills installed, Y agents, Z hooks, settings merged. Note that `/commit`, `/ship`, `/refine`, etc. are now invocable bare (not `t:`-prefixed).
+6. **Report**: print a summary — X skills installed, Y agents, Z hooks, settings merged. `/commit`, `/ship`, `/refine`, etc. are now invocable bare.
 
 ## Rules
 
