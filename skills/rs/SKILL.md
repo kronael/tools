@@ -1,6 +1,6 @@
 ---
 name: rs
-description: Rust development. .rs files, Cargo.toml, clap, eyre, tracing, tokio, DashMap, cargo clippy, core_affinity, testcontainers, enum states.
+description: Rust development. USE when editing .rs files or writing Rust code. Cargo.toml, clap, eyre, tracing, tokio, DashMap, cargo clippy, testcontainers, enum states.
 ---
 
 # Rust

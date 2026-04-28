@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Git commits. git status, git diff, commit messages, [section] format.
+description: Git commits. USE to draft commit messages and stage/commit changes ([section] format). NOT for PR descriptions (use pr-draft).
 user-invocable: true
 ---
 

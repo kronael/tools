@@ -1,7 +1,6 @@
 ---
 name: diary
-description: Record what matters in <cwd>/.diary/YYYYMMDD.md.
-  Preferences and long-term patterns go to memory (tell the user).
+description: Record what matters in <cwd>/.diary/YYYYMMDD.md. USE after significant work to log decisions/milestones. NOT for searching past entries (use recall-memories). Preferences and long-term patterns go to memory (tell the user).
 user-invocable: true
 ---
 

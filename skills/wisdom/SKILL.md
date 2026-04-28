@@ -15,6 +15,7 @@ description: Specific trigger context. Keywords and file types for activation.
 ```
 
 - Description is critical — semantic matching activates skills
+- For overlap-prone skills, append `USE when X. NOT for Y (use Z).` to disambiguate
 - ALWAYS/NEVER rules and examples, NEVER prose paragraphs
 - Under 200 lines, link to supporting files if larger
 - NEVER add obvious code examples LLMs already know

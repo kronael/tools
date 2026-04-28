@@ -1,6 +1,6 @@
 ---
 name: learn
-description: /learn — launch @learn agent to extract patterns and create skills
+description: /learn — launch @learn agent to extract patterns into new skills. USE to mine session history. NOT for writing skills from scratch (use wisdom).
 user-invocable: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: recall-memories
-description: Search diary, memory, and session history for relevant information.
+description: Search diary, memory, and session history. USE to find context from prior sessions. NOT for writing new entries (use diary).
 user-invocable: true
 arg: <question>
 ---

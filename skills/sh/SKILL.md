@@ -1,6 +1,6 @@
 ---
 name: sh
-description: Bash/shell scripting patterns. Use when writing .sh files, entrypoints, shell scripts.
+description: Bash/shell scripting. USE when editing .sh files or writing shell scripts. entrypoints, POSIX, bash patterns.
 ---
 
 # Bash Style

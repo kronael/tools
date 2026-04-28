@@ -1,6 +1,6 @@
 ---
 name: sql
-description: SQL queries and schemas. JOIN USING, column aliases without AS, migrations, schema changes, database design.
+description: SQL queries and schemas. USE when editing .sql files or writing SQL. JOIN USING, column aliases without AS, migrations, schema changes.
 ---
 
 # SQL

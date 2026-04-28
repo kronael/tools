@@ -1,6 +1,6 @@
 ---
 name: tsx
-description: Frontend React/Next.js. .tsx files, components, hooks, server/client components, Tailwind theming, forms, a11y.
+description: Frontend React/Next.js. USE when editing .tsx files or writing React components. hooks, server/client components, Tailwind theming, forms, a11y.
 requires: ts
 ---
 
