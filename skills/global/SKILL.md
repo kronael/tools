@@ -1,3 +1,8 @@
+---
+name: global
+description: Development wisdom — startup protocol (read diary, prior session, memory before answering), terse response style, boring code philosophy, language-agnostic and language-specific principles, file/test/git workflow rules. Load on session start; covers any code work.
+---
+
 # Development Wisdom
 
 ## Conversation Startup Protocol

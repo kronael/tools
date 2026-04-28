@@ -27,16 +27,8 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/local.py",
-            "timeout": 3000
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/nudge.py",
-            "timeout": 3000
-          }
+          { "type": "command", "command": "python3 ~/.claude/hooks/local.py", "timeout": 3000 },
+          { "type": "command", "command": "python3 ~/.claude/hooks/nudge.py", "timeout": 3000 }
         ]
       }
     ],
@@ -44,11 +36,7 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/stop.py",
-            "timeout": 10
-          }
+          { "type": "command", "command": "python3 ~/.claude/hooks/stop.py", "timeout": 10 }
         ]
       }
     ],
@@ -56,21 +44,9 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/local.py",
-            "timeout": 3000
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/learn.py",
-            "timeout": 10000
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/reclaude.py",
-            "timeout": 3000
-          }
+          { "type": "command", "command": "python3 ~/.claude/hooks/local.py", "timeout": 3000 },
+          { "type": "command", "command": "python3 ~/.claude/hooks/learn.py", "timeout": 10000 },
+          { "type": "command", "command": "python3 ~/.claude/hooks/reclaude.py", "timeout": 3000 }
         ]
       }
     ],
@@ -78,11 +54,7 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/learn.py",
-            "timeout": 10000
-          }
+          { "type": "command", "command": "python3 ~/.claude/hooks/learn.py", "timeout": 10000 }
         ]
       }
     ]
@@ -96,10 +68,7 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": [
-      "git",
-      "uv"
-    ]
+    "excludedCommands": ["git", "uv"]
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
