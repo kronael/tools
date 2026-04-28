@@ -1,10 +1,9 @@
 # dockbox
 
-Dockerized Claude Code for **operational usability** — not security isolation.
-The goal is a fully capable agent that can work across projects without
-polluting the host filesystem. Docker provides working directory scoping and
-a clean environment, not a security sandbox. The boxed agent has full access
-to your tools, config, and credentials — treat it as yourself in a container.
+A sandbox that is actually useful — full credentials, no permission prompts,
+mounts whatever you point at. Docker provides working directory scoping and a clean
+environment. The boxed agent has full access to your tools, config, and
+credentials — treat it as yourself in a container.
 
 ## Build
 
@@ -29,16 +28,18 @@ make clean              # remove binary and docker image
 ```bash
 dockbox                           # current dir, runs claude
 dockbox ~/wk/project              # mount project
-dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs
+dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
+dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
+dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
+dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
-dockbox -e bash .                 # run bash instead
-dockbox -c                        # continue session
+dockbox -x bash .                 # run bash instead
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-e` to override.
+Default command: claude. Use `-x` to override.
 
 ## Configuration
 
@@ -75,9 +76,11 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permission prompts are bypassed (`--dangerously-skip-permissions`).
-This is intentional — the use case is a trusted agent doing real work, not
-untrusted code execution. If you need security isolation, this is not the tool.
+All Claude Code permission prompts are bypassed two ways: `bypassPermissions`
+mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
+passed by the `claude` wrapper in the image. This is intentional — the use
+case is a trusted agent doing real work, not untrusted code execution. If you
+need security isolation, this is not the tool.
 
 ## Cookbook
 
@@ -94,10 +97,8 @@ Then in dockbox Claude, reference `capture.png` — it auto-attaches.
 
 ### Share a host file
 
-Add to `~/.dockboxrc`:
-
-```
--v /tmp/data.csv:/tmp/data.csv:ro
+```bash
+dockbox -v /tmp/data.csv ~/wk/project    # mounts at same path, ro
 ```
 
 ### GPU passthrough

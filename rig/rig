@@ -31,7 +31,7 @@ get_current_branch(){
     local c="HEAD"
     while git rev-parse --verify "$c" &>/dev/null; do
         branch=$(git for-each-ref --points-at "$c" --format='%(refname:short)' \
-            refs/remotes/ | grep -v '/HEAD$' | head -1)
+            refs/remotes/ | grep '/' | grep -v '/HEAD$' | head -1)
         [[ -n "$branch" ]] && { clean_branch "$branch"; return; }
         # merge commit = ambiguous ancestry, bail
         [[ $(git rev-parse --verify "$c^2" 2>/dev/null) ]] && break
@@ -72,8 +72,12 @@ cmd_branch_op(){
         esac
     done
 
+    # Fetch before selection so fzf shows current branches
+    [[ $fetch ]] && git fetch
+
     # Select branch
     local pattern="${1:-}"
+    pattern="${pattern#origin/}"
     if [[ -z "$pattern" && ("$op" == "rebase" || "$op" == "merge") ]]; then
         pattern=$(get_current_branch 2>/dev/null || true)
     fi
@@ -86,7 +90,6 @@ cmd_branch_op(){
     if [[ ${dryrun:-} ]]; then
         echo "origin/$branch"
     else
-        [[ $fetch ]] && git fetch
         case "$op" in
             checkout) git checkout "origin/$branch" ;;
             rebase)   git rebase -i "origin/$branch" ;;
@@ -143,11 +146,44 @@ EOF
     fi
 }
 
+# ── Fixup squash ────────────────────────────────────────────────────
+
+cmd_fixup(){
+    local fixup_pat='^fixup[[:space:]:!;]'
+
+    # Find oldest fixup commit to determine rebase base
+    local oldest
+    oldest=$(git log --format="%H %s" | \
+        awk -v p="$fixup_pat" '$0 ~ p {last=$1} END{print last}')
+    [[ -z "$oldest" ]] && { echo "no fixup commits"; return 0; }
+
+    # Sequence editor: mark fixup-pattern picks as fixup
+    local seq_ed
+    seq_ed=$(mktemp /tmp/rig-fixup-XXXXX.sh)
+    cat > "$seq_ed" <<'EOF'
+#!/bin/bash
+todo=$1
+tmp=$todo.tmp
+while IFS= read -r line; do
+    [[ "$line" =~ ^pick[[:space:]]+([a-f0-9]+) ]] || { echo "$line"; continue; }
+    msg=$(git log -1 --format='%s' "${BASH_REMATCH[1]}" 2>/dev/null)
+    if [[ "$msg" =~ ^fixup[[:space:]:!;] ]]; then
+        echo "${line/pick/fixup}"
+    else
+        echo "$line"
+    fi
+done < "$todo" > "$tmp" && mv "$tmp" "$todo"
+EOF
+    chmod +x "$seq_ed"
+    GIT_SEQUENCE_EDITOR="$seq_ed" git rebase -i "$oldest^"
+    rm -f "$seq_ed"
+}
+
 # ── Install ──────────────────────────────────────────────────────────
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(rco rip rir rim)
+    local symlinks=(rco rip rir rim riq)
     for s in "${symlinks[@]}"; do
         ln -sf rig "$dir/$s"
         echo "  $dir/$s -> rig"
@@ -165,6 +201,7 @@ rig - ripgit: git tools
   rig p [branch]     Push to origin (rip)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
+  rig sq             Squash fixup commits (riq)
   rig install        Create symlinks
 
 Flags: -z offline, -n dry-run, ? force fzf
@@ -178,6 +215,7 @@ dispatch(){
         p|push|rip)      shift; cmd_push "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
+        sq|fixup|riq)    shift; cmd_fixup "$@" ;;
         install)         cmd_install ;;
         -h|--help|help|"") usage ;;
         *)  echo "error: unknown command: $1"; usage ;;

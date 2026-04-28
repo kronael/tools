@@ -1,27 +1,23 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
 ## Repository
 
-Two sections: CLI tools (`rig/`) and Claude Code configuration
-(`assistants/`).
+Three things live here:
+1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`) — each with its own Makefile.
+2. Claude Code plugin (`.claude-plugin/`, `t/`) — installer skill that deploys the bundle to `~/.claude/`.
+3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael-tools:install` copies. Same content also installs via the manual "say install" path.
 
-## Tools
-
-Each tool lives in its own directory with an executable, Makefile
-(`install`/`clean` targets), and README. Installs to `~/.local/bin/`.
+## CLI tools
 
 ### Ratpoison Design Philosophy
 
-Optimized for **MAX INFLOW of information**: keyboard-driven, stays
-in terminal, single-purpose, scriptable, no visual cruft. Named after
-the keyboard-only window manager.
+Optimized for **MAX INFLOW of information**: keyboard-driven, stays in terminal, single-purpose, scriptable, no visual cruft. Named after the keyboard-only window manager.
 
-### rig - ripgit
+### rig — ripgit
 
-Single busybox-style bash script (`rig/rig`). Symlinks detect
-invocation name and dispatch to subcommands.
+Single busybox-style bash script (`rig/rig`). Symlinks detect invocation name and dispatch to subcommands.
 
 ```bash
 rig co [pattern]   # Checkout origin/branch, detached (rco)
@@ -31,56 +27,31 @@ rig m [pattern]    # Merge origin/branch (rim)
 rig install        # Create symlinks in script's directory
 ```
 
-**Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
+**Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf.
 
-**Implementation**: helpers at top, flags parsed, then main logic.
-Clear sections: `# Parse flags`, `# Select branch`, `# Execute`.
+### dockbox — Dockerized Claude Code sandbox
 
-### dockbox - Dockerized Claude Code sandbox
+Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z suspends container + returns to host shell; `fg` resumes.
 
-Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated
-Docker container. Multi-directory mounts, per-project `.dockboxrc`
-config, all permissions bypassed (container is the sandbox).
+Makefile: `image` (build), `install` (build+install), `clean`.
 
-Makefile targets: `image` (build), `install` (build+install), `clean`.
+## Claude Code toolkit
 
-### External tools (installed during assistants setup)
+Two install paths share the same source:
 
-- **ship** (`kronael/ship`): planner-worker-judge CLI for autonomous feature delivery
-- **agent-browser** (npm): headless browser automation CLI (playwright-based)
+- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools"). The plugin exposes only the install skill (`kronael-tools/install/SKILL.md`); after running it, skills/agents/hooks live in `~/.claude/` (no prefix).
+- **Manual**: open Claude Code at the repo root, say "install" — see [INSTALL.md](INSTALL.md).
 
-## Assistants
+### Source rules
 
-Claude Code configuration in `assistants/`.
+When editing bundle files:
+- NEVER include local paths, org-specific refs, or secrets in source (they go in `~/.claude/LOCAL.md`, auto-injected by `local.py`).
+- The `global` skill body becomes `~/.claude/CLAUDE.md` on install — the always-loaded wisdom file.
+- `RECLAUDE.md` is the re-injection template for the `reclaude` hook.
 
-- **claude-template/**: Skills, agents, hooks — say
-  "install" to deploy to `~/.claude/`
-- **usage-patterns/**: 12 usage patterns extracted from 57 projects
+## Coding philosophy
 
-### Components
-
-**Skills** (34): auto-activate based on file context (agent-browser,
-cli, commit, create-eval, data, diary, distill, docs-audit, fin, go,
-improve, learn, merge-trivial, ops, pr-draft, py, readme,
-recall-memories, refine, release, rs, service, sh, ship, specs, sql,
-sub, testing, trader, ts, tsx, tweet, visual, wisdom)
-
-**Agents** (6): @distill, @improve, @learn, @readme,
-@refine, @visual
-
-**Hooks** (5): nudge (keyword->agent routing), local (LOCAL.md
-injection), reclaude (RECLAUDE.md injection), learn (flow
-reports), stop (commit + diary nudge)
-
-### Sync Rules
-
-When syncing `claude-template/global/` to `~/.claude/`:
-- NEVER include local paths, org-specific refs, or secrets
-- Local content belongs in `~/.claude/LOCAL.md`
-
-## Coding Philosophy
-
-**"Debugging is twice as hard as writing the code."** - Kernighan
+**"Debugging is twice as hard as writing the code."** — Kernighan
 
 - Readability > Performance > Cleverness
 - Linear flow, minimal branching, one way to do things
@@ -91,10 +62,6 @@ When syncing `claude-template/global/` to `~/.claude/`:
 
 ## Development
 
-**Adding tools**: create `toolname/` with executable, Makefile,
-README. Follow ratpoison + boring code principles. Update root
-README.
+**Adding tools**: create `toolname/` with executable, Makefile, README. Follow ratpoison + boring-code principles. Update root README.
 
-**Working on assistants**: ALWAYS use ALWAYS/NEVER statements.
-Focus on non-obvious patterns LLMs fail to grasp. Test by
-installing then using in a real project.
+**Working on the toolkit**: ALWAYS use ALWAYS/NEVER statements. Focus on non-obvious patterns LLMs fail to grasp. Test by re-installing and using in a real project.

@@ -81,10 +81,14 @@ RUN uv tool install pre-commit
 RUN curl -fsSL https://get.sdkman.io | bash
 ENV SDKMAN_DIR="/home/claude/.sdkman"
 
-RUN bun install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
+
+RUN bun install -g \
   @openai/codex \
   @mariozechner/pi-coding-agent \
   agent-browser
+
+RUN uv tool install git+https://github.com/kronael/ship
 
 RUN bunx puppeteer browsers install chrome
 
@@ -93,7 +97,7 @@ RUN mkdir -p /home/claude/.local/bin && \
   printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
 [ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
-exec /home/claude/.bun/bin/claude --dangerously-skip-permissions "$@"\n' \
+exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /home/claude/.local/bin/claude && \
   chmod +x /home/claude/.local/bin/claude
 ENV PATH="/home/claude/.local/bin:$PATH"

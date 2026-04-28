@@ -1,0 +1,12 @@
+{
+  "name": "kronael-tools",
+  "owner": { "name": "Ondrej Vostal" },
+  "description": "Kronael Claude Code toolkit: skills, agents, and hooks for daily development.",
+  "plugins": [
+    {
+      "name": "kronael-tools",
+      "source": "./",
+      "description": "Run /kronael-tools:install (or say 'install kronael tools') to deploy language patterns, workflow commands, wisdom skill, and lifecycle hooks into ~/.claude/. Re-run to update."
+    }
+  ]
+}

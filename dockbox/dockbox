@@ -53,7 +53,9 @@ Usage: dockbox [options] [dirs...] [claude-args...]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -e cmd     Override entrypoint (default: claude)
+    -x cmd     Override entrypoint (default: claude)
+    -e VAR     Forward env var (e.g. -e GH_TOKEN)
+    -v path    Extra mount at same path ro by default; path:rw for read-write
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -61,10 +63,12 @@ Options:
 Examples:
     dockbox                           # current dir
     dockbox ~/wk/project              # mount project
-    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs
+    dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
+    dockbox -v ~/wk/lib               # extra mount ro (default)
+    dockbox -v ~/wk/lib:rw            # extra mount rw
+    dockbox -e GH_TOKEN               # forward env var
     dockbox -n mybox .                # custom name
-    dockbox -c                        # continue session
-    dockbox -e bash                   # run bash instead
+    dockbox -x bash                   # run bash instead
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
@@ -81,11 +85,15 @@ network=""
 ssh_agent=""
 docker_sock=""
 dirs=()
+extra_vols=()
+extra_env=()
 claude_args=()
-while getopts ":n:e:HAD" opt; do
+while getopts ":n:x:e:v:HAD" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
-        e) entrypoint="$OPTARG" ;;
+        x) entrypoint="$OPTARG" ;;
+        e) extra_env+=(-e "$OPTARG") ;;
+        v) extra_vols+=("$OPTARG") ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
@@ -115,7 +123,7 @@ done
 
 # override settings.local.json after ~/.claude mount to bypass trust prompts
 _settings=$(mktemp)
-echo '{"defaultMode":"bypassPermissions"}' > "$_settings"
+echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
 mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
 
 docker_gid_arg=""
@@ -141,6 +149,13 @@ for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
+done
+
+for vol in "${extra_vols[@]}"; do
+    mode="ro"
+    [[ "$vol" == *:rw ]] && { mode="rw"; vol="${vol%:rw}"; } || vol="${vol%:ro}"
+    src="$(cd "$vol" && pwd)"
+    mounts+=(-v "$src:$src:$mode")
 done
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
@@ -171,17 +186,31 @@ if [[ -n "$existing" ]]; then
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-trap '' TSTP
-exec docker run -it --rm \
+docker create -it \
     --name "$CONTAINER_NAME" \
     $network \
     $docker_gid_arg \
     -e HOME=/home/claude \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
+    "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
-    "${cmd[@]}"
+    "${cmd[@]}" >/dev/null
+
+trap 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1' EXIT
+
+while :; do
+    docker start -a --detach-keys='ctrl-z' "$CONTAINER_NAME"
+    state=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null) || break
+    if [[ "$state" == "exited" ]]; then
+        exit "$(docker inspect -f '{{.State.ExitCode}}' "$CONTAINER_NAME")"
+    fi
+    docker pause "$CONTAINER_NAME" >/dev/null
+    printf '\n[dockbox paused — fg to resume]\n' >&2
+    kill -STOP $$
+    docker unpause "$CONTAINER_NAME" >/dev/null 2>&1 || break
+done
