@@ -6,7 +6,7 @@
     {
       "name": "kronael",
       "source": "./",
-      "description": "Run /kronael:install (or say 'install kronael') to deploy language patterns, workflow commands, wisdom skill, and lifecycle hooks into ~/.claude/. Re-run to update."
+      "description": "Run /kronael:install (or say 'install kronael' / 'install kronael tools') to deploy language patterns, workflow commands, wisdom skill, and lifecycle hooks into ~/.claude/. Re-run to update."
     }
   ]
 }
