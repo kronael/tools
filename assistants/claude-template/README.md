@@ -43,7 +43,7 @@ behind each family (memory, refinement, shortcuts, hooks).
 
 ## Slash Commands
 
-Defined as user-invocable skills (not in `commands/`):
+Defined as user-invocable skills:
 
 - **/improve**: Launch @improve agent for code quality
 - **/learn**: Launch @learn agent to extract patterns
