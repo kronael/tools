@@ -1,79 +1,72 @@
 # Architecture
 
-## Overview
-
-Claude Code configuration: 6 agents, 32 auto-activating skills,
-5 hooks. Install by opening Claude Code here and saying "install".
-
-## Components
-
-### Global (installed to ~/.claude/)
-
-**CLAUDE.md**: Universal development principles
-
-**agents/** (6): Specialized task agents
-- Quality: @improve, @visual, @learn
-- Research: @distill
-- Utilities: @readme, @refine
-
-**skills/** (32): Auto-activating skills
-- Languages: go, py, rs, sh, sql, ts, tsx
-- Domain: cli, data, ops, service, trader, agent-browser, sub
-- Infrastructure: testing
-- Workflow: commit, create-eval, diary, docs-audit, merge-trivial,
-  pr-draft, recall-memories, refine, release, ship, specs, tweet, wisdom
-- Agent launchers (user-invocable): improve, learn, readme, visual
-
-The agent-launcher skills (improve/learn/readme/visual) provide
-slash-command invocation (`/improve`, `/learn`, etc.) that dispatches
-to their @-named agents via the Task tool.
-
-**hooks/** (5): Lifecycle hooks
-- nudge (UserPromptSubmit: keyword → agent)
-- local (UserPromptSubmit + PreCompact: LOCAL.md injection)
-- reclaude (UserPromptSubmit + PreCompact: RECLAUDE.md injection)
-- learn (PreCompact + SessionEnd: flow report)
-- stop (Stop: commit + diary nudge)
-
-## Installation Flow
+## Repo shape
 
 ```
-From this directory, say "install"
-
-Sync strategies:
-  Replace:    agents/, skills/, hooks/ (fresh copy)
-  Merge:      CLAUDE.md, settings.json (diff, ask)
-  Never touch: settings.local.json, LOCAL.md
+.claude-plugin/         marketplace.json + plugin.json
+kronael-tools/install/  the only plugin-exposed skill
+skills/                 bundle — auto-activating skills (languages, workflow, domain)
+agents/                 bundle — specialized task agents
+hooks/                  bundle — lifecycle hook scripts (Python)
+settings-recommended.json  user-side settings to merge into ~/.claude/settings.json
+RECLAUDE.md             template for ~/.claude/RECLAUDE.md (reclaude hook input)
+INSTALL.md              manual install procedure
+AGENTS.md               instructions for non-Claude agents (Codex)
+WORKFLOW.md             agent hierarchy and ship/build/refine workflows
+usage-patterns/         design patterns extracted from production projects
+dockbox/, rig/, ...     standalone CLI tools (each independent)
 ```
 
-## Runtime Flow
+## Two install paths, one source
+
+The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
+Both paths copy them into `~/.claude/`.
+
+**Plugin path** — Claude Code's marketplace clones this repo into its
+plugin cache. `/kronael-tools:install` reads the cached repo at
+`${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
+
+**Manual path** — User clones the repo themselves, opens Claude Code at
+the root, says "install". Same procedure, source is `cwd` instead of
+`${CLAUDE_PLUGIN_ROOT}`.
+
+## Sync strategies
+
+| Target | Strategy |
+|---|---|
+| `skills/`, `agents/`, `hooks/` | Replace (preserve user-added files not in source) |
+| `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
+| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask) |
+| `~/.claude/settings.local.json` | NEVER touch |
+| `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |
+
+Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
+
+## Runtime flow
 
 ```
 1. Claude Code starts in a project
-2. Loads ~/.claude/CLAUDE.md (global)
-3. Loads ./CLAUDE.md (project)
-4. Skills auto-activate based on:
-   - File extensions (.rs -> rs)
-   - Config files (Cargo.toml -> rs)
-5. Agents invoked explicitly or by delegation
+2. Loads ~/.claude/CLAUDE.md (global wisdom)
+3. Loads ./CLAUDE.md (project conventions)
+4. Hooks fire on UserPromptSubmit / PreCompact / Stop / SessionEnd
+5. Skills auto-activate by file extension or config file
+6. Agents invoked explicitly (`/refine`, `@improve`) or by delegation
 ```
 
-## Agent Hierarchy
+## Components
 
-See [WORKFLOW.md](WORKFLOW.md) for complete hierarchy and usage guide.
+**Skills** auto-activate by file context (`.rs` → `rs`, `Dockerfile` →
+`ops`, etc.) and provide workflow commands (`/commit`, `/ship`, `/refine`,
+`/diary`). The `global` skill becomes `~/.claude/CLAUDE.md`.
 
-```
-/refine
-  └─> @improve, @readme
+**Agents**: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`,
+`@visual`. Most are dispatched by slash-command wrappers.
 
-@distill, @improve, @learn, @readme, @refine, @visual (leaf agents)
-```
+**Hooks** wire lifecycle events:
+- `nudge` — UserPromptSubmit fuzzy-match keywords to agents/skills
+- `local` — UserPromptSubmit + PreCompact inject `~/.claude/LOCAL.md`
+- `reclaude` — PreCompact re-inject critical rules across compaction
+- `learn` — PreCompact + SessionEnd write flow reports for `@learn`
+- `stop` — Stop block on uncommitted changes / missing diary entries
 
-## Design Principles
-
-- **Auto-activation**: Skills match on file context
-- **Lazy loading**: Skill content loaded when activated
-- **Progressive refinement**: @learn improves skills from usage
-- **Safe updates**: /install compares, asks, backs up
-- **State separation**: Ship state in root (PROGRESS.md), build state in .ship/
-- **Clean delegation**: /ship → /build → leaf agents (@improve/@readme/@visual)
+See `WORKFLOW.md` for the full agent hierarchy.

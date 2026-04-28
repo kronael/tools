@@ -9,6 +9,7 @@ Command-line utilities and Claude Code configuration.
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
 - [tg-fetch](tg-fetch/) — Telegram channel/group archiver (telethon, TOML config)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
+- [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
 PEP 723 inline-deps Python scripts (`tg-fetch`, `dc-fetch`) run via `uv run main.py`. `dockbox` and `rig` have their own Makefile; `cd <tool> && make install`.
 
@@ -61,7 +62,7 @@ usage-patterns/         12 patterns extracted from production projects
 ### Working on this repo
 
 - ALWAYS keep files under 200 lines
-- ALWAYS use ALWAYS/NEVER/SHOULD statements in skill content
+- ALWAYS use ALWAYS/NEVER statements in skill content (no SHOULD — too soft)
 - Focus on non-obvious patterns LLMs fail to grasp
 - Test by re-running `/kronael-tools:install` (or "say install") and using in a real project
 - NEVER include local paths, org-specific refs, or secrets in source files (those go in `~/.claude/LOCAL.md`, auto-injected by the `local` hook)
