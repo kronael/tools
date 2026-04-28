@@ -50,7 +50,7 @@ Backup `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json}` to
 
 - Boring linear code over clever code.
 - Files under 200 lines.
-- ALWAYS/NEVER statements in skill content. SHOULD is too soft — don't use it.
+- ALWAYS/NEVER statements in skill content.
 - No secrets, no local paths, no org-specific references in source.
 - Commit format: `[section] Message`.
 - NEVER use `git add -A`, `git commit --amend`, or `git push`.

@@ -62,7 +62,7 @@ usage-patterns/         12 patterns extracted from production projects
 ### Working on this repo
 
 - ALWAYS keep files under 200 lines
-- ALWAYS use ALWAYS/NEVER statements in skill content (no SHOULD — too soft)
+- ALWAYS use ALWAYS/NEVER statements in skill content
 - Focus on non-obvious patterns LLMs fail to grasp
 - Test by re-running `/kronael-tools:install` (or "say install") and using in a real project
 - NEVER include local paths, org-specific refs, or secrets in source files (those go in `~/.claude/LOCAL.md`, auto-injected by the `local` hook)

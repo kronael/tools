@@ -50,7 +50,5 @@ Two muscle-memory wins:
 
 ## Status
 
-Experimental: API may change. Currently no tests, no error handling
-beyond what bash gives you for free. The fallback (`~/wk` scan) assumes
-that convention — adjust the script or maintain `~/.config/clp/projects`
-if your layout differs.
+Experimental. The `~/wk` fallback assumes that convention — adjust the
+script or maintain `~/.config/clp/projects` if your layout differs.

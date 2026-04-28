@@ -27,8 +27,8 @@ plugin cache. `/kronael-tools:install` reads the cached repo at
 `${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
 
 **Manual path** — User clones the repo themselves, opens Claude Code at
-the root, says "install". Same procedure, source is `cwd` instead of
-`${CLAUDE_PLUGIN_ROOT}`.
+the root, says "install". Source is `cwd`; the rest of the procedure is
+identical.
 
 ## Sync strategies
 

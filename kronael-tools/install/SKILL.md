@@ -35,7 +35,7 @@ Copy them to `~/.claude/`, merge settings, and write the wisdom file.
    - **Permissions, sandbox, env** — show diff, ask user which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-6. **Report**: print a summary — X skills installed, Y agents, Z hooks, settings merged. `/commit`, `/ship`, `/refine`, etc. are now invocable bare.
+6. **Report**: print a summary — X skills installed, Y agents, Z hooks, settings merged. `/commit`, `/ship`, `/refine`, etc. are invocable bare.
 
 ## Rules
 

@@ -64,4 +64,4 @@ When editing bundle files:
 
 **Adding tools**: create `toolname/` with executable, Makefile, README. Follow ratpoison + boring-code principles. Update root README.
 
-**Working on the toolkit**: ALWAYS use ALWAYS/NEVER statements (never SHOULD — too soft). Focus on non-obvious patterns LLMs fail to grasp. Test by re-installing and using in a real project.
+**Working on the toolkit**: ALWAYS use ALWAYS/NEVER statements. Focus on non-obvious patterns LLMs fail to grasp. Test by re-installing and using in a real project.
