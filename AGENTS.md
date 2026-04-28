@@ -65,7 +65,13 @@ echo "backup: $BK"
 
 ```sh
 mkdir -p ~/.claude/skills ~/.claude/agents ~/.claude/hooks
-cp -r skills/. ~/.claude/skills/
+# Copy every skill except global/ — its body lands in ~/.claude/CLAUDE.md (step 4),
+# copying it as a skill too would duplicate the always-loaded content.
+for d in skills/*/; do
+  [ "$(basename "$d")" = "global" ] && continue
+  cp -r "$d" ~/.claude/skills/
+done
+cp skills/README.md ~/.claude/skills/ 2>/dev/null || true
 cp -r agents/. ~/.claude/agents/
 cp -r hooks/.  ~/.claude/hooks/
 ```

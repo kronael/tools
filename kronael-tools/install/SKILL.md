@@ -28,12 +28,13 @@ If they're missing, you're in the wrong directory — stop and ask.
 1. **Backup**. Before overwriting anything, copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` to `~/.claude/backup/<timestamp>/`.
 
 2. **Copy assets** (replace strategy):
-   - `skills/*` → `~/.claude/skills/` (preserve user-added skills not in source — never delete)
+   - `skills/*` → `~/.claude/skills/` **but skip `skills/global/`** — its body is the wisdom file, deployed in step 3 below; copying it as a skill would duplicate the always-loaded content.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/lib/` → `~/.claude/hooks/`
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
+   - Preserve user-added files not in source — never delete.
 
-3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. If the user already has `~/.claude/CLAUDE.md` with content, show diff and ask before overwriting. Extract any local paths/repo names/secrets references the user has into `~/.claude/LOCAL.md` (auto-injected by `local.py` hook).
+3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md` — the always-loaded wisdom file. Single destination: do NOT also write to `~/.claude/skills/global/`. If the user already has `~/.claude/CLAUDE.md` with content, show diff and ask before overwriting. Extract any local paths/repo names/secrets references the user has into `~/.claude/LOCAL.md` (auto-injected by `local.py` hook).
 
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, Stop, PreCompact, SessionEnd) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
