@@ -1,6 +1,6 @@
 ---
 name: release
-description: Prepare a release. Version bump, changelog, docs alignment, git tag.
+description: Prepare a release. Version bump, changelog, docs alignment, git tag. USE for version bump + changelog + tag. NOT for a single commit ship (use commit + ship).
 user-invocable: true
 ---
 

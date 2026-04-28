@@ -1,6 +1,6 @@
 ---
 name: py
-description: Python development. USE when editing .py files or writing Python code. pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations.
+description: Python development. USE when editing .py files or writing Python code. pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations. NOT for shell scripting (use sh) or non-Python code.
 ---
 
 # Python

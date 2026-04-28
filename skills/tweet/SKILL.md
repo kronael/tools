@@ -1,6 +1,6 @@
 ---
 name: tweet
-description: Write X/Twitter threads. Dense, narrative, product-focused. No marketing fluff, no emojis, no hashtags.
+description: Write X/Twitter threads. Dense, narrative, product-focused. No marketing fluff, no emojis, no hashtags. USE to draft an X/Twitter thread. NOT for product copy or marketing prose.
 user-invocable: true
 ---
 

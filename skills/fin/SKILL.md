@@ -1,6 +1,6 @@
 ---
 name: fin
-description: /fin — finish mode. Execute all pending tasks until done without stopping for confirmation.
+description: /fin — finish mode. Execute all pending tasks until done without stopping for confirmation. USE to authorize multi-step autonomous execution. NOT for one-off commands (just run them).
 user-invocable: true
 ---
 

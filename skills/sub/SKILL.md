@@ -1,6 +1,6 @@
 ---
 name: sub
-description: /sub <prompt> — launch prompt as background subagent
+description: /sub <prompt> — launch prompt as background subagent. USE for fire-and-forget independent work. NOT for sequential tasks the main thread needs results from.
 user-invocable: true
 ---
 

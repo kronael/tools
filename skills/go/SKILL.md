@@ -1,6 +1,6 @@
 ---
 name: go
-description: Go development. USE when editing .go files or writing Go code. go.mod, *_test.go, testing.Short, goroutines, go test.
+description: Go development. USE when editing .go files or writing Go code. go.mod, *_test.go, testing.Short, goroutines, go test. NOT for non-Go code (use the matching language skill).
 ---
 
 # Go

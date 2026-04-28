@@ -1,6 +1,6 @@
 ---
 name: pr-draft
-description: Draft a short, clear PR description. Trigger on /pr-draft, "draft a PR", "write PR description", "PR description".
+description: Draft a short, clear PR description. Trigger on /pr-draft, "draft a PR", "write PR description", "PR description". USE to write a PR description from staged changes. NOT for the commit message itself (use commit).
 user-invocable: true
 ---
 

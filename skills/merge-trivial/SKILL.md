@@ -1,6 +1,6 @@
 ---
 name: merge-trivial
-description: Resolve git merge conflicts. Identify branches, classify each conflict as trivial (1000% clear) or ambiguous, resolve trivials immediately, ask about the rest.
+description: Resolve git merge conflicts. Identify branches, classify each conflict as trivial (1000% clear) or ambiguous, resolve trivials immediately, ask about the rest. USE for git merge conflicts that are 1000% clear (additions on both sides → union). NOT for ambiguous semantic conflicts (resolve manually).
 user-invocable: true
 ---
 

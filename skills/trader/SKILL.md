@@ -1,6 +1,6 @@
 ---
 name: trader
-description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config.
+description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config. USE for exchange APIs, position tracking, paper trading. NOT for general data scraping (use data).
 ---
 
 # Trader

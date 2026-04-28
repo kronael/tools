@@ -1,7 +1,7 @@
 ---
 name: testing
 description: Testing patterns. Use when writing tests, running tests, debugging or triaging
-  test failures, reading test output, testcontainers.
+  test failures, reading test output, testcontainers. USE for testcontainers, integration tests, real-API patterns. NOT for unit-test setup inside a language skill (handle there).
 ---
 
 # Testing
