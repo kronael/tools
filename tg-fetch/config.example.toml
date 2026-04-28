@@ -1,0 +1,10 @@
+# Telegram API credentials — get from https://my.telegram.org/apps
+api_id = 12345678
+api_hash = "abcdef1234567890abcdef1234567890"
+
+# Target group: username (no @) or numeric ID
+group = "some_group"
+
+# Auth — use one of:
+# bot_token = "123456789:AAF..."   # bot auth (read-only, no history)
+phone = "+1234567890"              # user auth (triggers interactive OTP)
