@@ -6,11 +6,13 @@ How to deploy the Kronael toolkit into `~/.claude/`. Two paths:
 
 ```
 /plugin marketplace add kronael/tools
-/plugin install t@kronael-tools
-/t:install
+/plugin install kronael-tools@kronael-tools
+/kronael-tools:install
 ```
 
-Marketplace = this repo. Plugin `t` ships only an installer skill (`/t:install`) that copies the bundled `skills/`, `agents/`, `hooks/` into `~/.claude/`, merges the recommended `settings.json`, and writes `~/.claude/CLAUDE.md` from the wisdom skill body. Re-run `/t:install` to update.
+Or just say "install kronael tools" once the plugin is installed — the install skill's description matches that phrasing.
+
+Marketplace = this repo. The `kronael-tools` plugin ships only an installer skill (`/kronael-tools:install`) that copies the bundled `skills/`, `agents/`, `hooks/` into `~/.claude/`, merges the recommended `settings.json`, and writes `~/.claude/CLAUDE.md` from the wisdom skill body. Re-run `/kronael-tools:install` to update.
 
 ## Manual
 

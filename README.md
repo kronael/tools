@@ -21,8 +21,8 @@ This repo is a [Claude Code plugin marketplace](.claude-plugin/marketplace.json)
 
 ```
 /plugin marketplace add kronael/tools
-/plugin install t@kronael-tools
-/t:install
+/plugin install kronael-tools@kronael-tools
+/kronael-tools:install
 ```
 
 Or install manually — see [INSTALL.md](INSTALL.md).
@@ -61,5 +61,5 @@ usage-patterns/         12 patterns extracted from production projects
 - ALWAYS keep files under 200 lines
 - ALWAYS use ALWAYS/NEVER/SHOULD statements in skill content
 - Focus on non-obvious patterns LLMs fail to grasp
-- Test by re-running `/t:install` (or "say install") and using in a real project
+- Test by re-running `/kronael-tools:install` (or "say install") and using in a real project
 - NEVER include local paths, org-specific refs, or secrets in source files (those go in `~/.claude/LOCAL.md`, auto-injected by the `local` hook)

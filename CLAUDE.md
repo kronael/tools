@@ -7,7 +7,7 @@ Guidance for Claude Code when working in this repository.
 Three things live here:
 1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`) — each with its own Makefile.
 2. Claude Code plugin (`.claude-plugin/`, `t/`) — installer skill that deploys the bundle to `~/.claude/`.
-3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/t:install` copies. Same content also installs via the manual "say install" path.
+3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael-tools:install` copies. Same content also installs via the manual "say install" path.
 
 ## CLI tools
 
@@ -39,7 +39,7 @@ Makefile: `image` (build), `install` (build+install), `clean`.
 
 Two install paths share the same source:
 
-- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install t@kronael-tools` → `/t:install`. The plugin exposes only the install skill (`t/install/SKILL.md`); after running it, skills/agents/hooks live in `~/.claude/` (no `t:` prefix).
+- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael-tools@kronael-tools` → `/kronael-tools:install` (or just say "install kronael tools"). The plugin exposes only the install skill (`kronael-tools/install/SKILL.md`); after running it, skills/agents/hooks live in `~/.claude/` (no prefix).
 - **Manual**: open Claude Code at the repo root, say "install" — see [INSTALL.md](INSTALL.md).
 
 ### Components
