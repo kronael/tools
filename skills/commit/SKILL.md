@@ -14,8 +14,11 @@ user-invocable: true
 
 ## Format
 
-`[section] Message` — why not what, 1-2 sentences.
+`[section] Message` — why not what.
 Sections: fix, feat, refactor, docs, test, chore, perf, style
+
+Subject ≤ 72 chars (includes `[section]`). Overflow goes in body via a
+second `-m`: `git commit -m "subj" -m "body" -- files`.
 
 Fixup: `fixup: <exact HEAD subject>` — use when the change is a correction to the immediately preceding commit.
 
