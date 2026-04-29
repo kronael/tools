@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq nano vim docker.io clang libclang-dev libudev-dev \
+  bubblewrap socat \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG UID=1000
