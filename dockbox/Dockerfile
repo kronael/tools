@@ -62,7 +62,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-  | sh -s -- -y && rustup component add rust-analyzer
+  | sh -s -- -y && /home/claude/.cargo/bin/rustup component add rust-analyzer
 ENV PATH="/home/claude/.cargo/bin:$PATH"
 
 RUN curl -sSL https://git.io/g-install | sh -s -- -y
