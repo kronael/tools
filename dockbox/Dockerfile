@@ -62,12 +62,13 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-  | sh -s -- -y
+  | sh -s -- -y && rustup component add rust-analyzer
 ENV PATH="/home/claude/.cargo/bin:$PATH"
 
 RUN curl -sSL https://git.io/g-install | sh -s -- -y
 ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
+RUN bash -lc 'go install golang.org/x/tools/gopls@latest'
 
 ARG NU_VERSION=0.110.0
 RUN ARCH=$(uname -m) && \
@@ -87,7 +88,9 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 RUN bun install -g \
   @openai/codex \
   @mariozechner/pi-coding-agent \
-  agent-browser
+  agent-browser \
+  pyright \
+  typescript typescript-language-server
 
 RUN uv tool install git+https://github.com/kronael/ship
 

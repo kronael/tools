@@ -5,6 +5,8 @@ IMAGE="dockbox"
 
 MOUNTS=(
     "$HOME/.claude:/home/claude/.claude:rw"
+    "$HOME/.claude/plugins:/home/claude/.claude/plugins:ro"
+    "$HOME/.claude/plugins:$HOME/.claude/plugins:ro"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
     "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
