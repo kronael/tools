@@ -1,9 +1,5 @@
 # Critical Rules (re-injected on compaction)
 
-Topics that have a dedicated reinject path are NOT here:
-- Git/commit rules → `stop.py` nudge + `nudge.py` COMMIT_RULES + `/commit` skill
-- Skill-content rules → `wisdom` skill
-
 ## Filesystem
 - NEVER use `/tmp` — ALWAYS `./tmp` in the project root
 - NEVER `basename $0` / `__dirname` / complex path resolution — fixed cwd, simple relative paths
