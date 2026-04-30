@@ -8,7 +8,7 @@ as slash commands (`/refine`, `/diary`, ...).
 
 LLMs forget. Every conversation starts cold, every long generation
 drifts from the rules, and the right skill rarely fires on its own.
-Each skill in this directory addresses one of four problems:
+Each skill in this directory addresses one of these problems:
 
 - **Style alignment** — language conventions the model wouldn't guess
 - **Session continuity** — facts and history across conversations
@@ -92,7 +92,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 
 | Skill | Role |
 |-------|------|
-| **commit** | structured git flow, `[section] Message`, HEEREDOC |
+| **commit** | structured git flow, `[section] Message`, HEREDOC |
 | **diary** | append `## HH:MM` to `.diary/YYYYMMDD.md` |
 | **docs-audit** | parallel subagent doc-vs-code audit |
 | **improve** | code-quality DO-CRITICIZE-EVALUATE-IMPROVE |

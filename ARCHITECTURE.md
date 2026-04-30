@@ -95,7 +95,6 @@ Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
 - `nudge` — UserPromptSubmit fuzzy-match keywords to agents/skills
 - `local` — UserPromptSubmit + PreCompact inject `~/.claude/LOCAL.md`
 - `reclaude` — PreCompact re-inject critical rules across compaction
-- `learn` — PreCompact + SessionEnd write flow reports for `@learn`
 - `stop` — Stop block on uncommitted changes / missing diary entries
 
 See [`WORKFLOW.md`](WORKFLOW.md) for the full agent hierarchy,

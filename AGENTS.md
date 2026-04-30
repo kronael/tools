@@ -133,12 +133,12 @@ restrictions to apply. NEVER touch `~/.claude/settings.local.json`.
 
 ```sh
 ls ~/.claude/skills/ | wc -l       # should match: ls skills/ | wc -l
-ls ~/.claude/agents/ | wc -l       # should be 6
-ls ~/.claude/hooks/*.py | wc -l    # should be at least 5
+ls ~/.claude/agents/ | wc -l       # should match: ls agents/ | wc -l
+ls ~/.claude/hooks/*.py | wc -l    # should match: ls hooks/*.py | wc -l
 test -f ~/.claude/CLAUDE.md
 ```
 
-Report to the user: `X skills, Y agents, Z hooks installed. Backup at $BK.`
+Report to the user: `N skills, M agents, K hooks installed. Backup at $BK.`
 
 ## Never-touch
 

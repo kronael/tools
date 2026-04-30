@@ -15,7 +15,7 @@
 
 /build (inner loop: plan → stages → workers → commit)
   │
-  ├── Parse plan from .claude/plans/
+  ├── Parse plan from .ship/
   ├── Spawn parallel workers per stage
   ├── Judge loop: poll, retry (max 3), error isolation
   ├── Refinement round (max 1)

@@ -1,6 +1,6 @@
 # Cookbook
 
-Daily recipes for `rig + dockbox + assistants`. Detached HEAD by
+Daily recipes for `rig + dockbox + kronael`. Detached HEAD by
 default — drop the clutter, make git do what you want.
 
 ## Why detached HEAD

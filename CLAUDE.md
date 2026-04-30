@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Repository
 
 Three things live here:
-1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`) — each with its own Makefile.
+1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`, `tg-fetch/`, `dc-fetch/`, `clp/`) — each with its own Makefile.
 2. Claude Code plugin (`.claude-plugin/`, `kronael/`) — installer skill that deploys the bundle to `~/.claude/`.
 3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael:install` copies. Same content also installs via the manual "say install" path.
 
@@ -49,7 +49,8 @@ Both paths follow [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the
 When editing bundle files:
 - NEVER include local paths, org-specific refs, or secrets in source (they go in `~/.claude/LOCAL.md`, auto-injected by `local.py`).
 - The `global` skill body becomes `~/.claude/CLAUDE.md` on install — the always-loaded wisdom file.
-- `RECLAUDE.md` is the re-injection template for the `reclaude` hook.
+- `RECLAUDE.md` is the re-injection template for the `reclaude` hook (PreCompact + manual continue/recap triggers).
+- ALWAYS verify `RECLAUDE.md` when changes here add or sharpen a rule in `skills/global/SKILL.md`: it should carry the highest-weight subset (refusal-required, frequently-violated). If a new rule belongs there, add it; if the rule it replaces became less critical, drop the old one.
 
 ## Coding philosophy
 

@@ -45,8 +45,7 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 **Hooks** wire lifecycle events:
 - `nudge` (UserPromptSubmit) — fuzzy-match keywords to agents/skills
 - `local` (UserPromptSubmit, PreCompact) — inject `~/.claude/LOCAL.md`
-- `reclaude` (PreCompact) — re-inject critical rules across compaction
-- `learn` (PreCompact, SessionEnd) — write flow reports for `@learn`
+- `reclaude` (UserPromptSubmit, PreCompact) — re-inject critical rules across compaction
 - `stop` (Stop) — block on uncommitted changes / missing diary entries
 
 ### Layout
