@@ -1,0 +1,44 @@
+target-version = "py311"
+line-length = 100
+exclude = [".venv", "tmp", "tweetfeed_cookies"]
+
+[lint]
+select = ["ALL"]
+ignore = [
+    # style/formatting — handled by ruff-format
+    "E501",   # line too long (formatter handles it)
+    "W191",   # indentation contains tabs
+    "D",      # docstrings (pydocstyle) — too noisy for utility scripts
+    "ANN",    # type annotations — not enforced
+    "TD",     # TODO comments
+    "FIX",    # fixme comments
+    "COM812", # trailing comma — conflicts with formatter
+    "ISC001", # implicit string concat — conflicts with formatter
+    "Q",      # quotes — handled by ruff-format quote-style
+
+    # disagree with for this repo
+    "EM",      # string literals in exceptions — too pedantic
+    "INP001",  # implicit namespace package — fine for hook scripts
+    "PLR09",   # too many arguments/branches/returns
+    "PLR2004", # magic values — fine for hook thresholds
+    "C901",    # too complex
+    "G004",    # f-string in logging — clearer than %s
+    "BLE001",  # blind except Exception — needed for hook resilience
+    "SIM108",  # ternary operator — readability preference
+    "PTH",     # pathlib suggestions — os.path is fine
+    "FBT",     # boolean positional args — too pedantic
+    "TRY003",  # long exception messages
+    "S101",    # assert — fine for invariants
+    "TC",      # type-checking import blocks — breaks runtime use
+]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"hooks/*.py"  = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess
+"**/main.py"  = ["T20"]                   # entry points print
+
+[lint.isort]
+force-single-line = true
+
+[format]
+quote-style = "single"
