@@ -42,8 +42,7 @@ description: Python development. USE when editing .py files or writing Python co
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
 
 ## Package Structure
-- NEVER create empty `__init__.py` — only when it contains actual code
-- NEVER add an `__init__.py` to "make imports work" — set PYTHONPATH from cwd (see global Scripts rules), prefer PEP 420 namespace packages
+- NEVER create `__init__.py` unless it contains actual code
 
 ## Build
 - uv for packages, pyright for types
