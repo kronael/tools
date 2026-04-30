@@ -10,7 +10,7 @@ from datetime import datetime
 
 try:
     data = json.load(sys.stdin)
-except json.JSONDecodeError, EOFError, ValueError:
+except (json.JSONDecodeError, EOFError, ValueError):
     sys.exit(0)
 
 if not isinstance(data, dict) or data.get('stop_hook_active'):

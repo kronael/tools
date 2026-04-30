@@ -5,7 +5,7 @@ import sys
 
 try:
     data = json.load(sys.stdin)
-except json.JSONDecodeError, EOFError, ValueError:
+except (json.JSONDecodeError, EOFError, ValueError):
     sys.exit(0)
 
 if not isinstance(data, dict):

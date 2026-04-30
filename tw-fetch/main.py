@@ -118,7 +118,7 @@ def parse_tweet(elem):
         except ValueError:
             return None
 
-    except NoSuchElementException, StaleElementReferenceException, WebDriverException:
+    except (NoSuchElementException, StaleElementReferenceException, WebDriverException):
         return None
     return {'id': id_, 'url': link, 'author': author, 'text': text, 'ctime': ctime}
 
@@ -196,7 +196,7 @@ def collect_round(driver, existing, path):
             )
             tab.click()
             sleep(2)
-        except NoSuchElementException, WebDriverException:
+        except (NoSuchElementException, WebDriverException):
             pass
 
         timeline = wait_timeline(driver)
