@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/. Trigger when the user says "install kronael", "install kronael tools", "install the toolkit", "install" (in this repo), or runs /kronael:install. Copies skills, agents, and hook scripts; merges hook wiring and recommended settings into ~/.claude/settings.json; installs the wisdom skill body into ~/.claude/CLAUDE.md (always-loaded). Run once per machine, then again on plugin updates.
+description: Install (or update) the Kronael toolkit into ~/.claude/. Copies skills, agents, hook scripts; merges hook wiring and recommended settings; installs the wisdom skill body as ~/.claude/CLAUDE.md. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install. NOT for installing the CLI tools dockbox/rig/clp (use their own Makefile).
 ---
 
 # Install Kronael toolkit
