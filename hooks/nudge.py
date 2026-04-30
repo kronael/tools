@@ -22,11 +22,10 @@ DOCS_RULES = """Documentation naming rules:
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
 COMMIT_RULES = """Commit rules:
-- NEVER git add -A
-- NEVER git commit --amend
-- NEVER add Co-Authored-By
-- Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
-- Format: "[section] Message"
+- Format: "[section] Message", subject <= 72 chars (overflow -> second -m body)
+- NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash
+- NEVER add Co-Authored-By, NEVER skip pre-commit hooks
+- Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
 
 AGENT_KEYWORDS = {

@@ -40,7 +40,12 @@ if r.returncode == 0 and r.stdout.strip():
     msg = 'Uncommitted changes detected.'
     if diff.stdout.strip():
         msg += '\n' + diff.stdout.strip()
-    msg += '\nConsider running /commit.'
+    msg += (
+        '\nConsider running /commit.\n'
+        'Commit rules: format "[section] Message", subject <= 72 chars '
+        '(overflow -> second -m body); NEVER add -A, -a, --amend, push, squash, '
+        'Co-Authored-By, --no-verify.'
+    )
     parts.append(msg)
 
 # Diary freshness (missing today or stale > 1h)
