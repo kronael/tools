@@ -206,7 +206,7 @@ docker create -it \
 trap 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1' EXIT
 
 while :; do
-    docker start -a --detach-keys='ctrl-z' "$CONTAINER_NAME"
+    docker start -ai --detach-keys='ctrl-z' "$CONTAINER_NAME"
     state=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null) || break
     if [[ "$state" == "exited" ]]; then
         exit "$(docker inspect -f '{{.State.ExitCode}}' "$CONTAINER_NAME")"
