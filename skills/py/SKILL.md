@@ -43,6 +43,7 @@ description: Python development. USE when editing .py files or writing Python co
 
 ## Package Structure
 - NEVER create empty `__init__.py` — only when it contains actual code
+- NEVER add an `__init__.py` to "make imports work" — set PYTHONPATH from cwd (see global Scripts rules), prefer PEP 420 namespace packages
 
 ## Build
 - uv for packages, pyright for types
