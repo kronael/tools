@@ -5,13 +5,13 @@ import sys
 
 try:
     data = json.load(sys.stdin)
-except (json.JSONDecodeError, EOFError, ValueError):
+except json.JSONDecodeError, EOFError, ValueError:
     sys.exit(0)
 
 if not isinstance(data, dict):
     sys.exit(0)
 
-prompt = data.get("prompt") or ""
+prompt = data.get('prompt') or ''
 if not isinstance(prompt, str):
     sys.exit(0)
 
@@ -30,16 +30,16 @@ COMMIT_RULES = """Commit rules:
 Invoke /commit skill."""
 
 AGENT_KEYWORDS = {
-    "ship": "/ship",
-    "build": "/build",
-    "refine": "/refine",
-    "tweet": "/tweet",
-    "diary": "/diary",
-    "readme": "@readme",
-    "learn": "@learn",
-    "improve": "@improve",
-    "visual": "@visual",
-    "distill": "@distill",
+    'ship': '/ship',
+    'build': '/build',
+    'refine': '/refine',
+    'tweet': '/tweet',
+    'diary': '/diary',
+    'readme': '@readme',
+    'learn': '@learn',
+    'improve': '@improve',
+    'visual': '@visual',
+    'distill': '@distill',
 }
 
 
@@ -74,32 +74,32 @@ def fuzzy_match(word, keywords):
 
 
 META_PATTERNS = [
-    r"\bhook\b",
-    r"\bagent\b.*\b(check|fix|issue)",
-    r"\b(check|fix|debug)\b.*(hook|agent|nudge|settings)",
-    r"invoke.*agent",
+    r'\bhook\b',
+    r'\bagent\b.*\b(check|fix|issue)',
+    r'\b(check|fix|debug)\b.*(hook|agent|nudge|settings)',
+    r'invoke.*agent',
 ]
 if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
     sys.exit(0)
 
 parts = []
 
-if re.search(r"\b(todo|readme|changelog|spec|architecture)\b|\.md\b", prompt, re.IGNORECASE):
+if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
     parts.append(DOCS_RULES)
 
-words = re.findall(r"\b[a-zA-Z]{3,}\b", prompt)
+words = re.findall(r'\b[a-zA-Z]{3,}\b', prompt)
 matched = None
 for word in words:
     matched = fuzzy_match(word, AGENT_KEYWORDS)
     if matched:
         break
 
-if re.search(r"\bcommit\b", prompt, re.IGNORECASE):
+if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
     parts.append(COMMIT_RULES)
 elif matched:
-    parts.append(f"Invoke {matched}.")
+    parts.append(f'Invoke {matched}.')
 
 if parts:
-    print(json.dumps({"ok": True, "systemMessage": "\n\n".join(parts)}))
+    print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
 
 sys.exit(0)
