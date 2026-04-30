@@ -17,7 +17,7 @@ This is the single source of truth for the install procedure. `README.md`, `CLAU
 Verify these dirs/files exist at the source root before proceeding:
 - `skills/` — bundle of skills (language, workflow, domain)
 - `agents/` — bundle of agents (@improve, @readme, @refine, …)
-- `hooks/` — bundle of hook scripts (nudge.py, local.py, reclaude.py, learn.py, stop.py) and `hooks/lib/`
+- `hooks/` — bundle of hook scripts (nudge.py, local.py, reclaude.py, stop.py)
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 
