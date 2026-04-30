@@ -33,9 +33,8 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"__init__.py" = ["F401"]
 "hooks/*.py"  = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess
-"**/main.py"  = ["T20"]                   # entry points print
+"**/main.py"  = ["T20"]                   # CLI entry points print status to stdout
 
 [lint.isort]
 force-single-line = true
