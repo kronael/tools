@@ -188,7 +188,7 @@ if [[ -n "$existing" ]]; then
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-docker create -it \
+exec docker run --rm -it \
     --name "$CONTAINER_NAME" \
     $network \
     $docker_gid_arg \
@@ -201,18 +201,4 @@ docker create -it \
     "${rcargs[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
-    "${cmd[@]}" >/dev/null
-
-trap 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1' EXIT
-
-while :; do
-    docker start -a --detach-keys='ctrl-z' "$CONTAINER_NAME"
-    state=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null) || break
-    if [[ "$state" == "exited" ]]; then
-        exit "$(docker inspect -f '{{.State.ExitCode}}' "$CONTAINER_NAME")"
-    fi
-    docker pause "$CONTAINER_NAME" >/dev/null
-    printf '\n[dockbox paused — fg to resume]\n' >&2
-    kill -STOP $$
-    docker unpause "$CONTAINER_NAME" >/dev/null 2>&1 || break
-done
+    "${cmd[@]}"
