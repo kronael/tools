@@ -205,16 +205,8 @@ docker create -it \
 
 trap 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1' EXIT
 
-# Need a real tty for detach-keys raw-mode handling
-[[ -t 0 && -t 1 ]] || { echo "dockbox needs a tty (no pipes/sudo wrappers)" >&2; exit 1; }
-
-# Start container in background once, then attach (and re-attach) in the loop.
-# `docker attach` is the supported re-entry primitive — `docker start -ai` on
-# an already-running container has inconsistent semantics across docker versions.
-docker start "$CONTAINER_NAME" >/dev/null
-
 while :; do
-    docker attach --detach-keys='ctrl-z' "$CONTAINER_NAME"
+    docker start -a --detach-keys='ctrl-z' "$CONTAINER_NAME"
     state=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null) || break
     if [[ "$state" == "exited" ]]; then
         exit "$(docker inspect -f '{{.State.ExitCode}}' "$CONTAINER_NAME")"
