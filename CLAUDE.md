@@ -31,7 +31,7 @@ rig install        # Create symlinks in script's directory
 
 ### dockbox — Dockerized Claude Code sandbox
 
-Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z suspends container + returns to host shell; `fg` resumes.
+Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z is ignored (would suspend dockbox itself, not the inner container).
 
 Makefile: `image` (build), `install` (build+install), `clean`.
 
