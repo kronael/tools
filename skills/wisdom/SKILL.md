@@ -24,13 +24,12 @@ when_to_use: <trigger phrases — natural requests users would say to invoke thi
 - NEVER use vague terms like "general utilities", "various tools".
 - Description is what the harness matches against — every word earns its place.
 
-### Description is routing, not metadata
+### Routing mechanics
 
-The description field is how Claude decides *when* to invoke the skill — it reads the description against the user's request. This is the only routing mechanism. Implications:
+Claude matches user requests against the combined `description` + `when_to_use` text. Keep `description` as a declarative summary ("summarizes X", not "summarize X"); put natural trigger phrases in `when_to_use`.
 
-- Include 4–6 natural phrases users would actually say, not category labels.
-- Overlapping descriptions cause races — two skills mentioning "changes" or "commit" will fight. NEVER use words shared with a sibling skill's primary trigger.
-- Write in declarative form ("summarizes X") not imperative ("summarize X") — describe what the skill does, not what to do.
+- Overlapping `when_to_use` causes races — NEVER use trigger words shared with a sibling skill's primary trigger.
+- `description` + `when_to_use` share a 1,536-char budget — trim ruthlessly.
 
 ## SKILL.md body
 
