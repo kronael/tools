@@ -1,6 +1,7 @@
 ---
 name: wisdom
-description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md — skill descriptions, ALWAYS/NEVER rules, frontmatter, project instructions. USE when creating a new skill, adding a rule, updating project guidance, or fixing a skill description. NOT for general code (use the matching language skill).
+description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md — skill descriptions, ALWAYS/NEVER rules, frontmatter, project instructions. NOT for general code (use the matching language skill).
+when_to_use: creating a new skill, adding a rule to CLAUDE.md, updating project guidance, fixing a skill description, writing ALWAYS/NEVER statements
 ---
 
 # Wisdom Skill
@@ -10,14 +11,15 @@ description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md — skill descriptions
 ```yaml
 ---
 name: short-name
-description: <one-line summary>. USE <when>. NOT for <case> (use <other-skill>).
+description: <one-line summary of what the skill does>. NOT for <case> (use <other-skill>).
+when_to_use: <trigger phrases — natural requests users would say to invoke this skill>
 ---
 ```
 
-- ALWAYS lead with a one-line summary of what the skill is for.
-- ALWAYS append `USE <when>` — concrete trigger: file extension, prompt keyword, task type.
-- ALWAYS append `NOT for <case> (use <other-skill>)` — disambiguate the closest neighbor.
-- NEVER omit USE/NOT — the harness has no other way to disambiguate overlapping skills.
+- ALWAYS put the one-line summary in `description`; put trigger phrases in `when_to_use`.
+- `description` + `when_to_use` share a 1,536-character budget — both shown to Claude for routing.
+- ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates closest neighbors.
+- NEVER omit the NOT clause — the harness has no other way to handle overlapping skills.
 - NEVER write "This skill helps you…" or any marketing prose.
 - NEVER use vague terms like "general utilities", "various tools".
 - Description is what the harness matches against — every word earns its place.
