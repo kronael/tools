@@ -1,6 +1,7 @@
 ---
 name: data
-description: Data collectors and ETL. Scrapers, API integrations, real-time feeds, asyncio, state.json, Redis, deduplication, LeakyBucket, backfill. USE for scrapers, ETL, real-time feeds with state recovery. NOT for one-shot fetches (use cli or sh).
+description: Data collectors and ETL. Scrapers, API integrations, real-time feeds, asyncio, state.json, Redis, deduplication, LeakyBucket, backfill. NOT for one-shot fetches (use cli or sh).
+when_to_use: building a scraper, ETL pipeline, real-time feed, collector with state recovery, WebSocket data source
 ---
 
 # Collector/Data Collection

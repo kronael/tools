@@ -1,6 +1,7 @@
 ---
 name: tsx
-description: Frontend React/Next.js. USE when editing .tsx files or writing React components with JSX. hooks, server/client components, Tailwind theming, forms, a11y. NOT for plain TypeScript without JSX (use ts).
+description: Frontend React/Next.js. hooks, server/client components, Tailwind theming, forms, a11y, server actions. NOT for plain TypeScript without JSX (use ts).
+when_to_use: editing .tsx files or writing React components with JSX
 requires: ts
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: sh
-description: Bash/shell scripting. USE when editing .sh files or writing shell scripts. entrypoints, POSIX, bash patterns. NOT for Python utilities (use py) or non-shell code.
+description: Bash/shell scripting. entrypoints, POSIX, bash patterns, trap, heredocs, variable quoting. NOT for Python utilities (use py) or non-shell code.
+when_to_use: editing .sh files or writing shell scripts
 ---
 
 # Bash Style

@@ -1,6 +1,7 @@
 ---
 name: ops
-description: DevOps and deployment. Dockerfile, Docker multi-stage, Prometheus, RUST_LOG, systemd, PID files, env.toml, GitHub Actions, monitoring, Ansible. USE for Dockerfile/systemd/Prometheus/deployment. NOT for application code (use the matching language skill).
+description: DevOps and deployment. Dockerfile, Docker multi-stage, Prometheus, RUST_LOG, systemd, PID files, env.toml, GitHub Actions, monitoring, Ansible. NOT for application code (use the matching language skill).
+when_to_use: writing a Dockerfile, systemd unit, Prometheus config, GitHub Actions workflow, deployment configuration
 ---
 
 # Ops

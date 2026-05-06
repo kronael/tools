@@ -1,6 +1,7 @@
 ---
 name: refine
-description: Code refinement orchestrator (improve + readme + test + commit). USE to finalize a finished feature. NOT for targeted fixes (use improve directly).
+description: Code refinement orchestrator (improve + readme + test + commit). NOT for targeted fixes (use improve directly).
+when_to_use: finalizing a finished feature, "refine this", "ship-ready cleanup", full polish pass, /refine
 user-invocable: true
 ---
 

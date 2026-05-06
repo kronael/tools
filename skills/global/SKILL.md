@@ -1,6 +1,7 @@
 ---
 name: global
-description: Development wisdom — startup protocol (read diary, prior session, memory before answering), terse response style, boring code philosophy, language-agnostic and language-specific principles, file/test/git workflow rules. Load on session start; covers any code work. USE this skill on session start; covers any code work. NOT a project-conventions file (those live in <project>/CLAUDE.md).
+description: Development wisdom — startup protocol (read diary, prior session, memory before answering), terse response style, boring code philosophy, language-agnostic and language-specific principles, file/test/git workflow rules. NOT a project-conventions file (those live in <project>/CLAUDE.md).
+when_to_use: session start; covers any code work
 ---
 
 # Development Wisdom

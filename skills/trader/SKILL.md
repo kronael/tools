@@ -1,6 +1,7 @@
 ---
 name: trader
-description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config. USE for exchange APIs, position tracking, paper trading. NOT for general data scraping (use data).
+description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config. NOT for general data scraping (use data).
+when_to_use: exchange APIs, position tracking, paper trading, trading bot development, order management
 ---
 
 # Trader

@@ -1,6 +1,7 @@
 ---
 name: cli
-description: CLI tools. argparse, click, clap, --help, exit codes, signal handling, SIGTERM, SIGINT, config precedence, interactive prompts. USE for argparse/click/clap-style command-line tools. NOT for one-off scripts (use sh).
+description: CLI tools. argparse, click, clap, --help, exit codes, signal handling, SIGTERM, SIGINT, config precedence, interactive prompts. NOT for one-off scripts (use sh).
+when_to_use: writing a CLI tool, adding --help, exit codes, signal handling, argparse/click/clap patterns, interactive prompts
 ---
 
 # CLI Style
