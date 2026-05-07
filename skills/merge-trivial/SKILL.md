@@ -1,7 +1,7 @@
 ---
 name: merge-trivial
 description: Resolve git merge conflicts. Classify each as trivial (additive, clear) or ambiguous; resolve trivials immediately, ask about the rest. NOT for ambiguous semantic conflicts (resolve manually).
-when_to_use: git merge conflicts, "resolve conflicts", merge conflict where both sides add things
+when_to_use: git merge conflicts, "resolve conflicts"
 user-invocable: true
 ---
 

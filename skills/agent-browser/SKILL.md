@@ -1,7 +1,7 @@
 ---
 name: agent-browser
-description: Browse the web for any task — research topics, read articles, interact with web apps, fill forms, take screenshots, extract data, test web pages. NOT for plain HTTP fetches (use a script directly).
-when_to_use: when a real browser is needed — login flows, screenshots, page interaction, web app testing, anywhere a browser would be more useful than curl
+description: Browser automation — interact with web pages, fill forms, take screenshots, extract data. NOT for plain HTTP fetches (use a script directly).
+when_to_use: login flows, screenshots, page interaction, web app testing
 allowed-tools: Bash(agent-browser:*)
 ---
 
