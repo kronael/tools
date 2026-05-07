@@ -1,7 +1,7 @@
 ---
 name: readme
-description: /readme — update docs via agent. NOT for new docs (write directly).
-when_to_use: sync README, ARCHITECTURE, CHANGELOG after shipping, "update the docs", "update the readme", /readme
+description: /readme — update docs via agent. NOT for new docs (write directly) or design specs (use specs).
+when_to_use: sync README, ARCHITECTURE, CHANGELOG after shipping, "update the readme"
 user-invocable: true
 ---
 

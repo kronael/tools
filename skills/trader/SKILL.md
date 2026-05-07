@@ -1,7 +1,7 @@
 ---
 name: trader
 description: Trading bots. NOT for general data scraping (use data).
-when_to_use: exchange APIs, paper trading, trading bots
+when_to_use: exchange APIs, paper trading
 ---
 
 # Trader

@@ -1,7 +1,7 @@
 ---
 name: testing
 description: Testing patterns. NOT for unit-test setup inside a language skill (handle there).
-when_to_use: writing tests, running tests, debugging test failures, reading test output, testcontainers setup
+when_to_use: writing tests, debugging test failures, reading test output
 ---
 
 # Testing

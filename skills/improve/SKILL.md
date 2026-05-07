@@ -1,7 +1,7 @@
 ---
 name: improve
-description: /improve — targeted fix via subagent. NOT for full cleanup (use refine).
-when_to_use: targeted code quality fix, "improve this function", "clean up this file", /improve
+description: /improve — targeted fix via subagent. NOT for full cleanup (use refine) or UI fixes (use visual).
+when_to_use: "improve this function", "clean up this file"
 user-invocable: true
 ---
 

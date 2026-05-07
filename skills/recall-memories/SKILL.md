@@ -1,7 +1,7 @@
 ---
 name: recall-memories
 description: Search diary, memory, and session history. NOT for writing entries (use diary).
-when_to_use: "what did we decide", "recall", "remember when", finding context from a prior session
+when_to_use: "what did we decide", "recall", "find context from a prior session"
 user-invocable: true
 arg: <question>
 ---

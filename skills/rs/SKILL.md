@@ -1,6 +1,6 @@
 ---
 name: rs
-description: Rust development. NOT for non-Rust code (use the matching language skill).
+description: Rust development. NOT for non-Rust code (use go, py, ts, tsx, or sh).
 when_to_use: editing .rs files or writing Rust code
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: agent-browser
-description: Browser automation. NOT for plain HTTP fetches (use a script directly).
-when_to_use: login flows, screenshots, page interaction, web app testing
+description: Browser automation. NOT for plain HTTP fetches (use sh or py).
+when_to_use: login flows, screenshots, filling forms, web app testing
 allowed-tools: Bash(agent-browser:*)
 ---
 

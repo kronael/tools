@@ -1,6 +1,6 @@
 ---
 name: sh
-description: Bash/shell scripting. NOT for Python utilities (use py).
+description: Bash/shell scripting. NOT for Python utilities (use py) or persistent CLI tools (use cli).
 when_to_use: editing .sh files or writing shell scripts
 ---
 

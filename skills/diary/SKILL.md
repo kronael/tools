@@ -1,7 +1,7 @@
 ---
 name: diary
-description: Write diary entries to <cwd>/.diary/YYYYMMDD.md. NOT for searching past entries (use recall-memories).
-when_to_use: after a commit, bug fix, or key decision, /diary
+description: Write diary entries to <cwd>/.diary/YYYYMMDD.md. NOT for searching entries (use recall-memories).
+when_to_use: after a commit, bug fix, or key decision, "log this decision"
 user-invocable: true
 ---
 

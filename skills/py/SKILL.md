@@ -1,6 +1,6 @@
 ---
 name: py
-description: Python development. NOT for shell scripting (use sh).
+description: Python development. NOT for shell scripting (use sh) or non-Python code.
 when_to_use: editing .py files or writing Python code
 ---
 

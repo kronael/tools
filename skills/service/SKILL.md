@@ -1,7 +1,7 @@
 ---
 name: service
 description: REST APIs and web services. NOT for CLI tools (use cli) or batch jobs (use data).
-when_to_use: building a REST API, microservice, /health endpoint, versioned API paths
+when_to_use: building a REST API, microservice, adding a /health endpoint
 ---
 
 # Service/API

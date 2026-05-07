@@ -1,7 +1,7 @@
 ---
 name: distill
-description: /distill — extract essence via recursive summarization. NOT for skill creation from history (use learn).
-when_to_use: compressing long content, summarizing a large document, distilling a conversation or article, /distill
+description: /distill — extract essence via recursive summarization. NOT for skill creation (use learn) or retrieving prior decisions (use recall-memories).
+when_to_use: summarizing a large document, distilling a conversation or article
 user-invocable: true
 ---
 

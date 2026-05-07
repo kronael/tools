@@ -1,7 +1,7 @@
 ---
 name: specs
 description: Design specs in specs/. NOT for in-flight work (use ship).
-when_to_use: "spec this out", document architecture, plan a design-first deliverable, "write a spec", /specs
+when_to_use: "spec this out", document architecture, "write a spec", "write a design doc"
 ---
 
 # Specs

@@ -1,6 +1,6 @@
 ---
 name: ops
-description: DevOps and deployment. NOT for application code (use the matching language skill).
+description: DevOps and deployment. NOT for application code (use go, rs, py, ts, or tsx).
 when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 ---
 

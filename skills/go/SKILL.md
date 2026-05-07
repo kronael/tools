@@ -1,6 +1,6 @@
 ---
 name: go
-description: Go development. NOT for non-Go code (use the matching language skill).
+description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
 when_to_use: editing .go files or writing Go code
 ---
 

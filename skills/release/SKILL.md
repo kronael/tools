@@ -1,7 +1,7 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "prepare a release", "cut a release", /release
+when_to_use: "prepare a release", "cut a release", "tag a release"
 user-invocable: true
 ---
 

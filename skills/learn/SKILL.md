@@ -1,7 +1,7 @@
 ---
 name: learn
 description: /learn — extract patterns into skills from session history. NOT for writing skills from scratch (use wisdom).
-when_to_use: "learn from this session", extract reusable patterns, mine conversation history, /learn
+when_to_use: "learn from this session", "save this pattern", extract reusable patterns
 user-invocable: true
 ---
 

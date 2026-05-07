@@ -1,7 +1,7 @@
 ---
 name: refine
 description: Code refinement orchestrator. NOT for targeted fixes (use improve).
-when_to_use: finalizing a finished feature, "refine this", "ship-ready cleanup", full polish pass, /refine
+when_to_use: finalizing a finished feature, "refine this", "polish this"
 user-invocable: true
 ---
 

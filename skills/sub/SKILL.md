@@ -1,7 +1,7 @@
 ---
 name: sub
-description: /sub — launch a background subagent. NOT for sequential tasks the main thread needs results from.
-when_to_use: fire-and-forget independent work, "run this in the background", "do X while I do Y", /sub
+description: /sub — launch a background subagent. NOT for tasks the main thread needs results from.
+when_to_use: "do this in the background", "run this separately", "do X while I do Y"
 user-invocable: true
 ---
 

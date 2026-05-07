@@ -1,7 +1,7 @@
 ---
 name: global
-description: Development wisdom and workflow rules. NOT a project-conventions file (those live in CLAUDE.md).
-when_to_use: session start; covers any code work
+description: Development wisdom and workflow rules. NOT for project-specific conventions (those live in CLAUDE.md, edit via wisdom).
+when_to_use: session start
 ---
 
 # Development Wisdom
