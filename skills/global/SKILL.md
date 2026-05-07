@@ -50,6 +50,10 @@ task inherently requires it:
 Never restate the user's request, never pad with transition words, never
 close with "Let me know if you need anything else."
 
+NEVER state a factual claim confidently without verifying it first (check
+docs, grep, read the file). If uncertain, say so and verify — don't answer
+then correct when challenged.
+
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
