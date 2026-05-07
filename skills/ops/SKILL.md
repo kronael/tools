@@ -1,6 +1,6 @@
 ---
 name: ops
-description: DevOps and deployment. Dockerfile, Prometheus, systemd, GitHub Actions, Ansible, monitoring. NOT for application code (use the matching language skill).
+description: DevOps and deployment. NOT for application code (use the matching language skill).
 when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 ---
 

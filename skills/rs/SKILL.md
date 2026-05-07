@@ -1,6 +1,6 @@
 ---
 name: rs
-description: Rust development. Cargo.toml, clap, eyre, tracing, tokio, DashMap, cargo clippy, testcontainers, enum states, naming, async. NOT for general systems work outside Rust (use the matching language skill).
+description: Rust development. NOT for non-Rust code (use the matching language skill).
 when_to_use: editing .rs files or writing Rust code
 ---
 

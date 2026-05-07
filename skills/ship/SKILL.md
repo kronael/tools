@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Ship multi-session work via the ship agent. Creates .ship/<NAME>/ with PROJECT + PLAN + PROGRESS + tasks.json. NOT for one-off edits, exploration, or <30min work — prefer TaskCreate.
+description: Ship multi-session work. NOT for one-off or <30min work (use TaskCreate).
 when_to_use: "ship this feature", "track this project", /ship
 user-invocable: true
 ---

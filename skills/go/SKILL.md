@@ -1,6 +1,6 @@
 ---
 name: go
-description: Go development. go.mod, *_test.go, testing.Short, goroutines, go test, naming, concurrency. NOT for non-Go code (use the matching language skill).
+description: Go development. NOT for non-Go code (use the matching language skill).
 when_to_use: editing .go files or writing Go code
 ---
 

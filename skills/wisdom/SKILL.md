@@ -1,6 +1,6 @@
 ---
 name: wisdom
-description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md — skill descriptions, ALWAYS/NEVER rules, frontmatter, project instructions. NOT for general code (use the matching language skill).
+description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md. NOT for general code (use the matching language skill).
 when_to_use: creating a new skill, adding a rule to CLAUDE.md, updating project guidance, fixing a skill description, writing ALWAYS/NEVER statements
 ---
 

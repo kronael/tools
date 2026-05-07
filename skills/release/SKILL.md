@@ -1,6 +1,6 @@
 ---
 name: release
-description: Prepare a release. Version bump, changelog, docs alignment, git tag. NOT for a single commit ship (use commit + ship).
+description: Prepare a release. NOT for a single commit (use commit).
 when_to_use: "prepare a release", "cut a release", /release
 user-invocable: true
 ---

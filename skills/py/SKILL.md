@@ -1,6 +1,6 @@
 ---
 name: py
-description: Python development. pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations, uv, pyright. NOT for shell scripting (use sh) or non-Python code.
+description: Python development. NOT for shell scripting (use sh).
 when_to_use: editing .py files or writing Python code
 ---
 

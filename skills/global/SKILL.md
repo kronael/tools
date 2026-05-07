@@ -1,6 +1,6 @@
 ---
 name: global
-description: Development wisdom — startup protocol, response style, boring code philosophy, language and workflow rules. NOT a project-conventions file (those live in <project>/CLAUDE.md).
+description: Development wisdom and workflow rules. NOT a project-conventions file (those live in CLAUDE.md).
 when_to_use: session start; covers any code work
 ---
 

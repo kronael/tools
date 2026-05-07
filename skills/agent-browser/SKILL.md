@@ -1,6 +1,6 @@
 ---
 name: agent-browser
-description: Browser automation — interact with web pages, fill forms, take screenshots, extract data. NOT for plain HTTP fetches (use a script directly).
+description: Browser automation. NOT for plain HTTP fetches (use a script directly).
 when_to_use: login flows, screenshots, page interaction, web app testing
 allowed-tools: Bash(agent-browser:*)
 ---

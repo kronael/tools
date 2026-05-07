@@ -1,6 +1,6 @@
 ---
 name: specs
-description: Write and manage design specs in specs/. NOT for in-flight work (use ship) or one-off notes (use TaskCreate).
+description: Design specs in specs/. NOT for in-flight work (use ship).
 when_to_use: "spec this out", document architecture, plan a design-first deliverable, "write a spec", /specs
 ---
 

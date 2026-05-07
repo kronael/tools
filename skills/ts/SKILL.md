@@ -1,6 +1,6 @@
 ---
 name: ts
-description: TypeScript/Node.js. package.json, Next.js, Bun, class-validator, Playwright, arrow functions, validation, logging. NOT for .tsx (use tsx).
+description: TypeScript/Node.js. NOT for .tsx (use tsx).
 when_to_use: editing .ts files or writing TypeScript
 ---
 

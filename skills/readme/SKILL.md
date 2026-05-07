@@ -1,6 +1,6 @@
 ---
 name: readme
-description: /readme — launch @readme agent to update documentation. NOT for new doc creation from scratch (write directly).
+description: /readme — update docs via agent. NOT for new docs (write directly).
 when_to_use: sync README, ARCHITECTURE, CHANGELOG after shipping, "update the docs", "update the readme", /readme
 user-invocable: true
 ---

@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Git commits. [section] format, direct pathspec staging, pre-commit hook retry. NOT for PR descriptions (use pr-draft).
+description: Git commits. NOT for PR descriptions (use pr-draft).
 when_to_use: drafting a commit message, committing changes, /commit, "commit this", "commit it"
 user-invocable: true
 ---

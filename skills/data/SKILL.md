@@ -1,6 +1,6 @@
 ---
 name: data
-description: Data collectors and ETL. Scrapers, API integrations, real-time feeds, asyncio, Redis, deduplication, backfill. NOT for one-shot fetches (use cli or sh).
+description: Data collectors and ETL. NOT for one-shot fetches (use cli or sh).
 when_to_use: building a scraper, ETL pipeline, real-time feed, WebSocket data source
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: diary
-description: Record what matters in <cwd>/.diary/YYYYMMDD.md. NOT for searching past entries (use recall-memories). Preferences and long-term patterns go to memory (tell the user).
+description: Write diary entries to <cwd>/.diary/YYYYMMDD.md. NOT for searching past entries (use recall-memories).
 when_to_use: after a commit, bug fix, or key decision, /diary
 user-invocable: true
 ---

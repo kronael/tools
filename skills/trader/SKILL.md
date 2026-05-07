@@ -1,6 +1,6 @@
 ---
 name: trader
-description: Trading bots. State machines, paper trading, WebSocket feeds, order management, exchange APIs, position tracking, Google Sheets config. NOT for general data scraping (use data).
+description: Trading bots. NOT for general data scraping (use data).
 when_to_use: exchange APIs, paper trading, trading bots
 ---
 

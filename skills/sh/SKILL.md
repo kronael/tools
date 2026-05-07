@@ -1,6 +1,6 @@
 ---
 name: sh
-description: Bash/shell scripting. entrypoints, POSIX, bash patterns, trap, heredocs, variable quoting. NOT for Python utilities (use py) or non-shell code.
+description: Bash/shell scripting. NOT for Python utilities (use py).
 when_to_use: editing .sh files or writing shell scripts
 ---
 
