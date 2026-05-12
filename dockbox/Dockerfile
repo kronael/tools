@@ -57,7 +57,7 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 
 ENV NVM_DIR="/home/claude/.nvm"
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
-  . "$NVM_DIR/nvm.sh" && nvm install 22 && nvm alias default 22
+  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install 22 && nvm alias default 22
 
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
@@ -103,6 +103,7 @@ RUN mkdir -p /home/claude/.local/bin && \
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
 [ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
 export NVM_DIR="/home/claude/.nvm"\n\
+unset NPM_CONFIG_PREFIX\n\
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
 exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /home/claude/.local/bin/claude && \
