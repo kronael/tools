@@ -97,11 +97,13 @@ RUN uv tool install git+https://github.com/kronael/ship
 
 RUN bunx puppeteer browsers install chrome
 
-# claude wrapper: inject host credentials, skip permissions
+# claude wrapper: inject host credentials, skip permissions, activate nvm default node
 RUN mkdir -p /home/claude/.local/bin && \
   printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
 [ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
+export NVM_DIR="/home/claude/.nvm"\n\
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
 exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /home/claude/.local/bin/claude && \
   chmod +x /home/claude/.local/bin/claude
