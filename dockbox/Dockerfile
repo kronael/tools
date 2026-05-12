@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:lts
 
 ARG TZ=UTC
 ENV TZ="$TZ"
@@ -32,7 +32,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
   dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
-RUN corepack enable && corepack prepare pnpm@11 --activate
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx -y playwright install --with-deps chromium && \
