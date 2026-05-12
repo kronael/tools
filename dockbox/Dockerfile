@@ -56,7 +56,8 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -x
 
 ENV NVM_DIR="/home/claude/.nvm"
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
+  . "$NVM_DIR/nvm.sh" && nvm install 22 && nvm alias default 22
 
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
