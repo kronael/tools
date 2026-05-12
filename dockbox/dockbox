@@ -10,6 +10,7 @@ MOUNTS=(
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
     "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
+    "$HOME/.codex:/home/claude/.codex:rw"
     "/etc/localtime:/etc/localtime:ro"
 )
 
@@ -196,6 +197,8 @@ exec docker run -it --rm \
     -e HOME=/home/claude \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
+    ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \
+    ${CODEX_API_KEY:+-e CODEX_API_KEY} \
     "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
