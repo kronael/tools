@@ -35,6 +35,14 @@ CLI flags > env vars > config files > defaults. Fail fast on invalid config.
 
 Two methods: `make link` (dev, symlink debug binary) and `make install` (system, install release binary).
 
+## Completions
+
+- ALWAYS ship completions for bash + zsh (fish if framework supports). argparse: argcomplete; click: `_<APP>_COMPLETE`; clap: `clap_complete`. Expose `<tool> completions <shell>` subcommand.
+
+## Performance
+
+- ALWAYS keep cold-start < 100ms. NEVER import heavy deps at top of entrypoint — lazy-import inside the subcommand. Measure with `hyperfine '<tool> --help'`.
+
 ## Pitfalls
 
 - NEVER write secrets to logs

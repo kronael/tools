@@ -69,6 +69,11 @@ codex exec "$prompt"
 Tell the user "oracle isn't configured" and continue without it. NEVER
 crash the turn.
 
+## Rules
+
+- ALWAYS hand codex the specific question + minimal code/error — NEVER paste session transcript or your reasoning chain
+- ALWAYS verify codex's claim against the codebase before acting. NEVER implement blindly. Discard with one-line reason if wrong; cite when acting
+
 ## Output
 
 `codex exec "<prompt>"` writes the final message to stdout. With

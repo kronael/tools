@@ -35,6 +35,8 @@ Update the summary on every diary write.
 ## Rules
 
 - `## HH:MM` entries, 250 chars max per entry
+- ALWAYS tag entries by op: `## HH:MM <op> | <title>` where op ∈ {decision, bug, discovery, blocker, ship}. Enables `grep "^## .* bug |" .diary/*.md`.
+- NEVER delete resolved open items — append `- [resolved YYYY-MM-DD: <how>]` instead. Same for reversed decisions — link forward. The trail is the point.
 - Only important things: decisions, bugs found/fixed, discoveries, open items
 - Skip routine operations (reading files, answering questions)
 - May compress earlier entries in the same day

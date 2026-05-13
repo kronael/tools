@@ -15,6 +15,12 @@ when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 - Cross-compilation: volume mount source, NEVER copy
 - ALWAYS set memory limits (2GB typical) and build timeout (30m)
 
+## Container hardening
+
+- ALWAYS USER non-root in final stage
+- ALWAYS HEALTHCHECK matching liveness endpoint
+- ALWAYS dumb-init (or --init) as PID 1; NEVER let app receive raw SIGTERM as PID 1
+
 ## Configuration
 
 - Three-level: base TOML -> env.toml (`${PREFIX:-/srv}/key/env.toml`) -> env vars
@@ -32,6 +38,12 @@ when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 - Heartbeat: ./tmp/<service>.heartbeat
 - Health: /.well-known/live, Metrics: /metrics (Prometheus)
 - Prometheus labels: NEVER unbounded values, ONLY bounded enums. High cardinality -> logs.
+
+## SLO + alerting
+
+- ALWAYS define SLO target + 30d window per service (availability, p95 latency)
+- ALWAYS alert on burn-rate ratios (1h@14.4x critical, 6h@6x critical); NEVER on absolute error counts
+- ALWAYS attach `runbook_url` annotation to every Prometheus alert; missing runbook = alert not ready
 
 ## Error Handling
 

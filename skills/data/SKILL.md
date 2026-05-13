@@ -21,6 +21,9 @@ when_to_use: building a scraper, ETL pipeline, real-time feed, WebSocket data so
 
 - state.json for recovery: resume from last_processed + 1
 - Save state every 10,000 items, keep portable (JSON)
+- ALWAYS make pipeline writes idempotent (UPSERT by primary key, not INSERT) — retries must not duplicate
+- ALWAYS version raw payloads (store source schema_version with data); NEVER drop unknown fields silently — keep in raw blob
+- ALWAYS validate required fields + types BEFORE insert (reject to dead-letter, never write partial rows)
 
 ## Data Source Patterns
 
