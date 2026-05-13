@@ -15,6 +15,7 @@ when_to_use: editing .py files or writing Python code
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`
+- ALWAYS `typing.Protocol` for duck-typed interfaces; NEVER `abc.ABC` unless runtime isinstance() checks are required
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)

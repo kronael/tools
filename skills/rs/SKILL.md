@@ -90,6 +90,9 @@ fn main() -> eyre::Result<()> {
 - Startup/init: `expect("msg")` ok (fail-fast)
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
+## Unsafe
+- ALWAYS `cargo +nightly miri test` on modules with `unsafe` blocks; NEVER ship `unsafe` without a `// SAFETY:` invariant comment
+
 ## Copy/Clone
 - NEVER derive Copy unless trivially copyable (i32, u64, bool, enum)
 - Newtypes over primitives (Price, Qty) may derive Copy
@@ -109,6 +112,7 @@ tokio::spawn(fetch_and_process(client));
 - Crate-per-concern: types/, common/, clients/, engine/
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
 - Re-export key types at crate root
+- NEVER `#[derive(Serialize, Deserialize)]` on core domain/entity structs — define DTOs in adapter layer and convert
 
 ## Non-Workspace Repos
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members

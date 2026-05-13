@@ -33,3 +33,8 @@ Requires `ts` skill for base TypeScript rules.
 - `aria-label` on icon-only buttons
 - NEVER suppress focus outlines without replacement
 - Form inputs ALWAYS have labels
+
+## Visual defaults
+- NEVER default to Inter, Roboto, Arial, or system fonts — pick a distinctive display + body pair
+- NEVER use purple-gradient-on-white or other AI-default palettes
+- ALWAYS commit to one aesthetic direction (minimal, brutalist, editorial, etc.) per surface

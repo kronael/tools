@@ -7,7 +7,9 @@ when_to_use: editing .sh files or writing shell scripts
 # Bash Style
 
 ## Structure
-- `set -e` at top
+- ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines
+- ALWAYS `tmp=$(mktemp -d)` + `trap 'rm -rf -- "$tmp"' EXIT` for transient files; NEVER hand-roll `/tmp/script-$$`
+- ALWAYS iterate `find` output with `while IFS= read -r -d ''` < <(find ... -print0) or `mapfile -t arr < <(cmd)`; NEVER `for f in $(find ...)` or `for f in $(ls)`
 - `do`/`then`/`else` on own line, NEVER after `;` or `&&`
 - Functions for repeated logic, plain sequence otherwise
 
