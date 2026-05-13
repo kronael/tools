@@ -35,15 +35,12 @@ Update the summary on every diary write.
 ## Rules
 
 - `## HH:MM` entries, 250 chars max per entry
-- ALWAYS tag entries by op: `## HH:MM <op> | <title>` where op ∈ {decision, bug, discovery, blocker, ship}. Enables `grep "^## .* bug |" .diary/*.md`.
-- NEVER delete resolved open items — append `- [resolved YYYY-MM-DD: <how>]` instead. Same for reversed decisions — link forward. The trail is the point.
-- Only important things: decisions, bugs found/fixed, discoveries, open items
-- Skip routine operations (reading files, answering questions)
-- May compress earlier entries in the same day
-- Preferences and recurring patterns → MEMORY.md, report to user verbatim
-- Review MEMORY.md for stale entries when writing diary
+- NEVER delete resolved open items — ALWAYS append `- [resolved YYYY-MM-DD: <how>]` instead
+- ALWAYS log only decisions, bugs found/fixed, discoveries, open items
+- NEVER log routine operations (reading files, answering questions)
+- ALWAYS route preferences and recurring patterns to MEMORY.md, report to user verbatim
+- ALWAYS review MEMORY.md for stale entries when writing diary
 
 ## When to write
 
-Write at end of significant work (after commit, after fixing a bug,
-after a key decision). The Stop hook will nudge — don't wait to be asked.
+End of significant work: after commit, bug fix, key decision. Stop hook nudges — NEVER wait to be asked.

@@ -29,7 +29,7 @@ Example: `.ship/01-SIM/`, `.ship/02-SCENARIOS/`,
    acceptance criteria, out-of-scope
 3. **Write PLAN.md** — file-level concrete changes per task
 4. **Run** — `ship .ship/NN-NAME/PLAN.md`
-5. **Verify** — run `make build && make test`. If tests fail, STOP. Fix before continuing. NEVER mark done or commit while tests fail.
+5. **Verify** — `make build && make test`
 6. **Update PROGRESS.md** after each session
 7. **Clean** — once shipped, trim PROJECT/PLAN to keep
    history or archive (don't delete — useful for reference)

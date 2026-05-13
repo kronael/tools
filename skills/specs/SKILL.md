@@ -41,7 +41,7 @@ Lifecycle: `draft` -> `spec` -> `partial` -> `shipped`.
 
 Add a row when creating a spec. Update status when it ships.
 
-## What specs SHOULD contain
+## What specs contain
 
 - **Problem**: why this exists, what was wrong before
 - **Approach**: design decisions, tradeoffs, WHY this way
@@ -49,7 +49,7 @@ Add a row when creating a spec. Update status when it ships.
   (e.g. "`src/config.ts` — HOST\_\* exports computed at startup")
 - **Stubs are good**: file path + one sentence of WHY
 
-## What specs should NOT contain
+## What specs do NOT contain
 
 - Step-by-step implementation details (read the code)
 - Code snippets that duplicate what's in the codebase

@@ -30,8 +30,6 @@ Spawn an Explore subagent with the question to search in parallel:
    sort by mtime, read the 2-3 most recent. Each line is a JSON message —
    look for `"role":"assistant"` or `"role":"user"` content matching the query.
 
-For each match, classify as: decision / current state / known issue / open question / roadmap.
-
 ### Step 3 — Deliberate
 
 In `<think>`:
@@ -39,11 +37,7 @@ In `<think>`:
 2. For each: what does it say? Does it answer the question? What gap remains?
 3. Verdict: use it, or research fresh
 
-For each match: is this still true? Cross-check against current repo state (git log, file contents). Mark stale findings explicitly.
-
-### Step 4 — Return
-
-**Return**: (a) direct answer, (b) sources cited as `<file>:<excerpt>`, (c) gaps / what wasn't found, (d) suggested next step.
+For each match, check whether it's still true against current repo state (git log, file contents). Mark stale findings explicitly — don't act on outdated decisions.
 
 ## When to use
 

@@ -17,8 +17,7 @@ either a host `~/.codex` mount or an env-var API key.
 - A sanity check on a non-obvious implementation before it ships
 - Disagreement with self after a reasoning round
 
-Don't reach for oracle on every uncertainty — most questions resolve via
-`/recall-memories` + grep faster and without an external call.
+NEVER reach for oracle on routine uncertainty — `/recall-memories` + grep resolve most questions faster and without an external call.
 
 ## Call it
 
@@ -36,8 +35,7 @@ EOF
 go test ./... 2>&1 | codex exec "summarize the failure and propose the smallest fix"
 ```
 
-Useful flags: `--json` for machine-readable output, `--ephemeral` to skip
-session persistence (fine for one-shots).
+Flags: `--json` for machine-readable output, `--ephemeral` to skip session persistence.
 
 ## Auth — two paths
 

@@ -18,8 +18,8 @@ when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 ## Container hardening
 
 - ALWAYS USER non-root in final stage
-- ALWAYS HEALTHCHECK matching liveness endpoint
-- ALWAYS dumb-init (or --init) as PID 1; NEVER let app receive raw SIGTERM as PID 1
+- ALWAYS HEALTHCHECK when the container exposes a liveness endpoint
+- Use `--init` (or dumb-init) for app images that fork children — proper PID 1 signal/reaping semantics
 
 ## Configuration
 
@@ -39,11 +39,10 @@ when_to_use: writing a Dockerfile, systemd unit, GitHub Actions workflow
 - Health: /.well-known/live, Metrics: /metrics (Prometheus)
 - Prometheus labels: NEVER unbounded values, ONLY bounded enums. High cardinality -> logs.
 
-## SLO + alerting
+## Alerting
 
-- ALWAYS define SLO target + 30d window per service (availability, p95 latency)
-- ALWAYS alert on burn-rate ratios (1h@14.4x critical, 6h@6x critical); NEVER on absolute error counts
-- ALWAYS attach `runbook_url` annotation to every Prometheus alert; missing runbook = alert not ready
+- ALWAYS SLO + burn-rate alerts over absolute error counts when the project has stated SLOs
+- ALWAYS attach `runbook_url` annotation pointing at the playbook on Prometheus alerts
 
 ## Error Handling
 

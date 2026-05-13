@@ -24,9 +24,9 @@ when_to_use: editing .ts files or writing TypeScript
 - NEVER `any` — use `unknown` and narrow. ALWAYS `import type { T }` for type-only imports.
 
 ## Design
-- Never methods just for grouping; use modules
-- Inline single-use one-liners; don't wrap trivial expressions
-- No JSDoc on self-explanatory functions
+- NEVER methods just for grouping — use modules
+- ALWAYS inline single-use one-liners; NEVER wrap trivial expressions
+- NEVER JSDoc on self-explanatory functions
 - Library barrel files: `export * from './module'`
 
 ## Logging

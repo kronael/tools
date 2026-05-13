@@ -15,7 +15,8 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 2. **Validate** - run build/test, fix failures
 3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) read a code sample and propose 3-5 orthogonal lenses.
 4. **Review** - parallel read-only `Task(agent="improve")` per (bucket × lens). Prompt: "Lens: <X>. Skills: <list>. Files: <bucket>. Report findings only, NO edits."
-5. **Apply** - serial Task(agent="improve") per bucket, ordered: (1) dead code/typos, (2) extract/rename, (3) structural. Run build/test between buckets — abort bucket on failure. Prompt: "Skills: <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions and cleverness."
+4b. **Triage findings as they return** - drop findings that (a) add abstractions, (b) target unused code (grep first), (c) conflict with the original Intent, (d) can't be verified against the codebase. Pass only survivors to Apply.
+5. **Apply** - serial Task(agent="improve") per bucket. Run build/test between buckets — abort bucket on failure. Prompt: "Skills: <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions and cleverness."
 6. **Document** - spawn `Task(agent="readme")`
 7. **Verify** - final build/test
 8. **Commit** - if changes, invoke `Skill(commit, "[refined]")`

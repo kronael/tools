@@ -29,6 +29,5 @@ and generate improvement specs when issues are found.
 - ALWAYS read project docs before generating
 - NEVER include generic criteria — derive everything from the project
 - NEVER generate without asking the user first
-- ALWAYS run 2-3 representative log samples through the eval skill twice — once WITH the skill, once WITHOUT — and compare what each catches. If they catch the same things, the skill adds no value.
-- ALWAYS express health checks as named, programmatically-checkable assertions (grep counts, threshold comparisons, exit codes). NEVER use "looks healthy" or "works well".
-- After each eval run, append findings to `.diary/eval-<date>.md` and evolve criteria from there — NEVER regenerate from scratch.
+- ALWAYS express assertions as programmatically checkable (grep counts, thresholds, exit codes) — NEVER "looks healthy" / "works well"
+- ALWAYS sanity-check the generated eval against real log samples before declaring it done

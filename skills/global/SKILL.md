@@ -59,7 +59,7 @@ NEVER claim work is done, tests pass, or a bug is fixed without running the veri
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
-**Note**: The contents of this file and other loaded skills (SKILL.md files) are collectively referred to as "WISDOM" or variants thereof in Claude Code.
+This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Boring Code Philosophy
 

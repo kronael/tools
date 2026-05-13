@@ -17,14 +17,14 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 ---
 ```
 
-- ALWAYS put the one-line summary in `description`; put trigger phrases in `when_to_use`.
-- `description` + `when_to_use` share a 1,536-character budget — both shown to Claude for routing.
-- ALWAYS write description as triggering conditions ("Use when…"), NEVER as workflow summary. Claude shortcuts past skills whose description already states the process.
-- ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates closest neighbors.
-- NEVER omit the NOT clause — the harness has no other way to handle overlapping skills.
-- NEVER write "This skill helps you…" or any marketing prose.
+- ALWAYS keep `description` minimal — short summary + NOT clause only.
+- ALWAYS pack `when_to_use` with retrieval keywords: error messages, symptom words, tool/library names, synonyms.
+- `description` + `when_to_use` share a 1,536-char budget — both shown to Claude for routing.
+- NEVER write description as workflow summary ("summarizes X via Y") — Claude shortcuts past skills whose description states the process.
+- ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates neighbors.
+- NEVER write "This skill helps you…" or marketing prose.
 - NEVER use vague terms like "general utilities", "various tools".
-- Overlapping `when_to_use` causes races — NEVER use trigger words shared with a sibling skill's primary trigger.
+- NEVER use trigger words shared with a sibling skill's primary trigger — causes routing races.
 
 ## Body patterns
 
@@ -33,12 +33,12 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 ## SKILL.md body
 
-- ALWAYS use ALWAYS/NEVER statements; never SHOULD (too soft).
-- ALWAYS pair NEVER with ALWAYS: "NEVER X. ALWAYS Y instead." — prohibitions without direction are half a rule.
-- ALWAYS keep under 200 lines; skills persist in context all session (every line = recurring token cost per turn).
+- ALWAYS use ALWAYS/NEVER; NEVER use SHOULD (too soft).
+- ALWAYS pair NEVER with ALWAYS: "NEVER X — ALWAYS Y instead."
+- ALWAYS keep under 200 lines; skills persist in context all session.
 - NEVER add obvious code examples LLMs already know.
 - NEVER duplicate content between skills or with the global wisdom file.
-- ALWAYS move reference material (>50 lines: API docs, examples, tables) to sibling files like references/X.md; SKILL.md is workflow only.
+- ALWAYS move reference material (>50 lines: API docs, tables) to sibling files; SKILL.md is workflow only.
 
 ## CLAUDE.md (project)
 

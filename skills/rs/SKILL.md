@@ -26,7 +26,7 @@ when_to_use: editing .rs files or writing Rust code
 - `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
 
 ## Design Patterns
-- Never accessor methods; access fields directly with interior mutability
+- NEVER accessor methods — access fields directly with interior mutability
 - FxDashMap for concurrent access (but no locks best)
 - Semaphore for concurrency control
 - Arc<Self> when spawned tasks need self reference
@@ -112,7 +112,7 @@ tokio::spawn(fetch_and_process(client));
 - Crate-per-concern: types/, common/, clients/, engine/
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
 - Re-export key types at crate root
-- NEVER `#[derive(Serialize, Deserialize)]` on core domain/entity structs — define DTOs in adapter layer and convert
+- When the project draws a domain/adapter boundary, keep `Serialize`/`Deserialize` on adapter-layer DTOs, not on core domain entities
 
 ## Non-Workspace Repos
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members

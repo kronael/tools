@@ -13,8 +13,8 @@ Execute until complete. Don't stop until all tasks are done.
 
 1. **No stopping early** — Continue working through all pending tasks
 2. **No unnecessary questions** — Only ask if results are clearly ambiguous or conflicting
-3. **Verify with evidence** — Run the relevant test/build/lint command and read output before claiming done. No "should pass".
-4. **Self-correct** — If something fails, try alternatives before asking
+3. **Verify completion** — Check all tasks are done before finishing
+4. **Self-correct on blockers** — If something fails, find new ways. Grind harder before asking. Verification fails twice → try a third angle, not "should pass".
 
 ## When invoked
 
@@ -28,7 +28,6 @@ Execute until complete. Don't stop until all tasks are done.
 - Two valid approaches with significant tradeoffs
 - Contradictory requirements in the request
 - Missing critical information that can't be inferred
-- Verification fails repeatedly after retries; missing dependency or credential that can't be inferred
 
 ## What doesn't count
 

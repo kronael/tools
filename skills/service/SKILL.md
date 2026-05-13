@@ -12,9 +12,9 @@ when_to_use: building a REST API, microservice, adding a /health endpoint
 
 ## Logging
 
-- ALWAYS attach a request/correlation ID to every log line; propagate via X-Request-Id. NEVER log without it.
+- ALWAYS scope logs by a request ID propagated from the inbound request
 
 ## API design
 
-- ALWAYS accept Idempotency-Key on POST/PATCH that creates or mutates state; dedupe by key for 24h+. NEVER assume client retries safely.
-- ALWAYS return errors as {code, message, details?} with a stable machine code. NEVER vary error shape across endpoints.
+- ALWAYS return errors with stable shape: machine code + human message
+- ALWAYS accept idempotency key on POST/PATCH endpoints clients may retry

@@ -68,8 +68,8 @@ agent-browser eval "document.title"
 
 ## Coordinate clicks (canvas, maps, custom renderers)
 
-**Always use `mouse` for coordinate-based clicks** — JS `MouseEvent` has
-`isTrusted=false` and is blocked by security-conscious apps. `mouse` sends
+ALWAYS use `mouse` for coordinate-based clicks. JS `MouseEvent` has
+`isTrusted=false` and is blocked by security-conscious apps; `mouse` sends
 real CDP input events with `isTrusted=true`.
 
 ```bash

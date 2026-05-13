@@ -15,7 +15,7 @@ when_to_use: editing .py files or writing Python code
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`
-- ALWAYS `typing.Protocol` for duck-typed interfaces; NEVER `abc.ABC` unless runtime isinstance() checks are required
+- ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)
@@ -27,8 +27,7 @@ when_to_use: editing .py files or writing Python code
 - dataclasses over Pydantic when enough
 
 ## Named Data Structures
-- Prefer dataclass/NamedTuple over bare tuples for return types
-- Skip for trivial cases or test code
+- ALWAYS dataclass/NamedTuple over bare tuples for return types (except trivial/test code)
 
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`

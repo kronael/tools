@@ -24,7 +24,7 @@ when_to_use: editing .sh files or writing shell scripts
 - NEVER forget closing `]` when `then` is on next line
 
 ## Loops
-- Prefer `shopt -s globstar` + `**/*.ext` over `find`
+- ALWAYS `shopt -s globstar` + `**/*.ext` over `find` for simple recursion
 - NEVER pipe into `while` when loop body sets variables (subshell loses state)
 
 ## Process
