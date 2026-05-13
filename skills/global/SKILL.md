@@ -54,6 +54,8 @@ NEVER state a factual claim confidently without verifying it first (check
 docs, grep, read the file). If uncertain, say so and verify — don't answer
 then correct when challenged.
 
+NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
@@ -222,6 +224,7 @@ operations, zero composition. Encapsulate I/O, expose information.
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
 - ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation
 - Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required

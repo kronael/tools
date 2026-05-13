@@ -7,3 +7,6 @@ user-invocable: true
 
 Launch the prompt after /sub as a background general-purpose agent (run_in_background: true).
 Report what was launched. Continue immediately without waiting.
+
+- NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
+- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.

@@ -55,6 +55,9 @@ Add a row when creating a spec. Update status when it ships.
 - Code snippets that duplicate what's in the codebase
 - Completed checklists or TODO items
 - Comments about implementation order or timeline
+- NEVER use "TBD" / "TODO" / "implement later" — decide now or omit
+- NEVER write future-tense plans ("we will…") — specs describe state, not work
+- NEVER re-state function signatures already in code — link to file:line instead
 
 ## After shipping
 
@@ -62,3 +65,10 @@ Add a row when creating a spec. Update status when it ships.
 2. Trim implementation details — keep problem, design, WHY
 3. Keep code pointers (WHERE + WHY), remove HOW
 4. Update `specs/index.md` status column
+
+## Self-review before commit
+1. Frontmatter status matches reality
+2. index.md row added/updated
+3. No HOW (implementation steps) — only WHY + WHERE
+4. No future tense; no "TBD"
+5. Code pointers resolve (paths exist)

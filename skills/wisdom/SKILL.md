@@ -19,7 +19,7 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 - ALWAYS put the one-line summary in `description`; put trigger phrases in `when_to_use`.
 - `description` + `when_to_use` share a 1,536-character budget — both shown to Claude for routing.
-- ALWAYS keep `description` as a declarative summary ("summarizes X", not "summarize X").
+- ALWAYS write description as triggering conditions ("Use when…"), NEVER as workflow summary. Claude shortcuts past skills whose description already states the process.
 - ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates closest neighbors.
 - NEVER omit the NOT clause — the harness has no other way to handle overlapping skills.
 - NEVER write "This skill helps you…" or any marketing prose.
@@ -38,6 +38,7 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - ALWAYS keep under 200 lines; skills persist in context all session (every line = recurring token cost per turn).
 - NEVER add obvious code examples LLMs already know.
 - NEVER duplicate content between skills or with the global wisdom file.
+- ALWAYS move reference material (>50 lines: API docs, examples, tables) to sibling files like references/X.md; SKILL.md is workflow only.
 
 ## CLAUDE.md (project)
 
