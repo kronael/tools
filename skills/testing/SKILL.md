@@ -30,3 +30,4 @@ when_to_use: writing tests, debugging test failures, reading test output
 - Remove real API/database tests from unit test suite
 - conftest.py (Python) or common/mod.rs (Rust) for shared fixtures
 - Return `Result<()>` for clean error propagation
+- A test that fails from import/typo/fixture errors proves nothing — confirm the failure message names the missing behavior before writing code
