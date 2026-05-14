@@ -69,3 +69,21 @@ when_to_use: building a scraper, ETL pipeline, real-time feed, WebSocket data so
 - ALWAYS parallelize independent tasks
 - Database constraints for dedup, not in-memory locks
 - Redis atomic ops (INCR, SET NX), DashMap for lock-free reads
+
+## Pipeline (file-based stages)
+
+- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap with `monkeypatch`.
+- Pipeline = stages of typed files. Each stage owns a directory. Stage N+1 reads stage N. Path = `{batch}/{key_path}/{date}.{pqt|jl}`. Day file = unit of work.
+- ALWAYS tidy at ingestion: one row/observation, one col/variable, one table/entity. NEVER re-clean downstream.
+- Raw is append-only. ALWAYS rebuild downstream from raw. NEVER UPDATE/DELETE raw.
+- Storage is `.jl` or `.pqt`. NEVER CSV, NEVER pickle.
+- ALWAYS `df.to_parquet(fn, coerce_timestamps='us', allow_truncated_timestamps=True)`.
+
+## Paths and resume
+
+- ALWAYS one `paths.py` per project. All path builders live there; NEVER hardcode paths elsewhere.
+- ALWAYS pair `get_filename` (write) and `parse_filename` (read) in the same module, same strftime format both ways.
+- ALWAYS expose `iter_available_*` from the filesystem for resume.
+- Loader = path in, DataFrame out. NEVER clean in loaders — that's ingestion.
+- Filesystem is pipeline state. NEVER track pipeline progress in state.json. ALWAYS gate work on output existence; continue day-loops past per-day failures.
+- `state.json` is for collector resume only (live-feed cursor), distinct from pipeline-stage resume.
