@@ -92,7 +92,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 
 | Skill | Role |
 |-------|------|
-| **commit** | structured git flow, `[section] Message`, HEEREDOC |
+| **commit** | structured git flow, `[section] Message`, HEREDOC |
 | **diary** | append `## HH:MM` to `.diary/YYYYMMDD.md` |
 | **docs-audit** | parallel subagent doc-vs-code audit |
 | **improve** | code-quality DO-CRITICIZE-EVALUATE-IMPROVE |

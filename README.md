@@ -67,7 +67,7 @@ agents/                            bundle copied to ~/.claude/agents/
 hooks/                             bundle copied to ~/.claude/hooks/
 settings-recommended.json          merged into ~/.claude/settings.json
 RECLAUDE.md                        template for ~/.claude/RECLAUDE.md
-usage-patterns/                    12 patterns extracted from production projects
+usage-patterns/                    3 patterns extracted from production projects
 ```
 
 ## Documentation
@@ -83,6 +83,7 @@ usage-patterns/                    12 patterns extracted from production project
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
 | [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (followed by both plugin and "say install") |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
 
 ### Working on this repo
 

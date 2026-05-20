@@ -86,13 +86,6 @@ git commit -m "[merge] Resolve conflicts: <brief summary>"
 
 If pre-commit reformats, retry once.
 
-## Key Patterns from Rust/Cargo Projects
-
-- **Missing module files**: If lib.rs references a module that doesn't exist on disk, restore from git: `git show <commit>:path/to/file.rs > path/to/file.rs`
-- **Added Cargo.toml deps**: After adding a dep, `Cargo.lock` will have unstaged changes — stage it too
-- **Type API changes**: If a type changed from one branch (e.g. `bool` → `enum`, `IntEnum` → `bitflags`), it's ambiguous — ask user which to keep, then update all call sites
-- **Function signature conflicts**: When HEAD adds param A and incoming adds param B, and the function body uses both → keep both params
-
 ## Priority Rule (when user says "prioritize HEAD / feature branch")
 
 - Keep HEAD's features and additions

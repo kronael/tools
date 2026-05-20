@@ -12,3 +12,4 @@
 # Cookies (secrets)
 cookies/
 tweetfeed_cookies/
+hooks/__pycache__

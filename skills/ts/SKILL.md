@@ -31,24 +31,6 @@ description: TypeScript/Node.js. USE when editing .ts files or writing TypeScrip
 - NEVER trust external APIs/user input with `as Type`
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
-## Frontend Stack
-
-### React / Next.js
-- **Next.js 15** with App Router (`app/` directory)
-- Server Components by default, `"use client"` only for interactive leaves
-
-### Package Management
-- **Bun** for packages and unit test runner
-- **uv** for Python (backend)
-
-### Styling
-- ALWAYS Tailwind theme variables, NEVER hardcoded colors
-- Theme vars in `globals.css`: `bg-background`, `bg-card`, `text-foreground`, `border-border`
-- Fix colors in `globals.css`, not with hardcoded workarounds
-
-### Simple Interactions
-- **HTMX** over React for forms, simple AJAX, server-rendered pages
-
 ## Testing
 - Unit: `*.test.ts` next to code (Bun), E2E: `*.spec.ts` in `playwright/`
 - **CRITICAL**: Configure `bunfig.toml` root to exclude Playwright files from Bun:

@@ -134,7 +134,7 @@ restrictions to apply. NEVER touch `~/.claude/settings.local.json`.
 ```sh
 ls ~/.claude/skills/ | wc -l       # should match: ls skills/ | wc -l
 ls ~/.claude/agents/ | wc -l       # should be 6
-ls ~/.claude/hooks/*.py | wc -l    # should be at least 5
+ls ~/.claude/hooks/*.py | wc -l    # should be 8
 test -f ~/.claude/CLAUDE.md
 ```
 

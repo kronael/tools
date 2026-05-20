@@ -6,7 +6,7 @@ description: Python development. USE when editing .py files or writing Python co
 # Python
 
 ## Version
-- ALWAYS target Python 3.14+, use newest language features
+- ALWAYS target Python 3.13+, use newest language features
 - `type Alias = int | str` (PEP 695), not `TypeAlias`
 - `type Point[T] = tuple[T, T]` for generic type aliases
 

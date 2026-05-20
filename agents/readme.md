@@ -74,8 +74,7 @@ See SPEC.md for specification, ARCHITECTURE.md for architecture.
 
 README is for getting started. Keep under 100 lines. Cut all marketing
 language ("powerful", "flexible", "robust", "comprehensive", "easy",
-"simple"). Never point out the obvious. SPEC.md = specification
-(requirements, contracts), not "documentation" or "details".
+"simple"). Never point out the obvious.
 
 Technical details (how validation works, retry logic, polymorphism,
 integration patterns) belong in ARCHITECTURE.md, not README.

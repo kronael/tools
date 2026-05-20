@@ -15,7 +15,7 @@ user-invocable: true
 ## Format
 
 `[section] Message` — why not what, 1-2 sentences.
-Sections: fix, feat, refactor, docs, test, chore, perf, style
+Sections: fix, feat, refactor, docs, test, chore, perf, style, release
 
 Fixup: `fixup: <exact HEAD subject>` — use when the change is a correction to the immediately preceding commit.
 

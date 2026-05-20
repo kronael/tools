@@ -16,7 +16,7 @@ description: Bash/shell scripting. USE when editing .sh files or writing shell s
 - Uppercase for env/config, lowercase for locals
 
 ## Conditionals
-- `[ ]` not `[[ ]]` (POSIX portable)
+- `[[ ]]` not `[ ]` (bash scripts)
 - Booleans: `flag=false` then `if $flag; then` (not string comparison)
 - NEVER forget closing `]` when `then` is on next line
 

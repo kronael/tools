@@ -21,7 +21,7 @@ Extract patterns from conversations, create or update skills.
 2. Identify recurring themes and categorize
 
 ### Phase 2: Review with User
-3. Present findings as questionnaire using AskUserQuestion tool
+3. Present findings as questionnaire by asking the user directly in the assistant turn
 4. For each pattern: show context, proposed skill, ask approve/reject/modify
 5. Enter plan mode to detail approved skills, let user refine
 

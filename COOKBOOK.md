@@ -166,3 +166,4 @@ rco -h                     # per-command help
 - [rig/README.md](rig/README.md) — full flag reference
 - [dockbox/README.md](dockbox/README.md) — sandbox config and mounts
 - [skills/README.md](skills/README.md) — skill rationale
+- [WORKFLOW.md](WORKFLOW.md) — agent hierarchy

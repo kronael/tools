@@ -26,7 +26,7 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
      [ -n "$branch" ] && git branch -D "$branch" 2>/dev/null
    done
    ```
-8. **Summary** - what changed, main impact, no fluff, not marketing
+10. **Summary** - what changed, main impact, no fluff, not marketing
 
 ## Prompt Structure
 
@@ -43,4 +43,4 @@ For readme agent: list what changed (file + one-line each).
 - NEVER do improvement work yourself - delegate to improve agent
 - NEVER summarize user intent - pass original request
 - Explicit scope > vague "review these files"
-- Run ALL 9 steps; skip commit only if no file changes
+- ALWAYS run all steps; NEVER skip commit unless no file changes

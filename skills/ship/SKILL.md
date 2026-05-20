@@ -75,4 +75,3 @@ learnings feed back to `specs/` if architectural.
   paths, and acceptance criteria
 - ship runs adversarial verification rounds and auto-commits
 - NEVER spawn readme/improve agents for work ship can handle
-- Sync this skill to `~/app/tools/assistants/`
