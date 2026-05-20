@@ -1,6 +1,6 @@
 ---
 name: agent-browser
-description: Browse the web for any task — research topics, read articles, interact with web apps, fill forms, take screenshots, extract data, and test web pages. Use whenever a browser would be useful, not just when the user explicitly asks. USE when a real browser is needed (login flows, screenshots, page interaction). NOT for plain HTTP fetches (use a script directly).
+description: Browser automation via the agent-browser CLI. USE when a real browser is needed (login flows, screenshots, page interaction, DOM extraction). NOT for plain HTTP fetches. ALWAYS invoke via Bash tool — this is NOT an Agent subagent type, never pass it to Agent(subagent_type=...).
 allowed-tools: Bash(agent-browser:*)
 ---
 
