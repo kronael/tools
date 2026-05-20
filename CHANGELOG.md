@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.2.2] — 20260520
+
+> kronael v0.2.2 — merge origin/master skill quality pass + browse rename
+>
+> • Merged v0.2.1 skill quality pass (21 skills refined against 10 external repos)
+> • browse skill (renamed agent-browser) — no more Agent subagent type confusion
+> • ops: container hardening rules (USER non-root, HEALTHCHECK, dumb-init)
+> • oracle + explore skills from origin
+
+### Added
+- oracle skill: codex CLI second-opinion
+- explore skill: read-only codebase exploration mode
+- ops: container hardening (USER non-root, HEALTHCHECK, `--init`/dumb-init)
+
+### Changed
+- `agent-browser` skill renamed to `browse` — CLI is still `agent-browser`, skill name is not
+- All changes from v0.2.1 skill quality pass (see below)
+
 ## [v0.2.1] — 20260513
 
 ### Changed
