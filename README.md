@@ -20,15 +20,23 @@ External tools used by the Claude Code config:
 
 ## Claude Code toolkit
 
-This repo is a [Claude Code plugin marketplace](.claude-plugin/marketplace.json). Install via:
+**Quickest path** — clone the repo, open Claude Code at the root, say **"install"**:
+
+```sh
+git clone https://github.com/kronael/tools ~/.kronael
+cd ~/.kronael
+claude   # then type: install
+```
+
+Claude auto-loads `CLAUDE.md`, which dispatches to [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings).
+
+**Plugin path** — if you prefer the marketplace:
 
 ```
 /plugin marketplace add kronael/tools
 /plugin install kronael@kronael
 /kronael:install
 ```
-
-Or open Claude Code at the repo root and say **"install"** — it auto-loads `CLAUDE.md`, which dispatches to [`kronael/install/SKILL.md`](kronael/install/SKILL.md) (the single source of truth for the install procedure).
 
 ### Why an install step (instead of pure plugin)
 
