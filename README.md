@@ -23,8 +23,8 @@ External tools used by the Claude Code config:
 **Quickest path** — clone the repo, open Claude Code at the root, say **"install"**:
 
 ```sh
-git clone https://github.com/kronael/tools ~/.kronael
-cd ~/.kronael
+git clone https://github.com/kronael/tools /tmp/kronael
+cd /tmp/kronael
 claude   # then type: install
 ```
 
