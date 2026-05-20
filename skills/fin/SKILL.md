@@ -1,6 +1,7 @@
 ---
 name: fin
-description: /fin — finish mode. Execute all pending tasks until done without stopping for confirmation. USE to authorize multi-step autonomous execution. NOT for one-off commands (just run them).
+description: /fin — finish mode, no confirmation stops. NOT for a single command (just run it).
+when_to_use: "finish this", "keep going", "don't stop", "just do it"
 user-invocable: true
 ---
 
@@ -13,7 +14,7 @@ Execute until complete. Don't stop until all tasks are done.
 1. **No stopping early** — Continue working through all pending tasks
 2. **No unnecessary questions** — Only ask if results are clearly ambiguous or conflicting
 3. **Verify completion** — Check all tasks are done before finishing
-4. **Self-correct** — If something fails, try alternatives before asking
+4. **Self-correct on blockers** — If something fails, find new ways. Grind harder before asking. Verification fails twice → try a third angle, not "should pass".
 
 ## When invoked
 

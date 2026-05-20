@@ -1,6 +1,7 @@
 ---
 name: recall-memories
-description: Search diary, memory, and session history. USE to find context from prior sessions. NOT for writing new entries (use diary).
+description: Search diary, memory, and session history. NOT for writing entries (use diary).
+when_to_use: "what did we decide", "recall", "find context from a prior session"
 user-invocable: true
 arg: <question>
 ---
@@ -35,6 +36,8 @@ In `<think>`:
 1. List matched sources
 2. For each: what does it say? Does it answer the question? What gap remains?
 3. Verdict: use it, or research fresh
+
+For each match, check whether it's still true against current repo state (git log, file contents). Mark stale findings explicitly — don't act on outdated decisions.
 
 ## When to use
 

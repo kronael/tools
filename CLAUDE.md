@@ -5,7 +5,7 @@ Guidance for Claude Code when working in this repository.
 ## Repository
 
 Three things live here:
-1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`) — each with its own Makefile.
+1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`, `tg-fetch/`, `dc-fetch/`, `clp/`) — each with its own Makefile.
 2. Claude Code plugin (`.claude-plugin/`, `kronael/`) — installer skill that deploys the bundle to `~/.claude/`.
 3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael:install` copies. Same content also installs via the manual "say install" path.
 
@@ -31,7 +31,7 @@ rig install        # Create symlinks in script's directory
 
 ### dockbox — Dockerized Claude Code sandbox
 
-Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z suspends container + returns to host shell; `fg` resumes.
+Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z is ignored (would suspend dockbox itself, not the inner container).
 
 Makefile: `image` (build), `install` (build+install), `clean`.
 
@@ -49,7 +49,11 @@ Both paths follow [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the
 When editing bundle files:
 - NEVER include local paths, org-specific refs, or secrets in source (they go in `~/.claude/LOCAL.md`, auto-injected by `local.py`).
 - The `global` skill body becomes `~/.claude/CLAUDE.md` on install — the always-loaded wisdom file.
-- `RECLAUDE.md` is the re-injection template for the `reclaude` hook.
+- `RECLAUDE.md` is the re-injection template for the `reclaude` hook (PreCompact + manual continue/recap triggers).
+- ALWAYS verify the matching reinject path when a skill changes:
+  - **Skill rule changed?** Update its dedicated reinject if there is one — `hooks/nudge.py` `COMMIT_RULES`/`DOCS_RULES` for the commit/docs skills, `hooks/stop.py` nudge text for stop-time rules.
+  - **Cross-cutting rule with no dedicated reinject?** Update `RECLAUDE.md` (filesystem, build, scope, writing — see its topic list).
+  - **Commit rules** specifically live in three places that must stay in sync: `skills/commit/SKILL.md` (full reference), `hooks/nudge.py` `COMMIT_RULES` (fires on prompts with "commit"), `hooks/stop.py` (fires on uncommitted state). RECLAUDE.md does NOT carry them — would be redundant noise.
 
 ## Coding philosophy
 

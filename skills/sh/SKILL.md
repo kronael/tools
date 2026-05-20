@@ -1,12 +1,15 @@
 ---
 name: sh
-description: Bash/shell scripting. USE when editing .sh files or writing shell scripts. entrypoints, POSIX, bash patterns. NOT for Python utilities (use py) or non-shell code.
+description: Bash/shell scripting. NOT for Python utilities (use py) or persistent CLI tools (use cli).
+when_to_use: editing .sh files or writing shell scripts
 ---
 
 # Bash Style
 
 ## Structure
-- `set -e` at top
+- ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines
+- ALWAYS `tmp=$(mktemp -d)` + `trap 'rm -rf -- "$tmp"' EXIT` for transient files; NEVER hand-roll `/tmp/script-$$`
+- ALWAYS iterate `find` output with `while IFS= read -r -d ''` < <(find ... -print0) or `mapfile -t arr < <(cmd)`; NEVER `for f in $(find ...)` or `for f in $(ls)`
 - `do`/`then`/`else` on own line, NEVER after `;` or `&&`
 - Functions for repeated logic, plain sequence otherwise
 
@@ -21,7 +24,7 @@ description: Bash/shell scripting. USE when editing .sh files or writing shell s
 - NEVER forget closing `]` when `then` is on next line
 
 ## Loops
-- Prefer `shopt -s globstar` + `**/*.ext` over `find`
+- ALWAYS `shopt -s globstar` + `**/*.ext` over `find` for simple recursion
 - NEVER pipe into `while` when loop body sets variables (subshell loses state)
 
 ## Process

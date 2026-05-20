@@ -1,6 +1,7 @@
 ---
 name: cli
-description: CLI tools. argparse, click, clap, --help, exit codes, signal handling, SIGTERM, SIGINT, config precedence, interactive prompts. USE for argparse/click/clap-style command-line tools. NOT for one-off scripts (use sh).
+description: CLI tools. NOT for one-off scripts (use sh).
+when_to_use: writing a CLI tool, argparse/click/clap, adding --help or subcommands
 ---
 
 # CLI Style
@@ -33,6 +34,10 @@ CLI flags > env vars > config files > defaults. Fail fast on invalid config.
 ## Installation
 
 Two methods: `make link` (dev, symlink debug binary) and `make install` (system, install release binary).
+
+## Performance
+
+- NEVER import heavy deps at top of entrypoint for an interactive CLI — lazy-import inside the subcommand. Measure with `hyperfine '<tool> --help'`.
 
 ## Pitfalls
 

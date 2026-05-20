@@ -11,9 +11,6 @@ Claude stops ──> Stop ──> stop.py (commit + diary nudge)
 
 Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
                           ──> reclaude.py (RECLAUDE.md + preservation note)
-                          ──> learn.py    (flow report)
-
-Session end ──> SessionEnd ──> learn.py (flow report)
 ```
 
 ## Components
@@ -57,15 +54,6 @@ Session end ──> SessionEnd ──> learn.py (flow report)
 3. Inject on `PreCompact` or continue/recap keywords.
 4. On `PreCompact`, append a preservation note so the content survives
    compaction.
-
-### learn.py (PreCompact + SessionEnd)
-
-**Input:** JSON with `hook_event`, `session_id`, `cwd`.
-**Output:** Markdown file at `~/.claude/flow-reports/{ts}-{event}.md`
-plus a `systemMessage` confirming the write.
-
-The report is a template with session metadata and a prompt for the
-`@learn` agent to extract patterns into skills.
 
 ### stop.py (Stop)
 
@@ -119,7 +107,7 @@ stdout (dirty tree + stale diary):
 
 All hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError` and bail
 with `sys.exit(0)` so a broken payload never blocks the session. File I/O
-errors in `learn.py` and `local.py` are swallowed for the same reason.
+errors in `local.py` are swallowed for the same reason.
 
 ## Extension Points
 

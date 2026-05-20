@@ -1,7 +1,7 @@
 ---
 name: testing
-description: Testing patterns. Use when writing tests, running tests, debugging or triaging
-  test failures, reading test output, testcontainers. USE for testcontainers, integration tests, real-API patterns. NOT for unit-test setup inside a language skill (handle there).
+description: Testing patterns. NOT for unit-test setup inside a language skill (handle there).
+when_to_use: writing tests, debugging test failures, reading test output
 ---
 
 # Testing
@@ -30,3 +30,4 @@ description: Testing patterns. Use when writing tests, running tests, debugging 
 - Remove real API/database tests from unit test suite
 - conftest.py (Python) or common/mod.rs (Rust) for shared fixtures
 - Return `Result<()>` for clean error propagation
+- A test that fails from import/typo/fixture errors proves nothing — confirm the failure message names the missing behavior before writing code

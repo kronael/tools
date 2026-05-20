@@ -1,9 +1,18 @@
 # Critical Rules (re-injected on compaction)
 
-- ALWAYS use make for build/lint/test/clean
-- ALWAYS build/test/lint every ~50 lines
+## Filesystem
+- NEVER use `/tmp` — ALWAYS `./tmp` in the project root
+- NEVER `basename $0` / `__dirname` / complex path resolution — fixed cwd, simple relative paths
+
+## Build / Test
+- ALWAYS `make` for build/lint/test/clean
+- ALWAYS build/test/lint every ~50 lines — errors cascade
+- NEVER re-run a command to inspect output — tee once, then `tail`/`grep` the log
+
+## Scope
 - NEVER improve beyond what's asked
-- NEVER use /tmp, ALWAYS use ./tmp in project root
-- NEVER use git add -A
-- NEVER use git commit --amend
-- NEVER add Co-Authored-By to commits
+- NEVER fix bugs found during a general check unless explicitly asked — log to `bugs.md`
+
+## Writing
+- NEVER marketing prose, NEVER "this helps you…", NEVER past-state apologies
+- NEVER comments about past state or backwards compat — use `.diary/`

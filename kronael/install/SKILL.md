@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/. Trigger when the user says "install kronael", "install kronael tools", "install the toolkit", "install" (in this repo), or runs /kronael:install. Copies skills, agents, and hook scripts; merges hook wiring and recommended settings into ~/.claude/settings.json; installs the wisdom skill body into ~/.claude/CLAUDE.md (always-loaded). Run once per machine, then again on plugin updates.
+description: Install (or update) the Kronael toolkit into ~/.claude/. Copies skills, agents, hook scripts; merges hook wiring and recommended settings; installs the wisdom skill body as ~/.claude/CLAUDE.md. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install. NOT for installing the CLI tools dockbox/rig/clp (use their own Makefile).
 ---
 
 # Install Kronael toolkit
@@ -17,7 +17,7 @@ This is the single source of truth for the install procedure. `README.md`, `CLAU
 Verify these dirs/files exist at the source root before proceeding:
 - `skills/` — bundle of skills (language, workflow, domain)
 - `agents/` — bundle of agents (@improve, @readme, @refine, …)
-- `hooks/` — bundle of hook scripts (nudge.py, local.py, reclaude.py, learn.py, stop.py) and `hooks/lib/`
+- `hooks/` — bundle of hook scripts (nudge.py, local.py, reclaude.py, stop.py)
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 

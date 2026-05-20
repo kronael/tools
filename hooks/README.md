@@ -50,12 +50,6 @@ Fires on `UserPromptSubmit` and `PreCompact`. Mirrors `local.py` but sources
 `~/.claude/RECLAUDE.md`. On `PreCompact`, appends a note instructing the
 model to preserve the wisdom across compaction.
 
-### Flow Reports (learn.py)
-
-Fires on `PreCompact` and `SessionEnd`. Writes a markdown report to
-`~/.claude/flow-reports/{timestamp}-{event}.md` with session metadata and
-a pointer to `@learn` for pattern extraction.
-
 ### Commit + Diary Nudge (stop.py)
 
 Fires on `Stop`. Blocks with a reason message if either:
@@ -74,9 +68,7 @@ local-only and explicit.
   nudge.py       # UserPromptSubmit: keyword → command/agent
   local.py       # UserPromptSubmit + PreCompact: LOCAL.md injection
   reclaude.py    # UserPromptSubmit + PreCompact: RECLAUDE.md injection
-  learn.py       # PreCompact + SessionEnd: flow reports
   stop.py        # Stop: commit + diary nudge
-  test_hooks.py  # Smoke tests
 ```
 
 ## Hook Configuration
@@ -88,10 +80,9 @@ In `~/.claude/settings.json`:
   "hooks": {
     "UserPromptSubmit": [{"matcher": "", "hooks": [...]}],
     "Stop":             [{"matcher": "", "hooks": [...]}],
-    "PreCompact":       [{"matcher": "", "hooks": [...]}],
-    "SessionEnd":       [{"matcher": "", "hooks": [...]}]
+    "PreCompact":       [{"matcher": "", "hooks": [...]}]
   }
 }
 ```
 
-See ARCHITECTURE.md for per-hook data flow and TEST.md for the smoke tests.
+See ARCHITECTURE.md for per-hook data flow.

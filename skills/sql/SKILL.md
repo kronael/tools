@@ -1,6 +1,7 @@
 ---
 name: sql
-description: SQL queries and schemas. USE when editing .sql files or writing SQL. JOIN USING, column aliases without AS, migrations, schema changes. NOT for ORM-only code with no raw SQL (use the host language skill).
+description: SQL queries and schemas. NOT for ORM-only code (use go, py, ts, or rs).
+when_to_use: editing .sql files or writing SQL queries
 ---
 
 # SQL

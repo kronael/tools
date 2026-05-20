@@ -1,6 +1,7 @@
 ---
 name: visual
-description: /visual — launch @visual agent for UI and styling improvements. USE for SVG/CSS/UI tweaks via headful browser. NOT for general code (use improve).
+description: /visual — UI and styling via headful browser. NOT for general code (use improve).
+when_to_use: SVG/CSS/UI tweaks, components, landing pages, dashboards, "improve the UI", "fix the styling", "beautify"
 user-invocable: true
 ---
 

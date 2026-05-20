@@ -1,6 +1,7 @@
 ---
 name: tsx
-description: Frontend React/Next.js. USE when editing .tsx files or writing React components with JSX. hooks, server/client components, Tailwind theming, forms, a11y. NOT for plain TypeScript without JSX (use ts).
+description: Frontend React/Next.js. NOT for plain TypeScript without JSX (use ts).
+when_to_use: editing .tsx files or writing React components with JSX
 requires: ts
 ---
 
@@ -25,7 +26,7 @@ Requires `ts` skill for base TypeScript rules.
 - Fetch in server components, pass down as props
 - NEVER fetch in `useEffect` — use server components or React Query/SWR
 - Server Actions for form submission, `useActionState` for validation
-- Forms SHOULD work without JS (progressive enhancement)
+- ALWAYS forms work without JS (progressive enhancement)
 
 ## Accessibility
 - Semantic HTML (`button` not `div onClick`)

@@ -1,6 +1,7 @@
 ---
 name: rs
-description: Rust development. USE when editing .rs files or writing Rust code. Cargo.toml, clap, eyre, tracing, tokio, DashMap, cargo clippy, testcontainers, enum states. NOT for general systems work outside Rust (use the matching language skill).
+description: Rust development. NOT for non-Rust code (use go, py, ts, tsx, or sh).
+when_to_use: editing .rs files or writing Rust code
 ---
 
 # Rust
@@ -25,7 +26,7 @@ description: Rust development. USE when editing .rs files or writing Rust code. 
 - `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
 
 ## Design Patterns
-- Never accessor methods; access fields directly with interior mutability
+- NEVER accessor methods — access fields directly with interior mutability
 - FxDashMap for concurrent access (but no locks best)
 - Semaphore for concurrency control
 - Arc<Self> when spawned tasks need self reference
@@ -89,6 +90,9 @@ fn main() -> eyre::Result<()> {
 - Startup/init: `expect("msg")` ok (fail-fast)
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
+## Unsafe
+- ALWAYS `cargo +nightly miri test` on modules with `unsafe` blocks; NEVER ship `unsafe` without a `// SAFETY:` invariant comment
+
 ## Copy/Clone
 - NEVER derive Copy unless trivially copyable (i32, u64, bool, enum)
 - Newtypes over primitives (Price, Qty) may derive Copy
@@ -108,6 +112,7 @@ tokio::spawn(fetch_and_process(client));
 - Crate-per-concern: types/, common/, clients/, engine/
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
 - Re-export key types at crate root
+- When the project draws a domain/adapter boundary, keep `Serialize`/`Deserialize` on adapter-layer DTOs, not on core domain entities
 
 ## Non-Workspace Repos
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members

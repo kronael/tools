@@ -8,7 +8,7 @@ as slash commands (`/refine`, `/diary`, ...).
 
 LLMs forget. Every conversation starts cold, every long generation
 drifts from the rules, and the right skill rarely fires on its own.
-Each skill in this directory addresses one of four problems:
+Each skill in this directory addresses one of these problems:
 
 - **Style alignment** — language conventions the model wouldn't guess
 - **Session continuity** — facts and history across conversations

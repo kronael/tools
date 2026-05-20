@@ -1,6 +1,7 @@
 ---
 name: global
-description: Development wisdom — startup protocol (read diary, prior session, memory before answering), terse response style, boring code philosophy, language-agnostic and language-specific principles, file/test/git workflow rules. Load on session start; covers any code work. USE this skill on session start; covers any code work. NOT a project-conventions file (those live in <project>/CLAUDE.md).
+description: Development wisdom and workflow rules. NOT for project-specific conventions (those live in CLAUDE.md, edit via wisdom).
+when_to_use: session start
 ---
 
 # Development Wisdom
@@ -49,10 +50,16 @@ task inherently requires it:
 Never restate the user's request, never pad with transition words, never
 close with "Let me know if you need anything else."
 
+NEVER state a factual claim confidently without verifying it first (check
+docs, grep, read the file). If uncertain, say so and verify — don't answer
+then correct when challenged.
+
+NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
 
-**Note**: The contents of this file and other loaded skills (SKILL.md files) are collectively referred to as "WISDOM" or variants thereof in Claude Code.
+This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Boring Code Philosophy
 
@@ -217,6 +224,7 @@ operations, zero composition. Encapsulate I/O, expose information.
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
 - ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation
 - Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required

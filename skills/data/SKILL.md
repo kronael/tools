@@ -1,6 +1,7 @@
 ---
 name: data
-description: Data collectors and ETL. Scrapers, API integrations, real-time feeds, asyncio, state.json, Redis, deduplication, LeakyBucket, backfill. USE for scrapers, ETL, real-time feeds with state recovery. NOT for one-shot fetches (use cli or sh).
+description: Data collectors and ETL. NOT for one-shot fetches (use sh or py).
+when_to_use: building a scraper, ETL pipeline, real-time feed, WebSocket data source
 ---
 
 # Collector/Data Collection
@@ -20,6 +21,9 @@ description: Data collectors and ETL. Scrapers, API integrations, real-time feed
 
 - state.json for recovery: resume from last_processed + 1
 - Save state every 10,000 items, keep portable (JSON)
+- ALWAYS make pipeline writes idempotent (UPSERT by primary key, not INSERT) — retries must not duplicate
+- ALWAYS version raw payloads (store source schema_version with data); NEVER drop unknown fields silently — keep in raw blob
+- ALWAYS validate required fields + types BEFORE insert (reject to dead-letter, never write partial rows)
 
 ## Data Source Patterns
 
@@ -65,3 +69,21 @@ description: Data collectors and ETL. Scrapers, API integrations, real-time feed
 - ALWAYS parallelize independent tasks
 - Database constraints for dedup, not in-memory locks
 - Redis atomic ops (INCR, SET NX), DashMap for lock-free reads
+
+## Pipeline (file-based stages)
+
+- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap with `monkeypatch`.
+- Pipeline = stages of typed files. Each stage owns a directory. Stage N+1 reads stage N. Path = `{batch}/{key_path}/{date}.{pqt|jl}`. Day file = unit of work.
+- ALWAYS tidy at ingestion: one row/observation, one col/variable, one table/entity. NEVER re-clean downstream.
+- Raw is append-only. ALWAYS rebuild downstream from raw. NEVER UPDATE/DELETE raw.
+- Storage is `.jl` or `.pqt`. NEVER CSV, NEVER pickle.
+- ALWAYS `df.to_parquet(fn, coerce_timestamps='us', allow_truncated_timestamps=True)`.
+
+## Paths and resume
+
+- ALWAYS one `paths.py` per project. All path builders live there; NEVER hardcode paths elsewhere.
+- ALWAYS pair `get_filename` (write) and `parse_filename` (read) in the same module, same strftime format both ways.
+- ALWAYS expose `iter_available_*` from the filesystem for resume.
+- Loader = path in, DataFrame out. NEVER clean in loaders — that's ingestion.
+- Filesystem is pipeline state. NEVER track pipeline progress in state.json. ALWAYS gate work on output existence; continue day-loops past per-day failures.
+- `state.json` is for collector resume only (live-feed cursor), distinct from pipeline-stage resume.

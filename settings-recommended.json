@@ -45,16 +45,7 @@
         "matcher": "",
         "hooks": [
           { "type": "command", "command": "python3 ~/.claude/hooks/local.py", "timeout": 3000 },
-          { "type": "command", "command": "python3 ~/.claude/hooks/learn.py", "timeout": 10000 },
           { "type": "command", "command": "python3 ~/.claude/hooks/reclaude.py", "timeout": 3000 }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "matcher": "",
-        "hooks": [
-          { "type": "command", "command": "python3 ~/.claude/hooks/learn.py", "timeout": 10000 }
         ]
       }
     ]

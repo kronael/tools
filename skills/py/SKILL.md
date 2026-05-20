@@ -1,6 +1,7 @@
 ---
 name: py
-description: Python development. USE when editing .py files or writing Python code. pyproject.toml, pytest, aiohttp, FastAPI, asyncpg, dataclass, async/await, type annotations. NOT for shell scripting (use sh) or non-Python code.
+description: Python development. NOT for shell scripting (use sh) or non-Python code.
+when_to_use: editing .py files or writing Python code
 ---
 
 # Python
@@ -14,6 +15,7 @@ description: Python development. USE when editing .py files or writing Python co
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`
+- ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)
@@ -25,8 +27,7 @@ description: Python development. USE when editing .py files or writing Python co
 - dataclasses over Pydantic when enough
 
 ## Named Data Structures
-- Prefer dataclass/NamedTuple over bare tuples for return types
-- Skip for trivial cases or test code
+- ALWAYS dataclass/NamedTuple over bare tuples for return types (except trivial/test code)
 
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
@@ -42,7 +43,7 @@ description: Python development. USE when editing .py files or writing Python co
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
 
 ## Package Structure
-- NEVER create empty `__init__.py` — only when it contains actual code
+- NEVER create `__init__.py` unless it contains actual code
 
 ## Build
 - uv for packages, pyright for types

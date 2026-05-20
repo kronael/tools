@@ -16,6 +16,7 @@ when_to_use: Dockerfile, docker-compose, systemd services, GitHub Actions CI, An
 - Cross-compilation: volume mount source, NEVER copy
 - ALWAYS set memory limits (2GB typical) and build timeout (30m)
 
+<<<<<<< HEAD
 ### Python + uv Dockerfile pattern (standalone repo)
 
 Two-layer image for max cache hit. Layer 1 is deps only (changes
@@ -73,6 +74,12 @@ image: Dockerfile
 Build context is the monorepo root so `lib/` is COPY-able. Dockerfile
 sets `WORKDIR /srv/app/<repo>/NAME`.
 
+## Container hardening
+
+- ALWAYS USER non-root in final stage
+- ALWAYS HEALTHCHECK when the container exposes a liveness endpoint
+- Use `--init` (or dumb-init) for app images that fork children — proper PID 1 signal/reaping semantics
+
 ## Configuration
 
 - Three-level: base TOML -> env.toml (`${PREFIX:-/srv}/key/env.toml`) -> env vars
@@ -90,6 +97,11 @@ sets `WORKDIR /srv/app/<repo>/NAME`.
 - Heartbeat: ./tmp/<service>.heartbeat
 - Health: /.well-known/live, Metrics: /metrics (Prometheus)
 - Prometheus labels: NEVER unbounded values, ONLY bounded enums. High cardinality -> logs.
+
+## Alerting
+
+- ALWAYS SLO + burn-rate alerts over absolute error counts when the project has stated SLOs
+- ALWAYS attach `runbook_url` annotation pointing at the playbook on Prometheus alerts
 
 ## Error Handling
 

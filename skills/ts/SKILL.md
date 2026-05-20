@@ -1,6 +1,7 @@
 ---
 name: ts
-description: TypeScript/Node.js. USE when editing .ts files or writing TypeScript. NOT for .tsx (use tsx). package.json, Next.js, Bun, class-validator, Playwright, arrow functions.
+description: TypeScript/Node.js. NOT for .tsx (use tsx).
+when_to_use: editing .ts files or writing TypeScript
 ---
 
 # TypeScript Style
@@ -16,10 +17,16 @@ description: TypeScript/Node.js. USE when editing .ts files or writing TypeScrip
 - NEVER spread when unnecessary — `filter()`, `map()`, `slice()` already create new arrays
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
+## Types
+- ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
+- ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
+- ALWAYS discriminated unions for state, NEVER boolean flag combos. ALWAYS exhaust with `default: const _:never = x` in switches.
+- NEVER `any` — use `unknown` and narrow. ALWAYS `import type { T }` for type-only imports.
+
 ## Design
-- Never methods just for grouping; use modules
-- Inline single-use one-liners; don't wrap trivial expressions
-- No JSDoc on self-explanatory functions
+- NEVER methods just for grouping — use modules
+- ALWAYS inline single-use one-liners; NEVER wrap trivial expressions
+- NEVER JSDoc on self-explanatory functions
 - Library barrel files: `export * from './module'`
 
 ## Logging

@@ -5,9 +5,12 @@ IMAGE="dockbox"
 
 MOUNTS=(
     "$HOME/.claude:/home/claude/.claude:rw"
+    "$HOME/.claude/plugins:/home/claude/.claude/plugins:ro"
+    "$HOME/.claude/plugins:$HOME/.claude/plugins:ro"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
     "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
+    "$HOME/.codex:/home/claude/.codex:rw"
     "/etc/localtime:/etc/localtime:ro"
 )
 
@@ -186,31 +189,20 @@ if [[ -n "$existing" ]]; then
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-docker create -it \
+trap '' TSTP
+exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     $network \
     $docker_gid_arg \
     -e HOME=/home/claude \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
+    ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \
+    ${CODEX_API_KEY:+-e CODEX_API_KEY} \
     "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
     "${rcargs[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
-    "${cmd[@]}" >/dev/null
-
-trap 'docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1' EXIT
-
-while :; do
-    docker start -a --detach-keys='ctrl-z' "$CONTAINER_NAME"
-    state=$(docker inspect -f '{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null) || break
-    if [[ "$state" == "exited" ]]; then
-        exit "$(docker inspect -f '{{.State.ExitCode}}' "$CONTAINER_NAME")"
-    fi
-    docker pause "$CONTAINER_NAME" >/dev/null
-    printf '\n[dockbox paused — fg to resume]\n' >&2
-    kill -STOP $$
-    docker unpause "$CONTAINER_NAME" >/dev/null 2>&1 || break
-done
+    "${cmd[@]}"

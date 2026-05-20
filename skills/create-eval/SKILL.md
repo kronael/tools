@@ -1,6 +1,7 @@
 ---
 name: create-eval
-description: Generate project-specific eval skill. Use when asked to create eval criteria, set up evaluation, or "create eval" for a project. USE to scaffold a project-specific eval skill. NOT for running existing evals (use the project's eval skill directly).
+description: Generate project-specific eval skill. NOT for running existing evals.
+when_to_use: "create eval", create eval criteria, scaffold eval skill
 user-invocable: true
 ---
 
@@ -28,3 +29,5 @@ and generate improvement specs when issues are found.
 - ALWAYS read project docs before generating
 - NEVER include generic criteria — derive everything from the project
 - NEVER generate without asking the user first
+- ALWAYS express assertions as programmatically checkable (grep counts, thresholds, exit codes) — NEVER "looks healthy" / "works well"
+- ALWAYS sanity-check the generated eval against real log samples before declaring it done

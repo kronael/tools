@@ -1,6 +1,7 @@
 ---
 name: commit
-description: Git commits. USE to draft commit messages and stage/commit changes ([section] format). NOT for PR descriptions (use pr-draft).
+description: Git commits. NOT for PR descriptions (use pr-draft).
+when_to_use: "commit this", "make a commit", committing changes
 user-invocable: true
 ---
 
@@ -16,6 +17,9 @@ user-invocable: true
 
 `[section] Message` — why not what, 1-2 sentences.
 Sections: fix, feat, refactor, docs, test, chore, perf, style, release
+
+Subject ≤ 72 chars (includes `[section]`). Overflow goes in body via a
+second `-m`: `git commit -m "subj" -m "body" -- files`.
 
 Fixup: `fixup: <exact HEAD subject>` — use when the change is a correction to the immediately preceding commit.
 
