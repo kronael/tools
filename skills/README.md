@@ -80,7 +80,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 
 | Skill | Domain |
 |-------|--------|
-| **agent-browser** | headless browser automation |
+| **browse** | headless browser automation |
 | **cli** | argparse/click/clap, exit codes, signals |
 | **data** | scrapers, ETL, leaky-bucket, state recovery |
 | **ops** | Dockerfile, systemd, Prometheus |

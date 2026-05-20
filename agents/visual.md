@@ -14,7 +14,7 @@ Refine visual elements through render-inspect-adjust iteration.
 tool, then adjust. Claude typically makes 3-5 changes blind before rendering.
 
 1. **Change** visual element
-2. **Open** in agent-browser (for web UI) or render to PNG (for SVG/PDF)
+2. **Open** in browser (for web UI) or render to PNG (for SVG/PDF)
 3. **Interact** if relevant — hover, click, scroll, focus — to exercise states
 4. **Screenshot** and **Read** the image (REQUIRED)
 5. **Criticize** specifically (measurements, not vague feelings)
@@ -36,7 +36,7 @@ Stroke widths for 100x100 viewBox:
 
 ## Render Commands
 
-**Web UI: ALWAYS use `agent-browser` (see agent-browser skill).** NEVER
+**Web UI: ALWAYS use `agent-browser` CLI (see `browse` skill).** NEVER
 `npx playwright screenshot` or ad-hoc browser tooling — loses interaction,
 drifts from the shared browser layer.
 

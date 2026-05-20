@@ -43,7 +43,7 @@ If they're missing, you're in the wrong directory — stop and ask.
 
 5. **External tools** (ask first — not everyone needs all of them):
    - `uv tool install git+https://github.com/kronael/ship` — planner-worker-judge CLI used by `/ship`.
-   - `bun install -g agent-browser` — headless browser automation used by the `agent-browser` skill.
+   - `bun install -g agent-browser` — headless browser automation used by the `browse` skill.
    - Skip if already installed and recent.
 
 6. **Report**: print a summary — X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine`, etc. are invocable bare. Suggest the user run `/recall-memories` once to verify the recall flow works against their existing diary/memory.
