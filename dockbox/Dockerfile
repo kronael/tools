@@ -26,7 +26,7 @@ RUN mkdir -p /workspace /home/claude/.claude /home/claude/.gnupg && \
 
 WORKDIR /workspace
 
-ARG GIT_DELTA_VERSION=0.18.2
+ARG GIT_DELTA_VERSION=0.19.2
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
@@ -46,7 +46,7 @@ ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global \
     EDITOR=nano \
     VISUAL=nano
 
-ARG ZSH_IN_DOCKER_VERSION=1.2.0
+ARG ZSH_IN_DOCKER_VERSION=1.2.1
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
   -p git \
   -p fzf \
@@ -56,8 +56,8 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -x
 
 ENV NVM_DIR="/home/claude/.nvm"
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
-  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install 22 && nvm alias default 22
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
+  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install --lts && nvm alias default 'lts/*'
 
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
@@ -71,7 +71,7 @@ ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
 RUN /home/claude/.go/bin/go install golang.org/x/tools/gopls@latest
 
-ARG NU_VERSION=0.110.0
+ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
   | tar xz --strip-components=1 -C /home/claude/.cargo/bin
