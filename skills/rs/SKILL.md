@@ -55,6 +55,7 @@ when_to_use: editing .rs files or writing Rust code
 - Libraries: `thiserror` for typed errors
 - ALWAYS `color_eyre::install()?` before tracing init
 - `.wrap_err("context")` not `.context()` (avoids trait ambiguity)
+- NEVER `let _ = call_that_returns_result()`. Silent drops have caused real correctness bugs. Use `?`, `if let Err(e) = ...`, or fail loud.
 
 ## Tracing
 - ALWAYS `tracing` over `log`
@@ -86,8 +87,8 @@ fn main() -> eyre::Result<()> {
 ```
 
 ## Unwrap Safety
-- NEVER unwrap() on hot path without `// SAFETY:` comment above
-- Startup/init: `expect("msg")` ok (fail-fast)
+- NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`
+- `.expect()` ok at startup (fail-fast) or on documented invariants; otherwise propagate
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
 ## Unsafe
