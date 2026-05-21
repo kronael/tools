@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.2.3] — 20260521
+
+> kronael v0.2.3 — fresher dockbox, gh-token shortcut
+>
+> Dockbox image now pulls latest Node/pnpm/bun/rust/nushell on rebuild, and a new `-g` flag forwards your GH token into the container.
+>
+> • `dockbox -g` — forwards `GH_TOKEN`/`GITHUB_TOKEN` so `gh` works inside the container
+> • dockbox rebuild: latest Node stable via nvm, plus bumped git-delta / nvm / zsh-in-docker / nushell pins
+> • `tg-fetch users.py` — snapshots Telegram group participants to JSONL
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -g` flag forwards `GH_TOKEN` and/or `GITHUB_TOKEN` from host env
+- `tg-fetch/users.py` — group participants snapshot to JSONL
+
+### Changed
+- dockbox: `nvm install node` (latest stable, was pinned `22`)
+- dockbox pinned-tool bumps: git-delta 0.18.2 → 0.19.2, nvm 0.40.1 → 0.40.4, zsh-in-docker 1.2.0 → 1.2.1, nushell 0.110.0 → 0.112.2
+- dockbox auto-latest tools (pnpm, bun, rustup, go, gopls, uv, claude-code, codex, pi-coding-agent, agent-browser, pyright, typescript, ship, playwright, puppeteer) now rebuild against current upstream
+
 ## [v0.2.2] — 20260520
 
 > kronael v0.2.2 — merge origin/master skill quality pass + browse rename
