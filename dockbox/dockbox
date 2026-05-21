@@ -62,6 +62,7 @@ Options:
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
+    -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
 
 Examples:
     dockbox                           # current dir
@@ -69,7 +70,8 @@ Examples:
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
-    dockbox -e GH_TOKEN               # forward env var
+    dockbox -e GH_TOKEN               # forward arbitrary env var
+    dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
     dockbox -x bash                   # run bash instead
 
@@ -91,7 +93,7 @@ dirs=()
 extra_vols=()
 extra_env=()
 claude_args=()
-while getopts ":n:x:e:v:HAD" opt; do
+while getopts ":n:x:e:v:HADg" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -100,6 +102,8 @@ while getopts ":n:x:e:v:HAD" opt; do
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
+        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
+           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
