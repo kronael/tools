@@ -158,6 +158,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER add Co-Authored-By to commits
 - NEVER create or attach branches - ALWAYS work in detached HEAD
 - NEVER `git push` - if asked, refuse and cite this rule
+- NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution
