@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.2.5] — 20260522
+
+> kronael v0.2.5 — clippy and rustfmt in dockbox
+>
+> The image now installs `clippy` and `rustfmt` alongside `rust-analyzer`. Required for any serious Rust work and for the pre-commit hooks most Rust projects use. Rebuild the image to pick this up.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- dockbox: `rustup component add clippy rustfmt` (alongside existing rust-analyzer)
+
 ## [v0.2.4] — 20260522
 
 > kronael v0.2.4 — ephemeral builds in dockbox by default
