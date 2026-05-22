@@ -85,8 +85,9 @@ work together so builds never touch your host workdir:
 2. **Overmount by default** (Node, Bun, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
-   doesn't recurse into matches), and overmounts each with an
-   anonymous Docker volume. Empty inside the container, gone on `--rm`.
+   doesn't recurse into matches), and bind-mounts an empty host stash
+   over each path. Empty inside the container, owned by the container
+   user, removed when dockbox exits.
 
    Names overmounted by default:
 
@@ -95,7 +96,13 @@ work together so builds never touch your host workdir:
    ```
 
    Monorepo workspaces are handled automatically — every match under
-   the workdir gets its own volume.
+   the workdir gets its own empty stash dir.
+
+   **Stash location**: `/tmp/dockbox-eph/<container-name>/` on the host.
+   Created by dockbox (so ownership matches the host user, which
+   matches the container's `claude` user via UID), removed by an EXIT
+   trap when dockbox returns. Put `/tmp` on tmpfs (most systemd
+   distros do by default) for RAM-backed speed without RAM caps.
 
 **Trade-off**: every fresh session re-installs and re-builds. Intentional —
 no stale artifacts persist, only source code is long-lived. A warm cache

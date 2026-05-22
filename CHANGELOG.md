@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.2.6] — 20260522
+
+> kronael v0.2.6 — dockbox ephemeral overmounts actually writable
+>
+> Default-on ephemeral overmounts in v0.2.4 used anonymous Docker volumes, which are root-owned and broke `pnpm install` (and any other writer) with EACCES inside the container. Now uses a per-container host stash under `/tmp/dockbox-eph/<name>/` bind-mounted in — owned by the host user, matching the container's `claude` UID. The stash is removed by an EXIT trap when dockbox returns. Put `/tmp` on tmpfs for RAM-backed speed.
+>
+> • dockbox: ephemeral `node_modules`/`.next`/`dist`/`build`/`.turbo`/`.cache` are now writable by the container user (EACCES gone)
+> • Stash lives at `/tmp/dockbox-eph/<container>/` on host, cleaned up on exit
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- dockbox: anonymous-volume overmounts (v0.2.4) were owned by root, breaking `pnpm install` and similar with EACCES — switched to host-side stash dirs at `/tmp/dockbox-eph/<container>/` bind-mounted in, owned by the host user (UID-matched with container `claude`)
+
+### Changed
+- dockbox script no longer `exec`s docker; runs in foreground so an `EXIT` trap can clean up the stash
+- `dockbox/README.md` "Ephemeral builds" section updated to describe the new bind-mount mechanism
+
 ## [v0.2.5] — 20260522
 
 > kronael v0.2.5 — clippy and rustfmt in dockbox

@@ -190,25 +190,35 @@ for vol in "${extra_vols[@]}"; do
     mounts+=(-v "$src:$src:$mode")
 done
 
-# ephemeral overmounts (default): build artifact dirs under workdir become
-# anonymous volumes (gone on --rm). recursive, so monorepo workspaces work.
-# disable with -P / --no-ephemeral to bind-mount from host instead.
+CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
+
+# ephemeral overmounts (default): for each build artifact dir found under
+# workdir, create an empty host stash dir (owned by host user) and bind-mount
+# it over the target path. claude (UID-matched) can write freely. the stash
+# is removed when this dockbox exits — gone with the container.
+# disable with -P / --no-ephemeral to keep host dirs visible.
+STASH=""
 if [[ -z "$persist_builds" ]]; then
+    STASH="/tmp/dockbox-eph/$CONTAINER_NAME"
+    rm -rf "$STASH"
+    mkdir -p "$STASH"
     for name in "${EPHEMERAL_DIRS[@]}"; do
         for d in "${dirs[@]}"; do
             absdir="$(cd "$d" && pwd)"
             while IFS= read -r found; do
-                mounts+=(-v "$found")
+                slug="${found//\//_}"
+                host="$STASH/$slug"
+                mkdir -p "$host"
+                mounts+=(-v "$host:$found")
             done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
         done
     done
 fi
+trap '[[ -n "$STASH" ]] && rm -rf "$STASH"' EXIT
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
 mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
-
-CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 rcargs=()
 for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
@@ -233,7 +243,7 @@ fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 trap '' TSTP
-exec docker run -it --rm \
+docker run -it --rm \
     --name "$CONTAINER_NAME" \
     $network \
     $docker_gid_arg \
