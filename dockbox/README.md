@@ -70,6 +70,25 @@ Project dirs are mounted at exact paths with read-write access.
 memory just like a normal session. This is intentional — treat the
 container as a full peer that should continuously improve shared config.
 
+## Ephemeral builds
+
+Build artifacts are an attack surface, not state to persist. Two layers:
+
+1. **Auto-redirected** (Rust, Python uv): the image sets
+   `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and
+   `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv`. Builds go to
+   container-ephemeral paths, never to your host workdir. `target/`
+   and `.venv/` don't appear in your project. `--rm` cleans them up
+   on exit.
+2. **Manual overmount** (Node, Bun, anything else): `-t <dir>`
+   overmounts `<workdir>/<dir>` with an anonymous Docker volume.
+   Example: `dockbox -t node_modules` — `node_modules/` inside the
+   container is a fresh empty volume that doesn't touch your host
+   workdir and is removed on container exit.
+
+Trade-off: every fresh session re-fetches and re-builds. Intentional —
+no stale artifacts persist, only source code is long-lived.
+
 ## Authentication
 
 Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).

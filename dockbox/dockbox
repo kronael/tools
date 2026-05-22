@@ -59,6 +59,7 @@ Options:
     -x cmd     Override entrypoint (default: claude)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
+    -t dir     Overmount <workdir>/dir with anonymous volume (temporary, ephemeral)
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -70,6 +71,7 @@ Examples:
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
+    dockbox -t node_modules           # ephemeral node_modules (no host write)
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -92,13 +94,15 @@ docker_sock=""
 dirs=()
 extra_vols=()
 extra_env=()
+temp_overmounts=()
 claude_args=()
-while getopts ":n:x:e:v:HADg" opt; do
+while getopts ":n:x:e:v:t:HADg" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
         e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
+        t) temp_overmounts+=("$OPTARG") ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
@@ -163,6 +167,11 @@ for vol in "${extra_vols[@]}"; do
     [[ "$vol" == *:rw ]] && { mode="rw"; vol="${vol%:rw}"; } || vol="${vol%:ro}"
     src="$(cd "$vol" && pwd)"
     mounts+=(-v "$src:$src:$mode")
+done
+
+# ephemeral overmounts: anonymous volume per dir, gone on --rm
+for dir in "${temp_overmounts[@]}"; do
+    mounts+=(-v "$workdir/${dir#/}")
 done
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png

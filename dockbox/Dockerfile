@@ -44,7 +44,9 @@ ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global \
     PATH="$PATH:/usr/local/share/npm-global/bin" \
     SHELL=/bin/zsh \
     EDITOR=nano \
-    VISUAL=nano
+    VISUAL=nano \
+    CARGO_TARGET_DIR=/home/claude/.cache/cargo-target \
+    UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv
 
 ARG ZSH_IN_DOCKER_VERSION=1.2.1
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
