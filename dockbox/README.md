@@ -31,6 +31,7 @@ dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
+dockbox -P                        # persist host build dirs (no overmount)
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
 dockbox -x bash .                 # run bash instead
@@ -72,22 +73,51 @@ container as a full peer that should continuously improve shared config.
 
 ## Ephemeral builds
 
-Build artifacts are an attack surface, not state to persist. Two layers:
+Build artifacts are an attack surface, not state to persist. Two layers
+work together so builds never touch your host workdir:
 
 1. **Auto-redirected** (Rust, Python uv): the image sets
    `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and
    `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv`. Builds go to
-   container-ephemeral paths, never to your host workdir. `target/`
-   and `.venv/` don't appear in your project. `--rm` cleans them up
-   on exit.
-2. **Manual overmount** (Node, Bun, anything else): `-t <name>`
-   walks the workdir, finds every directory named `<name>` (recursive,
-   pruned so it doesn't recurse into matches), and overmounts each
-   with an anonymous Docker volume. Repeatable: `-t node_modules -t .next`.
-   Each match becomes a fresh empty volume, removed on container exit.
+   container-ephemeral paths. `target/` and `.venv/` don't appear in
+   your project. `--rm` cleans them up on exit.
 
-Trade-off: every fresh session re-fetches and re-builds. Intentional —
-no stale artifacts persist, only source code is long-lived.
+2. **Overmount by default** (Node, Bun, framework caches): for any
+   ecosystem that hardcodes its output dir in CWD, dockbox walks the
+   workdir, finds every matching directory (recursive, pruned so it
+   doesn't recurse into matches), and overmounts each with an
+   anonymous Docker volume. Empty inside the container, gone on `--rm`.
+
+   Names overmounted by default:
+
+   ```
+   node_modules  .next  dist  build  .turbo  .cache
+   ```
+
+   Monorepo workspaces are handled automatically — every match under
+   the workdir gets its own volume.
+
+**Trade-off**: every fresh session re-installs and re-builds. Intentional —
+no stale artifacts persist, only source code is long-lived. A warm cache
+is a liability; the source tree is the truth.
+
+**Opt out**: `dockbox -P` (or `--no-ephemeral`) skips the overmounts and
+bind-mounts those dirs from the host like any other file. Use when:
+
+- You've committed `dist/` or `build/` and need the container to see it.
+- You want to share a single `node_modules/` across runs (and accept the
+  cache-poisoning risk).
+- You're debugging a build issue and need the artifacts to survive.
+
+The Rust/Python auto-redirects still apply with `-P` — they're baked into
+the image's env, not the overmount layer.
+
+### Surprise on first run
+
+If you already have a populated `node_modules/` on the host, the container
+will see an empty one and re-install on the first command. This is the
+sandbox working correctly. Subsequent commands in the same container reuse
+the volume; exiting the container discards it.
 
 ## Authentication
 

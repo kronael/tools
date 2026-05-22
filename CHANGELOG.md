@@ -2,23 +2,25 @@
 
 ## [v0.2.4] — 20260522
 
-> kronael v0.2.4 — ephemeral builds in dockbox, no more host workdir pollution
+> kronael v0.2.4 — ephemeral builds in dockbox by default
 >
-> Builds inside dockbox now stay inside dockbox. Rust and Python uv auto-redirect to a container-only cache via `CARGO_TARGET_DIR` and `UV_PROJECT_ENVIRONMENT`. A new `-t <name>` flag overmounts any directory name (recursively, e.g. `-t node_modules` covers monorepo workspaces) with an anonymous Docker volume that's gone on container exit.
+> Builds inside dockbox now stay inside dockbox, with zero flags. Rust and Python uv auto-redirect to a container-only cache via `CARGO_TARGET_DIR` and `UV_PROJECT_ENVIRONMENT`. For everything else, dockbox walks the workdir and overmounts every `node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache` (recursive — monorepo workspaces handled) with anonymous Docker volumes, gone on `--rm`. Opt out per-run with `dockbox -P` or `--no-ephemeral`.
 >
-> • dockbox: Rust/uv builds never write to your host workdir
-> • `dockbox -t node_modules` — every node_modules under workdir becomes ephemeral
+> • dockbox: builds never write to your host workdir, no flag required
+> • `dockbox -P` — opt-out for when you need host build dirs visible
 > • global: ban `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` — same protection as `git push`
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
-- `dockbox -t <name>` flag: walks workdir, finds every directory named `<name>` (pruned), overmounts each with anonymous Docker volume (ephemeral on `--rm`)
 - Dockerfile envs: `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv` — Rust and uv builds now go to container-ephemeral paths
-- `dockbox/README.md` — "Ephemeral builds" section explaining the model
+- dockbox: default-on ephemeral overmount for `node_modules .next dist build .turbo .cache` — recursive under workdir, anonymous Docker volumes, gone on `--rm`
+- `dockbox -P` / `--no-ephemeral` opt-out flag to bind-mount build dirs from host instead
+- `dockbox/README.md` — "Ephemeral builds" section explaining the model + trade-offs + first-run surprise
 
 ### Changed
 - global skill: ban `gh` push-to-remote (`gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create`) alongside existing `git push` ban
+- `settings-recommended.json` deny rules: same `gh` commands hard-blocked at the harness level, not just by skill text
 
 ## [v0.2.3] — 20260521
 

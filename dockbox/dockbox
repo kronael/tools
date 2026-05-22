@@ -3,6 +3,8 @@ set -euo pipefail
 
 IMAGE="dockbox"
 
+EPHEMERAL_DIRS=(node_modules .next dist build .turbo .cache)
+
 MOUNTS=(
     "$HOME/.claude:/home/claude/.claude:rw"
     "$HOME/.claude/plugins:/home/claude/.claude/plugins:ro"
@@ -59,11 +61,19 @@ Options:
     -x cmd     Override entrypoint (default: claude)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
-    -t name    Overmount every dir named <name> under workdir (ephemeral, recursive)
+    -P         Persist build dirs (disable default ephemeral overmounts)
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
+
+Ephemeral builds (default):
+    Build artifact dirs found under workdir are overmounted with anonymous
+    docker volumes — fresh and empty inside the container, gone on --rm.
+    Recursive (monorepo workspaces included). Pass -P or --no-ephemeral
+    to disable and bind-mount them from the host instead.
+
+    Names: ${EPHEMERAL_DIRS[*]}
 
 Examples:
     dockbox                           # current dir
@@ -71,7 +81,7 @@ Examples:
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
-    dockbox -t node_modules           # ephemeral node_modules (every workspace)
+    dockbox -P                        # keep host build dirs (no overmount)
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -94,18 +104,29 @@ docker_sock=""
 dirs=()
 extra_vols=()
 extra_env=()
-temp_overmounts=()
+persist_builds=""
 claude_args=()
-while getopts ":n:x:e:v:t:HADg" opt; do
+
+# pre-strip long flags getopts can't parse
+_args=()
+for a in "$@"; do
+    case "$a" in
+        --no-ephemeral) persist_builds=1 ;;
+        *) _args+=("$a") ;;
+    esac
+done
+set -- "${_args[@]}"
+
+while getopts ":n:x:e:v:HADgP" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
         e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
-        t) temp_overmounts+=("$OPTARG") ;;
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
+        P) persist_builds=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
         *) claude_args+=("-$OPTARG") ;;
@@ -169,16 +190,19 @@ for vol in "${extra_vols[@]}"; do
     mounts+=(-v "$src:$src:$mode")
 done
 
-# ephemeral overmounts: every dir matching name under workdir becomes an
-# anonymous volume (gone on --rm). recursive, so monorepo workspaces work.
-for name in "${temp_overmounts[@]}"; do
-    for d in "${dirs[@]}"; do
-        absdir="$(cd "$d" && pwd)"
-        while IFS= read -r found; do
-            mounts+=(-v "$found")
-        done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
+# ephemeral overmounts (default): build artifact dirs under workdir become
+# anonymous volumes (gone on --rm). recursive, so monorepo workspaces work.
+# disable with -P / --no-ephemeral to bind-mount from host instead.
+if [[ -z "$persist_builds" ]]; then
+    for name in "${EPHEMERAL_DIRS[@]}"; do
+        for d in "${dirs[@]}"; do
+            absdir="$(cd "$d" && pwd)"
+            while IFS= read -r found; do
+                mounts+=(-v "$found")
+            done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
+        done
     done
-done
+fi
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png

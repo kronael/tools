@@ -18,7 +18,12 @@
       "Bash(git push*)",
       "Bash(git pull*)",
       "Bash(ssh *)",
-      "Bash(rsync *)"
+      "Bash(rsync *)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr review*)",
+      "Bash(gh release create*)",
+      "Bash(gh repo create*)"
     ],
     "defaultMode": "default"
   },
