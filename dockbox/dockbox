@@ -59,7 +59,7 @@ Options:
     -x cmd     Override entrypoint (default: claude)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
-    -t dir     Overmount <workdir>/dir with anonymous volume (temporary, ephemeral)
+    -t name    Overmount every dir named <name> under workdir (ephemeral, recursive)
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -71,7 +71,7 @@ Examples:
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
-    dockbox -t node_modules           # ephemeral node_modules (no host write)
+    dockbox -t node_modules           # ephemeral node_modules (every workspace)
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -169,9 +169,15 @@ for vol in "${extra_vols[@]}"; do
     mounts+=(-v "$src:$src:$mode")
 done
 
-# ephemeral overmounts: anonymous volume per dir, gone on --rm
-for dir in "${temp_overmounts[@]}"; do
-    mounts+=(-v "$workdir/${dir#/}")
+# ephemeral overmounts: every dir matching name under workdir becomes an
+# anonymous volume (gone on --rm). recursive, so monorepo workspaces work.
+for name in "${temp_overmounts[@]}"; do
+    for d in "${dirs[@]}"; do
+        absdir="$(cd "$d" && pwd)"
+        while IFS= read -r found; do
+            mounts+=(-v "$found")
+        done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
+    done
 done
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png

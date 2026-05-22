@@ -80,11 +80,11 @@ Build artifacts are an attack surface, not state to persist. Two layers:
    container-ephemeral paths, never to your host workdir. `target/`
    and `.venv/` don't appear in your project. `--rm` cleans them up
    on exit.
-2. **Manual overmount** (Node, Bun, anything else): `-t <dir>`
-   overmounts `<workdir>/<dir>` with an anonymous Docker volume.
-   Example: `dockbox -t node_modules` — `node_modules/` inside the
-   container is a fresh empty volume that doesn't touch your host
-   workdir and is removed on container exit.
+2. **Manual overmount** (Node, Bun, anything else): `-t <name>`
+   walks the workdir, finds every directory named `<name>` (recursive,
+   pruned so it doesn't recurse into matches), and overmounts each
+   with an anonymous Docker volume. Repeatable: `-t node_modules -t .next`.
+   Each match becomes a fresh empty volume, removed on container exit.
 
 Trade-off: every fresh session re-fetches and re-builds. Intentional —
 no stale artifacts persist, only source code is long-lived.
