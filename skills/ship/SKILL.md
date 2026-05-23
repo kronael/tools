@@ -31,8 +31,55 @@ Example: `.ship/01-SIM/`, `.ship/02-SCENARIOS/`,
 4. **Run** — `ship .ship/NN-NAME/PLAN.md`
 5. **Verify** — `make build && make test`
 6. **Update PROGRESS.md** after each session
-7. **Clean** — once shipped, trim PROJECT/PLAN to keep
-   history or archive (don't delete — useful for reference)
+7. **Close-out + prune** (see below) — once shipped, distill
+   durable bits to their permanent homes and `git rm -rf`
+   the sprint dir. The default is to delete, not archive.
+
+## Close-out + prune (step 7)
+
+`.ship/` is **scratch**, not an archive. Per the global
+CLAUDE.md rule (`ALWAYS gitignored, ephemeral working dir
+... Clean after shipping: delete completed artifacts`),
+sprint dirs are temporary. When the work ships, distill
+durable bits to their permanent homes, then delete.
+
+**Distillation routing — for each thing in .ship/NN-NAME/,
+ask "where does this belong long-term?":**
+
+| Kind of content | Permanent home |
+|---|---|
+| Decisions, discoveries, bug post-mortems | `.diary/YYYYMMDD.md` (today's entry) |
+| Architectural decisions, design choices | `specs/N/<topic>.md` (move + add `status: shipped`) |
+| Release-notes-worthy changes | `CHANGELOG.md` |
+| Recurring rules / preferences / patterns | project `CLAUDE.md` or `MEMORY.md` |
+| Bench numbers worth tracking | `bench-baseline.json` + a short note in CHANGELOG |
+| Critique / review findings | resolved → fold into diary; deferred → `TODO.md` |
+| Forced-rank punch lists for "next sprint" | `TODO.md` + maybe seed `.ship/NN+1-NAME/PROJECT.md` |
+
+**Then prune:**
+```
+git rm -rf .ship/NN-NAME/
+git commit -m "[chore] ship NN-NAME complete: distilled + pruned"
+```
+
+**Rules:**
+- Don't keep `.ship/NN-NAME/REPORT.md` "for reference."
+  The repo's commit history + diary IS the reference.
+- Don't keep `PROGRESS.md` after the work ships. The
+  progress is `git log` now.
+- Don't archive into `.ship/archive/`. That's the same
+  hoarding under a different name.
+- Exception: if a sprint genuinely produced a long-lived
+  reference document (a spec, a runbook), move it to
+  `specs/` or `docs/` before pruning the rest.
+
+**When NOT to prune:**
+- Sprint is paused mid-flight (not shipped yet) — keep
+  `.ship/NN-NAME/` until it ships or is explicitly
+  cancelled.
+- Critique/audit doc is the input to the NEXT sprint —
+  keep until that sprint starts; then fold into its
+  PROJECT.md and prune the source.
 
 ## PROJECT.md format
 
