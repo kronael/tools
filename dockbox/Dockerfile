@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq nano vim docker.io clang libclang-dev libudev-dev \
-  bubblewrap socat \
+  bubblewrap socat gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG UID=1000
@@ -23,6 +23,23 @@ ENV DEVCONTAINER=true
 RUN mkdir -p /workspace /home/claude/.claude /home/claude/.gnupg && \
   chmod 700 /home/claude/.gnupg && \
   chown -R claude:claude /workspace /home/claude/.claude /home/claude/.gnupg
+
+# dockbox-init: if running as root (--user 0:0), chown ephemeral mount points
+# listed in $DOCKBOX_EPH_PATHS (colon-separated), then drop to claude. else
+# just exec. used as entrypoint for every dockbox container.
+RUN printf '#!/bin/sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
+    IFS=:\n\
+    for p in $DOCKBOX_EPH_PATHS; do\n\
+      [ -d "$p" ] && chown claude:claude "$p"\n\
+    done\n\
+    unset IFS\n\
+  fi\n\
+  exec gosu claude "$0" "$@"\n\
+fi\n\
+exec "$@"\n' > /usr/local/bin/dockbox-init && \
+  chmod +x /usr/local/bin/dockbox-init
 
 WORKDIR /workspace
 

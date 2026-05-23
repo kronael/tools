@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.2.7] — 20260523
+
+> kronael v0.2.7 — dockbox ephemeral mounts: tmpfs by default, volume on `-T`
+>
+> Builds inside dockbox no longer fight with the host UID. The default backend is now a kernel `tmpfs` per ephemeral dir, mounted with `uid` set so the container's `claude` user owns it from the first byte. Pass `-T` to switch to anonymous Docker volumes — the container then starts as root, a new `dockbox-init` entrypoint chowns each volume to `claude`, and `gosu` drops privilege before your command runs. Either way you stop seeing EACCES.
+>
+> • Default tmpfs is RAM-backed — fast for `node_modules`/`.next`/`.turbo` (lots of small files), at the cost of RAM
+> • `dockbox -T` uses disk-backed Docker volumes when you'd rather not pay RAM for artifacts
+> • Image grows by `gosu` + a tiny `/usr/local/bin/dockbox-init` script
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -T` — disk-backed anonymous Docker volume backend for ephemeral overmounts (default is tmpfs)
+- Dockerfile: `gosu` package and `/usr/local/bin/dockbox-init` entrypoint that chowns paths listed in `DOCKBOX_EPH_PATHS` (when running as root) then drops to `claude`
+
+### Changed
+- dockbox ephemeral overmounts default to kernel tmpfs (`--tmpfs <path>:uid=...,gid=...,mode=0755`) — no host footprint, owned by container user at mount, gone with the container
+- v0.2.6 host-stash mechanism (`/tmp/dockbox-eph/<name>/`) removed; not needed since both new backends own the mount correctly
+- `dockbox/README.md` "Ephemeral builds" section: two-backend model documented, trade-offs spelled out
+
 ## [v0.2.6] — 20260522
 
 > kronael v0.2.6 — dockbox ephemeral overmounts actually writable

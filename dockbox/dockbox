@@ -62,16 +62,24 @@ Options:
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
+    -T         Disable tmpfs; use anonymous Docker volumes (disk) instead
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
 
 Ephemeral builds (default):
-    Build artifact dirs found under workdir are overmounted with anonymous
-    docker volumes — fresh and empty inside the container, gone on --rm.
-    Recursive (monorepo workspaces included). Pass -P or --no-ephemeral
-    to disable and bind-mount them from the host instead.
+    Build artifact dirs found under workdir become fresh empty mounts inside
+    the container, owned by the container user, gone when the container
+    exits. Recursive (monorepo workspaces included).
+
+    Two backends:
+      tmpfs  (default) — kernel tmpfs with uid set at mount. RAM-backed.
+      volume (-T)      — anonymous Docker volume, chowned by entrypoint
+                         (container runs as root, gosu-drops to claude).
+                         Disk-backed. No host footprint after --rm.
+
+    Pass -P / --no-ephemeral to disable both and see host build dirs.
 
     Names: ${EPHEMERAL_DIRS[*]}
 
@@ -82,6 +90,7 @@ Examples:
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
     dockbox -P                        # keep host build dirs (no overmount)
+    dockbox -T                        # disk-backed volumes (disable tmpfs)
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -105,6 +114,7 @@ dirs=()
 extra_vols=()
 extra_env=()
 persist_builds=""
+eph_no_tmpfs=""
 claude_args=()
 
 # pre-strip long flags getopts can't parse
@@ -117,7 +127,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgP" opt; do
+while getopts ":n:x:e:v:HADgPT" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -127,6 +137,7 @@ while getopts ":n:x:e:v:HADgP" opt; do
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
         P) persist_builds=1 ;;
+        T) eph_no_tmpfs=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
         *) claude_args+=("-$OPTARG") ;;
@@ -192,29 +203,41 @@ done
 
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
-# ephemeral overmounts (default): for each build artifact dir found under
-# workdir, create an empty host stash dir (owned by host user) and bind-mount
-# it over the target path. claude (UID-matched) can write freely. the stash
-# is removed when this dockbox exits — gone with the container.
-# disable with -P / --no-ephemeral to keep host dirs visible.
-STASH=""
+# ephemeral overmounts (default): for each build-artifact dir found under
+# workdir, overmount it so the container sees a fresh empty dir owned by
+# the claude user, gone when the container exits.
+#   default backend: kernel tmpfs with uid set at mount (RAM-backed).
+#   -T backend: anonymous Docker volume + entrypoint chown (disk-backed).
+#               container runs as root, dockbox-init chowns the listed paths
+#               to claude, then gosu-drops to claude.
+# disable both with -P / --no-ephemeral.
+eph_paths=()
 if [[ -z "$persist_builds" ]]; then
-    STASH="/tmp/dockbox-eph/$CONTAINER_NAME"
-    rm -rf "$STASH"
-    mkdir -p "$STASH"
     for name in "${EPHEMERAL_DIRS[@]}"; do
         for d in "${dirs[@]}"; do
             absdir="$(cd "$d" && pwd)"
             while IFS= read -r found; do
-                slug="${found//\//_}"
-                host="$STASH/$slug"
-                mkdir -p "$host"
-                mounts+=(-v "$host:$found")
+                eph_paths+=("$found")
             done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
         done
     done
 fi
-trap '[[ -n "$STASH" ]] && rm -rf "$STASH"' EXIT
+
+user_arg=()
+if [[ ${#eph_paths[@]} -gt 0 ]]; then
+    if [[ -n "$eph_no_tmpfs" ]]; then
+        for p in "${eph_paths[@]}"; do
+            mounts+=(-v "$p")
+        done
+        user_arg=(--user 0:0)
+        eph_list=$(IFS=:; echo "${eph_paths[*]}")
+        extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
+    else
+        for p in "${eph_paths[@]}"; do
+            mounts+=(--tmpfs "$p:uid=$(id -u),gid=$(id -g),mode=0755")
+        done
+    fi
+fi
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
@@ -243,8 +266,10 @@ fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 trap '' TSTP
-docker run -it --rm \
+exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
+    --entrypoint /usr/local/bin/dockbox-init \
+    "${user_arg[@]}" \
     $network \
     $docker_gid_arg \
     -e HOME=/home/claude \
