@@ -217,6 +217,23 @@ operations, zero composition. Encapsulate I/O, expose information.
     record, not `.ship/`)
   - ALWAYS use `/diary` skill to write diary entries after
     significant work
+- facts/ directory for researched + remembered findings
+  - Topic-named `.md` files (e.g. `facts/syscall-latency.md`)
+  - YAML frontmatter MUST include `sources:` (URLs + author),
+    `date:` (research date), `status:` (verified | wip | stale),
+    and `local_measurement:` when the topic was cross-checked
+    against our own benches.
+  - Checked into git; long-lived. The point: durable knowledge
+    you'd otherwise re-research every six months.
+  - Re-validate when an underlying assumption could plausibly
+    have moved (new kernel, new CPU, new dep version).
+- refs/ directory for cloned external repos + large downloads
+  - Gitignored (add `refs/` to `.gitignore` on first use).
+  - Used to read other people's code offline without bloating
+    the repo. Example: `refs/dpdk-source/` for skimming DPDK
+    internals while planning a port; `refs/io_uring-papers/`
+    for stashing the LWN articles in one place.
+  - Treat as scratch; can be `rm -rf`'d at any time and re-cloned.
 - .claude/ for long-lived knowledge beyond CLAUDE.md
   - Additional *.md files next to CLAUDE.md for overflow context
 - NO todos/ directory — use TODO.md at root or plans in .ship/
