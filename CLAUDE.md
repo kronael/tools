@@ -35,13 +35,17 @@ Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker cont
 
 Makefile: `image` (build), `install` (build+install), `clean`.
 
-#### Ephemeral overmounts
+#### Runtime user + ephemeral overmounts
 
-Build-artifact dirs under workdir (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) are overmounted so the container always sees fresh empty dirs. Unified ownership flow regardless of backend: container starts as root (`--user 0:0`), `dockbox-init` chowns every path in `$DOCKBOX_EPH_PATHS` to `claude:claude`, then `gosu` drops to `claude` before exec'ing the user command. Backend just picks the mount type:
+The image has no baked user — tools live in `/opt/dev-tools/` (world-readable). Each `dockbox` invocation passes `DOCKBOX_UID/GID/USER` to a root-started container; `dockbox-init` adds an `/etc/passwd` entry for that runtime user, chowns `$HOME` (a tmpfs at `/home/dockbox`) and every `$DOCKBOX_EPH_PATHS` entry to that UID/GID, then `gosu`-drops. One image works for every host user.
+
+Ephemeral overmounts cover the build-artifact dirs (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) under workdir:
 - **tmpfs** (default): kernel `--tmpfs`, RAM-backed.
 - **volume** (`-T`): anonymous Docker volume, disk-backed.
 
 **Both backends leave ZERO footprint after the container exits.** `docker run --rm` (always used) removes anonymous volumes; tmpfs dies with the mount namespace. NEVER add cleanup logic, EXIT traps, "remember to remove" comments, or worry-prose about leaks — there is nothing to leak.
+
+`dockbox-init` does TOP-LEVEL chown only on `$HOME` (never `-R`) because the bind mounts of `~/.claude`, `~/.gitconfig`, etc. nest INTO `/home/dockbox` and must keep host ownership. NEVER add `-R` to that chown.
 
 ## Claude Code toolkit
 
@@ -59,9 +63,9 @@ When editing bundle files:
 - The `global` skill body becomes `~/.claude/CLAUDE.md` on install — the always-loaded wisdom file.
 - `RECLAUDE.md` is the re-injection template for the `reclaude` hook (PreCompact + manual continue/recap triggers).
 - ALWAYS verify the matching reinject path when a skill changes:
-  - **Skill rule changed?** Update its dedicated reinject if there is one — `hooks/nudge.py` `COMMIT_RULES`/`DOCS_RULES` for the commit/docs skills, `hooks/stop.py` nudge text for stop-time rules.
+  - **Skill rule changed?** Update its dedicated reinject if there is one — `hooks/prompt_nudge.py` `COMMIT_RULES`/`DOCS_RULES` for the commit/docs skills, `hooks/stop.py` nudge text for stop-time rules.
   - **Cross-cutting rule with no dedicated reinject?** Update `RECLAUDE.md` (filesystem, build, scope, writing — see its topic list).
-  - **Commit rules** specifically live in three places that must stay in sync: `skills/commit/SKILL.md` (full reference), `hooks/nudge.py` `COMMIT_RULES` (fires on prompts with "commit"), `hooks/stop.py` (fires on uncommitted state). RECLAUDE.md does NOT carry them — would be redundant noise.
+  - **Commit rules** specifically live in three places that must stay in sync: `skills/commit/SKILL.md` (full reference), `hooks/prompt_nudge.py` `COMMIT_RULES` (fires on prompts with "commit"), `hooks/stop.py` (fires on uncommitted state). RECLAUDE.md does NOT carry them — would be redundant noise.
 
 ## Coding philosophy
 

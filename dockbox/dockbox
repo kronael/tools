@@ -6,13 +6,13 @@ IMAGE="dockbox"
 EPHEMERAL_DIRS=(node_modules .next dist build .turbo .cache)
 
 MOUNTS=(
-    "$HOME/.claude:/home/claude/.claude:rw"
-    "$HOME/.claude/plugins:/home/claude/.claude/plugins:ro"
+    "$HOME/.claude:/home/dockbox/.claude:rw"
+    "$HOME/.claude/plugins:/home/dockbox/.claude/plugins:ro"
     "$HOME/.claude/plugins:$HOME/.claude/plugins:ro"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
-    "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
-    "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
-    "$HOME/.codex:/home/claude/.codex:rw"
+    "$HOME/.gitconfig:/home/dockbox/.gitconfig:ro"
+    "$HOME/.dockbox_history:/home/dockbox/.zsh_history:rw"
+    "$HOME/.codex:/home/dockbox/.codex:rw"
     "/etc/localtime:/etc/localtime:ro"
 )
 
@@ -73,9 +73,12 @@ Ephemeral builds (default):
     the container, owned by the container user, gone when the container
     exits. Recursive (monorepo workspaces included).
 
-    Unified flow: container starts as root, dockbox-init entrypoint chowns
-    every overmount to claude, then gosu-drops. Two backends pick the mount
-    type only:
+    Container starts as root; dockbox-init registers the host invoker in
+    /etc/passwd, chowns \$HOME (/home/dockbox tmpfs) plus every overmount to
+    the host UID/GID, then gosu-drops. Image has no baked user — one image
+    works for every host UID.
+
+    Two backends pick the overmount type only:
       tmpfs  (default) — kernel tmpfs. RAM-backed.
       volume (-T)      — anonymous Docker volume. Disk-backed.
                          No host footprint after --rm.
@@ -168,7 +171,7 @@ done
 # override settings.local.json after ~/.claude mount to bypass trust prompts
 _settings=$(mktemp)
 echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
-mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
+mounts+=(-v "$_settings:/home/dockbox/.claude/settings.local.json:ro")
 
 docker_gid_arg=""
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
@@ -177,10 +180,10 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
 fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
+[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
 for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
-        mounts+=(-v "$HOME/.gnupg/$f:/home/claude/.gnupg/$f:ro")
+        mounts+=(-v "$HOME/.gnupg/$f:/home/dockbox/.gnupg/$f:ro")
 done
 
 ssh_env=()
@@ -204,38 +207,42 @@ done
 
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
-# ephemeral overmounts (default): for each build-artifact dir found under
-# workdir, overmount it so the container sees a fresh empty dir. unified
-# ownership flow: container starts as root, dockbox-init chowns every path
-# listed in DOCKBOX_EPH_PATHS to claude, then gosu-drops to claude.
+# Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
+# chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
+# has no baked user — it works for any host UID without rebuilding.
+user_arg=(--user 0:0)
+extra_env+=(-e "DOCKBOX_UID=$(id -u)")
+extra_env+=(-e "DOCKBOX_GID=$(id -g)")
+extra_env+=(-e "DOCKBOX_USER=$(id -un)")
+
+# Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
+# mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
+mounts+=(--tmpfs /home/dockbox)
+chown_paths=("/home/dockbox")
+
+# Ephemeral overmounts (default): each build-artifact dir found under workdir
+# becomes a fresh empty mount inside the container, chowned by dockbox-init.
 #   tmpfs (default) — kernel tmpfs (RAM-backed).
 #   -T              — anonymous Docker volume (disk-backed).
-# disable both with -P / --no-ephemeral.
-eph_paths=()
+# Disable with -P / --no-ephemeral.
 if [[ -z "$persist_builds" ]]; then
     for name in "${EPHEMERAL_DIRS[@]}"; do
         for d in "${dirs[@]}"; do
             absdir="$(cd "$d" && pwd)"
             while IFS= read -r found; do
-                eph_paths+=("$found")
+                if [[ -n "$eph_no_tmpfs" ]]; then
+                    mounts+=(-v "$found")
+                else
+                    mounts+=(--tmpfs "$found")
+                fi
+                chown_paths+=("$found")
             done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
         done
     done
 fi
 
-user_arg=()
-if [[ ${#eph_paths[@]} -gt 0 ]]; then
-    for p in "${eph_paths[@]}"; do
-        if [[ -n "$eph_no_tmpfs" ]]; then
-            mounts+=(-v "$p")
-        else
-            mounts+=(--tmpfs "$p")
-        fi
-    done
-    user_arg=(--user 0:0)
-    eph_list=$(IFS=:; echo "${eph_paths[*]}")
-    extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
-fi
+eph_list=$(IFS=:; echo "${chown_paths[*]}")
+extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
@@ -270,7 +277,7 @@ exec docker run -it --rm \
     "${user_arg[@]}" \
     $network \
     $docker_gid_arg \
-    -e HOME=/home/claude \
+    -e HOME=/home/dockbox \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
     ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \

@@ -12,34 +12,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   bubblewrap socat gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ARG UID=1000
-RUN userdel -rf node 2>/dev/null; \
-  useradd -m -s /bin/zsh -u $UID claude && \
-  mkdir -p /usr/local/share/npm-global && \
-  chown -R claude:claude /usr/local/share
+# All tool homes live in /opt/dev-tools — world-readable so any runtime UID
+# can use them. No /home/<user> dependencies anywhere.
+ENV DEVCONTAINER=true \
+    SHELL=/bin/zsh \
+    EDITOR=nano \
+    VISUAL=nano \
+    NPM_CONFIG_PREFIX=/usr/local/share/npm-global \
+    NVM_DIR=/opt/dev-tools/nvm \
+    BUN_INSTALL=/opt/dev-tools/bun \
+    CARGO_HOME=/opt/dev-tools/cargo \
+    RUSTUP_HOME=/opt/dev-tools/rustup \
+    G_HOME=/opt/dev-tools/g \
+    GOPATH=/opt/dev-tools/go \
+    SDKMAN_DIR=/opt/dev-tools/sdkman \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers \
+    PUPPETEER_CACHE_DIR=/opt/playwright-browsers/puppeteer \
+    UV_TOOL_BIN_DIR=/opt/dev-tools/uv/bin \
+    UV_TOOL_DIR=/opt/dev-tools/uv/tools \
+    PATH=/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/g/bin:/opt/dev-tools/g/go/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-ENV DEVCONTAINER=true
-
-RUN mkdir -p /workspace /home/claude/.claude /home/claude/.gnupg && \
-  chmod 700 /home/claude/.gnupg && \
-  chown -R claude:claude /workspace /home/claude/.claude /home/claude/.gnupg
-
-# dockbox-init: if running as root (--user 0:0), chown ephemeral mount points
-# listed in $DOCKBOX_EPH_PATHS (colon-separated), then drop to claude. else
-# just exec. used as entrypoint for every dockbox container.
-RUN printf '#!/bin/sh\n\
-if [ "$(id -u)" = "0" ]; then\n\
-  if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
-    IFS=:\n\
-    for p in $DOCKBOX_EPH_PATHS; do\n\
-      [ -d "$p" ] && chown claude:claude "$p"\n\
-    done\n\
-    unset IFS\n\
-  fi\n\
-  exec gosu claude "$0" "$@"\n\
-fi\n\
-exec "$@"\n' > /usr/local/bin/dockbox-init && \
-  chmod +x /usr/local/bin/dockbox-init
+RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
 
 WORKDIR /workspace
 
@@ -51,57 +44,36 @@ RUN ARCH=$(dpkg --print-architecture) && \
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx -y playwright install --with-deps chromium && \
   chmod -R o+rx /opt/playwright-browsers
 
-USER claude
-
-ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global \
-    PATH="$PATH:/usr/local/share/npm-global/bin" \
-    SHELL=/bin/zsh \
-    EDITOR=nano \
-    VISUAL=nano \
-    CARGO_TARGET_DIR=/home/claude/.cache/cargo-target \
-    UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv
-
-ARG ZSH_IN_DOCKER_VERSION=1.2.1
-RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
-  -p git \
-  -p fzf \
-  -a "source /usr/share/doc/fzf/examples/key-bindings.zsh" \
-  -a "source /usr/share/doc/fzf/examples/completion.zsh" \
-  -a "export HISTFILE=/home/claude/.zsh_history" \
-  -x
-
-ENV NVM_DIR="/home/claude/.nvm"
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
-  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install node && nvm alias default node
+  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
+  nvm install node && nvm alias default node
 
 RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/home/claude/.bun/bin:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-  | sh -s -- -y && /home/claude/.cargo/bin/rustup component add rust-analyzer clippy rustfmt
-ENV PATH="/home/claude/.cargo/bin:$PATH"
+  | sh -s -- -y && \
+  /opt/dev-tools/cargo/bin/rustup component add rust-analyzer clippy rustfmt
 
-RUN curl -sSL https://git.io/g-install | sh -s -- -y
-ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
-    GOPATH="/home/claude/go"
-RUN /home/claude/.go/bin/go install golang.org/x/tools/gopls@latest
+RUN curl -sSL https://git.io/g-install | sh -s -- -y && \
+  /opt/dev-tools/g/go/bin/go install golang.org/x/tools/gopls@latest
 
 ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
-  | tar xz --strip-components=1 -C /home/claude/.cargo/bin
+  | tar xz --strip-components=1 -C /opt/dev-tools/cargo/bin
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/home/claude/.local/bin:$PATH"
+# uv installer writes to $HOME/.local/bin by default; move into /opt
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+  mkdir -p /opt/dev-tools/uv/bin && \
+  mv /root/.local/bin/uv /opt/dev-tools/uv/bin/ && \
+  mv /root/.local/bin/uvx /opt/dev-tools/uv/bin/ 2>/dev/null || true
 
 RUN uv tool install pre-commit
 
 RUN curl -fsSL https://get.sdkman.io | bash
-ENV SDKMAN_DIR="/home/claude/.sdkman"
 
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
@@ -116,15 +88,47 @@ RUN uv tool install git+https://github.com/kronael/ship
 
 RUN bunx puppeteer browsers install chrome
 
-# claude wrapper: inject host credentials, skip permissions, activate nvm default node
-RUN mkdir -p /home/claude/.local/bin && \
-  printf '#!/bin/sh\n\
-[ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json /home/claude/.claude.json\n\
-[ -f /home/claude/.claude.json ] || echo "{\"hasCompletedOnboarding\":true}" > /home/claude/.claude.json\n\
-export NVM_DIR="/home/claude/.nvm"\n\
+# system-wide zshrc — every zsh user loads this
+RUN mkdir -p /etc/zsh && printf '%s\n' \
+  '[ -r /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh' \
+  '[ -r /usr/share/doc/fzf/examples/completion.zsh ] && source /usr/share/doc/fzf/examples/completion.zsh' \
+  'export HISTFILE="$HOME/.zsh_history"' \
+  > /etc/zsh/zshrc
+
+# claude wrapper at /usr/local/bin (system-wide, $HOME-relative)
+RUN printf '#!/bin/sh\n\
+[ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json "$HOME/.claude.json"\n\
+[ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true}" > "$HOME/.claude.json"\n\
+export NVM_DIR="/opt/dev-tools/nvm"\n\
 unset NPM_CONFIG_PREFIX\n\
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
 exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\n' \
-  > /home/claude/.local/bin/claude && \
-  chmod +x /home/claude/.local/bin/claude
-ENV PATH="/home/claude/.local/bin:$PATH"
+  > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
+
+# dockbox-init: register the runtime user in /etc/passwd, chown overmounts
+# and $HOME (top-level only — nested bind mounts must not be touched), then
+# gosu-drop to DOCKBOX_UID:DOCKBOX_GID before exec'ing the command.
+RUN printf '#!/bin/sh\n\
+USERNAME="${DOCKBOX_USER:-dockbox}"\n\
+USER_UID="${DOCKBOX_UID:-1000}"\n\
+USER_GID="${DOCKBOX_GID:-1000}"\n\
+HOME_DIR="${HOME:-/home/dockbox}"\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  getent passwd "$USER_UID" >/dev/null 2>&1 || \\\n\
+    echo "${USERNAME}:x:${USER_UID}:${USER_GID}::${HOME_DIR}:/bin/zsh" >> /etc/passwd\n\
+  getent group "$USER_GID" >/dev/null 2>&1 || \\\n\
+    echo "${USERNAME}:x:${USER_GID}:" >> /etc/group\n\
+  [ -d "$HOME_DIR" ] && chown "${USER_UID}:${USER_GID}" "$HOME_DIR"\n\
+  if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
+    IFS=:\n\
+    for p in $DOCKBOX_EPH_PATHS; do\n\
+      [ -d "$p" ] && chown "${USER_UID}:${USER_GID}" "$p"\n\
+    done\n\
+    unset IFS\n\
+  fi\n\
+  exec gosu "${USER_UID}:${USER_GID}" "$@"\n\
+fi\n\
+exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-init
+
+# World-readable + writable tooling so any runtime UID can use it
+RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox

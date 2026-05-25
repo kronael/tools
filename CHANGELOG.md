@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.3.0] — 20260525
+
+> kronael v0.3.0 — one dockbox image for every host user
+>
+> Until v0.2.8 the image baked a `claude` user with the build-time UID; it only worked for whoever ran `make image`, and a UID mismatch (cross-host pulls, multi-user boxes, sudo invocations) silently broke `pnpm install` and friends with EACCES. v0.3.0 drops the baked user entirely: tools move into `/opt/dev-tools/` (world-readable), the image has no `USER` directive, and `dockbox-init` registers the host invoker in `/etc/passwd` at start, chowns `$HOME` (a tmpfs at `/home/dockbox`) plus every overmount, and `gosu`-drops to the host UID/GID. One image, every host UID, no rebuild.
+>
+> • Image is UID-agnostic — pushable to a registry, pullable on any host, works for alice/bob/ondra without per-user builds
+> • Bind mounts move from `/home/claude/*` to `/home/dockbox/*`; the runtime user gets a real `/etc/passwd` entry so `whoami`, prompts, `ls -l` all show the host username
+> • Tools (cargo, nvm, bun, rustup, sdkman, go, uv, pre-commit, ship, nushell, claude-code, codex, pi, agent-browser, pyright) all install to `/opt/dev-tools/`
+>
+> Rebuild your image (`cd dockbox && make install`) once after upgrading. Existing containers must be removed (`dockbox rm`) — they're frozen on old paths.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- `dockbox/Dockerfile` rewritten: no `ARG UID`, no `useradd`, no `USER` directive. Tools install to `/opt/dev-tools/{cargo, rustup, nvm, bun, go, sdkman, uv}/`, `npm-global` stays at `/usr/local/share/npm-global/`. Final `chmod -R a+rwX /opt/dev-tools` makes everything usable by any runtime UID.
+- `dockbox-init` (image-baked) now reads `$DOCKBOX_UID`, `$DOCKBOX_GID`, `$DOCKBOX_USER` to register `/etc/passwd` + `/etc/group` entries, top-level-chown `$HOME` and every `$DOCKBOX_EPH_PATHS` entry, then `exec gosu $UID:$GID "$@"`.
+- `dockbox` script always passes `--user 0:0` and the UID/GID/USER env vars; always mounts a tmpfs `$HOME` at `/home/dockbox`; bind-mount destinations switched from `/home/claude/*` to `/home/dockbox/*`.
+- `dockbox/Makefile` drops the `UID` build arg. Only `TZ` remains.
+- `claude` wrapper script moved from `/home/claude/.local/bin/claude` to `/usr/local/bin/claude`; reads `$HOME` instead of hardcoded path.
+- System-wide `/etc/zsh/zshrc` replaces the per-user oh-my-zsh setup — fzf bindings + `HISTFILE` only.
+- `dockbox/README.md` and `CLAUDE.md` updated to describe the new model.
+
+### Breaking
+- Old containers must be removed (`dockbox rm`) before upgrading; their bind-mount paths (`/home/claude/*`) no longer exist in the new image.
+- Anything outside the dockbox script that references `/home/claude/...` paths inside the container (`.dockboxrc` extras, custom skills) must move to `/home/dockbox/...`.
+
 ## [v0.2.8] — 20260525
 
 > kronael v0.2.8 — dockbox ephemeral overmounts: one chown path for both backends
