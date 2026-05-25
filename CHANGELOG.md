@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.3.1] — 20260525
+
+> kronael v0.3.1 — dockbox image hardened, hooks bulletproofed, eval-loop research bundle
+>
+> Follow-up patch release after v0.3.0's UID-agnostic image. The dockbox base swaps to `debian:forky` (fresher packages, dodges the bookworm GPG-mirror flap); `gh` arrives via cli.github.com's signed apt repo; `yq` and `bc` are bundled; `node` comes only from nvm so `.nvmrc` works per project. `dockbox-init` now sanitizes `DOCKBOX_USER` against `/etc/passwd` injection, defaults CMD to `/bin/zsh` when none is passed, surfaces chown failures to stderr, and `DISABLE_AUTOUPDATER=1` is baked in so claude-code never tries to self-update inside the sandbox. Hooks get a real test rig: `pretool_nudge.py` swallows every exception in production and ships 59 pytest cases covering every extension mapping and payload shape. `make test` runs them from the repo root. specs/2 pivots away from a Hermes clone to a DSPy-MIPROv2-style offline eval loop (PR-only, no runtime mutation of `~/.claude/skills/`), and a new `research/` directory documents the literature behind that decision (Library Drift, MIPROv2, A-MEM, Reflexion, Anthropic skills guidance, multi-agent failure modes, eval-set construction).
+>
+> • dockbox image is now stable across all host UIDs, includes `yq`/`bc`/`gh`, never auto-updates claude inside the sandbox
+> • `pretool_nudge.py` will never crash a tool call again — every exception is suppressed in production; pytest covers the logic
+> • `make test` at the repo root runs hook tests across all subdirs
+> • New `research/` hub: 8+ topic md files with sources behind the skill-eval-loop design
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `yq`, `bc` packages in the dockbox image; `gh` via github-cli signed apt repo
+- `DISABLE_AUTOUPDATER=1` + `CLAUDE_CODE_DISABLE_AUTOUPDATE=1` env in image — claude-code never self-updates inside dockbox
+- `dockbox-init` registers the runtime user in `/etc/passwd`, defaults CMD to `/bin/zsh`, surfaces chown failures
+- `make test` at repo root + `hooks/Makefile`; 59 pytest cases for `pretool_nudge.py`
+- `research/` directory with 8 topic markdown files documenting the skill auto-improvement design's sources
+- `specs/2-hermes-skill-autoimprove.md` rewritten to the bundle eval loop architecture (DSPy MIPROv2 style)
+
+### Changed
+- Base image: `node:lts` → `debian:forky`. Node now comes from nvm only, symlinked to `/usr/local/bin` so build-time npm/npx work without sourcing `nvm.sh`
+- All dev-tool homes moved to `/opt/dev-tools/{cargo,rustup,nvm,bun,goroot,go,sdkman,uv}/` (world-readable; portable across UIDs)
+- `pretool_nudge.py` refactored into orthogonal `skill_for` / `extract_path` / `process` functions; top-level swallow-all wrapper
+- `DOCKBOX_USER` is sanitized inside `dockbox-init` (only `[A-Za-z0-9_-]` allowed) — prevents `/etc/passwd` injection
+
+### Fixed
+- `dockbox-init`: `gosu` no longer errors when CMD is empty (defaults to `/bin/zsh`)
+- `dockbox-init`: chown failures now print warnings to stderr instead of being silent
+- `pretool_nudge.py`: hook can no longer block a tool call by raising a Traceback (top-level except in `main`)
+
 ## [v0.3.0] — 20260525
 
 > kronael v0.3.0 — one dockbox image for every host user
