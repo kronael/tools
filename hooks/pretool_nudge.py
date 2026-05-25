@@ -118,47 +118,53 @@ def main() -> None:
 
 
 # --- Self-tests ----------------------------------------------------------
+#
+# These are pure-function tests against process(). The /tmp paths below are
+# string inputs — process() never opens them, so there's nothing on disk to
+# clean up. If a future test touches the real cache_dir, use pytest's
+# `tmp_path` fixture to scope it.
+# ruff: noqa: S108
 
 TEST_CASES = [
     # (name, input dict, predicate on process() result)
     (
         'tsx → /tsx',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/proj/foo.tsx'}},
+        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.tsx'}},
         lambda r: r and '/tsx' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         'py → /py',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/proj/foo.py'}},
+        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.py'}},
         lambda r: r and '/py' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         'Makefile → /mk',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/p/Makefile'}},
+        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/Makefile'}},
         lambda r: r and '/mk' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         'Dockerfile → /ops',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/p/Dockerfile'}},
+        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/Dockerfile'}},
         lambda r: r and '/ops' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         '.github/workflows → /ops',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/repo/.github/workflows/ci.yml'}},
+        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/.github/workflows/ci.yml'}},
         lambda r: r and '/ops' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         'htmx alias',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/t/page.html'}},
+        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/page.html'}},
         lambda r: r and '/htmx' in r['hookSpecificOutput']['additionalContext'],
     ),
     (
         'unknown ext → silent',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/proj/foo.xyz'}},
+        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.xyz'}},
         lambda r: r is None,
     ),
     (
         'non-routed tool → silent',
-        {'tool_name': 'Bash', 'tool_input': {'file_path': '/proj/foo.py'}},
+        {'tool_name': 'Bash', 'tool_input': {'file_path': '/tmp/foo.py'}},
         lambda r: r is None,
     ),
     ('null tool_input → silent', {'tool_name': 'Read', 'tool_input': None}, lambda r: r is None),
