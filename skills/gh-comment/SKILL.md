@@ -26,6 +26,14 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 [ -n "$PENDING" ] && gh api repos/$REPO/pulls/<PR>/reviews/$PENDING --method DELETE
 ```
 
+## Sign-off questionnaire (REQUIRED before posting)
+
+Before posting, present each finding to the user with `AskUserQuestion` so they can approve, edit, or drop it. Use one question with `multiSelect: true` listing each finding as a short option label (e.g. `"index.ts:7 — internal exports"`) and a description that quotes the comment body. The user selects which ones to post; unselected findings are dropped silently.
+
+Max 4 options per question — if there are more than 4 findings, split into multiple questions.
+
+Only post the approved findings.
+
 ## Batch inline comments (preferred)
 
 Post all inline comments in one API call — avoids repeated pending review conflicts:
