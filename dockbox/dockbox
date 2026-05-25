@@ -73,11 +73,12 @@ Ephemeral builds (default):
     the container, owned by the container user, gone when the container
     exits. Recursive (monorepo workspaces included).
 
-    Two backends:
-      tmpfs  (default) — kernel tmpfs with uid set at mount. RAM-backed.
-      volume (-T)      — anonymous Docker volume, chowned by entrypoint
-                         (container runs as root, gosu-drops to claude).
-                         Disk-backed. No host footprint after --rm.
+    Unified flow: container starts as root, dockbox-init entrypoint chowns
+    every overmount to claude, then gosu-drops. Two backends pick the mount
+    type only:
+      tmpfs  (default) — kernel tmpfs. RAM-backed.
+      volume (-T)      — anonymous Docker volume. Disk-backed.
+                         No host footprint after --rm.
 
     Pass -P / --no-ephemeral to disable both and see host build dirs.
 
@@ -204,12 +205,11 @@ done
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 # ephemeral overmounts (default): for each build-artifact dir found under
-# workdir, overmount it so the container sees a fresh empty dir owned by
-# the claude user, gone when the container exits.
-#   default backend: kernel tmpfs with uid set at mount (RAM-backed).
-#   -T backend: anonymous Docker volume + entrypoint chown (disk-backed).
-#               container runs as root, dockbox-init chowns the listed paths
-#               to claude, then gosu-drops to claude.
+# workdir, overmount it so the container sees a fresh empty dir. unified
+# ownership flow: container starts as root, dockbox-init chowns every path
+# listed in DOCKBOX_EPH_PATHS to claude, then gosu-drops to claude.
+#   tmpfs (default) — kernel tmpfs (RAM-backed).
+#   -T              — anonymous Docker volume (disk-backed).
 # disable both with -P / --no-ephemeral.
 eph_paths=()
 if [[ -z "$persist_builds" ]]; then
@@ -225,18 +225,16 @@ fi
 
 user_arg=()
 if [[ ${#eph_paths[@]} -gt 0 ]]; then
-    if [[ -n "$eph_no_tmpfs" ]]; then
-        for p in "${eph_paths[@]}"; do
+    for p in "${eph_paths[@]}"; do
+        if [[ -n "$eph_no_tmpfs" ]]; then
             mounts+=(-v "$p")
-        done
-        user_arg=(--user 0:0)
-        eph_list=$(IFS=:; echo "${eph_paths[*]}")
-        extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
-    else
-        for p in "${eph_paths[@]}"; do
-            mounts+=(--tmpfs "$p:uid=$(id -u),gid=$(id -g),mode=0755")
-        done
-    fi
+        else
+            mounts+=(--tmpfs "$p")
+        fi
+    done
+    user_arg=(--user 0:0)
+    eph_list=$(IFS=:; echo "${eph_paths[*]}")
+    extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 fi
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png

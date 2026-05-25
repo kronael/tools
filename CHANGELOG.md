@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.2.8] — 20260525
+
+> kronael v0.2.8 — dockbox ephemeral overmounts: one chown path for both backends
+>
+> v0.2.7 had two ownership paths: tmpfs used `uid=` at mount, volume used start-as-root + chown via `dockbox-init` + `gosu` drop. The split made it possible for a stale tmpfs mount or a subtle host/container UID mismatch to leave something un-`claude`-owned and break `pnpm install`. Now both backends share the same flow: container always starts as root, `dockbox-init` chowns every overmount listed in `$DOCKBOX_EPH_PATHS` to `claude:claude`, `gosu` drops, then your command runs. Backend choice is purely the mount type — tmpfs (default, RAM) or anonymous Docker volume (`-T`, disk).
+>
+> • pnpm/npm/bun installs inside dockbox no longer trip over root- or ondra-owned overmount paths — every path is claude-owned before user code runs
+> • Same ownership logic regardless of `-T`, fewer corners to debug
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- dockbox always passes `--user 0:0` and `DOCKBOX_EPH_PATHS` to the container when any ephemeral overmounts are active; `dockbox-init` chowns then `gosu`-drops to `claude` regardless of backend
+- tmpfs overmounts mount with plain `--tmpfs <path>` (no `uid=`/`gid=`) — ownership is set by the entrypoint chown, not the mount option
+- `dockbox/README.md` and `CLAUDE.md` updated to describe the unified ownership flow
+
 ## [v0.2.7] — 20260523
 
 > kronael v0.2.7 — dockbox ephemeral mounts: tmpfs by default, volume on `-T`

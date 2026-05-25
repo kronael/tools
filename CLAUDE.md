@@ -37,9 +37,9 @@ Makefile: `image` (build), `install` (build+install), `clean`.
 
 #### Ephemeral overmounts
 
-Build-artifact dirs under workdir (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) are overmounted so the container always sees fresh empty dirs. Two backends:
-- **tmpfs** (default): kernel mount with `uid` set → owned by `claude` at mount, lives in the container namespace.
-- **volume** (`-T`): anonymous Docker volume + container starts as root → `dockbox-init` chowns the listed paths → `gosu` drops to `claude`.
+Build-artifact dirs under workdir (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) are overmounted so the container always sees fresh empty dirs. Unified ownership flow regardless of backend: container starts as root (`--user 0:0`), `dockbox-init` chowns every path in `$DOCKBOX_EPH_PATHS` to `claude:claude`, then `gosu` drops to `claude` before exec'ing the user command. Backend just picks the mount type:
+- **tmpfs** (default): kernel `--tmpfs`, RAM-backed.
+- **volume** (`-T`): anonymous Docker volume, disk-backed.
 
 **Both backends leave ZERO footprint after the container exits.** `docker run --rm` (always used) removes anonymous volumes; tmpfs dies with the mount namespace. NEVER add cleanup logic, EXIT traps, "remember to remove" comments, or worry-prose about leaks — there is nothing to leak.
 

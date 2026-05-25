@@ -99,19 +99,21 @@ work together so builds never touch your host workdir:
    Monorepo workspaces are handled automatically — every match under
    the workdir gets its own mount.
 
+   ### Ownership flow (same for both backends)
+
+   The container starts as root via `--user 0:0`. The `dockbox-init`
+   entrypoint reads `$DOCKBOX_EPH_PATHS` (colon-separated list of overmount
+   paths), `chown claude:claude` each, then `exec gosu claude "$@"` to drop
+   privilege before running your command. By the time `claude` is doing
+   anything, every overmount is owned by `claude`.
+
    ### Backends
 
-   - **tmpfs** (default): kernel `tmpfs` per path with `uid` and `gid` set
-     at mount time. RAM-backed (pages out to swap under pressure). Fast
-     for many-small-file workloads — `pnpm install` is noticeably
-     faster than disk. Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless
-     swapped. Make sure your machine has headroom.
-   - **volume** (`-T`): anonymous Docker volume per path. The container
-     starts as root via `--user 0:0`, the `dockbox-init` entrypoint chowns
-     each ephemeral mount point to `claude:claude`, then drops to `claude`
-     with `gosu` before running your command. Disk-backed. No host
-     footprint after `--rm`. Pick this when you don't want to pay RAM
-     for the artifact dirs, or when artifacts are too large for tmpfs.
+   - **tmpfs** (default): kernel `tmpfs` per path. RAM-backed (pages out
+     to swap under pressure). Fast for many-small-file workloads.
+     Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless swapped.
+   - **volume** (`-T`): anonymous Docker volume per path. Disk-backed.
+     Pick this when you don't want to pay RAM for the artifact dirs.
 
 **Trade-off**: every fresh session re-installs and re-builds. Intentional —
 no stale artifacts persist, only source code is long-lived. A warm cache
