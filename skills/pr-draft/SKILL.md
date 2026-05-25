@@ -11,7 +11,7 @@ Run directly in main context (no subagent).
 
 ## Workflow
 
-1. Find base: run `git log origin/main..HEAD --oneline`; if that fails try `git log main..HEAD --oneline`; if both fail, ask the user. Also run `git diff <base>..HEAD --stat`.
+1. Find base: `git log origin/main..HEAD --oneline`; fallback `git log main..HEAD --oneline`; if both fail, ask the user. Also `git diff <base>..HEAD --stat`.
 2. Draft title and body (see format below)
 3. Show draft, ask if they want to tweak anything
 4. STOP — NEVER run `gh pr create` or open the PR

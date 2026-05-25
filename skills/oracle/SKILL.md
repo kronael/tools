@@ -69,8 +69,23 @@ crash the turn.
 
 ## Rules
 
-- ALWAYS hand codex the specific question + minimal code/error — NEVER paste session transcript or your reasoning chain
-- ALWAYS verify codex's claim against the codebase before acting. NEVER implement blindly. Discard with one-line reason if wrong; cite when acting
+codex is a peer agent — has tools, sees the repo. ALWAYS let it explore; NEVER pre-chew the answer.
+
+### Adversarial framing
+
+codex is sycophantic — confirming questions get confirming answers. Frame as the opposing side so a flaw report carries signal.
+
+- ALWAYS attack your own conclusion: "Find the flaw in X", "Why would this break?", "What did I miss?"
+- NEVER ask "is X correct?" / "does this look right?" — primes a yes.
+
+### Prompt contents
+
+- ALWAYS state the goal in one line ("Goal: <X>").
+- ALWAYS hand it entry points: file paths, symbols, verbatim error/test output, binding constraints (language version, perf budget, forbidden deps).
+- OPTIONAL: short listing or excerpt when it saves a redundant search — NEVER as substitute for codex looking.
+- NEVER paste session transcript, your reasoning chain, or your conclusions — biases the second opinion.
+
+ALWAYS verify codex's claim against the codebase before acting. NEVER implement blindly. Discard with one-line reason if wrong; cite when acting.
 
 ## Output
 

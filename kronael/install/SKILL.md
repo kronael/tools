@@ -5,57 +5,56 @@ description: Install (or update) the Kronael toolkit into ~/.claude/. Copies ski
 
 # Install Kronael toolkit
 
-Goal: deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael:` prefix).
-
-This is the single source of truth for the install procedure. `README.md`, `CLAUDE.md`, and `AGENTS.md` all defer to this file.
+Deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael:` prefix).
 
 ## Source location
 
-- **Plugin path**: `${CLAUDE_PLUGIN_ROOT}` (the cached plugin repo).
-- **Manual path**: the current working directory (user opened Claude Code at the repo root and said "install").
+- **Plugin path**: `${CLAUDE_PLUGIN_ROOT}`.
+- **Manual path**: current working directory (user opened Claude Code at the repo root and said "install").
 
-Verify these dirs/files exist at the source root before proceeding:
-- `skills/` — bundle of skills (language, workflow, domain)
-- `agents/` — bundle of agents (@improve, @readme, @refine, …)
-- `hooks/` — bundle of hook scripts (nudge.py, local.py, reclaude.py, stop.py)
+ALWAYS verify these exist at the source root before proceeding:
+- `skills/` — bundle of skills
+- `agents/` — bundle of agents
+- `hooks/` — hook scripts (prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 
-If they're missing, you're in the wrong directory — stop and ask.
+If missing, you're in the wrong directory — stop and ask.
 
 ## Steps
 
-1. **Backup**. Before overwriting anything, copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` to `~/.claude/backup/<timestamp>/`.
+1. **Backup**. ALWAYS copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` to `~/.claude/backup/<timestamp>/` before overwriting.
 
 2. **Copy assets** (replace strategy):
-   - `skills/*` → `~/.claude/skills/` **but skip `skills/global/`** — its body is the wisdom file, deployed in step 3 below; copying it as a skill would duplicate the always-loaded content.
+   - `skills/*` → `~/.claude/skills/` **but skip `skills/global/`** — its body is the wisdom file, deployed in step 3. Copying it as a skill would duplicate the always-loaded content.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/lib/` → `~/.claude/hooks/`
+   - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
-   - Preserve user-added files not in source — never delete.
+   - NEVER delete user-added files not in source.
 
-3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md` — the always-loaded wisdom file. Single destination: do NOT also write to `~/.claude/skills/global/`. If the user already has `~/.claude/CLAUDE.md` with content, show diff and ask before overwriting. Extract any local paths/repo names/secrets references the user has into `~/.claude/LOCAL.md` (auto-injected by `local.py` hook).
+3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
 
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
-   - **Hooks block** (UserPromptSubmit, Stop, PreCompact, SessionEnd) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
-   - **Permissions, sandbox, env** — show diff, ask user which restrictions to apply.
+   - **Hooks block** (UserPromptSubmit, PreToolUse, Stop, PreCompact, SessionEnd) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
+   - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-5. **External tools** (ask first — not everyone needs all of them):
+5. **External tools** (ALWAYS ask first):
    - `uv tool install git+https://github.com/kronael/ship` — planner-worker-judge CLI used by `/ship`.
    - `bun install -g agent-browser` — headless browser automation used by the `browse` skill.
    - Skip if already installed and recent.
 
-6. **Report**: print a summary — X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine`, etc. are invocable bare. Suggest the user run `/recall-memories` once to verify the recall flow works against their existing diary/memory.
+6. **Report**: summary — X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
 
 ## Rules
 
-- NEVER delete files in `~/.claude/` that aren't in source (org overlays, user customizations live there).
-- NEVER touch `~/.claude/settings.local.json`, `~/.claude/LOCAL.md`, `~/.claude/CLAUDE.local.md`.
-- ALWAYS backup before overwriting.
-- Skills/hooks with name conflicts: replace with current versions.
-- NEVER sync `skipDangerousModePermissionPrompt` from user back into the template.
+- ALWAYS backup before overwriting
+- NEVER delete files in `~/.claude/` not in source (org overlays, user customizations live there)
+- NEVER touch `~/.claude/settings.local.json`, `~/.claude/LOCAL.md`, `~/.claude/CLAUDE.local.md`
+- ALWAYS replace skills/hooks with current versions on name conflict
+- NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
 
 ## Update flow
 
-Re-run `/kronael:install` (or "say install" in this repo) after `claude /plugin update` pulls a new version. Same steps; the backup directory grows but stays useful for rollback.
+Re-run `/kronael:install` (or "say install" in this repo) after `claude /plugin update`. Same steps; backup directory grows.

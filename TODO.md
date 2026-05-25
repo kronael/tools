@@ -1,6 +1,6 @@
 # TODO
 
-## nudge.py: skill nudges based on file extensions
+## prompt_nudge.py: skill nudges based on file extensions
 
 When Claude reads or edits files with known extensions, nudge the matching skill.
 
@@ -18,7 +18,7 @@ When Claude reads or edits files with known extensions, nudge the matching skill
 **Dedup:** only nudge once per skill per session (track in a state file like
 `local.py` does with `.claude/tmp/nudged-{session_id}`).
 
-## nudge.py: stricter matching (2-edit distance)
+## prompt_nudge.py: stricter matching (2-edit distance)
 
 Make the nudge matching stricter — only nudge when the extension match is
 within ~2 edit distance (Levenshtein). Prevents false positive nudges from

@@ -10,7 +10,7 @@ Hooks are configured in `~/.claude/settings.json`. The hook scripts live in
 
 ## Features
 
-### Keyword Routing (nudge.py)
+### Keyword Routing (prompt_nudge.py)
 
 Fires on `UserPromptSubmit`. Detects keywords in the prompt (with fuzzy
 edit-distance matching) and emits a system message telling Claude to invoke
@@ -65,7 +65,7 @@ local-only and explicit.
 
 ```
 ~/.claude/hooks/
-  nudge.py       # UserPromptSubmit: keyword → command/agent
+  prompt_nudge.py       # UserPromptSubmit: keyword → command/agent
   local.py       # UserPromptSubmit + PreCompact: LOCAL.md injection
   reclaude.py    # UserPromptSubmit + PreCompact: RECLAUDE.md injection
   stop.py        # Stop: commit + diary nudge
