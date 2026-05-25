@@ -1,3 +1,4 @@
+.DEFAULT_GOAL := help
 .PHONY: help image install clean
 
 IMAGE := dockbox

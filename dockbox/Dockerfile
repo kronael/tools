@@ -134,10 +134,13 @@ exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\
 # none is provided so `gosu` doesn't error on empty args. chown failures
 # print a warning instead of being silent.
 RUN printf '#!/bin/sh\n\
+set -eu\n\
 USERNAME="${DOCKBOX_USER:-dockbox}"\n\
 case "$USERNAME" in *[!A-Za-z0-9_-]*|"") USERNAME=dockbox ;; esac\n\
 USER_UID="${DOCKBOX_UID:-1000}"\n\
+case "$USER_UID" in ""|*[!0-9]*) USER_UID=1000 ;; esac\n\
 USER_GID="${DOCKBOX_GID:-1000}"\n\
+case "$USER_GID" in ""|*[!0-9]*) USER_GID=1000 ;; esac\n\
 HOME_DIR="${HOME:-/home/dockbox}"\n\
 if [ "$(id -u)" = "0" ]; then\n\
   getent passwd "$USER_UID" >/dev/null 2>&1 || \\\n\
@@ -146,7 +149,7 @@ if [ "$(id -u)" = "0" ]; then\n\
     echo "${USERNAME}:x:${USER_GID}:" >> /etc/group\n\
   [ -d "$HOME_DIR" ] && \\\n\
     { chown "${USER_UID}:${USER_GID}" "$HOME_DIR" || echo "dockbox-init: chown $HOME_DIR failed" >&2; }\n\
-  if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
+  if [ -n "${DOCKBOX_EPH_PATHS:-}" ]; then\n\
     IFS=:\n\
     for p in $DOCKBOX_EPH_PATHS; do\n\
       [ -d "$p" ] && \\\n\

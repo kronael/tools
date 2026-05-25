@@ -170,19 +170,19 @@ PATH_CASES = [
 ]
 
 PROCESS_CASES = [
-    # (input, expected: True = emit nudge, False = silent)
-    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.py'}}, True),
-    ({'tool_name': 'Edit', 'tool_input': {'file_path': '/x.py'}}, True),
-    ({'tool_name': 'Write', 'tool_input': {'file_path': '/x.py'}}, True),
-    ({'tool_name': 'MultiEdit', 'tool_input': {'file_path': '/x.py'}}, True),
-    ({'tool_name': 'NotebookEdit', 'tool_input': {'notebook_path': '/n.py'}}, True),
-    ({'tool_name': 'Bash', 'tool_input': {'file_path': '/x.py'}}, False),
-    ({'tool_name': 'Read'}, False),
-    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.xyz'}}, False),
-    ({'tool_name': None, 'tool_input': {'file_path': '/x.py'}}, False),
-    ({}, False),
-    ([], False),
-    (None, False),
+    # (input, expected_skill: a /name string when a nudge should fire, None when silent)
+    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.py'}}, '/py'),
+    ({'tool_name': 'Edit', 'tool_input': {'file_path': '/x.go'}}, '/go'),
+    ({'tool_name': 'Write', 'tool_input': {'file_path': '/x.rs'}}, '/rs'),
+    ({'tool_name': 'MultiEdit', 'tool_input': {'file_path': '/x.tsx'}}, '/tsx'),
+    ({'tool_name': 'NotebookEdit', 'tool_input': {'notebook_path': '/n.py'}}, '/py'),
+    ({'tool_name': 'Bash', 'tool_input': {'file_path': '/x.py'}}, None),
+    ({'tool_name': 'Read'}, None),
+    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.xyz'}}, None),
+    ({'tool_name': None, 'tool_input': {'file_path': '/x.py'}}, None),
+    ({}, None),
+    ([], None),
+    (None, None),
 ]
 
 try:
@@ -198,13 +198,16 @@ try:
     def test_extract_path(payload, path):
         assert extract_path(payload) == path
 
-    @pytest.mark.parametrize(('payload', 'should_emit'), PROCESS_CASES)
-    def test_process(payload, should_emit):
+    @pytest.mark.parametrize(('payload', 'expected_skill'), PROCESS_CASES)
+    def test_process(payload, expected_skill):
         result = process(payload)
-        assert (result is not None) == should_emit
-        if should_emit:
+        if expected_skill is None:
+            assert result is None
+        else:
+            assert result is not None
             assert result['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
-            assert 'follow ' in result['hookSpecificOutput']['additionalContext']
+            ctx = result['hookSpecificOutput']['additionalContext']
+            assert f'follow {expected_skill} conventions.' in ctx
 except ImportError:
     pass
 
