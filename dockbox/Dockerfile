@@ -42,7 +42,7 @@ ENV DEVCONTAINER=true \
     PUPPETEER_CACHE_DIR=/opt/playwright-browsers/puppeteer \
     UV_TOOL_BIN_DIR=/opt/dev-tools/uv/bin \
     UV_TOOL_DIR=/opt/dev-tools/uv/tools \
-    PATH=/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/usr/local/bin:/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
 
