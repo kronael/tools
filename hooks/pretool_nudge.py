@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # PreToolUse hook: emit a per-language skill nudge based on file extension.
-#
-# Production: silent-fail on any error (NEVER block a tool call with a
-# Traceback). Tests: `pytest hooks/pretool_nudge.py` runs the bundled
-# parametrized cases against the pure `process()` function.
+# Production: silent-fail on any error (NEVER block a tool call). Tests:
+# `pytest hooks/pretool_nudge.py` or `make test`.
 import contextlib
 import json
 import os
 import sys
 import tempfile
+
+TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit'})
 
 EXT_SKILLS = {
     '.go': '/go',
@@ -32,48 +32,48 @@ def skill_for(path: str) -> str | None:
     """Pure: map a file path to its language skill, or None."""
     if not isinstance(path, str) or not path:
         return None
-    basename = os.path.basename(path)
-    lower = basename.lower()
+    lower = os.path.basename(path).lower()
     if lower in ('makefile', 'gnumakefile') or lower.endswith(('.mk', '.make')):
         return '/mk'
     if lower == 'dockerfile' or lower.startswith('dockerfile.'):
         return '/ops'
     if lower in ('docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml'):
         return '/ops'
-    if '/.github/workflows/' in path or path.startswith('.github/workflows/'):
+    if '.github/workflows/' in path or '/ansible/' in path:
         return '/ops'
-    if '/ansible/' in path or lower.endswith('.ansible.yml'):
+    if lower.endswith(('.service', '.timer', '.socket', '.ansible.yml')):
         return '/ops'
-    if lower.endswith(('.service', '.timer', '.socket')):
-        return '/ops'
-    _, ext = os.path.splitext(lower)
-    return EXT_SKILLS.get(ext)
+    return EXT_SKILLS.get(os.path.splitext(lower)[1])
 
 
-def process(data: dict) -> dict | None:
-    """Pure: take parsed hook JSON, return the hookSpecificOutput dict or None."""
+def extract_path(data: object) -> str:
+    """Pure: pull file_path or notebook_path from a PreToolUse payload, '' if absent."""
     if not isinstance(data, dict):
-        return None
-    if data.get('tool_name') not in ('Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit'):
-        return None
-    ti = data.get('tool_input') or {}
+        return ''
+    ti = data.get('tool_input')
     if not isinstance(ti, dict):
+        return ''
+    return ti.get('file_path') or ti.get('notebook_path') or ''
+
+
+def process(data: object) -> dict | None:
+    """Pure: parsed hook JSON → hookSpecificOutput dict, or None for silent."""
+    if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
         return None
-    path = ti.get('file_path') or ti.get('notebook_path') or ''
+    path = extract_path(data)
     skill = skill_for(path)
     if not skill:
         return None
-    basename = os.path.basename(path) if isinstance(path, str) else ''
     return {
         'hookSpecificOutput': {
             'hookEventName': 'PreToolUse',
-            'additionalContext': f'Editing/reading {basename} — follow {skill} conventions.',
+            'additionalContext': f'Editing/reading {os.path.basename(path)} — follow {skill} conventions.',
         },
     }
 
 
 def already_seen(cache_file: str, key: str) -> bool:
-    """Side-effecting: check if key is in cache. Silent on OSError."""
+    """Side-effecting: True if key is in cache. Silent on OSError."""
     try:
         with open(cache_file, encoding='utf-8', errors='replace') as fh:
             return key in {line.rstrip('\n') for line in fh}
@@ -96,114 +96,121 @@ def main() -> None:
     if not result:
         return
 
-    # De-dup nudge for the same skill+path within a session.
+    path = extract_path(data)
+    skill = skill_for(path) or ''
     session = str(data.get('session_id') or 'default').replace('/', '_').replace('\\', '_')
     cache_dir = os.path.join(tempfile.gettempdir(), 'claude-extnudge')
     cache_file = os.path.join(cache_dir, f'{session}.txt')
-    skill = result['hookSpecificOutput']['additionalContext'].split('follow ')[1].split(' ')[0]
-    path = (
-        (data.get('tool_input') or {}).get('file_path')
-        or (data.get('tool_input') or {}).get('notebook_path')
-        or ''
-    )
     key = f'{skill}\t{path}'
     with contextlib.suppress(OSError):
         os.makedirs(cache_dir, exist_ok=True)
     if already_seen(cache_file, key):
         return
     remember(cache_file, key)
-
     with contextlib.suppress(OSError, ValueError):
         print(json.dumps(result))
 
 
-# --- Self-tests ----------------------------------------------------------
-#
-# These are pure-function tests against process(). The /tmp paths below are
-# string inputs — process() never opens them, so there's nothing on disk to
-# clean up. If a future test touches the real cache_dir, use pytest's
-# `tmp_path` fixture to scope it.
-# ruff: noqa: S108
+# --- Tests ---------------------------------------------------------------
+# Three layers: skill_for (path → skill mapping), extract_path (payload →
+# path), process (wiring + tool filter). Pytest parametrization keeps the
+# tables flat and adding a case = one tuple.
 
-TEST_CASES = [
-    # (name, input dict, predicate on process() result)
-    (
-        'tsx → /tsx',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.tsx'}},
-        lambda r: r and '/tsx' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        'py → /py',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.py'}},
-        lambda r: r and '/py' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        'Makefile → /mk',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/Makefile'}},
-        lambda r: r and '/mk' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        'Dockerfile → /ops',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/Dockerfile'}},
-        lambda r: r and '/ops' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        '.github/workflows → /ops',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/.github/workflows/ci.yml'}},
-        lambda r: r and '/ops' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        'htmx alias',
-        {'tool_name': 'Edit', 'tool_input': {'file_path': '/tmp/page.html'}},
-        lambda r: r and '/htmx' in r['hookSpecificOutput']['additionalContext'],
-    ),
-    (
-        'unknown ext → silent',
-        {'tool_name': 'Read', 'tool_input': {'file_path': '/tmp/foo.xyz'}},
-        lambda r: r is None,
-    ),
-    (
-        'non-routed tool → silent',
-        {'tool_name': 'Bash', 'tool_input': {'file_path': '/tmp/foo.py'}},
-        lambda r: r is None,
-    ),
-    ('null tool_input → silent', {'tool_name': 'Read', 'tool_input': None}, lambda r: r is None),
-    (
-        'null file_path → silent',
-        {'tool_name': 'Read', 'tool_input': {'file_path': None}},
-        lambda r: r is None,
-    ),
-    (
-        'non-string file_path → silent',
-        {'tool_name': 'Read', 'tool_input': {'file_path': 123}},
-        lambda r: r is None,
-    ),
-    ('empty dict → silent', {}, lambda r: r is None),
-    ('non-dict input → silent', [], lambda r: r is None),
+SKILL_CASES = [
+    ('foo.go', '/go'),
+    ('foo.rs', '/rs'),
+    ('foo.py', '/py'),
+    ('foo.ts', '/ts'),
+    ('foo.tsx', '/tsx'),
+    ('foo.sql', '/sql'),
+    ('foo.sh', '/sh'),
+    ('foo.bash', '/sh'),
+    ('foo.zsh', '/sh'),
+    ('foo.html', '/htmx'),
+    ('foo.htm', '/htmx'),
+    ('tmpl.jinja', '/htmx'),
+    ('tmpl.j2', '/htmx'),
+    ('live.heex', '/htmx'),
+    ('Makefile', '/mk'),
+    ('GnuMakefile', '/mk'),
+    ('build.mk', '/mk'),
+    ('build.make', '/mk'),
+    ('MAKEFILE', '/mk'),
+    ('Dockerfile', '/ops'),
+    ('Dockerfile.dev', '/ops'),
+    ('Dockerfile.prod', '/ops'),
+    ('docker-compose.yml', '/ops'),
+    ('docker-compose.yaml', '/ops'),
+    ('compose.yml', '/ops'),
+    ('compose.yaml', '/ops'),
+    ('/repo/.github/workflows/ci.yml', '/ops'),
+    ('.github/workflows/ci.yml', '/ops'),
+    ('/srv/ansible/playbook.yml', '/ops'),
+    ('vault.ansible.yml', '/ops'),
+    ('app.service', '/ops'),
+    ('cron.timer', '/ops'),
+    ('proxy.socket', '/ops'),
+    ('foo.xyz', None),
+    ('foo', None),
+    ('README', None),
+    ('', None),
 ]
 
+PATH_CASES = [
+    ({'tool_input': {'file_path': '/x.py'}}, '/x.py'),
+    ({'tool_input': {'notebook_path': '/n.ipynb'}}, '/n.ipynb'),
+    ({'tool_input': {'file_path': '/x.py', 'notebook_path': '/n.ipynb'}}, '/x.py'),
+    ({'tool_input': None}, ''),
+    ({'tool_input': 'not-a-dict'}, ''),
+    ({'tool_input': {}}, ''),
+    ({'tool_input': {'file_path': None}}, ''),
+    ({}, ''),
+    (None, ''),
+    ('not-a-dict', ''),
+]
 
-# Pytest discovery: `pytest hooks/pretool_nudge.py` runs each TEST_CASES tuple
-# as a parametrized test against `process()`. pytest is an optional dev dep —
-# the conditional import keeps production hook runs free of it.
+PROCESS_CASES = [
+    # (input, expected: True = emit nudge, False = silent)
+    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.py'}}, True),
+    ({'tool_name': 'Edit', 'tool_input': {'file_path': '/x.py'}}, True),
+    ({'tool_name': 'Write', 'tool_input': {'file_path': '/x.py'}}, True),
+    ({'tool_name': 'MultiEdit', 'tool_input': {'file_path': '/x.py'}}, True),
+    ({'tool_name': 'NotebookEdit', 'tool_input': {'notebook_path': '/n.py'}}, True),
+    ({'tool_name': 'Bash', 'tool_input': {'file_path': '/x.py'}}, False),
+    ({'tool_name': 'Read'}, False),
+    ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.xyz'}}, False),
+    ({'tool_name': None, 'tool_input': {'file_path': '/x.py'}}, False),
+    ({}, False),
+    ([], False),
+    (None, False),
+]
+
 try:
     import pytest
 
     @pytest.mark.parametrize(
-        ('name', 'inp', 'check'),
-        TEST_CASES,
-        ids=[c[0] for c in TEST_CASES],
+        ('path', 'skill'), SKILL_CASES, ids=[c[0] or '<empty>' for c in SKILL_CASES]
     )
-    def test_process(name, inp, check):
-        result = process(inp)
-        assert check(result), f'{name}: got {result!r}'
+    def test_skill_for(path, skill):
+        assert skill_for(path) == skill
+
+    @pytest.mark.parametrize(('payload', 'path'), PATH_CASES)
+    def test_extract_path(payload, path):
+        assert extract_path(payload) == path
+
+    @pytest.mark.parametrize(('payload', 'should_emit'), PROCESS_CASES)
+    def test_process(payload, should_emit):
+        result = process(payload)
+        assert (result is not None) == should_emit
+        if should_emit:
+            assert result['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
+            assert 'follow ' in result['hookSpecificOutput']['additionalContext']
 except ImportError:
     pass
 
 
 if __name__ == '__main__':
-    # Hooks must never crash a tool call. Swallow every exception silently —
-    # diagnostics belong in `pytest` runs, not in user-facing tool dispatch.
+    # Hooks must never crash a tool call.
     with contextlib.suppress(Exception):
         main()
     sys.exit(0)

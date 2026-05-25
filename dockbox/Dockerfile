@@ -127,8 +127,13 @@ exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\
 # dockbox-init: register the runtime user in /etc/passwd, chown overmounts
 # and $HOME (top-level only — nested bind mounts must not be touched), then
 # gosu-drop to DOCKBOX_UID:DOCKBOX_GID before exec'ing the command.
+# Sanitizes DOCKBOX_USER (only [A-Za-z0-9_-] allowed) so a malicious value
+# can't inject extra fields into /etc/passwd. Defaults CMD to /bin/zsh when
+# none is provided so `gosu` doesn't error on empty args. chown failures
+# print a warning instead of being silent.
 RUN printf '#!/bin/sh\n\
 USERNAME="${DOCKBOX_USER:-dockbox}"\n\
+case "$USERNAME" in *[!A-Za-z0-9_-]*|"") USERNAME=dockbox ;; esac\n\
 USER_UID="${DOCKBOX_UID:-1000}"\n\
 USER_GID="${DOCKBOX_GID:-1000}"\n\
 HOME_DIR="${HOME:-/home/dockbox}"\n\
@@ -137,16 +142,20 @@ if [ "$(id -u)" = "0" ]; then\n\
     echo "${USERNAME}:x:${USER_UID}:${USER_GID}::${HOME_DIR}:/bin/zsh" >> /etc/passwd\n\
   getent group "$USER_GID" >/dev/null 2>&1 || \\\n\
     echo "${USERNAME}:x:${USER_GID}:" >> /etc/group\n\
-  [ -d "$HOME_DIR" ] && chown "${USER_UID}:${USER_GID}" "$HOME_DIR"\n\
+  [ -d "$HOME_DIR" ] && \\\n\
+    { chown "${USER_UID}:${USER_GID}" "$HOME_DIR" || echo "dockbox-init: chown $HOME_DIR failed" >&2; }\n\
   if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
     IFS=:\n\
     for p in $DOCKBOX_EPH_PATHS; do\n\
-      [ -d "$p" ] && chown "${USER_UID}:${USER_GID}" "$p"\n\
+      [ -d "$p" ] && \\\n\
+        { chown "${USER_UID}:${USER_GID}" "$p" || echo "dockbox-init: chown $p failed" >&2; }\n\
     done\n\
     unset IFS\n\
   fi\n\
+  [ "$#" -eq 0 ] && set -- /bin/zsh\n\
   exec gosu "${USER_UID}:${USER_GID}" "$@"\n\
 fi\n\
+[ "$#" -eq 0 ] && set -- /bin/zsh\n\
 exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-init
 
 # World-readable + writable tooling so any runtime UID can use it
