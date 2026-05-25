@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq nano vim docker.io clang libclang-dev libudev-dev \
-  bubblewrap socat \
+  bubblewrap socat gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG UID=1000
@@ -24,9 +24,26 @@ RUN mkdir -p /workspace /home/claude/.claude /home/claude/.gnupg && \
   chmod 700 /home/claude/.gnupg && \
   chown -R claude:claude /workspace /home/claude/.claude /home/claude/.gnupg
 
+# dockbox-init: if running as root (--user 0:0), chown ephemeral mount points
+# listed in $DOCKBOX_EPH_PATHS (colon-separated), then drop to claude. else
+# just exec. used as entrypoint for every dockbox container.
+RUN printf '#!/bin/sh\n\
+if [ "$(id -u)" = "0" ]; then\n\
+  if [ -n "$DOCKBOX_EPH_PATHS" ]; then\n\
+    IFS=:\n\
+    for p in $DOCKBOX_EPH_PATHS; do\n\
+      [ -d "$p" ] && chown claude:claude "$p"\n\
+    done\n\
+    unset IFS\n\
+  fi\n\
+  exec gosu claude "$0" "$@"\n\
+fi\n\
+exec "$@"\n' > /usr/local/bin/dockbox-init && \
+  chmod +x /usr/local/bin/dockbox-init
+
 WORKDIR /workspace
 
-ARG GIT_DELTA_VERSION=0.18.2
+ARG GIT_DELTA_VERSION=0.19.2
 RUN ARCH=$(dpkg --print-architecture) && \
   wget "https://github.com/dandavison/delta/releases/download/${GIT_DELTA_VERSION}/git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
@@ -44,9 +61,11 @@ ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global \
     PATH="$PATH:/usr/local/share/npm-global/bin" \
     SHELL=/bin/zsh \
     EDITOR=nano \
-    VISUAL=nano
+    VISUAL=nano \
+    CARGO_TARGET_DIR=/home/claude/.cache/cargo-target \
+    UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv
 
-ARG ZSH_IN_DOCKER_VERSION=1.2.0
+ARG ZSH_IN_DOCKER_VERSION=1.2.1
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v${ZSH_IN_DOCKER_VERSION}/zsh-in-docker.sh)" -- \
   -p git \
   -p fzf \
@@ -56,14 +75,14 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -x
 
 ENV NVM_DIR="/home/claude/.nvm"
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash && \
-  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install 22 && nvm alias default 22
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
+  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && nvm install node && nvm alias default node
 
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/home/claude/.bun/bin:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-  | sh -s -- -y && /home/claude/.cargo/bin/rustup component add rust-analyzer
+  | sh -s -- -y && /home/claude/.cargo/bin/rustup component add rust-analyzer clippy rustfmt
 ENV PATH="/home/claude/.cargo/bin:$PATH"
 
 RUN curl -sSL https://git.io/g-install | sh -s -- -y
@@ -71,7 +90,7 @@ ENV PATH="/home/claude/go/bin:/home/claude/.go/bin:$PATH" \
     GOPATH="/home/claude/go"
 RUN /home/claude/.go/bin/go install golang.org/x/tools/gopls@latest
 
-ARG NU_VERSION=0.110.0
+ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
   | tar xz --strip-components=1 -C /home/claude/.cargo/bin

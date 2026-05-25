@@ -35,6 +35,14 @@ Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker cont
 
 Makefile: `image` (build), `install` (build+install), `clean`.
 
+#### Ephemeral overmounts
+
+Build-artifact dirs under workdir (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) are overmounted so the container always sees fresh empty dirs. Two backends:
+- **tmpfs** (default): kernel mount with `uid` set → owned by `claude` at mount, lives in the container namespace.
+- **volume** (`-T`): anonymous Docker volume + container starts as root → `dockbox-init` chowns the listed paths → `gosu` drops to `claude`.
+
+**Both backends leave ZERO footprint after the container exits.** `docker run --rm` (always used) removes anonymous volumes; tmpfs dies with the mount namespace. NEVER add cleanup logic, EXIT traps, "remember to remove" comments, or worry-prose about leaks — there is nothing to leak.
+
 ## Claude Code toolkit
 
 Two install paths share the same source:

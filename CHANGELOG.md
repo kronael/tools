@@ -1,5 +1,98 @@
 # Changelog
 
+## [v0.2.7] — 20260523
+
+> kronael v0.2.7 — dockbox ephemeral mounts: tmpfs by default, volume on `-T`
+>
+> Builds inside dockbox no longer fight with the host UID. The default backend is now a kernel `tmpfs` per ephemeral dir, mounted with `uid` set so the container's `claude` user owns it from the first byte. Pass `-T` to switch to anonymous Docker volumes — the container then starts as root, a new `dockbox-init` entrypoint chowns each volume to `claude`, and `gosu` drops privilege before your command runs. Either way you stop seeing EACCES.
+>
+> • Default tmpfs is RAM-backed — fast for `node_modules`/`.next`/`.turbo` (lots of small files), at the cost of RAM
+> • `dockbox -T` uses disk-backed Docker volumes when you'd rather not pay RAM for artifacts
+> • Image grows by `gosu` + a tiny `/usr/local/bin/dockbox-init` script
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -T` — disk-backed anonymous Docker volume backend for ephemeral overmounts (default is tmpfs)
+- Dockerfile: `gosu` package and `/usr/local/bin/dockbox-init` entrypoint that chowns paths listed in `DOCKBOX_EPH_PATHS` (when running as root) then drops to `claude`
+
+### Changed
+- dockbox ephemeral overmounts default to kernel tmpfs (`--tmpfs <path>:uid=...,gid=...,mode=0755`) — no host footprint, owned by container user at mount, gone with the container
+- v0.2.6 host-stash mechanism (`/tmp/dockbox-eph/<name>/`) removed; not needed since both new backends own the mount correctly
+- `dockbox/README.md` "Ephemeral builds" section: two-backend model documented, trade-offs spelled out
+
+## [v0.2.6] — 20260522
+
+> kronael v0.2.6 — dockbox ephemeral overmounts actually writable
+>
+> Default-on ephemeral overmounts in v0.2.4 used anonymous Docker volumes, which are root-owned and broke `pnpm install` (and any other writer) with EACCES inside the container. Now uses a per-container host stash under `/tmp/dockbox-eph/<name>/` bind-mounted in — owned by the host user, matching the container's `claude` UID. The stash is removed by an EXIT trap when dockbox returns. Put `/tmp` on tmpfs for RAM-backed speed.
+>
+> • dockbox: ephemeral `node_modules`/`.next`/`dist`/`build`/`.turbo`/`.cache` are now writable by the container user (EACCES gone)
+> • Stash lives at `/tmp/dockbox-eph/<container>/` on host, cleaned up on exit
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- dockbox: anonymous-volume overmounts (v0.2.4) were owned by root, breaking `pnpm install` and similar with EACCES — switched to host-side stash dirs at `/tmp/dockbox-eph/<container>/` bind-mounted in, owned by the host user (UID-matched with container `claude`)
+
+### Changed
+- dockbox script no longer `exec`s docker; runs in foreground so an `EXIT` trap can clean up the stash
+- `dockbox/README.md` "Ephemeral builds" section updated to describe the new bind-mount mechanism
+
+## [v0.2.5] — 20260522
+
+> kronael v0.2.5 — clippy and rustfmt in dockbox
+>
+> The image now installs `clippy` and `rustfmt` alongside `rust-analyzer`. Required for any serious Rust work and for the pre-commit hooks most Rust projects use. Rebuild the image to pick this up.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- dockbox: `rustup component add clippy rustfmt` (alongside existing rust-analyzer)
+
+## [v0.2.4] — 20260522
+
+> kronael v0.2.4 — ephemeral builds in dockbox by default
+>
+> Builds inside dockbox now stay inside dockbox, with zero flags. Rust and Python uv auto-redirect to a container-only cache via `CARGO_TARGET_DIR` and `UV_PROJECT_ENVIRONMENT`. For everything else, dockbox walks the workdir and overmounts every `node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache` (recursive — monorepo workspaces handled) with anonymous Docker volumes, gone on `--rm`. Opt out per-run with `dockbox -P` or `--no-ephemeral`.
+>
+> • dockbox: builds never write to your host workdir, no flag required
+> • `dockbox -P` — opt-out for when you need host build dirs visible
+> • global: ban `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` — same protection as `git push`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- Dockerfile envs: `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv` — Rust and uv builds now go to container-ephemeral paths
+- dockbox: default-on ephemeral overmount for `node_modules .next dist build .turbo .cache` — recursive under workdir, anonymous Docker volumes, gone on `--rm`
+- `dockbox -P` / `--no-ephemeral` opt-out flag to bind-mount build dirs from host instead
+- `dockbox/README.md` — "Ephemeral builds" section explaining the model + trade-offs + first-run surprise
+
+### Changed
+- global skill: ban `gh` push-to-remote (`gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create`) alongside existing `git push` ban
+- `settings-recommended.json` deny rules: same `gh` commands hard-blocked at the harness level, not just by skill text
+
+## [v0.2.3] — 20260521
+
+> kronael v0.2.3 — fresher dockbox, gh-token shortcut
+>
+> Dockbox image now pulls latest Node/pnpm/bun/rust/nushell on rebuild, and a new `-g` flag forwards your GH token into the container.
+>
+> • `dockbox -g` — forwards `GH_TOKEN`/`GITHUB_TOKEN` so `gh` works inside the container
+> • dockbox rebuild: latest Node stable via nvm, plus bumped git-delta / nvm / zsh-in-docker / nushell pins
+> • `tg-fetch users.py` — snapshots Telegram group participants to JSONL
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -g` flag forwards `GH_TOKEN` and/or `GITHUB_TOKEN` from host env
+- `tg-fetch/users.py` — group participants snapshot to JSONL
+
+### Changed
+- dockbox: `nvm install node` (latest stable, was pinned `22`)
+- dockbox pinned-tool bumps: git-delta 0.18.2 → 0.19.2, nvm 0.40.1 → 0.40.4, zsh-in-docker 1.2.0 → 1.2.1, nushell 0.110.0 → 0.112.2
+- dockbox auto-latest tools (pnpm, bun, rustup, go, gopls, uv, claude-code, codex, pi-coding-agent, agent-browser, pyright, typescript, ship, playwright, puppeteer) now rebuild against current upstream
+
 ## [v0.2.2] — 20260520
 
 > kronael v0.2.2 — merge origin/master skill quality pass + browse rename

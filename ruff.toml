@@ -33,8 +33,9 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"hooks/*.py"  = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess
-"**/main.py"  = ["T20"]                   # CLI entry points print status to stdout
+"hooks/*.py"   = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess
+"**/main.py"   = ["T20"]                   # CLI entry points print status to stdout
+"tg-fetch/*.py" = ["T20"]                  # tg-fetch contains CLI entry-point scripts
 
 [lint.isort]
 force-single-line = true
