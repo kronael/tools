@@ -1,16 +1,18 @@
 ---
 name: create-eval
-description: Generate project-specific eval skill. NOT for running existing evals.
-when_to_use: "create eval", create eval criteria, scaffold eval skill
+description: Generate project-specific service-eval skill. NOT for running existing evals or for adversarial audits (use cto-eval / ceo-eval).
+when_to_use: "create eval", create service-eval criteria, scaffold service-eval skill
 user-invocable: true
 ---
 
-# Create Eval
+# Create service-eval
 
-Generate `.claude/skills/eval/SKILL.md` for the current project.
+Generate `.claude/skills/service-eval/SKILL.md` for the current project.
 
-The eval skill runs periodically to read logs, verify correctness,
-and generate improvement specs when issues are found.
+The service-eval skill runs periodically to read logs, verify
+correctness, and generate improvement specs when issues are found. It
+is the routine-health pass; for adversarial pre-publication review,
+see `cto-eval` (code) and `ceo-eval` (demo).
 
 ## Process
 
@@ -19,7 +21,7 @@ and generate improvement specs when issues are found.
 3. Ask user: what does "good" look like? What does "best" look like?
 4. Ask user about known failure modes
    - Logs: check ops skill, /srv/log, /var/log, or ask
-5. Write `.claude/skills/eval/SKILL.md` with:
+5. Write `.claude/skills/service-eval/SKILL.md` with:
    - Log locations and what to grep for
    - Health checks (pass/fail criteria from logs)
    - When to generate improvement specs (to specs/ or .ship/)
