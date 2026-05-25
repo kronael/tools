@@ -1,0 +1,38 @@
+{
+  "id": "03",
+  "skill": "commit",
+  "task": "user added a /healthz endpoint across the service: handler, route registration, and a smoke test; commit as one feature",
+  "context": {
+    "cwd": "/some/repo",
+    "git_status": " M cmd/server/main.go\n M internal/http/router.go\nA  internal/http/healthz.go\nA  internal/http/healthz_test.go",
+    "git_diff": "diff --git a/internal/http/healthz.go b/internal/http/healthz.go\nnew file mode 100644\n+++ b/internal/http/healthz.go\n@@ +1,12 @@\n+package http\n+\n+import \"net/http\"\n+\n+func Healthz(w http.ResponseWriter, r *http.Request) {\n+    w.WriteHeader(200)\n+    w.Write([]byte(\"ok\"))\n+}\n\ndiff --git a/internal/http/router.go b/internal/http/router.go\n--- a/internal/http/router.go\n+++ b/internal/http/router.go\n@@ -22,6 +22,7 @@ func Routes(mux *http.ServeMux) {\n     mux.HandleFunc(\"/api/v1/orders\", Orders)\n+    mux.HandleFunc(\"/healthz\", Healthz)\n }",
+    "files_changed": [
+      "cmd/server/main.go",
+      "internal/http/router.go",
+      "internal/http/healthz.go",
+      "internal/http/healthz_test.go"
+    ],
+    "git_log_recent": "aaa1111 [feat] add /api/v1/orders endpoint\nbbb2222 [chore] bump go to 1.22\nccc3333 [test] router smoke covers 404s"
+  },
+  "expected_outcome": {
+    "must_use_format": "^\\[feat\\] .+",
+    "subject_max_chars": 72,
+    "must_not_include": [
+      "Co-Authored-By",
+      "--amend",
+      "git add -A",
+      "git add .",
+      "--no-verify",
+      "git commit -a"
+    ],
+    "should_mention": ["healthz"]
+  },
+  "rubric": [
+    {"criterion": "Subject under 72 chars including [feat] prefix", "weight": 0.2},
+    {"criterion": "Single commit listing all 4 files explicitly in the pathspec after --", "weight": 0.3},
+    {"criterion": "Subject names the new endpoint (/healthz) rather than a generic 'add feature' phrase", "weight": 0.25},
+    {"criterion": "Does not split into multiple commits unless explicitly justified; this is one cohesive chunk", "weight": 0.25}
+  ],
+  "source": "synthetic",
+  "provenance": "hand-crafted-2026-05-25"
+}

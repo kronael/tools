@@ -1,0 +1,33 @@
+{
+  "id": "01",
+  "skill": "commit",
+  "task": "user just made a small bugfix to handle null username in the login flow; help them commit it",
+  "context": {
+    "cwd": "/some/repo",
+    "git_status": " M src/auth/login.py",
+    "git_diff": "diff --git a/src/auth/login.py b/src/auth/login.py\n--- a/src/auth/login.py\n+++ b/src/auth/login.py\n@@ -42,7 +42,11 @@ def login(username, password):\n-    user = db.find_user(username)\n+    if username is None:\n+        return error('username required')\n+    user = db.find_user(username)\n     if user is None:\n         return error('no such user')",
+    "files_changed": ["src/auth/login.py"],
+    "git_log_recent": "abc1234 [feat] add password reset flow\ndef5678 [refactor] extract db session helper\n9876543 [docs] add login API examples"
+  },
+  "expected_outcome": {
+    "must_use_format": "^\\[fix\\] .+",
+    "subject_max_chars": 72,
+    "must_not_include": [
+      "Co-Authored-By",
+      "--amend",
+      "git add -A",
+      "git add .",
+      "--no-verify",
+      "git commit -a"
+    ],
+    "should_mention": ["null", "username"]
+  },
+  "rubric": [
+    {"criterion": "Subject under 72 chars including [fix] prefix", "weight": 0.2},
+    {"criterion": "[fix] section matches the bugfix nature of the change", "weight": 0.2},
+    {"criterion": "Body or subject explains the why (null username caused a crash or wrong path), not just 'fix login'", "weight": 0.3},
+    {"criterion": "Uses git commit -m '...' -- src/auth/login.py (direct commit with pathspec, no add step)", "weight": 0.3}
+  ],
+  "source": "synthetic",
+  "provenance": "hand-crafted-2026-05-25"
+}
