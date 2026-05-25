@@ -1,19 +1,31 @@
-FROM node:lts
+FROM debian:forky
 
 ARG TZ=UTC
 ENV TZ="$TZ"
 
 ARG CLAUDE_CODE_VERSION=latest
 
+# Base apt deps. gh isn't packaged in forky's apt — add GitHub CLI's
+# official repo before installing it.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  less git procps sudo fzf zsh man-db unzip zip gnupg2 gh \
+  wget curl ca-certificates gnupg2 \
+  && mkdir -p -m 755 /etc/apt/keyrings \
+  && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+  && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+     > /etc/apt/sources.list.d/github-cli.list \
+  && apt-get update && apt-get install -y --no-install-recommends \
+  xz-utils \
+  less git procps sudo fzf zsh man-db unzip zip gh \
   iptables ipset iproute2 dnsutils aggregate \
-  jq nano vim docker.io clang libclang-dev libudev-dev \
+  jq yq bc nano vim docker.io clang libclang-dev libudev-dev \
   bubblewrap socat gosu \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # All tool homes live in /opt/dev-tools — world-readable so any runtime UID
-# can use them. No /home/<user> dependencies anywhere.
+# can use them. No /home/<user> dependencies anywhere. Node comes from nvm,
+# not from a baked base image — respects per-project .nvmrc at runtime.
 ENV DEVCONTAINER=true \
     SHELL=/bin/zsh \
     EDITOR=nano \
@@ -23,18 +35,28 @@ ENV DEVCONTAINER=true \
     BUN_INSTALL=/opt/dev-tools/bun \
     CARGO_HOME=/opt/dev-tools/cargo \
     RUSTUP_HOME=/opt/dev-tools/rustup \
-    G_HOME=/opt/dev-tools/g \
+    GOROOT=/opt/dev-tools/goroot \
     GOPATH=/opt/dev-tools/go \
     SDKMAN_DIR=/opt/dev-tools/sdkman \
     PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers \
     PUPPETEER_CACHE_DIR=/opt/playwright-browsers/puppeteer \
     UV_TOOL_BIN_DIR=/opt/dev-tools/uv/bin \
     UV_TOOL_DIR=/opt/dev-tools/uv/tools \
-    PATH=/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/g/bin:/opt/dev-tools/g/go/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    PATH=/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
 
 WORKDIR /workspace
+
+# Install nvm + default LTS node first so subsequent RUNs can use npm/npx/corepack.
+# Symlink the default node's binaries to /usr/local/bin so they're on PATH
+# without sourcing nvm.sh in every RUN. Runtime users can still `nvm use` per
+# project (the wrapper sources nvm.sh, so .nvmrc / nvm install <ver> works).
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
+    unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
+    nvm install --lts && nvm alias default 'lts/*' && \
+    NODE_BIN="$NVM_DIR/versions/node/$(nvm version default)/bin" && \
+    for b in node npm npx corepack; do ln -sf "$NODE_BIN/$b" "/usr/local/bin/$b"; done
 
 ARG GIT_DELTA_VERSION=0.19.2
 RUN ARCH=$(dpkg --print-architecture) && \
@@ -47,10 +69,6 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN npx -y playwright install --with-deps chromium && \
   chmod -R o+rx /opt/playwright-browsers
 
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
-  unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
-  nvm install node && nvm alias default node
-
 RUN curl -fsSL https://bun.sh/install | bash
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
@@ -58,7 +76,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
   /opt/dev-tools/cargo/bin/rustup component add rust-analyzer clippy rustfmt
 
 RUN curl -sSL https://git.io/g-install | sh -s -- -y && \
-  /opt/dev-tools/g/go/bin/go install golang.org/x/tools/gopls@latest
+  /opt/dev-tools/goroot/bin/go install golang.org/x/tools/gopls@latest
 
 ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
@@ -95,7 +113,8 @@ RUN mkdir -p /etc/zsh && printf '%s\n' \
   'export HISTFILE="$HOME/.zsh_history"' \
   > /etc/zsh/zshrc
 
-# claude wrapper at /usr/local/bin (system-wide, $HOME-relative)
+# claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
+# honored; falls back to the symlinked default node otherwise.
 RUN printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json "$HOME/.claude.json"\n\
 [ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true}" > "$HOME/.claude.json"\n\
