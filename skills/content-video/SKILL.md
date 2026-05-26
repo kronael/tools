@@ -39,10 +39,11 @@ Pacing target: ~2.5 words per second spoken. 60 seconds ≈ 150 words.
 
 Scripts are de-branded by default. Refer to projects/products by their generic role ("the validator", "the build tool", "the indexer") unless the user has explicitly approved naming.
 
-- NEVER mention `Marinade`, `Marinade Finance`, `MNDE`, `mSOL`, or any client/employer brand by name in a draft.
+- NEVER mention any client, employer, protocol, or product brand by name in a draft.
 - NEVER name people, internal team handles, or in-progress code names.
-- ALWAYS use the role-form ("the staking pool", "the protocol") so the same script can be reused across audiences.
-- If the user supplies a brand name explicitly for THIS draft, include it; do not surface it again in subsequent drafts unless re-supplied.
+- NEVER reuse a brand name across drafts — even if the user named it once, drop it on the next draft unless re-supplied.
+- ALWAYS use the role-form ("the staking pool", "the protocol") so the same script reads naturally for any audience.
+- If the user explicitly supplies a brand name for THIS draft, include it; otherwise the role-form wins.
 
 ## Format on the page
 
