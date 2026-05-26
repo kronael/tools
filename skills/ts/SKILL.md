@@ -11,7 +11,13 @@ when_to_use: editing .ts files or writing TypeScript
 - Single-letter vars only in trivial one-line callbacks (`arr.find(v => v.id === x)`)
 - ALWAYS name types — NEVER inline/anonymous object types (tests exempt)
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
-- ALWAYS braces for if/for bodies (NEVER single-line without braces)
+- Single-line guards: omit braces, body indented on next line:
+  ```
+  if (x)
+    return y
+  ```
+- Multi-line bodies: ALWAYS braces
+- NEVER `if (x) { return y }` on one line — either braces+newline or no braces+newline
 
 ### Array Operations
 - NEVER spread when unnecessary — `filter()`, `map()`, `slice()` already create new arrays
