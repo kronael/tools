@@ -21,19 +21,29 @@ NEVER reach for oracle on routine uncertainty — `/recall-memories` + grep reso
 
 ## Call it
 
+ALWAYS pass `-s workspace-write` inside dockbox. Codex layers its own
+sandbox on top of dockbox's; the default `read-only` mode silently
+blocks file reads outside the declared workspace and reports "no
+findings" instead of an error. Dockbox is already the outer sandbox —
+codex's inner one is redundant.
+
 ```bash
 # Short prompt
-codex exec "is there a stdlib equivalent of Python's bisect in Go?"
+codex exec -s workspace-write "is there a stdlib equivalent of Python's bisect in Go?"
 
 # Multi-line context via stdin
-cat <<'EOF' | codex exec -
+cat <<'EOF' | codex exec -s workspace-write -
 Review this CRDT merge function for ordering bugs:
 <paste code>
 EOF
 
 # Pipe another command's output as context
-go test ./... 2>&1 | codex exec "summarize the failure and propose the smallest fix"
+go test ./... 2>&1 | codex exec -s workspace-write "summarize the failure and propose the smallest fix"
 ```
+
+If `workspace-write` still produces empty findings with codex citing
+sandbox blocks, escalate to `--dangerously-bypass-approvals-and-sandbox`
+(safe inside dockbox; NEVER use on the host).
 
 Flags: `--json` for machine-readable output, `--ephemeral` to skip session persistence.
 
