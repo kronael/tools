@@ -221,7 +221,7 @@ extra_env+=(-e "DOCKBOX_USER=$(id -un)")
 
 # Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
-mounts+=(--tmpfs /home/dockbox)
+mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
 chown_paths=("/home/dockbox")
 
 # Ephemeral overmounts (default): each build-artifact dir found under workdir
@@ -237,7 +237,7 @@ if [[ -z "$persist_builds" ]]; then
                 if [[ -n "$eph_no_tmpfs" ]]; then
                     mounts+=(-v "$found")
                 else
-                    mounts+=(--tmpfs "$found")
+                    mounts+=(--tmpfs "$found:rw,exec,mode=1777")
                 fi
                 chown_paths+=("$found")
             done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
