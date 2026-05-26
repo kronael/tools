@@ -1,5 +1,34 @@
 # Changelog
 
+## [v0.3.2] — 20260526
+
+> kronael v0.3.2 — make, dotnet, sudo, video scripts
+>
+> Dockbox grows the tools that kept missing; a new content skill lands.
+>
+> • `make` and `dotnet` baked in — Makefile projects and .NET apps run without setup
+> • `dockbox -S` grants passwordless sudo so ad-hoc tools install mid-session
+> • New `content-video` skill writes short-form video scripts (≤60s)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `make` (GNU Make 4.4.1) in the dockbox image via apt
+- `dotnet` SDK (LTS) installed under `/opt/dev-tools/dotnet/`; `DOTNET_ROOT` env set; `dotnet` on PATH; `libicu78` apt-installed so `dotnet` doesn't crash on globalization init
+- `dockbox -S` flag → passes `DOCKBOX_SUDO=1` to the container; `dockbox-init` writes `/etc/sudoers.d/dockbox-<user>` with `NOPASSWD:ALL` so the runtime user can `sudo apt install X` during a session; a `/etc/shadow` entry is also added so PAM doesn't reject the account
+- `skills/content-video/` — short-form video script skill (≤60s; hook + demo + payoff + CTA); follows tweet-skill terseness with bracketed direction lines + spoken lines
+- `make clean` at repo root, sweeping `__pycache__/` across subdirs; per-subdir `clean` targets
+
+### Changed
+- `research/library-drift.md` cites SkillsBench (arXiv 2602.12670) as its own paper rather than a "companion benchmark"
+- Root Makefile + `hooks/Makefile` get `.DEFAULT_GOAL := help` so bare `make` prints help instead of running tests
+- Hook test assertions in `pretool_nudge.py` now check the exact expected skill string (was matching only the literal "follow ")
+
+### Fixed
+- `dockbox-init`: `set -eu` guard + numeric validation on `DOCKBOX_UID` / `DOCKBOX_GID` (malicious non-numeric values fall back to 1000 instead of corrupting `/etc/passwd`)
+- `dockbox-init`: handles unset `DOCKBOX_EPH_PATHS` under `set -u` (was crashing with "parameter not set")
+- `dotnet-install.sh` invoked via `bash`, not `sh` (the installer uses bash redirection syntax)
+
 ## [v0.3.1] — 20260525
 
 > kronael v0.3.1 — dockbox hardened, hook tests

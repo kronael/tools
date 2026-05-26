@@ -66,6 +66,7 @@ Options:
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
+    -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
 
 Ephemeral builds (default):
@@ -114,6 +115,7 @@ entrypoint="claude"
 network=""
 ssh_agent=""
 docker_sock=""
+grant_sudo=""
 dirs=()
 extra_vols=()
 extra_env=()
@@ -131,7 +133,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgPT" opt; do
+while getopts ":n:x:e:v:HADgPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -140,6 +142,7 @@ while getopts ":n:x:e:v:HADgPT" opt; do
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
+        S) grant_sudo=1 ;;
         P) persist_builds=1 ;;
         T) eph_no_tmpfs=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
@@ -214,6 +217,7 @@ user_arg=(--user 0:0)
 extra_env+=(-e "DOCKBOX_UID=$(id -u)")
 extra_env+=(-e "DOCKBOX_GID=$(id -g)")
 extra_env+=(-e "DOCKBOX_USER=$(id -un)")
+[[ -n "$grant_sudo" ]] && extra_env+=(-e DOCKBOX_SUDO=1)
 
 # Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.

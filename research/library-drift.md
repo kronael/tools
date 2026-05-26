@@ -2,10 +2,10 @@
 
 The single most important paper in this corpus. The numbers in it are why our v3 design is "offline eval loop with PR gating", not "auto-edit at runtime".
 
-## Source
+## Sources
 
-- [Library Drift in LLM Agents, arXiv 2605.19576](https://arxiv.org/abs/2605.19576)
-- Companion benchmark: **SkillsBench** — held-out coding tasks designed to expose drift in agent skill libraries.
+- [Library Drift: Diagnosing and Fixing a Silent Failure Mode in Self-Evolving LLM Skill Libraries, arXiv 2605.19576](https://arxiv.org/abs/2605.19576) (May 2026)
+- [SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Tasks, arXiv 2602.12670](https://arxiv.org/abs/2602.12670) (Feb 2026) — the held-out benchmark Library Drift uses to measure the +0.0pp / +16.2pp gap. 86 tasks across 11 domains with curated skills and deterministic verifiers.
 
 ## Headline finding
 

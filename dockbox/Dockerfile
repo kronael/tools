@@ -16,11 +16,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
      > /etc/apt/sources.list.d/github-cli.list \
   && apt-get update && apt-get install -y --no-install-recommends \
-  xz-utils \
+  xz-utils make \
   less git procps sudo fzf zsh man-db unzip zip gh \
   iptables ipset iproute2 dnsutils aggregate \
   jq yq bc nano vim docker.io clang libclang-dev libudev-dev \
-  bubblewrap socat gosu \
+  bubblewrap socat gosu libicu78 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # All tool homes live in /opt/dev-tools — world-readable so any runtime UID
@@ -44,7 +44,8 @@ ENV DEVCONTAINER=true \
     PUPPETEER_CACHE_DIR=/opt/playwright-browsers/puppeteer \
     UV_TOOL_BIN_DIR=/opt/dev-tools/uv/bin \
     UV_TOOL_DIR=/opt/dev-tools/uv/tools \
-    PATH=/usr/local/bin:/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+    DOTNET_ROOT=/opt/dev-tools/dotnet \
+    PATH=/usr/local/bin:/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/opt/dev-tools/dotnet:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
 
@@ -94,6 +95,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
 RUN uv tool install pre-commit
 
 RUN curl -fsSL https://get.sdkman.io | bash
+
+# .NET SDK (LTS) — installed under /opt/dev-tools, in PATH so `dotnet` works
+# inside dockbox without per-project overrides.
+RUN curl -fsSL https://dot.net/v1/dotnet-install.sh \
+  | bash -s -- --install-dir /opt/dev-tools/dotnet --channel LTS
 
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
@@ -147,6 +153,12 @@ if [ "$(id -u)" = "0" ]; then\n\
     echo "${USERNAME}:x:${USER_UID}:${USER_GID}::${HOME_DIR}:/bin/zsh" >> /etc/passwd\n\
   getent group "$USER_GID" >/dev/null 2>&1 || \\\n\
     echo "${USERNAME}:x:${USER_GID}:" >> /etc/group\n\
+  getent shadow "$USERNAME" >/dev/null 2>&1 || \\\n\
+    echo "${USERNAME}:!:19000:0:99999:7:::" >> /etc/shadow\n\
+  if [ "${DOCKBOX_SUDO:-}" = "1" ]; then\n\
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/dockbox-${USERNAME}\n\
+    chmod 0440 /etc/sudoers.d/dockbox-${USERNAME}\n\
+  fi\n\
   [ -d "$HOME_DIR" ] && \\\n\
     { chown "${USER_UID}:${USER_GID}" "$HOME_DIR" || echo "dockbox-init: chown $HOME_DIR failed" >&2; }\n\
   if [ -n "${DOCKBOX_EPH_PATHS:-}" ]; then\n\
