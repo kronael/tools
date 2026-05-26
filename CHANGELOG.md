@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.3.3] — 20260526
+
+> kronael v0.3.3 — node_modules binaries run, brands stripped, essay shipped
+>
+> Permission-denied on `pnpm play` is fixed and the bundle is de-branded.
+>
+> • Dockbox tmpfs mounts now allow exec — `node_modules/.bin/playwright` and friends actually run
+> • Oracle skill uses codex's `--dangerously-bypass-approvals-and-sandbox` (safe inside dockbox)
+> • New `content-video` skill writes ≤60s scripts; brand names never appear in drafts
+> • Long-form essay `research/skill-libraries-cannot-evolve-themselves.md` consolidates the auto-improvement research
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `research/skill-libraries-cannot-evolve-themselves.md` — single ~3500-word writeup merging the per-topic research notes into one publishable piece (sources, design history, eval-set recipe)
+- `skills/content-video/SKILL.md` — short-form video script skill with a brand-agnostic de-branding rule
+
+### Changed
+- `skills/oracle/SKILL.md` — recommends `--dangerously-bypass-approvals-and-sandbox` for codex inside dockbox (codex's own sandbox blocks file reads silently and yields empty findings); load-bearing warning marks it host-unsafe
+- `dockbox/dockbox` — both tmpfs mounts (`/home/dockbox` and ephemeral overmounts) now use `:rw,exec,mode=1777` so binaries in `node_modules/.bin` can execute (Docker's default `--tmpfs` is `noexec`)
+
+### Removed
+- `usage-patterns/` directory — not useful
+- All brand-name mentions across tracked docs (`specs/1-ripclaude.md`, removed `usage-patterns/`); content-video's de-branding rule rewritten to itself be brand-agnostic
+
 ## [v0.3.2] — 20260526
 
 > kronael v0.3.2 — make, dotnet, sudo, video scripts
