@@ -35,16 +35,6 @@ Pacing target: ~2.5 words per second spoken. 60 seconds ≈ 150 words.
 - NEVER read out a URL aloud — put it in caption/description only.
 - NEVER write filler ("so basically", "the thing is", "you know") — cut on the second pass.
 
-## De-branding
-
-Scripts are de-branded by default. Refer to projects/products by their generic role ("the validator", "the build tool", "the indexer") unless the user has explicitly approved naming.
-
-- NEVER mention any client, employer, protocol, or product brand by name in a draft.
-- NEVER name people, internal team handles, or in-progress code names.
-- NEVER reuse a brand name across drafts — even if the user named it once, drop it on the next draft unless re-supplied.
-- ALWAYS use the role-form ("the staking pool", "the protocol") so the same script reads naturally for any audience.
-- If the user explicitly supplies a brand name for THIS draft, include it; otherwise the role-form wins.
-
 ## Format on the page
 
 ```
