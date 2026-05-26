@@ -21,29 +21,41 @@ NEVER reach for oracle on routine uncertainty — `/recall-memories` + grep reso
 
 ## Call it
 
-ALWAYS pass `-s workspace-write` inside dockbox. Codex layers its own
-sandbox on top of dockbox's; the default `read-only` mode silently
-blocks file reads outside the declared workspace and reports "no
-findings" instead of an error. Dockbox is already the outer sandbox —
-codex's inner one is redundant.
+**!!  ALWAYS pass `--dangerously-bypass-approvals-and-sandbox` inside dockbox  !!**
+
+Codex layers its own sandbox on top of dockbox's. The default `read-only`
+mode silently swallows file reads and reports "no findings"; even
+`workspace-write` cannot read paths outside its declared workspace.
+Dockbox is the real sandbox — codex's inner one is duplicate machinery
+that costs you findings.
+
+`--dangerously-bypass-approvals-and-sandbox` is **only safe inside
+dockbox** because dockbox is the perimeter. The flag's documentation
+explicitly says it is "intended solely for running in environments that
+are externally sandboxed" — that's us.
+
+> **NEVER use this flag on the host.** Codex will execute model-generated
+> shell commands with no approval and no isolation. Only fire it through
+> dockbox where the perimeter holds.
 
 ```bash
 # Short prompt
-codex exec -s workspace-write "is there a stdlib equivalent of Python's bisect in Go?"
+codex exec --dangerously-bypass-approvals-and-sandbox \
+  "is there a stdlib equivalent of Python's bisect in Go?"
 
 # Multi-line context via stdin
-cat <<'EOF' | codex exec -s workspace-write -
+cat <<'EOF' | codex exec --dangerously-bypass-approvals-and-sandbox -
 Review this CRDT merge function for ordering bugs:
 <paste code>
 EOF
 
 # Pipe another command's output as context
-go test ./... 2>&1 | codex exec -s workspace-write "summarize the failure and propose the smallest fix"
+go test ./... 2>&1 | codex exec --dangerously-bypass-approvals-and-sandbox \
+  "summarize the failure and propose the smallest fix"
 ```
 
-If `workspace-write` still produces empty findings with codex citing
-sandbox blocks, escalate to `--dangerously-bypass-approvals-and-sandbox`
-(safe inside dockbox; NEVER use on the host).
+If you ever see codex citing sandbox blocks, the flag wasn't applied —
+re-check the invocation, do not silently fall back to `-s read-only`.
 
 Flags: `--json` for machine-readable output, `--ephemeral` to skip session persistence.
 
