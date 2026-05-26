@@ -47,8 +47,8 @@ source ~/.local/share/clp/clp.bash
 `~/.config/clp/projects` — one dir per line:
 ```
 ~/wk/tools
-~/wk/marinade
-~/wk/trader
+~/wk/<project-a>
+~/wk/<project-b>
 ```
 
 Falls back to `~/wk/*/` if file missing.

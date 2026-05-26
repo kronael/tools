@@ -75,9 +75,9 @@ ansible-playbook playbooks.yml -i hosts -u <username> -t <tag-name>
 - Per-server customization via group_vars
 - Infrastructure as code (version control)
 
-### ops-infra (Marinade)
-**Location**: `/home/ondra/wk/mnde/ops-infra`
-**Purpose**: Git-ops source for Marinade infrastructure
+### ops-infra
+**Location**: `/home/ondra/wk/<project>/ops-infra`
+**Purpose**: Git-ops source for project infrastructure
 **Lang**: Terraform / Kubernetes / Ansible (mixed)
 
 **Structure**:
