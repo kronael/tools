@@ -55,6 +55,8 @@ The trick is — it doesn't compile what didn't change.
 - Plain lines are spoken verbatim. Read each aloud.
 - Empty line between beats.
 
+The render stage parses this format directly — bracketed lines become `visual`, plain lines become `vo`. No separate JSON authoring step; keep writing prose.
+
 ## Length variants
 
 | platform | target | hard cap |
