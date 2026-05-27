@@ -2,6 +2,27 @@
 
 Reference for [`create-video-render`](./SKILL.md). Loads on demand. Read this when choosing an engine, when licensing matters, or when Remotion isn't the right fit for the niche.
 
+## Niche engines — differential dynamics & coordination
+
+When the subject is dynamical systems (phase portraits, attractors, bifurcations, reaction-diffusion) or multi-agent coordination (swarms, coupled oscillators, agent orchestration), the mainstream web engines are the wrong tool. Specialist options, ranked by niche × quality:
+
+| tool | stack | uniquely good at | headless → mp4 | license |
+|---|---|---|---|---|
+| **DynamicalSystems.jl + GLMakie** | Julia | research-grade DS: trajectories, Lyapunov, basins, attractors | `record(fig, "out.mp4", frames)` | MIT |
+| **BifurcationKit.jl** | Julia | only serious open-source numerical continuation (Hopf/fold/period-doubling) | via Makie `record` | MIT |
+| **Bevy + wgpu headless** | Rust ECS | ECS *is* an agent-orchestration model — render the real sim, not a mock | `headless_renderer` example → PNG seq → ffmpeg | MIT/Apache |
+| **Taichi Lang** | Python→GPU | massive parallel fields: reaction-diffusion, stable-fluid, MPM | `ti.tools.VideoManager` → mp4 | Apache-2.0 |
+| **nannou** | Rust | reliable generative/swarm (boids, Vicsek) | `capture_frame(path)` → ffmpeg | MIT/Apache |
+| **Penrose** | TS DSL | declarative LaTeX-grade math diagrams, constraint-solved layout | SVG export → frames → ffmpeg | MIT |
+| **VisPy** | Python/GLSL | GPU shader field viz, millions of points @60fps | `canvas.render()` → imageio | BSD-3 |
+| **ParaView (pvbatch)** | Python/MPI | cinematic 3D PDE/volumetric fields, cluster-scale | off-screen EGL → `SaveAnimation()` | BSD-3 |
+| **phaseportrait** | Python/matplotlib | quick correct nullclines / 2D-3D portraits / cobweb | `FuncAnimation` → ffmpeg | MIT |
+| **Bonzomatic / KodeLife** | GLSL live-coder | pure fragment-shader field dynamics (demoscene) | capture via ffmpeg/NDI | zlib / proprietary |
+
+Picks: **DynamicalSystems.jl** for correct DS math; **Bevy headless** when the video should be driven by a real agent simulation (ECS mirrors containers/agents coordinating); **Taichi** for GPU fields; **nannou** for swarm/flocking. TouchDesigner and Houdini have high ceilings but weak headless/CLI stories — use only if already in that tool.
+
+Sources: [DynamicalSystems.jl](https://juliadynamics.github.io/DynamicalSystems.jl/dev/visualizations/) · [BifurcationKit.jl](https://github.com/bifurcationkit/BifurcationKit.jl) · [Bevy headless_renderer](https://github.com/bevyengine/bevy/blob/main/examples/app/headless_renderer.rs) · [Taichi](https://www.taichi-lang.org/) · [nannou](https://github.com/nannou-org/nannou) · [Penrose](https://penrose.cs.cmu.edu/blog/v3) · [VisPy](https://vispy.org/) · [ParaView pvbatch](https://docs.paraview.org/en/latest/Tutorials/ClassroomTutorials/pythonAndBatchPvpythonAndPvbatch.html) · [phaseportrait](https://pypi.org/project/phaseportrait/) · [Bonzomatic](https://github.com/Gargaj/Bonzomatic)
+
 ## Engine comparison
 
 | engine | paradigm | best niche | render | licensing |
