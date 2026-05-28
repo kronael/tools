@@ -26,8 +26,10 @@ None are full scaffolds — they drop into the engine's starter project.
 ## For the real niche (differential dynamics + coordination)
 
 These four are starting points. For research-grade dynamical-systems math or
-agent-coordination at scale, see the niche-engines section of
-[`../TECHNIQUES.md`](../TECHNIQUES.md) — **DynamicalSystems.jl + GLMakie** for
-correct phase portraits / attractors / basins, **Bevy headless** when the
-video should be driven by a *real* ECS agent simulation, **Taichi** for
-GPU reaction-diffusion fields.
+agent-coordination at scale, see the per-flavor files:
+[`../flavors/dynamical-systems.md`](../flavors/dynamical-systems.md) for
+correct phase portraits / attractors / bifurcations (Julia),
+[`../flavors/bevy-headless.md`](../flavors/bevy-headless.md) when the video
+should be driven by a *real* ECS agent simulation, and
+[`../flavors/fields-swarm.md`](../flavors/fields-swarm.md) for GPU
+reaction-diffusion / fluids / swarm.
