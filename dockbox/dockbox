@@ -229,19 +229,30 @@ chown_paths=("/home/dockbox")
 #   tmpfs (default) — kernel tmpfs (RAM-backed).
 #   -T              — anonymous Docker volume (disk-backed).
 # Disable with -P / --no-ephemeral.
+#
+# Cap depth at 4: covers workspace patterns (./node_modules,
+# ./packages/foo/node_modules, ./apps/bar/dist). Vendored pnpm/yarn
+# stores nest hundreds of node_modules deeper — overmounting each
+# blows ARG_MAX, and they're internal caches the container won't write.
+# Single find with -prune on any name so we don't double-mount nested
+# artifacts that a parent overmount already covers.
 if [[ -z "$persist_builds" ]]; then
+    find_expr=()
     for name in "${EPHEMERAL_DIRS[@]}"; do
-        for d in "${dirs[@]}"; do
-            absdir="$(cd "$d" && pwd)"
-            while IFS= read -r found; do
-                if [[ -n "$eph_no_tmpfs" ]]; then
-                    mounts+=(-v "$found")
-                else
-                    mounts+=(--tmpfs "$found:rw,exec,mode=1777")
-                fi
-                chown_paths+=("$found")
-            done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
-        done
+        [[ ${#find_expr[@]} -gt 0 ]] && find_expr+=(-o)
+        find_expr+=(-name "$name")
+    done
+    for d in "${dirs[@]}"; do
+        absdir="$(cd "$d" && pwd)"
+        while IFS= read -r found; do
+            if [[ -n "$eph_no_tmpfs" ]]; then
+                mounts+=(-v "$found")
+            else
+                mounts+=(--tmpfs "$found:rw,exec,mode=1777")
+            fi
+            chown_paths+=("$found")
+        done < <(find "$absdir" -maxdepth 4 -type d \
+            \( "${find_expr[@]}" \) -prune -print 2>/dev/null)
     done
 fi
 
