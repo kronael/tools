@@ -1,9 +1,9 @@
 # Example videos — coordination dynamics
 
-Four minimal, runnable examples, one per engine, all on the same theme:
-**coordination emerging in a system of many agents** (Kuramoto phase-sync +
-boids flocking). The metaphor for a distributed agent/container orchestrator
-finding coordination.
+Five minimal, runnable examples, one per engine, all on the same theme:
+**coordination emerging in a system of many agents** (Kuramoto phase-sync,
+boids flocking, ant stigmergy). The metaphor for a distributed agent/container
+orchestrator finding coordination.
 
 Each file is a single source unit with its render command in the header.
 None are full scaffolds — they drop into the engine's starter project.
@@ -14,6 +14,7 @@ None are full scaffolds — they drop into the engine's starter project.
 | [`remotion_KuramotoScene.tsx`](remotion_KuramotoScene.tsx) | Remotion | same Kuramoto model, frame-pure (any frame reproducible) | `npx remotion render src/index.ts kuramoto out.mp4` |
 | [`motion-canvas_coordination.tsx`](motion-canvas_coordination.tsx) | Motion Canvas | activation wave propagating a ring of nodes, then full sync | `npm run build` (or editor Render tab) |
 | [`p5_boids.js`](p5_boids.js) | p5.js | boids flocking — global order from three local rules, no leader | p5.capture addon → mp4 |
+| [`p5_ants.js`](p5_ants.js) | p5.js | ant stigmergy — food trails emerge from pheromone feedback, two sources compete | p5.capture addon → mp4 |
 
 ## Why these engines for this theme
 
