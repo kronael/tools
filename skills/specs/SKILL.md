@@ -14,7 +14,7 @@ Every spec file starts with YAML frontmatter:
 
 ```yaml
 ---
-status: draft|planned|partial|shipped
+status: draft|experiment|planned|partial|shipped
 ---
 ```
 
@@ -23,7 +23,10 @@ Lifecycle: `draft` → `planned` → `partial` → `shipped`.
 - **`draft`** — idea captured, NOT approved. Implementation is blocked.
   A draft spec must never be started. Promote to `planned` only when
   the work is explicitly approved to begin.
-- **`planned`** — approved and ready to implement.
+- **`experiment`** — live prototype in a preview branch; validates the idea
+  before committing to production. Must not merge to production until
+  explicitly promoted to `planned` AND any stated gates are cleared.
+- **`planned`** — approved and ready to implement in production.
 - **`partial`** — in progress.
 - **`shipped`** — complete; trim HOW, keep WHY + code pointers.
 
