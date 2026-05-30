@@ -237,6 +237,12 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ## Agents and Skills
 - Spawn 1-2 subagents typically, NEVER more than 4
+- NEVER run multiple code-editing subagents in parallel on the shared tree —
+  run code edits ONE AT A TIME (sequential), unless the user explicitly
+  authorizes parallel overlapping changes. Concurrent code edits interleave:
+  mid-flight commits, one sub reverting another's work, reviewers reading
+  half-edited files. Parallel IS fine for READ-ONLY subs (verify / review /
+  research) and for fully-isolated worktrees.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
