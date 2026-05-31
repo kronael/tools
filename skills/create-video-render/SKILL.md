@@ -47,6 +47,42 @@ The `vo` line drives both audio and caption timing.
 3. Per-word highlight captions (TikTok style, 1-3 words). Burn into the mp4 for autoplay; also emit `.srt`.
 4. NEVER speak a URL — caption/description only.
 
+## Text overlay — cards format
+
+Every visual `[direction]` line that names on-screen text maps to a **card** in `cards.json`.
+Pass to the renderer with `--cards path/to/cards.json` (or `--text "line1" "line2"` for ≤5 quick lines, auto-positioned).
+
+```json
+[
+  {"text": "Arizuko 0.49.0",           "pos": "top",    "size": 2.6, "color": [255,255,255],
+   "appear": 0,  "fade_in": 1.5},
+  {"text": "Colony finds shortest path","pos": "bottom", "size": 1.5, "color": [200,200,200],
+   "appear": 0,  "fade_in": 1.5},
+  {"text": "Now 3x faster",            "pos": "mid",    "size": 2.2, "color": [255,200,50],
+   "appear": 8,  "fade_in": 0.4, "hold": 4, "fade_out": 0.6}
+]
+```
+
+| field | type | default | meaning |
+|---|---|---|---|
+| `text` | string | — | displayed string |
+| `pos` | `"top"` `"upper"` `"mid"` `"lower"` `"bottom"` or float 0–1 | `"bottom"` | vertical position |
+| `size` | float | 2.0 | OpenCV font scale |
+| `color` | [R,G,B] | [255,255,255] | text color |
+| `thick` | int | 3 | stroke thickness |
+| `appear` | float | 0 | seconds into video when card starts |
+| `fade_in` | float | 1.0 | seconds to fade in |
+| `hold` | float or null | null | seconds to hold at full alpha; null = until end |
+| `fade_out` | float | 0.5 | seconds to fade out after hold |
+
+**Bridge rule**: map `[direction]` lines to cards by their intent:
+- `[Title: "…"]` → pos top, size 2.4–2.8, white, appear 0
+- `[Tagline: "…"]` → pos bottom, size 1.4–1.6, gray, appear 0
+- `[Callout: "…" at Ns]` → pos mid, size 2.0–2.4, accent color, appear N, hold 3–5, fade_out 0.5
+- `[Lower-third: "…"]` → pos lower, size 1.4, white, appear 0
+
+ALWAYS derive text from the script's `vo` lines and `[direction]` labels — NEVER add text that contradicts the spoken content.
+
 ## Pre-ship checklist
 
 - [ ] Colors from one config; one sans font; `tabular-nums` on counters

@@ -5,6 +5,7 @@
 #           --text "Arizuko 0.49.0" "Shortest path always wins"
 
 import argparse
+import json
 import math
 import sys
 
@@ -99,6 +100,71 @@ def put_centered(frame, text, y, scale, color, thick):
     cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, scale, color, thick, cv2.LINE_AA)
 
 
+# Named y-positions (px). Extend or override via cards JSON.
+_POS = {'top': 130, 'upper': H // 4, 'mid': H // 2, 'lower': 3 * H // 4, 'bottom': H - 90}
+
+# Auto-layout for --text shorthand: up to 5 lines, pre-styled.
+_TEXT_LAYOUT = [
+    {'pos': 'top', 'size': 2.6, 'color': [255, 255, 255], 'thick': 4},
+    {'pos': 'bottom', 'size': 1.5, 'color': [200, 200, 200], 'thick': 3},
+    {'pos': 'mid', 'size': 1.8, 'color': [230, 220, 180], 'thick': 3},
+    {'pos': 'upper', 'size': 1.5, 'color': [210, 210, 210], 'thick': 3},
+    {'pos': 'lower', 'size': 1.5, 'color': [210, 210, 210], 'thick': 3},
+]
+
+
+def card_y(pos):
+    if isinstance(pos, str):
+        return _POS.get(pos, H - 90)
+    return int(float(pos) * H)  # treat float 0-1 as normalized fraction
+
+
+def text_to_cards(lines):
+    return [
+        {
+            'text': t,
+            'appear': 0,
+            'fade_in': 1.5,
+            'hold': None,
+            'fade_out': 0.5,
+            **_TEXT_LAYOUT[i % len(_TEXT_LAYOUT)],
+        }
+        for i, t in enumerate(lines)
+    ]
+
+
+def render_cards(frame, cards, fps, fi):
+    t = fi / fps
+    for c in cards:
+        t0 = c.get('appear', 0.0)
+        fi_dur = c.get('fade_in', 1.0)
+        hold = c.get('hold')  # None = hold until end
+        fo_dur = c.get('fade_out', 0.5)
+        if t < t0:
+            continue
+        elapsed = t - t0
+        if elapsed < fi_dur:
+            alpha = elapsed / fi_dur
+        elif hold is None or elapsed < fi_dur + hold:
+            alpha = 1.0
+        elif elapsed < fi_dur + (hold or 0) + fo_dur:
+            alpha = 1.0 - (elapsed - fi_dur - (hold or 0)) / fo_dur
+        else:
+            continue
+        if alpha <= 0:
+            continue
+        overlay = frame.copy()
+        put_centered(
+            overlay,
+            c['text'],
+            card_y(c.get('pos', 'bottom')),
+            c.get('size', 2.0),
+            tuple(c.get('color', [255, 255, 255])),
+            c.get('thick', 3),
+        )
+        frame[:] = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--variant', default='default', choices=VARIANTS)
@@ -108,9 +174,27 @@ def main():
     ap.add_argument('--fps', type=int, default=60)
     ap.add_argument('--speed', type=int, default=1, help='sim steps per rendered frame (timelapse)')
     ap.add_argument('--gif', action='store_true', help='also write a 270x480 GIF at 15 fps')
-    ap.add_argument('--text', nargs='+', default=[], metavar='LINE', help='"version" "tagline"')
+    ap.add_argument(
+        '--text',
+        nargs='+',
+        default=[],
+        metavar='LINE',
+        help='quick text overlay: up to 5 lines auto-positioned top→bottom→mid…',
+    )
+    ap.add_argument(
+        '--cards',
+        metavar='JSON',
+        help='path to a JSON cards file for full per-element timing/style control',
+    )
     ap.add_argument('--out', default=None)
     args = ap.parse_args()
+
+    cards = []
+    if args.cards:
+        with open(args.cards) as fh:
+            cards = json.load(fh)
+    if args.text:
+        cards = text_to_cards(args.text) + cards
 
     v = VARIANTS[args.variant]
     out = args.out or f'ant_{args.variant}.mp4'
@@ -248,14 +332,8 @@ def main():
                 cv2.line(frame, (ix, iy), tip, col, 1)
                 cv2.circle(frame, (ix, iy), 2, col, -1)
 
-        if args.text:
-            alpha = min(1.0, fi / (args.fps * 1.5))
-            if alpha > 0:
-                overlay = frame.copy()
-                put_centered(overlay, args.text[0], 130, 2.6, (255, 255, 255), 4)
-                if len(args.text) > 1:
-                    put_centered(overlay, args.text[1], H - 90, 1.5, (200, 200, 200), 3)
-                frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+        if cards:
+            render_cards(frame, cards, args.fps, fi)
 
         vw.write(frame)
         if args.gif and fi % gif_stride == 0:
