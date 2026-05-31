@@ -10,8 +10,25 @@ user-invocable: true
 ## When
 
 - `/commit`: ALWAYS proceed
-- Auto (hook): only if all dirty files form a single cohesive chunk AND no unrelated dirty files exist
-- Not cohesive: name the logical groups, stop — do not suggest a combined commit
+- Auto (hook): the nudge is throttled to ~once per 10 min, so dirty work
+  accumulates between nudges. When it fires, do the work of splitting — don't
+  dump the whole tree into one commit (see Splitting).
+- Not cohesive: name the logical groups and commit each separately — never a
+  combined commit.
+
+## Splitting into coherent chunks
+
+One commit = one logical change. Read the diff and group by WHY, not by
+directory, then commit each group with its own `[section]` message:
+
+- fix vs refactor vs docs vs test → separate commits, even when touched together
+- unrelated features → separate commits
+- a fix + its test → one commit (single change)
+- a doc/SCREENS/ARCHITECTURE update for a behavior change → same commit as the change
+- if you can't state one reason for a group, it's two commits
+
+Prefer 3 precise commits over 1 vague one. The throttle buys you time to
+split correctly — use it. `git add -A` + one message defeats the split.
 
 ## Format
 
@@ -47,3 +64,15 @@ Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] M
 - NEVER skip pre-commit hooks
 - NEVER suggest committing if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes
+
+## Orphaned worktrees
+
+A worktree under `.claude/worktrees/` from a prior session may linger — locked
+by a dead pid, stranded on a stale base. Before touching it:
+
+1. `git worktree list` — note its base commit (often far behind HEAD).
+2. `git -C <wt> diff` — is the work superseded by current HEAD, or unique?
+3. Superseded / trivial / stale-base AND lock pid dead → safe to remove:
+   `git worktree unlock <wt> && git worktree remove --force <wt> && git branch -D <branch>`
+4. Holds unique, non-superseded work you did NOT create → surface to the user;
+   do NOT force-remove (you'd destroy unsaved work).
