@@ -13,6 +13,7 @@ MOUNTS=(
     "$HOME/.gitconfig:/home/dockbox/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/dockbox/.zsh_history:rw"
     "$HOME/.codex:/home/dockbox/.codex:rw"
+    "$HOME/.config/gcloud:/home/dockbox/.config/gcloud:ro"
     "/etc/localtime:/etc/localtime:ro"
 )
 
