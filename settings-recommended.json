@@ -76,8 +76,9 @@
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
+  "promptSuggestionEnabled": false,
+  "spinnerTipsEnabled": false,
   "env": {
-    "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION": "false",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   }
 }
