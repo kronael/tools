@@ -1,5 +1,39 @@
 # Changelog
 
+## [v0.3.4] — 20260531
+
+> kronael v0.3.4 — gcloud in dockbox, video pipeline, throttled nudges
+>
+> Dockbox now ships gcloud and forwards credentials safely; the video skill becomes a full render pipeline with working ant simulations and a text card system.
+>
+> • `dockbox -G` mounts `~/.config/gcloud` ro — gcloud ops work inside the sandbox without leaking creds by default
+> • gcloud CLI baked into the image — `gcloud storage cp` and friends available without setup
+> • Dockbox ephemeral `find` capped at depth 4 — no more ARG_MAX crash on deep monorepos
+> • `create-video-render` restructured: engine index + per-flavor files (Remotion, Manim, Bevy, swarm, shaders)
+> • Ant stigmergy simulation — headless mp4/gif renderer with 4 variants, `--speed`, `--text`/`--cards` text overlays
+> • Commit/stop hooks throttle their nudges to once per 10 min — less noise on long sessions
+> • Spec skill: draft → planned → partial → shipped lifecycle; draft status blocks implementation
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -G` flag — mounts `~/.config/gcloud` ro (opt-in, like `-g` for GH tokens); silently skipped when absent
+- `google-cloud-cli` installed in dockbox image via apt; `gcloud`, `gsutil`, `bq` on PATH
+- `skills/create-video-render/examples/ant_coordination.py` — headless ant stigmergy renderer: 4 variants (`default`, `race`, `bloom`, `chaos`), `--speed N` timelapse, `--gif`, `--text` / `--cards JSON` per-element text overlays with fade timing
+- `skills/create-video-render/examples/p5_boids.js` → `p5_ants.js` — browser-runnable stigmergy sketch
+- `skills/create-video-render/SKILL.md` — text card bridge spec: JSON schema, named positions (`top`/`upper`/`mid`/`lower`/`bottom`), per-card `appear`/`fade_in`/`hold`/`fade_out`
+- `skills/specs/SKILL.md` — experiment lifecycle (`draft` → `planned` → `partial` → `shipped`); draft status blocks implementation
+
+### Changed
+- `create-video-render` skill restructured: top-level `SKILL.md` is engine index; per-engine detail in `flavors/` (Remotion, Manim, Motion Canvas, DynamicalSystems.jl, Bevy headless, GPU fields/swarm, shaders)
+- Dockbox ephemeral `find` capped at `maxdepth 4` — prevents ARG_MAX overflow on deep pnpm/yarn workspaces
+- Commit skill nudge throttled to once per 10 min and reworded to emphasise coherent-chunk splitting
+- Stop hook commit nudge throttled to once per 10 min
+- `skills/ts/SKILL.md` — if-guard style: omit braces, indent body on next line (matches project style scan)
+
+### Fixed
+- Ant simulation: food sources repositioned to midscreen (y≈0.45); scouts pre-seeded near food so trails form from frame 1, not after random discovery
+
 ## [v0.3.3] — 20260526
 
 > kronael v0.3.3 — node_modules binaries run, brands stripped, essay shipped
