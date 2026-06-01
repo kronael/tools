@@ -13,7 +13,6 @@ MOUNTS=(
     "$HOME/.gitconfig:/home/dockbox/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/dockbox/.zsh_history:rw"
     "$HOME/.codex:/home/dockbox/.codex:rw"
-    "$HOME/.config/gcloud:/home/dockbox/.config/gcloud:ro"
     "/etc/localtime:/etc/localtime:ro"
 )
 
@@ -69,6 +68,7 @@ Options:
     -D         Mount Docker socket
     -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
+    -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
@@ -117,6 +117,7 @@ network=""
 ssh_agent=""
 docker_sock=""
 grant_sudo=""
+gcloud_creds=""
 dirs=()
 extra_vols=()
 extra_env=()
@@ -134,7 +135,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgPTS" opt; do
+while getopts ":n:x:e:v:HADgGPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -148,6 +149,7 @@ while getopts ":n:x:e:v:HADgPTS" opt; do
         T) eph_no_tmpfs=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        G) gcloud_creds=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -195,6 +197,9 @@ if [[ -n "$ssh_agent" && -n "${SSH_AUTH_SOCK:-}" ]]; then
     mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
     ssh_env=(-e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
 fi
+
+[[ -n "$gcloud_creds" && -d "$HOME/.config/gcloud" ]] && \
+    mounts+=(-v "$HOME/.config/gcloud:/home/dockbox/.config/gcloud:ro")
 
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
