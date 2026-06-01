@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.5] — 20260531
+
+> kronael v0.3.5 — pkg-config in dockbox
+>
+> hidapi and other C-binding crates now compile inside the sandbox.
+>
+> • `pkg-config` added to the image — Rust crates that probe `libudev` (hidapi, ledger, trezor) no longer fail at link time
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `pkg-config` missing from dockbox apt install — `hidapi`/`libudev`-dependent Rust crates now build inside the container
+
 ## [v0.3.4] — 20260531
 
 > kronael v0.3.4 — gcloud in dockbox, video pipeline, throttled nudges
