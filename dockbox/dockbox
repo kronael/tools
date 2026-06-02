@@ -3,7 +3,7 @@ set -euo pipefail
 
 IMAGE="dockbox"
 
-EPHEMERAL_DIRS=(node_modules .next dist build .turbo .cache)
+EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
 
 MOUNTS=(
     "$HOME/.claude:/home/dockbox/.claude:rw"
@@ -88,6 +88,7 @@ Ephemeral builds (default):
     Pass -P / --no-ephemeral to disable both and see host build dirs.
 
     Names: ${EPHEMERAL_DIRS[*]}
+    (dist/ and build/ are excluded — build tools rm -rf them, which hits EBUSY on a mountpoint)
 
 Examples:
     dockbox                           # current dir
