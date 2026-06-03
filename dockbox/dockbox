@@ -4,6 +4,10 @@ set -euo pipefail
 IMAGE="dockbox"
 
 EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
+# Output dirs: build tools rm -rf these, so a tmpfs mount causes EBUSY.
+# Instead: pre-delete on start (container gets a clean slate) and
+# delete again on exit (host stays clean). No mountpoint involved.
+OUTPUT_DIRS=(dist build target out)
 
 MOUNTS=(
     "$HOME/.claude:/home/dockbox/.claude:rw"
@@ -87,8 +91,8 @@ Ephemeral builds (default):
 
     Pass -P / --no-ephemeral to disable both and see host build dirs.
 
-    Names: ${EPHEMERAL_DIRS[*]}
-    (dist/ and build/ are excluded — build tools rm -rf them, which hits EBUSY on a mountpoint)
+    Incremental (tmpfs/volume): ${EPHEMERAL_DIRS[*]}
+    Output (pre-delete + post-exit cleanup): ${OUTPUT_DIRS[*]}
 
 Examples:
     dockbox                           # current dir
@@ -124,6 +128,7 @@ extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
+output_to_clean=()
 claude_args=()
 
 # pre-strip long flags getopts can't parse
@@ -263,6 +268,22 @@ if [[ -z "$persist_builds" ]]; then
     done
 fi
 
+if [[ -z "$persist_builds" ]]; then
+    out_expr=()
+    for name in "${OUTPUT_DIRS[@]}"; do
+        [[ ${#out_expr[@]} -gt 0 ]] && out_expr+=(-o)
+        out_expr+=(-name "$name")
+    done
+    for d in "${dirs[@]}"; do
+        absdir="$(cd "$d" && pwd)"
+        while IFS= read -r found; do
+            output_to_clean+=("$found")
+            rm -rf "$found" && mkdir -p "$found"
+        done < <(find "$absdir" -maxdepth 4 -type d \
+            \( "${out_expr[@]}" \) -prune -print 2>/dev/null)
+    done
+fi
+
 eph_list=$(IFS=:; echo "${chown_paths[*]}")
 extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 
@@ -292,8 +313,13 @@ if [[ -n "$existing" ]]; then
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
+_cleanup() {
+    local d
+    for d in "${output_to_clean[@]}"; do rm -rf "$d"; done
+}
 trap '' TSTP
-exec docker run -it --rm \
+trap _cleanup EXIT
+docker run -it --rm \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
