@@ -19,6 +19,21 @@ MOUNTS=(
     "/etc/localtime:/etc/localtime:ro"
 )
 
+name_override=""
+entrypoint="claude"
+network=""
+ssh_agent=""
+docker_sock=""
+grant_sudo=""
+gcloud_creds=""
+dirs=()
+extra_vols=()
+extra_env=()
+persist_builds=""
+eph_no_tmpfs=""
+output_to_clean=()
+claude_args=()
+
 case "${1:-}" in
     ls)
         docker container ls -a --filter "name=^dockbox-" \
@@ -118,20 +133,6 @@ Config: ~/.dockboxrc and .dockboxrc in project dir.
 EOF
         exit 0 ;;
 esac
-
-name_override=""
-entrypoint="claude"
-network=""
-ssh_agent=""
-docker_sock=""
-grant_sudo=""
-gcloud_creds=""
-dirs=()
-extra_vols=()
-extra_env=()
-persist_builds=""
-eph_no_tmpfs=""
-claude_args=()
 
 # pre-strip long flags getopts can't parse
 _args=()
