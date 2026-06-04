@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.6] — 20260604
+
+> kronael v0.3.6 — dist/build off ephemeral mounts, commit skill simplified
+>
+> Build tools that rm -rf their output dir no longer hit EBUSY inside dockbox.
+>
+> • `dist` and `build` removed from ephemeral overmounts — `rm -rf dist` works; container writes to host path as a plain bind mount
+> • Commit skill rewritten to conventional commits format with imperative mood and breaking-change rules
+> • Stop prompt suggestions disabled in recommended settings
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- `dockbox`: `dist` and `build` removed from `EPHEMERAL_DIRS` — tmpfs-mounting them caused EBUSY when build tools did `rm -rf dist`; container now writes to host path directly
+- `skills/commit/SKILL.md` — rewritten to conventional commits format (`feat:`, `fix:`, `chore:` etc.), imperative mood, breaking change rules; trimmed from 80 → 38 lines
+- `settings-recommended.json` — stop prompt suggestions disabled
+
 ## [v0.3.5] — 20260531
 
 > kronael v0.3.5 — pkg-config in dockbox
