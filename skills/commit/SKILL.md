@@ -39,7 +39,7 @@ Format shapes:
 - `revert: <subject>`
 - `release: vX.Y.Z`
 
-Subject: ≤ 72 chars, imperative mood. Test: "If applied, this commit will: _____"
+Subject: ≤ 72 chars, imperative mood, **capitalize first word after the colon**. Test: "If applied, this commit will: _____"
 
 Body (second `-m`): explain *why* — the diff shows what.
 `git commit -m "subj" -m "why" -- files`
