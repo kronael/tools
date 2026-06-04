@@ -54,7 +54,7 @@ case "${1:-}" in
                 docker rm "$name" && echo "removed $name"
         done
         exit 0 ;;
-    sh|enter)
+    sh)
         entrypoint=/bin/zsh
         shift ;;
     -h|--help)
