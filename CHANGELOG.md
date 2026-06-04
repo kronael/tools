@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.3.7] — 20260604
+
+> kronael v0.3.7 — Cargo tmpfs, dockbox sh, skill fixes
+>
+> Rust builds no longer pollute the host; drop into a shell with one word.
+>
+> • `dockbox sh [dirs...]` — enter the container with zsh instead of claude
+> • `CARGO_TARGET_DIR` redirected to a tmpfs — `target/` never written to host
+> • Commit skill: capitalize first word after the type colon
+> • Global skill: question-spending rule synced to installed CLAUDE.md
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox sh` subcommand — drops into `/bin/zsh` with the full dockbox setup; all flags (`-G`, `-S`, `-D`, etc.) still apply
+
+### Changed
+- `dockbox`: `CARGO_TARGET_DIR=/tmp/cargo-target` set unconditionally; dedicated tmpfs mounted at that path — Cargo builds stay in RAM, host `target/` untouched
+- `skills/commit/SKILL.md` — subject rule: capitalize first word after the type colon (`feat: Add` not `feat: add`)
+- `skills/global/SKILL.md` — added question-spending rule (synced from installed CLAUDE.md)
+
 ## [v0.3.6] — 20260604
 
 > kronael v0.3.6 — dist/build off ephemeral mounts, commit skill simplified
