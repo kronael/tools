@@ -54,10 +54,14 @@ case "${1:-}" in
                 docker rm "$name" && echo "removed $name"
         done
         exit 0 ;;
+    sh|enter)
+        entrypoint=/bin/zsh
+        shift ;;
     -h|--help)
         cat <<EOF
 Usage: dockbox [options] [dirs...] [claude-args...]
        dockbox ls | rm [pattern] | prune [hours]
+       dockbox sh|enter [options] [dirs...]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
