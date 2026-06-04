@@ -298,6 +298,9 @@ done
 
 existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
 if [[ -n "$existing" ]]; then
+    if [[ "$entrypoint" == "/bin/zsh" ]]; then
+        exec docker exec -it "$CONTAINER_NAME" /bin/zsh
+    fi
     echo "container '$CONTAINER_NAME' is already running" >&2
     echo "use -n <name> or stop it first" >&2
     exit 1
