@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.8] — 20260604
+
+> kronael v0.3.8 — dockbox sh re-enters running container
+>
+> `dockbox sh` now execs into the already-running container instead of erroring.
+>
+> • `dockbox sh` on a live container → `docker exec` into it; no need to know the container name
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- `dockbox sh` — if the container is already running, execs into it via `docker exec -it <name> /bin/zsh` instead of printing an error
+
 ## [v0.3.7] — 20260604
 
 > kronael v0.3.7 — Cargo tmpfs, dockbox sh, skill fixes
