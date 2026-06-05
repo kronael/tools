@@ -171,7 +171,11 @@ for arg in "$@"; do
 done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-cmd=("$entrypoint" "${claude_args[@]}")
+if [[ "$entrypoint" == "claude" ]]; then
+    cmd=("$entrypoint" --resume "${claude_args[@]}")
+else
+    cmd=("$entrypoint" "${claude_args[@]}")
+fi
 
 mounts=()
 workdir=""
