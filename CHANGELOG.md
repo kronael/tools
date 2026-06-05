@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.9] — 20260605
+
+> kronael v0.3.9 — dockbox resumes last session by default
+>
+> Dockbox now picks up where you left off — no more starting from scratch each launch.
+>
+> • `dockbox` passes `--resume` to claude by default — last session resumes automatically
+> • `fix` skill — reads `./capture.png` or `/tmp/capture.png` when the bug target is unclear
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- `dockbox`: passes `--resume` to `claude` by default; non-claude entrypoints unaffected
+- `skills/fix/SKILL.md`: auto-loads `./capture.png` or `/tmp/capture.png` when no clear target is given
+
 ## [v0.3.8] — 20260604
 
 > kronael v0.3.8 — dockbox sh re-enters running container
