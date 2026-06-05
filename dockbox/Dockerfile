@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   xz-utils make \
   less git procps sudo fzf zsh man-db unzip zip gh \
   iptables ipset iproute2 dnsutils aggregate \
-  jq yq bc nano vim docker.io clang libclang-dev libudev-dev pkg-config \
+  jq yq bc nano vim docker.io clang libclang-dev libudev-dev libssl-dev pkg-config \
   bubblewrap socat gosu libicu78 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
