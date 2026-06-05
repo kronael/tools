@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.10] — 20260605
+
+> kronael v0.3.10 — dockbox -N starts a fresh session
+>
+> Opt out of the default resume with one flag when you want a clean slate.
+>
+> • `dockbox -N` — skips `--resume`, starts a new claude session
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox -N` — new-session flag; omits the default `--resume` passed to claude
+
 ## [v0.3.9] — 20260605
 
 > kronael v0.3.9 — dockbox resumes last session by default
