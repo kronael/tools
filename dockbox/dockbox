@@ -245,6 +245,8 @@ extra_env+=(-e "DOCKBOX_USER=$(id -un)")
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
 
+mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
+
 # Cargo target dir: dedicated tmpfs so builds never write to the host workdir.
 # CARGO_TARGET_DIR tells Cargo to use this path regardless of project layout.
 mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
