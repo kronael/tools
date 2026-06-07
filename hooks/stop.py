@@ -17,22 +17,19 @@ if not isinstance(data, dict) or data.get('stop_hook_active') or os.environ.get(
     sys.exit(0)
 
 cwd = data.get('cwd', '.')
+now = datetime.now(tz=UTC)
 parts = []
 
-# Commit nudge is throttled: nag at most once per NUDGE_INTERVAL so work can
-# accumulate into coherent chunks instead of being nagged after every stop.
+# Throttle: nag at most once per NUDGE_INTERVAL so work accumulates into coherent chunks.
 NUDGE_INTERVAL = 600
 
 
+def git_run(*args):
+    return subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=cwd, check=False)
+
+
 def git_path(name):
-    r = subprocess.run(
-        ['git', 'rev-parse', '--git-dir'],
-        capture_output=True,
-        text=True,
-        timeout=5,
-        cwd=cwd,
-        check=False,
-    )
+    r = git_run('git', 'rev-parse', '--git-dir')
     if r.returncode != 0:
         return None
     gd = r.stdout.strip()
@@ -44,28 +41,14 @@ def git_path(name):
 def nudge_due(stamp):
     if stamp is None or not os.path.exists(stamp):
         return True
-    return datetime.now(tz=UTC).timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
+    return now.timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
 
 
 # Uncommitted changes
-r = subprocess.run(
-    ['git', 'status', '--porcelain', '-uno'],
-    capture_output=True,
-    text=True,
-    timeout=5,
-    cwd=cwd,
-    check=False,
-)
+r = git_run('git', 'status', '--porcelain', '-uno')
 stamp = git_path('claude-commit-nudge')
 if r.returncode == 0 and r.stdout.strip() and nudge_due(stamp):
-    diff = subprocess.run(
-        ['git', 'diff', '--stat'],
-        capture_output=True,
-        text=True,
-        timeout=5,
-        cwd=cwd,
-        check=False,
-    )
+    diff = git_run('git', 'diff', '--stat')
     msg = 'Uncommitted changes detected.'
     if diff.stdout.strip():
         msg += '\n' + diff.stdout.strip()
@@ -82,18 +65,20 @@ if r.returncode == 0 and r.stdout.strip() and nudge_due(stamp):
     if stamp is not None:
         try:
             with open(stamp, 'w') as f:
-                f.write(datetime.now(tz=UTC).isoformat())
+                f.write(now.isoformat())
         except OSError:
             pass
 
 # Diary freshness (missing today or stale > 1h)
-diary_dir = os.path.join(cwd, '.diary')
-if os.path.isdir(diary_dir):
-    diary_file = os.path.join(diary_dir, datetime.now(tz=UTC).strftime('%Y%m%d') + '.md')
-    if not os.path.exists(diary_file):
-        parts.append('No diary entry for today. Consider running /diary.')
-    elif datetime.now(tz=UTC).timestamp() - os.path.getmtime(diary_file) > 3600:
-        parts.append('Diary not updated in over an hour. Consider running /diary.')
+toplevel = git_run('git', 'rev-parse', '--show-toplevel')
+repo_root = toplevel.stdout.strip() if toplevel.returncode == 0 else cwd
+diary_dir = os.path.join(repo_root, '.diary')
+os.makedirs(diary_dir, exist_ok=True)
+diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
+if not os.path.exists(diary_file):
+    parts.append('No diary entry for today. Consider running /diary.')
+elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
+    parts.append('Diary not updated in over an hour. Consider running /diary.')
 
 if parts:
     print(json.dumps({'decision': 'block', 'reason': '\n'.join(parts)}))
