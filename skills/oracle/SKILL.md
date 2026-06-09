@@ -83,7 +83,8 @@ if ! codex login status >/dev/null 2>&1 \
   echo "oracle unavailable — no codex auth configured"
   exit 0
 fi
-codex exec "$prompt"
+# </dev/null is REQUIRED when passing prompt as argument — without it codex blocks on stdin
+codex exec "$prompt" </dev/null
 ```
 
 Tell the user "oracle isn't configured" and continue without it. NEVER
