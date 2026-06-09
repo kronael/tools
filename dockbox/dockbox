@@ -31,7 +31,6 @@ extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
-new_session=""
 output_to_clean=()
 claude_args=()
 
@@ -92,7 +91,6 @@ Options:
     -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
-    -N         New session (skip default --resume)
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
@@ -146,7 +144,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgGPTSN" opt; do
+while getopts ":n:x:e:v:HADgGPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -161,7 +159,6 @@ while getopts ":n:x:e:v:HADgGPTSN" opt; do
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
         G) gcloud_creds=1 ;;
-        N) new_session=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -174,7 +171,11 @@ for arg in "$@"; do
 done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-if [[ "$entrypoint" == "claude" && -z "$new_session" ]]; then
+_primary_dir="$(cd "${dirs[-1]}" && pwd)"
+_session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
+_has_session=""
+ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
+if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
     cmd=("$entrypoint" --resume "${claude_args[@]}")
 else
     cmd=("$entrypoint" "${claude_args[@]}")
