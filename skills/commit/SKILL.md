@@ -66,7 +66,7 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 
 ## Orphaned worktrees
 
-A worktree under `.claude/worktrees/` from a prior session may linger. Before touching it:
+Only applies to Claude-managed worktrees under `.claude/worktrees/`. Never touch other worktrees.
 
 1. `git worktree list` — note its base commit.
 2. `git -C <wt> diff` — superseded by HEAD, or unique?
