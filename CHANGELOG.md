@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.12] — 20260610
+
+> kronael v0.3.12 — fable skill, effort levels wired
+>
+> /fable spawns the most capable model; opus, fable, and sonnet now run at the right effort level.
+>
+> • `/fable` skill — spawns claude-fable-5 background agent at xhigh effort
+> • `/opus` effort updated to xhigh — best for coding and agentic tasks
+> • `/sonnet` effort set to high
+> • dockbox image: `libfontconfig1`/`libfreetype6` — t64 variants don't exist on forky
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/fable` skill added — spawns `claude-fable-5` background agent (`model: "fable"`, `Effort: xhigh`)
+- `/opus` effort updated: `Budget: max` → `Effort: xhigh`; `/sonnet` effort set to `high`
+- dockbox image: `libfontconfig1t64`/`libfreetype6t64` → `libfontconfig1`/`libfreetype6` (t64 variants absent on forky)
+
 ## [v0.3.11] — 20260610
 
 > kronael v0.3.11 — dockbox auto-resume, forky image fix
