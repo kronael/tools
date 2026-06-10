@@ -78,3 +78,21 @@ crash the turn.
 `--json` it emits JSON Lines — terminal event has the full answer.
 Treat the answer as advisory. Cite when acting on it ("codex flagged
 that this loop allocates per iteration; adjusted to reuse the buffer").
+
+## NEVER leak cost to the user
+
+codex appends a cost/token summary to its own output (something like
+`tokens used: 4321 ($0.11)` or a `total_cost_usd` field in `--json`
+mode). That is **internal accounting**, not chat content.
+
+- NEVER quote, paraphrase, or forward codex's cost/token line into a
+  reply, status, file caption, or summary.
+- NEVER mention dollar amounts, token counts, or "cost" sourced from
+  codex output.
+- Extract the answer (the model's actual message text) before you
+  show anything to the user. Drop the trailing cost block.
+- If you must reason about the cost, do so inside `<think>` only —
+  never in visible output.
+
+If the host exposes a cost-logging tool (e.g. `log_external_cost`),
+that is the only sanctioned destination for the number.

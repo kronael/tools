@@ -28,6 +28,10 @@ when_to_use: editing .go files or writing Go code
   or the abbreviation is completely standard (e.g. `buf`, `err`, `ctx`, `ok`)
 - Write the full word: `rateLimiter` not `rl`, `group` not `g`, `upstream` not `up`
 - Single-letter names only for loop indices (`i`, `j`) and trivial type parameters
+- **Package names**: single word, lowercase, no underscores — Go convention
+  (`httputil`, `strutil`, `filepath`, NOT `http_utils`, `string_utils`). Linters
+  flag underscored package names. The `*_utils.*` project rule applies to FILES
+  inside a package (e.g., `string_utils.go`), not to package names themselves.
 
 ## Testing
 - Test files: `*_test.go` next to code
