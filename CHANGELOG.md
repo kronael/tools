@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.3.11] — 20260610
+
+> kronael v0.3.11 — dockbox auto-resume, forky image fix
+>
+> Dockbox detects prior sessions automatically and the container image now builds on Debian forky with all Rust and Playwright dependencies.
+>
+> • `dockbox` auto-detects past session — `--resume` passed only when a `.jsonl` exists; `-N` flag removed
+> • Container `/tmp` mounted as tmpfs — scratch stays ephemeral, no host writes
+> • Image: `libpq-dev` + `libssl-dev` — postgres and openssl Rust crates compile cleanly
+> • Image: playwright chromium deps explicit — fixes Debian forky (t64 lib rename)
+> • oracle skill: pipe `/dev/null` to codex exec — unblocks stdin hang
+> • Hooks: diary nudge fixed for monorepos
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `dockbox`: `/tmp` mounted as tmpfs — scratch stays ephemeral
+- dockbox image: `libpq-dev` + `libssl-dev` — postgres and openssl-sys Rust crates
+
+### Changed
+- `dockbox`: auto-detects past session via `~/.claude/projects/<slug>/*.jsonl`; `--resume` only when session exists; `-N` flag removed
+
+### Fixed
+- dockbox image: chromium deps installed explicitly, `--with-deps` dropped — Playwright on Debian forky (t64 transition)
+- oracle skill: `/dev/null` piped to codex exec — unblocks stdin hang
+- hooks: diary nudge fixed for monorepos; `git_run` refactored
+
 ## [v0.3.10] — 20260605
 
 > kronael v0.3.10 — dockbox -N starts a fresh session
