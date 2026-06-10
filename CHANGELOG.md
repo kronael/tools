@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.3.14] — 20260610
+
+> kronael v0.3.14 — bugs skill + sharper nudges
+>
+> The `/bugs` issue-queue skill is finished, and the prompt nudger now points you at `/bugs` and `/specs`.
+>
+> • `/bugs` skill — record open issues in `bugs.md` with a fixed entry format, lifecycle, and prune-to-diary flow
+> • Prompt nudger routes "bug"/"spec" mentions to `/bugs` and `/specs`
+> • Fuzzy matcher matches singular/plural across a trailing "s", so 3-letter words like "bug" route too
+> • CLAUDE.md rewritten as a concise repo-specific guide instead of a copy of the global wisdom
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `/bugs` skill: the `bugs.md` open-issues queue — entry format, record/mark/prune lifecycle, optional aggregation. Policy stays in CLAUDE.md "Bug Triage Protocol", which now points to the skill
+- `prompt_nudge.py` routes `bug`/`bugs` → `/bugs` and `spec`/`specs` → `/specs`
+
+### Changed
+
+- Root `CLAUDE.md` rewritten as a concise (123-line) repo-specific guide — what the repo is, commands, install architecture, conventions — dropping the duplicated global wisdom
+- `prompt_nudge.py` fuzzy matcher normalizes a trailing `s`, matching singular/plural with one dict entry and bypassing the `len < 4` guard that blocked short keywords
+
 ## [v0.3.13] — 20260610
 
 > kronael v0.3.13 — creative skills bundle, opus dropped
