@@ -28,7 +28,7 @@ If missing, you're in the wrong directory — stop and ask.
 2. **Copy assets** (replace strategy):
    - `skills/*` → `~/.claude/skills/` **but skip `skills/global/`** — its body is the wisdom file, deployed in step 3. Copying it as a skill would duplicate the always-loaded content.
    - `agents/*` → `~/.claude/agents/`
-   - `hooks/*.py`, `hooks/lib/` → `~/.claude/hooks/`
+   - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
@@ -40,10 +40,32 @@ If missing, you're in the wrong directory — stop and ask.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-5. **External tools** (ALWAYS ask first):
-   - `uv tool install git+https://github.com/kronael/ship` — planner-worker-judge CLI used by `/ship`.
-   - `bun install -g agent-browser` — headless browser automation used by the `browse` skill.
-   - Skip if already installed and recent.
+5. **External tools** — run `which <tool>` to detect; skip if present and recent.
+
+   **Core** — ask once, install as a batch:
+   | Tool | Command | Skills |
+   |------|---------|--------|
+   | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
+   | `agent-browser` | `bun install -g agent-browser` | /browse |
+   | `codex` | `bun install -g @openai/codex` | /oracle |
+   | `pyright` | `bun install -g pyright` | /py /ts /tsx |
+   | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
+   | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
+
+   **Security audit** — ask separately (large, optional):
+   | Tool | Command | Skills |
+   |------|---------|--------|
+   | `bandit` | `uv tool install bandit` | /hacker-eval |
+   | `pip-audit` | `uv tool install pip-audit` | /hacker-eval |
+   | `semgrep` | `uv tool install semgrep` | /hacker-eval |
+   | `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /hacker-eval |
+   | `trufflehog` | `curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \| sh -s -- -b /usr/local/bin` | /hacker-eval |
+   | `gitleaks` | download from github.com/gitleaks/gitleaks releases | /hacker-eval |
+
+   **Video rendering** — ask separately (heavy, rarely needed):
+   | Tool | Command | Skills |
+   |------|---------|--------|
+   | `faster-whisper` | `uv tool install faster-whisper` | /create-video-render |
 
 6. **Report**: summary — X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
 

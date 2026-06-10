@@ -99,7 +99,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
   /opt/dev-tools/cargo/bin/rustup component add rust-analyzer clippy rustfmt
 
 RUN curl -sSL https://git.io/g-install | sh -s -- -y && \
-  /opt/dev-tools/goroot/bin/go install golang.org/x/tools/gopls@latest
+  /opt/dev-tools/goroot/bin/go install golang.org/x/tools/gopls@latest && \
+  /opt/dev-tools/goroot/bin/go install golang.org/x/vuln/cmd/govulncheck@latest
 
 ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
@@ -112,7 +113,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
   mv /root/.local/bin/uv /opt/dev-tools/uv/bin/ && \
   mv /root/.local/bin/uvx /opt/dev-tools/uv/bin/ 2>/dev/null || true
 
-RUN uv tool install pre-commit
+RUN uv tool install pre-commit bandit pip-audit semgrep
 
 RUN curl -fsSL https://get.sdkman.io | bash
 
@@ -131,6 +132,14 @@ RUN bun install -g \
   typescript typescript-language-server
 
 RUN uv tool install git+https://github.com/kronael/ship
+
+ARG GITLEAKS_VERSION=9.1.0
+RUN ARCH=$(dpkg --print-architecture) && \
+  wget -qO- "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${ARCH}.tar.gz" \
+  | tar xz -C /usr/local/bin gitleaks
+
+RUN curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+  | sh -s -- -b /usr/local/bin
 
 RUN bunx puppeteer browsers install chrome
 
