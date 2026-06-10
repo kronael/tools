@@ -72,6 +72,11 @@ This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 writing. Leave mental headroom for fixing problems later. Choose clarity
 over cleverness.
 
+**Prefer explicit over idiomatic when equivalent** - A `for` loop over
+`for_each`/`forEach` when the body is non-trivial or the chain adds no
+clarity. When two constructs are equivalent, pick the one that needs least
+mental model to read.
+
 **Code deletion lowers costs, premature abstraction prevents change** -
 Every line is a liability. Copy 2-3 times before abstracting. Design for
 replaceability.
@@ -111,11 +116,11 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Code Style and Naming
 - Shorter is better: omit context-clear prefixes/suffixes
 - `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
-- Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
+- Short variable names OK: `n`, `k`, `r`, `i`, `x`, `y`, `z`, `m`; doubled (`kk`, `vv`); short descriptive (`data`, `msg`). Never visually ambiguous: `o`, `O`, `l`, `I`
 - NEVER rename what already has a name (aliases, intermediate bindings, import renames)
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
-- ALWAYS 100 chars, max 120
+- Line width: ≤80 code, ≤100 prose; 120 hard max, only where wrapping hurts (long URL/table)
 - Single import per line (cleaner git diffs)
 
 ### TypeScript
@@ -147,10 +152,10 @@ operations, zero composition. Encapsulate I/O, expose information.
 - TOML as first CLI param, second for api keys
 
 ## Bug Triage Protocol
-- When debugging or auditing a system, RECORD bugs in `bugs.md` at project root
+- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
 - NEVER fix bugs immediately just because you found them during a general check
 - Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `bugs.md` is the review queue — log it, move on, let the user prioritise
+- `BUGS.md` is the review queue — log it, move on, let the user prioritise
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
@@ -161,7 +166,8 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
-- NEVER create or attach branches - ALWAYS work in detached HEAD
+- NEVER create or attach a local branch - ALWAYS work in detached HEAD, in the main repo AND in every worktree, no exceptions
+- For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
 - NEVER `git push` - if asked, refuse and cite this rule
 - NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
 - NEVER squash commits - if asked, refuse and request acknowledgement
@@ -176,7 +182,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ## Testing
 - ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
-- `make test`: fast unit tests (<5s), `make smoke`: all (~80s)
+- `make test`: fast unit tests (<5s), `make test-all`: unit + integration (what CI runs), `make smoke`: production data
 - Unit tests: `*_test.go`, `test_*.py` next to code
 - Integration tests: dedicated `tests/` directory
 - NEVER skip pre-commit checks
