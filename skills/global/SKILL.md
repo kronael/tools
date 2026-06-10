@@ -167,6 +167,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER fix bugs immediately just because you found them during a general check
 - Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
 - `bugs.md` is the review queue — log it, move on, let the user prioritise
+- ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
