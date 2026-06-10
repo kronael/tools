@@ -32,7 +32,7 @@ Group files into ≤4 non-overlapping buckets by domain. Per bucket:
 
 ### 3. Parallel review agents
 
-Per bucket, spawn `Task(subagent_type="improve", run_in_background=true)` with prompt:
+Per bucket, spawn `Agent(subagent_type="general-purpose", model="opus", run_in_background=true)` with prompt:
 
 ```
 Lens: <lens-name>
@@ -46,7 +46,7 @@ Report findings only, NO edits. Format each finding as:
   Fix: (if non-obvious)
 ```
 
-`improve` runs read-only here — the `NO edits` line is the contract; ALWAYS restate it. ALWAYS pass house rules so suggestions don't violate them.
+ALWAYS pass house rules so suggestions don't violate them.
 
 ALWAYS wait for all agents before proceeding.
 
@@ -89,7 +89,9 @@ ALWAYS verify each suggested fix by reading the surrounding code — agents prop
 - Bucket X: <reason>
 ```
 
-Then stop. Wait for user discussion before offering to post.
+Then log every triaged finding that was not fixed to `BUGS.md` at repo root
+(per the Bug Triage Protocol) — do this immediately, NEVER ask permission
+to record. Then stop. Wait for user discussion before offering to post.
 
 ### 7. Post to GitHub (on user request)
 
@@ -97,9 +99,21 @@ Trigger: "post", "upload", "comment on PR", or similar. If no PR number, `gh pr 
 
 Default to one PR review body via `gh pr review <N> --comment --body "$(cat <<'EOF' ... EOF)"`. For inline comments on specific lines, use the gh-comment skill.
 
+## Tiered model use
+
+- **Standalone PR review** — use `model="opus"` for all agents (step 3). High quality, no cost
+  pressure.
+- **Flag pass for refine** — caller passes `model="sonnet"` to step-3 agents. Cheap, high-recall
+  flagging only. Opus verify+fix is handled by the subsequent `improve` call.
+
+ALWAYS respect the model the caller specifies. NEVER upgrade to Opus silently when Sonnet was
+requested.
+
 ## Rules
 
 - NEVER make code edits — read-only analysis only
 - NEVER post to GitHub without explicit user confirmation
+- ALWAYS log unfixed findings to BUGS.md without asking — only GitHub
+  posting needs confirmation
 - ALWAYS present the report first and wait for discussion before posting
 - ALWAYS include `file:line` in every finding
