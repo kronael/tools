@@ -52,6 +52,12 @@ Two install paths share the same source:
 
 Both paths follow [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings, external tools). When the user says "install" in this repo, follow that skill.
 
+### Skill naming
+
+- `create-*` prefix is reserved for creative-output skills (HTML mockups, SVG diagrams, ASCII art, etc.), most ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative). They produce artifacts, not engineering changes. Invoke as `/create-<name>` (e.g. `/create-excalidraw`).
+- ALWAYS keep the prefix when porting new creative skills — the bundle expects this grouping for discovery and to avoid collisions with engineering skills (`go`, `rs`, `commit`, ...).
+- ONLY port skills that work locally (no paid APIs, no cloud accounts, no required external apps). Local CLI/library deps (ffmpeg, manim, pyfiglet) are fine.
+
 ### Source rules
 
 When editing bundle files:

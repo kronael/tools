@@ -123,6 +123,25 @@ common workflows surface automatically. See `../hooks/README.md`.
 | **tweet** | dense X/Twitter thread, no fluff |
 | **visual** | render → inspect → adjust (launches @visual) |
 
+### `create-*` — creative artifact generators
+
+Ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative). The `create-` prefix groups them and avoids collisions with engineering skills. Bundled set is **local-only** — skills that required paid APIs / cloud accounts / external apps (Suno, ComfyUI Cloud, TouchDesigner, image-gen) were dropped.
+
+| Skill | What it generates |
+|-------|-------------------|
+| **create-architecture-diagram** | dark-themed SVG infra/cloud diagrams as HTML |
+| **create-ascii-art** | pyfiglet / cowsay / figlet / boxes / image-to-ascii |
+| **create-ascii-video** | video/audio → colored ASCII MP4/GIF (ffmpeg) |
+| **create-claude-design** | one-off HTML artifacts (landing, deck, prototype) |
+| **create-design-md** | Google DESIGN.md token-spec files |
+| **create-excalidraw** | hand-drawn Excalidraw JSON (arch/flow/seq) |
+| **create-humanizer** | strip AI-isms from prose |
+| **create-manim-video** | 3Blue1Brown-style math animations (Manim CE) |
+| **create-p5js** | p5.js sketches (gen art, shaders, 3D) |
+| **create-popular-web-designs** | 54 design-system HTML/CSS templates |
+| **create-pretext** | text-as-geometry browser demos (@chenglou/pretext) |
+| **create-sketch** | 2-3 throwaway HTML mockup variants for comparison |
+
 ## Working with skills
 
 - Each `SKILL.md` has YAML frontmatter (`name`, `description`,
