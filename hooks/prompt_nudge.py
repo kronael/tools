@@ -34,9 +34,7 @@ AGENT_KEYWORDS = {
     'refine': '/refine',
     'tweet': '/tweet',
     'diary': '/diary',
-    'bug': '/bugs',
     'bugs': '/bugs',
-    'spec': '/specs',
     'specs': '/specs',
     'readme': '@readme',
     'learn': '@learn',
@@ -65,6 +63,11 @@ def fuzzy_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
+    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs)
+    if word.endswith('s') and word[:-1] in keywords:
+        return keywords[word[:-1]]
+    if word + 's' in keywords:
+        return keywords[word + 's']
     if len(word) < 4:
         return None
     for kw, agent in keywords.items():
