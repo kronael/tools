@@ -24,16 +24,3 @@ tmp/
 session.json
 capture.png
 .codex
-
-# Sandbox-mounted personal dotfiles (bind mounts, not project files)
-.bash_profile
-.bashrc
-.profile
-.zprofile
-.zshrc
-.gitconfig
-.gitmodules
-.ripgreprc
-.mcp.json
-.idea
-.vscode
