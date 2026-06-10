@@ -22,5 +22,6 @@ tweetfeed_cookies/
 # Local scratch / ephemeral
 tmp/
 session.json
+settings.json
 capture.png
 .codex
