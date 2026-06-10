@@ -77,7 +77,19 @@ RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-RUN npx -y playwright install --with-deps chromium && \
+# Chromium runtime deps installed manually — playwright --with-deps uses a
+# hardcoded list that predates Debian forky's t64 rename and missing font pkgs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libnspr4 libnss3 libglib2.0-0 libdbus-1-3 libdrm2 \
+  libatk1.0-0t64 libatk-bridge2.0-0 libcups2t64 \
+  libxkbcommon0 libatspi2.0-0 \
+  libx11-6 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxrandr2 \
+  libgbm1 libpango-1.0-0 libcairo2 libasound2t64 \
+  libfontconfig1t64 libfreetype6t64 \
+  fonts-liberation fonts-freefont-ttf \
+  && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN npx -y playwright install chromium && \
   chmod -R o+rx /opt/playwright-browsers
 
 RUN curl -fsSL https://bun.sh/install | bash
