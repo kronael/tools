@@ -8,13 +8,19 @@ credentials — treat it as yourself in a container.
 ## Build
 
 ```bash
-make image              # builds with your UID and TZ
-make image UID=1001     # custom UID
+make image              # builds the (UID-agnostic) image with host TZ
 make image TZ=EST       # custom timezone (default: host TZ or UTC)
 ```
 
-The container user `claude` is created with your UID so mounted files
-remain accessible with correct permissions.
+The image has no baked user. At runtime, dockbox passes your host UID/GID
+to the container and `dockbox-init` registers you in `/etc/passwd` before
+dropping privilege. One image works for every host user — alice, bob, ondra
+can share it.
+
+Tools (cargo, nvm, bun, rustup, sdkman, go, uv, nushell, etc.) live in
+`/opt/dev-tools/` inside the image, world-readable. Each runtime user gets
+a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
+`~/.gitconfig`, etc.) nested in.
 
 ## Install
 
@@ -57,12 +63,12 @@ container so the boxed agent can't modify it.
 ## Mounts
 
 Automatic:
-- `~/.claude` -> `/home/claude/.claude` (rw) - credentials, skills, settings
+- `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
-- `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
-- `gpg-agent socket` -> `/home/claude/.gnupg/S.gpg-agent`
-- `~/.gnupg/pubring.{kbx,gpg}` -> `/home/claude/.gnupg/` (ro)
-- `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
+- `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
+- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent`
+- `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
+- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
@@ -77,17 +83,16 @@ container as a full peer that should continuously improve shared config.
 Build artifacts are an attack surface, not state to persist. Two layers
 work together so builds never touch your host workdir:
 
-1. **Auto-redirected** (Rust, Python uv): the image sets
-   `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and
-   `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv`. Builds go to
-   container-ephemeral paths. `target/` and `.venv/` don't appear in
-   your project. `--rm` cleans them up on exit.
+1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
+   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`. Builds
+   produce artifacts in the workdir as usual; tool caches and toolchains
+   live in the image, not your project.
 
 2. **Overmount by default** (Node, Bun, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
-   mount inside the container. Owned by the container user, gone when
+   mount inside the container. Owned by the runtime user, gone when
    the container exits.
 
    Names overmounted by default:
@@ -99,19 +104,29 @@ work together so builds never touch your host workdir:
    Monorepo workspaces are handled automatically — every match under
    the workdir gets its own mount.
 
+   ### Ownership flow (same for both backends)
+
+   The container always starts as root via `--user 0:0`. The
+   `dockbox-init` entrypoint:
+
+   1. Registers the host invoker in `/etc/passwd` and `/etc/group`
+      using `DOCKBOX_USER`, `DOCKBOX_UID`, `DOCKBOX_GID` env vars
+      (so `whoami`, `ls -l`, prompts all work).
+   2. `chown`s `$HOME` (`/home/dockbox`, a tmpfs) and every overmount
+      listed in `DOCKBOX_EPH_PATHS` to the runtime UID/GID.
+   3. `exec gosu UID:GID "$@"` to drop privilege before your command.
+
+   The image has no baked user — one image works for every host UID.
+   Bind mounts of `~/.claude`, `~/.gitconfig`, etc. nest into
+   `/home/dockbox` and keep host ownership.
+
    ### Backends
 
-   - **tmpfs** (default): kernel `tmpfs` per path with `uid` and `gid` set
-     at mount time. RAM-backed (pages out to swap under pressure). Fast
-     for many-small-file workloads — `pnpm install` is noticeably
-     faster than disk. Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless
-     swapped. Make sure your machine has headroom.
-   - **volume** (`-T`): anonymous Docker volume per path. The container
-     starts as root via `--user 0:0`, the `dockbox-init` entrypoint chowns
-     each ephemeral mount point to `claude:claude`, then drops to `claude`
-     with `gosu` before running your command. Disk-backed. No host
-     footprint after `--rm`. Pick this when you don't want to pay RAM
-     for the artifact dirs, or when artifacts are too large for tmpfs.
+   - **tmpfs** (default): kernel `tmpfs` per path. RAM-backed (pages out
+     to swap under pressure). Fast for many-small-file workloads.
+     Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless swapped.
+   - **volume** (`-T`): anonymous Docker volume per path. Disk-backed.
+     Pick this when you don't want to pay RAM for the artifact dirs.
 
 **Trade-off**: every fresh session re-installs and re-builds. Intentional —
 no stale artifacts persist, only source code is long-lived. A warm cache

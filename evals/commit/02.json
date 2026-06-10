@@ -1,0 +1,35 @@
+{
+  "id": "02",
+  "skill": "commit",
+  "task": "user refactored a hot loop in the metrics aggregator to avoid an O(n^2) scan; same behavior, faster; commit it",
+  "context": {
+    "cwd": "/some/repo",
+    "git_status": " M internal/metrics/aggregate.go",
+    "git_diff": "diff --git a/internal/metrics/aggregate.go b/internal/metrics/aggregate.go\n--- a/internal/metrics/aggregate.go\n+++ b/internal/metrics/aggregate.go\n@@ -18,11 +18,12 @@ func Aggregate(samples []Sample) map[string]float64 {\n     result := map[string]float64{}\n-    for _, s := range samples {\n-        for _, t := range samples {\n-            if s.Key == t.Key { result[s.Key] += t.Value }\n-        }\n-    }\n+    for _, s := range samples {\n+        result[s.Key] += s.Value\n+    }\n     return result\n }",
+    "files_changed": ["internal/metrics/aggregate.go"],
+    "git_log_recent": "1a2b3c4 [feat] expose /metrics endpoint\n5d6e7f8 [test] aggregate handles empty input\n9012345 [docs] document sample schema"
+  },
+  "expected_outcome": {
+    "must_use_format": "^\\[(refactor|perf)\\] .+",
+    "subject_max_chars": 72,
+    "must_not_include": [
+      "Co-Authored-By",
+      "--amend",
+      "git add -A",
+      "git add .",
+      "--no-verify",
+      "git commit -a",
+      "[fix]",
+      "[feat]"
+    ],
+    "should_mention": ["aggregate", "O(n"]
+  },
+  "rubric": [
+    {"criterion": "Subject under 72 chars and uses [refactor] or [perf] (behavior is unchanged, complexity reduced)", "weight": 0.25},
+    {"criterion": "Mentions complexity reduction (O(n^2) -> O(n)) or single-pass change explicitly", "weight": 0.25},
+    {"criterion": "Does not claim a feature change or a bug fix (behavior is identical)", "weight": 0.25},
+    {"criterion": "Uses git commit -m '...' -- internal/metrics/aggregate.go (direct, pathspec form)", "weight": 0.25}
+  ],
+  "source": "synthetic",
+  "provenance": "hand-crafted-2026-05-25"
+}

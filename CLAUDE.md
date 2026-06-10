@@ -1,87 +1,256 @@
-# CLAUDE.md
 
-Guidance for Claude Code when working in this repository.
+# Development Wisdom
 
-## Repository
+## Conversation Startup Protocol
 
-Three things live here:
-1. CLI tools (`dockbox/`, `rig/`, `tw-fetch/`, `tg-fetch/`, `dc-fetch/`, `clp/`) — each with its own Makefile.
-2. Claude Code plugin (`.claude-plugin/`, `kronael/`) — installer skill that deploys the bundle to `~/.claude/`.
-3. Bundle (`skills/`, `agents/`, `hooks/`, `settings-recommended.json`, `RECLAUDE.md`) — what `/kronael:install` copies. Same content also installs via the manual "say install" path.
+ALWAYS follow before answering:
 
-## CLI tools
+1. **Read project diary** — `Glob` for `<cwd>/.diary/*.md`, read the 2-3 most
+   recent entries. Understand what was worked on, what decisions were made.
+2. **Read previous session** — if the user references prior work or context
+   seems missing: `Glob` for `~/.claude/projects/<slug>/*.jsonl` (slug =
+   CWD path with `/` → `-`, e.g. `/home/user/app/myproject` →
+   `-home-user-app-myproject`). Sort by mtime, `Read` the most recent file.
+   Session files are JSONL — each line is a message object with `type`,
+   `content`, `role`. Skim for decisions and context.
+3. **Check memory** — `~/.claude/projects/<slug>/memory/MEMORY.md` has
+   persistent cross-session facts about the project and user.
+4. **Then act** — NEVER guess what was decided in a prior session without
+   checking. NEVER claim "no access to session history" without trying step 2.
 
-### Ratpoison Design Philosophy
+## Session History
 
-Optimized for **MAX INFLOW of information**: keyboard-driven, stays in terminal, single-purpose, scriptable, no visual cruft. Named after the keyboard-only window manager.
+Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
+- Slug: replace `/` with `-` in absolute path, e.g.
+  `/home/user/app/myproject` → `-home-user-app-myproject`
+- Sort by mtime for recency
+- Use `/recall-memories` skill to search diary + memory
+- Use `Glob` + `Read` to inspect a specific session directly
 
-### rig — ripgit
+## Environment
 
-Single busybox-style bash script (`rig/rig`). Symlinks detect invocation name and dispatch to subcommands.
+- `sudo` is available — use `sudo docker ...` for all docker commands
 
-```bash
-rig co [pattern]   # Checkout origin/branch, detached (rco)
-rig p [branch]     # Push HEAD to origin/branch (rip)
-rig r [pattern]    # Rebase -i on origin/branch (rir)
-rig m [pattern]    # Merge origin/branch (rim)
-rig install        # Create symlinks in script's directory
-```
+## Response Style
 
-**Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf.
+Be terse by default. Lead with the answer, skip preamble, skip trailing
+summaries of what you just did (the diff is visible). One-sentence replies
+are fine when accurate. Exceptions — only when explicitly asked or the
+task inherently requires it:
 
-### dockbox — Dockerized Claude Code sandbox
+- Generating content (writing specs, docs, prose, code explanations)
+- Multi-step planning the user asked to see
+- Root-cause analysis the user asked to walk through
 
-Bash script (`dockbox/dockbox`) that runs Claude Code in an isolated Docker container. Multi-directory mounts, per-project `.dockboxrc`, all permissions bypassed (container is the sandbox). Ctrl-Z is ignored (would suspend dockbox itself, not the inner container).
+Never restate the user's request, never pad with transition words, never
+close with "Let me know if you need anything else."
 
-Makefile: `image` (build), `install` (build+install), `clean`.
+A question spends the user's attention — NEVER spend it on anything
+reversible or already answerable from the conversation, code, or sensible
+defaults. ALWAYS act, noting assumptions. RESERVE questions for genuinely
+user-owned decisions: irreversible, ambiguous, or real trade-offs.
 
-#### Ephemeral overmounts
+NEVER state a factual claim confidently without verifying it first (check
+docs, grep, read the file). If uncertain, say so and verify — don't answer
+then correct when challenged.
 
-Build-artifact dirs under workdir (`node_modules`, `.next`, `dist`, `build`, `.turbo`, `.cache`) are overmounted so the container always sees fresh empty dirs. Two backends:
-- **tmpfs** (default): kernel mount with `uid` set → owned by `claude` at mount, lives in the container namespace.
-- **volume** (`-T`): anonymous Docker volume + container starts as root → `dockbox-init` chowns the listed paths → `gosu` drops to `claude`.
+NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
 
-**Both backends leave ZERO footprint after the container exits.** `docker run --rm` (always used) removes anonymous volumes; tmpfs dies with the mount namespace. NEVER add cleanup logic, EXIT traps, "remember to remove" comments, or worry-prose about leaks — there is nothing to leak.
+**TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
+changes, cache external APIs.
 
-## Claude Code toolkit
+This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
-Two install paths share the same source:
+## Boring Code Philosophy
 
-- **Plugin**: `/plugin marketplace add kronael/tools` → `/plugin install kronael@kronael` → `/kronael:install` (or just say "install kronael").
-- **Manual**: open Claude Code at the repo root and say **"install"**.
+**Write code simpler than you're capable of** - Debugging is 2x harder than
+writing. Leave mental headroom for fixing problems later. Choose clarity
+over cleverness.
 
-Both paths follow [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for the install procedure (backup, copy assets, install wisdom, merge settings, external tools). When the user says "install" in this repo, follow that skill.
+**Prefer explicit over idiomatic when equivalent** - A `for` loop over
+`for_each`/`forEach` when the body is non-trivial or the chain adds no
+clarity. When two constructs are equivalent, pick the one that needs least
+mental model to read.
+
+**Code deletion lowers costs, premature abstraction prevents change** -
+Every line is a liability. Copy 2-3 times before abstracting. Design for
+replaceability.
+
+**Abstraction must reduce total complexity, not just line count** - If the
+helper introduces concepts absent from call sites (fn pointers, closures,
+generics, combinator chains), it's not simpler. Judge by cognitive overhead,
+not diff size.
+
+**Simple-mostly-right beats complex-fully-correct** - Implementation
+simplicity trumps perfection. A 50% solution that's simple spreads and
+evolves. Complexity, once embedded, cannot be removed.
+
+**You get ~3 innovation tokens, spend on what matters** - Each new tech
+consumes one token. New tech = unknown failures. Boring tech = documented
+solutions. Spend tokens on competitive advantage, not fashion.
+
+**Good taste eliminates special cases by reframing the problem** - Don't
+handle edges with if-statements. Redesign so the edge case IS the normal
+case. One code path beats ten.
+
+**Develop "entanglement radar" to spot complecting** - If you can't
+understand component A without tracking B's state, they're braided
+together. Complected code has combinatorial complexity; separated code
+composes linearly.
+
+**State leaks complexity through all boundaries** - If f(x) returns
+different results over time, that complexity escapes to every caller.
+Values compose; stateful objects leak. Minimize state, make it explicit.
+
+**Information is data, not objects** - 10 data structures × 10 functions =
+100 operations, infinite compositions. 100 classes × 10 methods = 1000
+operations, zero composition. Encapsulate I/O, expose information.
+
+# Development Principles
+
+## Code Style and Naming
+- Shorter is better: omit context-clear prefixes/suffixes
+- `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
+- Short variable names OK: `n`, `k`, `r`, `i`, `x`, `y`, `z`, `m`; doubled (`kk`, `vv`); short descriptive (`data`, `msg`). Never visually ambiguous: `o`, `O`, `l`, `I`
+- NEVER rename what already has a name (aliases, intermediate bindings, import renames)
+- Short file extensions (.jl not .jsonl), short CLI flags
+- Entrypoint is ALWAYS called main
+- ALWAYS 100 chars, max 120
+- Single import per line (cleaner git diffs)
+
+### TypeScript
+- ALWAYS use `function` keyword for top-level functions where possible
+- Arrow functions only for callbacks and inline lambdas
+- Adhere to gst lint rules
+- Match existing style when changing code
+
+## Design Patterns
+- Structs/objects only for state or dependency injection
+- Otherwise plain functions in modules
+- Explicit enum states, not implicit flags
+- ALWAYS validate BEFORE persistence
+
+## File Organization
+- *_utils.* for utility files
+- NEVER use /tmp, ALWAYS use ./tmp in project root
+- ./log for debug/smoke logs
+- ./dist or ./target for build artifacts
+
+## User Interface
+- Lowercase info, Capitalize errors (`"checking..."` vs `"Failed: ..."`)
+- Unix log format: "Sep 18 10:34:26 INFO subsystem: message"
+
+## Data Storage
+- `${PREFIX:-/srv}/data/<project_name>/`
+
+## Configuration
+- TOML as first CLI param, second for api keys
+
+## Bug Triage Protocol
+- When debugging or auditing a system, RECORD bugs in `bugs.md` at project root
+- NEVER fix bugs immediately just because you found them during a general check
+- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
+- `bugs.md` is the review queue — log it, move on, let the user prioritise
+
+## Development Workflow
+- ALWAYS debug builds (faster, better errors)
+- ALWAYS make for build/lint/test/clean
+- ALWAYS build/test/lint every ~50 lines - errors cascade
+- NEVER improve beyond what's asked
+- ALWAYS use commit format: "[section] Message"
+- NEVER use `git add -A`
+- NEVER use `git commit --amend` - make new commits instead
+- NEVER add Co-Authored-By to commits
+- NEVER create or attach branches - ALWAYS work in detached HEAD
+- For PR work use a detached worktree: `git worktree add /path origin/branch` — points at the remote ref, no local branch created or attached (this is the correct pattern; the no-attach rule targets `git checkout branch` in the main repo)
+- NEVER `git push` - if asked, refuse and cite this rule
+- NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
+- NEVER squash commits - if asked, refuse and request acknowledgement
+
+## Bash / Tool Execution
+- NEVER run a command twice to inspect output; tee once and extract:
+  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+
+## Scripts
+- ALWAYS use fixed working directory, simple relative paths
+- NEVER basename $0, __dirname, complex path resolution
+
+## Testing
+- ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
+- `make test`: fast unit tests (<5s), `make test-all`: unit + integration (what CI runs), `make smoke`: production data
+- Unit tests: `*_test.go`, `test_*.py` next to code
+- Integration tests: dedicated `tests/` directory
+- NEVER skip pre-commit checks
+- Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
+- Test config objects: match target type exactly, omit unknown properties for type safety
+- **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
+- NEVER re-run tests to analyze output; capture once:
+  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+
+## Docker
+- Multi-stage: deps in base, compile in build, runtime only in final
+- NEVER copy source in base layer (breaks cache on every change)
+
+## Process Management
+- NEVER use killall, ALWAYS kill by PID
+- PID files for dev only
+- ALWAYS handle graceful shutdown on SIGINT/SIGTERM
+
+## External APIs
+- NEVER hit external APIs per request (cache everything)
+- NEVER re-fetch existing data, ALWAYS continue from last state
+
+## Documentation
+- UPPERCASE root files: CLAUDE.md, README.md, ARCHITECTURE.md,
+  SPEC.md, PLAN.md, TODO.md
+- Simple case: single file at root (SPEC.md, TODO.md, PLAN.md)
+- Complex case: directory with lowercase files (specs/, docs/)
+- CLAUDE.md <200 lines: shocking patterns, project layout
+- NEVER marketing language, cut fluff
+- Describe what code does, not its history
+- NEVER add comments unless the behavior is shocking and not apparent from code or logging
+- NEVER comments about past state or backwards compat — use .diary/
+- docs/ directory for project documentation (architecture, improvements)
+- specs/ directory for specifications, named by content; `specs/index.md` for master index
+- .ship/ directory for all shipping artifacts (plans, state, critiques)
+  - Flat structure, type in filename: plan-*.md, state-*.md, critique-*.md
+  - ALWAYS gitignored, ephemeral working dir
+  - Clean after shipping: delete completed artifacts
+- .diary/ directory for shipping log (date-named: YYYYMMDD.md)
+  - Document important steps, decisions, milestones
+  - Checked into git, long-lived project history
+  - ALWAYS use `/diary` skill to write diary entries after significant work
+- .claude/ for long-lived knowledge beyond CLAUDE.md
+  - Additional *.md files next to CLAUDE.md for overflow context
+- NO todos/ directory — use TODO.md at root or plans in .ship/
+- NO plans/ directory — plans live in .ship/plan-*.md
+
+## Agents and Skills
+- Spawn 1-2 subagents typically, NEVER more than 4
+- Spawn standalone work in subagents to keep main context fresh
+  (examples: implement feature, multi-file changes, research+distill),
+  but don't overuse
+- ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill naming
-
 - `create-*` prefix is reserved for creative-output skills (HTML mockups, SVG diagrams, ASCII art, etc.), most ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative). They produce artifacts, not engineering changes. Invoke as `/create-<name>` (e.g. `/create-excalidraw`).
 - ALWAYS keep the prefix when porting new creative skills — the bundle expects this grouping for discovery and to avoid collisions with engineering skills (`go`, `rs`, `commit`, ...).
 - ONLY port skills that work locally (no paid APIs, no cloud accounts, no required external apps). Local CLI/library deps (ffmpeg, manim, pyfiglet) are fine.
 
-### Source rules
+### Skill discovery and reconciliation
+- Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
+- `/dispatch` scans all skill descriptions, matches to current task, and
+  reconciles prior work if a skill was discovered late
+- Do not continue producing outputs that contradict a known applicable skill
 
-When editing bundle files:
-- NEVER include local paths, org-specific refs, or secrets in source (they go in `~/.claude/LOCAL.md`, auto-injected by `local.py`).
-- The `global` skill body becomes `~/.claude/CLAUDE.md` on install — the always-loaded wisdom file.
-- `RECLAUDE.md` is the re-injection template for the `reclaude` hook (PreCompact + manual continue/recap triggers).
-- ALWAYS verify the matching reinject path when a skill changes:
-  - **Skill rule changed?** Update its dedicated reinject if there is one — `hooks/nudge.py` `COMMIT_RULES`/`DOCS_RULES` for the commit/docs skills, `hooks/stop.py` nudge text for stop-time rules.
-  - **Cross-cutting rule with no dedicated reinject?** Update `RECLAUDE.md` (filesystem, build, scope, writing — see its topic list).
-  - **Commit rules** specifically live in three places that must stay in sync: `skills/commit/SKILL.md` (full reference), `hooks/nudge.py` `COMMIT_RULES` (fires on prompts with "commit"), `hooks/stop.py` (fires on uncommitted state). RECLAUDE.md does NOT carry them — would be redundant noise.
-
-## Coding philosophy
-
-**"Debugging is twice as hard as writing the code."** — Kernighan
-
-- Readability > Performance > Cleverness
-- Linear flow, minimal branching, one way to do things
-- Helper functions at top, main logic at bottom
-- Section comments: `# Parse flags`, `# Execute`
-- POSIX-compatible bash, `[[ ]]` for conditions
-- ALWAYS keep files under 200 lines
-
-## Development
-
-**Adding tools**: create `toolname/` with executable, Makefile, README. Follow ratpoison + boring-code principles. Update root README.
-
-**Working on the toolkit**: ALWAYS use ALWAYS/NEVER statements. Focus on non-obvious patterns LLMs fail to grasp. Test by re-installing and using in a real project.
+### Cross-component refinement pattern (multi-agent)
+When doing a broad refinement/audit across a microservice repo:
+1. Group components into ≤4 buckets (related packages together)
+2. Spawn one subagent per bucket in parallel
+3. Each subagent: read all files in its bucket, report minimization +
+   orthogonalization opportunities (dead code, cross-boundary leaks,
+   unnecessary coupling between packages)
+4. Collect results, implement changes, build+test, commit [refined]
+- A "task" = one component-bucket × one concern (minimize OR orthogonalize)
+- Each subagent owns its bucket exclusively — no overlapping file sets

@@ -3,18 +3,36 @@ set -euo pipefail
 
 IMAGE="dockbox"
 
-EPHEMERAL_DIRS=(node_modules .next dist build .turbo .cache)
+EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
+# dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
+# mountpoint. Container writes to host paths for these; use -P to disable
+# all ephemeral mounts if you need a completely clean workdir.
 
 MOUNTS=(
-    "$HOME/.claude:/home/claude/.claude:rw"
-    "$HOME/.claude/plugins:/home/claude/.claude/plugins:ro"
+    "$HOME/.claude:/home/dockbox/.claude:rw"
+    "$HOME/.claude/plugins:/home/dockbox/.claude/plugins:ro"
     "$HOME/.claude/plugins:$HOME/.claude/plugins:ro"
     "$HOME/.claude.json:/tmp/host-claude.json:ro"
-    "$HOME/.gitconfig:/home/claude/.gitconfig:ro"
-    "$HOME/.dockbox_history:/home/claude/.zsh_history:rw"
-    "$HOME/.codex:/home/claude/.codex:rw"
+    "$HOME/.gitconfig:/home/dockbox/.gitconfig:ro"
+    "$HOME/.dockbox_history:/home/dockbox/.zsh_history:rw"
+    "$HOME/.codex:/home/dockbox/.codex:rw"
     "/etc/localtime:/etc/localtime:ro"
 )
+
+name_override=""
+entrypoint="claude"
+network=""
+ssh_agent=""
+docker_sock=""
+grant_sudo=""
+gcloud_creds=""
+dirs=()
+extra_vols=()
+extra_env=()
+persist_builds=""
+eph_no_tmpfs=""
+output_to_clean=()
+claude_args=()
 
 case "${1:-}" in
     ls)
@@ -51,10 +69,14 @@ case "${1:-}" in
                 docker rm "$name" && echo "removed $name"
         done
         exit 0 ;;
+    sh)
+        entrypoint=/bin/zsh
+        shift ;;
     -h|--help)
         cat <<EOF
 Usage: dockbox [options] [dirs...] [claude-args...]
        dockbox ls | rm [pattern] | prune [hours]
+       dockbox sh|enter [options] [dirs...]
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
@@ -66,22 +88,29 @@ Options:
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
+    -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
+    -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
     the container, owned by the container user, gone when the container
     exits. Recursive (monorepo workspaces included).
 
-    Two backends:
-      tmpfs  (default) — kernel tmpfs with uid set at mount. RAM-backed.
-      volume (-T)      — anonymous Docker volume, chowned by entrypoint
-                         (container runs as root, gosu-drops to claude).
-                         Disk-backed. No host footprint after --rm.
+    Container starts as root; dockbox-init registers the host invoker in
+    /etc/passwd, chowns \$HOME (/home/dockbox tmpfs) plus every overmount to
+    the host UID/GID, then gosu-drops. Image has no baked user — one image
+    works for every host UID.
+
+    Two backends pick the overmount type only:
+      tmpfs  (default) — kernel tmpfs. RAM-backed.
+      volume (-T)      — anonymous Docker volume. Disk-backed.
+                         No host footprint after --rm.
 
     Pass -P / --no-ephemeral to disable both and see host build dirs.
 
     Names: ${EPHEMERAL_DIRS[*]}
+    (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
     dockbox                           # current dir
@@ -105,18 +134,6 @@ EOF
         exit 0 ;;
 esac
 
-name_override=""
-entrypoint="claude"
-network=""
-ssh_agent=""
-docker_sock=""
-dirs=()
-extra_vols=()
-extra_env=()
-persist_builds=""
-eph_no_tmpfs=""
-claude_args=()
-
 # pre-strip long flags getopts can't parse
 _args=()
 for a in "$@"; do
@@ -127,7 +144,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgPT" opt; do
+while getopts ":n:x:e:v:HADgGPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
         x) entrypoint="$OPTARG" ;;
@@ -136,10 +153,12 @@ while getopts ":n:x:e:v:HADgPT" opt; do
         H) network="--network host" ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
+        S) grant_sudo=1 ;;
         P) persist_builds=1 ;;
         T) eph_no_tmpfs=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        G) gcloud_creds=1 ;;
         *) claude_args+=("-$OPTARG") ;;
     esac
 done
@@ -152,7 +171,15 @@ for arg in "$@"; do
 done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-cmd=("$entrypoint" "${claude_args[@]}")
+_primary_dir="$(cd "${dirs[-1]}" && pwd)"
+_session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
+_has_session=""
+ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
+if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
+    cmd=("$entrypoint" --resume "${claude_args[@]}")
+else
+    cmd=("$entrypoint" "${claude_args[@]}")
+fi
 
 mounts=()
 workdir=""
@@ -167,7 +194,7 @@ done
 # override settings.local.json after ~/.claude mount to bypass trust prompts
 _settings=$(mktemp)
 echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
-mounts+=(-v "$_settings:/home/claude/.claude/settings.local.json:ro")
+mounts+=(-v "$_settings:/home/dockbox/.claude/settings.local.json:ro")
 
 docker_gid_arg=""
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
@@ -176,10 +203,10 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
 fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/claude/.gnupg/S.gpg-agent")
+[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
 for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
-        mounts+=(-v "$HOME/.gnupg/$f:/home/claude/.gnupg/$f:ro")
+        mounts+=(-v "$HOME/.gnupg/$f:/home/dockbox/.gnupg/$f:ro")
 done
 
 ssh_env=()
@@ -187,6 +214,9 @@ if [[ -n "$ssh_agent" && -n "${SSH_AUTH_SOCK:-}" ]]; then
     mounts+=(-v "$SSH_AUTH_SOCK:/tmp/ssh-agent.sock")
     ssh_env=(-e SSH_AUTH_SOCK=/tmp/ssh-agent.sock)
 fi
+
+[[ -n "$gcloud_creds" && -d "$HOME/.config/gcloud" ]] && \
+    mounts+=(-v "$HOME/.config/gcloud:/home/dockbox/.config/gcloud:ro")
 
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
@@ -203,41 +233,61 @@ done
 
 CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
-# ephemeral overmounts (default): for each build-artifact dir found under
-# workdir, overmount it so the container sees a fresh empty dir owned by
-# the claude user, gone when the container exits.
-#   default backend: kernel tmpfs with uid set at mount (RAM-backed).
-#   -T backend: anonymous Docker volume + entrypoint chown (disk-backed).
-#               container runs as root, dockbox-init chowns the listed paths
-#               to claude, then gosu-drops to claude.
-# disable both with -P / --no-ephemeral.
-eph_paths=()
+# Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
+# chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
+# has no baked user — it works for any host UID without rebuilding.
+user_arg=(--user 0:0)
+extra_env+=(-e "DOCKBOX_UID=$(id -u)")
+extra_env+=(-e "DOCKBOX_GID=$(id -g)")
+extra_env+=(-e "DOCKBOX_USER=$(id -un)")
+[[ -n "$grant_sudo" ]] && extra_env+=(-e DOCKBOX_SUDO=1)
+
+# Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
+# mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
+mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
+
+mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
+
+# Cargo target dir: dedicated tmpfs so builds never write to the host workdir.
+# CARGO_TARGET_DIR tells Cargo to use this path regardless of project layout.
+mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
+extra_env+=(-e CARGO_TARGET_DIR=/tmp/cargo-target)
+chown_paths=("/home/dockbox")
+
+# Ephemeral overmounts (default): each build-artifact dir found under workdir
+# becomes a fresh empty mount inside the container, chowned by dockbox-init.
+#   tmpfs (default) — kernel tmpfs (RAM-backed).
+#   -T              — anonymous Docker volume (disk-backed).
+# Disable with -P / --no-ephemeral.
+#
+# Cap depth at 4: covers workspace patterns (./node_modules,
+# ./packages/foo/node_modules, ./apps/bar/dist). Vendored pnpm/yarn
+# stores nest hundreds of node_modules deeper — overmounting each
+# blows ARG_MAX, and they're internal caches the container won't write.
+# Single find with -prune on any name so we don't double-mount nested
+# artifacts that a parent overmount already covers.
 if [[ -z "$persist_builds" ]]; then
+    find_expr=()
     for name in "${EPHEMERAL_DIRS[@]}"; do
-        for d in "${dirs[@]}"; do
-            absdir="$(cd "$d" && pwd)"
-            while IFS= read -r found; do
-                eph_paths+=("$found")
-            done < <(find "$absdir" -type d -name "$name" -prune 2>/dev/null)
-        done
+        [[ ${#find_expr[@]} -gt 0 ]] && find_expr+=(-o)
+        find_expr+=(-name "$name")
+    done
+    for d in "${dirs[@]}"; do
+        absdir="$(cd "$d" && pwd)"
+        while IFS= read -r found; do
+            if [[ -n "$eph_no_tmpfs" ]]; then
+                mounts+=(-v "$found")
+            else
+                mounts+=(--tmpfs "$found:rw,exec,mode=1777")
+            fi
+            chown_paths+=("$found")
+        done < <(find "$absdir" -maxdepth 4 -type d \
+            \( "${find_expr[@]}" \) -prune -print 2>/dev/null)
     done
 fi
 
-user_arg=()
-if [[ ${#eph_paths[@]} -gt 0 ]]; then
-    if [[ -n "$eph_no_tmpfs" ]]; then
-        for p in "${eph_paths[@]}"; do
-            mounts+=(-v "$p")
-        done
-        user_arg=(--user 0:0)
-        eph_list=$(IFS=:; echo "${eph_paths[*]}")
-        extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
-    else
-        for p in "${eph_paths[@]}"; do
-            mounts+=(--tmpfs "$p:uid=$(id -u),gid=$(id -g),mode=0755")
-        done
-    fi
-fi
+eph_list=$(IFS=:; echo "${chown_paths[*]}")
+extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 
 # screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
@@ -259,6 +309,9 @@ done
 
 existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
 if [[ -n "$existing" ]]; then
+    if [[ "$entrypoint" == "/bin/zsh" ]]; then
+        exec docker exec -it "$CONTAINER_NAME" /bin/zsh
+    fi
     echo "container '$CONTAINER_NAME' is already running" >&2
     echo "use -n <name> or stop it first" >&2
     exit 1
@@ -272,7 +325,7 @@ exec docker run -it --rm \
     "${user_arg[@]}" \
     $network \
     $docker_gid_arg \
-    -e HOME=/home/claude \
+    -e HOME=/home/dockbox \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
     ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \

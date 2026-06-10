@@ -3,7 +3,7 @@
 ## Overview
 
 ```
-User Prompt ──> UserPromptSubmit ──> nudge.py    (keyword → command/agent)
+User Prompt ──> UserPromptSubmit ──> prompt_nudge.py    (keyword → command/agent)
                                  ──> local.py    (LOCAL.md on first prompt)
                                  ──> reclaude.py (RECLAUDE.md on first prompt)
 
@@ -15,7 +15,7 @@ Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
 
 ## Components
 
-### nudge.py (UserPromptSubmit)
+### prompt_nudge.py (UserPromptSubmit)
 
 **Input:** JSON with `prompt` field.
 **Output:** `{"ok": true, "systemMessage": "..."}` or silent exit.
@@ -83,7 +83,7 @@ stdin:
   "cwd": "/project"
 }
 
-stdout (nudge.py match):
+stdout (prompt_nudge.py match):
 {"ok": true, "systemMessage": "Invoke @improve."}
 ```
 
@@ -111,7 +111,7 @@ errors in `local.py` are swallowed for the same reason.
 
 ## Extension Points
 
-**Add a new keyword route** — edit `AGENT_KEYWORDS` in `nudge.py` and the
+**Add a new keyword route** — edit `AGENT_KEYWORDS` in `prompt_nudge.py` and the
 table in `README.md`.
 
 **Add a new stop nudge** — append to the `parts` list in `stop.py`. Keep

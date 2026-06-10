@@ -97,7 +97,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 | **docs-audit** | parallel subagent doc-vs-code audit |
 | **improve** | code-quality DO-CRITICIZE-EVALUATE-IMPROVE |
 | **learn** | extract patterns from history into skills |
-| **merge-trivial** | classify conflicts, resolve trivial unions |
+| **merge** | classify conflicts, resolve trivial unions |
 | **pr-draft** | short, clear PR descriptions |
 | **readme** | sync README/ARCHITECTURE with code |
 | **recall-memories** | search diary + memory + sessions |

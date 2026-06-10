@@ -1,0 +1,35 @@
+{
+  "id": "05",
+  "skill": "commit",
+  "task": "user is cutting a release: bumped version in package.json and prepended an entry to CHANGELOG.md; commit as a release",
+  "context": {
+    "cwd": "/some/repo",
+    "git_status": " M package.json\n M CHANGELOG.md",
+    "git_diff": "diff --git a/package.json b/package.json\n--- a/package.json\n+++ b/package.json\n@@ -2,7 +2,7 @@\n {\n   \"name\": \"widget\",\n-  \"version\": \"0.4.2\",\n+  \"version\": \"0.5.0\",\n   \"main\": \"dist/index.js\"\n }\n\ndiff --git a/CHANGELOG.md b/CHANGELOG.md\n--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -1,5 +1,10 @@\n # Changelog\n \n+## 0.5.0 - 2026-05-25\n+- new: streaming widget API\n+- fix: race in widget cache invalidation\n+- chore: drop node 18 support\n+\n ## 0.4.2 - 2026-05-12",
+    "files_changed": ["package.json", "CHANGELOG.md"],
+    "git_log_recent": "111aaaa [feat] streaming widget API\n222bbbb [fix] race in widget cache invalidation\n333cccc [chore] drop node 18 support\n444dddd [release] v0.4.2 patchnotes"
+  },
+  "expected_outcome": {
+    "must_use_format": "^\\[release\\] .+",
+    "subject_max_chars": 72,
+    "must_not_include": [
+      "Co-Authored-By",
+      "--amend",
+      "git add -A",
+      "git add .",
+      "--no-verify",
+      "git commit -a",
+      "git tag",
+      "git push"
+    ],
+    "should_mention": ["0.5.0"]
+  },
+  "rubric": [
+    {"criterion": "Subject under 72 chars, [release] prefix, version v0.5.0 visible in subject", "weight": 0.3},
+    {"criterion": "Names a one-line release theme (streaming API headline) rather than a generic 'release v0.5.0'", "weight": 0.25},
+    {"criterion": "Commits both package.json and CHANGELOG.md in a single commit with explicit pathspec", "weight": 0.25},
+    {"criterion": "Does NOT run git tag or git push as part of the commit step (commit only; tagging/pushing is separate)", "weight": 0.2}
+  ],
+  "source": "synthetic",
+  "provenance": "hand-crafted-2026-05-25"
+}

@@ -6,8 +6,8 @@ output / exit code.
 ## 1. JSON Error Handling (should NOT crash)
 
 ```bash
-echo ""              | python3 ~/.claude/hooks/nudge.py
-echo "{bad json}"    | python3 ~/.claude/hooks/nudge.py
+echo ""              | python3 ~/.claude/hooks/prompt_nudge.py
+echo "{bad json}"    | python3 ~/.claude/hooks/prompt_nudge.py
 echo "[]"            | python3 ~/.claude/hooks/local.py
 echo "{incomplete"   | python3 ~/.claude/hooks/reclaude.py
 ```
@@ -17,8 +17,8 @@ Expected: exit 0, no stderr.
 ## 2. Null & Type Errors (should NOT crash)
 
 ```bash
-echo '{"prompt": null}'                         | python3 ~/.claude/hooks/nudge.py
-echo '{"prompt": {"nested": "dict"}}'           | python3 ~/.claude/hooks/nudge.py
+echo '{"prompt": null}'                         | python3 ~/.claude/hooks/prompt_nudge.py
+echo '{"prompt": {"nested": "dict"}}'           | python3 ~/.claude/hooks/prompt_nudge.py
 echo '{"prompt": null}'                         | python3 ~/.claude/hooks/local.py
 ```
 
@@ -37,10 +37,10 @@ Expected: exit 0, no `systemMessage` in output.
 ## 4. Keyword Routing (fuzzy match)
 
 ```bash
-echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/nudge.py | grep -q "@improve" && echo "✓ PASS"
-echo '{"prompt": "visual"}'       | python3 ~/.claude/hooks/nudge.py | grep -q "@visual"  && echo "✓ PASS"
-echo '{"prompt": "ship"}'         | python3 ~/.claude/hooks/nudge.py | grep -q "/ship"    && echo "✓ PASS"
-echo '{"prompt": "diary"}'        | python3 ~/.claude/hooks/nudge.py | grep -q "/diary"   && echo "✓ PASS"
+echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@improve" && echo "✓ PASS"
+echo '{"prompt": "visual"}'       | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@visual"  && echo "✓ PASS"
+echo '{"prompt": "ship"}'         | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/ship"    && echo "✓ PASS"
+echo '{"prompt": "diary"}'        | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/diary"   && echo "✓ PASS"
 ```
 
 Expected: all four print `✓ PASS`.
@@ -63,11 +63,11 @@ echo '{"prompt": "where were we"}'                | python3 ~/.claude/hooks/loca
 
 ## Hook-by-Hook Smoke
 
-## nudge.py
+## prompt_nudge.py
 
 ```bash
-echo '{"prompt": "improve styling"}' | python3 ~/.claude/hooks/nudge.py
-echo '{"prompt": "save progress"}'   | python3 ~/.claude/hooks/nudge.py   # commit rules
+echo '{"prompt": "improve styling"}' | python3 ~/.claude/hooks/prompt_nudge.py
+echo '{"prompt": "save progress"}'   | python3 ~/.claude/hooks/prompt_nudge.py   # commit rules
 ```
 
 ## local.py

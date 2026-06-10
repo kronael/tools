@@ -2,7 +2,7 @@
 
 Rewrite `redirect.py` as a generic declarative rule engine.
 Rules in a flat text file, three response modes, prefix matching.
-Add git safety rules. Update nudge.py and commit skill.
+Add git safety rules. Update prompt_nudge.py and commit skill.
 
 ## Background
 
@@ -170,7 +170,7 @@ sys.exit(0)
 No toolchain.py dependency. No lib/. Rules file is the config.
 Hook is the generic engine.
 
-## nudge.py — update COMMIT_RULES
+## prompt_nudge.py — update COMMIT_RULES
 
 ```python
 COMMIT_RULES = """Commit rules:

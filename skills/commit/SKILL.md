@@ -10,40 +10,65 @@ user-invocable: true
 ## When
 
 - `/commit`: ALWAYS proceed
-- Auto (hook): only if all dirty files form a single cohesive chunk AND no unrelated dirty files exist
-- Not cohesive: name the logical groups, stop — do not suggest a combined commit
+- Auto (hook): throttled ~once per 10 min — split accumulated work into coherent commits, don't dump it all in one.
+
+## Splitting
+
+One commit = one logical change. Group by WHY, not by directory:
+
+- fix vs refa vs simpl vs docs vs test → separate commits
+- a fix + its test → one commit
+- a doc/SCREENS/ARCHITECTURE update for a behavior change → same commit
 
 ## Format
 
-`[section] Message` — why not what, 1-2 sentences.
-Sections: fix, feat, refactor, docs, test, chore, perf, style, release
+Use `type(scope):` — scope is optional, omit only when the change is truly cross-cutting.
 
-Subject ≤ 72 chars (includes `[section]`). Overflow goes in body via a
-second `-m`: `git commit -m "subj" -m "body" -- files`.
+Format shapes:
+- `fix(scope): why broken`
+- `feat(scope): what added`
+- `refa(scope): what restructured`
+- `simpl(scope): what simplified`
+- `chore: what maintained`
+- `docs(scope): what documented`
+- `test(scope): what covered`
+- `perf(scope): what sped up`
+- `style: what formatted`
+- `build: what changed`
+- `ci: what changed`
+- `revert: <subject>`
+- `release: vX.Y.Z`
 
-Fixup: `fixup: <exact HEAD subject>` — use when the change is a correction to the immediately preceding commit.
+Subject: ≤ 72 chars, imperative mood, **capitalize first word after the colon**. Test: "If applied, this commit will: _____"
 
-Markers: `[checkpoint]` → `[checkpoint] Message`, `[refined]` → `[section] Message [refined]`
+Body (second `-m`): explain *why* — the diff shows what.
+`git commit -m "subj" -m "why" -- files`
+
+Breaking changes: `feat!:` / `fix!:` + footer `BREAKING CHANGE: what breaks and migration path`
+
+Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding commit.
 
 ## Workflow
 
 1. `git status` + `git diff` + `git log --oneline -5`
-2. Decide commit or not; if correction to HEAD use `fixup:` format
-3. Draft message
-4. Commit directly: `git commit -m "msg" -- file1 file2`
-5. If pre-commit reformats, retry once
-6. If index.lock: `rm -f .git/index.lock`, retry once
+2. Commit: `git commit -m "msg" -- file1 file2`
+3. If pre-commit reformats, retry once
+4. If index.lock: `rm -f .git/index.lock`, retry once
 
 ## Rules
 
-- ALWAYS `git commit -m "msg" -- file1 file2` (direct, no staging)
-- ALWAYS commit whole files, list each explicitly
-- NEVER `git add` (commit directly with -- pathspec)
-- NEVER `git commit` without `-- file1 file2`
+- NEVER `git commit` without `-m "msg" -- file1 file2` (no staging, explicit files)
 - NEVER `git commit --amend`
-- NEVER `git commit -a`
-- NEVER `git stash`
 - NEVER Co-Authored-By
 - NEVER skip pre-commit hooks
-- NEVER suggest committing if unrelated dirty files exist alongside the cohesive chunk
+- NEVER commit if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes
+
+## Orphaned worktrees
+
+Only applies to Claude-managed worktrees under `.claude/worktrees/`. Never touch other worktrees.
+
+1. `git worktree list` — note its base commit.
+2. `git -C <wt> diff` — superseded by HEAD, or unique?
+3. Superseded + lock pid dead → remove: `git worktree unlock <wt> && git worktree remove --force <wt> && git branch -D <branch>`
+4. Holds unique work you did NOT create → surface to user, do NOT remove.
