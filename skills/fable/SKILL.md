@@ -1,11 +1,11 @@
 ---
 name: fable
-description: /fable — launch a background subagent forcing model=fable (claude-fable-5). Use for the hardest reasoning, hardest design decisions, and multi-file architecture work where opus isn't enough.
-when_to_use: "do this in a fable sub", "spawn a fable sub", "use fable", "use claude fable"
+description: /fable — maximum reasoning, hardest architecture, long-horizon agentic work (fable-5, xhigh). NOT for tasks opus can handle (use /opus).
+when_to_use: "do this in a fable sub", "spawn a fable sub", "use fable", "use claude fable", hardest problem, maximum intelligence, long-horizon, deep reasoning, most capable
 user-invocable: true
 ---
 
-Launch the prompt after /fable as a background general-purpose agent (run_in_background: true, model: "fable").
+Launch the prompt after /fable as a background agent (run_in_background: true, subagent_type: "fable").
 Report what was launched. Continue immediately without waiting.
 
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.

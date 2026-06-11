@@ -1,7 +1,7 @@
 ---
 name: opus
-description: /opus — launch a background subagent using the opus agent definition (opus model, xhigh effort). Use for complex reasoning, design decisions, and multi-file architecture work.
-when_to_use: "do this in an opus sub", "spawn an opus sub", "use opus"
+description: /opus — complex reasoning, design decisions, multi-file architecture (opus, xhigh). NOT for mechanical tasks (use /sonnet or /haiku).
+when_to_use: "do this in an opus sub", "spawn an opus sub", "use opus", complex reasoning, architecture review, design decision, deep analysis, cross-cutting
 user-invocable: true
 ---
 
