@@ -2,5 +2,5 @@
 name: sonnet
 model: sonnet
 effort: high
-description: Sonnet at high effort — thinking-enabled balance of speed and reasoning for agentic coding and tool-heavy workflows.
+description: Sonnet at high effort — thinking-enabled workhorse for coding, exploration, pre-review, flagging, and template-heavy tasks.
 ---

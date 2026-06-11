@@ -1,6 +1,6 @@
 ---
 name: sonnet
-description: /sonnet — launch a background subagent forcing model=sonnet. NOT for routine mechanical tasks (use /haiku).
+description: /sonnet — launch a background subagent at sonnet+high effort. Coding, exploration, pre-review, flagging, template-filling. NOT for routine mechanical tasks (use /haiku).
 when_to_use: "do this in a sonnet sub", "spawn a sonnet sub", "use sonnet"
 user-invocable: true
 ---
