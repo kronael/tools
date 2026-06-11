@@ -11,8 +11,15 @@ Run directly in main context (no subagent).
 
 ## Workflow
 
-1. Find base: `git log origin/main..HEAD --oneline`; fallback `git log main..HEAD --oneline`; if both fail, ask the user. Also `git diff <base>..HEAD --stat`.
-2. Draft title and body (see format below)
+1. Find true merge base:
+   ```
+   BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
+   git log $BASE..HEAD --oneline
+   git diff $BASE..HEAD --stat
+   ```
+   The base is the merge-base with main, NOT `origin/main` itself — that misses commits
+   already on the branch before the last merge. If both fail, ask the user.
+2. Draft title and body covering ALL changes since that base (see format below)
 3. Show draft, ask if they want to tweak anything
 4. STOP — NEVER run `gh pr create` or open the PR
 

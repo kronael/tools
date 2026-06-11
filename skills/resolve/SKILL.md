@@ -1,51 +1,65 @@
 ---
 name: resolve
-description: Triage an incoming request — classify (new task vs continuation), recall context on new tasks, dispatch matching skills, then act. NOT for first-time skill authoring (use wisdom).
-when_to_use: start of any non-trivial request, "what was I working on", ambiguous follow-up, picking up after a gap, deciding which skill applies
-user-invocable: true
+description: >
+  Universal entry point for every user message — invoke this BEFORE any
+  domain skill. Domain skills skip context loading; resolve loads diary/facts
+  first so you have project history before acting. It also prevents
+  wrong-skill pattern-matching: you see all skill descriptions together and
+  pick the best one, rather than jumping at the first description that fits.
+  Continuations re-use the prior skill set instead of re-matching from
+  scratch. NOT for first-time skill authoring (use wisdom).
+user-invocable: false
 ---
 
 # Resolve
 
-Internal triage you run before acting on a request. Reason in `<think>` —
-never emit the section headings below or words like "Classification:",
-"Continuation —", "New task —".
+Triage every incoming message. Internal only — never emit the section
+headings below or words like "Classification:", "Continuation —", "New
+task —". Wrap reasoning in `<think>…</think>`.
 
 ## 1. Classify
 
 **Continuation** — follow-up to current work (yes, ok, corrections,
-references to something just discussed). Skip recall (step 2); go to
-dispatch (step 3). Skills that fired on the prior turn usually still
-apply for follow-ups on the same entity.
+references to something just discussed). Skip recall (step 2);
+proceed to dispatch (step 3). The skills that fired on the prior turn
+usually still apply for follow-ups on the same entity.
 
-**New task** — a distinct request, or the first request in a session. If
-the entity, repo, or deliverable may have changed, treat as new task. If
-unsure, treat as new task.
+**New task** — distinct request, or first message in session. If unsure,
+treat as new task.
 
 ## 2. Recall (new task only)
 
-ALWAYS run `/recall-memories <topic>` on a new task before claiming you
-lack context — it searches diary, `MEMORY.md`, and recent session
-transcripts. NEVER answer "I don't have context" without recalling first.
-It also surfaces unfinished prior-session work to resume.
+```bash
+ls -t ~/diary/*.md 2>/dev/null | head -2 | xargs cat 2>/dev/null
+ls ~/facts/ 2>/dev/null | head -20
+```
 
-## 3. Dispatch (new task AND continuation)
+Read the 2 most recent diary files. Scan fact filenames; read any
+relevant to the topic. If the user references an unrecognized name:
+
+```bash
+grep -ril "<term>" ~/diary/ ~/facts/ ~/users/ 2>/dev/null | head -5
+```
+
+If a fact's `verified_at` is >14 days old and the task needs accurate
+data, refresh via `/find <topic>`. Delete facts that are wrong.
+
+## 3. Dispatch (every turn — new task AND continuation)
 
 ```bash
 for d in ~/.claude/skills/*/; do
-  [ -d "$d" ] || continue
   n=$(basename "$d")
   desc=$(awk '/^description:/{f=1; sub(/^description:[[:space:]]*/,""); print; next} f && /^[^ ]/{exit} f{print}' "$d/SKILL.md" 2>/dev/null | tr '\n' ' ' | sed 's/^[>[:space:]]*//')
   [ -n "$desc" ] && echo "$n: $desc"
 done
 ```
 
-Reads the one-line `description:` from each skill's frontmatter. Match
-descriptions against the request. If a skill matches, read its
-`SKILL.md` and follow its workflow. On continuations the prior turn's
-skills usually still match — keep using them unless the entity changed.
+Match descriptions against the request. If a skill matches, read its
+SKILL.md and follow its workflow. On continuations, the same skills
+that matched the prior turn typically still match — keep using them
+unless the entity has clearly changed.
 
 ## 4. Act
 
-Respond to the user and apply matched skill workflows. Never mention this
-skill ran.
+Respond to the user. Apply matched skill workflows. Do not mention this
+skill.

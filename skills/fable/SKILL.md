@@ -1,6 +1,6 @@
 ---
 name: fable
-description: /fable — launch a background subagent forcing model=fable (claude-fable-5). Use for the hardest reasoning, hardest design decisions, and multi-file architecture work.
+description: /fable — launch a background subagent forcing model=fable (claude-fable-5). Use for the hardest reasoning, hardest design decisions, and multi-file architecture work where opus isn't enough.
 when_to_use: "do this in a fable sub", "spawn a fable sub", "use fable", "use claude fable"
 user-invocable: true
 ---
@@ -10,6 +10,6 @@ Report what was launched. Continue immediately without waiting.
 
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
-- ALWAYS set the Agent tool's `model: "fable"`.
-- ALWAYS instruct the subagent to use xhigh effort — add to the prompt: "Think deeply and use extended reasoning before acting. Effort: xhigh."
-- Fable is the most capable and most expensive model — prefer `/sonnet` or `/haiku` for tasks that don't require maximum intelligence.
+- ALWAYS use `subagent_type: "fable"` on the Agent tool (NOT `model: "fable"`). The `fable` agent definition in `~/.claude/agents/fable.md` sets `model: fable` AND `effort: xhigh` — this is the only way to actually set effort on the spawned agent. The Agent tool has no `effort` parameter; `model:` alone does not set effort.
+- Do NOT add text prompts like "Think deeply / Effort: xhigh" — effort is set at the API level via the agent definition, not via prompt text.
+- Fable is the most capable and most expensive model — prefer `/opus` for tasks that don't require maximum intelligence.

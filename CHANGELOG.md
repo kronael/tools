@@ -1,5 +1,35 @@
 # Changelog
 
+## [v0.3.15] — 20260611
+
+> kronael v0.3.15 — tiered model hierarchy + PostToolUse nudge
+>
+> Skills now route through a three-tier model ladder (sonnet → opus → fable), each tier pinned to a named agent definition that sets model and effort at the API level — not prompt text.
+>
+> • `/opus` re-added — fable model at default effort; slots between `/sonnet` and `/fable` for heavy-but-not-maximum tasks
+> • `agents/fable.md`, `agents/sonnet.md` pin model + effort tier so skills use `subagent_type:` instead of `model:` + prompt-text nudges
+> • `post_tool_nudge.sh` (PostToolUse) fires after every tool call, throttled, nudges commit + diary on stop
+> • `/resolve` rewritten — recalls context via `/recall-memories` instead of diary/facts grep
+> • `/review` gets a fable adversarial reverification pass that drops false positives before posting
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `/opus` skill — fable-model background agent with prompt-based xhigh effort hint; re-introduced as mid-tier between `/sonnet` and `/fable` (was removed in v0.3.13)
+- `agents/fable.md`, `agents/sonnet.md` — agent definitions that pin `model` + `effort` at the API level; `/fable` and `/sonnet` skills now use `subagent_type:` to invoke them
+- `hooks/post_tool_nudge.sh` (PostToolUse hook) — throttled (100 calls/10 min), delegates to `stop.py` for commit and diary nudging
+- `/hacker-eval` and `/merge` skills added to bundle
+
+### Changed
+
+- `/fable`: switches to `subagent_type: "fable"` (was `model: "fable"`); prefers `/opus` for tasks not requiring maximum intelligence
+- `/sonnet`: switches to `subagent_type: "sonnet"` (was `model: "sonnet"`); escalates to `/opus` instead of `/fable`
+- `/resolve` major rewrite — uses `/recall-memories` for context recall; description and dispatch section updated
+- `/review` adds step 4 fable reverification pass — reads diff fresh, adversarially reverifies sonnet findings, drops false positives
+- `/pr-draft` base detection uses `git merge-base HEAD origin/main` instead of `origin/main..HEAD`
+- `skills/global/SKILL.md` synced: adds `/bugs` skill pointer and `BUGS.md` triage rule
+
 ## [v0.3.14] — 20260610
 
 > kronael v0.3.14 — bugs skill + sharper nudges

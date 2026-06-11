@@ -16,7 +16,7 @@ user-invocable: true
 
 One commit = one logical change. Group by WHY, not by directory:
 
-- fix vs refa vs simpl vs docs vs test → separate commits
+- fix vs refa vs splx vs docs vs test → separate commits
 - a fix + its test → one commit
 - a doc/SCREENS/ARCHITECTURE update for a behavior change → same commit
 
@@ -25,21 +25,21 @@ One commit = one logical change. Group by WHY, not by directory:
 Use `type(scope):` — scope is optional, omit only when the change is truly cross-cutting.
 
 Format shapes:
-- `fix(scope): why broken`
-- `feat(scope): what added`
-- `refa(scope): what restructured`
-- `simpl(scope): what simplified`
-- `chore: what maintained`
-- `docs(scope): what documented`
-- `test(scope): what covered`
-- `perf(scope): what sped up`
-- `style: what formatted`
-- `build: what changed`
-- `ci: what changed`
+- `fix(scope): Fix why it broke`
+- `feat(scope): Add what`
+- `refa(scope): Restructure what`
+- `splx(scope): Simplify what`
+- `chore: Maintain what`
+- `docs(scope): Document what`
+- `test(scope): Cover what`
+- `perf(scope): Speed up what`
+- `style: Format what`
+- `build: Change what`
+- `ci: Change what`
 - `revert: <subject>`
 - `release: vX.Y.Z`
 
-Subject: ≤ 72 chars, imperative mood, **capitalize first word after the colon**. Test: "If applied, this commit will: _____"
+Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. Test: "If applied, this commit will: _____"
 
 Body (second `-m`): explain *why* — the diff shows what.
 `git commit -m "subj" -m "why" -- files`

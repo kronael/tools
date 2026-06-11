@@ -7,7 +7,7 @@ user-invocable: true
 
 # Review
 
-Bucket → lenses → parallel agents → discuss → GitHub post.
+Bucket → lenses → parallel agents → fable reverification → discuss → GitHub post.
 
 ## Input
 
@@ -50,7 +50,47 @@ ALWAYS pass house rules so suggestions don't violate them.
 
 ALWAYS wait for all agents before proceeding.
 
-### 4. Per-hunk minimality pass
+### 4. Fable deep-dive + reverification pass
+
+Run a **single** `Agent(model="fable")` that does two things simultaneously:
+
+1. **Independent deep review** — read the full diff and key changed files itself, hunting for:
+   - Gross bugs (incorrect logic, wrong invariants, data loss, panic paths)
+   - Regression risks (behavior changes not reflected in tests, broken API contracts)
+   - Things sonnet-tier agents are likely to miss or hallucinate fixes for
+   Do NOT rely on the sonnet findings for this — approach fresh.
+
+2. **Reverification of sonnet findings** — for each sonnet finding, decide:
+   - KEEP — real problem, clear impact, in changed code, non-obvious to the author
+   - DROP — false positive, style nit, out-of-scope, or a suggested fix that is wrong/worse
+
+Prompt structure:
+```
+You are doing a deep adversarial code review. You have two jobs:
+
+**Job 1 — Independent deep review**
+Read the full diff and key files. Find gross bugs, regression risks, and invariant violations
+that a fast reviewer would miss. Focus on: [domain-specific invariants from PR description].
+Format: FILE:LINE — [Type] Title / Problem / Fix
+
+**Job 2 — Sonnet findings reverification**
+For each finding below, answer KEEP or DROP with one-line justification.
+Only KEEP findings that are: real, clearly impactful, in changed code, non-obvious.
+Sonnet findings:
+<paste all findings>
+
+PR description:
+<paste PR description>
+
+House rules:
+<relevant CLAUDE.md excerpts>
+```
+
+Output is: fable's own findings + KEEP list from sonnet. Merge both into the final pool.
+
+ALWAYS run this pass. ALWAYS trust fable's DROP judgements over sonnet's findings.
+
+### 5. Per-hunk minimality pass
 
 Walk every hunk in `git diff <base>..HEAD`. Flag any that don't serve the stated goal:
 - Renames with no behavior change
