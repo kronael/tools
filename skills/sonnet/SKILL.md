@@ -13,4 +13,4 @@ Report what was launched. Continue immediately without waiting.
 - ALWAYS set the Agent tool's `model: "sonnet"`.
 - ALWAYS instruct the subagent to use high effort — add to the prompt: "Apply high effort reasoning for this task. Effort: high."
 - For simple mechanical work (find-and-replace, renaming, single-file edits with no design calls), prefer `/haiku` instead — it's faster and cheaper.
-- For hard tasks (multi-file reasoning, design decisions, cross-cutting analysis), escalate to `/opus` instead.
+- For hard tasks (multi-file reasoning, design decisions, cross-cutting analysis), escalate to `/fable` instead.

@@ -48,6 +48,8 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 
 **Skills** auto-activate by file context (Rust → `/rs` patterns, Dockerfile → `/ops`, etc.) and provide workflow commands (`/commit`, `/ship`, `/refine`, `/diary`). The `global` skill carries development wisdom (startup protocol, terse response style, boring-code philosophy) and is installed as `~/.claude/CLAUDE.md`.
 
+**`create-*` skills** are creative-output generators ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative) (`skills/creative/`). The `create-` prefix groups them and keeps trigger discovery scoped — invoke with `/create-<name>` (e.g. `/create-excalidraw`, `/create-p5js`). Only the local-only ones are bundled here; skills that required external paid services (Suno, ComfyUI Cloud, TouchDesigner, image-gen APIs) were dropped.
+
 **Agents** are specialized task workers: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`, `@visual`. Most are launched via slash commands (`/refine` → `@refine`, etc.).
 
 **Hooks** wire lifecycle events:

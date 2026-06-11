@@ -1,5 +1,63 @@
 # Changelog
 
+## [v0.3.14] — 20260610
+
+> kronael v0.3.14 — bugs skill + sharper nudges
+>
+> The `/bugs` issue-queue skill is finished, and the prompt nudger now points you at `/bugs` and `/specs`.
+>
+> • `/bugs` skill — record open issues in `bugs.md` with a fixed entry format, lifecycle, and prune-to-diary flow
+> • Prompt nudger routes "bug"/"spec" mentions to `/bugs` and `/specs`
+> • Fuzzy matcher matches singular/plural across a trailing "s", so 3-letter words like "bug" route too
+> • CLAUDE.md rewritten as a concise repo-specific guide instead of a copy of the global wisdom
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `/bugs` skill: the `bugs.md` open-issues queue — entry format, record/mark/prune lifecycle, optional aggregation. Policy stays in CLAUDE.md "Bug Triage Protocol", which now points to the skill
+- `prompt_nudge.py` routes `bug`/`bugs` → `/bugs` and `spec`/`specs` → `/specs`
+
+### Changed
+
+- Root `CLAUDE.md` rewritten as a concise (123-line) repo-specific guide — what the repo is, commands, install architecture, conventions — dropping the duplicated global wisdom
+- `prompt_nudge.py` fuzzy matcher normalizes a trailing `s`, matching singular/plural with one dict entry and bypassing the `len < 4` guard that blocked short keywords
+
+## [v0.3.13] — 20260610
+
+> kronael v0.3.13 — creative skills bundle, opus dropped
+>
+> Twelve `create-*` skills land for HTML mockups, SVG architecture diagrams, p5.js sketches, ASCII art, and Manim videos; `/opus` and `/oracle` removed.
+>
+> • 12 `create-*` skills — HTML/SVG/ASCII generators (excalidraw, p5js, ascii-art/video, manim, design-md, …)
+> • `/oracle` (codex second opinion) and `/opus` removed — bundle standardizes on `/fable` for hard reasoning
+> • `/sonnet` escalation now points at `/fable` instead of `/opus`
+> • `prompt_nudge.py` restored — UserPromptSubmit keyword routing was deleted but not replaced in v0.3.11
+> • Web one-pager landing spec drafted in `specs/5-web-onepager.md`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- 12 `create-*` creative-output skills ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative) under a `create-` prefix that scopes discovery and avoids collisions with engineering skills (`go`, `rs`, …). Only local-only ones bundled: `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`. Four upstream skills needing paid APIs / cloud / external apps were dropped (Suno, ComfyUI Cloud, TouchDesigner, baoyu image-gen)
+- `specs/5-web-onepager.md` — plan for terminal-native README landing (5 anchor visuals, 11-section layout, 9 implementation phases)
+- README, CLAUDE.md, skills/README.md document the `create-*` naming convention
+
+### Changed
+
+- `/sonnet` escalation arrow now points at `/fable` instead of `/opus`
+- `/fable` description and footer drop the `/opus` references
+
+### Removed
+
+- `/oracle` skill (codex CLI second opinion, unused)
+- `/opus` skill (standardize on `/fable` for hardest reasoning)
+
+### Fixed
+
+- `hooks/prompt_nudge.py` restored from backup — the v0.3.11 merge intended to rename `nudge.py` → `prompt_nudge.py` but only the deletion landed, leaving `settings-recommended.json` referencing a non-existent file
+- `settings-recommended.json` UserPromptSubmit hook list now wires the real script paths
+
 ## [v0.3.12] — 20260610
 
 > kronael v0.3.12 — fable skill, effort levels wired

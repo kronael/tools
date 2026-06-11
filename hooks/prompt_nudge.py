@@ -43,6 +43,7 @@ AGENT_KEYWORDS = {
     'fix': '/fix',
     'explore': '/explore',
     'release': '/release',
+    'bugs': '/bugs',
     'spec': '/specs',
     'specs': '/specs',
     'test': '/testing',
@@ -80,14 +81,18 @@ def fuzzy_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
+    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs)
+    if word.endswith('s') and word[:-1] in keywords:
+        return keywords[word[:-1]]
+    if word + 's' in keywords:
+        return keywords[word + 's']
     if len(word) < 4:
         return None
     for kw, agent in keywords.items():
-        # short keywords require exact match (already handled above)
-        if len(kw) <= 4:
+        if len(kw) < 4:
             continue
-        max_dist = 1 if len(kw) <= 6 else 2
-        if edit_distance(word, kw) <= max_dist:
+        dist = edit_distance(word, kw)
+        if dist <= max(1, len(kw) // 4):
             return agent
     return None
 

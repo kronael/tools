@@ -1,6 +1,6 @@
 ---
 name: fable
-description: /fable — launch a background subagent forcing model=fable (claude-fable-5). Use for the hardest reasoning, hardest design decisions, and multi-file architecture work where opus isn't enough.
+description: /fable — launch a background subagent forcing model=fable (claude-fable-5). Use for the hardest reasoning, hardest design decisions, and multi-file architecture work.
 when_to_use: "do this in a fable sub", "spawn a fable sub", "use fable", "use claude fable"
 user-invocable: true
 ---
@@ -12,4 +12,4 @@ Report what was launched. Continue immediately without waiting.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
 - ALWAYS set the Agent tool's `model: "fable"`.
 - ALWAYS instruct the subagent to use xhigh effort — add to the prompt: "Think deeply and use extended reasoning before acting. Effort: xhigh."
-- Fable is the most capable and most expensive model — prefer `/opus` for tasks that don't require maximum intelligence.
+- Fable is the most capable and most expensive model — prefer `/sonnet` or `/haiku` for tasks that don't require maximum intelligence.

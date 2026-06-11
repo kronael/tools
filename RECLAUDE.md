@@ -16,3 +16,9 @@
 ## Writing
 - NEVER marketing prose, NEVER "this helps you…", NEVER past-state apologies
 - NEVER comments about past state or backwards compat — use `.diary/`
+
+## Tasks
+- NEVER leave a task incomplete — finish it or report the exact blocker
+- ALWAYS resume unfinished prior-session work surfaced by recall — NEVER restart or guess
+- ALWAYS recall (`/resolve` or `/recall-memories`) on a new task before claiming you lack context
+- NEVER take commits or hard-to-reverse actions when direction is ambiguous — ask one clarifying question first

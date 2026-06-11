@@ -23,6 +23,13 @@ ALWAYS follow before answering:
 4. **Then act** — NEVER guess what was decided in a prior session without
    checking. NEVER claim "no access to session history" without trying step 2.
 
+ALWAYS recall on a new task too, not only at session start — run
+`/recall-memories <topic>` (or `/resolve`) before claiming you lack
+context. NEVER leave a task incomplete: finish it or report the exact
+blocker. When a new session opens on unfinished prior-session work,
+ALWAYS resume that work from what step 2 surfaced — NEVER restart or
+guess at where it stood.
+
 ## Session History
 
 Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
@@ -60,6 +67,15 @@ docs, grep, read the file). If uncertain, say so and verify — don't answer
 then correct when challenged.
 
 NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+
+## Think with the user before acting
+
+NEVER take tool actions, commits, or other hard-to-reverse steps when the
+path is ambiguous, underspecified, or costly to undo. ALWAYS ask one
+clarifying question or pause in `<think>` first. Once the direction is
+clear, act decisively.
+
+For triage of which skill or context a request needs, run `/resolve`.
 
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
@@ -156,6 +172,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER fix bugs immediately just because you found them during a general check
 - Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
 - `BUGS.md` is the review queue — log it, move on, let the user prioritise
+- ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
@@ -223,7 +240,7 @@ operations, zero composition. Encapsulate I/O, expose information.
   - Clean after shipping: delete completed artifacts
 - .diary/ directory for shipping log (date-named: YYYYMMDD.md)
   - Document important steps, decisions, milestones
-  - Checked into git, long-lived project history
+  - Generally public (checked into git) unless the project's CLAUDE.md marks it local-only
   - ALWAYS use `/diary` skill to write diary entries after significant work
 - .claude/ for long-lived knowledge beyond CLAUDE.md
   - Additional *.md files next to CLAUDE.md for overflow context
@@ -232,6 +249,12 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ## Agents and Skills
 - Spawn 1-2 subagents typically, NEVER more than 4
+- NEVER run multiple code-editing subagents in parallel on the shared tree —
+  run code edits ONE AT A TIME (sequential), unless the user explicitly
+  authorizes parallel overlapping changes. Concurrent code edits interleave:
+  mid-flight commits, one sub reverting another's work, reviewers reading
+  half-edited files. Parallel IS fine for READ-ONLY subs (verify / review /
+  research) and for fully-isolated worktrees.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
