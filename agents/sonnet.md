@@ -1,6 +1,6 @@
 ---
 name: sonnet
 model: sonnet
-effort: medium
-description: Sonnet at medium effort — best balance of speed, cost, and performance for agentic coding and tool-heavy workflows.
+effort: high
+description: Sonnet at high effort — thinking-enabled balance of speed and reasoning for agentic coding and tool-heavy workflows.
 ---
