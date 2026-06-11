@@ -115,6 +115,11 @@ function name, or constant referenced in docs: grep the codebase to
 confirm it exists and is used as described. If a doc references `foo()`
 doing X, read `foo()` to verify.
 
+**Test listings** — if the README lists tests (names, counts, `make test`
+targets, test categories): grep `*_test.*`, `test_*.py`, `tests/` for the
+actual test names and counts. Fix the README to match. A stale test listing
+is a broken claim.
+
 ### 6. Check Against Wisdom and Skills
 
 Remove from CLAUDE.md if covered elsewhere:
