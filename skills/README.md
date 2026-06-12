@@ -145,9 +145,53 @@ Ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-a
 
 ## Skill workflow diagram
 
-`WORKFLOW.md` in this directory shows all skills clustered by phase (orientation,
-planning, coding, quality, output, communication, escalation) with arrows
-showing typical session flow. Generated with the `diagram` skill and `ascfix`.
+Skills cluster into phases. Main spine: orientation → planning → coding → quality → output.
+Side-channels (escalation, communication) fire at any stage.
+
+┌─ orientation ───────────────┐
+│ resolve recall-memories     │
+│ explore                     │
+└──────────────┬──────────────┘
+               │
+┌─ planning ───▼──────────────┐
+│ specs ship                  │
+└──────────────┬──────────────┘
+               │
+┌─ coding ─────▼──────────────┐
+│ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
+│ service data trader         ├────────►│ haiku sonnet opus   │
+└──────────────┬──────────────┘         │ fable sub fin       │
+               │                        └─────────────────────┘
+┌─ quality ────▼──────────────┐
+│ review code-review improve  │
+│ refine visual testing bugs  │
+└──────────────┬──────────────┘
+               │
+┌─ output ─────▼──────────────┐         ┌─ communication ─────┐
+│ commit pr-draft release     │         │ diary readme wisdom │
+│ gh-comment                  ├────────►│ learn tweet         │
+└─────────────────────────────┘         └─────────────────────┘
+
+**orientation** — load context before acting. `resolve` is the universal entry point;
+`recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
+
+**planning** — `specs` for design docs; `ship` for multi-session work tracking.
+Skip for one-off tasks.
+
+**coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
+shape skills (cli, service, data, trader) carry patterns for what you're building.
+They compose: a Rust CLI loads `rs` + `cli`.
+
+**quality** — `review`/`code-review` for finding issues; `improve`/`refine` for fixing
+them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
+
+**output** — `commit`, `pr-draft`, `release`, `gh-comment`. Use once work is verified.
+
+**communication** — fires after milestones at any stage. `diary` logs decisions;
+`readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
+
+**escalation** — route to the right model/mode from any stage. haiku → sonnet → opus → fable
+for increasing capability. `sub` for fire-and-forget; `fin` for no-confirmation runs.
 
 ## Working with skills
 
