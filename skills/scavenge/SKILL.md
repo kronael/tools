@@ -1,6 +1,6 @@
 ---
 name: scavenge
-description: Scavenge public best practices for an activity, oracle-test what you scavenged, assemble into a durable artifact (skill, agent, guideline, runbook, checklist, review template, spec). NOT for codifying conversation-history patterns (use learn) or editing existing artifacts (use wisdom).
+description: Codify public best practice into a durable, oracle-tested artifact — skill, agent, guideline, runbook, checklist, review template, or spec. NOT for conversation-history patterns (use learn) or editing an existing artifact (use wisdom).
 when_to_use: "create a skill for X", "write up our guideline for Y", "draft a runbook for Z", "make a checklist for W", "codify our practice on X", "produce a review template for Y", "make an agent for Z", "draft a spec for V", new methodology, repeatable workflow extraction
 user-invocable: true
 ---
