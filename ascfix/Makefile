@@ -5,8 +5,8 @@ name = ascfix
 build:
 	go build -o $(name) .
 
-test: build
-	@echo "┌───┐" | printf '┌───┐\n│   │\n└─┬─┘\n  ─\n  │\n' | ./$(name)
+test:
+	go test .
 
 install: build
 	cp $(name) ~/.local/bin/$(name)
