@@ -1,4 +1,4 @@
-name = ascfix
+name = udfix
 
 .PHONY: build test install clean
 
