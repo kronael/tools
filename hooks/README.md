@@ -1,88 +1,54 @@
 # Claude Code Hooks
 
-Hooks that extend Claude Code with keyword routing, session rule injection,
-and commit/diary nudges.
+Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
+commit/diary nudges. Scripts install to `~/.claude/hooks/`.
 
-## Installation
+The authoritative wiring (events, matchers, timeouts) is
+`../settings-recommended.json` — its `hooks` block is merged into
+`~/.claude/settings.json` by the install step. This file is the
+overview; the wiring is not restated here.
 
-Hooks are configured in `~/.claude/settings.json`. The hook scripts live in
-`~/.claude/hooks/`.
+## The hooks
 
-## Features
+### prompt_nudge.py (UserPromptSubmit)
 
-### Keyword Routing (prompt_nudge.py)
+Fuzzy-matches prompt keywords and emits a system message telling Claude
+to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
+the source — read the dict, don't duplicate it. Also injects
+`COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions. Meta
+prompts (hook/agent debugging) are skipped so the hook doesn't
+interfere with its own maintenance.
 
-Fires on `UserPromptSubmit`. Detects keywords in the prompt (with fuzzy
-edit-distance matching) and emits a system message telling Claude to invoke
-the matching command or agent.
+### pretool_nudge.py (PreToolUse: Read|Edit|Write|MultiEdit|NotebookEdit)
 
-| Keyword | Route |
-|---------|-------|
-| ship    | /ship |
-| build   | /build |
-| refine  | /refine |
-| tweet   | /tweet |
-| diary   | /diary |
-| readme  | @readme |
-| learn   | @learn |
-| improve | @improve |
-| visual  | @visual |
-| distill | @distill |
+Maps the touched file to a language skill by extension/filename
+(`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
+`Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
+nudge, once per session+file.
 
-Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on
-`todo|readme|changelog|spec|architecture|*.md` mentions.
+### post_tool_nudge.sh (PostToolUse)
 
-Meta prompts (hook/agent debugging) are detected and skipped so the hook
-does not interfere with hook maintenance itself.
+Counts tool calls in `/tmp/claude-commit-nudge`; every 100 calls or 10
+minutes re-runs `stop.py`'s commit/diary check mid-session.
+Non-blocking, always exits 0.
 
-### LOCAL.md Injection (local.py)
+### local.py (UserPromptSubmit + PreCompact)
 
-Fires on `UserPromptSubmit` and `PreCompact`. Injects `~/.claude/LOCAL.md`
-(and `$cwd/LOCAL.md` if present) on the first prompt of a session and on
-pre-compaction. Also re-injects a short `RULES` block on continue/recap
-keywords, respecting negation ("don't continue").
+Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
+first prompt of a session and on pre-compaction. Re-injects a short
+`RULES` block on continue/recap keywords, respecting negation.
+State: `$cwd/.claude/tmp/local-{session_id}`.
 
-**State:** `$cwd/.claude/tmp/local-{session_id}` tracks the first prompt.
+### reclaude.py (PreCompact)
 
-### RECLAUDE.md Injection (reclaude.py)
+Injects `~/.claude/RECLAUDE.md` before compaction, with a note
+instructing the model to preserve the wisdom across the compact.
 
-Fires on `UserPromptSubmit` and `PreCompact`. Mirrors `local.py` but sources
-`~/.claude/RECLAUDE.md`. On `PreCompact`, appends a note instructing the
-model to preserve the wisdom across compaction.
+### stop.py (Stop)
 
-### Commit + Diary Nudge (stop.py)
-
-Fires on `Stop`. Blocks with a reason message if either:
-
-- `git status --porcelain -uno` shows uncommitted changes → "consider /commit"
-- `$cwd/.diary/` exists and today's `YYYYMMDD.md` is missing or >1h stale
-  → "consider /diary"
-
-Pure script, no LLM call. NEVER pushes. Commit and diary writes are
-local-only and explicit.
-
-## File Structure
-
-```
-~/.claude/hooks/
-  prompt_nudge.py       # UserPromptSubmit: keyword → command/agent
-  local.py       # UserPromptSubmit + PreCompact: LOCAL.md injection
-  reclaude.py    # UserPromptSubmit + PreCompact: RECLAUDE.md injection
-  stop.py        # Stop: commit + diary nudge
-```
-
-## Hook Configuration
-
-In `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [{"matcher": "", "hooks": [...]}],
-    "Stop":             [{"matcher": "", "hooks": [...]}],
-    "PreCompact":       [{"matcher": "", "hooks": [...]}]
-  }
-}
-```
+Blocks the stop with a reason if `git status --porcelain -uno` shows
+uncommitted changes ("consider /commit") or `$cwd/.diary/` exists with
+today's entry missing or >1h stale ("consider /diary"). Pure script, no
+LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

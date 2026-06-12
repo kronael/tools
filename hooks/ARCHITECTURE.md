@@ -3,15 +3,19 @@
 ## Overview
 
 ```
-User Prompt ──> UserPromptSubmit ──> prompt_nudge.py    (keyword → command/agent)
-                                 ──> local.py    (LOCAL.md on first prompt)
-                                 ──> reclaude.py (RECLAUDE.md on first prompt)
+User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
+                                 ──> local.py        (LOCAL.md on first prompt)
+
+Tool call ──> PreToolUse  ──> pretool_nudge.py   (file → language-skill nudge)
+          ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
 Claude stops ──> Stop ──> stop.py (commit + diary nudge)
 
 Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
                           ──> reclaude.py (RECLAUDE.md + preservation note)
 ```
+
+Event/matcher wiring is owned by `../settings-recommended.json`.
 
 ## Components
 
@@ -29,7 +33,33 @@ Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
 4. If prompt contains `commit`, append `COMMIT_RULES` and short-circuit;
    otherwise emit the first fuzzy-matched agent route.
 
-**Keyword table:** see README.md.
+**Routes:** `AGENT_KEYWORDS` dict in the source.
+
+### pretool_nudge.py (PreToolUse)
+
+**Input:** JSON with `tool_name`, `tool_input` (`file_path` /
+`notebook_path`), `session_id`.
+**Output:** `hookSpecificOutput.additionalContext` nudge, or silent.
+
+**Flow:**
+1. Ignore tools outside Read/Edit/Write/MultiEdit/NotebookEdit.
+2. Map path to a skill: special filenames first (`Makefile` → `/mk`,
+   `Dockerfile`/compose/workflows → `/ops`), then extension via
+   `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
+3. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
+   each nudge fires once.
+4. Emit "Editing/reading <file> — follow <skill> conventions."
+
+### post_tool_nudge.sh (PostToolUse)
+
+**Input:** stdin unused; state in `/tmp/claude-commit-nudge` (ts + count).
+**Output:** `stop.py`'s output every 100 tool calls or 10 minutes,
+otherwise silent. Always exits 0 — never blocks a tool call.
+
+**Flow:**
+1. Increment the call counter.
+2. At 100 calls or 600 s, reset state and run `stop.py` so the
+   commit/diary nudge also fires mid-session, not only on Stop.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
@@ -43,17 +73,19 @@ Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
 2. On continue/recap keywords (respecting negation), append `RULES`.
 3. On `PreCompact`, always append `RULES`.
 
-### reclaude.py (UserPromptSubmit + PreCompact)
+### reclaude.py (PreCompact)
 
-**Input:** JSON with `prompt`, `hook_event`.
+**Input:** JSON with `hook_event`.
 **Output:** `{"ok": true, "systemMessage": "<RECLAUDE.md>"}` or silent.
 
 **Flow:**
 1. Reads `~/.claude/RECLAUDE.md`; silent exit if missing.
-2. Skip on negation (`don't continue`, etc).
-3. Inject on `PreCompact` or continue/recap keywords.
-4. On `PreCompact`, append a preservation note so the content survives
-   compaction.
+2. On `PreCompact`, injects the content with an appended preservation
+   note so the wisdom survives compaction.
+
+The script also has a continue/recap-keyword trigger path, but the
+recommended wiring runs it on `PreCompact` only — the keyword path is
+unwired.
 
 ### stop.py (Stop)
 
@@ -105,19 +137,18 @@ stdout (dirty tree + stale diary):
 
 ## Error Handling
 
-All hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError` and bail
-with `sys.exit(0)` so a broken payload never blocks the session. File I/O
-errors in `local.py` are swallowed for the same reason.
+All Python hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError`
+and bail with exit 0 so a broken payload never blocks the session. File
+I/O errors are swallowed for the same reason. `post_tool_nudge.sh`
+always exits 0.
 
 ## Extension Points
 
-**Add a new keyword route** — edit `AGENT_KEYWORDS` in `prompt_nudge.py` and the
-table in `README.md`.
+**Add a new keyword route** — edit `AGENT_KEYWORDS` in `prompt_nudge.py`.
 
 **Add a new stop nudge** — append to the `parts` list in `stop.py`. Keep
 checks cheap (no network, no LLM) and guard with a path/directory probe
 so the hook stays silent in projects that don't use the feature.
 
-**Add a new injected file** — model it on `local.py`/`reclaude.py`: read
-on first prompt + `PreCompact`, respect negation, append rules on
-compaction.
+**Add a new injected file** — model it on `local.py` (first prompt +
+`PreCompact`, negation-aware) or `reclaude.py` (`PreCompact` only).

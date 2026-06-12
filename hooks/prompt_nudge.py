@@ -18,7 +18,6 @@ Invoke /commit skill."""
 
 AGENT_KEYWORDS = {
     'ship': '/ship',
-    'build': '/build',
     'refine': '/refine',
     'tweet': '/tweet',
     'diary': '/diary',
