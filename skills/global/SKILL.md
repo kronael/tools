@@ -263,7 +263,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ### Skill discovery and reconciliation
 - Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
-- `/dispatch` scans all skill descriptions, matches to current task, and
+- `/resolve` scans all skill descriptions, matches to current task, and
   reconciles prior work if a skill was discovered late
 - Do not continue producing outputs that contradict a known applicable skill
 

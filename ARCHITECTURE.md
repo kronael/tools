@@ -3,18 +3,16 @@
 ## Repo shape
 
 ```
-.claude-plugin/         marketplace.json + plugin.json
-kronael/install/  the only plugin-exposed skill — install procedure
-skills/                 bundle — auto-activating skills (languages, workflow, domain)
-agents/                 bundle — specialized task agents
-hooks/                  bundle — lifecycle hook scripts (Python)
-settings-recommended.json  user-side settings to merge into ~/.claude/settings.json
-RECLAUDE.md             template for ~/.claude/RECLAUDE.md (reclaude hook input)
-AGENTS.md               instructions for non-Claude agents (Codex)
-WORKFLOW.md             agent hierarchy and ship/build/refine workflows
-COOKBOOK.md             daily git recipes (detached HEAD with rig)
-usage-patterns/         design patterns extracted from production projects
-dockbox/, rig/, ...     standalone CLI tools (each independent)
+.claude-plugin/             marketplace.json + plugin.json
+kronael/install/            the only plugin-exposed skill — install procedure
+skills/                     bundle — auto-activating skills (languages, workflow, domain)
+agents/                     bundle — specialized task agents
+hooks/                      bundle — lifecycle hook scripts
+settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
+RECLAUDE.md                 template for ~/.claude/RECLAUDE.md (reclaude hook input)
+AGENTS.md                   notes for non-Claude agents (Codex)
+COOKBOOK.md                 daily git recipes (detached HEAD with rig)
+udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in README.md)
 ```
 
 ## Two install paths, one source
@@ -30,7 +28,7 @@ plugin cache. `/kronael:install` reads the cached repo at
 the root, says "install". Source is `cwd`; the rest of the procedure is
 identical.
 
-The procedure is documented in [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
+The procedure is documented in [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the notes in [`AGENTS.md`](AGENTS.md).
 
 ## Why hybrid (plugin + install step)
 
@@ -77,31 +75,23 @@ Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
 1. Claude Code starts in a project
 2. Loads ~/.claude/CLAUDE.md (global wisdom)
 3. Loads ./CLAUDE.md (project conventions)
-4. Hooks fire on UserPromptSubmit / PreCompact / Stop / SessionEnd
+4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills auto-activate by file extension or config file
 6. Agents invoked explicitly (`/refine`, `@improve`) or by delegation
 ```
 
 ## Components
 
-**Skills** auto-activate by file context (`.rs` → `rs`, `Dockerfile` →
-`ops`, etc.) and provide workflow commands (`/commit`, `/ship`, `/refine`,
-`/diary`). The `global` skill becomes `~/.claude/CLAUDE.md`.
+**Skills** auto-activate by file context and provide workflow slash
+commands. The `global` skill becomes `~/.claude/CLAUDE.md`. Index,
+rationale, and workflow diagram: [`skills/README.md`](skills/README.md).
 
-**Agents**: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`,
-`@visual`. Most are dispatched by slash-command wrappers.
+**Agents** are task workers, mostly dispatched by slash-command wrappers.
 
-**Hooks** wire lifecycle events:
-- `nudge` — UserPromptSubmit fuzzy-match keywords to agents/skills
-- `local` — UserPromptSubmit + PreCompact inject `~/.claude/LOCAL.md`
-- `reclaude` — PreCompact re-inject critical rules across compaction
-- `stop` — Stop block on uncommitted changes / missing diary entries
-
-See [`WORKFLOW.md`](WORKFLOW.md) for the full agent hierarchy,
-[`skills/README.md`](skills/README.md) for skill rationale by family
-(memory, refinement, shortcuts), and
-[`hooks/README.md`](hooks/README.md) +
-[`hooks/ARCHITECTURE.md`](hooks/ARCHITECTURE.md) for hook details.
+**Hooks** wire the lifecycle events above; the wiring is defined in
+`settings-recommended.json`. Per-hook rationale and data flow:
+[`hooks/README.md`](hooks/README.md),
+[`hooks/ARCHITECTURE.md`](hooks/ARCHITECTURE.md).
 
 ## Org overlays
 

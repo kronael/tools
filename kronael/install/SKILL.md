@@ -36,7 +36,7 @@ If missing, you're in the wrong directory — stop and ask.
 3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
 
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
-   - **Hooks block** (UserPromptSubmit, PreToolUse, Stop, PreCompact, SessionEnd) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
+   - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 

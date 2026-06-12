@@ -11,9 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The **kronael toolkit** — two things in one repo:
 
-1. **Standalone CLI tools** (`dockbox/`, `rig/`, `tw-fetch/`, `tg-fetch/`,
-   `dc-fetch/`, `clp/`). Each is fully independent: own dir, own Makefile or
-   PEP 723 inline-deps script, own README. They do not import from each other.
+1. **Standalone CLI tools**, one directory each. Fully independent: own
+   Makefile or PEP 723 inline-deps script, own README, no imports between
+   them. The tool inventory lives in `README.md` — when adding a tool, add
+   its row there.
 2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`,
    `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
    deployed into a user's `~/.claude/` by an install step.
@@ -25,9 +26,10 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # run tests across subdirs (currently: hooks)
-make test-hooks    # tests for one subdir
-make clean         # clean subdirs + sweep __pycache__
+make test          # run tests across all projects in PROJECTS (hooks udfix)
+make test-<dir>    # tests for one project, e.g. make test-udfix
+make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
+make clean         # clean projects + sweep __pycache__
 ```
 
 - **Hooks** (`hooks/`): `make -C hooks test` runs pytest. Only `pretool_nudge.py`
@@ -45,54 +47,36 @@ make clean         # clean subdirs + sweep __pycache__
 ## Architecture: two install paths, one source
 
 `skills/`, `agents/`, `hooks/` at repo root **are** the bundle. Both install
-paths copy them into `~/.claude/`:
-
-- **Plugin path** — marketplace clones the repo into Claude Code's plugin
-  cache; `/kronael:install` copies from `${CLAUDE_PLUGIN_ROOT}`.
-- **Manual path** — user clones, opens Claude Code at root, says "install";
-  source is `cwd`.
+paths copy them into `~/.claude/`: the plugin path (`/kronael:install` from
+the marketplace clone at `${CLAUDE_PLUGIN_ROOT}`) and the manual path (user
+opens Claude Code at the cloned root and says "install").
 
 `kronael/install/SKILL.md` is the **single source of truth** for the
-procedure (the only plugin-exposed skill). `AGENTS.md` is the bash translation
-for Codex / non-Claude agents. When you change install behavior, change
-`kronael/install/SKILL.md` and keep `AGENTS.md` in sync.
+procedure (the only plugin-exposed skill). When you change install behavior,
+change that file and keep `AGENTS.md`'s notes in sync. Why the install step
+exists at all: `ARCHITECTURE.md#why-hybrid-plugin--install-step`.
 
-### Why hybrid (plugin + install step), not pure plugin
+Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
-The install step is an LLM running a merge procedure, not a `cp -r`. It diffs
-before overwriting, surfaces conflicts, extracts user-local paths/secrets to
-`LOCAL.md`, and preserves user-added skills. This makes the user's `~/.claude/`
-a **working copy** they can edit and PR back — a pure plugin would overwrite
-edits on every update. See `ARCHITECTURE.md#why-hybrid-plugin--install-step`.
-
-### Sync rules (enforced by the install procedure)
-
-| Target | Rule |
-|---|---|
-| `skills/`, `agents/`, `hooks/` | Replace matching files; **never `rm -rf`** (preserves org overlays / user skills) |
-| `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (frontmatter stripped) — diff and ask |
-| `~/.claude/settings.json` | Merge from `settings-recommended.json` — diff and ask; the `hooks` block is the minimum required |
-| `settings.local.json`, `LOCAL.md`, `CLAUDE.local.md` | **NEVER touch** |
-| Anything in `~/.claude/` not in this source tree | **NEVER delete** |
-
-`skills/global/` is copied as the wisdom file (→ `~/.claude/CLAUDE.md`), **not**
-as a skill — installing it both ways would duplicate always-loaded content.
+- **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org
+  overlays and user-added skills must survive. NEVER delete anything in
+  `~/.claude/` that isn't in this source tree.
+- **NEVER touch** `settings.local.json`, `LOCAL.md`, `CLAUDE.local.md`.
+- `skills/global/` installs as the wisdom file (→ `~/.claude/CLAUDE.md`),
+  **not** as a skill — installing it both ways would duplicate always-loaded
+  content.
 
 ## The bundle
 
 - **Skills** (`skills/<name>/SKILL.md`) auto-activate by file context
   (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
   `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
-  explicit dispatch (`/dispatch`, `/resolve`) is the intended path.
-- **Agents** (`agents/*.md`): `@distill`, `@improve`, `@learn`, `@readme`,
-  `@refine`, `@visual`. Mostly invoked via slash-command wrappers.
-- **Hooks** (`hooks/*.py`) wire lifecycle events:
-  - `prompt_nudge` / `pretool_nudge` (UserPromptSubmit / PreToolUse) — fuzzy-match keywords to agents/skills
-  - `local` (UserPromptSubmit, PreCompact) — inject `~/.claude/LOCAL.md`
-  - `reclaude` (PreCompact) — re-inject critical rules across compaction
-  - `stop` (Stop) — block on uncommitted changes / missing diary entries
-
-  See `hooks/ARCHITECTURE.md` for per-hook data flow.
+  explicit dispatch (`/resolve`) is the intended path. Index: `skills/README.md`.
+- **Agents** (`agents/*.md`) — task workers, mostly invoked via
+  slash-command wrappers.
+- **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is
+  defined in `settings-recommended.json`; per-hook data flow in
+  `hooks/ARCHITECTURE.md`.
 
 ## Repo-specific conventions
 
@@ -111,13 +95,7 @@ as a skill — installing it both ways would duplicate always-loaded content.
 
 ## Docs map
 
-| Doc | Purpose |
-|-----|---------|
-| `README.md` | User-facing overview + install paths |
-| `ARCHITECTURE.md` | Repo shape, install paths, sync strategies, org overlays |
-| `AGENTS.md` | Conventions + bash install runbook for Codex / non-Claude agents |
-| `WORKFLOW.md` | Agent hierarchy: `/ship` → `/build` → `/refine` → leaf agents |
-| `COOKBOOK.md` | Daily git recipes (detached-HEAD with `rig`) |
-| `kronael/install/SKILL.md` | Canonical install procedure (both paths) |
-| `skills/README.md`, `hooks/README.md` | Bundle rationale by family |
-| `CHANGELOG.md` | Release history |
+The full map is `README.md#documentation`. Most-used here:
+`kronael/install/SKILL.md` (canonical install), `ARCHITECTURE.md` (design
+rationale), `COOKBOOK.md` (git recipes), `skills/README.md` +
+`hooks/README.md` (bundle rationale by family).
