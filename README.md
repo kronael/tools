@@ -56,7 +56,6 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 **Hooks** wire lifecycle events:
 - `prompt_nudge` (UserPromptSubmit) — fuzzy-match keywords to agents/skills
 - `pretool_nudge` (PreToolUse) — context hints when editing known file types
-- `udfix_nudge` (PostToolUse Write/Edit) — auto-fix Unicode box-drawing junctions in written files
 - `local` (UserPromptSubmit, PreCompact) — inject `~/.claude/LOCAL.md`
 - `reclaude` (UserPromptSubmit, PreCompact) — re-inject critical rules across compaction
 - `stop` (Stop) — block on uncommitted changes / missing diary entries
