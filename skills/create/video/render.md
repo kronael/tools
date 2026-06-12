@@ -1,27 +1,27 @@
 ---
-name: create-video-render
-description: Render short-form / motion / dynamical-systems video from a script. Indexes engines (Remotion, Manim, Motion Canvas, Julia, Bevy, shaders) — loads one on demand. NOT for writing the script (use create-video-script) or static UI (use visual).
+name: video-render
+description: Render short-form / motion / dynamical-systems video from a script. Indexes engines (Remotion, Manim, Motion Canvas, Julia, Bevy, shaders) — loads one on demand. NOT for writing the script (use ../video.md) or static UI (use visual).
 when_to_use: "render the video", "build a Remotion video", "manim", "motion canvas", "animate this script", "motion design", "make an mp4", "phase portrait", "vector field", "swarm", "coupled oscillators", "differential dynamics", "coordination animation", "captions", "voiceover"
 user-invocable: true
 ---
 
 # Video Render — index
 
-Turns a prose script from [`create-video-script`](../create-video-script/SKILL.md) into an mp4. This file is engine-agnostic: the bridge, house style, caption pipeline, and a flavor index. Pick a flavor, then read only its file.
+Turns a prose script from [`video.md`](../video.md) into an mp4. This file is engine-agnostic: the bridge, house style, caption pipeline, and a flavor index. Pick a flavor, then read only its file.
 
 ## Pick a flavor (load on demand)
 
 | flavor | file | pick when |
 |---|---|---|
-| Remotion | [flavors/remotion.md](flavors/remotion.md) | React stack, data-driven, any CSS/SVG; the default web path |
-| Manim | [flavors/manim.md](flavors/manim.md) | math — formulae, plots, geometry, derivations |
-| Motion Canvas / Revideo | [flavors/motion-canvas.md](flavors/motion-canvas.md) | timing-first choreography; license-free; automated pipelines |
-| DynamicalSystems.jl | [flavors/dynamical-systems.md](flavors/dynamical-systems.md) | research-grade phase portraits, attractors, basins, bifurcations |
-| Bevy headless | [flavors/bevy-headless.md](flavors/bevy-headless.md) | render a *real* ECS agent simulation (orchestration themes) |
-| GPU fields & swarm | [flavors/fields-swarm.md](flavors/fields-swarm.md) | reaction-diffusion, fluids, boids, Vicsek (Taichi/nannou/VisPy/p5) |
-| Shaders & declarative | [flavors/shaders-declarative.md](flavors/shaders-declarative.md) | per-pixel field shaders; LaTeX-grade solved diagrams (Penrose) |
+| Remotion | [render/flavors/remotion.md](render/flavors/remotion.md) | React stack, data-driven, any CSS/SVG; the default web path |
+| Manim | [render/flavors/manim.md](render/flavors/manim.md) | math — formulae, plots, geometry, derivations |
+| Motion Canvas / Revideo | [render/flavors/motion-canvas.md](render/flavors/motion-canvas.md) | timing-first choreography; license-free; automated pipelines |
+| DynamicalSystems.jl | [render/flavors/dynamical-systems.md](render/flavors/dynamical-systems.md) | research-grade phase portraits, attractors, basins, bifurcations |
+| Bevy headless | [render/flavors/bevy-headless.md](render/flavors/bevy-headless.md) | render a *real* ECS agent simulation (orchestration themes) |
+| GPU fields & swarm | [render/flavors/fields-swarm.md](render/flavors/fields-swarm.md) | reaction-diffusion, fluids, boids, Vicsek (Taichi/nannou/VisPy/p5) |
+| Shaders & declarative | [render/flavors/shaders-declarative.md](render/flavors/shaders-declarative.md) | per-pixel field shaders; LaTeX-grade solved diagrams (Penrose) |
 
-Runnable starting points for the common engines are in [`examples/`](examples/README.md).
+Runnable starting points for the common engines are in [`render/examples/`](render/examples/README.md).
 
 ## Bridge: prose script → scenes
 

@@ -1,13 +1,13 @@
 ---
-name: create-video-script
-description: Short-form video scripts (Twitter/X video, YouTube Shorts, Reels, TikTok). NOT for tweet threads (use tweet), product copy (use writing), or rendering the video (use create-video-render).
+name: video-script
+description: Short-form video scripts (Twitter/X video, YouTube Shorts, Reels, TikTok). NOT for tweet threads (use tweet), product copy (use writing), or rendering the video (use video/render.md).
 when_to_use: "write a video script", "shorts script", "reel script", "TikTok script", "make a 60-second video about X", "demo script", "voiceover script"
 user-invocable: true
 ---
 
 # Short-form Video Scripts
 
-First stage of the video pipeline: this skill writes the script; [`create-video-render`](../create-video-render/SKILL.md) turns a script into an mp4.
+First stage of the video pipeline: this skill writes the script; [`video/render.md`](video/render.md) turns a script into an mp4.
 
 ## Voice
 

@@ -1,5 +1,5 @@
 ---
-name: create-ascii-video
+name: ascii-video
 description: "ASCII video: convert video/audio to colored ASCII MP4/GIF."
 platforms: [linux, macos, windows]
 ---
@@ -34,12 +34,12 @@ This is visual art. ASCII characters are the medium; cinema is the standard.
 
 | Mode | Input | Output | Reference |
 |------|-------|--------|-----------|
-| **Video-to-ASCII** | Video file | ASCII recreation of source footage | `references/inputs.md` § Video Sampling |
-| **Audio-reactive** | Audio file | Generative visuals driven by audio features | `references/inputs.md` § Audio Analysis |
-| **Generative** | None (or seed params) | Procedural ASCII animation | `references/effects.md` |
+| **Video-to-ASCII** | Video file | ASCII recreation of source footage | `ascii-video/references/inputs.md` § Video Sampling |
+| **Audio-reactive** | Audio file | Generative visuals driven by audio features | `ascii-video/references/inputs.md` § Audio Analysis |
+| **Generative** | None (or seed params) | Procedural ASCII animation | `ascii-video/references/effects.md` |
 | **Hybrid** | Video + audio | ASCII video with audio-reactive overlays | Both input refs |
-| **Lyrics/text** | Audio + text/SRT | Timed text with visual effects | `references/inputs.md` § Text/Lyrics |
-| **TTS narration** | Text quotes + TTS API | Narrated testimonial/quote video with typed text | `references/inputs.md` § TTS Integration |
+| **Lyrics/text** | Audio + text/SRT | Timed text with visual effects | `ascii-video/references/inputs.md` § Text/Lyrics |
+| **TTS narration** | Text quotes + TTS API | Narrated testimonial/quote video with typed text | `ascii-video/references/inputs.md` § TTS Integration |
 
 ## Stack
 
@@ -65,9 +65,9 @@ INPUT → ANALYZE → SCENE_FN → TONEMAP → SHADE → ENCODE
 
 1. **INPUT** — Load/decode source material (video frames, audio samples, images, or nothing)
 2. **ANALYZE** — Extract per-frame features (audio bands, video luminance/edges, motion vectors)
-3. **SCENE_FN** — Scene function renders to pixel canvas (`uint8 H,W,3`). Composes multiple character grids via `_render_vf()` + pixel blend modes. See `references/composition.md`
-4. **TONEMAP** — Percentile-based adaptive brightness normalization. See `references/composition.md` § Adaptive Tonemap
-5. **SHADE** — Post-processing via `ShaderChain` + `FeedbackBuffer`. See `references/shaders.md`
+3. **SCENE_FN** — Scene function renders to pixel canvas (`uint8 H,W,3`). Composes multiple character grids via `_render_vf()` + pixel blend modes. See `ascii-video/references/composition.md`
+4. **TONEMAP** — Percentile-based adaptive brightness normalization. See `ascii-video/references/composition.md` § Adaptive Tonemap
+5. **SHADE** — Post-processing via `ShaderChain` + `FeedbackBuffer`. See `ascii-video/references/shaders.md`
 6. **ENCODE** — Pipe raw RGB frames to ffmpeg for H.264/GIF encoding
 
 ## Creative Direction
@@ -127,7 +127,7 @@ Map the user's prompt to aesthetic choices. A "chill lo-fi visualizer" demands d
 
 - **Mode** — which of the 6 modes above
 - **Resolution** — landscape 1920x1080 (default), portrait 1080x1920, square 1080x1080 @ 24fps
-- **Hardware detection** — auto-detect cores/RAM, set quality profile. See `references/optimization.md`
+- **Hardware detection** — auto-detect cores/RAM, set quality profile. See `ascii-video/references/optimization.md`
 - **Sections** — map timestamps to scene functions, each with its own effect/palette/color/shader config
 - **Output format** — MP4 (default), GIF (640x360 @ 15fps), PNG sequence
 
@@ -135,16 +135,16 @@ Map the user's prompt to aesthetic choices. A "chill lo-fi visualizer" demands d
 
 Single Python file. Components (with references):
 
-1. **Hardware detection + quality profile** — `references/optimization.md`
-2. **Input loader** — mode-dependent; `references/inputs.md`
+1. **Hardware detection + quality profile** — `ascii-video/references/optimization.md`
+2. **Input loader** — mode-dependent; `ascii-video/references/inputs.md`
 3. **Feature analyzer** — audio FFT, video luminance, or synthetic
-4. **Grid + renderer** — multi-density grids with bitmap cache; `references/architecture.md`
-5. **Character palettes** — multiple per project; `references/architecture.md` § Palettes
-6. **Color system** — HSV + discrete RGB + harmony generation; `references/architecture.md` § Color
-7. **Scene functions** — each returns `canvas (uint8 H,W,3)`; `references/scenes.md`
-8. **Tonemap** — adaptive brightness normalization; `references/composition.md`
-9. **Shader pipeline** — `ShaderChain` + `FeedbackBuffer`; `references/shaders.md`
-10. **Scene table + dispatcher** — time → scene function + config; `references/scenes.md`
+4. **Grid + renderer** — multi-density grids with bitmap cache; `ascii-video/references/architecture.md`
+5. **Character palettes** — multiple per project; `ascii-video/references/architecture.md` § Palettes
+6. **Color system** — HSV + discrete RGB + harmony generation; `ascii-video/references/architecture.md` § Color
+7. **Scene functions** — each returns `canvas (uint8 H,W,3)`; `ascii-video/references/scenes.md`
+8. **Tonemap** — adaptive brightness normalization; `ascii-video/references/composition.md`
+9. **Shader pipeline** — `ShaderChain` + `FeedbackBuffer`; `ascii-video/references/shaders.md`
+10. **Scene table + dispatcher** — time → scene function + config; `ascii-video/references/scenes.md`
 11. **Parallel encoder** — N-worker clip rendering with ffmpeg pipes
 12. **Main** — orchestrate full pipeline
 
@@ -176,19 +176,19 @@ Per-scene gamma: default 0.75, solarize 0.55, posterize 0.50, bright scenes 0.85
 
 ### Font Cell Height
 
-macOS Pillow: `textbbox()` returns wrong height. Use `font.getmetrics()`: `cell_height = ascent + descent`. See `references/troubleshooting.md`.
+macOS Pillow: `textbbox()` returns wrong height. Use `font.getmetrics()`: `cell_height = ascent + descent`. See `ascii-video/references/troubleshooting.md`.
 
 ### ffmpeg Pipe Deadlock
 
-Never `stderr=subprocess.PIPE` with long-running ffmpeg — buffer fills at 64KB and deadlocks. Redirect to file. See `references/troubleshooting.md`.
+Never `stderr=subprocess.PIPE` with long-running ffmpeg — buffer fills at 64KB and deadlocks. Redirect to file. See `ascii-video/references/troubleshooting.md`.
 
 ### Font Compatibility
 
-Not all Unicode chars render in all fonts. Validate palettes at init — render each char, check for blank output. See `references/troubleshooting.md`.
+Not all Unicode chars render in all fonts. Validate palettes at init — render each char, check for blank output. See `ascii-video/references/troubleshooting.md`.
 
 ### Per-Clip Architecture
 
-For segmented videos (quotes, scenes, chapters), render each as a separate clip file for parallel rendering and selective re-rendering. See `references/scenes.md`.
+For segmented videos (quotes, scenes, chapters), render each as a separate clip file for parallel rendering and selective re-rendering. See `ascii-video/references/scenes.md`.
 
 ## Performance Targets
 
@@ -204,14 +204,14 @@ For segmented videos (quotes, scenes, chapters), render each as a separate clip 
 
 | File | Contents |
 |------|----------|
-| `references/architecture.md` | Grid system, resolution presets, font selection, character palettes (20+), color system (HSV + OKLAB + discrete RGB + harmony generation), `_render_vf()` helper, GridLayer class |
-| `references/composition.md` | Pixel blend modes (20 modes), `blend_canvas()`, multi-grid composition, adaptive `tonemap()`, `FeedbackBuffer`, `PixelBlendStack`, masking/stencil system |
-| `references/effects.md` | Effect building blocks: value field generators, hue fields, noise/fBM/domain warp, voronoi, reaction-diffusion, cellular automata, SDFs, strange attractors, particle systems, coordinate transforms, temporal coherence |
-| `references/shaders.md` | `ShaderChain`, `_apply_shader_step()` dispatch, 38 shader catalog, audio-reactive scaling, transitions, tint presets, output format encoding, terminal rendering |
-| `references/scenes.md` | Scene protocol, `Renderer` class, `SCENES` table, `render_clip()`, beat-synced cutting, parallel rendering, design patterns (layer hierarchy, directional arcs, visual metaphors, compositional techniques), complete scene examples at every complexity level, scene design checklist |
-| `references/inputs.md` | Audio analysis (FFT, bands, beats), video sampling, image conversion, text/lyrics, TTS integration (ElevenLabs, voice assignment, audio mixing) |
-| `references/optimization.md` | Hardware detection, quality profiles, vectorized patterns, parallel rendering, memory management, performance budgets |
-| `references/troubleshooting.md` | NumPy broadcasting traps, blend mode pitfalls, multiprocessing/pickling, brightness diagnostics, ffmpeg issues, font problems, common mistakes |
+| `ascii-video/references/architecture.md` | Grid system, resolution presets, font selection, character palettes (20+), color system (HSV + OKLAB + discrete RGB + harmony generation), `_render_vf()` helper, GridLayer class |
+| `ascii-video/references/composition.md` | Pixel blend modes (20 modes), `blend_canvas()`, multi-grid composition, adaptive `tonemap()`, `FeedbackBuffer`, `PixelBlendStack`, masking/stencil system |
+| `ascii-video/references/effects.md` | Effect building blocks: value field generators, hue fields, noise/fBM/domain warp, voronoi, reaction-diffusion, cellular automata, SDFs, strange attractors, particle systems, coordinate transforms, temporal coherence |
+| `ascii-video/references/shaders.md` | `ShaderChain`, `_apply_shader_step()` dispatch, 38 shader catalog, audio-reactive scaling, transitions, tint presets, output format encoding, terminal rendering |
+| `ascii-video/references/scenes.md` | Scene protocol, `Renderer` class, `SCENES` table, `render_clip()`, beat-synced cutting, parallel rendering, design patterns (layer hierarchy, directional arcs, visual metaphors, compositional techniques), complete scene examples at every complexity level, scene design checklist |
+| `ascii-video/references/inputs.md` | Audio analysis (FFT, bands, beats), video sampling, image conversion, text/lyrics, TTS integration (ElevenLabs, voice assignment, audio mixing) |
+| `ascii-video/references/optimization.md` | Hardware detection, quality profiles, vectorized patterns, parallel rendering, memory management, performance budgets |
+| `ascii-video/references/troubleshooting.md` | NumPy broadcasting traps, blend mode pitfalls, multiprocessing/pickling, brightness diagnostics, ffmpeg issues, font problems, common mistakes |
 
 ---
 

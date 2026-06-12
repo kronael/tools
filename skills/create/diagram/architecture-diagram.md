@@ -1,5 +1,5 @@
 ---
-name: create-architecture-diagram
+name: architecture-diagram
 description: "Dark-themed SVG architecture/cloud/infra diagrams as HTML."
 version: 1.0.0
 author: Cocoon AI (hello@cocoon-ai.com), ported by Hermes Agent
@@ -142,7 +142,7 @@ The generated HTML file follows a four-part layout:
 Load the full HTML template for the exact structure, CSS, and SVG component examples:
 
 ```
-skill_view(name="architecture-diagram", file_path="templates/template.html")
+read architecture-diagram/templates/template.html
 ```
 
 The template contains working examples of every component type (frontend, backend, database, cloud, security), arrow styles (standard, dashed, curved), security groups, region boundaries, and the legend — use it as your structural reference when generating diagrams.

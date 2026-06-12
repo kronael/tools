@@ -1,5 +1,5 @@
 ---
-name: create-pretext
+name: pretext
 description: "Use when building creative browser demos with @chenglou/pretext — DOM-free text layout for ASCII art, typographic flow around obstacles, text-as-geometry games, kinetic typography, and text-powered generative art. Produces single-file HTML demos by default."
 version: 1.0.0
 author: Hermes Agent
@@ -133,7 +133,7 @@ This is the most important pattern in the whole library. It's what unlocks "text
 
 ## Demo Recipe Patterns
 
-The community corpus (see `references/patterns.md`) clusters into a handful of strong patterns. Pick one and riff — don't invent a new category unless asked.
+The community corpus (see `pretext/references/patterns.md`) clusters into a handful of strong patterns. Pick one and riff — don't invent a new category unless asked.
 
 | Pattern | Key API | Example idea |
 |---|---|---|
@@ -145,14 +145,14 @@ The community corpus (see `references/patterns.md`) clusters into a handful of s
 | **Kinetic type** | `layoutWithLines` + per-line transform over time | Star Wars crawl, wave, bounce, glitch |
 | **Multiline shrink-wrap** | `measureLineStats` | Quote card that auto-sizes to its tightest container |
 
-See `templates/donut-orbit.html` and `templates/hello-orb-flow.html` for working single-file starters.
+See `pretext/templates/donut-orbit.html` and `pretext/templates/hello-orb-flow.html` for working single-file starters.
 
 ## Workflow
 
 1. **Pick a pattern** from the table above based on the user's brief.
 2. **Start from a template**:
-   - `templates/hello-orb-flow.html` — text reflowing around a moving orb (reflow-around-obstacle pattern)
-   - `templates/donut-orbit.html` — advanced example: measured ASCII logo obstacles, draggable wire sphere/cube, morphing shape fields, selectable DOM text, and dev-only controls
+   - `pretext/templates/hello-orb-flow.html` — text reflowing around a moving orb (reflow-around-obstacle pattern)
+   - `pretext/templates/donut-orbit.html` — advanced example: measured ASCII logo obstacles, draggable wire sphere/cube, morphing shape fields, selectable DOM text, and dev-only controls
    - `write_file` to a new `.html` in `/tmp/` or the user's workspace.
 3. **Swap the corpus** for something intentional to the brief. Real prose, 10-100 sentences, no lorem.
 4. **Tune the aesthetic** — font, palette, composition, interaction. This is the work; don't skip it.

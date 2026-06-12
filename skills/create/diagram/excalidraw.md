@@ -1,5 +1,5 @@
 ---
-name: create-excalidraw
+name: excalidraw
 description: "Hand-drawn Excalidraw JSON diagrams (arch, flow, seq)."
 version: 1.0.0
 author: Hermes Agent
@@ -26,7 +26,7 @@ Generate `.excalidraw` files for architecture diagrams, flowcharts, sequence dia
 1. **Load this skill** (you already did)
 2. **Write the elements JSON** -- an array of Excalidraw element objects
 3. **Save the file** using `write_file` to create a `.excalidraw` file
-4. **Optionally upload** for a shareable link using `scripts/upload.py` via `terminal`
+4. **Optionally upload** for a shareable link using `excalidraw/scripts/upload.py` via `terminal`
 
 ### Saving a Diagram
 
@@ -48,10 +48,10 @@ Save to any path, e.g. `~/diagrams/my_diagram.excalidraw`.
 
 ### Uploading for a Shareable Link
 
-Run the upload script (located in this skill's `scripts/` directory) via terminal:
+Run the upload script (located in this skill's `excalidraw/scripts/` directory) via terminal:
 
 ```bash
-python skills/diagramming/excalidraw/scripts/upload.py ~/diagrams/my_diagram.excalidraw
+python ~/.claude/skills/create/diagram/excalidraw/scripts/upload.py ~/diagrams/my_diagram.excalidraw
 ```
 
 This uploads to excalidraw.com (no account needed) and prints a shareable URL. Requires the `cryptography` pip package (`pip install cryptography`).
@@ -177,7 +177,7 @@ The shape needs `boundElements` listing the text, and the text needs `containerI
 
 ### Color Palette
 
-See `references/colors.md` for full color tables. Quick reference:
+See `excalidraw/references/colors.md` for full color tables. Quick reference:
 
 | Use | Fill Color | Hex |
 |-----|-----------|-----|
@@ -193,7 +193,7 @@ See `references/colors.md` for full color tables. Quick reference:
 - Use the color palette consistently across the diagram
 - **Text contrast is CRITICAL** -- never use light gray on white backgrounds. Minimum text color on white: `#757575`
 - Do NOT use emoji in text -- they don't render in Excalidraw's font
-- For dark mode diagrams, see `references/dark-mode.md`
-- For larger examples, see `references/examples.md`
+- For dark mode diagrams, see `excalidraw/references/dark-mode.md`
+- For larger examples, see `excalidraw/references/examples.md`
 
 

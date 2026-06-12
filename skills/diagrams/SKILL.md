@@ -1,6 +1,6 @@
 ---
 name: diagrams
-description: ASCII architecture and workflow diagrams using Unicode box-drawing chars. NOT for Excalidraw or SVG (use create-excalidraw).
+description: ASCII architecture and workflow diagrams using Unicode box-drawing chars. NOT for Excalidraw or SVG (use the create skill, diagram mode).
 when_to_use: creating component diagrams, flow charts, dependency maps, architecture overviews in plain text
 ---
 

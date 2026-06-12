@@ -1,5 +1,5 @@
 ---
-name: create-manim-video
+name: manim
 description: "Manim CE animations: 3Blue1Brown math/algo videos."
 version: 1.0.0
 platforms: [linux, macos, windows]
@@ -29,19 +29,19 @@ This is educational cinema. Every frame teaches. Every animation reveals structu
 
 ## Prerequisites
 
-Run `scripts/setup.sh` to verify all dependencies. Requires: Python 3.10+, Manim Community Edition v0.20+ (`pip install manim`), LaTeX (`texlive-full` on Linux, `mactex` on macOS), and ffmpeg. Reference docs tested against Manim CE v0.20.1.
+Run `manim/scripts/setup.sh` to verify all dependencies. Requires: Python 3.10+, Manim Community Edition v0.20+ (`pip install manim`), LaTeX (`texlive-full` on Linux, `mactex` on macOS), and ffmpeg. Reference docs tested against Manim CE v0.20.1.
 
 ## Modes
 
 | Mode | Input | Output | Reference |
 |------|-------|--------|-----------|
-| **Concept explainer** | Topic/concept | Animated explanation with geometric intuition | `references/scene-planning.md` |
-| **Equation derivation** | Math expressions | Step-by-step animated proof | `references/equations.md` |
-| **Algorithm visualization** | Algorithm description | Step-by-step execution with data structures | `references/graphs-and-data.md` |
-| **Data story** | Data/metrics | Animated charts, comparisons, counters | `references/graphs-and-data.md` |
-| **Architecture diagram** | System description | Components building up with connections | `references/mobjects.md` |
-| **Paper explainer** | Research paper | Key findings and methods animated | `references/scene-planning.md` |
-| **3D visualization** | 3D concept | Rotating surfaces, parametric curves, spatial geometry | `references/camera-and-3d.md` |
+| **Concept explainer** | Topic/concept | Animated explanation with geometric intuition | `manim/references/scene-planning.md` |
+| **Equation derivation** | Math expressions | Step-by-step animated proof | `manim/references/equations.md` |
+| **Algorithm visualization** | Algorithm description | Step-by-step execution with data structures | `manim/references/graphs-and-data.md` |
+| **Data story** | Data/metrics | Animated charts, comparisons, counters | `manim/references/graphs-and-data.md` |
+| **Architecture diagram** | System description | Components building up with connections | `manim/references/mobjects.md` |
+| **Paper explainer** | Research paper | Key findings and methods animated | `manim/references/scene-planning.md` |
+| **3D visualization** | 3D concept | Rotating surfaces, parametric curves, spatial geometry | `manim/references/camera-and-3d.md` |
 
 ## Stack
 
@@ -64,7 +64,7 @@ PLAN --> CODE --> RENDER --> STITCH --> AUDIO (optional) --> REVIEW
 2. **CODE** — Write `script.py` with one class per scene, each independently renderable
 3. **RENDER** — `manim -ql script.py Scene1 Scene2 ...` for draft, `-qh` for production
 4. **STITCH** — ffmpeg concat of scene clips into `final.mp4`
-5. **AUDIO** (optional) — Add voiceover and/or background music via ffmpeg. See `references/rendering.md`
+5. **AUDIO** (optional) — Add voiceover and/or background music via ffmpeg. See `manim/references/rendering.md`
 6. **REVIEW** — Render preview stills, verify against plan, adjust
 
 ## Project Structure
@@ -113,7 +113,7 @@ project-name/
 
 ### Fonts
 
-**Use monospace fonts for all text.** Manim's Pango renderer produces broken kerning with proportional fonts at all sizes. See `references/visual-design.md` for full recommendations.
+**Use monospace fonts for all text.** Manim's Pango renderer produces broken kerning with proportional fonts at all sizes. See `manim/references/visual-design.md` for full recommendations.
 
 ```python
 MONO = "Menlo"  # define once at top of file
@@ -137,7 +137,7 @@ Never use identical config for all scenes. For each scene:
 
 ### Step 1: Plan (plan.md)
 
-Before any code, write `plan.md`. See `references/scene-planning.md` for the comprehensive template.
+Before any code, write `plan.md`. See `manim/references/scene-planning.md` for the comprehensive template.
 
 ### Step 2: Code (script.py)
 
@@ -230,20 +230,20 @@ Always iterate at `-ql`. Only render `-qh` for final output.
 
 | File | Contents |
 |------|----------|
-| `references/animations.md` | Core animations, rate functions, composition, `.animate` syntax, timing patterns |
-| `references/mobjects.md` | Text, shapes, VGroup/Group, positioning, styling, custom mobjects |
-| `references/visual-design.md` | 12 design principles, opacity layering, layout templates, color palettes |
-| `references/equations.md` | LaTeX in Manim, TransformMatchingTex, derivation patterns |
-| `references/graphs-and-data.md` | Axes, plotting, BarChart, animated data, algorithm visualization |
-| `references/camera-and-3d.md` | MovingCameraScene, ThreeDScene, 3D surfaces, camera control |
-| `references/scene-planning.md` | Narrative arcs, layout templates, scene transitions, planning template |
-| `references/rendering.md` | CLI reference, quality presets, ffmpeg, voiceover workflow, GIF export |
-| `references/troubleshooting.md` | LaTeX errors, animation errors, common mistakes, debugging |
-| `references/animation-design-thinking.md` | When to animate vs show static, decomposition, pacing, narration sync |
-| `references/updaters-and-trackers.md` | ValueTracker, add_updater, always_redraw, time-based updaters, patterns |
-| `references/paper-explainer.md` | Turning research papers into animations — workflow, templates, domain patterns |
-| `references/decorations.md` | SurroundingRectangle, Brace, arrows, DashedLine, Angle, annotation lifecycle |
-| `references/production-quality.md` | Pre-code, pre-render, post-render checklists, spatial layout, color, tempo |
+| `manim/references/animations.md` | Core animations, rate functions, composition, `.animate` syntax, timing patterns |
+| `manim/references/mobjects.md` | Text, shapes, VGroup/Group, positioning, styling, custom mobjects |
+| `manim/references/visual-design.md` | 12 design principles, opacity layering, layout templates, color palettes |
+| `manim/references/equations.md` | LaTeX in Manim, TransformMatchingTex, derivation patterns |
+| `manim/references/graphs-and-data.md` | Axes, plotting, BarChart, animated data, algorithm visualization |
+| `manim/references/camera-and-3d.md` | MovingCameraScene, ThreeDScene, 3D surfaces, camera control |
+| `manim/references/scene-planning.md` | Narrative arcs, layout templates, scene transitions, planning template |
+| `manim/references/rendering.md` | CLI reference, quality presets, ffmpeg, voiceover workflow, GIF export |
+| `manim/references/troubleshooting.md` | LaTeX errors, animation errors, common mistakes, debugging |
+| `manim/references/animation-design-thinking.md` | When to animate vs show static, decomposition, pacing, narration sync |
+| `manim/references/updaters-and-trackers.md` | ValueTracker, add_updater, always_redraw, time-based updaters, patterns |
+| `manim/references/paper-explainer.md` | Turning research papers into animations — workflow, templates, domain patterns |
+| `manim/references/decorations.md` | SurroundingRectangle, Brace, arrows, DashedLine, Angle, annotation lifecycle |
+| `manim/references/production-quality.md` | Pre-code, pre-render, post-render checklists, spatial layout, color, tempo |
 
 ---
 

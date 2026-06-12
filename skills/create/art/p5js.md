@@ -1,5 +1,5 @@
 ---
-name: create-p5js
+name: p5js
 description: "p5.js sketches: gen art, shaders, interactive, 3D."
 version: 1.0.0
 platforms: [linux, macos, windows]
@@ -39,13 +39,13 @@ This is visual art rendered in the browser. The canvas is the medium; the algori
 
 | Mode | Input | Output | Reference |
 |------|-------|--------|-----------|
-| **Generative art** | Seed / parameters | Procedural visual composition (still or animated) | `references/visual-effects.md` |
-| **Data visualization** | Dataset / API | Interactive charts, graphs, custom data displays | `references/interaction.md` |
-| **Interactive experience** | None (user drives) | Mouse/keyboard/touch-driven sketch | `references/interaction.md` |
-| **Animation / motion graphics** | Timeline / storyboard | Timed sequences, kinetic typography, transitions | `references/animation.md` |
-| **3D scene** | Concept description | WebGL geometry, lighting, camera, materials | `references/webgl-and-3d.md` |
-| **Image processing** | Image file(s) | Pixel manipulation, filters, mosaic, pointillism | `references/visual-effects.md` § Pixel Manipulation |
-| **Audio-reactive** | Audio file / mic | Sound-driven generative visuals | `references/interaction.md` § Audio Input |
+| **Generative art** | Seed / parameters | Procedural visual composition (still or animated) | `p5js/references/visual-effects.md` |
+| **Data visualization** | Dataset / API | Interactive charts, graphs, custom data displays | `p5js/references/interaction.md` |
+| **Interactive experience** | None (user drives) | Mouse/keyboard/touch-driven sketch | `p5js/references/interaction.md` |
+| **Animation / motion graphics** | Timeline / storyboard | Timed sequences, kinetic typography, transitions | `p5js/references/animation.md` |
+| **3D scene** | Concept description | WebGL geometry, lighting, camera, materials | `p5js/references/webgl-and-3d.md` |
+| **Image processing** | Image file(s) | Pixel manipulation, filters, mosaic, pointillism | `p5js/references/visual-effects.md` § Pixel Manipulation |
+| **Audio-reactive** | Audio file / mic | Sound-driven generative visuals | `p5js/references/interaction.md` § Audio Input |
 
 ## Stack
 
@@ -68,7 +68,7 @@ Single self-contained HTML file per project. No build step required.
 
 **p5.js 1.x** (1.11.3) is the default — stable, well-documented, broadest library compatibility. Use this unless a project requires 2.x features.
 
-**p5.js 2.x** (2.2+) adds: `async setup()` replacing `preload()`, OKLCH/OKLAB color modes, `splineVertex()`, shader `.modify()` API, variable fonts, `textToContours()`, pointer events. Required for p5.brush. See `references/core-api.md` § p5.js 2.0.
+**p5.js 2.x** (2.2+) adds: `async setup()` replacing `preload()`, OKLCH/OKLAB color modes, `splineVertex()`, shader `.modify()` API, variable fonts, `textToContours()`, pointer events. Required for p5.brush. See `p5js/references/core-api.md` § p5.js 2.0.
 
 ## Pipeline
 
@@ -91,18 +91,18 @@ CONCEPT → DESIGN → CODE → PREVIEW → EXPORT → VERIFY
 
 | Dimension | Options | Reference |
 |-----------|---------|-----------|
-| **Color system** | HSB/HSL, RGB, named palettes, procedural harmony, gradient interpolation | `references/color-systems.md` |
-| **Noise vocabulary** | Perlin noise, simplex, fractal (octaved), domain warping, curl noise | `references/visual-effects.md` § Noise |
-| **Particle systems** | Physics-based, flocking, trail-drawing, attractor-driven, flow-field following | `references/visual-effects.md` § Particles |
-| **Shape language** | Geometric primitives, custom vertices, bezier curves, SVG paths | `references/shapes-and-geometry.md` |
-| **Motion style** | Eased, spring-based, noise-driven, physics sim, lerped, stepped | `references/animation.md` |
-| **Typography** | System fonts, loaded OTF, `textToPoints()` particle text, kinetic | `references/typography.md` |
-| **Shader effects** | GLSL fragment/vertex, filter shaders, post-processing, feedback loops | `references/webgl-and-3d.md` § Shaders |
-| **Composition** | Grid, radial, golden ratio, rule of thirds, organic scatter, tiled | `references/core-api.md` § Composition |
-| **Interaction model** | Mouse follow, click spawn, drag, keyboard state, scroll-driven, mic input | `references/interaction.md` |
-| **Blend modes** | `BLEND`, `ADD`, `MULTIPLY`, `SCREEN`, `DIFFERENCE`, `EXCLUSION`, `OVERLAY` | `references/color-systems.md` § Blend Modes |
-| **Layering** | `createGraphics()` offscreen buffers, alpha compositing, masking | `references/core-api.md` § Offscreen Buffers |
-| **Texture** | Perlin surface, stippling, hatching, halftone, pixel sorting | `references/visual-effects.md` § Texture Generation |
+| **Color system** | HSB/HSL, RGB, named palettes, procedural harmony, gradient interpolation | `p5js/references/color-systems.md` |
+| **Noise vocabulary** | Perlin noise, simplex, fractal (octaved), domain warping, curl noise | `p5js/references/visual-effects.md` § Noise |
+| **Particle systems** | Physics-based, flocking, trail-drawing, attractor-driven, flow-field following | `p5js/references/visual-effects.md` § Particles |
+| **Shape language** | Geometric primitives, custom vertices, bezier curves, SVG paths | `p5js/references/shapes-and-geometry.md` |
+| **Motion style** | Eased, spring-based, noise-driven, physics sim, lerped, stepped | `p5js/references/animation.md` |
+| **Typography** | System fonts, loaded OTF, `textToPoints()` particle text, kinetic | `p5js/references/typography.md` |
+| **Shader effects** | GLSL fragment/vertex, filter shaders, post-processing, feedback loops | `p5js/references/webgl-and-3d.md` § Shaders |
+| **Composition** | Grid, radial, golden ratio, rule of thirds, organic scatter, tiled | `p5js/references/core-api.md` § Composition |
+| **Interaction model** | Mouse follow, click spawn, drag, keyboard state, scroll-driven, mic input | `p5js/references/interaction.md` |
+| **Blend modes** | `BLEND`, `ADD`, `MULTIPLY`, `SCREEN`, `DIFFERENCE`, `EXCLUSION`, `OVERLAY` | `p5js/references/color-systems.md` § Blend Modes |
+| **Layering** | `createGraphics()` offscreen buffers, alpha compositing, masking | `p5js/references/core-api.md` § Offscreen Buffers |
+| **Texture** | Perlin surface, stippling, hatching, halftone, pixel sorting | `p5js/references/visual-effects.md` § Texture Generation |
 
 ### Per-Project Variation Rules
 
@@ -163,11 +163,11 @@ Map the user's prompt to aesthetic choices. "Relaxing generative background" dem
 - **Frame rate** — 60fps (interactive), 30fps (ambient animation), or `noLoop()` (static generative)
 - **Export target** — browser display, PNG still, GIF loop, MP4 video, SVG vector
 - **Interaction model** — passive (no input), mouse-driven, keyboard-driven, audio-reactive, scroll-driven
-- **Viewer UI** — for interactive generative art, start from `templates/viewer.html` which provides seed navigation, parameter sliders, and download. For simple sketches or video export, use bare HTML
+- **Viewer UI** — for interactive generative art, start from `p5js/templates/viewer.html` which provides seed navigation, parameter sliders, and download. For simple sketches or video export, use bare HTML
 
 ### Step 3: Code the Sketch
 
-For **interactive generative art** (seed exploration, parameter tuning): start from `templates/viewer.html`. Read the template first, keep the fixed sections (seed nav, actions), replace the algorithm and parameter controls. This gives the user seed prev/next/random/jump, parameter sliders with live update, and PNG download — all wired up.
+For **interactive generative art** (seed exploration, parameter tuning): start from `p5js/templates/viewer.html`. Read the template first, keep the fixed sections (seed nav, actions), replace the algorithm and parameter controls. This gives the user seed prev/next/random/jump, parameter sliders with live update, and PNG download — all wired up.
 
 For **animations, video export, or simple sketches**: use bare HTML:
 
@@ -254,7 +254,7 @@ Key implementation patterns:
 ### Step 4: Preview & Iterate
 
 - Open HTML file directly in browser — no server needed for basic sketches
-- For `loadImage()`/`loadFont()` from local files: use `scripts/serve.sh` or `python3 -m http.server`
+- For `loadImage()`/`loadFont()` from local files: use `p5js/scripts/serve.sh` or `python3 -m http.server`
 - Chrome DevTools Performance tab to verify 60fps
 - Test at target export resolution, not just the window size
 - Adjust parameters until the visual matches the concept from Step 1
@@ -264,10 +264,10 @@ Key implementation patterns:
 | Format | Method | Command |
 |--------|--------|---------|
 | **PNG** | `saveCanvas('output', 'png')` in `keyPressed()` | Press 's' to save |
-| **High-res PNG** | Puppeteer headless capture | `node scripts/export-frames.js sketch.html --width 3840 --height 2160 --frames 1` |
+| **High-res PNG** | Puppeteer headless capture | `node p5js/scripts/export-frames.js sketch.html --width 3840 --height 2160 --frames 1` |
 | **GIF** | `saveGif('output', 5)` — captures N seconds | Press 'g' to save |
 | **Frame sequence** | `saveFrames('frame', 'png', 10, 30)` — 10s at 30fps | Then `ffmpeg -i frame-%04d.png -c:v libx264 output.mp4` |
-| **MP4** | Puppeteer frame capture + ffmpeg | `bash scripts/render.sh sketch.html output.mp4 --duration 30 --fps 30` |
+| **MP4** | Puppeteer frame capture + ffmpeg | `bash p5js/scripts/render.sh sketch.html output.mp4 --duration 30 --fps 30` |
 | **SVG** | `createCanvas(w, h, SVG)` with p5.js-svg | `save('output.svg')` |
 
 ### Step 6: Quality Verification
@@ -303,7 +303,7 @@ let v = Math.random();        // not random() — when seed not needed
 let m = Math.min(a, b);       // not min(a, b)
 ```
 
-Never `console.log()` inside `draw()`. Never manipulate DOM in `draw()`. See `references/troubleshooting.md` § Performance.
+Never `console.log()` inside `draw()`. Never manipulate DOM in `draw()`. See `p5js/references/troubleshooting.md` § Performance.
 
 ### Seeded Randomness — Always
 
@@ -337,7 +337,7 @@ noiseSeed(SEED);
 let x = rng() * width;  // instead of random(width)
 ```
 
-See `references/export-pipeline.md` § Platform Export.
+See `p5js/references/export-pipeline.md` § Platform Export.
 
 ### Color Mode — Use HSB
 
@@ -351,7 +351,7 @@ colorMode(HSB, 360, 100, 100, 100);
 // Darken: fill(hue, sat, bri * 0.5)
 ```
 
-Never hardcode raw RGB values. Define a palette object, derive variations procedurally. See `references/color-systems.md`.
+Never hardcode raw RGB values. Define a palette object, derive variations procedurally. See `p5js/references/color-systems.md`.
 
 ### Noise — Multi-Octave, Not Raw
 
@@ -370,7 +370,7 @@ function fbm(x, y, octaves = 4) {
 }
 ```
 
-For flowing organic forms, use **domain warping**: feed noise output back as noise input coordinates. See `references/visual-effects.md`.
+For flowing organic forms, use **domain warping**: feed noise output back as noise input coordinates. See `p5js/references/visual-effects.md`.
 
 ### createGraphics() for Layers — Not Optional
 
@@ -420,7 +420,7 @@ for (let p of particles) {
 updatePixels();
 ```
 
-See `references/troubleshooting.md` § Performance.
+See `p5js/references/troubleshooting.md` § Performance.
 
 ### Instance Mode for Multiple Sketches
 
@@ -476,9 +476,9 @@ function setup() {
 }
 ```
 
-The bundled `scripts/export-frames.js` detects `_p5Ready` and calls `redraw()` once per capture for exact 1:1 frame correspondence. See `references/export-pipeline.md` § Deterministic Capture.
+The bundled `p5js/scripts/export-frames.js` detects `_p5Ready` and calls `redraw()` once per capture for exact 1:1 frame correspondence. See `p5js/references/export-pipeline.md` § Deterministic Capture.
 
-For multi-scene videos, use the per-clip architecture: one HTML per scene, render independently, stitch with `ffmpeg -f concat`. See `references/export-pipeline.md` § Per-Clip Architecture.
+For multi-scene videos, use the per-clip architecture: one HTML per scene, render independently, stitch with `ffmpeg -f concat`. See `p5js/references/export-pipeline.md` § Per-Clip Architecture.
 
 ### Agent Workflow
 
@@ -488,10 +488,10 @@ When building p5.js sketches:
 2. **Open in browser** — `open sketch.html` (macOS) or `xdg-open sketch.html` (Linux)
 3. **Local assets** (fonts, images) require a server: `python3 -m http.server 8080` in the project directory, then open `http://localhost:8080/sketch.html`
 4. **Export PNG/GIF** — add `keyPressed()` shortcuts as shown above, tell the user which key to press
-5. **Headless export** — `node scripts/export-frames.js sketch.html --frames 300` for automated frame capture (sketch must use `noLoop()` + `_p5Ready`)
-6. **MP4 rendering** — `bash scripts/render.sh sketch.html output.mp4 --duration 30`
+5. **Headless export** — `node p5js/scripts/export-frames.js sketch.html --frames 300` for automated frame capture (sketch must use `noLoop()` + `_p5Ready`)
+6. **MP4 rendering** — `bash p5js/scripts/render.sh sketch.html output.mp4 --duration 30`
 7. **Iterative refinement** — edit the HTML file, user refreshes browser to see changes
-8. **Load references on demand** — use `skill_view(name="p5js", file_path="references/...")` to load specific reference files as needed during implementation
+8. **Load references on demand** — read `p5js/references/...` to load specific reference files as needed during implementation
 
 ## Performance Targets
 
@@ -509,17 +509,17 @@ When building p5.js sketches:
 
 | File | Contents |
 |------|----------|
-| `references/core-api.md` | Canvas setup, coordinate system, draw loop, `push()`/`pop()`, offscreen buffers, composition patterns, `pixelDensity()`, responsive design |
-| `references/shapes-and-geometry.md` | 2D primitives, `beginShape()`/`endShape()`, Bezier/Catmull-Rom curves, `vertex()` systems, custom shapes, `p5.Vector`, signed distance fields, SVG path conversion |
-| `references/visual-effects.md` | Noise (Perlin, fractal, domain warp, curl), flow fields, particle systems (physics, flocking, trails), pixel manipulation, texture generation (stipple, hatch, halftone), feedback loops, reaction-diffusion |
-| `references/animation.md` | Frame-based animation, easing functions, `lerp()`/`map()`, spring physics, state machines, timeline sequencing, `millis()`-based timing, transition patterns |
-| `references/typography.md` | `text()`, `loadFont()`, `textToPoints()`, kinetic typography, text masks, font metrics, responsive text sizing |
-| `references/color-systems.md` | `colorMode()`, HSB/HSL/RGB, `lerpColor()`, `paletteLerp()`, procedural palettes, color harmony, `blendMode()`, gradient rendering, curated palette library |
-| `references/webgl-and-3d.md` | WEBGL renderer, 3D primitives, camera, lighting, materials, custom geometry, GLSL shaders (`createShader()`, `createFilterShader()`), framebuffers, post-processing |
-| `references/interaction.md` | Mouse events, keyboard state, touch input, DOM elements, `createSlider()`/`createButton()`, audio input (p5.sound FFT/amplitude), scroll-driven animation, responsive events |
-| `references/export-pipeline.md` | `saveCanvas()`, `saveGif()`, `saveFrames()`, deterministic headless capture, ffmpeg frame-to-video, CCapture.js, SVG export, per-clip architecture, platform export (fxhash), video gotchas |
-| `references/troubleshooting.md` | Performance profiling, per-pixel budgets, common mistakes, browser compatibility, WebGL debugging, font loading issues, pixel density traps, memory leaks, CORS |
-| `templates/viewer.html` | Interactive viewer template: seed navigation (prev/next/random/jump), parameter sliders, download PNG, responsive canvas. Start from this for explorable generative art |
+| `p5js/references/core-api.md` | Canvas setup, coordinate system, draw loop, `push()`/`pop()`, offscreen buffers, composition patterns, `pixelDensity()`, responsive design |
+| `p5js/references/shapes-and-geometry.md` | 2D primitives, `beginShape()`/`endShape()`, Bezier/Catmull-Rom curves, `vertex()` systems, custom shapes, `p5.Vector`, signed distance fields, SVG path conversion |
+| `p5js/references/visual-effects.md` | Noise (Perlin, fractal, domain warp, curl), flow fields, particle systems (physics, flocking, trails), pixel manipulation, texture generation (stipple, hatch, halftone), feedback loops, reaction-diffusion |
+| `p5js/references/animation.md` | Frame-based animation, easing functions, `lerp()`/`map()`, spring physics, state machines, timeline sequencing, `millis()`-based timing, transition patterns |
+| `p5js/references/typography.md` | `text()`, `loadFont()`, `textToPoints()`, kinetic typography, text masks, font metrics, responsive text sizing |
+| `p5js/references/color-systems.md` | `colorMode()`, HSB/HSL/RGB, `lerpColor()`, `paletteLerp()`, procedural palettes, color harmony, `blendMode()`, gradient rendering, curated palette library |
+| `p5js/references/webgl-and-3d.md` | WEBGL renderer, 3D primitives, camera, lighting, materials, custom geometry, GLSL shaders (`createShader()`, `createFilterShader()`), framebuffers, post-processing |
+| `p5js/references/interaction.md` | Mouse events, keyboard state, touch input, DOM elements, `createSlider()`/`createButton()`, audio input (p5.sound FFT/amplitude), scroll-driven animation, responsive events |
+| `p5js/references/export-pipeline.md` | `saveCanvas()`, `saveGif()`, `saveFrames()`, deterministic headless capture, ffmpeg frame-to-video, CCapture.js, SVG export, per-clip architecture, platform export (fxhash), video gotchas |
+| `p5js/references/troubleshooting.md` | Performance profiling, per-pixel budgets, common mistakes, browser compatibility, WebGL debugging, font loading issues, pixel density traps, memory leaks, CORS |
+| `p5js/templates/viewer.html` | Interactive viewer template: seed navigation (prev/next/random/jump), parameter sliders, download PNG, responsive canvas. Start from this for explorable generative art |
 
 ---
 
