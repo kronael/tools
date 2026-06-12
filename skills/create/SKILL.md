@@ -1,7 +1,7 @@
 ---
 name: create
-description: Router for ALL creative artifact generation — web pages, videos, generative art, diagrams. Read the ONE data file the dispatch table matches; everything under create/ except this file is cold. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
-when_to_use: landing page, HTML mockup, deck, prototype, design system, design tokens, DESIGN.md, "make it look like Stripe/Linear/Vercel", sketch UI variants, wireframe, video script, shorts/reel/TikTok script, render video, MP4, GIF, Remotion, Manim, math animation, 3Blue1Brown, Motion Canvas, p5.js, generative art, shaders, GLSL, canvas, creative coding, WebGL, ASCII art, figlet banner, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, text-as-geometry, Excalidraw, architecture diagram, flowchart, infra diagram, SVG diagram
+description: Router for creative artifact generation — web pages, videos, generative art, diagrams. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
+when_to_use: landing page, HTML mockup, deck, sketch UI variants, wireframe, design tokens, DESIGN.md, "make it look like Stripe/Linear/Vercel", video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram
 user-invocable: true
 ---
 

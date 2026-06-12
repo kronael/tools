@@ -24,7 +24,7 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 
 - New light mode → flat `<mode>.md`; heavy ported tree → `<mode>/<slug>.md`
   + `<mode>/<slug>/` moved intact. Then: dispatch row in `SKILL.md` +
-  keywords in its frontmatter.
+  keywords in its `when_to_use` (trimmed — it preloads).
 - Paths inside `<mode>/<slug>.md` are prefixed with `<slug>/`
   (e.g. `p5js/references/core-api.md`); paths inside the subtree stay
   subtree-relative. Keep that invariant when editing.

@@ -10,16 +10,21 @@ repo CLAUDE.md links to this file.
 - **Router skill** = one `SKILL.md` (the ONLY preloaded file) + sibling cold
   data `.md` files, read on demand. Current routers: `create/` (artifact
   generators), `software/` (engineering runbooks).
-- Only each skill's `SKILL.md` frontmatter preloads into discovery context.
+- Preload model (verified): Claude Code injects `name` + `description` +
+  `when_to_use` per skill into the always-on listing; `when_to_use` is
+  "appended to description" and the combined text is capped at 1,536 chars
+  per entry (code.claude.com/docs/en/skills, frontmatter reference).
+  Bodies load only on invocation. `when_to_use` is NOT free — trim it too.
   ALWAYS make a router when several rarely-invoked skills share an audience —
-  N preloaded descriptions collapse to 1.
+  N preloaded entries collapse to 1.
 
 ## Router anatomy
 
 - `SKILL.md` — dispatch table: trigger keywords → data file. NEVER prose
-  links alone. Frontmatter `description`/`when_to_use` MUST carry every
-  folded mode's retrieval keywords (1536-char shared budget) — `/resolve`
-  routes on them.
+  links alone. `description` = one-line summary + `NOT for…` clause — no
+  keyword dump, no workflow text. `when_to_use` = trimmed keyword list,
+  at least one anchor per folded mode, no synonyms — `/resolve` scans both
+  fields.
 - Light content lives flat: `<mode>.md`.
 - Heavy content nests: `<mode>/<slug>.md` + `<mode>/<slug>/` keeping the
   ported tree intact (`references/`, `scripts/`, `templates/`).
@@ -40,7 +45,8 @@ repo CLAUDE.md links to this file.
 1. Add/keep content in the cold data file (size is irrelevant — it loads
    only on dispatch).
 2. Update the router dispatch table row.
-3. Add the mode's trigger keywords to router frontmatter if missing.
+3. Add the mode's trigger keywords to router `when_to_use` if missing
+   (keep trimmed — it preloads).
 4. If a dir is removed/renamed, add it to the prune list in
    `../kronael/install/SKILL.md` so reinstalls delete orphans.
 5. Per-router edit notes: `create/CLAUDE.md`, `software/CLAUDE.md`.

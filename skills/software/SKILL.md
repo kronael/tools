@@ -1,7 +1,7 @@
 ---
 name: software
-description: Router for deep engineering runbooks extracted from ops. Read the ONE data file the dispatch table matches; everything under software/ except this file is cold. NOT for terse Docker/systemd/config rules (ops keeps those hot) or app code (use language skills).
-when_to_use: Python uv Dockerfile, two-layer image, m4 monorepo Dockerfile, .dockerignore, Ansible docker-service role, deploy a service, per-deployable subdir layout, Makefile for uv (prepare/test/right/image), CI make targets, logging format, Prometheus metrics, SLO burn-rate alerts, heartbeat, error-handling hierarchy, exponential backoff, distribute a Python tool, PEP 723 single-file script, uvx --from git
+description: Router for deep engineering runbooks — Docker images, CI Makefiles, deploys, observability, Python tool distribution. NOT for terse Docker/systemd/config rules (ops keeps those hot) or app code (use language skills).
+when_to_use: Python uv Dockerfile, m4 monorepo image, .dockerignore, Ansible docker-service role, deploy a service, Makefile for uv, CI make targets, logging format, Prometheus metrics, SLO burn-rate alerts, error-handling hierarchy, distribute a Python tool, PEP 723 script, uvx
 ---
 
 # Software — runbook router

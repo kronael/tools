@@ -49,13 +49,13 @@ data, refresh via `/find <topic>`. Delete facts that are wrong.
 ```bash
 for d in ~/.claude/skills/*/; do
   n=$(basename "$d")
-  desc=$(awk '/^description:/{f=1; sub(/^description:[[:space:]]*/,""); print; next} f && /^[^ ]/{exit} f{print}' "$d/SKILL.md" 2>/dev/null | tr '\n' ' ' | sed 's/^[>[:space:]]*//')
+  desc=$(awk 'NR>1 && /^---$/{exit} /^(description|when_to_use):/{f=1; sub(/^[a-z_]*:[[:space:]]*/,""); print; next} f && /^[^ ]/{f=0} f{print}' "$d/SKILL.md" 2>/dev/null | tr '\n' ' ' | sed 's/^[>[:space:]]*//')
   [ -n "$desc" ] && echo "$n: $desc"
 done
 ```
 
-Match descriptions against the request. If a skill matches, read its
-SKILL.md and follow its workflow. On continuations, the same skills
+Match each entry (`description` + `when_to_use`) against the request.
+If a skill matches, read its SKILL.md and follow its workflow. On continuations, the same skills
 that matched the prior turn typically still match — keep using them
 unless the entity has clearly changed.
 
