@@ -25,7 +25,5 @@ session.json
 settings.json
 capture.png
 .codex
-
-# Shipping log + ephemeral working dir (local-only, may contain local paths)
 .diary/
 .ship/
