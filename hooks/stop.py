@@ -69,16 +69,15 @@ def main():
             except OSError:
                 pass
 
-    # Diary freshness (missing today or stale > 1h)
+    # Diary freshness (missing today or stale > 1h) — only inside a git repo.
     toplevel = git_run(cwd, 'git', 'rev-parse', '--show-toplevel')
-    repo_root = toplevel.stdout.strip() if toplevel.returncode == 0 else cwd
-    diary_dir = os.path.join(repo_root, '.diary')
-    os.makedirs(diary_dir, exist_ok=True)
-    diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
-    if not os.path.exists(diary_file):
-        parts.append('No diary entry for today. Consider running /diary.')
-    elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
-        parts.append('Diary not updated in over an hour. Consider running /diary.')
+    if toplevel.returncode == 0:
+        diary_dir = os.path.join(toplevel.stdout.strip(), '.diary')
+        diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
+        if not os.path.exists(diary_file):
+            parts.append('No diary entry for today. Consider running /diary.')
+        elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
+            parts.append('Diary not updated in over an hour. Consider running /diary.')
 
     if parts:
         print(json.dumps({'decision': 'block', 'reason': '\n'.join(parts)}))

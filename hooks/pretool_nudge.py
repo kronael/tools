@@ -6,7 +6,6 @@ import contextlib
 import json
 import os
 import sys
-import tempfile
 
 TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit'})
 
@@ -99,7 +98,7 @@ def main() -> None:
     path = extract_path(data)
     skill = skill_for(path) or ''
     session = str(data.get('session_id') or 'default').replace('/', '_').replace('\\', '_')
-    cache_dir = os.path.join(tempfile.gettempdir(), 'claude-extnudge')
+    cache_dir = os.path.expanduser('~/.claude/tmp/extnudge')
     cache_file = os.path.join(cache_dir, f'{session}.txt')
     key = f'{skill}\t{path}'
     with contextlib.suppress(OSError):

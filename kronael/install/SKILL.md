@@ -59,7 +59,7 @@ If missing, you're in the wrong directory — stop and ask.
    | `pip-audit` | `uv tool install pip-audit` | /hacker-eval |
    | `semgrep` | `uv tool install semgrep` | /hacker-eval |
    | `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /hacker-eval |
-   | `trufflehog` | `curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \| sh -s -- -b /usr/local/bin` | /hacker-eval |
+   | `trufflehog` | `go install github.com/trufflesecurity/trufflehog/v3@latest` | /hacker-eval |
    | `gitleaks` | download from github.com/gitleaks/gitleaks releases | /hacker-eval |
 
    **Video rendering** — ask separately (heavy, rarely needed):

@@ -1,6 +1,8 @@
 #!/bin/bash
 # Nudge commit every 100 tool calls OR 10 minutes — non-blocking.
-STATE_FILE="/tmp/claude-commit-nudge"
+STATE_DIR="${HOME}/.claude/tmp"
+mkdir -p "$STATE_DIR"
+STATE_FILE="$STATE_DIR/commit-nudge"
 read -r ts cnt < "$STATE_FILE" 2>/dev/null || { ts=$(date +%s); cnt=0; }
 [[ "$ts" =~ ^[0-9]+$ ]] || ts=$(date +%s)
 [[ "$cnt" =~ ^[0-9]+$ ]] || cnt=0
