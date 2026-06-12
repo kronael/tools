@@ -83,7 +83,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 | **browse** | headless browser automation |
 | **cli** | argparse/click/clap, exit codes, signals |
 | **data** | scrapers, ETL, leaky-bucket, state recovery |
-| **diagram** | Unicode box-drawing ASCII diagrams; pipes through `udfix` |
+| **diagrams** | Unicode box-drawing ASCII diagrams; pipes through `udfix` |
 | **ops** | Dockerfile, systemd, Prometheus |
 | **service** | REST, /health, versioned paths, validate-before-persist |
 | **trader** | exchange APIs, state machines, paper trading |

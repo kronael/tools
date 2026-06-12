@@ -30,7 +30,7 @@ NEVER sell past the opening sentence. Keep under 150 lines. Technical details (v
 
 Sections: Overview, Components, Data Flow, State Management, External Systems. Keep under 300 lines. Focus on relationships and flows, not implementation.
 
-For ASCII component/flow diagrams, follow the `diagram` skill: draw with Unicode box-drawing chars and pipe through `udfix` to correct junctions. NEVER hand-draw junction chars (┬ ┴ ├ ┤ ┼) — let `udfix` fix them.
+For ASCII component/flow diagrams, follow the `diagrams` skill: draw with Unicode box-drawing chars and pipe through `udfix` to correct junctions. NEVER hand-draw junction chars (┬ ┴ ├ ┤ ┼) — let `udfix` fix them.
 
 ### 5. Verify claims against code
 
