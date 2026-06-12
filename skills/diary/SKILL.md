@@ -40,6 +40,7 @@ Update the summary on every diary write.
 - NEVER log routine operations (reading files, answering questions)
 - ALWAYS route preferences and recurring patterns to MEMORY.md, report to user verbatim
 - ALWAYS review MEMORY.md for stale entries when writing diary
+- ALWAYS apply the `writing` skill's copy rules — no preamble, plain verbs
 
 ## When to write
 

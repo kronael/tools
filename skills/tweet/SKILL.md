@@ -27,6 +27,7 @@ user-invocable: true
 - NEVER: "Thread", "Here's why", "Let me explain", marketing language
 - NEVER list the same concept three different ways
 - NEVER start with "I built this" (start with what the reader gets)
+- ALWAYS apply the `writing` skill's copy rules — no preamble, plain verbs, no jargon
 
 ## Process
 

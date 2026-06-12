@@ -5,4 +5,4 @@ when_to_use: sync README, ARCHITECTURE, CHANGELOG after shipping, "update the re
 user-invocable: true
 ---
 
-Launch the @readme agent (Task tool, subagent_type: readme) to update README, ARCHITECTURE, and documentation files.
+Launch the @readme agent (Task tool, subagent_type: readme) to update README, ARCHITECTURE, and documentation files. Doc prose follows the `writing` skill's copy rules.

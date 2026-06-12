@@ -30,6 +30,7 @@ Types: `fix` `feat` `refactor` `docs` `chore`
 
 **Body**: short prose lines, 2-4 lines total. Lead with the main point.
 No bullets, no "This PR...", no test plans or checklists.
+Prose follows the `writing` skill's copy rules.
 
 Example:
 ```
