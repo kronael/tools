@@ -3,18 +3,6 @@ import json
 import re
 import sys
 
-try:
-    data = json.load(sys.stdin)
-except (json.JSONDecodeError, EOFError, ValueError):
-    sys.exit(0)
-
-if not isinstance(data, dict):
-    sys.exit(0)
-
-prompt = data.get('prompt') or ''
-if not isinstance(prompt, str):
-    sys.exit(0)
-
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
 - Organized in directories: use lowercase (specs/multi-tenancy.md, todos/general.md, plans/migration.md)
@@ -103,27 +91,46 @@ META_PATTERNS = [
     r'\b(check|fix|debug)\b.*(hook|agent|nudge|settings)',
     r'invoke.*agent',
 ]
-if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+    except (json.JSONDecodeError, EOFError, ValueError):
+        sys.exit(0)
+
+    if not isinstance(data, dict):
+        sys.exit(0)
+
+    prompt = data.get('prompt') or ''
+    if not isinstance(prompt, str):
+        sys.exit(0)
+
+    if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        sys.exit(0)
+
+    parts = []
+
+    if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
+        parts.append(DOCS_RULES)
+
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', prompt)
+    matched = None
+    for word in words:
+        matched = fuzzy_match(word, AGENT_KEYWORDS)
+        if matched:
+            break
+
+    if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
+        parts.append(COMMIT_RULES)
+    elif matched:
+        parts.append(f'Invoke {matched}.')
+
+    if parts:
+        print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
+
     sys.exit(0)
 
-parts = []
 
-if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
-    parts.append(DOCS_RULES)
-
-words = re.findall(r'\b[a-zA-Z]{3,}\b', prompt)
-matched = None
-for word in words:
-    matched = fuzzy_match(word, AGENT_KEYWORDS)
-    if matched:
-        break
-
-if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
-    parts.append(COMMIT_RULES)
-elif matched:
-    parts.append(f'Invoke {matched}.')
-
-if parts:
-    print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
-
-sys.exit(0)
+if __name__ == '__main__':
+    main()

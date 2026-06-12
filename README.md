@@ -4,6 +4,7 @@ Command-line utilities and Claude Code configuration.
 
 ## CLI tools
 
+- [ascfix](ascfix/) — fix Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
@@ -11,7 +12,7 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
-PEP 723 inline-deps Python scripts (`tg-fetch`, `dc-fetch`) run via `uv run main.py`. `dockbox` and `rig` have their own Makefile; `cd <tool> && make install`.
+Go tools (`ascfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` has its own Makefile.
 
 External tools used by the Claude Code config:
 
@@ -53,7 +54,8 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 **Agents** are specialized task workers: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`, `@visual`. Most are launched via slash commands (`/refine` → `@refine`, etc.).
 
 **Hooks** wire lifecycle events:
-- `nudge` (UserPromptSubmit) — fuzzy-match keywords to agents/skills
+- `prompt_nudge` (UserPromptSubmit) — fuzzy-match keywords to agents/skills
+- `pretool_nudge` (PreToolUse) — context hints when editing known file types
 - `local` (UserPromptSubmit, PreCompact) — inject `~/.claude/LOCAL.md`
 - `reclaude` (UserPromptSubmit, PreCompact) — re-inject critical rules across compaction
 - `stop` (Stop) — block on uncommitted changes / missing diary entries
