@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.3.16] — 20260612
+
+> kronael v0.3.16 — udfix tool, diagrams skill, docs + security cleanup
+>
+> A new `udfix` CLI repairs broken box-drawing junctions in ASCII diagrams, a `diagrams` skill teaches the workflow, and the bundle's docs and hooks got a hard pass for drift and shared-host safety.
+>
+> • `udfix` — pipe an ASCII diagram through it and crossing/T junctions (┬ ┴ ├ ┤ ┼) get the right character
+> • `diagrams` skill — how to draw box diagrams and fix them with `udfix`; `@readme` uses it for ARCHITECTURE.md
+> • `credits` skill + `NOTICE` — attribution practice for ported/LLM-assisted work
+> • Hooks no longer write state to shared `/tmp`, and stop only nags about diaries inside a git repo
+> • Docs deduplicated to single-owner facts — deleted the fictional WORKFLOW.md
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `udfix` — Go CLI that fixes Unicode box-drawing junction chars from neighbor connectivity (stdin → stdout); table-driven, tested
+- `diagrams` skill — ASCII architecture/flow diagram authoring; pipes through `udfix`
+- `credits` skill + root `NOTICE` — acknowledge upstream sources (humanizer, hermes-agent, design.md, get-shit-done) and AI-assisted provenance
+- `make workflows` — auto-generates the `PROJECTS` list from subdirs exposing `test` + `clean`; `make test`/`clean` iterate it
+
+### Changed
+
+- Root docs deduplicated to single-owner facts: README owns the CLI inventory + docs map, ARCHITECTURE owns the install rationale, `settings-recommended.json` + hook source own hook wiring; other docs link
+- `skills/README.md` replaces the drift-prone per-skill tables with categories + `ls skills/` pointer; keeps the workflow cluster diagram
+- All hooks guard execution behind `if __name__ == '__main__'` so the suite can import them (59 tests collect)
+- `diagram` skill renamed `diagrams` (matches `bugs`/`specs`)
+
+### Fixed
+
+- **Security:** hook state moved from shared `/tmp` to `~/.claude/tmp` (symlink-clobber risk on multi-user hosts)
+- **Security:** install procedure installs `trufflehog` via `go install`, not `curl … | sh` to `/usr/local/bin`
+- `stop.py` only checks/nudges the diary inside a git repo — no more stray `.diary/` dirs in arbitrary directories
+- `udfix` Makefile built a binary named `ascfix`; removed two build artifacts that had been committed
+- Doc drift: deleted `WORKFLOW.md` (described a `/ship → /build` hierarchy; `/build` never existed), corrected `reclaude.py` to PreCompact-only, `/dispatch` → `/resolve`, dropped the dead `/build` nudge route
+
 ## [v0.3.15] — 20260611
 
 > kronael v0.3.15 — tiered model hierarchy + PostToolUse nudge
