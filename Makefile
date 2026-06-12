@@ -2,7 +2,36 @@
 PROJECTS := hooks udfix
 # <<< projects <<<
 
-.PHONY: help test clean workflows $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
+T := .github/templates
+W := .github/workflows
+COMMA := ,
+
+# gen-ci: output, template, component, paths, timeout
+# Generates $(W)/<output>.yml from $(T)/<template>.yml.tmpl, substituting the
+# %%COMPONENT%% / %%PATHS%% / %%TIMEOUT%% placeholders. Templates already carry
+# the yamlfmt canonical form (leading ---, unquoted bracket lists) so the sed
+# output is byte-identical to what pre-commit's yamlfmt would produce — no drift.
+define gen-ci
+$(W)/$(1).yml: $(T)/$(2).yml.tmpl
+	sed -e 's|%%COMPONENT%%|$(3)|g' \
+	    -e 's|%%PATHS%%|$(4)|g' \
+	    -e 's|%%TIMEOUT%%|$(5)|g' \
+	    $$< > $$@
+endef
+
+$(eval $(call gen-ci,test-udfix,test-go,udfix,[udfix/**],10))
+$(eval $(call gen-ci,test-hooks,test-py,hooks,[hooks/**],5))
+
+# lint.yml.tmpl has no placeholders — pure copy keeps it regenerable too.
+$(W)/lint.yml: $(T)/lint.yml.tmpl
+	cp $< $@
+
+CI_WORKFLOWS := \
+	$(W)/test-udfix.yml \
+	$(W)/test-hooks.yml \
+	$(W)/lint.yml
+
+.PHONY: help test clean workflows gen-ci $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
@@ -10,6 +39,7 @@ help:
 	@echo "make clean       - clean all projects + __pycache__ sweep"
 	@echo "make clean-<dir> - clean one project"
 	@echo "make workflows   - regenerate PROJECTS from */Makefile"
+	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
 
 test: $(addprefix test-,$(PROJECTS))
 	@echo "all tests passed ($(PROJECTS))"
@@ -30,3 +60,5 @@ workflows:
 	done | paste -sd' '); \
 	sed -i "s|^PROJECTS := .*|PROJECTS := $$dirs|" Makefile; \
 	echo "PROJECTS := $$dirs"
+
+gen-ci: $(CI_WORKFLOWS)
