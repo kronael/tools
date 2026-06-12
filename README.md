@@ -81,6 +81,7 @@ usage-patterns/                    3 patterns extracted from production projects
 | [WORKFLOW.md](WORKFLOW.md) | Agent hierarchy: `/ship` → `/build` → `/refine` → leaf agents |
 | [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `dockbox`, and the toolkit |
 | [skills/README.md](skills/README.md) | Skill rationale by family: memory, refinement, shortcuts |
+| [skills/WORKFLOW.md](skills/WORKFLOW.md) | Skill dependency diagram — clusters, workflow sequence, when to reach for each |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
 | [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (followed by both plugin and "say install") |

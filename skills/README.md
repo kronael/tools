@@ -83,6 +83,7 @@ common workflows surface automatically. See `../hooks/README.md`.
 | **browse** | headless browser automation |
 | **cli** | argparse/click/clap, exit codes, signals |
 | **data** | scrapers, ETL, leaky-bucket, state recovery |
+| **diagram** | Unicode box-drawing ASCII diagrams; pipes through `ascfix` |
 | **ops** | Dockerfile, systemd, Prometheus |
 | **service** | REST, /health, versioned paths, validate-before-persist |
 | **trader** | exchange APIs, state machines, paper trading |
@@ -141,6 +142,12 @@ Ported from [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-a
 | **create-popular-web-designs** | 54 design-system HTML/CSS templates |
 | **create-pretext** | text-as-geometry browser demos (@chenglou/pretext) |
 | **create-sketch** | 2-3 throwaway HTML mockup variants for comparison |
+
+## Skill workflow diagram
+
+`WORKFLOW.md` in this directory shows all skills clustered by phase (orientation,
+planning, coding, quality, output, communication, escalation) with arrows
+showing typical session flow. Generated with the `diagram` skill and `ascfix`.
 
 ## Working with skills
 
