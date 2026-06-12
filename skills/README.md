@@ -78,12 +78,13 @@ authoritative entry. The categories:
   `testing`, `browse`, `diagrams`) — patterns for a kind of program.
   They compose with language skills: a Rust CLI loads `rs` + `cli`.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
-  `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`) —
-  multi-pass refinement, git flow, memory, scaffolding.
+  `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
+  `scavenge`, `oracle`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice.
 - **Escalation + shortcuts** (`haiku`, `sonnet`, `opus`, `fable`,
   `sub`, `fin`) — model routing and macro aliases.
-- **Evaluation lenses** (e.g. `hacker-eval`, `credits`) — judge a
-  codebase or practice from a fixed perspective.
+- **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
+  judge a codebase or practice from a fixed perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
