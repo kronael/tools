@@ -84,12 +84,17 @@ authoritative entry. The categories:
   `sub`, `fin`) — model routing and macro aliases.
 - **Evaluation lenses** (e.g. `hacker-eval`, `credits`) — judge a
   codebase or practice from a fixed perspective.
-- **`create-*`** — creative artifact generators (HTML, SVG, ASCII,
-  video), mostly ported from
-  [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative).
-  The prefix is reserved for creative output. Bundled set is
-  **local-only** — skills needing paid APIs, cloud accounts, or
+- **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
+  dispatching to cold data files read on demand. `create/` holds the
+  creative artifact generators (HTML, SVG, ASCII, video), mostly ported
+  from
+  [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative)
+  and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
+  `software/` holds engineering runbooks extracted from `ops`. Structure
+  rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
+- **Shared prose references** (`writing`, `humanize`) — copy rules and
+  the de-slop pass, cited by `tweet`, `pr-draft`, `readme`, `diary`.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 

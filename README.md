@@ -47,8 +47,8 @@ would overwrite your edits on every update. Full rationale:
 ### What's in the bundle
 
 - **Skills** (`skills/`) — auto-activating context plus workflow commands
-  (`/commit`, `/ship`, `/refine`, `/diary`, ...). `create-*` skills are
-  creative-output generators ported from
+  (`/commit`, `/ship`, `/refine`, `/diary`, ...). The `create` router skill
+  bundles the creative-output generators ported from
   [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative);
   only ones that run locally are bundled. Index and rationale:
   [skills/README.md](skills/README.md).

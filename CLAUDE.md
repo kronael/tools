@@ -80,11 +80,13 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
 ## Repo-specific conventions
 
-- **Skill naming**: `create-*` is **reserved** for creative-output skills
-  (HTML/SVG/ASCII artifacts, ported from NousResearch/hermes-agent under
-  `skills/creative/`). Keep the prefix when porting. Only port skills that work
-  **locally** — no paid APIs, no cloud accounts, no required external apps
-  (local CLI/lib deps like ffmpeg, manim, pyfiglet are fine).
+- **Skill naming**: creative-output generators live under the `skills/create/`
+  **router** (one preloaded `SKILL.md`, cold data files per mode); engineering
+  runbooks under `skills/software/`. NEVER add new `create-*` dirs. The router
+  convention — flat vs router, naming law, edit procedure — is owned by
+  `skills/CLAUDE.md`. Only port skills that work **locally** — no paid APIs,
+  no cloud accounts, no required external apps (local CLI/lib deps like
+  ffmpeg, manim, pyfiglet are fine).
 - **Files under 200 lines.** Skill/CLAUDE content uses **ALWAYS/NEVER**
   statements and targets non-obvious patterns LLMs miss — not generic advice.
 - **NEVER put local paths, org-specific refs, or secrets in source.** Those
