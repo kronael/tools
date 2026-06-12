@@ -8,26 +8,26 @@ when_to_use: creating component diagrams, flow charts, dependency maps, architec
 
 ## Toolchain
 
-Draw with Unicode box-drawing chars, pipe through `ascfix` to correct junctions:
+Draw with Unicode box-drawing chars, pipe through `udfix` to correct junctions:
 
 ```
-echo '<diagram>' | ascfix
+echo '<diagram>' | udfix
 ```
 
-`ascfix` is at `ascfix/` in this repo — install with `make install`.
+`udfix` is at `udfix/` in this repo — install with `make install`.
 
 ## Characters
 
 ```
 ─ │          straight lines
 ┌ ┐ └ ┘      corners
-├ ┤ ┬ ┴ ┼   junctions (ascfix auto-corrects these)
-► ◄ ▲ ▼      arrows (directional, not rewritten by ascfix)
+├ ┤ ┬ ┴ ┼   junctions (udfix auto-corrects these)
+► ◄ ▲ ▼      arrows (directional, not rewritten by udfix)
 ```
 
 ## ALWAYS
 
-- ALWAYS run output through `ascfix` before finalising
+- ALWAYS run output through `udfix` before finalising
 - ALWAYS use `►` / `◄` / `▲` / `▼` for arrows, not `->` or `<-`
 - ALWAYS label boxes with short noun phrases, not verbs
 - ALWAYS left-align content — ASCII diagrams look bad centred
@@ -35,7 +35,7 @@ echo '<diagram>' | ascfix
 ## NEVER
 
 - NEVER mix half-width and full-width Unicode in the same diagram
-- NEVER draw junctions by hand — let ascfix fix them
+- NEVER draw junctions by hand — let udfix fix them
 
 ## Layout pattern
 

@@ -4,7 +4,7 @@ Command-line utilities and Claude Code configuration.
 
 ## CLI tools
 
-- [ascfix](ascfix/) — fix Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
+- [udfix](udfix/) — fix Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
@@ -12,7 +12,7 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
-Go tools (`ascfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` has its own Makefile.
+Go tools (`udfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` has its own Makefile.
 
 External tools used by the Claude Code config:
 
@@ -56,6 +56,7 @@ This is the basis of evolvability — the bundle stays modular and user-owned. S
 **Hooks** wire lifecycle events:
 - `prompt_nudge` (UserPromptSubmit) — fuzzy-match keywords to agents/skills
 - `pretool_nudge` (PreToolUse) — context hints when editing known file types
+- `udfix_nudge` (PostToolUse Write/Edit) — auto-fix Unicode box-drawing junctions in written files
 - `local` (UserPromptSubmit, PreCompact) — inject `~/.claude/LOCAL.md`
 - `reclaude` (UserPromptSubmit, PreCompact) — re-inject critical rules across compaction
 - `stop` (Stop) — block on uncommitted changes / missing diary entries

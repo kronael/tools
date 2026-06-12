@@ -51,6 +51,12 @@
         "hooks": [
           { "type": "command", "command": "bash ~/.claude/hooks/post_tool_nudge.sh", "timeout": 1000 }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "python3 ~/.claude/hooks/udfix_nudge.py", "timeout": 3000 }
+        ]
       }
     ],
     "Stop": [
