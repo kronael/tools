@@ -16,7 +16,6 @@ when_to_use: Dockerfile, docker-compose, systemd services, GitHub Actions CI, An
 - Cross-compilation: volume mount source, NEVER copy
 - ALWAYS set memory limits (2GB typical) and build timeout (30m)
 
-<<<<<<< HEAD
 ### Python + uv Dockerfile pattern (standalone repo)
 
 Two-layer image for max cache hit. Layer 1 is deps only (changes
