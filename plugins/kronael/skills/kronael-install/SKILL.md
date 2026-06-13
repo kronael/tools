@@ -1,6 +1,6 @@
 ---
 name: kronael-install
-description: Install or update Kronael from Codex. NOT for installing CLI tools directly (use their Makefiles).
+description: Install/update Kronael; bridge CLAUDE.md/.claude/skills into Codex. NOT for CLI tools (use Makefiles).
 ---
 
 # Kronael Install
@@ -10,8 +10,8 @@ port the toolkit into Codex-specific duplicate directories.
 
 ## Source Root
 
-Find the source root by walking up from `cwd` and from this skill's path until
-all of these exist:
+For install/update requests, find the source root by walking up from `cwd` and
+from this skill's path until all of these exist:
 
 - `kronael/install/SKILL.md`
 - `skills/`
@@ -20,8 +20,21 @@ all of these exist:
 - `settings-recommended.json`
 - `RECLAUDE.md`
 
-If any are missing, ask for the local `kronael/tools` clone path. The Codex
-plugin is only an installer bridge; the source repo still owns the bundle.
+If any are missing, ask for the local `kronael/tools` clone path. NEVER invent
+paths. The Codex plugin is only an installer bridge; the source repo still owns
+the bundle.
+
+If the user has no local clone, tell them to clone the source and restart Codex
+from that directory:
+
+```sh
+git clone https://github.com/kronael/tools <path>
+cd <path>
+codex
+```
+
+For Codex Bridge-only requests, skip source-root discovery and perform only the
+requested bridge step.
 
 ## Install
 
@@ -33,6 +46,20 @@ plugin is only an installer bridge; the source repo still owns the bundle.
    backup, copy assets (incl. the `create-*` prune list), install wisdom,
    merge the hooks block, external tools, verify. NEVER restate or fork those
    steps here; that file is the only source of truth and copies drift.
+
+## Invocation
+
+Users usually invoke:
+
+```text
+Use $kronael-install to install/update Kronael.
+```
+
+If the user says "install kronael" without naming this skill, still run this
+workflow.
+
+If the user asks only to make Codex read `CLAUDE.md` or `.claude/skills`, skip
+the install workflow and use the Codex Bridge section.
 
 ## Codex Bridge
 
@@ -54,6 +81,15 @@ missing.
 If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
 fallback in the same directory. ALWAYS add a short `AGENTS.md` pointer that
 tells Codex to read `CLAUDE.md` first.
+
+Example pointer:
+
+```md
+# AGENTS.md
+
+Read `CLAUDE.md` first. Those are project conventions for every coding agent,
+not Claude-specific behavior.
+```
 
 ### .claude/skills
 

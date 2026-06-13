@@ -16,7 +16,8 @@
     "category": "Productivity",
     "capabilities": ["Write"],
     "defaultPrompt": [
-      "Use $kronael-install to install/update Kronael."
+      "Use $kronael-install to install/update Kronael.",
+      "Use $kronael-install to bridge CLAUDE.md into Codex."
     ]
   }
 }
