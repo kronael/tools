@@ -37,6 +37,10 @@ identical.
 `kronael/install/SKILL.md` and runs the manual path. It does not duplicate the
 bundle into Codex.
 
+The Codex bridge needs the full source checkout visible at install time. If a
+plugin cache exposes only `plugins/kronael/`, the skill asks for the checkout
+path instead of copying bundle files into the plugin.
+
 The procedure is documented in
 [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
 truth for all paths. Codex/non-Claude agents follow

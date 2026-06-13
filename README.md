@@ -51,7 +51,7 @@ Claude bundle. The Codex plugin exposes one skill, `kronael-install`, whose job
 is to read [`kronael/install/SKILL.md`](kronael/install/SKILL.md) and run the
 manual install path from the repo root.
 
-Install from Codex:
+Published plugin path:
 
 ```sh
 codex plugin marketplace add kronael/tools
@@ -64,9 +64,31 @@ ask:
 Use $kronael-install to install/update Kronael.
 ```
 
-For a local checkout, Codex can discover the repo marketplace at
-`.agents/plugins/marketplace.json`; it points at `plugins/kronael/`. The bridge
-does not duplicate `skills/`, `agents/`, or `hooks/` into Codex.
+The same skill also handles bridge-only setup:
+
+```text
+Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
+```
+
+Local checkout path:
+
+```sh
+git clone https://github.com/kronael/tools <path>
+cd <path>
+codex
+```
+
+Codex can discover the repo marketplace at `.agents/plugins/marketplace.json`;
+it points at `plugins/kronael/`. If the local marketplace does not appear in
+`/plugins`, add the checkout explicitly:
+
+```sh
+codex plugin marketplace add <path>
+```
+
+The bridge does not duplicate `skills/`, `agents/`, or `hooks/` into Codex.
+The installer needs the full checkout visible so it can read
+`kronael/install/SKILL.md` and copy the source bundle.
 
 Codex compatibility for Claude projects:
 
@@ -76,6 +98,14 @@ Codex compatibility for Claude projects:
   Codex to read `CLAUDE.md`; fallback files do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink
   `.agents/skills -> ../.claude/skills` instead of copying skill files.
+
+Troubleshooting:
+
+- Plugin installed but install cannot start: launch Codex from the full
+  `kronael/tools` checkout or give `$kronael-install` that checkout path.
+- `kronael` missing from `/plugins`: restart Codex after adding the marketplace.
+- Claude hooks missing after install: rerun `$kronael-install`; it merges hook
+  wiring from `settings-recommended.json`.
 
 ### What's in the bundle
 

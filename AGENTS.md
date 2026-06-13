@@ -47,12 +47,24 @@ Published marketplace path:
 codex plugin marketplace add kronael/tools
 ```
 
-Local checkout path: Codex can discover `.agents/plugins/marketplace.json`,
-which points at `plugins/kronael/`. Install `kronael` from `/plugins`, then
-invoke:
+Local checkout path: run Codex from the repo root. Codex can discover
+`.agents/plugins/marketplace.json`, which points at `plugins/kronael/`.
+If it does not show in `/plugins`, run:
+
+```sh
+codex plugin marketplace add <repo-root>
+```
+
+Install `kronael` from `/plugins`, then invoke:
 
 ```text
 Use $kronael-install to install/update Kronael.
+```
+
+Bridge-only invocation:
+
+```text
+Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
 ```
 
 Codex compatibility for Claude projects:
@@ -63,6 +75,10 @@ Codex compatibility for Claude projects:
   `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink
   `.agents/skills -> ../.claude/skills` instead of copying.
+
+If `$kronael-install` cannot find the source root, give it the full
+`kronael/tools` checkout path. NEVER make the bridge copy source bundle files
+into `plugins/kronael/`.
 
 Shell translations for the non-obvious steps:
 
