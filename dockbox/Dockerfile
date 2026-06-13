@@ -113,7 +113,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
   mv /root/.local/bin/uv /opt/dev-tools/uv/bin/ && \
   mv /root/.local/bin/uvx /opt/dev-tools/uv/bin/ 2>/dev/null || true
 
-RUN uv tool install pre-commit bandit pip-audit semgrep
+RUN for t in pre-commit bandit pip-audit semgrep; do uv tool install "$t"; done
 
 RUN curl -fsSL https://get.sdkman.io | bash
 
@@ -133,10 +133,11 @@ RUN bun install -g \
 
 RUN uv tool install git+https://github.com/kronael/ship
 
-ARG GITLEAKS_VERSION=9.1.0
+ARG GITLEAKS_VERSION=8.30.1
 RUN ARCH=$(dpkg --print-architecture) && \
-  wget -qO- "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${ARCH}.tar.gz" \
-  | tar xz -C /usr/local/bin gitleaks
+  case "$ARCH" in amd64) GLARCH=x64 ;; arm64) GLARCH=arm64 ;; *) GLARCH=$ARCH ;; esac && \
+  wget -qO /tmp/gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${GLARCH}.tar.gz" \
+  && tar xzf /tmp/gitleaks.tgz -C /usr/local/bin gitleaks && rm /tmp/gitleaks.tgz
 
 RUN curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
   | sh -s -- -b /usr/local/bin
@@ -164,6 +165,10 @@ exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\
 # dockbox-init: register the runtime user in /etc/passwd, chown overmounts
 # and $HOME (top-level only — nested bind mounts must not be touched), then
 # gosu-drop to DOCKBOX_UID:DOCKBOX_GID before exec'ing the command.
+# Before the drop it adds the runtime user to every --group-add supplementary
+# gid (e.g. the docker socket's group from `dockbox -D`): gosu re-runs
+# initgroups from /etc/group, so a `docker run --group-add` alone is lost on
+# the drop unless the user is also a member in the container's /etc/group.
 # Sanitizes DOCKBOX_USER (only [A-Za-z0-9_-] allowed) so a malicious value
 # can't inject extra fields into /etc/passwd. Defaults CMD to /bin/zsh when
 # none is provided so `gosu` doesn't error on empty args. chown failures
@@ -198,8 +203,18 @@ if [ "$(id -u)" = "0" ]; then\n\
     done\n\
     unset IFS\n\
   fi\n\
+  for g in $(id -G); do\n\
+    case "$g" in 0|"$USER_GID") continue ;; esac\n\
+    gname="$(getent group "$g" | cut -d: -f1)"\n\
+    gmem="$(getent group "$g" | cut -d: -f4)"\n\
+    [ -z "$gname" ] && gname="hostgrp$g"\n\
+    case ",$gmem," in *",$USERNAME,"*) continue ;; esac\n\
+    [ -n "$gmem" ] && gmem="$gmem,$USERNAME" || gmem="$USERNAME"\n\
+    sed -i "/^$gname:/d" /etc/group\n\
+    echo "$gname:x:$g:$gmem" >> /etc/group\n\
+  done\n\
   [ "$#" -eq 0 ] && set -- /bin/zsh\n\
-  exec gosu "${USER_UID}:${USER_GID}" "$@"\n\
+  exec gosu "$USERNAME" "$@"\n\
 fi\n\
 [ "$#" -eq 0 ] && set -- /bin/zsh\n\
 exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-init

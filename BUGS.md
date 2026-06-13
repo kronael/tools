@@ -2,32 +2,15 @@
 
 Review queue. Log here, fix when prioritised — not on sight.
 
-## dockbox: `-D` docker socket unusable after gosu drop
+## (resolved) dockbox: `-D` docker socket unusable after gosu drop
 
-**Symptom:** testcontainers (and anything as the runtime user) inside
-`dockbox -D` can't reach `/var/run/docker.sock` — "gid 1000 isn't in the
-socket's group (964)".
+[resolved 2026-06-13] Fix: `dockbox-init` now (1) adds the runtime user to
+each `--group-add` supplementary gid in `/etc/group`, and (2) drops with
+`gosu "$USERNAME"` (by name) instead of numeric `uid:gid` — numeric specs
+skip `initgroups`, so supplementary groups were silently dropped. Verified on
+a fresh image: `groups=…,964` + socket read/write OK with `dockbox -D`.
 
-**Root cause:** `dockbox` passes `--group-add $(stat -c %g docker.sock)`
-(=964) to `docker run`, but that group lands on the **root init process
-only**. `dockbox-init` creates the runtime user with `${USERNAME}:x:${USER_GID}:`
-(gid 1000) and `exec gosu ${UID}:${GID}` — gosu's `initgroups` reads
-`/etc/group`, finds the user in no group 964, and drops the supplementary
-group. Socket is `srw-rw---- root docker` (mode 660), so the dropped user
-is denied.
-
-**Fix (Dockerfile `dockbox-init` heredoc, before the `gosu` exec):** add the
-runtime user to each non-primary supplementary gid the container was started
-with, so `initgroups` preserves it:
-```sh
-for g in $(id -G); do
-  case "$g" in 0|"$USER_GID") continue ;; esac
-  getent group "$g" >/dev/null 2>&1 || groupadd -g "$g" "hostgrp$g"
-  usermod -aG "$g" "$USERNAME"
-done
-```
-Requires `make image` rebuild + a testcontainers smoke test inside dockbox.
-
-**NOT the fix:** `chmod 666 /var/run/docker.sock` on the host — world-writable
-socket is root-equivalent for every process on the box, and unnecessary (host
-ondra is already in `docker` group; the socket answers).
+While fixing, two latent cold-build breakers in `dockbox/Dockerfile` were also
+fixed: `uv tool install` was given four packages at once (takes one per call),
+and gitleaks was pinned to a nonexistent `v9.1.0`/`amd64` (now `8.30.1`/`x64`
+with a fail-fast download). These only surfaced once the build cache went cold.
