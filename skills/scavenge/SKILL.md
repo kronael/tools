@@ -1,20 +1,20 @@
 ---
 name: scavenge
-description: Codify public best practice into a durable, oracle-tested artifact — skill, agent, guideline, runbook, checklist, review template, or spec. NOT for conversation-history patterns (use learn) or editing an existing artifact (use wisdom).
+description: Codify public best practice into a durable, codex-tested artifact — skill, agent, guideline, runbook, checklist, review template, or spec. NOT for conversation-history patterns (use learn) or editing an existing artifact (use wisdom).
 when_to_use: "create a skill for X", "write up our guideline for Y", "draft a runbook for Z", "make a checklist for W", "codify our practice on X", "produce a review template for Y", "make an agent for Z", "draft a spec for V", new methodology, repeatable workflow extraction
 user-invocable: true
 ---
 
-# scavenge — gather, oracle-test at every step, assemble
+# scavenge — gather, codex-test at every step, assemble
 
 You're not inventing. Someone (NN/g, Nielsen, Norman, Krug, GOV.UK,
 Google SRE, OWASP, ...) has already figured out the activity in front
-of you. The job: scavenge their work, sniff it for rot via `oracle` at
+of you. The job: scavenge their work, sniff it for rot via `codex` at
 each step, and assemble what survives into a durable artifact your team
 can reuse.
 
 **Critique is not localised to step 3.** It threads through the
-pipeline. `oracle` is the adversarial engine; call it at every
+pipeline. `codex` is the adversarial engine; call it at every
 checkpoint below. Confirmation bias accumulates step by step — one
 late critique can't undo a bias planted at step 1.
 
@@ -53,9 +53,9 @@ shapes; only step 5's skeleton differs.
 ONE sentence: "<name> [shape] that <verb> <domain> for <persona/output>."
 Wobbling sentence → scope not bounded; reshape first.
 
-**Critique checkpoint 1 (light).** Ask `oracle` in 2–4 lines: "is this
+**Critique checkpoint 1 (light).** Ask `codex` in 2–4 lines: "is this
 activity well-bounded, and is the shape the right one given REUSE +
-INVOCATION pattern?" If oracle suggests a different shape, listen.
+INVOCATION pattern?" If codex suggests a different shape, listen.
 
 ### Step 2 — research subagent
 
@@ -70,13 +70,13 @@ Spawn one (`general-purpose` or `Explore`). Self-contained prompt:
 
 ALWAYS self-contained — subagent has zero context.
 
-### Step 3 — adversarial oracle critique (the deep one)
+### Step 3 — adversarial codex critique (the deep one)
 
-Invoke `oracle` adversarially: "find what's wrong, where the science
+Invoke `codex` adversarially: "find what's wrong, where the science
 doesn't support the claim, where the protocol generates bad data,
 what to cut as filler, where classification collapses in practice."
 NEVER frame as "is this correct?" Save to
-`<cwd>/docs/<topic>/oracle-critique.md`.
+`<cwd>/docs/<topic>/codex-critique.md`.
 
 ### Step 4 — fold the critique in
 
@@ -98,7 +98,7 @@ re-read and verify:
   identified, not just the methodological ones
 - the shape skeleton was followed (no missing sections)
 
-If thin or off-pattern, send to `oracle` for a focused second pass.
+If thin or off-pattern, send to `codex` for a focused second pass.
 
 ### Step 6 — dogfood (gating step, not a smoke test)
 
@@ -113,7 +113,7 @@ Run the new artifact end-to-end on the originating task. Verify:
 
 **Critique checkpoint 3 (dogfood-as-critique).** Dogfood IS critique
 against reality. If anything broke or surfaced ambiguity, send the
-v1 artifact + dogfood notes back to `oracle` adversarially: "what
+v1 artifact + dogfood notes back to `codex` adversarially: "what
 operational rules are still missing? what rules will get smuggled
 around in practice?" Patch and re-run.
 
@@ -129,9 +129,9 @@ material.
 
 ## Rules
 
-- ALWAYS call `oracle` at MULTIPLE checkpoints, not just step 3.
+- ALWAYS call `codex` at MULTIPLE checkpoints, not just step 3.
   Adversarial framing on every call.
-- ALWAYS keep oracle critique files as audit trail.
+- ALWAYS keep codex critique files as audit trail.
 - ALWAYS dogfood as a GATING step (verify writes, not just runs).
 - ALWAYS main thread owns the final write to `~/.claude/skills/` or
   `~/.claude/agents/` — subagents may be sandbox-blocked from writing
@@ -147,7 +147,7 @@ material.
 - ALWAYS one activity per artifact. NEVER fold two domains into one.
 - ALWAYS cite the methodology doc from the artifact.
 - ALWAYS pick the shape by REUSE + INVOCATION pattern.
-- NEVER skip step 3 oracle.
+- NEVER skip step 3 codex.
 - NEVER let the produced artifact exceed 200 lines.
 - NEVER name artifacts as workflow summaries — ALWAYS a punchy
   compound that says the point (`last30days`, `eye-13yo`).
@@ -160,10 +160,10 @@ material.
   (it's a runbook); reusable persona-driven eval minted as checklist
   (it's a skill).
 - **Bloat.** Artifact becomes a generic "do good X" how-to.
-- **Validatory oracle.** "Does this look right?" returns blessing,
+- **Validatory codex.** "Does this look right?" returns blessing,
   surfaces nothing.
 - **Critique-doc dead-letter.** Methodology never updated after
-  oracle.
+  codex.
 - **Two activities, one artifact.** Different triggers — separate
   artifacts.
 - **Artifact written from intuition.** No research, no citations —
@@ -174,5 +174,5 @@ material.
 ## Reference
 
 This skill was itself scavenged + dogfooded — `eye-13yo` was the first
-artifact it produced. The methodology + oracle critiques live under
+artifact it produced. The methodology + codex critiques live under
 `<cwd>/docs/<topic>/` per the pipeline above.

@@ -50,7 +50,7 @@ If missing, you're in the wrong directory — stop and ask.
    |------|---------|--------|
    | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
    | `agent-browser` | `bun install -g agent-browser` | /browse |
-   | `codex` | `bun install -g @openai/codex` | /oracle |
+   | `codex` | `bun install -g @openai/codex` | /codex |
    | `pyright` | `bun install -g pyright` | /py /ts /tsx |
    | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
    | `pre-commit` | `uv tool install pre-commit` | all (hooks) |

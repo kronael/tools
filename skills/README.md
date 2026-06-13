@@ -79,7 +79,7 @@ authoritative entry. The categories:
   They compose with language skills: a Rust CLI loads `rs` + `cli`.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `oracle`) — multi-pass refinement, git flow, memory,
+  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
   scaffolding, second opinions, codifying public best practice.
 - **Escalation + shortcuts** (`haiku`, `sonnet`, `opus`, `fable`,
   `sub`, `fin`) — model routing and macro aliases.
