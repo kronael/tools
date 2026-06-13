@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.19] — 20260613
+
+> kronael v0.3.19 — Codex bridge skill polish
+>
+> The `kronael-install` skill now dispatches correctly before it reads install steps, local-checkout instructions are complete, and the bridge prompt is consistent everywhere.
+>
+> • Dispatch routing moved before source-root discovery — bridge-only users no longer wade through install steps
+> • Clone instructions added for when no local checkout exists
+> • Bridge prompt synced across plugin.json, AGENTS.md, and README
+> • README and AGENTS.md expanded with local path, troubleshooting, and AGENTS.md pointer example
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `kronael-install` `## Invocation` section moved before `## Source Root` — dispatch (install vs bridge-only) now happens before the LLM hits install steps
+- Clone hint added for users with no local checkout; AGENTS.md pointer example added to Codex Bridge section
+- Bridge `defaultPrompt` in `plugin.json` synced to match `AGENTS.md` and `README` wording (`CLAUDE.md and .claude/skills`)
+- README: expanded local checkout path, bridge-only usage, troubleshooting section
+- ARCHITECTURE.md: noted that bridge requires full source checkout visible
+
 ## [v0.3.18] — 20260613
 
 > kronael v0.3.18 — Codex installer bridge, codex skill, dockbox -D fix
