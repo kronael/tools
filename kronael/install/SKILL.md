@@ -21,7 +21,22 @@ ALWAYS verify these exist at the source root before proceeding:
 
 If missing, you're in the wrong directory — stop and ask.
 
+## Sync protocol
+
+Install is a fast copy only when installed source-owned files are unchanged.
+When local installed edits exist, install becomes a merge workflow.
+
+- ALWAYS run a quiet checksum/`cmp` drift check before backup/copy.
+- NEVER run recursive diffs on the happy path.
+- If installed copies differ or are newer, ALWAYS show a diff summary and ask:
+  sync back to repo, overwrite from source, or skip that path.
+- NEVER treat a backup as permission to discard installed-side edits.
+- NEVER touch installed-only files except the explicit prune list below.
+
 ## Steps
+
+0. **Fast drift preflight**. Follow the sync protocol for
+   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` before backup/copy.
 
 1. **Backup**. ALWAYS copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` to `~/.claude/backup/<timestamp>/` before overwriting.
 
@@ -70,14 +85,14 @@ If missing, you're in the wrong directory — stop and ask.
    |------|---------|--------|
    | `faster-whisper` | `uv tool install faster-whisper` | /create (video render) |
 
-6. **Report**: summary — X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
+6. **Report**: summary — fast drift result, X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
 
 ## Rules
 
 - ALWAYS backup before overwriting
 - NEVER delete files in `~/.claude/` not in source (org overlays, user customizations live there)
 - NEVER touch `~/.claude/settings.local.json`, `~/.claude/LOCAL.md`, `~/.claude/CLAUDE.local.md`
-- ALWAYS replace skills/hooks with current versions on name conflict
+- ALWAYS replace skills/hooks with current versions on name conflict only after drift preflight clears installed-side edits
 - NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
 
 ## Update flow
