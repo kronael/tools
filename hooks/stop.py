@@ -70,9 +70,13 @@ def main():
                 pass
 
     # Diary freshness (missing today or stale > 1h) — only inside a git repo.
-    toplevel = git_run(cwd, 'git', 'rev-parse', '--show-toplevel')
-    if toplevel.returncode == 0:
-        diary_dir = os.path.join(toplevel.stdout.strip(), '.diary')
+    # --git-common-dir resolves to the main repo's .git even from a worktree.
+    common = git_run(cwd, 'git', 'rev-parse', '--git-common-dir')
+    if common.returncode == 0:
+        git_dir = common.stdout.strip()
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(cwd, git_dir)
+        diary_dir = os.path.join(os.path.dirname(git_dir), '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
         if not os.path.exists(diary_file):
             parts.append('No diary entry for today. Consider running /diary.')
