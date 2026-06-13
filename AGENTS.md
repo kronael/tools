@@ -7,7 +7,7 @@ conventions, not product-specific behavior.
 
 ## What this repo contains
 
-Two things — see `CLAUDE.md` for the shape and `README.md` for the CLI
+Three things — see `CLAUDE.md` for the shape and `README.md` for the CLI
 tool inventory:
 
 1. **CLI tools** — one independent dir each. Adding a tool: own dir, own
@@ -15,6 +15,10 @@ tool inventory:
 2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`,
    `settings-recommended.json`, `RECLAUDE.md`, distributed via
    `.claude-plugin/` + `kronael/install/`.
+3. **Codex installer bridge** — `plugins/kronael/` and
+   `.agents/plugins/marketplace.json`.
+   It exposes one Codex skill that teaches Codex to run the same manual
+   install path. It does not duplicate the bundle.
 
 ## Installing the toolkit from Codex
 
@@ -30,6 +34,35 @@ deletions) applies verbatim. Below are only the Codex-specific deltas.
   events, skills use Claude Code auto-activation. Codex doesn't use it —
   Codex is the installer, deploying to `~/.claude/` for the user's
   Claude Code sessions.
+- The Codex plugin is a thin bridge only. Its one skill is
+  `plugins/kronael/skills/kronael-install/SKILL.md`; keep install behavior in
+  `kronael/install/SKILL.md` and update the bridge only when Codex-specific
+  translation changes.
+
+## Codex plugin usage
+
+Published marketplace path:
+
+```sh
+codex plugin marketplace add kronael/tools
+```
+
+Local checkout path: Codex can discover `.agents/plugins/marketplace.json`,
+which points at `plugins/kronael/`. Install `kronael` from `/plugins`, then
+invoke:
+
+```text
+Use $kronael-install to install/update Kronael.
+```
+
+Codex compatibility for Claude projects:
+
+- Add `CLAUDE.md` to `project_doc_fallback_filenames` in
+  `~/.codex/config.toml` for projects without `AGENTS.md`.
+- If a project already has `AGENTS.md`, make that file tell Codex to read
+  `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
+- To expose project `.claude/skills` to Codex, symlink
+  `.agents/skills -> ../.claude/skills` instead of copying.
 
 Shell translations for the non-obvious steps:
 

@@ -1,0 +1,20 @@
+{
+  "name": "kronael-local",
+  "interface": {
+    "displayName": "Kronael Local"
+  },
+  "plugins": [
+    {
+      "name": "kronael",
+      "source": {
+        "source": "local",
+        "path": "./plugins/kronael"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

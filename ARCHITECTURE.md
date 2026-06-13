@@ -4,6 +4,8 @@
 
 ```
 .claude-plugin/             marketplace.json + plugin.json
+.agents/plugins/            repo-local Codex marketplace metadata
+plugins/kronael/            thin Codex plugin with one installer skill
 kronael/install/            the only plugin-exposed skill — install procedure
 skills/                     bundle — auto-activating skills (languages, workflow, domain)
 agents/                     bundle — specialized task agents
@@ -15,20 +17,42 @@ COOKBOOK.md                 daily git recipes (detached HEAD with rig)
 udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in README.md)
 ```
 
-## Two install paths, one source
+## Install paths, one source
 
 The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
-Both paths copy them into `~/.claude/`.
+All install paths copy them into `~/.claude/`.
 
-**Plugin path** — Claude Code's marketplace clones this repo into its
+**Claude plugin path** — Claude Code's marketplace clones this repo into its
 plugin cache. `/kronael:install` reads the cached repo at
 `${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
 
-**Manual path** — User clones the repo themselves, opens Claude Code at
+**Claude manual path** — User clones the repo themselves, opens Claude Code at
 the root, says "install". Source is `cwd`; the rest of the procedure is
 identical.
 
-The procedure is documented in [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the notes in [`AGENTS.md`](AGENTS.md).
+**Codex bridge path** — Codex installs the thin plugin from
+`plugins/kronael/.codex-plugin/plugin.json` via
+`.agents/plugins/marketplace.json`. The only Codex skill is
+`plugins/kronael/skills/kronael-install/SKILL.md`; it reads
+`kronael/install/SKILL.md` and runs the manual path. It does not duplicate the
+bundle into Codex.
+
+The procedure is documented in
+[`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
+truth for all paths. Codex/non-Claude agents follow
+[`AGENTS.md`](AGENTS.md).
+
+## Codex project bridge
+
+Codex can be configured to consume Claude project conventions without copying
+them:
+
+- `~/.codex/config.toml`: add `CLAUDE.md` to
+  `project_doc_fallback_filenames` for Claude-only projects.
+- Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
+  `CLAUDE.md`, because Codex loads at most one instruction file per directory.
+- Project `.claude/skills`: expose them to Codex with
+  `.agents/skills -> ../.claude/skills` symlinks when requested.
 
 ## Why hybrid (plugin + install step)
 

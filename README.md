@@ -44,6 +44,39 @@ single source of truth for the procedure. The install step exists so your
 would overwrite your edits on every update. Full rationale:
 [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--install-step).
 
+## Codex installer bridge
+
+Codex does not run Claude Code slash commands, but it can install this same
+Claude bundle. The Codex plugin exposes one skill, `kronael-install`, whose job
+is to read [`kronael/install/SKILL.md`](kronael/install/SKILL.md) and run the
+manual install path from the repo root.
+
+Install from Codex:
+
+```sh
+codex plugin marketplace add kronael/tools
+```
+
+Then open Codex, install `kronael` from `/plugins`, start a fresh thread, and
+ask:
+
+```text
+Use $kronael-install to install/update Kronael.
+```
+
+For a local checkout, Codex can discover the repo marketplace at
+`.agents/plugins/marketplace.json`; it points at `plugins/kronael/`. The bridge
+does not duplicate `skills/`, `agents/`, or `hooks/` into Codex.
+
+Codex compatibility for Claude projects:
+
+- Add `CLAUDE.md` to `project_doc_fallback_filenames` in
+  `~/.codex/config.toml` so Codex reads Claude-only project instructions.
+- If a project already has `AGENTS.md`, keep a short pointer there telling
+  Codex to read `CLAUDE.md`; fallback files do not stack with `AGENTS.md`.
+- To expose project `.claude/skills` to Codex, symlink
+  `.agents/skills -> ../.claude/skills` instead of copying skill files.
+
 ### What's in the bundle
 
 - **Skills** (`skills/`) — auto-activating context plus workflow commands
@@ -63,6 +96,8 @@ would overwrite your edits on every update. Full rationale:
 
 ```
 .claude-plugin/             marketplace.json + plugin.json
+.agents/plugins/            repo-local Codex marketplace metadata
+plugins/kronael/            thin Codex plugin exposing kronael-install
 kronael/install/SKILL.md    plugin-exposed install procedure (source of truth)
 skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
@@ -82,5 +117,5 @@ RECLAUDE.md                 template for ~/.claude/RECLAUDE.md
 | [skills/README.md](skills/README.md) | Skill rationale, index, and workflow diagram |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
-| [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (both paths) |
+| [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (all paths) |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |

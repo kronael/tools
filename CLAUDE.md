@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-The **kronael toolkit** — two things in one repo:
+The **kronael toolkit** — three things in one repo:
 
 1. **Standalone CLI tools**, one directory each. Fully independent: own
    Makefile or PEP 723 inline-deps script, own README, no imports between
@@ -18,6 +18,9 @@ The **kronael toolkit** — two things in one repo:
 2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`,
    `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
    deployed into a user's `~/.claude/` by an install step.
+3. **A thin Codex installer bridge** (`plugins/kronael/` plus
+   `.agents/plugins/`) exposing one Codex skill that runs the same install
+   procedure without duplicating bundle assets.
 
 The bundle is Claude Code *configuration*. It does not run here — it runs in
 the user's Claude Code sessions after install. When editing the bundle you are
@@ -44,17 +47,23 @@ make clean         # clean projects + sweep __pycache__
   `ruff.toml` is the config. Pre-commit reformats on first run — retry the
   commit if it does.
 
-## Architecture: two install paths, one source
+## Architecture: install paths, one source
 
-`skills/`, `agents/`, `hooks/` at repo root **are** the bundle. Both install
-paths copy them into `~/.claude/`: the plugin path (`/kronael:install` from
-the marketplace clone at `${CLAUDE_PLUGIN_ROOT}`) and the manual path (user
-opens Claude Code at the cloned root and says "install").
+`skills/`, `agents/`, `hooks/` at repo root **are** the bundle. The Claude
+plugin path (`/kronael:install` from `${CLAUDE_PLUGIN_ROOT}`) and the manual
+path (user opens Claude Code at the cloned root and says "install") both copy
+them into `~/.claude/`.
+
+Codex has a third, thin bridge path:
+`plugins/kronael/skills/kronael-install/SKILL.md` reads the canonical
+installer and runs the manual path. NEVER duplicate the bundle under
+Codex-specific directories.
 
 `kronael/install/SKILL.md` is the **single source of truth** for the
 procedure (the only plugin-exposed skill). When you change install behavior,
-change that file and keep `AGENTS.md`'s notes in sync. Why the install step
-exists at all: `ARCHITECTURE.md#why-hybrid-plugin--install-step`.
+change that file and keep `AGENTS.md` plus the Codex installer skill in sync.
+Why the install step exists at all:
+`ARCHITECTURE.md#why-hybrid-plugin--install-step`.
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 

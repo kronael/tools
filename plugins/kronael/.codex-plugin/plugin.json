@@ -1,0 +1,22 @@
+{
+  "name": "kronael",
+  "version": "0.3.17",
+  "description": "Installer bridge for the Kronael Claude Code toolkit.",
+  "author": {
+    "name": "Ondrej Vostal"
+  },
+  "license": "MIT",
+  "keywords": ["codex", "claude-code", "skills", "hooks"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Kronael",
+    "shortDescription": "Install the Kronael Claude Code toolkit from Codex.",
+    "longDescription": "Runs the canonical installer and deploys the Claude Code bundle into ~/.claude/.",
+    "developerName": "Ondrej Vostal",
+    "category": "Productivity",
+    "capabilities": ["Write"],
+    "defaultPrompt": [
+      "Use $kronael-install to install/update Kronael."
+    ]
+  }
+}
