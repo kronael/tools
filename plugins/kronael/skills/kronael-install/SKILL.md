@@ -8,6 +8,20 @@ description: Install/update Kronael; bridge CLAUDE.md/.claude/skills into Codex.
 ALWAYS install the existing Claude Code bundle from this repo. NEVER copy or
 port the toolkit into Codex-specific duplicate directories.
 
+## Invocation
+
+Users usually invoke:
+
+```text
+Use $kronael-install to install/update Kronael.
+```
+
+If the user says "install kronael" without naming this skill, still run this
+workflow.
+
+If the user asks only to make Codex read `CLAUDE.md` or `.claude/skills`, skip
+the install workflow and use the Codex Bridge section.
+
 ## Source Root
 
 For install/update requests, find the source root by walking up from `cwd` and
@@ -46,20 +60,6 @@ requested bridge step.
    backup, copy assets (incl. the `create-*` prune list), install wisdom,
    merge the hooks block, external tools, verify. NEVER restate or fork those
    steps here; that file is the only source of truth and copies drift.
-
-## Invocation
-
-Users usually invoke:
-
-```text
-Use $kronael-install to install/update Kronael.
-```
-
-If the user says "install kronael" without naming this skill, still run this
-workflow.
-
-If the user asks only to make Codex read `CLAUDE.md` or `.claude/skills`, skip
-the install workflow and use the Codex Bridge section.
 
 ## Codex Bridge
 
