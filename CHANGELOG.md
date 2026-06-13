@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.3.18] — 20260613
+
+> kronael v0.3.18 — Codex installer bridge, codex skill, dockbox -D fix
+>
+> Codex can now install the toolkit, the codex second-opinion skill is in the bundle, and `dockbox -D` can finally reach the docker socket.
+>
+> • Codex installer bridge — one `kronael-install` skill runs the canonical installer; no bundle duplication
+> • `codex` skill replaces the near-identical `oracle`, pinned to the newest model at high effort
+> • `dockbox -D` socket fix — the runtime user now keeps the docker group across the privilege drop
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Codex installer bridge — `plugins/kronael/` (thin `.codex-plugin` exposing one
+  `kronael-install` skill) + `.agents/plugins/marketplace.json`. The skill
+  follows the canonical `kronael/install/SKILL.md`; it never duplicates the
+  bundle. Includes Codex project-compat notes (`CLAUDE.md` fallback,
+  `.claude/skills` → `.agents/skills` symlink).
+- `codex` skill in the bundle — drives the codex CLI for a second opinion,
+  pinned to the account's newest model at high effort.
+
+### Changed
+
+- `codex` replaces the near-identical `oracle` as the bundle's second-opinion
+  skill; `scavenge` rewired `oracle` → `codex`.
+
+### Fixed
+
+- `dockbox -D`: the runtime user lost the docker socket group on the `gosu`
+  privilege-drop (numeric `uid:gid` skips `initgroups`). `dockbox-init` now adds
+  the user to each `--group-add` gid in `/etc/group` and drops via
+  `gosu "$USERNAME"`. Verified on a fresh image. Also fixed two latent
+  cold-build breakers: `uv tool install` one-tool-per-call, gitleaks
+  `v9.1.0`/`amd64` → `8.30.1`/`x64`.
+
 ## [v0.3.17] — 20260612
 
 > kronael v0.3.17 — skill routers, CI, and three new skills
