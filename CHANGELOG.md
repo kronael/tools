@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.3.20] — 20260613
+
+> kronael v0.3.20 — Codex install exposes skills
+>
+> Codex installs now bridge the installed Kronael skills into Codex, so `/skills` shows the toolkit instead of only the installer.
+>
+> • Codex install auto-links `~/.agents/skills` to installed `~/.claude/skills`
+> • Existing `~/.agents/skills` dirs get per-skill symlinks instead of replacement
+> • Source discovery uses Codex marketplace snapshots, not the bridge-only plugin cache
+> • Installer drift preflight protects local edits before overwrite
+> • PostToolUse nudge state moved into the repo git dir
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Codex install now runs the global skills bridge after the canonical Claude install, exposing installed Kronael skills and their scripts through `~/.agents/skills`
+- Existing `~/.agents/skills` directories are preserved; the bridge adds per-skill symlinks for source-owned Kronael skills and reports conflicts
+- `kronael-install` source discovery now checks Codex marketplace snapshots and avoids treating the bridge-only plugin cache as the bundle source
+- README, AGENTS.md, ARCHITECTURE.md, and plugin metadata now state that the Codex plugin contains only `kronael-install`
+- Install procedure adds a fast drift preflight before backup/copy so installed-side edits are surfaced before overwrite
+- `post_tool_nudge.sh` stores throttle state in the current repo git dir instead of shared `~/.claude/tmp`
+
 ## [v0.3.19] — 20260613
 
 > kronael v0.3.19 — Codex bridge skill polish
