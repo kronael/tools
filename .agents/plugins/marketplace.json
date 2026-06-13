@@ -1,7 +1,7 @@
 {
-  "name": "kronael-local",
+  "name": "kronael",
   "interface": {
-    "displayName": "Kronael Local"
+    "displayName": "Kronael"
   },
   "plugins": [
     {
