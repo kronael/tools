@@ -34,12 +34,14 @@ identical.
 `plugins/kronael/.codex-plugin/plugin.json` via
 `.agents/plugins/marketplace.json`. The only Codex skill is
 `plugins/kronael/skills/kronael-install/SKILL.md`; it reads
-`kronael/install/SKILL.md` and runs the manual path. It does not duplicate the
-bundle into Codex.
+`kronael/install/SKILL.md` from the GitHub marketplace snapshot and deploys the
+bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
 
-The Codex bridge needs the full source checkout visible at install time. If a
-plugin cache exposes only `plugins/kronael/`, the skill asks for the checkout
-path instead of copying bundle files into the plugin.
+Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
+skills available inside Codex, the install bridge exposes them with
+`~/.agents/skills -> ~/.claude/skills` when possible. If
+`~/.agents/skills` already exists as a directory, it adds per-skill symlinks
+for source-owned Kronael skills.
 
 The procedure is documented in
 [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
@@ -57,6 +59,8 @@ them:
   `CLAUDE.md`, because Codex loads at most one instruction file per directory.
 - Project `.claude/skills`: expose them to Codex with
   `.agents/skills -> ../.claude/skills` symlinks when requested.
+- Global installed Kronael skills: expose them to Codex with
+  `~/.agents/skills -> ~/.claude/skills` when requested.
 
 ## Why hybrid (plugin + install step)
 

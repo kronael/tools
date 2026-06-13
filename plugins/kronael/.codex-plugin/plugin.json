@@ -1,6 +1,6 @@
 {
   "name": "kronael",
-  "version": "0.3.19",
+  "version": "0.3.20",
   "description": "Installer bridge for the Kronael Claude Code toolkit.",
   "author": {
     "name": "Ondrej Vostal"
@@ -11,7 +11,7 @@
   "interface": {
     "displayName": "Kronael",
     "shortDescription": "Install the Kronael Claude Code toolkit from Codex.",
-    "longDescription": "Runs the canonical installer and deploys the Claude Code bundle into ~/.claude/.",
+    "longDescription": "Runs the canonical installer, deploys the Claude Code bundle into ~/.claude/, and exposes installed skills to Codex through ~/.agents/skills.",
     "developerName": "Ondrej Vostal",
     "category": "Productivity",
     "capabilities": ["Write"],

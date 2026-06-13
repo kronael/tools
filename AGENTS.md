@@ -29,7 +29,8 @@ settings, report. Its Rules section (backup first, never-touch list, no
 deletions) applies verbatim. Below are only the Codex-specific deltas.
 
 - `/kronael:install` is a Claude Code slash command — you can't run it
-  from Codex. Run the manual path from the repo root.
+  from Codex. Run the canonical installer from the source root discovered by
+  the bridge.
 - The bundle is Claude Code config: hooks fire on Claude Code lifecycle
   events, skills use Claude Code auto-activation. Codex doesn't use it —
   Codex is the installer, deploying to `~/.claude/` for the user's
@@ -38,33 +39,35 @@ deletions) applies verbatim. Below are only the Codex-specific deltas.
   `plugins/kronael/skills/kronael-install/SKILL.md`; keep install behavior in
   `kronael/install/SKILL.md` and update the bridge only when Codex-specific
   translation changes.
+- Installing from Codex deploys the Claude bundle to `~/.claude/`, then
+  exposes those installed skills to Codex through `~/.agents/skills`. The
+  plugin cache still contains only the bridge skill.
 
 ## Codex plugin usage
 
-Published marketplace path:
+GitHub marketplace path:
 
 ```sh
 codex plugin marketplace add kronael/tools
+codex plugin add kronael@kronael
 ```
 
-Local checkout path: run Codex from the repo root. Codex can discover
-`.agents/plugins/marketplace.json`, which points at `plugins/kronael/`.
-If it does not show in `/plugins`, run:
-
-```sh
-codex plugin marketplace add <repo-root>
-```
-
-Install `kronael` from `/plugins`, then invoke:
+Then start a fresh Codex thread and invoke:
 
 ```text
 Use $kronael-install to install/update Kronael.
 ```
 
-Bridge-only invocation:
+Bridge-only invocation (for repair or existing installs):
 
 ```text
 Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
+```
+
+Global installed-skill bridge:
+
+```text
+Use $kronael-install to bridge .claude/skills into Codex.
 ```
 
 Codex compatibility for Claude projects:
@@ -75,17 +78,24 @@ Codex compatibility for Claude projects:
   `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink
   `.agents/skills -> ../.claude/skills` instead of copying.
+- To expose globally installed Kronael skills to Codex, symlink
+  `~/.agents/skills -> ~/.claude/skills` when possible; if
+  `~/.agents/skills` is already a directory, add per-skill symlinks for
+  source-owned Kronael skills. Codex does not scan `~/.claude/skills`
+  directly.
 
-If `$kronael-install` cannot find the source root, give it the full
-`kronael/tools` checkout path. NEVER make the bridge copy source bundle files
-into `plugins/kronael/`.
+If `$kronael-install` cannot find the source root, refresh the GitHub
+marketplace with `codex plugin marketplace upgrade kronael` (or
+`kronael-local` for older installs). NEVER make the bridge copy source bundle
+files into `plugins/kronael/`.
 
 Shell translations for the non-obvious steps:
 
 **Copy skills, skipping `global/`** (its body becomes the wisdom file;
 copying it as a skill too would duplicate always-loaded content). NEVER
-`rm -rf ~/.claude/skills/` first — `cp -r` overwrites matching files and
-leaves user-added ones alone:
+`rm -rf ~/.claude/skills/` first. Run the sync protocol from
+`kronael/install/SKILL.md` before this copy so local installed edits are
+merged or explicitly overwritten, never clobbered silently:
 
 ```sh
 for d in skills/*/; do

@@ -22,15 +22,7 @@ External tools used by the Claude Code config:
 
 ## Claude Code toolkit
 
-**Quickest path** — clone the repo, open Claude Code at the root, say **"install"**:
-
-```sh
-git clone https://github.com/kronael/tools /tmp/kronael
-cd /tmp/kronael
-claude   # then type: install
-```
-
-**Plugin path** — if you prefer the marketplace:
+**Claude plugin path**:
 
 ```
 /plugin marketplace add kronael/tools
@@ -38,10 +30,10 @@ claude   # then type: install
 /kronael:install
 ```
 
-Both paths run [`kronael/install/SKILL.md`](kronael/install/SKILL.md), the
-single source of truth for the procedure. The install step exists so your
-`~/.claude/` becomes a working copy you can edit and PR back — a pure plugin
-would overwrite your edits on every update. Full rationale:
+This runs [`kronael/install/SKILL.md`](kronael/install/SKILL.md), the single
+source of truth for the procedure. The install step exists so your
+`~/.claude/` becomes a working copy you can edit and PR back; pure plugin
+updates would overwrite edits. Full rationale:
 [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--install-step).
 
 ## Codex installer bridge
@@ -49,16 +41,20 @@ would overwrite your edits on every update. Full rationale:
 Codex does not run Claude Code slash commands, but it can install this same
 Claude bundle. The Codex plugin exposes one skill, `kronael-install`, whose job
 is to read [`kronael/install/SKILL.md`](kronael/install/SKILL.md) and run the
-manual install path from the repo root.
+install path from the GitHub marketplace snapshot.
 
-Published plugin path:
+The Codex plugin is only the installer bridge. It contains one Codex skill
+(`kronael-install`); the Kronael bundle installs to `~/.claude/`, then the
+bridge exposes those installed skills to Codex through `~/.agents/skills`.
+
+**Codex plugin path**:
 
 ```sh
 codex plugin marketplace add kronael/tools
+codex plugin add kronael@kronael
 ```
 
-Then open Codex, install `kronael` from `/plugins`, start a fresh thread, and
-ask:
+Then start a fresh Codex thread and ask:
 
 ```text
 Use $kronael-install to install/update Kronael.
@@ -70,25 +66,21 @@ The same skill also handles bridge-only setup:
 Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
 ```
 
-Local checkout path:
+The bridge does not duplicate `skills/`, `agents/`, or `hooks/` into the Codex
+plugin cache. It reads the GitHub marketplace snapshot, deploys the Claude
+bundle into `~/.claude/`, and symlinks the installed skills into Codex's user
+skill location.
 
-```sh
-git clone https://github.com/kronael/tools <path>
-cd <path>
-codex
+To repair or apply only the Codex side of that bridge, ask:
+
+```text
+Use $kronael-install to bridge .claude/skills into Codex.
 ```
 
-Codex can discover the repo marketplace at `.agents/plugins/marketplace.json`;
-it points at `plugins/kronael/`. If the local marketplace does not appear in
-`/plugins`, add the checkout explicitly:
-
-```sh
-codex plugin marketplace add <path>
-```
-
-The bridge does not duplicate `skills/`, `agents/`, or `hooks/` into Codex.
-The installer needs the full checkout visible so it can read
-`kronael/install/SKILL.md` and copy the source bundle.
+That links `~/.agents/skills` to `~/.claude/skills` when possible. If
+`~/.agents/skills` already exists as a directory, the bridge adds per-skill
+symlinks for Kronael skills instead. Codex scans `~/.agents/skills`, not
+`~/.claude/skills`.
 
 Codex compatibility for Claude projects:
 
@@ -101,9 +93,11 @@ Codex compatibility for Claude projects:
 
 Troubleshooting:
 
-- Plugin installed but install cannot start: launch Codex from the full
-  `kronael/tools` checkout or give `$kronael-install` that checkout path.
-- `kronael` missing from `/plugins`: restart Codex after adding the marketplace.
+- `kronael` missing from Codex: run `codex plugin marketplace upgrade kronael`
+  (or `kronael-local` for older installs), then
+  `codex plugin add kronael@kronael`.
+- Kronael skills missing in Codex after install: run the bridge prompt above,
+  then start a new Codex thread and open `/skills`.
 - Claude hooks missing after install: rerun `$kronael-install`; it merges hook
   wiring from `settings-recommended.json`.
 
