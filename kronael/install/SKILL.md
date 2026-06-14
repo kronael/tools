@@ -28,8 +28,15 @@ When local installed edits exist, install becomes a merge workflow.
 
 - ALWAYS run a quiet checksum/`cmp` drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
-- If installed copies differ or are newer, ALWAYS show a diff summary and ask:
-  sync back to repo, overwrite from source, or skip that path.
+- **Determine direction automatically** for every differing file — compare
+  content (`cmp`) AND mtime (installed vs source):
+  - **source-newer** (installed mtime ≤ source, content differs): this is a
+    normal update where the repo advanced. Overwrite silently — do NOT ask.
+    A uniform installed mtime across the differing set (one prior-install
+    timestamp) confirms no hand-edits.
+  - **installed-newer** (installed mtime > source): a real local edit may
+    exist. ONLY here show a diff summary and ask: sync back to repo,
+    overwrite from source, or skip that path.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
 
