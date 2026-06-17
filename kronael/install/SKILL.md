@@ -98,6 +98,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    | `pyright` | `bun install -g pyright` | /py /ts /tsx |
    | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
    | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
+   | `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
+
+   `rm` the `sg` shim — it shadows shadow-utils' `/usr/bin/sg`; the canonical
+   binary is `ast-grep`.
 
    **Security audit** — ask separately (large, optional):
    | Tool | Command | Skills |
