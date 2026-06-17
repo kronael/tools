@@ -75,8 +75,9 @@ authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`) — patterns for a kind of program.
-  They compose with language skills: a Rust CLI loads `rs` + `cli`.
+  `testing`, `browse`, `diagrams`, `astgrep`) — patterns for a kind of
+  program or tool. They compose with language skills: a Rust CLI loads
+  `rs` + `cli`; a structural codemod loads `astgrep` + the target language.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
