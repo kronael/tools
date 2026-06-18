@@ -1,7 +1,7 @@
 ---
 name: sonnet
-description: /sonnet — launch a background subagent at sonnet+high effort. Coding, exploration, pre-review, flagging, template-filling. NOT for routine mechanical tasks (use /haiku).
-when_to_use: "do this in a sonnet sub", "spawn a sonnet sub", "use sonnet", explore, pre-review, flagging, template, coding, exploration, investigation, feature implementation, bug fix, multi-file change, write tests, add coverage, refactor a module, analyze codebase, sonnet sub
+description: /sonnet — launch a background subagent at sonnet+high effort. Investigation, bug hunting, simplification sweeps, pre-review, read-only analysis. NOT for implementing changes (use /opus) or mechanical single-file work (use /haiku).
+when_to_use: "do this in a sonnet sub", "spawn a sonnet sub", "use sonnet", explore, pre-review, flagging, investigation, bug hunt, find bugs, find simplification, survey codebase, analyze codebase, code review, read-only analysis, find places to clean up, sonnet sub
 user-invocable: true
 ---
 
@@ -9,9 +9,9 @@ Launch the prompt after /sonnet as a background general-purpose agent (run_in_ba
 Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /sonnet without being asked when the task is:
-- Multi-file feature implementation or bug fix
-- Test coverage, module refactor, code exploration with analysis
-- Anything with design judgment on concrete code (not architecture)
+- Bug hunt, find simplification opportunities, pre-review sweep
+- Read-only codebase analysis, survey, or audit
+- Flag issues before implementing (scout, not executor)
 
 NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.

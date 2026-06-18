@@ -12,20 +12,20 @@ Report which tier was chosen and why. Continue immediately without waiting.
 
 ALWAYS pick exactly one tier before launching. Be explicit about the choice.
 
-**haiku** — single-file mechanical work:
+**haiku** — single-file mechanical work, no judgment needed:
 - Find-and-replace, rename, typo fix, add a constant, swap a class name
 - Grep + summarize (read-only, one file/area)
 - Boilerplate: test stub, repetitive struct, constant list
 
-**sonnet** — multi-file coding, clear spec:
-- Feature implementation, bug fix, test coverage, module refactor
-- Code exploration + analysis across files
-- Anything with design judgment on concrete code
+**sonnet** — investigation, hunting, analysis:
+- Find bugs, find simplification opportunities, survey the codebase
+- Pre-review: flag issues before implementing
+- Exploration with no code changes; read-only analysis across files
 
-**opus** — design decisions, deep analysis:
-- Architecture decision, new protocol, security review
-- Cross-cutting concerns, ambiguous requirements needing synthesis
-- Spec writing, threat modeling, cross-package refactors with no clear path
+**opus** — implementation, execution:
+- Multi-file feature implementation, applying fixes, writing code
+- Architecture decisions + executing them, cross-package refactors
+- Security review + implementing the hardening
 
 ## Launch rules
 
