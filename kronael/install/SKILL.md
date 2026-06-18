@@ -9,23 +9,11 @@ Deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the use
 
 ## Source location
 
-Detect which path is active before doing anything else:
+Source root: `CLAUDE_PLUGIN_ROOT` if set and assets exist there; else CWD.
+Stop if neither has assets — report which path to use.
 
-1. **Plugin path** — check if `CLAUDE_PLUGIN_ROOT` env var is set AND the
-   required assets exist under it. If yes, use it as source root.
-2. **Manual path** — CWD contains the required assets (user opened Claude Code
-   at the cloned repo root). Use CWD as source root.
-3. **Neither** — report: "Can't find source assets. Either set
-   `CLAUDE_PLUGIN_ROOT` or open Claude Code from the cloned repo root."
-
-Also check `~/.claude/plugins/installed_plugins.json` for a `kronael@*` entry:
-- **Found**: plugin is registered — note the `installPath` and version. The
-  `Skill` tool can invoke `kronael:install` to re-run this skill.
-- **Not found**: plugin is not registered — note this is manual-path only.
-  The `Skill("kronael:install")` trigger will fail (no plugin namespace);
-  the user must say "install" or "update" in this repo.
-
-ALWAYS report both findings (source path + plugin status) before proceeding.
+Check `~/.claude/plugins/installed_plugins.json` for `kronael@*`: if absent,
+note that `Skill("kronael:install")` won't resolve — user must say "install" here.
 
 ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
