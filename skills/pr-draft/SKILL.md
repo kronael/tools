@@ -32,9 +32,13 @@ Types: `fix` `feat` `refactor` `docs` `chore`
 No bullets, no "This PR...", no test plans or checklists.
 Prose follows the `writing` skill's copy rules.
 
+ALWAYS output the draft (title + body) in one fenced code block so it is easy
+to copy.
+
 Example:
 ```
-Extends dockbox with full headless browser support.
+[feat] Extend dockbox with full headless browser support
+
 Playwright installs as root with --with-deps, replacing 15 manually-listed Chrome libs.
 agent-browser CLI, playwright chromium, and puppeteer chrome are baked into the image.
 

@@ -46,12 +46,12 @@ the diff visible.
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
 
-## Shortcuts (fin, sub)
+## Shortcuts (fin, dispatch)
 
 Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
-- **sub**: "spawn this prompt as a background subagent and continue"
+- **dispatch**: "spawn this prompt as a background subagent and continue"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
