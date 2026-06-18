@@ -1,7 +1,7 @@
 ---
 name: fin
 description: /fin — finish mode, no confirmation stops. NOT for a single command (just run it).
-when_to_use: "finish this", "keep going", "don't stop", "just do it"
+when_to_use: "finish this, keep going, don't stop, just do it"
 user-invocable: true
 ---
 

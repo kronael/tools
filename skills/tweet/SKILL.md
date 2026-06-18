@@ -1,7 +1,7 @@
 ---
 name: tweet
 description: Write X/Twitter threads. NOT for product copy or marketing prose.
-when_to_use: "draft a tweet thread", "write a thread about X"
+when_to_use: "draft a tweet thread, write a thread about X"
 user-invocable: true
 ---
 

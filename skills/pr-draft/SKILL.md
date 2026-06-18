@@ -1,7 +1,7 @@
 ---
 name: pr-draft
 description: Draft a PR description. NOT for commit messages (use commit).
-when_to_use: "draft a PR", "open a PR"
+when_to_use: "draft a PR, open a PR"
 user-invocable: true
 ---
 

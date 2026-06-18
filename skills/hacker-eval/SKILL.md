@@ -1,6 +1,6 @@
 ---
 name: hacker-eval
-description: Use when evaluating a codebase or project from a security researcher / red-team perspective. Triggers on: "security review", "pentest this", "hacker evaluation", "is this safe to run", "attack surface", "can I trust this dependency", security audit before adopting open-source code.
+description: "Use when evaluating a codebase or project from a security researcher / red-team perspective. Triggers on: \"security review\", \"pentest this\", \"hacker evaluation\", \"is this safe to run\", \"attack surface\", \"can I trust this dependency\", security audit before adopting open-source code."
 ---
 
 # Hacker Eval

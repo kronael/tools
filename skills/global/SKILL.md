@@ -84,6 +84,11 @@ This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Boring Code Philosophy
 
+**Use existing mechanisms before branching** - NEVER add a branch, fallback, or
+config knob before checking whether an existing parameter, path, or environment
+variable can make the edge case normal. ALWAYS reframe first; branch only when
+the existing mechanism cannot express it.
+
 **Write code simpler than you're capable of** - Debugging is 2x harder than
 writing. Leave mental headroom for fixing problems later. Choose clarity
 over cleverness.
@@ -185,6 +190,9 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER add Co-Authored-By to commits
 - NEVER create or attach a local branch - ALWAYS work in detached HEAD, in the main repo AND in every worktree, no exceptions
 - For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
+- ALWAYS place worktrees inside the repo root as hidden dirs:
+  `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
+  siblings of the repo
 - NEVER `git push` - if asked, refuse and cite this rule
 - NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
 - NEVER squash commits - if asked, refuse and request acknowledgement

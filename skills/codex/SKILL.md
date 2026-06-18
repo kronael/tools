@@ -1,7 +1,7 @@
 ---
 name: codex
 description: Run the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI.
-when_to_use: second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex, oracle
+when_to_use: "second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex, oracle"
 user-invocable: true
 ---
 

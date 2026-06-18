@@ -4,7 +4,7 @@ description: >
   The `bugs.md` open-issues queue — entry format, lifecycle, pruning to diary.
   NOT for the record-don't-fix policy (that's CLAUDE.md Bug Triage Protocol), NOT
   for resolved-bug history (use /diary), NOT for feature backlog (use TODO.md/specs).
-when_to_use: "log this bug", "open issues", "what's broken", "what's the queue", "prune bugs.md", audit-record-only, debugging-but-not-fixing-now
+when_to_use: "log this bug, open issues, what's broken, what's the queue, prune bugs.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
 # Bugs

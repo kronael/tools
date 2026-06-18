@@ -1,7 +1,7 @@
 ---
 name: explore
 description: /explore — read and answer only, no code modifications. NOT for making changes (use improve).
-when_to_use: "just answer", "don't touch anything", "explain this", "read only", "stop modifying"
+when_to_use: "just answer, don't touch anything, explain this, read only, stop modifying"
 user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 ---

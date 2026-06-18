@@ -1,7 +1,7 @@
 ---
 name: create-eval
 description: Generate project-specific eval skill. NOT for running existing evals.
-when_to_use: "create eval", create eval criteria, scaffold eval skill
+when_to_use: "create eval, create eval criteria, scaffold eval skill"
 user-invocable: true
 ---
 

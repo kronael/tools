@@ -1,7 +1,7 @@
 ---
 name: visual
 description: /visual — UI and styling via headful browser. NOT for general code (use improve).
-when_to_use: SVG/CSS/UI tweaks, components, landing pages, dashboards, "improve the UI", "fix the styling", "beautify"
+when_to_use: "SVG/CSS/UI tweaks, components, landing pages, dashboards, improve the UI, fix the styling, beautify"
 user-invocable: true
 ---
 

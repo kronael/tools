@@ -1,7 +1,7 @@
 ---
 name: eye-13yo
 description: UX walkthrough of a web app from a 13-year-old novice's eyes (with manual access). NOT for functional/e2e testing (use testing) or visual polish (use visual).
-when_to_use: UX walkthrough, novice walkthrough, "test as a 13yo", "see this with fresh eyes", "find what's confusing", evaluate-as-new-user, dashboard usability pass, screen-by-screen UX evaluation, find jargon and intimidation
+when_to_use: "UX walkthrough, novice walkthrough, test as a 13yo, see this with fresh eyes, find what's confusing, evaluate-as-new-user, dashboard usability pass, screen-by-screen UX evaluation, find jargon and intimidation"
 user-invocable: true
 ---
 

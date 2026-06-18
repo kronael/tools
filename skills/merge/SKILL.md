@@ -1,7 +1,7 @@
 ---
 name: merge
 description: Resolve git merge conflicts. NOT for ambiguous semantic conflicts (resolve manually).
-when_to_use: git merge conflicts, "resolve conflicts", "fix merge conflicts"
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts"
 user-invocable: true
 ---
 
