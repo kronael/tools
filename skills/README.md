@@ -81,8 +81,9 @@ the authoritative entry. The categories:
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
   scaffolding, second opinions, codifying public best practice.
-- **Escalation + shortcuts** (`sub`, `fin`) — model routing and
-  macro aliases. `sub` accepts an optional tier prefix (haiku/sonnet/opus/fable).
+- **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
+  routing and macro aliases. Each model tier has its own skill; `dispatch` is
+  fire-and-forget at default model.
 - **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
   judge a codebase or practice from a fixed perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
@@ -115,8 +116,8 @@ Side-channels (escalation, communication) fire at any stage.
                │
 ┌─ coding ─────▼──────────────┐
 │ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data trader         ├────────►│ sub (haiku/sonnet/  │
-└──────────────┬──────────────┘         │  opus/fable) fin    │
+│ service data trader         ├────────►│ haiku sonnet opus   │
+└──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review code-review improve  │
@@ -146,8 +147,8 @@ them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. Use `/sub haiku`, `/sub sonnet`,
-`/sub opus`, or `/sub fable` for increasing capability. `fin` for no-confirmation runs.
+**escalation** — route to the right model/mode from any stage. `/haiku` → `/sonnet` → `/opus` → `/fable`
+for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
 
 ## Working with skills
 
