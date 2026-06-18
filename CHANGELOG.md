@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.24] — 20260618
+
+> kronael v0.3.24 — eval skill polish
+>
+> /ceo-eval and /cto-eval checklists moved to sibling files; SKILL.md bodies are now workflow-only. Minor ALWAYS/NEVER fixes across model-tier skills.
+>
+> • /ceo-eval and /cto-eval: checklist bodies moved to checklist.md sibling files
+> • SKILL.md for each eval skill is now <10 lines — workflow dispatch only
+> • haiku/sonnet/fable: REJECT/Do NOT → NEVER/ALWAYS
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/ceo-eval` and `/cto-eval` checklists (tables, verdict templates, decision rubrics) moved to `checklist.md` sibling files; SKILL.md reduced to workflow-only dispatch per wisdom rules
+- `NEVER`/`ALWAYS` discipline applied to `/haiku`, `/sonnet`, `/fable` (replaced `REJECT` and `Do NOT`)
+
 ## [v0.3.23] — 20260618
 
 > kronael v0.3.23 — model-tier skills restored; /dispatch replaces /sub
