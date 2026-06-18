@@ -12,7 +12,8 @@
       "Bash(git commit*)",
       "Bash(gh pr comment*)",
       "Bash(gh api repos/*/pulls/*/reviews*)",
-      "Bash(gh api repos/*/pulls/*/comments*)"
+      "Bash(gh api repos/*/pulls/*/comments*)",
+      "Bash(rsync * ~/.claude/*)"
     ],
     "deny": [
       "Bash(rm -r*)",
