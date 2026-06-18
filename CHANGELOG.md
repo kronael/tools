@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.25] — 20260618
+
+> kronael v0.3.25 — /sub fully removed
+>
+> The old /sub skill file is deleted and its "spawn a sub" trigger cleaned from /dispatch. No stray references remain.
+>
+> • `skills/sub/SKILL.md` deleted from repo
+> • /dispatch when_to_use: "spawn a sub" → "background agent"
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Deleted `skills/sub/SKILL.md` — the rename to `/dispatch` is now complete in git history
+- Removed "spawn a sub" trigger from `/dispatch` `when_to_use`; replaced with "background agent"
+
 ## [v0.3.24] — 20260618
 
 > kronael v0.3.24 — eval skill polish
