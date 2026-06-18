@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/. Copies skills, agents, hook scripts; merges hook wiring and recommended settings; installs the wisdom skill body as ~/.claude/CLAUDE.md. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install. NOT for installing the CLI tools dockbox/rig/clp (use their own Makefile).
+description: Install (or update) the Kronael toolkit into ~/.claude/. Copies skills, agents, hook scripts; merges hook wiring and recommended settings; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
 ---
 
 # Install Kronael toolkit
@@ -28,10 +28,39 @@ When local installed edits exist, install becomes a merge workflow.
 
 - ALWAYS run a quiet checksum/`cmp` drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
-- If installed copies differ or are newer, ALWAYS show a diff summary and ask:
-  sync back to repo, overwrite from source, or skip that path.
+- **Determine direction automatically** for every differing file — compare
+  content (`cmp`) AND mtime (installed vs source):
+  - **source-newer** (installed mtime ≤ source, content differs): this is a
+    normal update where the repo advanced. Overwrite silently — do NOT ask.
+    A uniform installed mtime across the differing set (one prior-install
+    timestamp) confirms no hand-edits.
+  - **installed-newer** (installed mtime > source): a real local edit may
+    exist. ONLY here show a diff summary and ask: sync back to repo,
+    overwrite from source, or skip that path.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
+
+## Plan & consent
+
+Detect first-time vs update: a **new install** = neither `~/.claude/CLAUDE.md`
+nor `~/.claude/skills/` exists yet. An **update** = either already exists.
+
+- **New install**: BEFORE any copy, explain what install does in 2-3 lines,
+  then present a questionnaire so the user opts into each group. On Claude use
+  AskUserQuestion (multiSelect); on Codex list numbered options and ask the
+  user to reply with their picks. Groups:
+  - **Bundle** (skills + agents + hooks + wisdom file → `~/.claude/`) — the
+    core; default on. Nothing else is useful without it.
+  - **Settings restrictions** — permissions, sandbox, env (step 4).
+  - **External tools** — ship, agent-browser, codex, pyright, LSP servers,
+    pre-commit (step 5 core batch).
+  - **CLI tools** — rig, udfix, clp (step 6).
+  - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 6).
+  - **Heavy/optional** — security-audit + video tools (step 5 separate asks).
+  Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
+- **Update**: skip the questionnaire. Proceed with the per-step asks the steps
+  already define (settings and tools still confirm before installing). NEVER
+  replay the full questionnaire on every re-run.
 
 ## Steps
 
@@ -88,7 +117,25 @@ When local installed edits exist, install becomes a merge workflow.
    |------|---------|--------|
    | `faster-whisper` | `uv tool install faster-whisper` | /create (video render) |
 
-6. **Report**: summary — fast drift result, X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
+6. **CLI tools** — install the repo's standalone CLI tools so their binaries
+   in `~/.local/bin` track the repo (a stale binary is the failure this step
+   prevents). ONLY possible when the tool's source dir exists at the source
+   root (the cloned/manual path; the Codex marketplace snapshot has them too).
+   A plugin-only snapshot omits them — then say so and point to
+   `cd <tool> && make install` from a clone. For each opted-in tool run its
+   Makefile — idempotent, so ALWAYS (re)install to refresh a stale binary:
+
+   | Tool | Command | Notes |
+   |------|---------|-------|
+   | `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim/riq |
+   | `udfix` | `cd udfix && make install` | needs a Go toolchain |
+   | `clp` | `cd clp && make install` | sourceable bash; prints how to source it |
+   | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
+
+   NEVER fail the whole install if one tool's toolchain is missing — report
+   that tool as skipped and continue.
+
+7. **Report**: summary — fast drift result, X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools, CLI tools installed/skipped. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
 
 ## Rules
 

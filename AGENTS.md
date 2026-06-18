@@ -23,10 +23,13 @@ tool inventory:
 ## Installing the toolkit from Codex
 
 Follow the canonical procedure in
-[`kronael/install/SKILL.md`](kronael/install/SKILL.md) step by step —
-verify source, backup, copy assets, install the wisdom file, merge
-settings, report. Its Rules section (backup first, never-touch list, no
-deletions) applies verbatim. Below are only the Codex-specific deltas.
+[`kronael/install/SKILL.md`](kronael/install/SKILL.md) step by step — on a
+new install present its plan/consent questionnaire first, then verify source,
+backup, copy assets, install the wisdom file, merge settings, install the
+opted-in CLI tools (rig/udfix/clp/dockbox via their Makefiles — the
+marketplace snapshot carries their source dirs), report. Its Rules section
+(backup first, never-touch list, no deletions) applies verbatim. Below are
+only the Codex-specific deltas.
 
 - `/kronael:install` is a Claude Code slash command — you can't run it
   from Codex. Run the canonical installer from the source root discovered by

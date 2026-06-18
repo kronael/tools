@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.21] — 20260618
+## [v0.3.22] — 20260618
 
-> kronael v0.3.21 — /sub absorbs model-tier skills
+> kronael v0.3.22 — /sub absorbs model-tier skills
 >
 > Four separate model-routing skills (haiku, sonnet, opus, fable) are gone. Use `/sub haiku`, `/sub sonnet`, `/sub opus`, or `/sub fable` instead — one skill, same dispatch.
 >
@@ -15,6 +15,23 @@
 - `/sub` extended with optional model-tier prefix dispatch (haiku → `model: "haiku"`; sonnet/opus/fable → `subagent_type` pinning effort via agent definitions)
 - Removed `/haiku`, `/sonnet`, `/opus`, `/fable` skills — all model routing goes through `/sub`
 - `skills/README.md` updated to reflect consolidated escalation path
+
+## [v0.3.21] — 20260614
+
+> kronael v0.3.21 — Install reaches the CLI tools
+>
+> Install now also refreshes the standalone CLI tools and walks first-time users through what gets installed.
+>
+> • Install (re)installs rig, udfix, clp, dockbox so the binaries stop drifting from the repo
+> • First-time installs get a questionnaire to opt into each group; re-runs skip it
+> • Drift check updates repo-advanced files silently, asking only when you have local edits
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Install now (re)installs the standalone CLI tools (rig, udfix, clp, dockbox) via their Makefiles, so `~/.local/bin` binaries track the repo instead of going stale
+- First-time installs present a plan/consent questionnaire (Claude AskUserQuestion, Codex numbered options) to opt into each install group; updates skip it
+- Drift preflight auto-detects direction: source-newer files overwrite silently (normal repo-advanced update); only genuinely installed-newer edits trigger the sync-back prompt
+- Codex bridge skill and AGENTS.md kept in sync with the canonical installer
 
 ## [v0.3.20] — 20260613
 

@@ -1,6 +1,6 @@
 ---
 name: kronael-install
-description: Install/update Kronael; bridge CLAUDE.md/.claude/skills into Codex. NOT for CLI tools (use Makefiles).
+description: Install/update Kronael (bundle + CLI tools rig/udfix/clp/dockbox); bridge CLAUDE.md/.claude/skills into Codex.
 ---
 
 # Kronael Install
@@ -67,11 +67,13 @@ requested bridge step.
 2. Follow it as the source of truth.
 3. Treat the discovered source root as the canonical install source. NEVER run
    `/kronael:install`; that is a Claude Code slash command.
-4. Execute the canonical installer's steps exactly as written there —
-   sync protocol, backup, copy assets (incl. the `create-*` prune list),
-   install wisdom, merge the hooks block, external tools, verify. NEVER
-   restate or fork those steps here; that file is the only source of truth and
-   copies drift.
+4. Execute the canonical installer's steps exactly as written there — the
+   new-install plan/consent questionnaire, sync protocol, backup, copy assets
+   (incl. the `create-*` prune list), install wisdom, merge the hooks block,
+   external tools, CLI tools (rig/udfix/clp/dockbox — the marketplace snapshot
+   carries their source dirs), verify. Present the questionnaire inline as
+   numbered options. NEVER restate or fork those steps here; that file is the
+   only source of truth and copies drift.
 5. After successful install from Codex, run the **Global installed skills**
    bridge below so Codex can see the installed skills and their scripts.
    This is part of the Codex install path, not an optional extra.
