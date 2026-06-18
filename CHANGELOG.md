@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.23] — 20260618
+
+> kronael v0.3.23 — model-tier skills restored; /dispatch replaces /sub
+>
+> Each model now has its own skill and agent definition. /haiku, /sonnet, /opus, /fable are back. /sub is renamed /dispatch for generic fire-and-forget. CEO and CTO eval lenses added.
+>
+> • `/haiku` restored — uses `subagent_type: "haiku"` via new agent definition
+> • `/sonnet`, `/opus`, `/fable` restored with consistent `subagent_type` dispatch
+> • `/dispatch` replaces `/sub` — generic background agent, no model override
+> • `/ceo-eval` and `/cto-eval` added — business and technical adoption evaluation
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Restored `/haiku`, `/sonnet`, `/opus`, `/fable` as individual skills; all use `subagent_type` (haiku now has an agent definition pinning the model)
+- Added `agents/haiku.md` — consistent with sonnet/opus/fable agent definitions
+- Renamed `/sub` → `/dispatch` for generic fire-and-forget background work; `/sub` added to install prune list
+- Added `/ceo-eval` (business adoption: ROI, TCO, license risk, lock-in, make-vs-buy) and `/cto-eval` (technical due diligence: build quality, arch, ops readiness, maintenance forecast)
+
 ## [v0.3.22] — 20260618
 
 > kronael v0.3.22 — /sub absorbs model-tier skills
