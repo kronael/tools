@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.21] — 20260618
+
+> kronael v0.3.21 — /sub absorbs model-tier skills
+>
+> Four separate model-routing skills (haiku, sonnet, opus, fable) are gone. Use `/sub haiku`, `/sub sonnet`, `/sub opus`, or `/sub fable` instead — one skill, same dispatch.
+>
+> • `/sub` now accepts an optional tier prefix: haiku/sonnet/opus/fable
+> • haiku uses `model: "haiku"` directly; sonnet/opus/fable use `subagent_type` to pin effort via agent definitions
+> • `/haiku`, `/sonnet`, `/opus`, `/fable` skills removed
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/sub` extended with optional model-tier prefix dispatch (haiku → `model: "haiku"`; sonnet/opus/fable → `subagent_type` pinning effort via agent definitions)
+- Removed `/haiku`, `/sonnet`, `/opus`, `/fable` skills — all model routing goes through `/sub`
+- `skills/README.md` updated to reflect consolidated escalation path
+
 ## [v0.3.20] — 20260613
 
 > kronael v0.3.20 — Codex install exposes skills
