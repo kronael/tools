@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.26] — 20260618
+
+> kronael v0.3.26 — install skill knows when the plugin is missing
+>
+> The install skill now detects whether it's running from a plugin or a cloned repo, and explains why `/kronael:install` won't work when the plugin isn't registered.
+>
+> • Install skill checks `installed_plugins.json` for `kronael@*` before proceeding
+> • Reports missing plugin registration so user knows to say "install" instead
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `kronael/install/SKILL.md`: detect source root (`CLAUDE_PLUGIN_ROOT` vs CWD) and plugin registry status before proceeding; explain `Skill("kronael:install")` failure when plugin absent
+
 ## [v0.3.25] — 20260618
 
 > kronael v0.3.25 — /sub fully removed
