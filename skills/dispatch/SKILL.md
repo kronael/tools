@@ -1,7 +1,7 @@
 ---
 name: dispatch
 description: /dispatch — launch a background subagent at default model. NOT for tasks the main thread needs results from inline; NOT for model-specific work (use /haiku, /sonnet, /opus, /fable).
-when_to_use: "do this in the background, run this separately, do X while I do Y, spawn a sub, dispatch this"
+when_to_use: "do this in the background, run this separately, do X while I do Y, dispatch this, background agent"
 user-invocable: true
 ---
 
