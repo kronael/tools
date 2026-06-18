@@ -11,4 +11,4 @@ Report what was launched. Continue immediately without waiting.
 - ALWAYS use `subagent_type: "haiku"` on the Agent tool.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
-- REJECT multi-step reasoning, ambiguous design calls, or cross-file refactors — escalate to `/sonnet` or `/dispatch`.
+- NEVER accept multi-step reasoning, ambiguous design calls, or cross-file refactors — ALWAYS escalate to `/sonnet` or `/dispatch`.
