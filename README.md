@@ -100,6 +100,10 @@ Troubleshooting:
   then start a new Codex thread and open `/skills`.
 - Claude hooks missing after install: rerun `$kronael-install`; it merges hook
   wiring from `settings-recommended.json`.
+- Codex says `Skipped loading ... invalid SKILL.md`: run
+  `make skills-frontmatter-fix`, reinstall/bridge with `$kronael-install`,
+  then start a new Codex thread. The lint extracts SKILL.md frontmatter,
+  validates it with PyYAML, and fixes known loose forms Claude Code tolerated.
 
 ### What's in the bundle
 

@@ -35,6 +35,9 @@ When local installed edits exist, install becomes a merge workflow.
 
 ## Steps
 
+0. **Skill lint preflight**. ALWAYS run `make skills-frontmatter` when available.
+   If it reports files, run `make skills-frontmatter-fix` before copying skills.
+
 0. **Fast drift preflight**. Follow the sync protocol for
    `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` before backup/copy.
 
