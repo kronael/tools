@@ -20,6 +20,12 @@ when_to_use: editing .py files or writing Python code
 - NEVER `default_factory=lambda: []` — use `default_factory=list`
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
+- Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
+
+## Naming
+- Functions and methods MUST be verbs: `get_programs()`, `build_index()`, `compute_pnl()`
+- NEVER name a function as a noun: `program_lookup`, `symbol_map`, `client_index` — these read as data, not actions
+- Exception: boolean predicates — `is_funded()`, `has_positions()`, `can_advance()`
 
 ## Properties and accessor overrides
 - NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
