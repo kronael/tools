@@ -6,6 +6,9 @@ when_to_use: editing .py files or writing Python code
 
 # Python
 
+## Verify before claiming
+- ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge. Takes 2 seconds, ends the debate.
+
 ## Version
 - ALWAYS target Python 3.13+, use newest language features
 - `type Alias = int | str` (PEP 695), not `TypeAlias`
@@ -16,6 +19,15 @@ when_to_use: editing .py files or writing Python code
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
+- NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
+
+## Properties and accessor overrides
+- NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
+- They hide computation behind attribute access, break "no surprises" reads, and make grep useless
+- Two legitimate exceptions:
+  1. **Mocking / test doubles** — overriding attribute access on a stub
+  2. **Adapting external/library code** — wrapping an API you don't own that requires property protocol
+- Instead: plain method (`def program_lookup(self)`) or compute once and store on the dataclass field
 
 ## getattr/setattr
 - Legitimate ONLY when the attribute name is a code-derived value (variable, loop var, expression) unknown until runtime
