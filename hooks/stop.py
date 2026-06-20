@@ -9,10 +9,29 @@ from datetime import UTC
 from datetime import datetime
 
 NUDGE_INTERVAL = 600
+HEADER_RECENT = 300
 
 
 def git_run(cwd, *args):
     return subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=cwd, check=False)
+
+
+def append_header(diary_file, hhmm):
+    """Append a blank `## HH:MM` header to today's diary, creating dirs/file.
+
+    Skip if the file already ends with a header newer than HEADER_RECENT,
+    to avoid spamming empty headers on repeated stops.
+    """
+    try:
+        if os.path.exists(diary_file):
+            if datetime.now(tz=UTC).timestamp() - os.path.getmtime(diary_file) < HEADER_RECENT:
+                return
+        else:
+            os.makedirs(os.path.dirname(diary_file), exist_ok=True)
+        with open(diary_file, 'a') as f:
+            f.write(f'\n## {hhmm}\n\n')
+    except OSError:
+        pass
 
 
 def git_path(cwd, name):
@@ -78,10 +97,19 @@ def main():
             git_dir = os.path.join(cwd, git_dir)
         diary_dir = os.path.join(os.path.dirname(git_dir), '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
+        hhmm = now.strftime('%H:%M %Y-%m-%d')
         if not os.path.exists(diary_file):
-            parts.append('No diary entry for today. Consider running /diary.')
+            append_header(diary_file, hhmm)
+            parts.append(
+                f'No diary entry for today (now {hhmm}). Entry header '
+                'appended — fill it in. Run /diary.'
+            )
         elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
-            parts.append('Diary not updated in over an hour. Consider running /diary.')
+            append_header(diary_file, hhmm)
+            parts.append(
+                f'Diary not updated in over an hour (now {hhmm}). '
+                'Entry header appended — fill it in.'
+            )
 
     if parts:
         print(json.dumps({'decision': 'block', 'reason': '\n'.join(parts)}))
