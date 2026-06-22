@@ -19,11 +19,11 @@ only; do not restate the policy.
 
 ## When NOT to record
 
-- User is currently driving a fix — just fix
-- Trivial / one-shot enough that a code comment covers it
-- It's a feature request — goes in `TODO.md` or a new spec
-- An open entry already covers the same root cause — append context to it
-  instead of duplicating
+- NEVER record when user is currently driving a fix — just fix
+- NEVER record trivial / one-shot issues a code comment covers
+- NEVER record feature requests — those go in `TODO.md` or a new spec
+- NEVER duplicate — when an open entry covers the same root cause, append
+  context to it instead
 
 ## Bug ID format
 
@@ -75,9 +75,3 @@ into root `bugs.md` periodically (per release, or on request via `aggregate`):
 
 Scratch files stay as-is; the owner wipes them after merge.
 
-## Pointers
-
-- `.diary/` — resolution log
-- `TODO.md` — forward-looking backlog (features, refactors)
-- `bugs.md` — open-issues queue (this skill)
-- `specs/` — design surface (specs may reference bugs by anchor)

@@ -1,7 +1,7 @@
 ---
 name: oracle
 description: Ask the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI.
-when_to_use: "oracle, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex"
+when_to_use: "oracle, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex. NOT for routine lookups"
 user-invocable: true
 ---
 
@@ -50,7 +50,7 @@ codex login status   # "Logged in using ChatGPT" / "Logged in using API key"
 
 **Path B — env var.** dockbox forwards `OPENAI_API_KEY` and `CODEX_API_KEY` from the host env.
 
-If unavailable, tell the user "codex isn't configured" and continue without it. NEVER crash the turn.
+If unavailable, ALWAYS tell the user "codex isn't configured". NEVER crash the turn.
 
 ## Rules
 

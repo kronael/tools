@@ -7,7 +7,7 @@ when_to_use: editing .py files or writing Python code
 # Python
 
 ## Verify before claiming
-- ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge. Takes 2 seconds, ends the debate.
+- ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge.
 
 ## Version
 - ALWAYS target Python 3.13+, use newest language features
@@ -23,7 +23,7 @@ when_to_use: editing .py files or writing Python code
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
 
 ## Naming
-- Functions and methods MUST be verbs: `get_programs()`, `build_index()`, `compute_pnl()`
+- ALWAYS name functions and methods as verbs: `get_programs()`, `build_index()`, `compute_pnl()`
 - NEVER name a function as a noun: `program_lookup`, `symbol_map`, `client_index` — these read as data, not actions
 - Exception: boolean predicates — `is_funded()`, `has_positions()`, `can_advance()`
 
@@ -46,7 +46,7 @@ when_to_use: editing .py files or writing Python code
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg)
-- Return batches, not yield individual items
+- NEVER yield individual items; ALWAYS return batches
 
 ## Stack
 - aiohttp for clients (HTTP + WS), FastAPI for servers
@@ -70,7 +70,6 @@ when_to_use: editing .py files or writing Python code
 - Exception variables: NEVER `e` — use `ex`, `exc`, `err`
 - Use `async with asynccontextmanager` for resource cleanup, never bare `try/finally` for pools/connections
 - Short vars OK: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; `ts`, `ms` for time; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) also fine
-- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
 - NEVER `sys.path` modification
 - NEVER `global` keyword except trivial scripts or signal handlers
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line

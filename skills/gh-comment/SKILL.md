@@ -26,7 +26,7 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ## Sign-off questionnaire
 
-ALWAYS present each finding to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — list findings in chat and ask "post these? y/n"; wait for explicit reply before any write.
+ALWAYS present each finding to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
 ## Batch inline post
 
