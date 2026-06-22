@@ -34,6 +34,46 @@ function clear() {
   process.stdout.write("\x1b[2J\x1b[H")
 }
 
+// Simulated fzf picker: shows the full branch list, narrows it as the
+// query is typed (subsequence match, like real fzf), then lands the cursor
+// on the picked match. `pick` is an index into the FILTERED list.
+async function fzf(all: string[], query: string, pick: number) {
+  const matches = (b: string, q: string) => {
+    let i = 0
+    for (const ch of b)
+      if (i < q.length && ch === q[i]) i++
+    return i === q.length
+  }
+
+  const draw = (typed: string, cursor: number) => {
+    const shown = all.filter((b) => matches(b, typed))
+    process.stdout.write("\x1b[2J\x1b[H")
+    console.log(`  ${D}${shown.length}/${all.length}${R}`)
+    shown.forEach((b, i) => {
+      if (i === cursor)
+        console.log(`${C}${B}> ${b}${R}`)
+      else
+        console.log(`  ${D}${b}${R}`)
+    })
+    process.stdout.write(`\n${C}>${R} ${typed}`)
+  }
+
+  draw("", 0)
+  await Bun.sleep(900)
+  let typed = ""
+  for (const ch of query) {
+    typed += ch
+    draw(typed, 0)
+    await Bun.sleep(140)
+  }
+  await Bun.sleep(500)
+  for (let i = 1; i <= pick; i++) {
+    draw(typed, i)
+    await Bun.sleep(240)
+  }
+  await Bun.sleep(700)
+}
+
 // ── Title card ───────────────────────────────────────────────────────
 clear()
 await Bun.sleep(400)
@@ -96,13 +136,24 @@ await Bun.sleep(1200)
 note("Each * is a commit. Lines show ancestry. Branch labels are origin pointers.")
 await Bun.sleep(2000)
 
-// ── Section 3: Checkout ──────────────────────────────────────────────
+// ── Section 3: Checkout with fzf ─────────────────────────────────────
 clear()
-h1("Grab a remote branch — no local branch created")
-story("rco = rig checkout. Fetches first, then puts you on that commit.")
-await Bun.sleep(800)
+h1("Grab a remote branch — pick it with fzf")
+story("rco ? opens a fuzzy picker over every remote branch.")
+await Bun.sleep(1000)
 
-await type("rco feature/auth")
+await type("rco ?")
+await fzf([
+  "main",
+  "feature/retry",
+  "feature/auth",
+  "feature/oauth-scopes",
+  "fix/empty-body",
+  "chore/deps-bump",
+], "auth", 0)
+
+clear()
+console.log(`${G}~/project ${D}$${R} rco ?`)
 console.log(`${D}Fetching...
   9ab0cde..7c8d9e0  feature/auth -> origin/feature/auth${R}`)
 await Bun.sleep(400)
@@ -111,15 +162,14 @@ await Bun.sleep(1400)
 
 note('"HEAD is now at" = detached HEAD. You are ON the commit.')
 note("No local branch exists. This is intentional — and freeing.")
-await Bun.sleep(2000)
+await Bun.sleep(2200)
 
-await type("gl")
-console.log(
-  `${G}7c8d9e0${R} feat: add token refresh
-${G}9ab0cde${R} chore: update dependencies
-${G}1f23456${R} feat: initial api client`,
-)
-await Bun.sleep(1600)
+story("Know the name? Skip the picker — rco fuzzy-matches it directly.")
+await Bun.sleep(600)
+await type("rco auth")
+console.log(`${D}Fetching...${R}
+HEAD is now at 7c8d9e0 feat: add token refresh`)
+await Bun.sleep(1800)
 
 // ── Section 4: Push back to origin ──────────────────────────────────
 clear()
