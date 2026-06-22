@@ -21,6 +21,7 @@ MOUNTS=(
 
 name_override=""
 entrypoint="claude"
+entrypoint_explicit=""
 network=""
 ssh_agent=""
 docker_sock=""
@@ -74,13 +75,23 @@ case "${1:-}" in
         shift ;;
     -h|--help)
         cat <<EOF
-Usage: dockbox [options] [dirs...] [claude-args...]
+Usage: dockbox [tool] [options] [dirs...] [tool-args...]
        dockbox ls | rm [pattern] | prune [hours]
-       dockbox sh|enter [options] [dirs...]
+       dockbox sh [options] [dirs...]
+
+Tools (first positional arg — no leading dash):
+    claude          Claude Code (default)
+    codex           OpenAI Codex
+    haiku           Claude Code --model claude-haiku-4-5-20251001
+    sonnet          Claude Code --model claude-sonnet-4-6
+    opus            Claude Code --model claude-opus-4-8
+    fable           Claude Code --model claude-fable-5
+    sh|zsh|bash     Interactive shell
+    <any cmd>       Any binary installed in the image
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -x cmd     Override entrypoint (default: claude)
+    -x cmd     Override entrypoint explicitly (bypasses tool detection)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
@@ -113,8 +124,11 @@ Ephemeral builds (default):
     (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
-    dockbox                           # current dir
+    dockbox                           # current dir, claude
     dockbox ~/wk/project              # mount project
+    dockbox codex ~/wk/project        # OpenAI Codex
+    dockbox haiku ~/wk/project        # Claude Haiku model
+    dockbox sh                        # interactive shell
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
@@ -123,7 +137,6 @@ Examples:
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
-    dockbox -x bash                   # run bash instead
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
@@ -147,7 +160,7 @@ set -- "${_args[@]}"
 while getopts ":n:x:e:v:HADgGPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
-        x) entrypoint="$OPTARG" ;;
+        x) entrypoint="$OPTARG"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
         H) network="--network host" ;;
@@ -163,6 +176,26 @@ while getopts ":n:x:e:v:HADgGPTS" opt; do
     esac
 done
 shift $((OPTIND - 1))
+
+# First positional arg: if not a path and -x wasn't given, it's the tool.
+# Model aliases map to claude with --model; anything else is the binary name.
+if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
+    case "$1" in
+        /*|./*|.|~*) : ;;  # path — use default entrypoint
+        *)
+            _tool="$1"; shift
+            case "$_tool" in
+                haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001) ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6) ;;
+                opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8) ;;
+                fable)  entrypoint=claude; claude_args=(--model claude-fable-5) ;;
+                zsh|bash) entrypoint="/bin/$_tool" ;;
+                *)      entrypoint="$_tool" ;;
+            esac
+            ;;
+    esac
+fi
+
 for arg in "$@"; do
     case "$arg" in
         /*|./*|.|~*) dirs+=("$arg") ;;
