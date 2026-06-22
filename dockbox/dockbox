@@ -79,11 +79,11 @@ Usage: dockbox [tool] [options] [dirs...] [tool-args...]
        dockbox sh [options] [dirs...]
 
 Tools (first positional arg — no leading dash):
-    (default)       Claude Code, haiku model — fast and cheap for most tasks
-    claude          Claude Code, haiku model (same as default)
+    (default)       Claude Code, sonnet @ medium effort — the workhorse
+    claude          Claude Code, sonnet (same as default)
     codex           OpenAI Codex
-    haiku           Claude Code --model claude-haiku-4-5-20251001
-    sonnet          Claude Code --model claude-sonnet-4-6  (upgrade when needed)
+    haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
+    sonnet          Claude Code --model claude-sonnet-4-6  (default model)
     opus            Claude Code --model claude-opus-4-8    (complex reasoning)
     fable           Claude Code --model claude-fable-5     (max effort)
     sh|zsh|bash     Interactive shell
@@ -124,9 +124,9 @@ Ephemeral builds (default):
     (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
-    dockbox                           # current dir, claude haiku (fast default)
-    dockbox ~/wk/project              # mount project, haiku
-    dockbox sonnet ~/wk/project       # upgrade to sonnet when needed
+    dockbox                           # current dir, sonnet @ medium (default)
+    dockbox ~/wk/project              # mount project, sonnet
+    dockbox haiku ~/wk/project        # drop to haiku for speed/cost
     dockbox codex ~/wk/project        # OpenAI Codex
     dockbox sh                        # interactive shell
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
@@ -208,10 +208,11 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-# Default to haiku — fast and cheap; select another tool for more power.
+# Default tool: sonnet at medium effort — the workhorse. Explicit model
+# aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
 if [[ "$entrypoint" == "claude" ]] && \
    ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
-    claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}")
+    claude_args=(--model claude-sonnet-4-6 --effort medium "${claude_args[@]}")
 fi
 
 if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
