@@ -92,8 +92,9 @@ ${G}*${R} ${G}9ab0cde${R} chore: deps
 ${G}/${R}
 ${G}*${R} ${G}1f23456${R} (${M}origin/main${R}) feat: init api client`,
 )
-note("Each * is a commit. Branches show where origin pointers are.")
-await Bun.sleep(2200)
+await Bun.sleep(1200)
+note("Each * is a commit. Lines show ancestry. Branch labels are origin pointers.")
+await Bun.sleep(2000)
 
 // ── Section 3: Checkout ──────────────────────────────────────────────
 clear()
