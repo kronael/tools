@@ -153,14 +153,14 @@ stdout (prompt_nudge.py match):
 ```
 stdin:
 {
-  "cwd": "/project",
-  "stop_hook_active": false
+  "cwd": "/project"
+  // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
 }
 
 stdout (dirty tree + stale diary):
 {
   "decision": "block",
-  "reason": "Uncommitted changes detected.\n <diff stat>\nConsider running /commit.\nDiary not updated in over an hour. Consider running /diary."
+  "reason": "Uncommitted changes detected.\n <diff stat>\nRun /commit.\nDiary not updated in over an hour. Run /diary."
 }
 ```
 
