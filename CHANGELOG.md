@@ -1,5 +1,31 @@
 # Changelog
 
+## [v0.3.26] — 20260622
+
+> kronael v0.3.26 — Codex hooks install cleanly
+>
+> Codex installs now wire Kronael lifecycle hooks without breaking compaction.
+>
+> • Codex hooks install to `~/.codex/hooks.json` through `codex-hooks.json`
+> • `codex_hook.py` adapts Codex payloads before calling installed Claude hooks
+> • `PreCompact` no longer returns invalid context JSON in Codex
+> • Prompt/tool nudges still reach Codex as `hookSpecificOutput.additionalContext`
+> • PostToolUse now passes the original payload to `stop.py`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Added Codex lifecycle hook wiring via `codex-hooks.json`, installed to
+  `~/.codex/hooks.json`.
+- Added `hooks/codex_hook.py` to normalize Codex hook payloads, translate prompt
+  and tool context output, and delegate to the installed Kronael hook scripts.
+- Fixed Codex `PreCompact` handling so Claude-style context output is suppressed
+  instead of being returned as invalid Codex hook JSON; block decisions still
+  pass through.
+- Updated install docs and bridge prompts so Codex installs `~/.agents/skills`
+  and `~/.codex/hooks.json`, with `/hooks` trust as the explicit review step.
+- Fixed `post_tool_nudge.sh` to pass the original hook payload through to
+  `stop.py` when the periodic nudge fires.
+
 ## [v0.3.25] — 20260618
 
 > kronael v0.3.25 — /sub fully removed
