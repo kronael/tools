@@ -46,8 +46,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ## Response Style
 
 Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). One-sentence replies
-are fine when accurate. Exceptions — only when explicitly asked or the
+summaries of what you just did (the diff is visible). No tables, headers, or
+multi-section recaps for a chat reply — if the reader must scroll to find the
+point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
 task inherently requires it:
 
 - Generating content (writing specs, docs, prose, code explanations)
@@ -131,6 +132,16 @@ Values compose; stateful objects leak. Minimize state, make it explicit.
 **Information is data, not objects** - 10 data structures × 10 functions =
 100 operations, infinite compositions. 100 classes × 10 methods = 1000
 operations, zero composition. Encapsulate I/O, expose information.
+
+**Grug rules (grugbrain.dev) — only what Boring Code above doesn't already say:**
+
+- **Match the tool to the task's weight** - if the scaffolding (subagents,
+  generated machinery, lookbehind regex) is bigger than the change, it's wrong.
+  Small task → small tool.
+- **Prefer locality of behavior** - put code on the thing that does the thing;
+  NEVER scatter understanding across files just to honor separation-of-concerns.
+- **Chesterton's fence** - NEVER delete or "simplify" code you don't yet
+  understand; the ugliness often encodes a real constraint. Understand first.
 
 # Development Principles
 
