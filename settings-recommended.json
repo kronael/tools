@@ -15,8 +15,8 @@
       "Bash(gh api repos/*/pulls/*/comments*)"
     ],
     "deny": [
-      "Bash(rm -rf /)*",
-      "Bash(rm -rf ~)*",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
       "Bash(chmod 777*)",
       "Bash(git push*)",
       "Bash(git pull*)",
