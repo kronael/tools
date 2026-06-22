@@ -183,7 +183,7 @@ EOF
 
 cmd_install(){
     local dir=$(dirname "$(readlink -f "$0")")
-    local symlinks=(rco rip rir rim riq gl gis gig gitg gp gpc gpa)
+    local symlinks=(rco rip rir rim riq gl gis gig gitg gp gpc gpa gw)
     for s in "${symlinks[@]}"; do
         ln -sf rig "$dir/$s"
         echo "  $dir/$s -> rig"
@@ -212,6 +212,7 @@ Aliases (installed as symlinks):
   gp  [commit...]    git cherry-pick
   gpc                git cherry-pick --continue
   gpa                git cherry-pick --abort
+  gw  [args...]      git worktree
 
 Flags: -z offline, -n dry-run, ? force fzf
 EOF
@@ -225,13 +226,14 @@ dispatch(){
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
         sq|fixup|riq)    shift; cmd_fixup "$@" ;;
-        gl)  git --no-pager log --oneline -20 "$@" ;;
-        gis) git status -uno "$@" ;;
-        gig) git log --graph --oneline --simplify-by-decoration --all --decorate "$@" ;;
-        gitg) git log --graph --oneline --all --decorate "$@" ;;
-        gp)  shift; git cherry-pick "$@" ;;
-        gpc) git cherry-pick --continue ;;
-        gpa) git cherry-pick --abort ;;
+        gl)   shift; git --no-pager log --oneline -20 "$@" ;;
+        gis)  shift; git status -uno "$@" ;;
+        gig)  shift; git log --graph --oneline --simplify-by-decoration --all --decorate "$@" ;;
+        gitg) shift; git log --graph --oneline --all --decorate "$@" ;;
+        gp)   shift; git cherry-pick "$@" ;;
+        gpc)  git cherry-pick --continue ;;
+        gpa)  git cherry-pick --abort ;;
+        gw)   shift; git worktree "$@" ;;
         install)         cmd_install ;;
         -h|--help|help|"") usage ;;
         *)  echo "error: unknown command: $1"; usage ;;

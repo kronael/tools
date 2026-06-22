@@ -65,6 +65,7 @@ These are plain git shortcuts installed as symlinks — no rig logic, just short
 | `gp` | `git cherry-pick` |
 | `gpc` | `git cherry-pick --continue` |
 | `gpa` | `git cherry-pick --abort` |
+| `gw` | `git worktree` |
 
 ## Dependencies
 
