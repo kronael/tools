@@ -91,7 +91,7 @@ Tools (first positional arg — no leading dash):
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -x cmd     Override entrypoint explicitly (bypasses tool detection)
+    -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
@@ -157,10 +157,10 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgGPTS" opt; do
+while getopts ":n:d:x:e:v:HADgGPTS" opt; do
     case "$opt" in
         n) name_override="$OPTARG" ;;
-        x) entrypoint="$OPTARG"; entrypoint_explicit=1 ;;
+        d|x) entrypoint="$OPTARG"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
         H) network="--network host" ;;

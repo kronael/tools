@@ -1,11 +1,11 @@
 ---
-name: codex
-description: Run the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI.
-when_to_use: "second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex, oracle"
+name: oracle
+description: Ask the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI.
+when_to_use: "oracle, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex"
 user-invocable: true
 ---
 
-# Codex
+# Oracle
 
 Runs `codex exec` as a subprocess for a one-shot second opinion.
 NEVER use a raw `Agent(...)` call when you need a second opinion — ALWAYS use this skill instead.
