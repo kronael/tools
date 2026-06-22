@@ -1,0 +1,77 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py UserPromptSubmit local",
+            "timeout": 5,
+            "statusMessage": "Loading Kronael local context"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py UserPromptSubmit prompt_nudge",
+            "timeout": 5,
+            "statusMessage": "Checking Kronael prompt nudges"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PreToolUse pretool_nudge",
+            "timeout": 5,
+            "statusMessage": "Checking Kronael file nudges"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse post_tool_nudge",
+            "timeout": 10,
+            "statusMessage": "Updating Kronael tool counters"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py Stop stop",
+            "timeout": 10,
+            "statusMessage": "Checking Kronael stop nudges"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PreCompact local",
+            "timeout": 5,
+            "statusMessage": "Reloading Kronael local context"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PreCompact reclaude",
+            "timeout": 5,
+            "statusMessage": "Reloading Kronael rules"
+          }
+        ]
+      }
+    ]
+  }
+}

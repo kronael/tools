@@ -13,7 +13,8 @@ tool inventory:
 1. **CLI tools** — one independent dir each. Adding a tool: own dir, own
    Makefile (or PEP 723 inline-deps script), entry in `README.md`.
 2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`,
-   `settings-recommended.json`, `RECLAUDE.md`, distributed via
+   `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
+   distributed via
    `.claude-plugin/` + `kronael/install/`.
 3. **Codex installer bridge** — `plugins/kronael/` and
    `.agents/plugins/marketplace.json`.
@@ -34,17 +35,18 @@ only the Codex-specific deltas.
 - `/kronael:install` is a Claude Code slash command — you can't run it
   from Codex. Run the canonical installer from the source root discovered by
   the bridge.
-- The bundle is Claude Code config: hooks fire on Claude Code lifecycle
-  events, skills use Claude Code auto-activation. Codex doesn't use it —
-  Codex is the installer, deploying to `~/.claude/` for the user's
-  Claude Code sessions.
+- The bundle installs hook scripts into `~/.claude/hooks/`. Claude Code uses
+  `settings-recommended.json`; Codex uses `codex-hooks.json` plus
+  `hooks/codex_hook.py` to normalize Codex hook payloads before delegating to
+  those same scripts.
 - The Codex plugin is a thin bridge only. Its one skill is
   `plugins/kronael/skills/kronael-install/SKILL.md`; keep install behavior in
   `kronael/install/SKILL.md` and update the bridge only when Codex-specific
   translation changes.
-- Installing from Codex deploys the Claude bundle to `~/.claude/`, then
-  exposes those installed skills to Codex through `~/.agents/skills`. The
-  plugin cache still contains only the bridge skill.
+- Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
+  those installed skills to Codex through `~/.agents/skills`, and writes
+  `~/.codex/hooks.json` for Codex lifecycle hooks. The plugin cache still
+  contains only the bridge skill.
 
 ## Codex plugin usage
 
@@ -64,13 +66,13 @@ Use $kronael-install to install/update Kronael.
 Bridge-only invocation (for repair or existing installs):
 
 ```text
-Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
+Use $kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
 Global installed-skill bridge:
 
 ```text
-Use $kronael-install to bridge .claude/skills into Codex.
+Use $kronael-install to bridge .claude/skills and hooks into Codex.
 ```
 
 Codex compatibility for Claude projects:
@@ -128,9 +130,15 @@ jq -s '.[0].hooks = .[1].hooks | .[0]' \
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
+**Codex hooks** — copy `codex-hooks.json` to `~/.codex/hooks.json` after the
+Claude hook scripts are installed. This is part of Codex bridge-only repair,
+not only full installs. In a fresh Codex TUI session, the user must open
+`/hooks` once and trust changed command hooks.
+
 **Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
-the source dirs (skills: minus `global/`), and `~/.claude/CLAUDE.md`
-exists. Report counts and the backup path.
+the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
+`~/.agents/skills` bridges to `~/.claude/skills`, and
+`~/.codex/hooks.json` exists. Report counts and the backup path.
 
 ## Conventions
 
