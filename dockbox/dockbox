@@ -22,7 +22,7 @@ MOUNTS=(
 name_override=""
 entrypoint="claude"
 entrypoint_explicit=""
-network=""
+network_arg=()
 ssh_agent=""
 docker_sock=""
 grant_sudo=""
@@ -32,7 +32,6 @@ extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
-output_to_clean=()
 claude_args=()
 
 case "${1:-}" in
@@ -164,7 +163,7 @@ while getopts ":n:d:x:e:v:HADgGPTS" opt; do
         d|x) entrypoint="$OPTARG"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$OPTARG") ;;
         v) extra_vols+=("$OPTARG") ;;
-        H) network="--network host" ;;
+        H) network_arg=(--network host) ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
         S) grant_sudo=1 ;;
@@ -186,10 +185,10 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
         *)
             _tool="$1"; shift
             case "$_tool" in
-                haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001) ;;
-                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6) ;;
-                opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8) ;;
-                fable)  entrypoint=claude; claude_args=(--model claude-fable-5) ;;
+                haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 "${claude_args[@]}") ;;
+                opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 "${claude_args[@]}") ;;
+                fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
                 zsh|bash) entrypoint="/bin/$_tool" ;;
                 *)      entrypoint="$_tool" ;;
             esac
@@ -249,10 +248,10 @@ print(json.dumps(d))
 " > "$_settings"
 mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")
 
-docker_gid_arg=""
+docker_gid_arg=()
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
-    docker_gid_arg="--group-add $(stat -c %g /var/run/docker.sock)"
+    docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
@@ -376,8 +375,8 @@ exec docker run -it --rm \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
-    $network \
-    $docker_gid_arg \
+    "${network_arg[@]}" \
+    "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
