@@ -1,5 +1,27 @@
 # Changelog
 
+## [v0.3.27] — 20260622
+
+> kronael v0.3.27 — dockbox haiku default, settings fix, wisdom refinements, rig aliases
+>
+> • dockbox: default model haiku; sandbox restart loop fixed (patches settings.json directly)
+> • settings-recommended.json: rm deny glob fixed (`/)*` → `/*)`); gh-comment allow rules added
+> • global wisdom: Grug rules + no-tables response style added; gh-comment ALWAYS rule
+> • skills refined: oracle adversarial framing, gh-comment Codex fallback, bugs/py ALWAYS/NEVER
+> • hooks: post_tool_nudge.sh stderr fixed (2>&1 → 2>/dev/null)
+> • rig: git alias shortcuts gl, gis, gig, gitg, gp, gpc, gpa
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default model now `claude-haiku-4-5-20251001` — fast and cheap; re-select with `--model` or model alias when you need more. Sandbox restart loop fixed: dockbox now patches a merged `settings.json` with `sandbox.enabled: false` and mounts it `:ro` so the Claude Code instance never tries to restart into bubblewrap.
+- settings-recommended.json: rm deny rules had glob outside parens (`Bash(rm -rf /)*` → `Bash(rm -rf /*)`); fix makes `rm -rf /home` actually denied. Added `Bash(gh pr comment*)`, `Bash(gh api repos/*/pulls/*/reviews*)`, `Bash(gh api repos/*/pulls/*/comments*)` to allow — needed for `/gh-comment` workflow.
+- global wisdom (skills/global/SKILL.md → ~/.claude/CLAUDE.md): added Grug rules block (match tool to task weight, locality of behavior, Chesterton's fence); added no-tables/no-headers sentence to Response Style; added ALWAYS rule to use `/gh-comment` for PR comment/review posting.
+- skills/oracle: adversarial framing rules tightened; `-s danger-full-access` flag clarified as the correct flag for skipping bubblewrap in containers.
+- skills/gh-comment: Codex fallback — AskUserQuestion unavailable in Codex; replaced with explicit chat-confirmation requirement.
+- skills/bugs, skills/py: SHOULD→ALWAYS/NEVER; removed duplicate global rules; added NEVER yield individual items batch rule to py.
+- hooks/post_tool_nudge.sh: stderr was leaking into hook stdout (interpreted as JSON); fixed with `2>/dev/null`.
+- rig: added git alias shortcuts installed as symlinks — `gl` (log), `gis` (status -uno), `gig`/`gitg` (graph log), `gp`/`gpc`/`gpa` (cherry-pick).
+
 ## [v0.3.26] — 20260622
 
 > kronael v0.3.26 — Codex hooks, dockbox tools, caveman style, oracle skill
