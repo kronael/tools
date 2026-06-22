@@ -2,6 +2,8 @@
 
 Lightweight git tools for upstream-only, detached HEAD workflows.
 
+![rig demo](demo/demo.gif)
+
 ## Rationale
 
 **rig optimizes for MAX INFLOW** - getting commands INTO the computer

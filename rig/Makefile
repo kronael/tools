@@ -33,10 +33,10 @@ tmp/demo.cast: demo/run.ts
 	mkdir -p tmp
 	COLUMNS=80 LINES=30 asciinema rec tmp/demo.cast --overwrite --cols 80 --rows 30 -c 'bun run demo/run.ts'
 
-tmp/demo.gif: tmp/demo.cast
+demo/demo.gif: tmp/demo.cast
 	agg --theme solarized-light --font-size 16 \
 	    --cols 80 --rows 30 \
 	    --idle-time-limit 3 --last-frame-duration 8 \
-	    tmp/demo.cast tmp/demo.gif
+	    tmp/demo.cast demo/demo.gif
 
-demo: tmp/demo.gif
+demo: demo/demo.gif

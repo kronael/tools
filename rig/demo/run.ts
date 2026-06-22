@@ -75,8 +75,8 @@ async function fzf(all: string[], query: string, pick: number) {
 }
 
 // ── Title card ───────────────────────────────────────────────────────
+// Render at t=0 so the poster / first frame is the title, not a blank screen.
 clear()
-await Bun.sleep(400)
 console.log(`\n\n  ${B}${C}rig${R}  ${D}—${R}  ${B}ripgit${R}\n`)
 console.log(`  ${B}No local branches. Work directly from origin.${R}\n`)
 console.log(`  ${D}You grab a remote branch, make changes, push back.${R}`)
@@ -121,6 +121,9 @@ await type("gis")
 console.log(` M src/client.ts`)
 await Bun.sleep(1400)
 
+// Graph gets its own screen — it's the most visual part, don't crowd it.
+clear()
+h1("Know where you are")
 story("gig — the whole branch graph, simplified")
 await Bun.sleep(600)
 
@@ -282,7 +285,8 @@ console.log(`  ${C}${B}rir${R} ${D}[branch]${R}    fetch + rebase -i on origin  
 console.log(`  ${C}${B}rim${R} ${D}[branch]${R}    fetch + merge from origin`)
 console.log(`  ${C}${B}riq${R}             squash fixup: commits\n`)
 console.log(`  ${G}${B}gl${R}   ${G}${B}gis${R}   ${G}${B}gig${R}   ${G}${B}gitg${R}       log · status · graph`)
-console.log(`  ${G}${B}gp${R}   ${G}${B}gpc${R}   ${G}${B}gpa${R}          cherry-pick · continue · abort\n`)
+console.log(`  ${G}${B}gp${R}   ${G}${B}gpc${R}   ${G}${B}gpa${R}          cherry-pick · continue · abort`)
+console.log(`  ${G}${B}gw${R}                       git worktree\n`)
 console.log(`  ${D}No local branches. Reflog keeps 90 days. Nothing gets lost.${R}\n`)
 console.log(`  ${D}cd rig && make install${R}\n`)
 await Bun.sleep(6000)
