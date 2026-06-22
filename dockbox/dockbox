@@ -80,12 +80,13 @@ Usage: dockbox [tool] [options] [dirs...] [tool-args...]
        dockbox sh [options] [dirs...]
 
 Tools (first positional arg — no leading dash):
-    claude          Claude Code (default)
+    (default)       Claude Code, haiku model — fast and cheap for most tasks
+    claude          Claude Code, haiku model (same as default)
     codex           OpenAI Codex
     haiku           Claude Code --model claude-haiku-4-5-20251001
-    sonnet          Claude Code --model claude-sonnet-4-6
-    opus            Claude Code --model claude-opus-4-8
-    fable           Claude Code --model claude-fable-5
+    sonnet          Claude Code --model claude-sonnet-4-6  (upgrade when needed)
+    opus            Claude Code --model claude-opus-4-8    (complex reasoning)
+    fable           Claude Code --model claude-fable-5     (max effort)
     sh|zsh|bash     Interactive shell
     <any cmd>       Any binary installed in the image
 
@@ -124,10 +125,10 @@ Ephemeral builds (default):
     (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
-    dockbox                           # current dir, claude
-    dockbox ~/wk/project              # mount project
+    dockbox                           # current dir, claude haiku (fast default)
+    dockbox ~/wk/project              # mount project, haiku
+    dockbox sonnet ~/wk/project       # upgrade to sonnet when needed
     dockbox codex ~/wk/project        # OpenAI Codex
-    dockbox haiku ~/wk/project        # Claude Haiku model
     dockbox sh                        # interactive shell
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
@@ -208,6 +209,12 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
+# Default to haiku — fast and cheap; select another tool for more power.
+if [[ "$entrypoint" == "claude" ]] && \
+   ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
+    claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}")
+fi
+
 if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
     cmd=("$entrypoint" --resume "${claude_args[@]}")
 else
@@ -224,10 +231,23 @@ for m in "${MOUNTS[@]}"; do
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
-# override settings.local.json after ~/.claude mount to bypass trust prompts
+# Override settings.json with sandbox disabled — settings.local.json alone does
+# not suppress the sandbox restart loop when the host settings.json enables it.
+# Merge host settings then force sandbox off so the host config (permissions,
+# hooks) is preserved but the container never enters bubblewrap mode.
 _settings=$(mktemp)
-echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
-mounts+=(-v "$_settings:/home/dockbox/.claude/settings.local.json:ro")
+python3 -c "
+import json, os, sys
+path = os.path.expanduser('~/.claude/settings.json')
+try:
+    d = json.load(open(path))
+except Exception:
+    d = {}
+d['sandbox'] = {'enabled': False}
+d['defaultMode'] = 'bypassPermissions'
+print(json.dumps(d))
+" > "$_settings"
+mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")
 
 docker_gid_arg=""
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
