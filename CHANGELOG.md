@@ -2,15 +2,14 @@
 
 ## [v0.3.26] — 20260622
 
-> kronael v0.3.26 — Codex hooks install cleanly
->
-> Codex installs now wire Kronael lifecycle hooks without breaking compaction.
+> kronael v0.3.26 — Codex hooks, dockbox tools, caveman style, oracle skill
 >
 > • Codex hooks install to `~/.codex/hooks.json` through `codex-hooks.json`
 > • `codex_hook.py` adapts Codex payloads before calling installed Claude hooks
 > • `PreCompact` no longer returns invalid context JSON in Codex
-> • Prompt/tool nudges still reach Codex as `hookSpecificOutput.additionalContext`
-> • PostToolUse now passes the original payload to `stop.py`
+> • dockbox: first positional arg selects tool (codex, haiku, sonnet, opus, fable, any binary)
+> • `output-styles/80-caveman.md` added; activated in settings-recommended.json
+> • `/codex` skill renamed to `/oracle`
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
@@ -25,6 +24,12 @@
   and `~/.codex/hooks.json`, with `/hooks` trust as the explicit review step.
 - Fixed `post_tool_nudge.sh` to pass the original hook payload through to
   `stop.py` when the periodic nudge fires.
+- dockbox: first positional arg is now the tool entrypoint; model aliases
+  (haiku/sonnet/opus/fable) map to `claude --model <id>`; `-d` flag added as
+  explicit tool selector; `-x` kept hidden for compat.
+- Added `output-styles/80-caveman.md` (stripped-not-broken output style);
+  `settings-recommended.json` activates it via `outputStyle`.
+- Renamed `skills/codex` → `skills/oracle`; `codex` added to install prune list.
 
 ## [v0.3.25] — 20260618
 
