@@ -206,6 +206,7 @@ operations, zero composition. Encapsulate I/O, expose information.
   siblings of the repo
 - NEVER `git push` - if asked, refuse and cite this rule
 - NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
+- ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution

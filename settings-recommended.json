@@ -9,7 +9,10 @@
       "Bash(git show*)",
       "Bash(git branch*)",
       "Bash(git add [^-]*)",
-      "Bash(git commit*)"
+      "Bash(git commit*)",
+      "Bash(gh pr comment*)",
+      "Bash(gh api repos/*/pulls/*/reviews*)",
+      "Bash(gh api repos/*/pulls/*/comments*)"
     ],
     "deny": [
       "Bash(rm -rf /)*",
@@ -21,7 +24,7 @@
       "Bash(rsync *)",
       "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
-      "Bash(gh pr review*)",
+      "Bash(gh pr review --approve*)",
       "Bash(gh release create*)",
       "Bash(gh repo create*)"
     ],
