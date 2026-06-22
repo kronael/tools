@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.28] — 20260622
+
+> kronael v0.3.28 — rig demo, sonnet default
+>
+> rig gets an animated terminal demo, and dockbox now launches Claude at sonnet/medium by default instead of haiku.
+>
+> • dockbox: bare `dockbox` now runs sonnet @ medium effort — haiku is opt-in (`dockbox haiku`) for speed/cost
+> • rig: scripted asciinema demo walks the detached-HEAD workflow — checkout, push, rebase, merge, fixup
+> • rig demo: simulated fzf picker shows `rco ?` narrowing the branch list as you type
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: added a scripted terminal demo (`rig/demo/run.ts` + `make demo`) covering the detached-HEAD workflow — orientation (`gl`/`gis`/`gig`), checkout, push, rebase, merge, fixup squash. Includes an honest fzf-picker simulation for `rco ?` that narrows the branch list by subsequence match as the query types, plus narrative framing (old-way contrast, inline jargon notes) so the detached-HEAD idea reads as intentional, not broken.
+- dockbox: default tool is now sonnet at medium effort (was haiku). `--model claude-sonnet-4-6 --effort medium` is injected only when no `--model` is given; explicit `dockbox haiku` drops to the fast/cheap model, and `dockbox sonnet`/`opus`/`fable` are unchanged.
+
 ## [v0.3.27] — 20260622
 
 > kronael v0.3.27 — dockbox haiku default, settings fix, wisdom refinements, rig aliases
