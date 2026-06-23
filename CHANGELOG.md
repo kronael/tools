@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.29] — 20260623
+
+> kronael v0.3.29 — rig alias fix, dockbox re-entry, /codex restored
+>
+> Fixes rig's git-alias symlinks (they were passing their own name to git), re-enters a running dockbox, and restores `/codex`.
+>
+> • rig: `gl`/`gis`/`gig`/`gitg` symlinks now work — they were leaking their own name as a git arg
+> • rig: new `gw` alias for `git worktree`; an animated terminal demo gif is embedded in the README
+> • dockbox: re-running for an active project now `docker exec`s into the live box, not a new container
+> • `/codex` is the canonical second-opinion skill again; `/oracle` is a thin alias for it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: fixed `gl`/`gis`/`gig`/`gitg` — invoked as symlinks they passed their own name to git (`git log gl` → unknown revision) because the dispatch arm was missing a `shift`. Added `gw` → `git worktree`, wired through every install/usage/clean surface.
+- rig: committed the terminal demo as `rig/demo/demo.gif` (rendered headlessly via a virtual-clock recorder + `agg`), embedded it in the README, and pointed `make demo` at it. Demo now renders the title at t=0 and gives the graph its own screen.
+- dockbox: re-running `dockbox` for a project whose container is already up now `docker exec`s the requested tool into the live box as the host user, instead of spawning a second container — model/effort ride in the command so they still apply, while run-time mounts/network stay frozen at creation. The re-entry probe runs before provisioning, so it skips the settings-merge and `find` walk it would otherwise discard.
+- skills: restored `/codex` as the canonical second-opinion skill with `/oracle` as a thin alias (reverts the v0.3.26 codex→oracle rename); fixed the install prune list so reinstalls no longer delete `~/.claude/skills/codex`. Trimmed the duplicate `oracle` keyword from codex's `when_to_use`.
+
 ## [v0.3.28] — 20260622
 
 > kronael v0.3.28 — rig demo, sonnet default
