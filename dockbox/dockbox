@@ -137,6 +137,14 @@ Examples:
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
+    dockbox sh                        # 2nd session: enters the running box
+    dockbox codex                     # enters running box, launches codex
+
+Re-entry: if a dockbox for the project is already running, the command
+runs inside that live container (shared HOME, mounts, processes) instead
+of starting a new one. Tool/model/effort apply; run-time flags (-v, -H,
+-D, -g, -e) don't — they belong to the existing container. Use -n <name>
+to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
@@ -360,14 +368,20 @@ done
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
+# Container already up — enter it and run the requested command instead of
+# spawning a fresh one. The command (tool + model/effort/args) applies; the
+# run-time flags (-v mounts, -H network, -D socket, -g/-G/-e creds, tmpfs
+# HOME) belong to the live container and can't change. Run as the host user:
+# exec defaults to the container's --user 0:0 and skips dockbox-init's
+# gosu-drop, so without -u the entered session would be root. Use -n <name>
+# to force a separate, fully-provisioned container instead.
 existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
 if [[ -n "$existing" ]]; then
-    if [[ "$entrypoint" == "/bin/zsh" ]]; then
-        exec docker exec -it "$CONTAINER_NAME" /bin/zsh
-    fi
-    echo "container '$CONTAINER_NAME' is already running" >&2
-    echo "use -n <name> or stop it first" >&2
-    exit 1
+    # No -w: inherit the container's working dir (the original project,
+    # guaranteed mounted). This invocation's workdir may differ — the name
+    # only matches on basename, so its path need not exist in the container.
+    exec docker exec -it -u "$(id -u):$(id -g)" -e TERM \
+        "$CONTAINER_NAME" "${cmd[@]}"
 fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
