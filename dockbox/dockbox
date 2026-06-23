@@ -229,6 +229,26 @@ else
     cmd=("$entrypoint" "${claude_args[@]}")
 fi
 
+# Name keys on the primary dir's basename (= workdir basename below).
+CONTAINER_NAME="${name_override:-dockbox-${_primary_dir##*/}}"
+
+# Container already up — enter it and run the requested command instead of
+# spawning a fresh one. The command (tool + model/effort/args) applies; the
+# run-time flags (-v mounts, -H network, -D socket, -g/-G/-e creds, tmpfs
+# HOME) belong to the live container and can't change. Run as the host user:
+# exec defaults to the container's --user 0:0 and skips dockbox-init's
+# gosu-drop, so without -u the entered session would be root. Use -n <name>
+# to force a separate, fully-provisioned container instead. Gate this before
+# provisioning so re-entry skips the mount/settings/find work it would discard.
+existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
+if [[ -n "$existing" ]]; then
+    # No -w: inherit the container's working dir (the original project,
+    # guaranteed mounted). This invocation's workdir may differ — the name
+    # only matches on basename, so its path need not exist in the container.
+    exec docker exec -it -u "$(id -u):$(id -g)" -e TERM \
+        "$CONTAINER_NAME" "${cmd[@]}"
+fi
+
 mounts=()
 workdir=""
 
@@ -291,8 +311,6 @@ for vol in "${extra_vols[@]}"; do
     src="$(cd "$vol" && pwd)"
     mounts+=(-v "$src:$src:$mode")
 done
-
-CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 # Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
 # chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
@@ -368,21 +386,6 @@ done
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
-# Container already up — enter it and run the requested command instead of
-# spawning a fresh one. The command (tool + model/effort/args) applies; the
-# run-time flags (-v mounts, -H network, -D socket, -g/-G/-e creds, tmpfs
-# HOME) belong to the live container and can't change. Run as the host user:
-# exec defaults to the container's --user 0:0 and skips dockbox-init's
-# gosu-drop, so without -u the entered session would be root. Use -n <name>
-# to force a separate, fully-provisioned container instead.
-existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
-if [[ -n "$existing" ]]; then
-    # No -w: inherit the container's working dir (the original project,
-    # guaranteed mounted). This invocation's workdir may differ — the name
-    # only matches on basename, so its path need not exist in the container.
-    exec docker exec -it -u "$(id -u):$(id -g)" -e TERM \
-        "$CONTAINER_NAME" "${cmd[@]}"
-fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 trap '' TSTP
