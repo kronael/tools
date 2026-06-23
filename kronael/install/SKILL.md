@@ -88,9 +88,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
      `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
-     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
-     `codex` (renamed to `oracle` in v0.3.26).
-     NEVER delete `create-eval` (still bundled) or any skill dir not on this list — user-added skills stay.
+     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here).
+     NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
+     bundled again — `codex` is the canonical second-opinion skill, `oracle`
+     is its alias; the v0.3.26 codex→oracle rename was reverted), or any
+     skill dir not on this list — user-added skills stay.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
@@ -126,7 +128,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    |------|---------|--------|
    | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
    | `agent-browser` | `bun install -g agent-browser` | /browse |
-   | `codex` | `bun install -g @openai/codex` | /oracle |
+   | `codex` | `bun install -g @openai/codex` | /codex /oracle |
    | `pyright` | `bun install -g pyright` | /py /ts /tsx |
    | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
    | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
