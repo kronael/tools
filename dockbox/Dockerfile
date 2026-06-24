@@ -102,6 +102,9 @@ RUN curl -sSL https://git.io/g-install | sh -s -- -y && \
   /opt/dev-tools/goroot/bin/go install golang.org/x/tools/gopls@latest && \
   /opt/dev-tools/goroot/bin/go install golang.org/x/vuln/cmd/govulncheck@latest
 
+COPY udfix/ /tmp/udfix/
+RUN make -C /tmp/udfix install PREFIX=/usr/local/bin && rm -rf /tmp/udfix
+
 ARG NU_VERSION=0.112.2
 RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \

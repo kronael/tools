@@ -1,4 +1,5 @@
 name = udfix
+PREFIX ?= $(HOME)/.local/bin
 
 .PHONY: build test install clean
 
@@ -9,7 +10,7 @@ test:
 	go test .
 
 install: build
-	cp $(name) ~/.local/bin/$(name)
+	install -m 755 $(name) $(PREFIX)/$(name)
 
 clean:
 	rm -f $(name)
