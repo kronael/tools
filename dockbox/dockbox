@@ -83,8 +83,8 @@ Tools (first positional arg — no leading dash):
     claude          Claude Code, sonnet (same as default)
     codex           OpenAI Codex
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
-    sonnet          Claude Code --model claude-sonnet-4-6  (default model)
-    opus            Claude Code --model claude-opus-4-8    (complex reasoning)
+    sonnet          Claude Code --model claude-sonnet-4-6  (fast workhorse)
+    opus            Claude Code --model claude-opus-4-8    (default model)
     fable           Claude Code --model claude-fable-5     (max effort)
     sh|zsh|bash     Interactive shell
     <any cmd>       Any binary installed in the image
@@ -216,11 +216,11 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-# Default tool: sonnet at medium effort — the workhorse. Explicit model
+# Default tool: opus at high effort — the workhorse. Explicit model
 # aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
 if [[ "$entrypoint" == "claude" ]] && \
    ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
-    claude_args=(--model claude-sonnet-4-6 --effort medium "${claude_args[@]}")
+    claude_args=(--model claude-opus-4-8 --effort high "${claude_args[@]}")
 fi
 
 if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
