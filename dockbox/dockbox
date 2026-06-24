@@ -194,7 +194,7 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
             _tool="$1"; shift
             case "$_tool" in
                 haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
-                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 "${claude_args[@]}") ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 --effort high "${claude_args[@]}") ;;
                 opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
                 zsh|bash) entrypoint="/bin/$_tool" ;;
