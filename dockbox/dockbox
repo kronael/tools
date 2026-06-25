@@ -205,7 +205,7 @@ done
 set -- "${_args[@]}"
 
 while getopts ":n:d:x:e:v:HADgGPTS" opt; do
-    apply_flag "$opt" "$OPTARG"
+    apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
 
@@ -247,7 +247,7 @@ OPTIND=1
 while getopts ":n:d:x:e:v:HADgGPTS" opt "${rc_tokens[@]}"; do
     case "$opt" in
         A|D|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
-        *) apply_flag "$opt" "$OPTARG" ;;
+        *) apply_flag "$opt" "${OPTARG:-}" ;;
     esac
 done
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
