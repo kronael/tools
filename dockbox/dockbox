@@ -188,6 +188,7 @@ apply_flag() {
         G) gcloud_creds=1 ;;
         *) claude_args+=("-$2") ;;
     esac
+    return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
 }
 
 # ~/.dockboxrc: default flags, prepended so the command line overrides them.
