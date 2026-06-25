@@ -149,11 +149,50 @@ to force a separate, fully-provisioned box.
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
 
-Config: ~/.dockboxrc and .dockboxrc in project dir.
-        Extra docker args, one per line. # comments ok.
+Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
+        dockbox flags, one per line, # comments ok. The command line
+        overrides ~/.dockboxrc. Project .dockboxrc takes the safe
+        subset only — -A/-D/-S are ignored there (use ~/.dockboxrc).
 EOF
         exit 0 ;;
 esac
+
+# Read whitespace-split flag tokens from an rc file into global rc_tokens.
+# Blank lines and # comments ignored. Missing file -> empty.
+read_rc() {
+    rc_tokens=()
+    [[ -f "$1" ]] || return 0
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        read -ra words <<< "$line"
+        rc_tokens+=("${words[@]}")
+    done < "$1"
+}
+
+# Apply one parsed flag. Single source of truth for flag semantics, shared by
+# the command line and both rc files.
+apply_flag() {
+    case "$1" in
+        n) name_override="$2" ;;
+        d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
+        e) extra_env+=(-e "$2") ;;
+        v) extra_vols+=("$2") ;;
+        H) network_arg=(--network host) ;;
+        A) ssh_agent=1 ;;
+        D) docker_sock=1 ;;
+        S) grant_sudo=1 ;;
+        P) persist_builds=1 ;;
+        T) eph_no_tmpfs=1 ;;
+        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
+           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        G) gcloud_creds=1 ;;
+        *) claude_args+=("-$2") ;;
+    esac
+}
+
+# ~/.dockboxrc: default flags, prepended so the command line overrides them.
+read_rc "$HOME/.dockboxrc"
+set -- "${rc_tokens[@]}" "$@"
 
 # pre-strip long flags getopts can't parse
 _args=()
@@ -166,22 +205,7 @@ done
 set -- "${_args[@]}"
 
 while getopts ":n:d:x:e:v:HADgGPTS" opt; do
-    case "$opt" in
-        n) name_override="$OPTARG" ;;
-        d|x) entrypoint="$OPTARG"; entrypoint_explicit=1 ;;
-        e) extra_env+=(-e "$OPTARG") ;;
-        v) extra_vols+=("$OPTARG") ;;
-        H) network_arg=(--network host) ;;
-        A) ssh_agent=1 ;;
-        D) docker_sock=1 ;;
-        S) grant_sudo=1 ;;
-        P) persist_builds=1 ;;
-        T) eph_no_tmpfs=1 ;;
-        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
-           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
-        G) gcloud_creds=1 ;;
-        *) claude_args+=("-$OPTARG") ;;
-    esac
+    apply_flag "$opt" "$OPTARG"
 done
 shift $((OPTIND - 1))
 
@@ -213,6 +237,19 @@ done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
 _primary_dir="$(cd "${dirs[-1]}" && pwd)"
+
+# Project .dockboxrc: per-repo default flags, applied before any flag is
+# consumed below. Gated to the safe subset — an untrusted repo must not
+# silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
+# or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
+read_rc "$_primary_dir/.dockboxrc"
+OPTIND=1
+while getopts ":n:d:x:e:v:HADgGPTS" opt "${rc_tokens[@]}"; do
+    case "$opt" in
+        A|D|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+        *) apply_flag "$opt" "$OPTARG" ;;
+    esac
+done
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
@@ -372,16 +409,6 @@ extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
 mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 
-rcargs=()
-for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
-    [[ -f "$rc" ]] || continue
-    while IFS= read -r line; do
-        [[ -z "$line" || "$line" == \#* ]] && continue
-        read -ra words <<< "$line"
-        rcargs+=("${words[@]}")
-    done < "$rc"
-done
-
 # overmount so container can't modify project .dockboxrc
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
@@ -403,7 +430,6 @@ exec docker run -it --rm \
     "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
-    "${rcargs[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
     "${cmd[@]}"
