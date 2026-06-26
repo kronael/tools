@@ -142,12 +142,9 @@ EOF
         exit 1
     }
 
-    # Execute
-    if [[ ${dryrun:-} ]]; then
-        echo "git push origin $@ $commit:refs/heads/$branch" --tags
-    else
-        git push origin "$@" "$commit:refs/heads/$branch" --tags
-    fi
+    # Execute (dry-run prints the exact command)
+    local cmd=(git push origin "$@" "$commit:refs/heads/$branch" --tags)
+    if [[ ${dryrun:-} ]]; then echo "${cmd[*]}"; else "${cmd[@]}"; fi
 }
 
 # ── Fixup squash ────────────────────────────────────────────────────
