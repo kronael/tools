@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.3.30] — 20260626
+
+> kronael v0.3.30 — dockbox defaults to Opus, .dockboxrc sets flags
+>
+> dockbox now launches Claude at opus/high by default, bakes in `udfix`, and lets `~/.dockboxrc` carry default flags like `-A`.
+>
+> • dockbox: bare `dockbox` runs opus @ high effort (was sonnet/medium); `dockbox sonnet` now launches at high effort
+> • dockbox: `~/.dockboxrc` sets dockbox flags — put `-A` there to always forward your SSH agent
+> • dockbox: `udfix` (box-drawing junction repair) is now built into the image
+> • rig: bare `gw` defaults to `git worktree list` instead of erroring on the missing subcommand
+> • the `/sonnet` subagent drops to medium effort
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default Claude tool is now opus at high effort (was sonnet/medium) — `--model claude-opus-4-8 --effort high` is injected when no `--model` is given. The `sonnet` launcher alias now passes `--effort high` too.
+- dockbox: `.dockboxrc` now carries dockbox flags instead of raw `docker run` args (which were injected too late to affect any dockbox flag). `~/.dockboxrc` is read before flag parsing and prepended so the command line overrides it — the full flag set, including `-A`/`-D`/`-S`. Project `.dockboxrc` runs through a gated pass that drops the privilege flags (`-A`/`-D`/`-S`) and tool/name flags (`-n`/`-d`/`-x`) so an untrusted repo can't auto-escalate. Flag reading (`read_rc`) and flag→effect (`apply_flag`) are now single shared helpers; `apply_flag` always returns 0 so a tokenless `-g` can't trip `set -e`, and `OPTARG` is defaulted for no-arg flags under `set -u`.
+- dockbox: `udfix` is built into the image from its own Makefile (`make -C udfix install PREFIX=/usr/local/bin`); the build context widened to the repo root, and udfix's Makefile gained an overridable `PREFIX`.
+- skills: the `/sonnet` subagent now runs at medium effort (was high) — the interactive `dockbox sonnet` launcher is the one at high effort.
+- rig: bare `gw` now runs `git worktree list` instead of erroring on the missing subcommand; explicit args still pass through.
+
 ## [v0.3.29] — 20260623
 
 > kronael v0.3.29 — rig alias fix, dockbox re-entry, /codex restored
