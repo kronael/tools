@@ -105,31 +105,35 @@ cmd_push(){
             -n) local dryrun=1; shift ;;
             -h|--help)
                 cat <<EOF
-Usage: rig push [-n] [branch[:commit]] [git-push-flags]
-Flags: -n dry-run, ? interactive selection
+Usage: rig push [-n] [branch|?] [commit] [git-push-flags]
+       (branch and commit are order-independent; branch:commit also works)
+Flags: -n dry-run, ? pick branch interactively
 EOF
                 exit 0 ;;
             *) break ;;
         esac
     done
 
-    # Select branch and commit
-    local branch commit="HEAD"
-    case "${1:-}" in
-        "")  branch=$(get_current_branch 2>/dev/null) || branch=$(pick_branch "?")
-             [[ -z "$branch" ]] && exit 1 ;;
-        "?") branch=$(pick_branch "?")
-             [[ -z "$branch" ]] && exit 1; shift ;;
-        *:*) branch=$(clean_branch "${1%:*}")
-             commit=${1#*:}; shift ;;
-        *)   if is_commit_not_branch "$1"; then
-                 echo "warn: '$1' looks like a commit, not a branch"
-                 echo "      use branch:commit syntax"
-                 branch=$(get_current_branch 2>/dev/null)
-             else
-                 branch=$(clean_branch "$1")
-             fi; shift ;;
-    esac
+    # Select branch + commit from up to two positional args, in either order:
+    # a branch (or ? to pick interactively) and a commit (HEAD^, a sha, ...).
+    # The branch:commit combined form still works; the rest go to git push.
+    local branch="" commit="HEAD" arg
+    for arg in "${1:-}" "${2:-}"; do
+        [[ -z "$arg" || "$arg" == -* ]] && break
+        case "$arg" in
+            \?)  branch="?" ;;
+            *:*) branch=$(clean_branch "${arg%:*}"); commit=${arg#*:} ;;
+            *)   if is_commit_not_branch "$arg"; then commit="$arg"
+                 else branch=$(clean_branch "$arg"); fi ;;
+        esac
+        shift
+    done
+
+    if [[ "$branch" == "?" ]]; then
+        branch=$(pick_branch "?")
+    elif [[ -z "$branch" ]]; then
+        branch=$(get_current_branch 2>/dev/null) || branch=$(pick_branch "?")
+    fi
 
     # Validate
     [[ -z "$branch" ]] && {
