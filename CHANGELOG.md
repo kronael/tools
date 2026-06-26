@@ -19,6 +19,7 @@
 - dockbox: `udfix` is built into the image from its own Makefile (`make -C udfix install PREFIX=/usr/local/bin`); the build context widened to the repo root, and udfix's Makefile gained an overridable `PREFIX`.
 - skills: the `/sonnet` subagent now runs at medium effort (was high) — the interactive `dockbox sonnet` launcher is the one at high effort.
 - rig: bare `gw` now runs `git worktree list` instead of erroring on the missing subcommand; explicit args still pass through.
+- install: the install skill detects its source root (`CLAUDE_PLUGIN_ROOT` vs CWD) and checks `~/.claude/plugins/installed_plugins.json` for `kronael@*`, explaining why `Skill("kronael:install")` fails when the plugin isn't registered (merged from origin/master).
 
 ## [v0.3.29] — 20260623
 

@@ -12,8 +12,11 @@ Codex's `~/.agents/skills` and `~/.codex/hooks.json` surfaces.
 
 ## Source location
 
-- **Plugin path**: `${CLAUDE_PLUGIN_ROOT}`.
-- **Manual path**: current working directory (user opened Claude Code at the repo root and said "install").
+Source root: `CLAUDE_PLUGIN_ROOT` if set and assets exist there; else CWD.
+Stop if neither has assets — report which path to use.
+
+Check `~/.claude/plugins/installed_plugins.json` for `kronael@*`: if absent,
+note that `Skill("kronael:install")` won't resolve — user must say "install" here.
 
 ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
