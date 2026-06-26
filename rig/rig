@@ -233,7 +233,7 @@ dispatch(){
         gp)   shift; git cherry-pick "$@" ;;
         gpc)  git cherry-pick --continue ;;
         gpa)  git cherry-pick --abort ;;
-        gw)   shift; git worktree "$@" ;;
+        gw)   shift; git worktree "${@:-list}" ;;
         install)         cmd_install ;;
         -h|--help|help|"") usage ;;
         *)  echo "error: unknown command: $1"; usage ;;
