@@ -19,18 +19,36 @@ Run directly in main context (no subagent).
    ```
    The base is the merge-base with main, NOT `origin/main` itself — that misses commits
    already on the branch before the last merge. If both fail, ask the user.
-2. Draft title and body covering ALL changes since that base (see format below)
+2. Draft title and body covering ALL changes since that base, then cut fluff to
+   essence — only the trimmed version is real (see format below)
 3. Show draft, ask if they want to tweak anything
-4. STOP — NEVER run `gh pr create` or open the PR
+4. Show draft. For a NEW PR, STOP — NEVER run `gh pr create` or open the PR.
+
+## Setting the description on an EXISTING PR
+
+To update an existing PR's body, write the body to `tmp/body.md` and PATCH via
+REST. NEVER use `gh pr edit --body` — it runs a GraphQL `login` query that
+requires `read:org`; the REST endpoint needs only `repo`:
+
+```
+gh api -X PATCH repos/<owner>/<repo>/pulls/<N> -f body="$(cat tmp/body.md)" --jq '.body | length'
+```
+
+STILL NEVER `gh pr create` (new PR) or `gh pr merge`.
 
 ## Format
 
 **Title**: `[type] Short imperative sentence` (max 72 chars)
 Types: `fix` `feat` `refactor` `docs` `chore`
 
-**Body**: short prose lines, 2-4 lines total. Lead with the main point.
-No bullets, no "This PR...", no test plans or checklists.
-Prose follows the `writing` skill's copy rules.
+**Body**: short prose, lead with the main point. No bullets, no "This PR...",
+no test plans or checklists. Prose follows the `writing` skill's copy rules.
+
+ALWAYS draft then cut — the first version is a draft, NEVER the deliverable.
+Once written, strip every word that doesn't change meaning: hedges, context the
+diff already shows, adjectives, any line kept only because it "sounds complete."
+Only the trimmed result is final and real. Shortest version that still says it
+wins — 2-3 lines beats 4; NEVER pad to look thorough.
 
 ALWAYS output the draft (title + body) in one fenced code block so it is easy
 to copy.

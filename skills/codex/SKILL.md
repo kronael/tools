@@ -13,9 +13,14 @@ NEVER use a raw `Agent(...)` call when you need a second opinion — ALWAYS use 
 
 ## Invoke
 
-We're inside dockbox (a container); codex's inner bwrap sandbox is unnecessary and
-will fail on kernels that block unprivileged user namespaces. Always pass
-`-s danger-full-access` to skip it.
+We're inside dockbox (a container); codex's inner bwrap sandbox is unnecessary.
+On kernels that block unprivileged user namespaces, bwrap fails with
+`No permissions to create a new namespace` — and `-s danger-full-access` does NOT
+help, because it still spins up bwrap (in full-access mode), so every shell
+command codex runs dies before executing. The ONLY reliable skip is the flag
+`--dangerously-bypass-approvals-and-sandbox`, which disables bwrap entirely.
+NEVER use `-s read-only` for an audit either — it sandboxes the network too, so
+codex's backend lookups fail (`failed to lookup address information`).
 
 ```bash
 # Auth check first
@@ -25,10 +30,17 @@ if ! codex login status >/dev/null 2>&1 \
   exit 0
 fi
 
-# -s danger-full-access: skip bwrap (container is the real perimeter)
+# --dangerously-bypass-approvals-and-sandbox: skip bwrap (container is the real
+#   perimeter; -s danger-full-access still runs bwrap, fails on no-userns kernels)
+# --ephemeral: skip session-rollout files (a long batch loop fills the disk otherwise)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
-codex exec -s danger-full-access "Goal: <X>. Find the flaw in..." </dev/null
+codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral \
+  "Goal: <X>. Find the flaw in..." </dev/null
 ```
+
+NEVER `pkill -f codex` to clean up — it matches your own shell's command line
+(which contains "codex") and kills the harness. Kill codex by numeric PID
+(`ps -eo pid,args | grep -F 'codex exec' | grep -v grep | grep -v zsh`).
 
 ## Model — ALWAYS the newest, at high effort
 

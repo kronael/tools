@@ -477,6 +477,21 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 >
 > When users hit a slow page, they leave.
 
+
+### 30. Parenthetical Aside Overuse (narrative prose)
+
+**Signs to watch:** frequent `(like this)` asides in essays, blog posts, tweets, memos, opinion pieces — a parenthetical in most sentences.
+
+**Problem:** In narrative or expository writing, heavy parenthetical asides fragment the voice and read as an LLM hedging or stuffing in a caveat it couldn't commit to a real sentence. A person telling a story commits to the point or starts a new sentence. (This is about narrative. In reference and technical docs, parentheses for precise qualifications — units, exact values, an API caveat — are fine and often clearer, so don't strip those.)
+
+**Before:**
+> The launch went well (mostly) and the team was happy (at least the ones who showed up), which set us up for next quarter (assuming nothing breaks).
+
+**After:**
+> The launch went well and the team was happy. That set us up for next quarter, assuming nothing breaks.
+
+**Fix:** fold the aside into the sentence, promote it to its own sentence, or cut it.
+
 ---
 
 ## Process

@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files or writing Python code
+when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
 ---
 
 # Python
@@ -17,7 +17,8 @@ when_to_use: editing .py files or writing Python code
 ## Type Annotations
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
-- NEVER `default_factory=lambda: []` — use `default_factory=list`
+- NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
+- NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
@@ -45,16 +46,19 @@ when_to_use: editing .py files or writing Python code
 - Test: if you can swap the call for `.attr` syntax and pyright stays quiet, it's slop
 
 ## Async
-- NEVER manually close async context managers (corrupts asyncpg)
+- NEVER manually close async context managers (corrupts asyncpg) — ALWAYS `async with`
 - NEVER yield individual items; ALWAYS return batches
 
 ## Stack
-- aiohttp for clients (HTTP + WS), FastAPI for servers
-- asyncpg direct, no SQLAlchemy
-- dataclasses over Pydantic when enough
+- ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
+- ALWAYS asyncpg direct, NEVER SQLAlchemy
+- ALWAYS dataclasses over Pydantic unless validation/coercion is needed
 
 ## Named Data Structures
 - ALWAYS dataclass/NamedTuple over bare tuples for return types (except trivial/test code)
+- ALWAYS `@dataclass(frozen=True)` over a heterogeneous tuple used as a dict/map key — positional `key[2]` or `key[:4]` access is a smell; name the fields
+- A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
+- NEVER `kw_only=True` / `InitVar` to dodge dataclass field-ordering — if every caller passes a value the default is dead, so make the field required
 
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
@@ -69,9 +73,9 @@ when_to_use: editing .py files or writing Python code
 ## Style
 - Exception variables: NEVER `e` — use `ex`, `exc`, `err`
 - Use `async with asynccontextmanager` for resource cleanup, never bare `try/finally` for pools/connections
-- Short vars OK: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; `ts`, `ms` for time; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) also fine
-- NEVER `sys.path` modification
-- NEVER `global` keyword except trivial scripts or signal handlers
+- Short vars OK: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; `ts`, `ms` for time; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) — NEVER visually ambiguous `o`, `O`, `l`, `I`
+- NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
+- NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
 
 ## Package Structure
@@ -82,11 +86,13 @@ when_to_use: editing .py files or writing Python code
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
 - `make check`: ruff lint + format check (canonical CQ target)
 - `make right`: pyright only (not in pre-commit)
+- ruff 0.15.17 `ruff-format` strips parens from `except (TypeError, ValueError):` → Py2 `except T, V:` (SyntaxError); guard with `except (TypeError, ValueError):  # fmt: skip`
 
 ## Testing
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
 - Testcontainers: centralize in `conftest.py`
+- NEVER monkeypatch module globals (`module.fn = stub`) for a test seam — ALWAYS inject the dep as a param (`get_cfg_fn: Callable[...] | None = None`) defaulting to the module fn (`get_cfg_fn or get_cfg`)
 
 ## Subprocesses
 - `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leak)
