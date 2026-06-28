@@ -1,6 +1,6 @@
 ---
 name: review
-description: Deep code review with discussion and GitHub posting. Reviews code by bucketing files into groups, applying orthogonal lenses, running parallel analysis agents, then presenting findings for discussion before optionally posting to a GitHub PR.
+description: Deep multi-agent code review, optionally posted to a GitHub PR. NOT for your own uncommitted diff (use /code-review).
 when_to_use: "reviewing code changes, review this, review the branch, review PR <N>"
 user-invocable: true
 ---

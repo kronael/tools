@@ -1,6 +1,6 @@
 ---
 name: humanize
-description: "Humanize text: strip AI-isms and add real voice."
+description: "Humanize text: strip AI-isms and add real voice. NOT for drafting new copy (use writing)."
 version: 2.5.1
 author: Siqi Chen (@blader, https://github.com/blader/humanizer), ported by Hermes Agent
 license: MIT
