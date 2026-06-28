@@ -56,6 +56,8 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 
 ## Named Data Structures
 - ALWAYS dataclass/NamedTuple over bare tuples for return types (except trivial/test code)
+- ALWAYS `@dataclass(frozen=True)` by default for value/data types — immutability prevents aliasing bugs, makes instances hashable, and catches accidental mutation at runtime. Drop `frozen` only for types that are deliberately mutated in place (accumulators, stateful objects like `World`/`Client`)
+- PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS `@dataclass(frozen=True)` over a heterogeneous tuple used as a dict/map key — positional `key[2]` or `key[:4]` access is a smell; name the fields
 - A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
 - NEVER `kw_only=True` / `InitVar` to dodge dataclass field-ordering — if every caller passes a value the default is dead, so make the field required
