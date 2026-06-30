@@ -216,6 +216,7 @@ if [ "$(id -u)" = "0" ]; then\n\
     sed -i "/^$gname:/d" /etc/group\n\
     echo "$gname:x:$g:$gmem" >> /etc/group\n\
   done\n\
+  mkdir -p /run/dockbox/sess && touch /run/dockbox/ready\n\
   [ "$#" -eq 0 ] && set -- /bin/zsh\n\
   exec gosu "$USERNAME" "$@"\n\
 fi\n\

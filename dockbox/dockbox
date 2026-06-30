@@ -270,21 +270,32 @@ fi
 # Name keys on the primary dir's basename (= workdir basename below).
 CONTAINER_NAME="${name_override:-dockbox-${_primary_dir##*/}}"
 
-# Container already up — enter it and run the requested command instead of
-# spawning a fresh one. The command (tool + model/effort/args) applies; the
-# run-time flags (-v mounts, -H network, -D socket, -g/-G/-e creds, tmpfs
-# HOME) belong to the live container and can't change. Run as the host user:
-# exec defaults to the container's --user 0:0 and skips dockbox-init's
-# gosu-drop, so without -u the entered session would be root. Use -n <name>
-# to force a separate, fully-provisioned container instead. Gate this before
+# Every session is a `docker exec` into a detached, long-lived container whose
+# PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
+# container is removed only after the LAST session exits — a session quitting
+# never tears the container out from under other live execs. Run as the host
+# user: exec defaults to --user 0:0 and skips dockbox-init's gosu-drop, so
+# without -u the session would be root. $@ = extra docker-exec flags (e.g. -w).
+enter_session() {
+    trap '' TSTP
+    local sid="$$"
+    docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$sid" 2>/dev/null
+    docker exec -it -u "$(id -u):$(id -g)" -e TERM "$@" "$CONTAINER_NAME" "${cmd[@]}"
+    local rc=$? left
+    left=$(docker exec "$CONTAINER_NAME" sh -c \
+        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)
+    [[ "${left:-0}" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    exit "$rc"
+}
+
+# Container already up — re-enter it. No -w: inherit the container's working
+# dir (the original project, guaranteed mounted); this invocation's workdir may
+# differ and need not exist in the container. The command (tool + model/effort)
+# applies; run-time flags (-v, -H, -D, -g/-G/-e, tmpfs HOME) belong to the live
+# container and can't change — use -n <name> for a separate one. Gate before
 # provisioning so re-entry skips the mount/settings/find work it would discard.
-existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
-if [[ -n "$existing" ]]; then
-    # No -w: inherit the container's working dir (the original project,
-    # guaranteed mounted). This invocation's workdir may differ — the name
-    # only matches on basename, so its path need not exist in the container.
-    exec docker exec -it -u "$(id -u):$(id -g)" -e TERM \
-        "$CONTAINER_NAME" "${cmd[@]}"
+if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
+    enter_session
 fi
 
 mounts=()
@@ -416,8 +427,10 @@ mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-trap '' TSTP
-exec docker run -it --rm \
+# Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
+# lifetime is independent of any session. dockbox-init runs the per-user setup,
+# touches /run/dockbox/ready, then holds the container open with sleep infinity.
+docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
@@ -433,4 +446,14 @@ exec docker run -it --rm \
     "${mounts[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
-    "${cmd[@]}"
+    sleep infinity >/dev/null || { echo "Failed to start container" >&2; exit 1; }
+
+# Wait for dockbox-init to finish per-user setup before the first session.
+for _ in $(seq 1 100); do
+    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
+    docker ps -q -f "name=^${CONTAINER_NAME}$" >/dev/null 2>&1 || \
+        { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
+    sleep 0.1
+done
+
+enter_session -w "$workdir"
