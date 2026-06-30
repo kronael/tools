@@ -86,8 +86,8 @@ Tools (first positional arg — no leading dash):
     sonnet          Claude Code --model claude-sonnet-4-6  (fast workhorse)
     opus            Claude Code --model claude-opus-4-8    (default model)
     fable           Claude Code --model claude-fable-5     (max effort)
-    gpt             Codex -m gpt-5.5            (big)
-    mini            Codex -m gpt-5.4-mini       (workhorse)
+    gpt             Codex -m gpt-5.5             (big)
+    mini            Codex -m gpt-5.4-mini        (workhorse)
     spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
     sh|zsh|bash     Interactive shell
     <any cmd>       Any binary installed in the image
