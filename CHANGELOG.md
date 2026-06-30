@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.31] — 20260630
+
+> kronael v0.3.31 — dockbox keeps parallel sessions alive, codex aliases
+>
+> Quitting one dockbox session no longer kills the others sharing the box, and codex runs sandbox-free with gpt/mini/spark model aliases.
+>
+> • dockbox: a session exiting no longer tears down the container under other live sessions — it survives until the last one leaves
+> • dockbox: `codex` runs with no inner sandbox and no approval prompts, like the claude launcher
+> • dockbox: new codex model aliases — `gpt` (gpt-5.5), `mini` (gpt-5.4-mini), `spark` (gpt-5.3-codex-spark)
+> • rig: `rip HEAD^ ?` works — branch and commit in any order, and `?` opens the branch picker
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: the container now runs detached with a sleeper PID 1 (`--init` reaps zombies); every session is a ref-counted `docker exec`, and the container is removed only after the last session exits. Previously the first session owned PID 1, so quitting it killed every re-entry session and `--rm` tore the box down mid-work.
+- dockbox: `codex` and its aliases launch with `--dangerously-bypass-approvals-and-sandbox` — no inner bwrap, no approval prompts — matching the claude wrapper's posture inside the container.
+- dockbox: added codex model aliases paralleling the claude tiers — `gpt`→gpt-5.5, `mini`→gpt-5.4-mini, `spark`→gpt-5.3-codex-spark. Fixed the usage block that still claimed the default was sonnet@medium (it's opus@high).
+- rig: `rip` classifies args by role, so `rip HEAD^ ?`, `rip ? HEAD^`, `rip branch HEAD^`, and `rip branch:commit` all work; `?` opens the fzf branch picker instead of leaking into git as a bad refspec. The push command is built once, so `-n` dry-run prints exactly what runs.
+- skills: synced local refinements into the repo — merge safety-gate, codex bwrap/pkill-cleanup fix, browse Playwright-debugging section, py frozen-dataclass + ruff rules, review robot-head markers, pr-draft existing-PR flow, worktree-aware diary; fixed review/humanize descriptions per wisdom (dropped workflow text, added NOT clauses).
+
 ## [v0.3.30] — 20260626
 
 > kronael v0.3.30 — dockbox defaults to Opus, .dockboxrc sets flags
