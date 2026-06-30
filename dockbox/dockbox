@@ -263,6 +263,11 @@ fi
 
 if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
     cmd=("$entrypoint" --resume "${claude_args[@]}")
+elif [[ "$entrypoint" == "codex" ]]; then
+    # Mirror the claude wrapper: inside dockbox the container is the perimeter,
+    # so run codex with no inner bwrap sandbox and no approval prompts. The flag
+    # is a top-level option, forwarded to the interactive TUI and to subcommands.
+    cmd=("$entrypoint" --dangerously-bypass-approvals-and-sandbox "${claude_args[@]}")
 else
     cmd=("$entrypoint" "${claude_args[@]}")
 fi
