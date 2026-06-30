@@ -79,13 +79,16 @@ Usage: dockbox [tool] [options] [dirs...] [tool-args...]
        dockbox sh [options] [dirs...]
 
 Tools (first positional arg — no leading dash):
-    (default)       Claude Code, sonnet @ medium effort — the workhorse
-    claude          Claude Code, sonnet (same as default)
-    codex           OpenAI Codex
+    (default)       Claude Code, opus @ high effort — the workhorse
+    claude          Claude Code, opus (same as default)
+    codex           OpenAI Codex (config default model; no sandbox/approvals)
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
     sonnet          Claude Code --model claude-sonnet-4-6  (fast workhorse)
     opus            Claude Code --model claude-opus-4-8    (default model)
     fable           Claude Code --model claude-fable-5     (max effort)
+    gpt             Codex -m gpt-5.5            (big)
+    mini            Codex -m gpt-5.4-mini       (workhorse)
+    spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
     sh|zsh|bash     Interactive shell
     <any cmd>       Any binary installed in the image
 
@@ -222,6 +225,9 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
                 sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 --effort high "${claude_args[@]}") ;;
                 opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
+                gpt)    entrypoint=codex; claude_args=(-m gpt-5.5 "${claude_args[@]}") ;;
+                mini)   entrypoint=codex; claude_args=(-m gpt-5.4-mini "${claude_args[@]}") ;;
+                spark)  entrypoint=codex; claude_args=(-m gpt-5.3-codex-spark "${claude_args[@]}") ;;
                 zsh|bash) entrypoint="/bin/$_tool" ;;
                 *)      entrypoint="$_tool" ;;
             esac
