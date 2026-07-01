@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.37] — 20260701
+
+> kronael v0.3.37 — Codex fallback repair stays in the installer
+>
+> Codex config repair now lives as skill guidance instead of a one-off helper script.
+>
+> • install: `CLAUDE.md` fallback repair is inline guidance, not a Python helper
+> • codex: installers keep `project_doc_fallback_filenames` top-level
+> • docs: AGENTS/README/ARCHITECTURE explain the top-level TOML rule
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- install: removed `kronael/install/codex_config_fallback.py`; the installer
+  skills now directly say to keep `project_doc_fallback_filenames` top-level.
+- codex: bridge-only repair no longer needs source-root discovery just to run a
+  config helper; agents edit the TOML key in place.
+- docs: AGENTS, README, and ARCHITECTURE keep the top-level TOML warning.
+
 ## [v0.3.36] — 20260701
 
 > kronael v0.3.36 — engineering baseline consolidated into the software skill
