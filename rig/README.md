@@ -2,6 +2,8 @@
 
 Lightweight git tools for upstream-only, detached HEAD workflows.
 
+![rig demo](demo/demo.gif)
+
 ## Rationale
 
 **rig optimizes for MAX INFLOW** - getting commands INTO the computer
@@ -48,8 +50,24 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
+| `rig fixup` / `rig sq` | `riq` | Auto-squash fixup commits |
 
 **Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
+
+## Git aliases
+
+These are plain git shortcuts installed as symlinks — no rig logic, just shorter names:
+
+| Symlink | Equivalent |
+|---------|-----------|
+| `gl` | `git log --oneline -20` |
+| `gis` | `git status -uno` |
+| `gig` | `git log --graph --oneline --simplify-by-decoration --all --decorate` |
+| `gitg` | `git log --graph --oneline --all --decorate` |
+| `gp` | `git cherry-pick` |
+| `gpc` | `git cherry-pick --continue` |
+| `gpa` | `git cherry-pick --abort` |
+| `gw` | `git worktree` |
 
 ## Dependencies
 
@@ -63,7 +81,7 @@ cd rig
 make install
 ```
 
-Installs to `~/.local/bin/`.
+Installs `rig` + all symlinks to `~/.local/bin/`.
 
 ## Usage
 

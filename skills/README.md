@@ -52,6 +52,7 @@ Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
 - **dispatch**: "spawn this prompt as a background subagent and continue"
+- **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.

@@ -9,6 +9,24 @@ user-invocable: true
 
 Resolve all merge conflicts in the working tree. Run directly in main context (no subagent).
 
+## 0. Safety gate — don't fuck it up
+
+Before resolving ANYTHING, size the merge and decide whether to ask first.
+
+- Count conflicted files and conflict markers; count commits each side has since
+  the merge base (`git rev-list --count BASE..HEAD` vs `BASE..MERGE_HEAD`).
+- If the merge is large or high-stakes (many files/markers, one side massively
+  supersedes the other, or any semantic/API conflict): **write a one-paragraph
+  resolution plan — strategy + rationale + anything genuinely ambiguous — and ASK
+  for a go-ahead BEFORE touching files.** Cheap insurance; a bad merge silently
+  drops work.
+- Verify NOTHING is lost before proposing "take one side wholesale": confirm every
+  conflicted path exists on the side you keep, and trace any file the other side
+  added/deleted (`git cat-file -e BASE:f / OURS:f / THEIRS:f`) so an agreed
+  deletion isn't mistaken for lost work.
+- Only skip the ask for small, obviously-trivial merges (a handful of
+  complementary/formatting conflicts). When in doubt, ask.
+
 ## 1. Orient
 
 `git log --oneline -5`, check `MERGE_HEAD` / stash if present.

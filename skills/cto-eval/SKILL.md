@@ -1,11 +1,22 @@
 ---
 name: cto-eval
-description: Technical adoption evaluation — build quality, architecture, ops readiness, maintenance burden. NOT for ROI or business strategy (use /ceo-eval).
-when_to_use: "CTO evaluation, technical due diligence, should we adopt this, architecture review, production readiness, tech debt assessment, dependency adoption, engineering risk"
+description: CTO evaluation — technical adoption by default; SLA/code audit on request.
+when_to_use: "CTO evaluation, technical due diligence, production readiness, cto audit, code audit, SLA bet"
+user-invocable: true
 ---
 
-Read `checklist.md` in this skill directory. Work through each section for the target project.
+# CTO Eval
 
-- ALWAYS run build + test first (section 1) — a project that can't pass its own gates signals the rest of the checklist will be worse than it looks.
-- ALWAYS produce a verdict (ADOPT / ADOPT WITH CONDITIONS / TRIAL / DO NOT ADOPT) using the template at the end of `checklist.md`.
-- NEVER skip the maintenance burden forecast — a technically impressive project with one maintainer is a liability.
+Dispatch:
+
+- Technical adoption / due diligence: read `checklist.md`.
+- SLA-bet / adversarial source audit: read `code-audit.md`.
+
+Rules:
+
+- ALWAYS run build + test first for adoption evaluations.
+- ALWAYS produce a verdict using the selected mode's template.
+- NEVER skip maintenance burden. Impressive code with one maintainer is still
+  a liability.
+- NEVER blur CTO and CEO outputs: CTO owns technical production readiness; CEO
+  owns ROI and demo judgment.

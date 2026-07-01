@@ -15,9 +15,32 @@ Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
                           ──> reclaude.py (RECLAUDE.md + preservation note)
 ```
 
-Event/matcher wiring is owned by `../settings-recommended.json`.
+Claude event/matcher wiring is owned by `../settings-recommended.json`.
+Codex event/matcher wiring is owned by `../codex-hooks.json`; every Codex hook
+first runs through `codex_hook.py`.
 
 ## Components
+
+### codex_hook.py (Codex adapter)
+
+**Input:** Codex hook JSON, which may use Codex field names.
+**Output:** delegated hook stdout.
+
+**Flow:**
+1. Normalize payload fields to the Claude hook shape:
+   `cwd`, `session_id`, `hook_event`, `prompt`, `tool_name`, `tool_input`.
+2. Dispatch to one installed target hook under `~/.claude/hooks/`.
+3. Translate Claude output for Codex: strip Claude-only `ok`, promote
+   `systemMessage` to `hookSpecificOutput.additionalContext` for prompt/tool
+   hooks, and rewrite Kronael nudge refs from `/skill` to `@skill`.
+4. For Codex `PreCompact`, suppress context-only `systemMessage` output because
+   Codex only accepts block decisions for that event; forward
+   `decision:block` if a hook emits one.
+5. Forward Stop `decision:block` output after the same nudge-ref rewrite, so
+   commit/diary nudges work in both runtimes.
+
+This keeps the business logic in one hook implementation while allowing Codex
+and Claude to use different lifecycle wiring.
 
 ### prompt_nudge.py (UserPromptSubmit)
 
@@ -34,6 +57,7 @@ Event/matcher wiring is owned by `../settings-recommended.json`.
    otherwise emit the first fuzzy-matched agent route.
 
 **Routes:** `AGENT_KEYWORDS` dict in the source.
+Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 ### pretool_nudge.py (PreToolUse)
 
@@ -49,22 +73,27 @@ Event/matcher wiring is owned by `../settings-recommended.json`.
 3. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
    each nudge fires once.
 4. Emit "Editing/reading <file> — follow <skill> conventions."
+Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### post_tool_nudge.sh (PostToolUse)
 
-**Input:** stdin unused; state in `/tmp/claude-commit-nudge` (ts + count).
+**Input:** original hook payload; state in the current repo's git dir
+(`post_tool_nudge`, ts + count).
 **Output:** `stop.py`'s output every 100 tool calls or 10 minutes,
 otherwise silent. Always exits 0 — never blocks a tool call.
 
 **Flow:**
 1. Increment the call counter.
-2. At 100 calls or 600 s, reset state and run `stop.py` so the
-   commit/diary nudge also fires mid-session, not only on Stop.
+2. At 100 calls or 600 s, reset state and pipe the original payload to
+   `stop.py` so the commit/diary nudge also fires mid-session, not only on
+   Stop.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
 **Input:** JSON with `prompt`, `hook_event`, `session_id`, `cwd`.
 **Output:** `{"ok": true, "systemMessage": "<content>"}` or silent.
+Codex runs this through `codex_hook.py`; PreCompact context output is
+suppressed there to avoid invalid Codex hook JSON.
 
 **Flow:**
 1. First prompt per session (tracked via `$cwd/.claude/tmp/local-{sid}`)
@@ -77,6 +106,8 @@ otherwise silent. Always exits 0 — never blocks a tool call.
 
 **Input:** JSON with `hook_event`.
 **Output:** `{"ok": true, "systemMessage": "<RECLAUDE.md>"}` or silent.
+Codex runs this through `codex_hook.py`; PreCompact context output is
+suppressed there to avoid invalid Codex hook JSON.
 
 **Flow:**
 1. Reads `~/.claude/RECLAUDE.md`; silent exit if missing.
@@ -124,16 +155,19 @@ stdout (prompt_nudge.py match):
 ```
 stdin:
 {
-  "cwd": "/project",
-  "stop_hook_active": false
+  "cwd": "/project"
+  // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
 }
 
 stdout (dirty tree + stale diary):
 {
   "decision": "block",
-  "reason": "Uncommitted changes detected.\n <diff stat>\nConsider running /commit.\nDiary not updated in over an hour. Consider running /diary."
+  "reason": "Uncommitted changes detected.\n <diff stat>\nRun /commit.\nDiary not updated in over an hour. Run /diary."
 }
 ```
+
+Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and
+`Run @diary`.
 
 ## Error Handling
 

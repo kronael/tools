@@ -45,7 +45,8 @@ install path from the GitHub marketplace snapshot.
 
 The Codex plugin is only the installer bridge. It contains one Codex skill
 (`kronael-install`); the Kronael bundle installs to `~/.claude/`, then the
-bridge exposes those installed skills to Codex through `~/.agents/skills`.
+bridge exposes those installed skills to Codex through `~/.agents/skills` and
+wires Codex lifecycle hooks through `~/.codex/hooks.json`.
 
 **Codex plugin path**:
 
@@ -57,30 +58,33 @@ codex plugin add kronael@kronael
 Then start a fresh Codex thread and ask:
 
 ```text
-Use $kronael-install to install/update Kronael.
+Use @kronael-install to install/update Kronael.
 ```
 
 The same skill also handles bridge-only setup:
 
 ```text
-Use $kronael-install to bridge CLAUDE.md and .claude/skills into Codex.
+Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
-The bridge does not duplicate `skills/`, `agents/`, or `hooks/` into the Codex
-plugin cache. It reads the GitHub marketplace snapshot, deploys the Claude
-bundle into `~/.claude/`, and symlinks the installed skills into Codex's user
-skill location.
+The bridge does not duplicate `skills/`, `agents/`, or hook scripts into the
+Codex plugin cache. It reads the marketplace snapshot, deploys the Claude
+bundle into `~/.claude/`, symlinks the installed skills into Codex's user skill
+location, and copies `codex-hooks.json` into `~/.codex/hooks.json`.
 
 To repair or apply only the Codex side of that bridge, ask:
 
 ```text
-Use $kronael-install to bridge .claude/skills into Codex.
+Use @kronael-install to bridge .claude/skills and hooks into Codex.
 ```
 
-That links `~/.agents/skills` to `~/.claude/skills` when possible. If
-`~/.agents/skills` already exists as a directory, the bridge adds per-skill
-symlinks for Kronael skills instead. Codex scans `~/.agents/skills`, not
-`~/.claude/skills`.
+That links `~/.agents/skills` to `~/.claude/skills` when possible and copies
+`codex-hooks.json` to `~/.codex/hooks.json`. If `~/.agents/skills` already
+exists as a directory, the bridge adds per-skill symlinks for Kronael skills
+instead. Codex scans `~/.agents/skills`, not `~/.claude/skills`.
+In Codex, bridged Kronael skills are invoked as `@skill-name` (for example,
+`@refine`); installed hook nudges rewrite Claude `/skill` references to that
+form.
 
 Codex compatibility for Claude projects:
 
@@ -98,10 +102,13 @@ Troubleshooting:
   `codex plugin add kronael@kronael`.
 - Kronael skills missing in Codex after install: run the bridge prompt above,
   then start a new Codex thread and open `/skills`.
-- Claude hooks missing after install: rerun `$kronael-install`; it merges hook
+- Kronael hooks missing in Codex after install: run the bridge prompt above to
+  refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open
+  `/hooks`, and trust the changed command hooks.
+- Claude hooks missing after install: rerun `@kronael-install`; it merges hook
   wiring from `settings-recommended.json`.
 - Codex says `Skipped loading ... invalid SKILL.md`: run
-  `make skills-frontmatter-fix`, reinstall/bridge with `$kronael-install`,
+  `make skills-frontmatter-fix`, reinstall/bridge with `@kronael-install`,
   then start a new Codex thread. The lint extracts SKILL.md frontmatter,
   validates it with PyYAML, and fixes known loose forms Claude Code tolerated.
 
@@ -114,10 +121,12 @@ Troubleshooting:
   only ones that run locally are bundled. Index and rationale:
   [skills/README.md](skills/README.md).
 - **Agents** (`agents/`) — task workers (`@distill`, `@improve`, `@learn`,
-  `@readme`, `@refine`, `@visual`), mostly launched via slash commands.
+  `@readme`, `@refine`, `@visual`; model-tier: `@haiku`, `@sonnet`, `@opus`,
+  `@fable`), mostly launched via slash commands.
 - **Hooks** (`hooks/`) — lifecycle scripts: keyword nudging, `LOCAL.md`
-  injection, rule re-injection across compaction, stop-time checks. Wiring
-  lives in `settings-recommended.json`; see [hooks/README.md](hooks/README.md).
+  injection, rule re-injection across compaction, stop-time checks. Claude
+  wiring lives in `settings-recommended.json`; Codex wiring lives in
+  `codex-hooks.json`; see [hooks/README.md](hooks/README.md).
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
 
 ### Layout
@@ -130,6 +139,7 @@ kronael/install/SKILL.md    plugin-exposed install procedure (source of truth)
 skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
 hooks/                      bundle copied to ~/.claude/hooks/
+codex-hooks.json            copied to ~/.codex/hooks.json for Codex hooks
 settings-recommended.json   merged into ~/.claude/settings.json
 RECLAUDE.md                 template for ~/.claude/RECLAUDE.md
 ```

@@ -1,17 +1,175 @@
 # Changelog
 
-## [v0.3.26] — 20260618
+## [v0.3.33] — 20260701
 
-> kronael v0.3.26 — install skill knows when the plugin is missing
+> kronael v0.3.33 — eval skills stay compact
 >
-> The install skill now detects whether it's running from a plugin or a cloned repo, and explains why `/kronael:install` won't work when the plugin isn't registered.
+> CEO/CTO evals now route adoption and audit work cleanly, while stop hooks enforce `/fin` follow-through.
 >
-> • Install skill checks `installed_plugins.json` for `kronael@*` before proceeding
-> • Reports missing plugin registration so user knows to say "install" instead
+> • `/ceo-eval`: adoption checklist stays default; demo audit moved to cold docs
+> • `/cto-eval`: technical due diligence stays default; SLA audit moved to cold docs
+> • `/create-eval`: generates project health evals without colliding with CEO/CTO audits
+> • Stop hook: `/fin` sessions get one last open-items guard before stopping
+> • Wisdom: repo guidance points at global wisdom; facts/refs conventions are preserved
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `kronael/install/SKILL.md`: detect source root (`CLAUDE_PLUGIN_ROOT` vs CWD) and plugin registry status before proceeding; explain `Skill("kronael:install")` failure when plugin absent
+- `/ceo-eval` and `/cto-eval` keep compact dispatch-only `SKILL.md` files:
+  incoming adoption checklists remain in `checklist.md`, while local demo/SLA
+  audit runbooks moved to `demo-audit.md` and `code-audit.md`.
+- `/create-eval` now targets project health checks, avoiding the overloaded
+  generic `eval` name and keeping adversarial audits under CEO/CTO evals.
+- `hooks/stop.py` keeps the incoming throttled commit/diary nudge behavior and
+  adds the local `/fin` open-items guard at stop time.
+- `CLAUDE.md` remains repo-specific; global wisdom stays sourced from
+  `skills/global/SKILL.md`, including the new facts/refs conventions.
+- `/oracle` remains a thin alias to `/codex`; duplicated runbook content stays
+  in the canonical codex skill.
+
+## [v0.3.32] — 20260701
+
+> kronael v0.3.32 — Codex nudges use @skills
+>
+> Codex hook nudges now point at installed `@skill` commands, and prompt routing covers the reasonable workflow agents.
+>
+> • Codex: nudges rewrite `/refine`, `/commit`, and `/py` to `@refine`, `@commit`, and `@py`
+> • Prompt nudges: more workflow routes — release, specs, diagrams, security, UX, writing, model agents
+> • `/fix`: bundled in source so the existing bug-fix nudge points at an installed skill
+> • Hooks: adapter/pretool tests moved out of production scripts, keeping hook files under 200 lines
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Codex hook output now rewrites known Kronael nudge references from `/skill` to `@skill`, covering prompt nudges, file-extension skill nudges, and stop-time commit/diary nudges.
+- Prompt keyword routing covers the reasonably nudgeable workflow, evaluation, writing, UX, release, and model-agent skills; stale `/verify` and `/schedule` routes were removed.
+- Added source `skills/fix/SKILL.md` so the existing `/fix` nudge installs a bundled bug-fix workflow.
+- Split `codex_hook.py` and `pretool_nudge.py` tests into dedicated pytest files, keeping production hook scripts under 200 lines.
+- Codex install docs now teach `@kronael-install` and `@skill-name`, while Claude docs keep slash-command examples where they still apply.
+
+## [v0.3.31] — 20260630
+
+> kronael v0.3.31 — dockbox keeps parallel sessions alive, codex aliases
+>
+> Quitting one dockbox session no longer kills the others sharing the box, and codex runs sandbox-free with gpt/mini/spark model aliases.
+>
+> • dockbox: a session exiting no longer tears down the container under other live sessions — it survives until the last one leaves
+> • dockbox: `codex` runs with no inner sandbox and no approval prompts, like the claude launcher
+> • dockbox: new codex model aliases — `gpt` (gpt-5.5), `mini` (gpt-5.4-mini), `spark` (gpt-5.3-codex-spark)
+> • rig: `rip HEAD^ ?` works — branch and commit in any order, and `?` opens the branch picker
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: the container now runs detached with a sleeper PID 1 (`--init` reaps zombies); every session is a ref-counted `docker exec`, and the container is removed only after the last session exits. Previously the first session owned PID 1, so quitting it killed every re-entry session and `--rm` tore the box down mid-work.
+- dockbox: `codex` and its aliases launch with `--dangerously-bypass-approvals-and-sandbox` — no inner bwrap, no approval prompts — matching the claude wrapper's posture inside the container.
+- dockbox: added codex model aliases paralleling the claude tiers — `gpt`→gpt-5.5, `mini`→gpt-5.4-mini, `spark`→gpt-5.3-codex-spark. Fixed the usage block that still claimed the default was sonnet@medium (it's opus@high).
+- rig: `rip` classifies args by role, so `rip HEAD^ ?`, `rip ? HEAD^`, `rip branch HEAD^`, and `rip branch:commit` all work; `?` opens the fzf branch picker instead of leaking into git as a bad refspec. The push command is built once, so `-n` dry-run prints exactly what runs.
+- skills: synced local refinements into the repo — merge safety-gate, codex bwrap/pkill-cleanup fix, browse Playwright-debugging section, py frozen-dataclass + ruff rules, review robot-head markers, pr-draft existing-PR flow, worktree-aware diary; fixed review/humanize descriptions per wisdom (dropped workflow text, added NOT clauses).
+
+## [v0.3.30] — 20260626
+
+> kronael v0.3.30 — dockbox defaults to Opus, .dockboxrc sets flags
+>
+> dockbox now launches Claude at opus/high by default, bakes in `udfix`, and lets `~/.dockboxrc` carry default flags like `-A`.
+>
+> • dockbox: bare `dockbox` runs opus @ high effort (was sonnet/medium); `dockbox sonnet` now launches at high effort
+> • dockbox: `~/.dockboxrc` sets dockbox flags — put `-A` there to always forward your SSH agent
+> • dockbox: `udfix` (box-drawing junction repair) is now built into the image
+> • rig: bare `gw` defaults to `git worktree list` instead of erroring on the missing subcommand
+> • the `/sonnet` subagent drops to medium effort
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default Claude tool is now opus at high effort (was sonnet/medium) — `--model claude-opus-4-8 --effort high` is injected when no `--model` is given. The `sonnet` launcher alias now passes `--effort high` too.
+- dockbox: `.dockboxrc` now carries dockbox flags instead of raw `docker run` args (which were injected too late to affect any dockbox flag). `~/.dockboxrc` is read before flag parsing and prepended so the command line overrides it — the full flag set, including `-A`/`-D`/`-S`. Project `.dockboxrc` runs through a gated pass that drops the privilege flags (`-A`/`-D`/`-S`) and tool/name flags (`-n`/`-d`/`-x`) so an untrusted repo can't auto-escalate. Flag reading (`read_rc`) and flag→effect (`apply_flag`) are now single shared helpers; `apply_flag` always returns 0 so a tokenless `-g` can't trip `set -e`, and `OPTARG` is defaulted for no-arg flags under `set -u`.
+- dockbox: `udfix` is built into the image from its own Makefile (`make -C udfix install PREFIX=/usr/local/bin`); the build context widened to the repo root, and udfix's Makefile gained an overridable `PREFIX`.
+- skills: the `/sonnet` subagent now runs at medium effort (was high) — the interactive `dockbox sonnet` launcher is the one at high effort.
+- rig: bare `gw` now runs `git worktree list` instead of erroring on the missing subcommand; explicit args still pass through.
+- install: the install skill detects its source root (`CLAUDE_PLUGIN_ROOT` vs CWD) and checks `~/.claude/plugins/installed_plugins.json` for `kronael@*`, explaining why `Skill("kronael:install")` fails when the plugin isn't registered (merged from origin/master).
+
+## [v0.3.29] — 20260623
+
+> kronael v0.3.29 — rig alias fix, dockbox re-entry, /codex restored
+>
+> Fixes rig's git-alias symlinks (they were passing their own name to git), re-enters a running dockbox, and restores `/codex`.
+>
+> • rig: `gl`/`gis`/`gig`/`gitg` symlinks now work — they were leaking their own name as a git arg
+> • rig: new `gw` alias for `git worktree`; an animated terminal demo gif is embedded in the README
+> • dockbox: re-running for an active project now `docker exec`s into the live box, not a new container
+> • `/codex` is the canonical second-opinion skill again; `/oracle` is a thin alias for it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: fixed `gl`/`gis`/`gig`/`gitg` — invoked as symlinks they passed their own name to git (`git log gl` → unknown revision) because the dispatch arm was missing a `shift`. Added `gw` → `git worktree`, wired through every install/usage/clean surface.
+- rig: committed the terminal demo as `rig/demo/demo.gif` (rendered headlessly via a virtual-clock recorder + `agg`), embedded it in the README, and pointed `make demo` at it. Demo now renders the title at t=0 and gives the graph its own screen.
+- dockbox: re-running `dockbox` for a project whose container is already up now `docker exec`s the requested tool into the live box as the host user, instead of spawning a second container — model/effort ride in the command so they still apply, while run-time mounts/network stay frozen at creation. The re-entry probe runs before provisioning, so it skips the settings-merge and `find` walk it would otherwise discard.
+- skills: restored `/codex` as the canonical second-opinion skill with `/oracle` as a thin alias (reverts the v0.3.26 codex→oracle rename); fixed the install prune list so reinstalls no longer delete `~/.claude/skills/codex`. Trimmed the duplicate `oracle` keyword from codex's `when_to_use`.
+
+## [v0.3.28] — 20260622
+
+> kronael v0.3.28 — rig demo, sonnet default
+>
+> rig gets an animated terminal demo, and dockbox now launches Claude at sonnet/medium by default instead of haiku.
+>
+> • dockbox: bare `dockbox` now runs sonnet @ medium effort — haiku is opt-in (`dockbox haiku`) for speed/cost
+> • rig: scripted asciinema demo walks the detached-HEAD workflow — checkout, push, rebase, merge, fixup
+> • rig demo: simulated fzf picker shows `rco ?` narrowing the branch list as you type
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: added a scripted terminal demo (`rig/demo/run.ts` + `make demo`) covering the detached-HEAD workflow — orientation (`gl`/`gis`/`gig`), checkout, push, rebase, merge, fixup squash. Includes an honest fzf-picker simulation for `rco ?` that narrows the branch list by subsequence match as the query types, plus narrative framing (old-way contrast, inline jargon notes) so the detached-HEAD idea reads as intentional, not broken.
+- dockbox: default tool is now sonnet at medium effort (was haiku). `--model claude-sonnet-4-6 --effort medium` is injected only when no `--model` is given; explicit `dockbox haiku` drops to the fast/cheap model, and `dockbox sonnet`/`opus`/`fable` are unchanged.
+
+## [v0.3.27] — 20260622
+
+> kronael v0.3.27 — dockbox haiku default, settings fix, wisdom refinements, rig aliases
+>
+> • dockbox: default model haiku; sandbox restart loop fixed (patches settings.json directly)
+> • settings-recommended.json: rm deny glob fixed (`/)*` → `/*)`); gh-comment allow rules added
+> • global wisdom: Grug rules + no-tables response style added; gh-comment ALWAYS rule
+> • skills refined: oracle adversarial framing, gh-comment Codex fallback, bugs/py ALWAYS/NEVER
+> • hooks: post_tool_nudge.sh stderr fixed (2>&1 → 2>/dev/null)
+> • rig: git alias shortcuts gl, gis, gig, gitg, gp, gpc, gpa
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default model now `claude-haiku-4-5-20251001` — fast and cheap; re-select with `--model` or model alias when you need more. Sandbox restart loop fixed: dockbox now patches a merged `settings.json` with `sandbox.enabled: false` and mounts it `:ro` so the Claude Code instance never tries to restart into bubblewrap.
+- settings-recommended.json: rm deny rules had glob outside parens (`Bash(rm -rf /)*` → `Bash(rm -rf /*)`); fix makes `rm -rf /home` actually denied. Added `Bash(gh pr comment*)`, `Bash(gh api repos/*/pulls/*/reviews*)`, `Bash(gh api repos/*/pulls/*/comments*)` to allow — needed for `/gh-comment` workflow.
+- global wisdom (skills/global/SKILL.md → ~/.claude/CLAUDE.md): added Grug rules block (match tool to task weight, locality of behavior, Chesterton's fence); added no-tables/no-headers sentence to Response Style; added ALWAYS rule to use `/gh-comment` for PR comment/review posting.
+- skills/oracle: adversarial framing rules tightened; `-s danger-full-access` flag clarified as the correct flag for skipping bubblewrap in containers.
+- skills/gh-comment: Codex fallback — AskUserQuestion unavailable in Codex; replaced with explicit chat-confirmation requirement.
+- skills/bugs, skills/py: SHOULD→ALWAYS/NEVER; removed duplicate global rules; added NEVER yield individual items batch rule to py.
+- hooks/post_tool_nudge.sh: stderr was leaking into hook stdout (interpreted as JSON); fixed with `2>/dev/null`.
+- rig: added git alias shortcuts installed as symlinks — `gl` (log), `gis` (status -uno), `gig`/`gitg` (graph log), `gp`/`gpc`/`gpa` (cherry-pick).
+
+## [v0.3.26] — 20260622
+
+> kronael v0.3.26 — Codex hooks, dockbox tools, caveman style, oracle skill
+>
+> • Codex hooks install to `~/.codex/hooks.json` through `codex-hooks.json`
+> • `codex_hook.py` adapts Codex payloads before calling installed Claude hooks
+> • `PreCompact` no longer returns invalid context JSON in Codex
+> • dockbox: first positional arg selects tool (codex, haiku, sonnet, opus, fable, any binary)
+> • `output-styles/80-caveman.md` added; activated in settings-recommended.json
+> • `/codex` skill renamed to `/oracle`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Added Codex lifecycle hook wiring via `codex-hooks.json`, installed to
+  `~/.codex/hooks.json`.
+- Added `hooks/codex_hook.py` to normalize Codex hook payloads, translate prompt
+  and tool context output, and delegate to the installed Kronael hook scripts.
+- Fixed Codex `PreCompact` handling so Claude-style context output is suppressed
+  instead of being returned as invalid Codex hook JSON; block decisions still
+  pass through.
+- Updated install docs and bridge prompts so Codex installs `~/.agents/skills`
+  and `~/.codex/hooks.json`, with `/hooks` trust as the explicit review step.
+- Fixed `post_tool_nudge.sh` to pass the original hook payload through to
+  `stop.py` when the periodic nudge fires.
+- dockbox: first positional arg is now the tool entrypoint; model aliases
+  (haiku/sonnet/opus/fable) map to `claude --model <id>`; `-d` flag added as
+  explicit tool selector; `-x` kept hidden for compat.
+- Added `output-styles/80-caveman.md` (stripped-not-broken output style);
+  `settings-recommended.json` activates it via `outputStyle`.
+- Renamed `skills/codex` → `skills/oracle`; `codex` added to install prune list.
 
 ## [v0.3.25] — 20260618
 

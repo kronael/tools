@@ -21,7 +21,8 @@ MOUNTS=(
 
 name_override=""
 entrypoint="claude"
-network=""
+entrypoint_explicit=""
+network_arg=()
 ssh_agent=""
 docker_sock=""
 grant_sudo=""
@@ -31,7 +32,6 @@ extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
-output_to_clean=()
 claude_args=()
 
 case "${1:-}" in
@@ -74,13 +74,27 @@ case "${1:-}" in
         shift ;;
     -h|--help)
         cat <<EOF
-Usage: dockbox [options] [dirs...] [claude-args...]
+Usage: dockbox [tool] [options] [dirs...] [tool-args...]
        dockbox ls | rm [pattern] | prune [hours]
-       dockbox sh|enter [options] [dirs...]
+       dockbox sh [options] [dirs...]
+
+Tools (first positional arg — no leading dash):
+    (default)       Claude Code, opus @ high effort — the workhorse
+    claude          Claude Code, opus (same as default)
+    codex           OpenAI Codex (config default model; no sandbox/approvals)
+    haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
+    sonnet          Claude Code --model claude-sonnet-4-6  (fast workhorse)
+    opus            Claude Code --model claude-opus-4-8    (default model)
+    fable           Claude Code --model claude-fable-5     (max effort)
+    gpt             Codex -m gpt-5.5             (big)
+    mini            Codex -m gpt-5.4-mini        (workhorse)
+    spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
+    sh|zsh|bash     Interactive shell
+    <any cmd>       Any binary installed in the image
 
 Options:
     -n name    Override container name (default: dockbox-<project>)
-    -x cmd     Override entrypoint (default: claude)
+    -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
@@ -113,8 +127,11 @@ Ephemeral builds (default):
     (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
-    dockbox                           # current dir
-    dockbox ~/wk/project              # mount project
+    dockbox                           # current dir, sonnet @ medium (default)
+    dockbox ~/wk/project              # mount project, sonnet
+    dockbox haiku ~/wk/project        # drop to haiku for speed/cost
+    dockbox codex ~/wk/project        # OpenAI Codex
+    dockbox sh                        # interactive shell
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
@@ -123,16 +140,63 @@ Examples:
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
-    dockbox -x bash                   # run bash instead
+    dockbox sh                        # 2nd session: enters the running box
+    dockbox codex                     # enters running box, launches codex
+
+Re-entry: if a dockbox for the project is already running, the command
+runs inside that live container (shared HOME, mounts, processes) instead
+of starting a new one. Tool/model/effort apply; run-time flags (-v, -H,
+-D, -g, -e) don't — they belong to the existing container. Use -n <name>
+to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
 
-Config: ~/.dockboxrc and .dockboxrc in project dir.
-        Extra docker args, one per line. # comments ok.
+Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
+        dockbox flags, one per line, # comments ok. The command line
+        overrides ~/.dockboxrc. Project .dockboxrc takes the safe
+        subset only — -A/-D/-S are ignored there (use ~/.dockboxrc).
 EOF
         exit 0 ;;
 esac
+
+# Read whitespace-split flag tokens from an rc file into global rc_tokens.
+# Blank lines and # comments ignored. Missing file -> empty.
+read_rc() {
+    rc_tokens=()
+    [[ -f "$1" ]] || return 0
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        read -ra words <<< "$line"
+        rc_tokens+=("${words[@]}")
+    done < "$1"
+}
+
+# Apply one parsed flag. Single source of truth for flag semantics, shared by
+# the command line and both rc files.
+apply_flag() {
+    case "$1" in
+        n) name_override="$2" ;;
+        d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
+        e) extra_env+=(-e "$2") ;;
+        v) extra_vols+=("$2") ;;
+        H) network_arg=(--network host) ;;
+        A) ssh_agent=1 ;;
+        D) docker_sock=1 ;;
+        S) grant_sudo=1 ;;
+        P) persist_builds=1 ;;
+        T) eph_no_tmpfs=1 ;;
+        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
+           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        G) gcloud_creds=1 ;;
+        *) claude_args+=("-$2") ;;
+    esac
+    return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
+}
+
+# ~/.dockboxrc: default flags, prepended so the command line overrides them.
+read_rc "$HOME/.dockboxrc"
+set -- "${rc_tokens[@]}" "$@"
 
 # pre-strip long flags getopts can't parse
 _args=()
@@ -144,25 +208,33 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:x:e:v:HADgGPTS" opt; do
-    case "$opt" in
-        n) name_override="$OPTARG" ;;
-        x) entrypoint="$OPTARG" ;;
-        e) extra_env+=(-e "$OPTARG") ;;
-        v) extra_vols+=("$OPTARG") ;;
-        H) network="--network host" ;;
-        A) ssh_agent=1 ;;
-        D) docker_sock=1 ;;
-        S) grant_sudo=1 ;;
-        P) persist_builds=1 ;;
-        T) eph_no_tmpfs=1 ;;
-        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
-           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
-        G) gcloud_creds=1 ;;
-        *) claude_args+=("-$OPTARG") ;;
-    esac
+while getopts ":n:d:x:e:v:HADgGPTS" opt; do
+    apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
+
+# First positional arg: if not a path and -x wasn't given, it's the tool.
+# Model aliases map to claude with --model; anything else is the binary name.
+if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
+    case "$1" in
+        /*|./*|.|~*) : ;;  # path — use default entrypoint
+        *)
+            _tool="$1"; shift
+            case "$_tool" in
+                haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 --effort high "${claude_args[@]}") ;;
+                opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 "${claude_args[@]}") ;;
+                fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
+                gpt)    entrypoint=codex; claude_args=(-m gpt-5.5 "${claude_args[@]}") ;;
+                mini)   entrypoint=codex; claude_args=(-m gpt-5.4-mini "${claude_args[@]}") ;;
+                spark)  entrypoint=codex; claude_args=(-m gpt-5.3-codex-spark "${claude_args[@]}") ;;
+                zsh|bash) entrypoint="/bin/$_tool" ;;
+                *)      entrypoint="$_tool" ;;
+            esac
+            ;;
+    esac
+fi
+
 for arg in "$@"; do
     case "$arg" in
         /*|./*|.|~*) dirs+=("$arg") ;;
@@ -172,13 +244,69 @@ done
 
 [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
 _primary_dir="$(cd "${dirs[-1]}" && pwd)"
+
+# Project .dockboxrc: per-repo default flags, applied before any flag is
+# consumed below. Gated to the safe subset — an untrusted repo must not
+# silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
+# or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
+read_rc "$_primary_dir/.dockboxrc"
+OPTIND=1
+while getopts ":n:d:x:e:v:HADgGPTS" opt "${rc_tokens[@]}"; do
+    case "$opt" in
+        A|D|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+        *) apply_flag "$opt" "${OPTARG:-}" ;;
+    esac
+done
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
+# Default tool: opus at high effort — the workhorse. Explicit model
+# aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
+if [[ "$entrypoint" == "claude" ]] && \
+   ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
+    claude_args=(--model claude-opus-4-8 --effort high "${claude_args[@]}")
+fi
+
 if [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
     cmd=("$entrypoint" --resume "${claude_args[@]}")
+elif [[ "$entrypoint" == "codex" ]]; then
+    # Mirror the claude wrapper: inside dockbox the container is the perimeter,
+    # so run codex with no inner bwrap sandbox and no approval prompts. The flag
+    # is a top-level option, forwarded to the interactive TUI and to subcommands.
+    cmd=("$entrypoint" --dangerously-bypass-approvals-and-sandbox "${claude_args[@]}")
 else
     cmd=("$entrypoint" "${claude_args[@]}")
+fi
+
+# Name keys on the primary dir's basename (= workdir basename below).
+CONTAINER_NAME="${name_override:-dockbox-${_primary_dir##*/}}"
+
+# Every session is a `docker exec` into a detached, long-lived container whose
+# PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
+# container is removed only after the LAST session exits — a session quitting
+# never tears the container out from under other live execs. Run as the host
+# user: exec defaults to --user 0:0 and skips dockbox-init's gosu-drop, so
+# without -u the session would be root. $@ = extra docker-exec flags (e.g. -w).
+enter_session() {
+    trap '' TSTP
+    local sid="$$"
+    docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$sid" 2>/dev/null
+    docker exec -it -u "$(id -u):$(id -g)" -e TERM "$@" "$CONTAINER_NAME" "${cmd[@]}"
+    local rc=$? left
+    left=$(docker exec "$CONTAINER_NAME" sh -c \
+        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)
+    [[ "${left:-0}" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    exit "$rc"
+}
+
+# Container already up — re-enter it. No -w: inherit the container's working
+# dir (the original project, guaranteed mounted); this invocation's workdir may
+# differ and need not exist in the container. The command (tool + model/effort)
+# applies; run-time flags (-v, -H, -D, -g/-G/-e, tmpfs HOME) belong to the live
+# container and can't change — use -n <name> for a separate one. Gate before
+# provisioning so re-entry skips the mount/settings/find work it would discard.
+if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
+    enter_session
 fi
 
 mounts=()
@@ -191,15 +319,28 @@ for m in "${MOUNTS[@]}"; do
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
-# override settings.local.json after ~/.claude mount to bypass trust prompts
+# Override settings.json with sandbox disabled — settings.local.json alone does
+# not suppress the sandbox restart loop when the host settings.json enables it.
+# Merge host settings then force sandbox off so the host config (permissions,
+# hooks) is preserved but the container never enters bubblewrap mode.
 _settings=$(mktemp)
-echo '{"defaultMode":"bypassPermissions","sandbox":{"enabled":false}}' > "$_settings"
-mounts+=(-v "$_settings:/home/dockbox/.claude/settings.local.json:ro")
+python3 -c "
+import json, os, sys
+path = os.path.expanduser('~/.claude/settings.json')
+try:
+    d = json.load(open(path))
+except Exception:
+    d = {}
+d['sandbox'] = {'enabled': False}
+d['defaultMode'] = 'bypassPermissions'
+print(json.dumps(d))
+" > "$_settings"
+mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")
 
-docker_gid_arg=""
+docker_gid_arg=()
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
-    docker_gid_arg="--group-add $(stat -c %g /var/run/docker.sock)"
+    docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
@@ -230,8 +371,6 @@ for vol in "${extra_vols[@]}"; do
     src="$(cd "$vol" && pwd)"
     mounts+=(-v "$src:$src:$mode")
 done
-
-CONTAINER_NAME="${name_override:-dockbox-${workdir##*/}}"
 
 # Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
 # chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
@@ -293,38 +432,21 @@ extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
 mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 
-rcargs=()
-for rc in "$HOME/.dockboxrc" "$workdir/.dockboxrc"; do
-    [[ -f "$rc" ]] || continue
-    while IFS= read -r line; do
-        [[ -z "$line" || "$line" == \#* ]] && continue
-        read -ra words <<< "$line"
-        rcargs+=("${words[@]}")
-    done < "$rc"
-done
-
 # overmount so container can't modify project .dockboxrc
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
-existing=$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)
-if [[ -n "$existing" ]]; then
-    if [[ "$entrypoint" == "/bin/zsh" ]]; then
-        exec docker exec -it "$CONTAINER_NAME" /bin/zsh
-    fi
-    echo "container '$CONTAINER_NAME' is already running" >&2
-    echo "use -n <name> or stop it first" >&2
-    exit 1
-fi
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-trap '' TSTP
-exec docker run -it --rm \
+# Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
+# lifetime is independent of any session. dockbox-init runs the per-user setup,
+# touches /run/dockbox/ready, then holds the container open with sleep infinity.
+docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
-    $network \
-    $docker_gid_arg \
+    "${network_arg[@]}" \
+    "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
@@ -333,7 +455,16 @@ exec docker run -it --rm \
     "${extra_env[@]}" \
     "${ssh_env[@]}" \
     "${mounts[@]}" \
-    "${rcargs[@]}" \
     -w "$workdir" \
     -- "$IMAGE" \
-    "${cmd[@]}"
+    sleep infinity >/dev/null || { echo "Failed to start container" >&2; exit 1; }
+
+# Wait for dockbox-init to finish per-user setup before the first session.
+for _ in $(seq 1 100); do
+    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
+    docker ps -q -f "name=^${CONTAINER_NAME}$" >/dev/null 2>&1 || \
+        { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
+    sleep 0.1
+done
+
+enter_session -w "$workdir"
