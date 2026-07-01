@@ -2,9 +2,13 @@
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
 when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
+requires: software-engineering
 ---
 
 # Python
+
+Requires the `software-engineering` skill for shared naming, style, and design
+rules. Below are Python-specific additions and deltas.
 
 ## Verify before claiming
 - ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge.
@@ -20,6 +24,7 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 - NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
 - NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
+- NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
 
@@ -75,10 +80,11 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 ## Style
 - Exception variables: NEVER `e` — use `ex`, `exc`, `err`
 - Use `async with asynccontextmanager` for resource cleanup, never bare `try/finally` for pools/connections
-- Short vars OK: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; `ts`, `ms` for time; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) — NEVER visually ambiguous `o`, `O`, `l`, `I`
+- Python-specific short vars: `ts`, `ms` for time
 - NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
 - NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
+- For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code
@@ -94,7 +100,11 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
 - Testcontainers: centralize in `conftest.py`
+- ALWAYS build properly shaped test doubles (`Mock` / `MagicMock` with explicit
+  attrs or a small fake class); NEVER make production code tolerate incomplete
+  fakes
 - NEVER monkeypatch module globals (`module.fn = stub`) for a test seam — ALWAYS inject the dep as a param (`get_cfg_fn: Callable[...] | None = None`) defaulting to the module fn (`get_cfg_fn or get_cfg`)
+- ALWAYS relax pyright for test paths when strict test typing is impractical (exclude tests from strict source check or use a separate relaxed test config); NEVER weaken production annotations for fake convenience
 
 ## Subprocesses
 - `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leak)

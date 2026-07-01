@@ -2,12 +2,17 @@
 name: ts
 description: TypeScript/Node.js. NOT for .tsx (use tsx).
 when_to_use: editing .ts files or writing TypeScript
+requires: software-engineering
 ---
 
 # TypeScript Style
 
+Requires the `software-engineering` skill for shared naming, style, and design
+rules. Below are TypeScript-specific additions and deltas.
+
 ## Code Style
-- Arrow functions: `const f = (args): result => { ... }`
+- ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
+- Adhere to `gst` lint rules; match existing style when changing code
 - Single-letter vars only in trivial one-line callbacks (`arr.find(v => v.id === x)`)
 - ALWAYS name types — NEVER inline/anonymous object types (tests exempt)
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
@@ -45,6 +50,11 @@ when_to_use: editing .ts files or writing TypeScript
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
 ## Testing
+- ALWAYS a JSDoc block above every `test(...)` / `it(...)` call: what it
+  does, what preconditions it assumes, what it verifies — one sentence per
+  point. (The "NEVER JSDoc self-explanatory functions" rule does NOT apply
+  to test cases — a test's intent and preconditions are never self-evident
+  from its body.)
 - Unit: `*.test.ts` next to code (Bun), E2E: `*.spec.ts` in `playwright/`
 - **CRITICAL**: Configure `bunfig.toml` root to exclude Playwright files from Bun:
   ```toml

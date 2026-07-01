@@ -36,6 +36,10 @@ gh api -X PATCH repos/<owner>/<repo>/pulls/<N> -f body="$(cat tmp/body.md)" --jq
 
 STILL NEVER `gh pr create` (new PR) or `gh pr merge`.
 
+## GitHub Markdown Uploads
+
+NEVER hard-wrap Markdown uploaded to GitHub just for source width — ALWAYS keep tables, links, paths, commands, and list items in the shape that renders best.
+
 ## Format
 
 **Title**: `[type] Short imperative sentence` (max 72 chars)

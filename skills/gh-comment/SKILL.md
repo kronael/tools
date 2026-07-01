@@ -37,7 +37,7 @@ gh api repos/$REPO/pulls/<PR>/reviews --method POST --input - <<'EOF'
 {
   "commit_id": "<HEAD_SHA>",
   "comments": [
-    {"path": "src/file.ts", "line": 46, "side": "RIGHT", "body": "🤖 claude: <finding>"}
+    {"path": "src/file.ts", "line": 46, "side": "RIGHT", "body": "🤖 <finding>"}
   ]
 }
 EOF
@@ -56,12 +56,12 @@ Check hunk ranges: `gh pr diff <PR> | grep -A<N> "diff --git.*<filename>" | grep
 For lines outside the diff:
 
 ```bash
-gh pr comment <PR> --body "🤖 claude: <finding with file:line reference>"
+gh pr comment <PR> --body "🤖 <finding with file:line reference>"
 ```
 
 ## Rules
 
-- ALWAYS prefix comment body with `"🤖 claude: "`
+- ALWAYS prefix comment body with `"🤖 "`
 - ALWAYS leave the review PENDING — NEVER include `event` unless user asks to submit
 - ALWAYS batch inline comments into one POST — NEVER loop individual calls
 - ALWAYS fall back to a general PR comment with explicit `file:line` if a line is outside the diff

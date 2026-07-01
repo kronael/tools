@@ -2,9 +2,13 @@
 name: sh
 description: Bash/shell scripting. NOT for Python utilities (use py) or persistent CLI tools (use cli).
 when_to_use: editing .sh files or writing shell scripts
+requires: software-engineering
 ---
 
 # Bash Style
+
+Requires the `software-engineering` skill for shared naming, style, and design
+rules. Below are shell-specific additions.
 
 ## Structure
 - ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines

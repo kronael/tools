@@ -2,9 +2,13 @@
 name: sql
 description: SQL queries and schemas. NOT for ORM-only code (use go, py, ts, or rs).
 when_to_use: editing .sql files or writing SQL queries
+requires: software-engineering
 ---
 
 # SQL
+
+Requires the `software-engineering` skill for shared naming, style, and design
+rules. Below are SQL-specific additions.
 
 ## Style
 - No AS for column aliases: `MAX(rtime) max_rtime`
