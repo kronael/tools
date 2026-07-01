@@ -1,6 +1,6 @@
 ---
 name: demo
-description: Recording terminal demo GIFs for READMEs via asciinema + agg. NOT for general Makefile targets (use software's ci.md) or GUI screenshots (use visual).
+description: Terminal demo GIF recordings for READMEs (asciinema + agg). NOT for general Makefile targets (use software's ci.md) or GUI screenshots (use visual).
 when_to_use: "record a demo, make demo, demo gif, asciinema, agg, terminal recording for README"
 ---
 
@@ -40,7 +40,7 @@ Reference implementation: `rig/Makefile`.
   commit the final `.gif` under `demo/` next to its driving script.
 - NEVER flatten `demo` into one phony target — split cast-recording from
   gif-rendering as separate file targets so Make can skip either.
-- Match `--cols`/`--rows` between `asciinema rec` and `agg` — a mismatch
-  crops or letterboxes the gif.
-- `--idle-time-limit` trims dead pauses in the recording; tune per-demo,
-  don't just copy the value above.
+- ALWAYS match `--cols`/`--rows` between `asciinema rec` and `agg` — a
+  mismatch crops or letterboxes the gif.
+- NEVER copy `--idle-time-limit`/`--last-frame-duration` verbatim —
+  ALWAYS tune per demo, they trim dead pauses in the recording.
