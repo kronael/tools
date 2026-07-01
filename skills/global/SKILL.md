@@ -193,7 +193,6 @@ operations, zero composition. Encapsulate I/O, expose information.
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
-- `make demo` MUST use proper file targets with real prerequisites: `demo: tmp/demo.gif`, `tmp/demo.cast: $(BIN) demo/script`, `tmp/demo.gif: tmp/demo.cast`. Output in `tmp/` (never committed). NEVER flatten into one phony target — Make must be able to skip the record if the cast is fresh and only re-render the gif.
 - ALWAYS build/test/lint every ~50 lines - errors cascade
 - NEVER improve beyond what's asked
 - ALWAYS use commit format: "[section] Message"
