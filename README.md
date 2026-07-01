@@ -90,8 +90,7 @@ Codex compatibility for Claude projects:
 
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` so Codex reads Claude-only project instructions.
-  Installers use `kronael/install/codex_config_fallback.py` so the key stays
-  top-level instead of landing inside the current TOML table.
+  The key must stay top-level instead of landing inside the current TOML table.
 - If a project already has `AGENTS.md`, keep a short pointer there telling
   Codex to read `CLAUDE.md`; fallback files do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink

@@ -92,17 +92,17 @@ skills; bridge with symlinks.
 ### CLAUDE.md
 
 To make Claude-only projects work in Codex, add `CLAUDE.md` as a fallback
-instruction filename in `~/.codex/config.toml` by running:
+instruction filename in `~/.codex/config.toml`:
 
-```sh
-python3 "$SOURCE_ROOT/kronael/install/codex_config_fallback.py"
+```toml
+project_doc_fallback_filenames = ["CLAUDE.md"]
 ```
 
-This writes the top-level TOML key
-`project_doc_fallback_filenames = ["CLAUDE.md"]`, preserving existing fallback
-names and repairing the known bad install shape where `CLAUDE.md` was inserted
-under `[tui]` or `[tui.model_availability_nux]`. NEVER hand-append this line
-after the current table header; in TOML that makes it part of the table.
+ALWAYS keep this as a top-level TOML key: insert it before the first `[table]`
+header, or append `CLAUDE.md` to the existing top-level fallback array. NEVER
+hand-append it after the current table header; in TOML that makes it part of the
+table. NEVER leave `CLAUDE.md` under `[tui]` or `[tui.model_availability_nux]`
+— move it to the top-level key.
 
 If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
 fallback in the same directory. ALWAYS add a short `AGENTS.md` pointer that

@@ -23,7 +23,6 @@ ALWAYS verify these exist at the source root before proceeding:
 - `agents/` — bundle of agents
 - `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
-- `kronael/install/codex_config_fallback.py` — TOML-safe Codex config repair
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 
@@ -111,10 +110,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 5. **Install Codex bridge**. When running from Codex, or when the user asks
    for Codex support, install both bridges:
    - Ensure `project_doc_fallback_filenames` in `~/.codex/config.toml`
-     contains `CLAUDE.md` by running
-     `python3 "$SOURCE_ROOT/kronael/install/codex_config_fallback.py"`.
-     This is a top-level key; NEVER append it after a `[table]` header or edit
-     `[tui]` / `[tui.model_availability_nux]` for this fallback.
+     contains `CLAUDE.md`. ALWAYS keep this as a top-level TOML key: insert it
+     before the first `[table]` header, or append `CLAUDE.md` to the existing
+     top-level array. NEVER leave `CLAUDE.md` under `[tui]` or
+     `[tui.model_availability_nux]` — move it to the top-level key.
    - Ensure `~/.agents/skills` points at `~/.claude/skills` (symlink when
      possible; per-skill symlinks only when `~/.agents/skills` is already a
      directory).

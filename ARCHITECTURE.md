@@ -56,8 +56,7 @@ Codex can be configured to consume Claude project conventions without copying
 them:
 
 - `~/.codex/config.toml`: add `CLAUDE.md` to
-  top-level `project_doc_fallback_filenames` for Claude-only projects, using
-  `kronael/install/codex_config_fallback.py` to avoid table-scope corruption.
+  top-level `project_doc_fallback_filenames` for Claude-only projects.
 - Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
   `CLAUDE.md`, because Codex loads at most one instruction file per directory.
 - Project `.claude/skills`: expose them to Codex with
