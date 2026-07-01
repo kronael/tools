@@ -32,6 +32,39 @@ when_to_use: editing .go files or writing Go code
   flag underscored package names. The `*_utils.*` project rule applies to FILES
   inside a package (e.g., `string_utils.go`), not to package names themselves.
 
+## Error Suppression
+
+Intentionally dropped errors must be explicit in code, not hidden in linter config.
+Config exclusions are for structural cases only (generated files, test path patterns).
+
+**Non-defer**: use `_ =` with a short reason on the line above.
+```go
+// body fully read into buffer above
+_ = resp.Body.Close()
+```
+
+**Defer**: `defer func() { _ = x.Close() }()` is uglier than the problem.
+Use `//nolint:errcheck` with the reason on the line above — no inline text:
+```go
+// body drained; close error unactionable
+defer resp.Body.Close() //nolint:errcheck
+
+// commit already succeeded; rollback is best-effort
+defer tx.Rollback(ctx) //nolint:errcheck
+```
+
+**Inline `_ =` in HTTP handlers** — `w.Write` failure means client disconnected;
+response is already committed. One short inline comment is fine:
+```go
+_, _ = w.Write([]byte(`{"status":"ok"}`)) // client disconnect; nothing to do
+```
+
+NEVER write a suppression without a reason. The comment must answer WHY.
+
+NEVER use a linter config exclusion for a specific symbol or call site — a reader
+has to look up the config. Config exclusions are for structural cases only:
+generated files, test path patterns, project-wide style choices (no-comment policy).
+
 ## Testing
 - Test files: `*_test.go` next to code
 - Skip slow tests: `if testing.Short() { t.Skip() }`
