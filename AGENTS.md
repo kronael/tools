@@ -81,7 +81,9 @@ After the bridge, installed Kronael skills are invoked in Codex as
 Codex compatibility for Claude projects:
 
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
-  `~/.codex/config.toml` for projects without `AGENTS.md`.
+  `~/.codex/config.toml` for projects without `AGENTS.md`. Use
+  `kronael/install/codex_config_fallback.py`; the key is top-level, not under
+  `[tui]` or any other table.
 - If a project already has `AGENTS.md`, make that file tell Codex to read
   `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink
