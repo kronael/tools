@@ -83,7 +83,7 @@ Tools (first positional arg — no leading dash):
     claude          Claude Code, opus (same as default)
     codex           OpenAI Codex (config default model; no sandbox/approvals)
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
-    sonnet          Claude Code --model claude-sonnet-4-6  (fast workhorse)
+    sonnet          Claude Code --model claude-sonnet-5    (fast workhorse)
     opus            Claude Code --model claude-opus-4-8    (default; xhigh)
     fable           Claude Code --model claude-fable-5     (max effort)
     gpt             Codex -m gpt-5.5             (big)
@@ -222,7 +222,7 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
             _tool="$1"; shift
             case "$_tool" in
                 haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
-                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-4-6 --effort high "${claude_args[@]}") ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5 --effort high "${claude_args[@]}") ;;
                 opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 --effort xhigh "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
                 gpt)    entrypoint=codex; claude_args=(-m gpt-5.5 "${claude_args[@]}") ;;
