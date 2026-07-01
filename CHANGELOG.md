@@ -1,5 +1,31 @@
 # Changelog
 
+## [v0.3.33] — 20260701
+
+> kronael v0.3.33 — eval skills stay compact
+>
+> CEO/CTO evals now route adoption and audit work cleanly, while stop hooks enforce `/fin` follow-through.
+>
+> • `/ceo-eval`: adoption checklist stays default; demo audit moved to cold docs
+> • `/cto-eval`: technical due diligence stays default; SLA audit moved to cold docs
+> • `/create-eval`: generates project health evals without colliding with CEO/CTO audits
+> • Stop hook: `/fin` sessions get one last open-items guard before stopping
+> • Wisdom: repo guidance points at global wisdom; facts/refs conventions are preserved
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/ceo-eval` and `/cto-eval` keep compact dispatch-only `SKILL.md` files:
+  incoming adoption checklists remain in `checklist.md`, while local demo/SLA
+  audit runbooks moved to `demo-audit.md` and `code-audit.md`.
+- `/create-eval` now targets project health checks, avoiding the overloaded
+  generic `eval` name and keeping adversarial audits under CEO/CTO evals.
+- `hooks/stop.py` keeps the incoming throttled commit/diary nudge behavior and
+  adds the local `/fin` open-items guard at stop time.
+- `CLAUDE.md` remains repo-specific; global wisdom stays sourced from
+  `skills/global/SKILL.md`, including the new facts/refs conventions.
+- `/oracle` remains a thin alias to `/codex`; duplicated runbook content stays
+  in the canonical codex skill.
+
 ## [v0.3.32] — 20260701
 
 > kronael v0.3.32 — Codex nudges use @skills
