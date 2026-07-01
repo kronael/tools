@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.35] — 20260701
+
+> kronael v0.3.35 — dockbox effort/model tuning
+>
+> dockbox opus now thinks at xhigh, and the sonnet launcher moves to claude-sonnet-5.
+>
+> • dockbox: `opus` (alias + bare default) now runs at xhigh reasoning effort
+> • dockbox: `dockbox sonnet` launches claude-sonnet-5
+> • /dispatch help now lists `/sonnet` as medium, matching the sonnet subagent
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: the `opus` alias and the bare default inject `--effort xhigh` (was high); the opus subagent was already xhigh, so the launcher now matches it.
+- dockbox: `dockbox sonnet` launches `claude-sonnet-5` (was claude-sonnet-4-6). The sonnet subagent stays at medium effort.
+- skills: `/dispatch`'s tier hint reads `/sonnet (coding/medium)` — was stale at `high`, now matches `agents/sonnet.md`.
+
 ## [v0.3.34] — 20260701
 
 > kronael v0.3.34 — demo recording gets its own skill
