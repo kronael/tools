@@ -1,5 +1,31 @@
 # Changelog
 
+## [v0.3.34] — 20260701
+
+> kronael v0.3.34 — demo recording gets its own skill
+>
+> Terminal-demo GIF recording moves out of the always-loaded wisdom file into a standalone skill, release respects a project's own release rules, and Go gets error-suppression guidance.
+>
+> • New `/demo` skill: asciinema + agg recipe for README demo GIFs
+> • `/release`: reads a project's `CLAUDE.md` `## Release` section as an override before running defaults
+> • Go: explicit rules for suppressing errors with `_ =` and `//nolint:errcheck`, always with a reason
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Added `skills/demo/SKILL.md`: a flat, directly-invocable skill for recording
+  terminal demo GIFs (`asciinema` → `.cast` → `agg` → `.gif`), with the
+  Makefile-target recipe pulled from `rig/Makefile`.
+- Removed the `make demo` targets rule from the global wisdom file
+  (`skills/global/SKILL.md`) — it was too niche to load into every session;
+  it now lives only in the `demo` skill.
+- `/release` gained a step 0: read the project's `CLAUDE.md` for a
+  `## Release` section and apply any overrides (skip tagging, custom
+  checklist, pinned version file) before running the default process.
+- `go` skill: new Error Suppression section — intentionally dropped errors
+  must carry an explicit reason (`_ =` with a comment, or
+  `//nolint:errcheck` with the reason above it), never a bare linter-config
+  exclusion for a specific call site.
+
 ## [v0.3.33] — 20260701
 
 > kronael v0.3.33 — eval skills stay compact

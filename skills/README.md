@@ -80,8 +80,9 @@ the authoritative entry. The categories:
   They compose with language skills: a Rust CLI loads `rs` + `cli`.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice.
+  `scavenge`, `codex`, `demo`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice, README
+  demo recordings.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
