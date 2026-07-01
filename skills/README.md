@@ -8,7 +8,7 @@ as slash commands (`/refine`, `/diary`, ...).
 
 LLMs forget. Every conversation starts cold, every long generation
 drifts from the rules, and the right skill rarely fires on its own.
-Each skill in this directory addresses one of these problems:
+Each skill in this directory addresses one of five problems:
 
 - **Style alignment** — language conventions the model wouldn't guess
 - **Session continuity** — facts and history across conversations
@@ -46,12 +46,13 @@ the diff visible.
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
 
-## Shortcuts (fin, sub)
+## Shortcuts (fin, dispatch)
 
 Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
-- **sub**: "spawn this prompt as a background subagent and continue"
+- **dispatch**: "spawn this prompt as a background subagent and continue"
+- **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
@@ -59,69 +60,96 @@ memory: `/fin` is faster than retyping the rule.
 ## Discovery nudging (hooks, not skills)
 
 Skills auto-activate by description match, but in practice the LLM
-often misses the right one. Hooks add explicit nudges:
+often misses the right one. Hooks add explicit nudges: keyword →
+skill/agent routing on prompt submit, file extension → language skill
+on file touch, commit/diary checks on stop. Without them the LLM picks
+the wrong skill or none. With them, common workflows surface
+automatically. The hook list and wiring live in `../hooks/README.md`.
 
-- **nudge** (UserPromptSubmit): keyword → agent routing
-  ("ship", "diary", "commit" → suggested invocations)
-- **stop** (Stop): blocks the response when uncommitted changes or
-  stale diary detected, suggests `/commit` or `/diary`
+## Skill categories
 
-Without nudges the LLM picks the wrong skill or none. With them,
-common workflows surface automatically. See `../hooks/README.md`.
+A hand-maintained per-skill table drifts the moment a skill lands, so
+there isn't one. **Run `ls skills/` for the full set** — each dir has a
+`SKILL.md` whose frontmatter (`name`, `description`, `when_to_use`) is
+the authoritative entry. The categories:
 
-## Skill index
+- **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
+  codestyle only: naming, idioms, test layout, build flags.
+- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
+  `testing`, `browse`, `diagrams`) — patterns for a kind of program.
+  They compose with language skills: a Rust CLI loads `rs` + `cli`.
+- **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
+  `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
+  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice.
+- **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
+  routing and macro aliases. Each model tier has its own skill; `dispatch` is
+  fire-and-forget at default model.
+- **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
+  judge a codebase or practice from a fixed perspective.
+- **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
+  dispatching to cold data files read on demand. `create/` holds the
+  creative artifact generators (HTML, SVG, ASCII, video), mostly ported
+  from
+  [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative)
+  and **local-only** — generators needing paid APIs, cloud accounts, or
+  external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
+  `software/` holds engineering runbooks extracted from `ops`. Structure
+  rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
+- **Shared prose references** (`writing`, `humanize`) — copy rules and
+  the de-slop pass, cited by `tweet`, `pr-draft`, `readme`, `diary`.
+- **`global`** — special case, not installed as a skill: its body
+  becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
-### Languages — codestyle only
+## Skill workflow diagram
 
-`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx` — conventions per language
-(naming, idioms, test layout, build flags).
+Skills cluster into phases. Main spine: orientation → planning → coding → quality → output.
+Side-channels (escalation, communication) fire at any stage.
 
-### Domain — patterns for a kind of program
+┌─ orientation ───────────────┐
+│ resolve recall-memories     │
+│ explore                     │
+└──────────────┬──────────────┘
+               │
+┌─ planning ───▼──────────────┐
+│ specs ship                  │
+└──────────────┬──────────────┘
+               │
+┌─ coding ─────▼──────────────┐
+│ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
+│ service data trader         ├────────►│ haiku sonnet opus   │
+└──────────────┬──────────────┘         │ fable dispatch fin  │
+               │                        └─────────────────────┘
+┌─ quality ────▼──────────────┐
+│ review code-review improve  │
+│ refine visual testing bugs  │
+└──────────────┬──────────────┘
+               │
+┌─ output ─────▼──────────────┐         ┌─ communication ─────┐
+│ commit pr-draft release     │         │ diary readme wisdom │
+│ gh-comment                  ├────────►│ learn tweet         │
+└─────────────────────────────┘         └─────────────────────┘
 
-| Skill | Domain |
-|-------|--------|
-| **browse** | headless browser automation |
-| **cli** | argparse/click/clap, exit codes, signals |
-| **data** | scrapers, ETL, leaky-bucket, state recovery |
-| **ops** | Dockerfile, systemd, Prometheus |
-| **service** | REST, /health, versioned paths, validate-before-persist |
-| **trader** | exchange APIs, state machines, paper trading |
-| **testing** | testcontainers, real-API-first, RAII cleanup |
+**orientation** — load context before acting. `resolve` is the universal entry point;
+`recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
-### Workflow — multi-pass + scaffolding
+**planning** — `specs` for design docs; `ship` for multi-session work tracking.
+Skip for one-off tasks.
 
-| Skill | Role |
-|-------|------|
-| **commit** | structured git flow, `[section] Message`, HEREDOC |
-| **diary** | append `## HH:MM` to `.diary/YYYYMMDD.md` |
-| **docs-audit** | parallel subagent doc-vs-code audit |
-| **improve** | code-quality DO-CRITICIZE-EVALUATE-IMPROVE |
-| **learn** | extract patterns from history into skills |
-| **merge-trivial** | classify conflicts, resolve trivial unions |
-| **pr-draft** | short, clear PR descriptions |
-| **readme** | sync README/ARCHITECTURE with code |
-| **recall-memories** | search diary + memory + sessions |
-| **refine** | orchestrate improve + readme + commit `[refined]` |
-| **release** | version bump, changelog, git tag |
-| **ship** | plan → build → judge pipeline |
-| **specs** | spec authoring and index |
-| **wisdom** | meta — how to write SKILL.md / CLAUDE.md |
+**coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
+shape skills (cli, service, data, trader) carry patterns for what you're building.
+They compose: a Rust CLI loads `rs` + `cli`.
 
-### Shortcuts
+**quality** — `review`/`code-review` for finding issues; `improve`/`refine` for fixing
+them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
 
-| Skill | What it macros |
-|-------|----------------|
-| **fin** | "run to completion, no confirmation prompts" |
-| **sub** | "fire-and-forget background subagent" |
+**output** — `commit`, `pr-draft`, `release`, `gh-comment`. Use once work is verified.
 
-### Generators / one-offs
+**communication** — fires after milestones at any stage. `diary` logs decisions;
+`readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-| Skill | What it generates |
-|-------|-------------------|
-| **create-eval** | project-specific eval skill |
-| **distill** | recursive 5/3 summarization (launches @distill) |
-| **tweet** | dense X/Twitter thread, no fluff |
-| **visual** | render → inspect → adjust (launches @visual) |
+**escalation** — route to the right model/mode from any stage. `/haiku` → `/sonnet` → `/opus` → `/fable`
+for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
 
 ## Working with skills
 

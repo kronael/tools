@@ -24,10 +24,13 @@ when_to_use: editing .go files or writing Go code
   must import that function, not reimplement it
 
 ## Naming
-- No abbreviated variable names unless the function is very small (≤5 lines)
-  or the abbreviation is completely standard (e.g. `buf`, `err`, `ctx`, `ok`)
-- Write the full word: `rateLimiter` not `rl`, `group` not `g`, `upstream` not `up`
-- Single-letter names only for loop indices (`i`, `j`) and trivial type parameters
+- Write the full word for compound names: `rateLimiter` not `rl`, `group` not `g`, `upstream` not `up`
+- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`, `buf`, `err`, `ctx`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine too
+- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
+- **Package names**: single word, lowercase, no underscores — Go convention
+  (`httputil`, `strutil`, `filepath`, NOT `http_utils`, `string_utils`). Linters
+  flag underscored package names. The `*_utils.*` project rule applies to FILES
+  inside a package (e.g., `string_utils.go`), not to package names themselves.
 
 ## Testing
 - Test files: `*_test.go` next to code

@@ -8,13 +8,19 @@ credentials — treat it as yourself in a container.
 ## Build
 
 ```bash
-make image              # builds with your UID and TZ
-make image UID=1001     # custom UID
+make image              # builds the (UID-agnostic) image with host TZ
 make image TZ=EST       # custom timezone (default: host TZ or UTC)
 ```
 
-The container user `claude` is created with your UID so mounted files
-remain accessible with correct permissions.
+The image has no baked user. At runtime, dockbox passes your host UID/GID
+to the container and `dockbox-init` registers you in `/etc/passwd` before
+dropping privilege. One image works for every host user — alice, bob, ondra
+can share it.
+
+Tools (cargo, nvm, bun, rustup, sdkman, go, uv, nushell, etc.) live in
+`/opt/dev-tools/` inside the image, world-readable. Each runtime user gets
+a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
+`~/.gitconfig`, etc.) nested in.
 
 ## Install
 
@@ -31,6 +37,8 @@ dockbox ~/wk/project              # mount project
 dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
+dockbox -P                        # persist host build dirs (no overmount)
+dockbox -T                        # tmpfs backend for ephemeral dirs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
 dockbox -x bash .                 # run bash instead
@@ -40,6 +48,25 @@ dockbox prune [hours]             # remove exited containers older than N hours 
 ```
 
 Default command: claude. Use `-x` to override.
+
+### Re-entry into a running box
+
+If a dockbox for the project is already running, the next `dockbox`
+invocation enters that live container (`docker exec`) and runs the
+requested command there, rather than starting a second one:
+
+```bash
+dockbox ~/wk/project    # starts the box, runs claude
+dockbox sh              # 2nd terminal: shell inside the same box
+dockbox codex           # 3rd terminal: codex inside the same box
+```
+
+The entered session shares the container's `HOME`, mounts, and
+processes, and runs as your host user (not root). The **command** —
+tool, `--model`, `--effort`, args — takes effect; **run-time flags**
+(`-v`, `-H`, `-D`, `-g`, `-e`) do not, because mounts/network/env are
+fixed when the container is created. Use `-n <name>` to force a
+separate, fully-provisioned container instead.
 
 ## Configuration
 
@@ -55,12 +82,12 @@ container so the boxed agent can't modify it.
 ## Mounts
 
 Automatic:
-- `~/.claude` -> `/home/claude/.claude` (rw) - credentials, skills, settings
+- `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
-- `~/.gitconfig` -> `/home/claude/.gitconfig` (ro)
-- `gpg-agent socket` -> `/home/claude/.gnupg/S.gpg-agent`
-- `~/.gnupg/pubring.{kbx,gpg}` -> `/home/claude/.gnupg/` (ro)
-- `~/.dockbox_history` -> `/home/claude/.zsh_history` (rw)
+- `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
+- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent`
+- `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
+- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
@@ -69,6 +96,77 @@ Project dirs are mounted at exact paths with read-write access.
 `~/.claude` is rw so the boxed agent can update skills, settings, and
 memory just like a normal session. This is intentional — treat the
 container as a full peer that should continuously improve shared config.
+
+## Ephemeral builds
+
+Build artifacts are an attack surface, not state to persist. Two layers
+work together so builds never touch your host workdir:
+
+1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
+   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`. Builds
+   produce artifacts in the workdir as usual; tool caches and toolchains
+   live in the image, not your project.
+
+2. **Overmount by default** (Node, Bun, framework caches): for any
+   ecosystem that hardcodes its output dir in CWD, dockbox walks the
+   workdir, finds every matching directory (recursive, pruned so it
+   doesn't recurse into matches), and replaces each with a fresh empty
+   mount inside the container. Owned by the runtime user, gone when
+   the container exits.
+
+   Names overmounted by default:
+
+   ```
+   node_modules  .next  dist  build  .turbo  .cache
+   ```
+
+   Monorepo workspaces are handled automatically — every match under
+   the workdir gets its own mount.
+
+   ### Ownership flow (same for both backends)
+
+   The container always starts as root via `--user 0:0`. The
+   `dockbox-init` entrypoint:
+
+   1. Registers the host invoker in `/etc/passwd` and `/etc/group`
+      using `DOCKBOX_USER`, `DOCKBOX_UID`, `DOCKBOX_GID` env vars
+      (so `whoami`, `ls -l`, prompts all work).
+   2. `chown`s `$HOME` (`/home/dockbox`, a tmpfs) and every overmount
+      listed in `DOCKBOX_EPH_PATHS` to the runtime UID/GID.
+   3. `exec gosu UID:GID "$@"` to drop privilege before your command.
+
+   The image has no baked user — one image works for every host UID.
+   Bind mounts of `~/.claude`, `~/.gitconfig`, etc. nest into
+   `/home/dockbox` and keep host ownership.
+
+   ### Backends
+
+   - **tmpfs** (default): kernel `tmpfs` per path. RAM-backed (pages out
+     to swap under pressure). Fast for many-small-file workloads.
+     Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless swapped.
+   - **volume** (`-T`): anonymous Docker volume per path. Disk-backed.
+     Pick this when you don't want to pay RAM for the artifact dirs.
+
+**Trade-off**: every fresh session re-installs and re-builds. Intentional —
+no stale artifacts persist, only source code is long-lived. A warm cache
+is a liability; the source tree is the truth.
+
+**Opt out** (`dockbox -P` / `--no-ephemeral`):
+
+- You've committed `dist/` or `build/` and need the container to see it.
+- You want to share a single `node_modules/` across runs (and accept the
+  cache-poisoning risk).
+- You're debugging a build issue and need the artifacts to survive.
+
+The Rust/Python auto-redirects still apply with `-P` — they're baked into
+the image's env, not the overmount layer.
+
+### Surprise on first run
+
+If you already have a populated `node_modules/` on the host, the container
+will see an empty one and re-install on the first command. This is the
+sandbox working correctly. Subsequent commands in the same container reuse
+the mount; exiting the container discards it.
 
 ## Authentication
 

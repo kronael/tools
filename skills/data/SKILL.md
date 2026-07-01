@@ -1,7 +1,7 @@
 ---
 name: data
 description: Data collectors and ETL. NOT for one-shot fetches (use sh or py).
-when_to_use: building a scraper, ETL pipeline, real-time feed, WebSocket data source
+when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data source"
 ---
 
 # Collector/Data Collection

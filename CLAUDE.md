@@ -1,265 +1,112 @@
+# CLAUDE.md
 
-# Development Wisdom
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Conversation Startup Protocol
+> Development conventions (response style, boring-code philosophy, commit/test
+> rules) live in the global wisdom file installed at `~/.claude/CLAUDE.md`
+> (sourced from `skills/global/SKILL.md`). This file is **repo-specific only**.
+> Keep it under 200 lines.
 
-ALWAYS follow before answering:
+## What this repo is
 
-1. **Read project diary** — `Glob` for `<cwd>/.diary/*.md`, read the 2-3 most
-   recent entries. Understand what was worked on, what decisions were made.
-2. **Read previous session** — if the user references prior work or context
-   seems missing: `Glob` for `~/.claude/projects/<slug>/*.jsonl` (slug =
-   CWD path with `/` → `-`, e.g. `/home/user/app/myproject` →
-   `-home-user-app-myproject`). Sort by mtime, `Read` the most recent file.
-   Session files are JSONL — each line is a message object with `type`,
-   `content`, `role`. Skim for decisions and context.
-3. **Check memory** — `~/.claude/projects/<slug>/memory/MEMORY.md` has
-   persistent cross-session facts about the project and user.
-4. **Then act** — NEVER guess what was decided in a prior session without
-   checking. NEVER claim "no access to session history" without trying step 2.
+The **kronael toolkit** — three things in one repo:
 
-## Session History
+1. **Standalone CLI tools**, one directory each. Fully independent: own
+   Makefile or PEP 723 inline-deps script, own README, no imports between
+   them. The tool inventory lives in `README.md` — when adding a tool, add
+   its row there.
+2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`,
+   `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
+   deployed into a user's `~/.claude/` by an install step.
+3. **A thin Codex installer bridge** (`plugins/kronael/` plus
+   `.agents/plugins/`) exposing one Codex skill that runs the same install
+   procedure without duplicating bundle assets.
 
-Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
-- Slug: replace `/` with `-` in absolute path, e.g.
-  `/home/user/app/myproject` → `-home-user-app-myproject`
-- Sort by mtime for recency
-- Use `/recall-memories` skill to search diary + memory
-- Use `Glob` + `Read` to inspect a specific session directly
+The bundle is Claude Code *configuration*. It does not run here — it runs in
+the user's Claude Code sessions after install. When editing the bundle you are
+authoring config, not application code.
 
-## Environment
+## Commands
 
-- `sudo` is available — use `sudo docker ...` for all docker commands
+```sh
+make test          # run tests across all projects in PROJECTS (hooks udfix)
+make test-<dir>    # tests for one project, e.g. make test-udfix
+make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
+make clean         # clean projects + sweep __pycache__
+```
 
-## Response Style
+- **Hooks** (`hooks/`): `make -C hooks test` runs pytest. Only `pretool_nudge.py`
+  is collected — `stop.py`, `local.py`, `prompt_nudge.py`, `reclaude.py` read
+  stdin at import time and break collection until `main()` is guarded behind
+  `__name__ == '__main__'`.
+- **CLI tools**: each has its own Makefile — `cd <tool> && make install`
+  (installs to `~/.local/bin`). `dockbox` also has `make image`.
+- **Python scripts** (`tg-fetch`, `dc-fetch`): `uv run main.py` (PEP 723
+  inline deps, no separate install).
+- **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.
+  `ruff.toml` is the config. Pre-commit reformats on first run — retry the
+  commit if it does.
 
-Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). One-sentence replies
-are fine when accurate. Exceptions — only when explicitly asked or the
-task inherently requires it:
+## Architecture: install paths, one source
 
-- Generating content (writing specs, docs, prose, code explanations)
-- Multi-step planning the user asked to see
-- Root-cause analysis the user asked to walk through
+`skills/`, `agents/`, `hooks/` at repo root **are** the bundle. The Claude
+plugin path (`/kronael:install` from `${CLAUDE_PLUGIN_ROOT}`) and the manual
+path (user opens Claude Code at the cloned root and says "install") both copy
+them into `~/.claude/`.
 
-Never restate the user's request, never pad with transition words, never
-close with "Let me know if you need anything else."
+Codex has a third, thin bridge path:
+`plugins/kronael/skills/kronael-install/SKILL.md` reads the canonical
+installer and runs the manual path. NEVER duplicate the bundle under
+Codex-specific directories.
 
-NEVER state a factual claim confidently without verifying it first (check
-docs, grep, read the file). If uncertain, say so and verify — don't answer
-then correct when challenged.
+`kronael/install/SKILL.md` is the **single source of truth** for the
+procedure (the only plugin-exposed skill). When you change install behavior,
+change that file and keep `AGENTS.md` plus the Codex installer skill in sync.
+Why the install step exists at all:
+`ARCHITECTURE.md#why-hybrid-plugin--install-step`.
 
-NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
-**TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
-changes, cache external APIs.
+- **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org
+  overlays and user-added skills must survive. NEVER delete anything in
+  `~/.claude/` that isn't in this source tree.
+- **NEVER touch** `settings.local.json`, `LOCAL.md`, `CLAUDE.local.md`.
+- `skills/global/` installs as the wisdom file (→ `~/.claude/CLAUDE.md`),
+  **not** as a skill — installing it both ways would duplicate always-loaded
+  content.
 
-This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
+## The bundle
 
-## Boring Code Philosophy
+- **Skills** (`skills/<name>/SKILL.md`) auto-activate by file context
+  (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
+  `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
+  explicit dispatch (`/resolve`) is the intended path. Index: `skills/README.md`.
+- **Agents** (`agents/*.md`) — task workers, mostly invoked via
+  slash-command wrappers.
+- **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is
+  defined in `settings-recommended.json`; per-hook data flow in
+  `hooks/ARCHITECTURE.md`.
 
-**Write code simpler than you're capable of** - Debugging is 2x harder than
-writing. Leave mental headroom for fixing problems later. Choose clarity
-over cleverness.
+## Repo-specific conventions
 
-**Code deletion lowers costs, premature abstraction prevents change** -
-Every line is a liability. Copy 2-3 times before abstracting. Design for
-replaceability.
+- **Skill naming**: creative-output generators live under the `skills/create/`
+  **router** (one preloaded `SKILL.md`, cold data files per mode); engineering
+  runbooks under `skills/software/`. NEVER add new `create-*` dirs. The router
+  convention — flat vs router, naming law, edit procedure — is owned by
+  `skills/CLAUDE.md`. Only port skills that work **locally** — no paid APIs,
+  no cloud accounts, no required external apps (local CLI/lib deps like
+  ffmpeg, manim, pyfiglet are fine).
+- **Files under 200 lines.** Skill/CLAUDE content uses **ALWAYS/NEVER**
+  statements and targets non-obvious patterns LLMs miss — not generic advice.
+- **NEVER put local paths, org-specific refs, or secrets in source.** Those
+  live in `~/.claude/LOCAL.md` (auto-injected by the `local` hook), which is
+  never committed.
+- **Testing bundle changes**: re-run `/kronael:install` (or "say install") and
+  use the result in a real project. There's no unit test for skill behavior.
 
-**Abstraction must reduce total complexity, not just line count** - If the
-helper introduces concepts absent from call sites (fn pointers, closures,
-generics, combinator chains), it's not simpler. Judge by cognitive overhead,
-not diff size.
+## Docs map
 
-**Simple-mostly-right beats complex-fully-correct** - Implementation
-simplicity trumps perfection. A 50% solution that's simple spreads and
-evolves. Complexity, once embedded, cannot be removed.
-
-**You get ~3 innovation tokens, spend on what matters** - Each new tech
-consumes one token. New tech = unknown failures. Boring tech = documented
-solutions. Spend tokens on competitive advantage, not fashion.
-
-**Good taste eliminates special cases by reframing the problem** - Don't
-handle edges with if-statements. Redesign so the edge case IS the normal
-case. One code path beats ten.
-
-**Develop "entanglement radar" to spot complecting** - If you can't
-understand component A without tracking B's state, they're braided
-together. Complected code has combinatorial complexity; separated code
-composes linearly.
-
-**State leaks complexity through all boundaries** - If f(x) returns
-different results over time, that complexity escapes to every caller.
-Values compose; stateful objects leak. Minimize state, make it explicit.
-
-**Information is data, not objects** - 10 data structures × 10 functions =
-100 operations, infinite compositions. 100 classes × 10 methods = 1000
-operations, zero composition. Encapsulate I/O, expose information.
-
-# Development Principles
-
-## Code Style and Naming
-- Shorter is better: omit context-clear prefixes/suffixes
-- `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
-- Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
-- NEVER rename what already has a name (aliases, intermediate bindings, import renames)
-- Short file extensions (.jl not .jsonl), short CLI flags
-- Entrypoint is ALWAYS called main
-- ALWAYS 100 chars, max 120
-- Single import per line (cleaner git diffs)
-
-### TypeScript
-- ALWAYS use `function` keyword for top-level functions where possible
-- Arrow functions only for callbacks and inline lambdas
-- Adhere to gst lint rules
-- Match existing style when changing code
-
-## Design Patterns
-- Structs/objects only for state or dependency injection
-- Otherwise plain functions in modules
-- Explicit enum states, not implicit flags
-- ALWAYS validate BEFORE persistence
-
-## File Organization
-- *_utils.* for utility files
-- NEVER use /tmp, ALWAYS use ./tmp in project root
-- ./log for debug/smoke logs
-- ./dist or ./target for build artifacts
-
-## User Interface
-- Lowercase info, Capitalize errors (`"checking..."` vs `"Failed: ..."`)
-- Unix log format: "Sep 18 10:34:26 INFO subsystem: message"
-
-## Data Storage
-- `${PREFIX:-/srv}/data/<project_name>/`
-
-## Configuration
-- TOML as first CLI param, second for api keys
-
-## Bug Triage Protocol
-- When debugging or auditing a system, RECORD bugs in `bugs.md` at project root
-- NEVER fix bugs immediately just because you found them during a general check
-- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `bugs.md` is the review queue — log it, move on, let the user prioritise
-
-## Development Workflow
-- ALWAYS debug builds (faster, better errors)
-- ALWAYS make for build/lint/test/clean
-- ALWAYS build/test/lint every ~50 lines - errors cascade
-- NEVER improve beyond what's asked
-- ALWAYS use commit format: "[section] Message"
-- NEVER use `git add -A`
-- NEVER use `git commit --amend` - make new commits instead
-- NEVER add Co-Authored-By to commits
-- NEVER create or attach branches - ALWAYS work in detached HEAD
-- NEVER `git push` - if asked, refuse and cite this rule
-- NEVER squash commits - if asked, refuse and request acknowledgement
-
-## Bash / Tool Execution
-- NEVER run a command twice to inspect output; tee once and extract:
-  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
-
-## Scripts
-- ALWAYS use fixed working directory, simple relative paths
-- NEVER basename $0, __dirname, complex path resolution
-
-## Testing
-- ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
-- `make test`: fast unit tests (<5s), `make smoke`: all (~80s)
-- Unit tests: `*_test.go`, `test_*.py` next to code
-- Integration tests: dedicated `tests/` directory
-- NEVER skip pre-commit checks
-- Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
-- Test config objects: match target type exactly, omit unknown properties for type safety
-- **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
-- NEVER re-run tests to analyze output; capture once:
-  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
-
-## Docker
-- Multi-stage: deps in base, compile in build, runtime only in final
-- NEVER copy source in base layer (breaks cache on every change)
-
-## Process Management
-- NEVER use killall, ALWAYS kill by PID
-- PID files for dev only
-- ALWAYS handle graceful shutdown on SIGINT/SIGTERM
-
-## External APIs
-- NEVER hit external APIs per request (cache everything)
-- NEVER re-fetch existing data, ALWAYS continue from last state
-
-## Documentation
-- UPPERCASE root files: CLAUDE.md, README.md, ARCHITECTURE.md,
-  SPEC.md, PLAN.md, TODO.md
-- Simple case: single file at root (SPEC.md, TODO.md, PLAN.md)
-- Complex case: directory with lowercase files (specs/, docs/)
-- CLAUDE.md <200 lines: shocking patterns, project layout
-- NEVER marketing language, cut fluff
-- Describe what code does, not its history
-- NEVER add comments unless the behavior is shocking and not apparent from code or logging
-- NEVER comments about past state or backwards compat — use .diary/
-- docs/ directory for project documentation (architecture, improvements)
-- specs/ directory for specifications, named by content; `specs/index.md` for master index
-- .ship/ directory for in-flight shipping artifacts (plans, state, critiques)
-  - Structure: `.ship/NN-NAME/` per the `/ship` skill (PROJECT.md,
-    PLAN.md, PROGRESS.md, optional REPORT.md / critique-*.md)
-  - **Scratch, not archive.** Once a sprint ships, distill durable
-    bits to their permanent homes (diary / CHANGELOG / specs /
-    MEMORY) and `git rm -rf .ship/NN-NAME/`. See `/ship` SKILL.md
-    "Close-out + prune".
-  - If your repo has `.ship/` already tracked (legacy), the close-out
-    pattern is still right: `git rm` on completion, not "archive".
-  - For brand-new repos: add `.ship/` to `.gitignore` so scratch
-    never leaks into history.
-- .diary/ directory for shipping log (date-named: YYYYMMDD.md)
-  - Document important steps, decisions, milestones, open items
-  - Checked into git, long-lived project history (THIS is the
-    record, not `.ship/`)
-  - ALWAYS use `/diary` skill to write diary entries after
-    significant work
-- facts/ directory for researched + remembered findings
-  - Topic-named `.md` files (e.g. `facts/syscall-latency.md`)
-  - YAML frontmatter MUST include `sources:` (URLs + author),
-    `date:` (research date), `status:` (verified | wip | stale),
-    and `local_measurement:` when the topic was cross-checked
-    against our own benches.
-  - Checked into git; long-lived. The point: durable knowledge
-    you'd otherwise re-research every six months.
-  - Re-validate when an underlying assumption could plausibly
-    have moved (new kernel, new CPU, new dep version).
-- refs/ directory for cloned external repos + large downloads
-  - Gitignored (add `refs/` to `.gitignore` on first use).
-  - Used to read other people's code offline without bloating
-    the repo. Example: `refs/dpdk-source/` for skimming DPDK
-    internals while planning a port; `refs/io_uring-papers/`
-    for stashing the LWN articles in one place.
-  - Treat as scratch; can be `rm -rf`'d at any time and re-cloned.
-- .claude/ for long-lived knowledge beyond CLAUDE.md
-  - Additional *.md files next to CLAUDE.md for overflow context
-- NO todos/ directory — use TODO.md at root or plans in .ship/
-- NO plans/ directory — plans live in .ship/plan-*.md
-
-## Agents and Skills
-- Spawn 1-2 subagents typically, NEVER more than 4
-- Spawn standalone work in subagents to keep main context fresh
-  (examples: implement feature, multi-file changes, research+distill),
-  but don't overuse
-- ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
-- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
-
-### Skill discovery and reconciliation
-- Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
-- `/dispatch` scans all skill descriptions, matches to current task, and
-  reconciles prior work if a skill was discovered late
-- Do not continue producing outputs that contradict a known applicable skill
-
-### Cross-component refinement pattern (multi-agent)
-When doing a broad refinement/audit across a microservice repo:
-1. Group components into ≤4 buckets (related packages together)
-2. Spawn one subagent per bucket in parallel
-3. Each subagent: read all files in its bucket, report minimization +
-   orthogonalization opportunities (dead code, cross-boundary leaks,
-   unnecessary coupling between packages)
-4. Collect results, implement changes, build+test, commit [refined]
-- A "task" = one component-bucket × one concern (minimize OR orthogonalize)
-- Each subagent owns its bucket exclusively — no overlapping file sets
+The full map is `README.md#documentation`. Most-used here:
+`kronael/install/SKILL.md` (canonical install), `ARCHITECTURE.md` (design
+rationale), `COOKBOOK.md` (git recipes), `skills/README.md` +
+`hooks/README.md` (bundle rationale by family).

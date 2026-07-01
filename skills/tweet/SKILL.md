@@ -1,7 +1,7 @@
 ---
 name: tweet
 description: Write X/Twitter threads. NOT for product copy or marketing prose.
-when_to_use: "draft a tweet thread", "write a thread about X"
+when_to_use: "draft a tweet thread, write a thread about X"
 user-invocable: true
 ---
 
@@ -27,6 +27,7 @@ user-invocable: true
 - NEVER: "Thread", "Here's why", "Let me explain", marketing language
 - NEVER list the same concept three different ways
 - NEVER start with "I built this" (start with what the reader gets)
+- ALWAYS apply the `writing` skill's copy rules — no preamble, plain verbs, no jargon
 
 ## Process
 

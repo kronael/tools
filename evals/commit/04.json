@@ -1,0 +1,36 @@
+{
+  "id": "04",
+  "skill": "commit",
+  "task": "user updated the README to clarify install steps after a recent rename; pure docs change",
+  "context": {
+    "cwd": "/some/repo",
+    "git_status": " M README.md",
+    "git_diff": "diff --git a/README.md b/README.md\n--- a/README.md\n+++ b/README.md\n@@ -14,8 +14,8 @@ Three things live here:\n ## Install\n \n-Run `./setup.sh` to install the toolkit.\n+Run `./bin/install` to install the toolkit. The old `setup.sh` was renamed in v0.3.0; the wrapper at `setup.sh` was removed.\n \n ## Usage",
+    "files_changed": ["README.md"],
+    "git_log_recent": "ddd4444 [release] v0.3.0 rename setup.sh -> bin/install\neee5555 [refactor] move install script under bin/\nfff6666 [chore] gitignore .ruff_cache"
+  },
+  "expected_outcome": {
+    "must_use_format": "^\\[docs\\] .+",
+    "subject_max_chars": 72,
+    "must_not_include": [
+      "Co-Authored-By",
+      "--amend",
+      "git add -A",
+      "git add .",
+      "--no-verify",
+      "git commit -a",
+      "[fix]",
+      "[feat]",
+      "[refactor]"
+    ],
+    "should_mention": ["install", "README"]
+  },
+  "rubric": [
+    {"criterion": "Subject under 72 chars and uses [docs] prefix (pure documentation change, no code)", "weight": 0.3},
+    {"criterion": "Names what was clarified (install steps / rename to bin/install), not just 'update docs'", "weight": 0.3},
+    {"criterion": "Uses git commit -m '...' -- README.md (direct, single-file pathspec)", "weight": 0.2},
+    {"criterion": "Does not add Co-Authored-By, --amend, --no-verify, or use git add", "weight": 0.2}
+  ],
+  "source": "synthetic",
+  "provenance": "hand-crafted-2026-05-25"
+}

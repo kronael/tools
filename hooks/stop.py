@@ -8,76 +8,131 @@ import sys
 from datetime import UTC
 from datetime import datetime
 
-try:
-    data = json.load(sys.stdin)
-except (json.JSONDecodeError, EOFError, ValueError):
-    sys.exit(0)
+NUDGE_INTERVAL = 600
+HEADER_RECENT = 300
 
-if not isinstance(data, dict) or data.get('stop_hook_active'):
-    sys.exit(0)
 
-cwd = data.get('cwd', '.')
-parts = []
+def git_run(cwd, *args):
+    return subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=cwd, check=False)
 
-# Uncommitted changes
-r = subprocess.run(
-    ['git', 'status', '--porcelain', '-uno'],
-    capture_output=True,
-    text=True,
-    timeout=5,
-    cwd=cwd,
-    check=False,
-)
-if r.returncode == 0 and r.stdout.strip():
-    diff = subprocess.run(
-        ['git', 'diff', '--stat'],
-        capture_output=True,
-        text=True,
-        timeout=5,
-        cwd=cwd,
-        check=False,
-    )
-    msg = 'Uncommitted changes detected.'
-    if diff.stdout.strip():
-        msg += '\n' + diff.stdout.strip()
-    msg += (
-        '\nConsider running /commit.\n'
-        'Commit rules: format "[section] Message", subject <= 72 chars '
-        '(overflow -> second -m body); NEVER add -A, -a, --amend, push, squash, '
-        'Co-Authored-By, --no-verify.'
-    )
-    parts.append(msg)
 
-# Diary freshness (missing today or stale > 1h)
-diary_dir = os.path.join(cwd, '.diary')
-if os.path.isdir(diary_dir):
-    diary_file = os.path.join(diary_dir, datetime.now(tz=UTC).strftime('%Y%m%d') + '.md')
-    if not os.path.exists(diary_file):
-        parts.append('No diary entry for today. Consider running /diary.')
-    elif datetime.now(tz=UTC).timestamp() - os.path.getmtime(diary_file) > 3600:
-        parts.append('Diary not updated in over an hour. Consider running /diary.')
+def append_header(diary_file, hhmm):
+    """Append a blank `## HH:MM` header to today's diary, creating dirs/file.
 
-# /fin enforcement: if the user recently invoked /fin (finish mode), don't let
-# a stop slide on work that was falsely deferred. Scan the tail of the
-# transcript for a recent /fin and, if found, force a re-check.
-transcript = data.get('transcript_path')
-if transcript and os.path.exists(transcript):
+    Skip if the file already ends with a header newer than HEADER_RECENT,
+    to avoid spamming empty headers on repeated stops.
+    """
+    try:
+        if os.path.exists(diary_file):
+            if datetime.now(tz=UTC).timestamp() - os.path.getmtime(diary_file) < HEADER_RECENT:
+                return
+        else:
+            os.makedirs(os.path.dirname(diary_file), exist_ok=True)
+        with open(diary_file, 'a') as f:
+            f.write(f'\n## {hhmm}\n\n')
+    except OSError:
+        pass
+
+
+def git_path(cwd, name):
+    r = git_run(cwd, 'git', 'rev-parse', '--git-dir')
+    if r.returncode != 0:
+        return None
+    gd = r.stdout.strip()
+    if not os.path.isabs(gd):
+        gd = os.path.join(cwd, gd)
+    return os.path.join(gd, name)
+
+
+def nudge_due(stamp, now):
+    if stamp is None or not os.path.exists(stamp):
+        return True
+    return now.timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
+
+
+def fin_recent(data):
+    transcript = data.get('transcript_path')
+    if not transcript or not os.path.exists(transcript):
+        return False
     try:
         with open(transcript, encoding='utf-8') as f:
             recent = ''.join(f.readlines()[-60:])
     except OSError:
-        recent = ''
-    if '/fin' in recent or '<command-name>fin' in recent or 'finish mode' in recent:
+        return False
+    return '/fin' in recent or '<command-name>fin' in recent or 'finish mode' in recent
+
+
+def main():
+    try:
+        data = json.load(sys.stdin)
+    except (json.JSONDecodeError, EOFError, ValueError):
+        sys.exit(0)
+
+    if not isinstance(data, dict) or data.get('stop_hook_active') or os.environ.get('CLAUDE_EVAL'):
+        sys.exit(0)
+
+    cwd = data.get('cwd', '.')
+    now = datetime.now(tz=UTC)
+    parts = []
+
+    # Uncommitted changes
+    r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
+    stamp = git_path(cwd, 'claude-commit-nudge')
+    if r.returncode == 0 and r.stdout.strip() and nudge_due(stamp, now):
+        diff = git_run(cwd, 'git', 'diff', '--stat')
+        msg = 'Uncommitted changes detected.'
+        if diff.stdout.strip():
+            msg += '\n' + diff.stdout.strip()
+        msg += (
+            '\nCommit your work — but split it into coherent chunks: one '
+            '[section] commit per logical change, related files together, '
+            'unrelated work in separate commits. Not one mega-commit, not '
+            'premature fragments. Run /commit.\n'
+            'Rules: "[section] Message", subject <= 72 chars (overflow -> second '
+            '-m body); NEVER add -A, -a, --amend, push, squash, Co-Authored-By, '
+            '--no-verify.'
+        )
+        parts.append(msg)
+        if stamp is not None:
+            try:
+                with open(stamp, 'w') as f:
+                    f.write(now.isoformat())
+            except OSError:
+                pass
+
+    # Diary freshness (missing today or stale > 1h) — only inside a git repo.
+    # --git-common-dir resolves to the main repo's .git even from a worktree.
+    common = git_run(cwd, 'git', 'rev-parse', '--git-common-dir')
+    if common.returncode == 0:
+        git_dir = common.stdout.strip()
+        if not os.path.isabs(git_dir):
+            git_dir = os.path.join(cwd, git_dir)
+        diary_dir = os.path.join(os.path.dirname(git_dir), '.diary')
+        diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
+        hhmm = now.strftime('%H:%M %Y-%m-%d')
+        if not os.path.exists(diary_file):
+            append_header(diary_file, hhmm)
+            parts.append(
+                f'No diary entry for today (now {hhmm}). Entry header '
+                'appended — fill it in. Run /diary.'
+            )
+        elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
+            append_header(diary_file, hhmm)
+            parts.append(
+                f'Diary not updated in over an hour (now {hhmm}). '
+                'Entry header appended — fill it in.'
+            )
+
+    if fin_recent(data):
         parts.append(
-            '/fin (finish mode) was invoked. Before you stop, RE-RUN the '
-            'open-items pass. A "deferred" item is legitimate ONLY if it is '
-            'blocked (waiting on the user) or genuinely out of scope. If '
-            'anything you labelled "deferred", "later", "marginal", "not worth '
-            'it", or "next session" is actually doable now, you are bullshitting '
-            'the user -- CONTINUE and finish it instead of stopping. Stop ONLY '
-            'when every active item is truly done, blocked, or out of scope -- '
-            'and say which for each.'
+            '/fin (finish mode) was invoked. Before stopping, re-run the '
+            'open-items pass: every item must be done, blocked, or explicitly '
+            'deferred with a reason.'
         )
 
-if parts:
-    print(json.dumps({'decision': 'block', 'reason': '\n'.join(parts)}))
+    if parts:
+        print(json.dumps({'decision': 'block', 'reason': '\n'.join(parts)}))
+
+
+if __name__ == '__main__':
+    main()

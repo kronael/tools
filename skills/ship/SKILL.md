@@ -1,7 +1,7 @@
 ---
 name: ship
 description: Ship multi-session work. NOT for one-off or <30min work.
-when_to_use: "ship this feature", "track this project"
+when_to_use: "ship this feature, track this project"
 user-invocable: true
 ---
 

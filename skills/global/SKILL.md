@@ -23,6 +23,13 @@ ALWAYS follow before answering:
 4. **Then act** — NEVER guess what was decided in a prior session without
    checking. NEVER claim "no access to session history" without trying step 2.
 
+ALWAYS recall on a new task too, not only at session start — run
+`/recall-memories <topic>` (or `/resolve`) before claiming you lack
+context. NEVER leave a task incomplete: finish it or report the exact
+blocker. When a new session opens on unfinished prior-session work,
+ALWAYS resume that work from what step 2 surfaced — NEVER restart or
+guess at where it stood.
+
 ## Session History
 
 Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
@@ -39,8 +46,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ## Response Style
 
 Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). One-sentence replies
-are fine when accurate. Exceptions — only when explicitly asked or the
+summaries of what you just did (the diff is visible). No tables, headers, or
+multi-section recaps for a chat reply — if the reader must scroll to find the
+point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
 task inherently requires it:
 
 - Generating content (writing specs, docs, prose, code explanations)
@@ -50,11 +58,25 @@ task inherently requires it:
 Never restate the user's request, never pad with transition words, never
 close with "Let me know if you need anything else."
 
+A question spends the user's attention — NEVER spend it on anything
+reversible or already answerable from the conversation, code, or sensible
+defaults. ALWAYS act, noting assumptions. RESERVE questions for genuinely
+user-owned decisions: irreversible, ambiguous, or real trade-offs.
+
 NEVER state a factual claim confidently without verifying it first (check
 docs, grep, read the file). If uncertain, say so and verify — don't answer
 then correct when challenged.
 
 NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+
+## Think with the user before acting
+
+NEVER take tool actions, commits, or other hard-to-reverse steps when the
+path is ambiguous, underspecified, or costly to undo. ALWAYS ask one
+clarifying question or pause in `<think>` first. Once the direction is
+clear, act decisively.
+
+For triage of which skill or context a request needs, run `/resolve`.
 
 **TL;DR**: make for dev, debug builds, TOML config, test vs smoke, minimal
 changes, cache external APIs.
@@ -63,9 +85,19 @@ This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Boring Code Philosophy
 
+**Use existing mechanisms before branching** - NEVER add a branch, fallback, or
+config knob before checking whether an existing parameter, path, or environment
+variable can make the edge case normal. ALWAYS reframe first; branch only when
+the existing mechanism cannot express it.
+
 **Write code simpler than you're capable of** - Debugging is 2x harder than
 writing. Leave mental headroom for fixing problems later. Choose clarity
 over cleverness.
+
+**Prefer explicit over idiomatic when equivalent** - A `for` loop over
+`for_each`/`forEach` when the body is non-trivial or the chain adds no
+clarity. When two constructs are equivalent, pick the one that needs least
+mental model to read.
 
 **Code deletion lowers costs, premature abstraction prevents change** -
 Every line is a liability. Copy 2-3 times before abstracting. Design for
@@ -101,16 +133,26 @@ Values compose; stateful objects leak. Minimize state, make it explicit.
 100 operations, infinite compositions. 100 classes × 10 methods = 1000
 operations, zero composition. Encapsulate I/O, expose information.
 
+**Grug rules (grugbrain.dev) — only what Boring Code above doesn't already say:**
+
+- **Match the tool to the task's weight** - if the scaffolding (subagents,
+  generated machinery, lookbehind regex) is bigger than the change, it's wrong.
+  Small task → small tool.
+- **Prefer locality of behavior** - put code on the thing that does the thing;
+  NEVER scatter understanding across files just to honor separation-of-concerns.
+- **Chesterton's fence** - NEVER delete or "simplify" code you don't yet
+  understand; the ugliness often encodes a real constraint. Understand first.
+
 # Development Principles
 
 ## Code Style and Naming
 - Shorter is better: omit context-clear prefixes/suffixes
 - `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
-- Short variable names: `n`, `k`, `r` not `cnt`, `count`, `result`
+- Short variable names OK: `n`, `k`, `r`, `i`, `x`, `y`, `z`, `m`; doubled (`kk`, `vv`); short descriptive (`data`, `msg`). Never visually ambiguous: `o`, `O`, `l`, `I`
 - NEVER rename what already has a name (aliases, intermediate bindings, import renames)
 - Short file extensions (.jl not .jsonl), short CLI flags
 - Entrypoint is ALWAYS called main
-- ALWAYS 100 chars, max 120
+- Line width: ≤80 code, ≤100 prose; 120 hard max, only where wrapping hurts (long URL/table)
 - Single import per line (cleaner git diffs)
 
 ### TypeScript
@@ -142,10 +184,11 @@ operations, zero composition. Encapsulate I/O, expose information.
 - TOML as first CLI param, second for api keys
 
 ## Bug Triage Protocol
-- When debugging or auditing a system, RECORD bugs in `bugs.md` at project root
+- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
 - NEVER fix bugs immediately just because you found them during a general check
 - Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `bugs.md` is the review queue — log it, move on, let the user prioritise
+- `BUGS.md` is the review queue — log it, move on, let the user prioritise
+- ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
@@ -156,8 +199,14 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
-- NEVER create or attach branches - ALWAYS work in detached HEAD
+- NEVER create or attach a local branch - ALWAYS work in detached HEAD, in the main repo AND in every worktree, no exceptions
+- For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
+- ALWAYS place worktrees inside the repo root as hidden dirs:
+  `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
+  siblings of the repo
 - NEVER `git push` - if asked, refuse and cite this rule
+- NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
+- ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution
@@ -170,7 +219,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ## Testing
 - ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
-- `make test`: fast unit tests (<5s), `make smoke`: all (~80s)
+- `make test`: fast unit tests (<5s), `make test-all`: unit + integration (what CI runs), `make smoke`: production data
 - Unit tests: `*_test.go`, `test_*.py` next to code
 - Integration tests: dedicated `tests/` directory
 - NEVER skip pre-commit checks
@@ -211,7 +260,7 @@ operations, zero composition. Encapsulate I/O, expose information.
   - Clean after shipping: delete completed artifacts
 - .diary/ directory for shipping log (date-named: YYYYMMDD.md)
   - Document important steps, decisions, milestones
-  - Checked into git, long-lived project history
+  - Generally public (checked into git) unless the project's CLAUDE.md marks it local-only
   - ALWAYS use `/diary` skill to write diary entries after significant work
 - .claude/ for long-lived knowledge beyond CLAUDE.md
   - Additional *.md files next to CLAUDE.md for overflow context
@@ -220,6 +269,12 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ## Agents and Skills
 - Spawn 1-2 subagents typically, NEVER more than 4
+- NEVER run multiple code-editing subagents in parallel on the shared tree —
+  run code edits ONE AT A TIME (sequential), unless the user explicitly
+  authorizes parallel overlapping changes. Concurrent code edits interleave:
+  mid-flight commits, one sub reverting another's work, reviewers reading
+  half-edited files. Parallel IS fine for READ-ONLY subs (verify / review /
+  research) and for fully-isolated worktrees.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
@@ -228,7 +283,7 @@ operations, zero composition. Encapsulate I/O, expose information.
 
 ### Skill discovery and reconciliation
 - Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
-- `/dispatch` scans all skill descriptions, matches to current task, and
+- `/resolve` scans all skill descriptions, matches to current task, and
   reconciles prior work if a skill was discovered late
 - Do not continue producing outputs that contradict a known applicable skill
 

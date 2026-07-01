@@ -1,77 +1,13 @@
 ---
 name: oracle
-description: Ask codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories).
-when_to_use: tricky algorithm, unfamiliar library, sanity check before committing to a non-obvious implementation, disagreement with self after reasoning
+description: Alias for /codex — ask codex CLI for a second opinion. NOT for routine lookups or Agent delegation.
+when_to_use: "oracle, second opinion, sanity check, ask codex, disagreement after reasoning"
+user-invocable: true
 ---
 
 # Oracle
 
-Drives `codex` CLI (`@openai/codex`) as a subprocess for a one-shot
-second opinion. The binary is on `PATH` in dockbox; auth comes from
-either a host `~/.codex` mount or an env-var API key.
+Alias for **/codex**. The full runbook lives in `skills/codex/SKILL.md`.
 
-## When to invoke
-
-- A tricky algorithm where trade-offs aren't obvious
-- A library/API surface you don't know well
-- A sanity check on a non-obvious implementation before it ships
-- Disagreement with self after a reasoning round
-
-NEVER reach for oracle on routine uncertainty — `/recall-memories` + grep resolve most questions faster and without an external call.
-
-## Call it
-
-```bash
-# Short prompt
-codex exec "is there a stdlib equivalent of Python's bisect in Go?"
-
-# Multi-line context via stdin
-cat <<'EOF' | codex exec -
-Review this CRDT merge function for ordering bugs:
-<paste code>
-EOF
-
-# Pipe another command's output as context
-go test ./... 2>&1 | codex exec "summarize the failure and propose the smallest fix"
-```
-
-Flags: `--json` for machine-readable output, `--ephemeral` to skip session persistence.
-
-## Auth — two paths
-
-**Path A — host `~/.codex` mount (preferred).** dockbox bind-mounts
-`~/.codex` from the host at `/home/claude/.codex` (rw) when the dir
-exists. codex reads `auth.json` from there — ChatGPT-OAuth, API key,
-config. Single `codex login` on the host serves every dockbox session.
-
-```bash
-codex login status   # "Logged in using ChatGPT" / "Logged in using API key"
-```
-
-**Path B — env var.** dockbox forwards `OPENAI_API_KEY` and
-`CODEX_API_KEY` from the host env when set.
-
-## Model
-
-The default model is pinned to a supported one in `~/.codex/config.toml`
-(`model = "gpt-5.5"`). Leave prompts model-agnostic — do NOT pass `-m` in
-skill commands (it goes stale) and do NOT probe for a working model first.
-Just run `codex exec "$prompt"` directly.
-
-If a call ever fails with `400 ... 'gpt-5.x' is not supported when using
-Codex with a ChatGPT account`, the fix is one line in the config
-(`model = "gpt-5.5"` or whatever `[tui.model_availability_nux]` currently
-lists) — not a per-call probe. Surface that error to the user and continue;
-never crash the turn.
-
-## Rules
-
-- ALWAYS hand codex the specific question + minimal code/error — NEVER paste session transcript or your reasoning chain
-- ALWAYS verify codex's claim against the codebase before acting. NEVER implement blindly. Discard with one-line reason if wrong; cite when acting
-
-## Output
-
-`codex exec "<prompt>"` writes the final message to stdout. With
-`--json` it emits JSON Lines — terminal event has the full answer.
-Treat the answer as advisory. Cite when acting on it ("codex flagged
-that this loop allocates per iteration; adjusted to reuse the buffer").
+Load that skill and follow it. Auth checks, sandbox flags, adversarial
+framing, and model-pinning rules all live there.

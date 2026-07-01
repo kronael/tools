@@ -1,0 +1,35 @@
+kronael toolkit — by kronael
+Unlicense (public domain). No warranty. Attribution appreciated but not required.
+
+If you build on this toolkit — say so:
+  Built on kronael/tools (https://github.com/kronael/tools) by kronael.
+
+Built on (paths under skills/):
+  humanize © 2025 Siqi Chen (@blader) (MIT)
+    https://github.com/blader/humanizer
+    ported via NousResearch/hermes-agent (MIT)
+
+  create/diagram/architecture-diagram — based on Cocoon AI
+    architecture-diagram-generator (MIT)
+    https://github.com/Cocoon-AI/architecture-diagram-generator
+    ported via NousResearch/hermes-agent (MIT)
+
+  create/web/design-md — based on google-labs-code/design.md (Apache-2.0)
+    https://github.com/google-labs-code/design.md
+    ported via NousResearch/hermes-agent (MIT)
+
+  create/web.md § Sketch — adapted from GSD/get-shit-done
+    © 2025 Lex Christopherson (MIT)
+    https://github.com/gsd-build/get-shit-done
+    ported via NousResearch/hermes-agent (MIT)
+
+  create/art.md, create/art/ascii-video, create/art/p5js, create/art/pretext,
+  create/web.md § Claude Design, create/web/popular-web-designs,
+  create/video.md, create/video/render, create/video/manim,
+  create/diagram/excalidraw, create-eval
+    © 2025 Nous Research (MIT)
+    https://github.com/NousResearch/hermes-agent
+
+Sub-licenses are reproduced in skills/humanize/LICENSE.
+For all MIT and Apache-2.0 upstream works, copyright notices are retained
+in the respective data-file frontmatter where present.

@@ -27,11 +27,13 @@ when_to_use: editing .rs files or writing Rust code
 ## Naming
 - ALWAYS verb-based function names unless trivially a constructor
   - `collect_tx_summaries()` not `tx_summaries()`; nouns ok for `new()`, `from_str()`
-- Function params: NEVER shortcuts — `value` not `v`, `count` not `c`
-- Loop variables and math context: single-letter fine (`i`, `n`, `k`)
+- Function params: full names for multi-word concepts; short OK in closures (`v`, `k`, `n` in `.map(|v| ...)`)
+- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine
+- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
 - Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
 ## Code Style
+- Prefer `for x in xs {}` over `xs.for_each(|x| ...)` when the closure adds no clarity
 - NEVER use `.filter().map().unwrap_or()` as a disguised `if/else` — write `if`/`let` directly
 - `.filter()` filters collections; it is NOT a conditional branch
 - `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
@@ -127,6 +129,17 @@ fn main() -> eyre::Result<()> {
   `.expect()` / `panic!` / fail-fast / `.unwrap()`. That dilutes the convention
   and is wrong. For a deliberate panic, the reason goes in the `.expect("…")`
   message or a plain `//` comment — `// SAFETY:` means "this unsafe is sound", nothing else.
+
+## serde_json Value
+- NEVER `serde_json::from_value::<T>(value.clone())` — `&Value` implements `Deserializer`, use
+  `T::deserialize(value)` (ref, no clone):
+  ```rust
+  let Ok(value) = MyType::deserialize(details) else { continue };
+  ```
+- For sparse reads (1–2 fields), prefer direct access over full deserialization:
+  ```rust
+  let Some(value) = details.get("count").and_then(|v| v.as_u64()) else { continue };
+  ```
 
 ## Copy/Clone
 - NEVER derive Copy unless trivially copyable (i32, u64, bool, enum)

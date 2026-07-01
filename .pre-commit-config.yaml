@@ -4,6 +4,16 @@ default_language_version:
 
 repos:
 
+    - repo: local
+      hooks:
+          - id: skill-frontmatter
+            name: check SKILL.md frontmatter YAML
+            entry: python hooks/skill_frontmatter_lint.py --write --fail-on-write
+            language: python
+            additional_dependencies: [PyYAML]
+            files: (^|/)SKILL\.md$
+            pass_filenames: true
+
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:
@@ -12,8 +22,10 @@ repos:
           - id: check-toml
           - id: check-symlinks
           - id: trailing-whitespace
+            exclude: ^skills/create/    # ported bundle data, kept verbatim
           - id: mixed-line-ending
             args: [--fix=lf]
+            exclude: ^skills/create/
 
     - repo: https://github.com/charliermarsh/ruff-pre-commit
       rev: v0.12.1

@@ -12,4 +12,18 @@
 # Cookies (secrets)
 cookies/
 tweetfeed_cookies/
-hooks/__pycache__
+
+# Python caches
+**/__pycache__/
+
+# Research checkouts (embedded git repos cloned for reading)
+.refs/
+
+# Local scratch / ephemeral
+tmp/
+session.json
+settings.json
+capture.png
+.codex
+.diary/
+.ship/

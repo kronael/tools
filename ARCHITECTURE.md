@@ -3,34 +3,66 @@
 ## Repo shape
 
 ```
-.claude-plugin/         marketplace.json + plugin.json
-kronael/install/  the only plugin-exposed skill — install procedure
-skills/                 bundle — auto-activating skills (languages, workflow, domain)
-agents/                 bundle — specialized task agents
-hooks/                  bundle — lifecycle hook scripts (Python)
-settings-recommended.json  user-side settings to merge into ~/.claude/settings.json
-RECLAUDE.md             template for ~/.claude/RECLAUDE.md (reclaude hook input)
-AGENTS.md               instructions for non-Claude agents (Codex)
-WORKFLOW.md             agent hierarchy and ship/build/refine workflows
-COOKBOOK.md             daily git recipes (detached HEAD with rig)
-usage-patterns/         design patterns extracted from production projects
-dockbox/, rig/, ...     standalone CLI tools (each independent)
+.claude-plugin/             marketplace.json + plugin.json
+.agents/plugins/            repo-local Codex marketplace metadata
+plugins/kronael/            thin Codex plugin with one installer skill
+kronael/install/            the only plugin-exposed skill — install procedure
+skills/                     bundle — auto-activating skills (languages, workflow, domain)
+agents/                     bundle — specialized task agents
+hooks/                      bundle — lifecycle hook scripts
+settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
+RECLAUDE.md                 template for ~/.claude/RECLAUDE.md (reclaude hook input)
+AGENTS.md                   notes for non-Claude agents (Codex)
+COOKBOOK.md                 daily git recipes (detached HEAD with rig)
+udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in README.md)
 ```
 
-## Two install paths, one source
+## Install paths, one source
 
 The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
-Both paths copy them into `~/.claude/`.
+All install paths copy them into `~/.claude/`.
 
-**Plugin path** — Claude Code's marketplace clones this repo into its
+**Claude plugin path** — Claude Code's marketplace clones this repo into its
 plugin cache. `/kronael:install` reads the cached repo at
 `${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
 
-**Manual path** — User clones the repo themselves, opens Claude Code at
+**Claude manual path** — User clones the repo themselves, opens Claude Code at
 the root, says "install". Source is `cwd`; the rest of the procedure is
 identical.
 
-The procedure is documented in [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of truth for both paths. Codex/non-Claude agents follow the bash translation in [`AGENTS.md`](AGENTS.md).
+**Codex bridge path** — Codex installs the thin plugin from
+`plugins/kronael/.codex-plugin/plugin.json` via
+`.agents/plugins/marketplace.json`. The only Codex skill is
+`plugins/kronael/skills/kronael-install/SKILL.md`; it reads
+`kronael/install/SKILL.md` from the GitHub marketplace snapshot and deploys the
+bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
+
+Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
+skills available inside Codex, the install bridge exposes them with
+`~/.agents/skills -> ~/.claude/skills` when possible. If
+`~/.agents/skills` already exists as a directory, it adds per-skill symlinks
+for source-owned Kronael skills. Codex invokes those bridged skills as
+`@skill-name`, and `codex_hook.py` rewrites installed hook nudges from
+Claude-style `/skill` to Codex-style `@skill`.
+
+The procedure is documented in
+[`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
+truth for all paths. Codex/non-Claude agents follow
+[`AGENTS.md`](AGENTS.md).
+
+## Codex project bridge
+
+Codex can be configured to consume Claude project conventions without copying
+them:
+
+- `~/.codex/config.toml`: add `CLAUDE.md` to
+  `project_doc_fallback_filenames` for Claude-only projects.
+- Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
+  `CLAUDE.md`, because Codex loads at most one instruction file per directory.
+- Project `.claude/skills`: expose them to Codex with
+  `.agents/skills -> ../.claude/skills` symlinks when requested.
+- Global installed Kronael skills: expose them to Codex with
+  `~/.agents/skills -> ~/.claude/skills` when requested.
 
 ## Why hybrid (plugin + install step)
 
@@ -77,31 +109,23 @@ Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
 1. Claude Code starts in a project
 2. Loads ~/.claude/CLAUDE.md (global wisdom)
 3. Loads ./CLAUDE.md (project conventions)
-4. Hooks fire on UserPromptSubmit / PreCompact / Stop / SessionEnd
+4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills auto-activate by file extension or config file
 6. Agents invoked explicitly (`/refine`, `@improve`) or by delegation
 ```
 
 ## Components
 
-**Skills** auto-activate by file context (`.rs` → `rs`, `Dockerfile` →
-`ops`, etc.) and provide workflow commands (`/commit`, `/ship`, `/refine`,
-`/diary`). The `global` skill becomes `~/.claude/CLAUDE.md`.
+**Skills** auto-activate by file context and provide workflow slash
+commands. The `global` skill becomes `~/.claude/CLAUDE.md`. Index,
+rationale, and workflow diagram: [`skills/README.md`](skills/README.md).
 
-**Agents**: `@distill`, `@improve`, `@learn`, `@readme`, `@refine`,
-`@visual`. Most are dispatched by slash-command wrappers.
+**Agents** are task workers, mostly dispatched by slash-command wrappers.
 
-**Hooks** wire lifecycle events:
-- `nudge` — UserPromptSubmit fuzzy-match keywords to agents/skills
-- `local` — UserPromptSubmit + PreCompact inject `~/.claude/LOCAL.md`
-- `reclaude` — PreCompact re-inject critical rules across compaction
-- `stop` — Stop block on uncommitted changes / missing diary entries
-
-See [`WORKFLOW.md`](WORKFLOW.md) for the full agent hierarchy,
-[`skills/README.md`](skills/README.md) for skill rationale by family
-(memory, refinement, shortcuts), and
-[`hooks/README.md`](hooks/README.md) +
-[`hooks/ARCHITECTURE.md`](hooks/ARCHITECTURE.md) for hook details.
+**Hooks** wire the lifecycle events above; the wiring is defined in
+`settings-recommended.json`. Per-hook rationale and data flow:
+[`hooks/README.md`](hooks/README.md),
+[`hooks/ARCHITECTURE.md`](hooks/ARCHITECTURE.md).
 
 ## Org overlays
 

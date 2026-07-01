@@ -1,0 +1,20 @@
+---
+name: Test — %%COMPONENT%%
+
+on:
+    push:
+        paths: %%PATHS%%
+    pull_request:
+        branches: [master]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: %%TIMEOUT%%
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-go@v5
+              with:
+                  go-version-file: %%COMPONENT%%/go.mod
+            - run: cd %%COMPONENT%% && go test ./...
+            - run: cd %%COMPONENT%% && go vet ./...

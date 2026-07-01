@@ -13,6 +13,11 @@ ready. Reflog keeps everything for 90 days — no work is ever lost.
 Mental model: **you commit to a SHA, not a branch**. The branch is
 just a label that lives upstream.
 
+For PR work in a worktree, `git worktree add /path origin/branch`
+points at the remote ref — detached HEAD, no local branch created or
+attached. That's the correct pattern; the no-attach rule targets
+`git checkout branch` in the main repo.
+
 ## Start work on a feature
 
 ```bash
@@ -165,5 +170,4 @@ rco -h                     # per-command help
 
 - [rig/README.md](rig/README.md) — full flag reference
 - [dockbox/README.md](dockbox/README.md) — sandbox config and mounts
-- [skills/README.md](skills/README.md) — skill rationale
-- [WORKFLOW.md](WORKFLOW.md) — agent hierarchy
+- [skills/README.md](skills/README.md) — skill rationale and workflow diagram

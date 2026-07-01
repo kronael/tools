@@ -9,16 +9,24 @@
       "Bash(git show*)",
       "Bash(git branch*)",
       "Bash(git add [^-]*)",
-      "Bash(git commit*)"
+      "Bash(git commit*)",
+      "Bash(gh pr comment*)",
+      "Bash(gh api repos/*/pulls/*/reviews*)",
+      "Bash(gh api repos/*/pulls/*/comments*)"
     ],
     "deny": [
-      "Bash(rm -rf /)*",
-      "Bash(rm -rf ~)*",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
       "Bash(chmod 777*)",
       "Bash(git push*)",
       "Bash(git pull*)",
       "Bash(ssh *)",
-      "Bash(rsync *)"
+      "Bash(rsync *)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr review --approve*)",
+      "Bash(gh release create*)",
+      "Bash(gh repo create*)"
     ],
     "defaultMode": "default"
   },
@@ -27,8 +35,40 @@
       {
         "matcher": "",
         "hooks": [
-          { "type": "command", "command": "python3 ~/.claude/hooks/local.py", "timeout": 3000 },
-          { "type": "command", "command": "python3 ~/.claude/hooks/nudge.py", "timeout": 3000 }
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/local.py",
+            "timeout": 500
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/prompt_nudge.py",
+            "timeout": 500
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/pretool_nudge.py",
+            "timeout": 500
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/post_tool_nudge.sh",
+            "timeout": 1000
+          }
         ]
       }
     ],
@@ -36,7 +76,11 @@
       {
         "matcher": "",
         "hooks": [
-          { "type": "command", "command": "python3 ~/.claude/hooks/stop.py", "timeout": 10000 }
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/stop.py",
+            "timeout": 1000
+          }
         ]
       }
     ],
@@ -44,8 +88,16 @@
       {
         "matcher": "",
         "hooks": [
-          { "type": "command", "command": "python3 ~/.claude/hooks/local.py", "timeout": 3000 },
-          { "type": "command", "command": "python3 ~/.claude/hooks/reclaude.py", "timeout": 3000 }
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/local.py",
+            "timeout": 500
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/reclaude.py",
+            "timeout": 500
+          }
         ]
       }
     ]
@@ -59,12 +111,17 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
-    "excludedCommands": ["git", "uv"]
+    "excludedCommands": [
+      "git",
+      "uv"
+    ]
   },
   "alwaysThinkingEnabled": true,
   "skipDangerousModePermissionPrompt": true,
+  "promptSuggestionEnabled": false,
+  "spinnerTipsEnabled": false,
   "env": {
-    "CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION": "false",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
-  }
+  },
+  "outputStyle": "80% caveman"
 }

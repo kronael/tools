@@ -1,7 +1,7 @@
+.DEFAULT_GOAL := help
 .PHONY: help image install clean
 
 IMAGE := dockbox
-UID := $(shell id -u)
 TZ := $(shell date +%Z 2>/dev/null || echo UTC)
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 PREFIX := $(HOME)/.local/bin
@@ -12,7 +12,7 @@ help:
 	@echo "make clean    - remove installed binary and docker image"
 
 image:
-	$(SUDO) docker build --build-arg UID=$(UID) --build-arg TZ=$(TZ) -t $(IMAGE) .
+	$(SUDO) docker build --build-arg TZ=$(TZ) -t $(IMAGE) -f Dockerfile ..
 
 install: image
 	install -m 755 dockbox $(PREFIX)/

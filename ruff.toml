@@ -1,6 +1,6 @@
 target-version = "py314"
 line-length = 100
-exclude = [".venv", "tmp", "tweetfeed_cookies"]
+exclude = [".venv", "tmp", "tweetfeed_cookies", "skills/create"]  # skills/create = ported bundle data, kept verbatim
 
 [lint]
 select = ["ALL"]

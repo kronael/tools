@@ -1,88 +1,71 @@
-# Claude Code Hooks
+# Kronael Hooks
 
-Hooks that extend Claude Code with keyword routing, session rule injection,
-and commit/diary nudges.
+Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
+commit/diary nudges. Scripts install to `~/.claude/hooks/`.
 
-## Installation
+Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
+its `hooks` block is merged into `~/.claude/settings.json` by the install
+step. Codex wiring is `../codex-hooks.json`; it installs to
+`~/.codex/hooks.json` and calls `codex_hook.py` before delegating to the same
+hook scripts.
 
-Hooks are configured in `~/.claude/settings.json`. The hook scripts live in
-`~/.claude/hooks/`.
+## The hooks
 
-## Features
+### prompt_nudge.py (UserPromptSubmit)
 
-### Keyword Routing (nudge.py)
+Fuzzy-matches prompt keywords and emits a system message telling Claude
+to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
+the source — read the dict, don't duplicate it. Also injects
+`COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions. Meta
+prompts (hook/agent debugging) are skipped so the hook doesn't
+interfere with its own maintenance.
 
-Fires on `UserPromptSubmit`. Detects keywords in the prompt (with fuzzy
-edit-distance matching) and emits a system message telling Claude to invoke
-the matching command or agent.
+### pretool_nudge.py (PreToolUse: Read|Edit|Write|MultiEdit|NotebookEdit)
 
-| Keyword | Route |
-|---------|-------|
-| ship    | /ship |
-| build   | /build |
-| refine  | /refine |
-| tweet   | /tweet |
-| diary   | /diary |
-| readme  | @readme |
-| learn   | @learn |
-| improve | @improve |
-| visual  | @visual |
-| distill | @distill |
+Maps the touched file to a language skill by extension/filename
+(`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
+`Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
+nudge, once per session+file.
 
-Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on
-`todo|readme|changelog|spec|architecture|*.md` mentions.
+### post_tool_nudge.sh (PostToolUse)
 
-Meta prompts (hook/agent debugging) are detected and skipped so the hook
-does not interfere with hook maintenance itself.
+Counts tool calls in the current repo's git dir; every 100 calls or 10
+minutes re-runs `stop.py`'s commit/diary check mid-session using the original
+hook payload.
+Non-blocking, always exits 0.
 
-### LOCAL.md Injection (local.py)
+### codex_hook.py (Codex adapter)
 
-Fires on `UserPromptSubmit` and `PreCompact`. Injects `~/.claude/LOCAL.md`
-(and `$cwd/LOCAL.md` if present) on the first prompt of a session and on
-pre-compaction. Also re-injects a short `RULES` block on continue/recap
-keywords, respecting negation ("don't continue").
+Normalizes Codex hook payloads into the Claude-style fields the existing hooks
+expect (`cwd`, `session_id`, `hook_event`, `prompt`, `tool_name`,
+`tool_input`) and delegates to the target hook. Codex should call this wrapper;
+do not wire Codex directly to the Claude scripts unless their payload contract
+is intentionally changed.
 
-**State:** `$cwd/.claude/tmp/local-{session_id}` tracks the first prompt.
+The adapter also translates Claude hook output for Codex: it strips Claude-only
+`ok`, promotes `systemMessage` into `hookSpecificOutput.additionalContext` for
+prompt/tool hooks, and rewrites Kronael nudge references from `/skill` to
+`@skill`. Codex `PreCompact` does not accept context injection JSON, so the
+adapter suppresses context-only `systemMessage` output for that event and only
+forwards explicit `decision: block` responses.
 
-### RECLAUDE.md Injection (reclaude.py)
+### local.py (UserPromptSubmit + PreCompact)
 
-Fires on `UserPromptSubmit` and `PreCompact`. Mirrors `local.py` but sources
-`~/.claude/RECLAUDE.md`. On `PreCompact`, appends a note instructing the
-model to preserve the wisdom across compaction.
+Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
+first prompt of a session and on pre-compaction. Re-injects a short
+`RULES` block on continue/recap keywords, respecting negation.
+State: `$cwd/.claude/tmp/local-{session_id}`.
 
-### Commit + Diary Nudge (stop.py)
+### reclaude.py (PreCompact)
 
-Fires on `Stop`. Blocks with a reason message if either:
+Injects `~/.claude/RECLAUDE.md` before compaction, with a note
+instructing the model to preserve the wisdom across the compact.
 
-- `git status --porcelain -uno` shows uncommitted changes → "consider /commit"
-- `$cwd/.diary/` exists and today's `YYYYMMDD.md` is missing or >1h stale
-  → "consider /diary"
+### stop.py (Stop)
 
-Pure script, no LLM call. NEVER pushes. Commit and diary writes are
-local-only and explicit.
-
-## File Structure
-
-```
-~/.claude/hooks/
-  nudge.py       # UserPromptSubmit: keyword → command/agent
-  local.py       # UserPromptSubmit + PreCompact: LOCAL.md injection
-  reclaude.py    # UserPromptSubmit + PreCompact: RECLAUDE.md injection
-  stop.py        # Stop: commit + diary nudge
-```
-
-## Hook Configuration
-
-In `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [{"matcher": "", "hooks": [...]}],
-    "Stop":             [{"matcher": "", "hooks": [...]}],
-    "PreCompact":       [{"matcher": "", "hooks": [...]}]
-  }
-}
-```
+Blocks the stop with a reason if `git status --porcelain -uno` shows
+uncommitted changes ("consider /commit"; Codex sees `@commit`) or
+`$cwd/.diary/` exists with today's entry missing or >1h stale ("consider
+/diary"; Codex sees `@diary`). Pure script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

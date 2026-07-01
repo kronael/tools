@@ -1,123 +1,130 @@
 # AGENTS.md
 
-Instructions for Codex (and any non-Claude coding agent) working in this
-repository. The same conventions live in `CLAUDE.md`; this file makes
-them accessible to agents that don't pick up `CLAUDE.md` automatically.
-
-## Startup
-
-ALWAYS read before making changes:
-
-1. Root `CLAUDE.md` — repo conventions and layout.
-2. [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — canonical install procedure (this file is the bash translation).
-3. Nearest nested `CLAUDE.md` for the area being changed (if any).
-
-NEVER ignore a `CLAUDE.md` because it says "Claude". These are project
+Notes for Codex (and any non-Claude coding agent) working in this repo.
+Repo conventions and layout live in `CLAUDE.md` — read it first. NEVER
+ignore a `CLAUDE.md` because it says "Claude"; these are project
 conventions, not product-specific behavior.
 
 ## What this repo contains
 
-1. **CLI tools** — `dockbox/`, `rig/`, `tw-fetch/`, `tg-fetch/`,
-   `dc-fetch/`, `clp/`. Each is independent. Adding a new tool: own
-   dir, own Makefile (or PEP 723 inline-deps script), entry in
-   `README.md`.
-2. **Claude Code plugin** — `.claude-plugin/` + `kronael/install/`.
-   Only `/kronael:install` is exposed; running it copies the
-   bundle into `~/.claude/`. **You can't run this from Codex** — it's
-   a Claude Code slash command. Use the manual path below instead.
-3. **Bundle** — `skills/`, `agents/`, `hooks/`, `settings-recommended.json`,
-   `RECLAUDE.md`, and `skills/global/SKILL.md` (the wisdom file source).
-   Source for both install paths.
+Three things — see `CLAUDE.md` for the shape and `README.md` for the CLI
+tool inventory:
+
+1. **CLI tools** — one independent dir each. Adding a tool: own dir, own
+   Makefile (or PEP 723 inline-deps script), entry in `README.md`.
+2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`,
+   `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
+   distributed via
+   `.claude-plugin/` + `kronael/install/`.
+3. **Codex installer bridge** — `plugins/kronael/` and
+   `.agents/plugins/marketplace.json`.
+   It exposes one Codex skill that teaches Codex to run the same manual
+   install path. It does not duplicate the bundle.
 
 ## Installing the toolkit from Codex
 
-The bundle is Claude Code config — the hooks fire on Claude Code
-lifecycle events, the skills use Claude Code's auto-activation. Codex
-itself doesn't use them; Codex is the installer, deploying the bundle
-to `~/.claude/` for the user's Claude Code sessions.
+Follow the canonical procedure in
+[`kronael/install/SKILL.md`](kronael/install/SKILL.md) step by step — on a
+new install present its plan/consent questionnaire first, then verify source,
+backup, copy assets, install the wisdom file, merge settings, install the
+opted-in CLI tools (rig/udfix/clp/dockbox via their Makefiles — the
+marketplace snapshot carries their source dirs), report. Its Rules section
+(backup first, never-touch list, no deletions) applies verbatim. Below are
+only the Codex-specific deltas.
 
-Run from the repo root.
+- `/kronael:install` is a Claude Code slash command — you can't run it
+  from Codex. Run the canonical installer from the source root discovered by
+  the bridge.
+- The bundle installs hook scripts into `~/.claude/hooks/`. Claude Code uses
+  `settings-recommended.json`; Codex uses `codex-hooks.json` plus
+  `hooks/codex_hook.py` to normalize Codex hook payloads before delegating to
+  those same scripts.
+- The Codex plugin is a thin bridge only. Its one skill is
+  `plugins/kronael/skills/kronael-install/SKILL.md`; keep install behavior in
+  `kronael/install/SKILL.md` and update the bridge only when Codex-specific
+  translation changes.
+- Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
+  those installed skills to Codex through `~/.agents/skills`, and writes
+  `~/.codex/hooks.json` for Codex lifecycle hooks. The plugin cache still
+  contains only the bridge skill.
 
-### 1. Verify source
+## Codex plugin usage
+
+GitHub marketplace path:
 
 ```sh
-test -d skills && test -d agents && test -d hooks \
-  && test -f settings-recommended.json && test -f RECLAUDE.md \
-  || { echo "wrong cwd: run from repo root"; exit 1; }
+codex plugin marketplace add kronael/tools
+codex plugin add kronael@kronael
 ```
 
-### 2. Backup current state
+Then start a fresh Codex thread and invoke:
 
-```sh
-TS=$(date +%Y%m%d-%H%M%S)
-BK=~/.claude/backup/$TS
-mkdir -p "$BK"
-for d in skills agents hooks; do
-  [ -d ~/.claude/$d ] && cp -r ~/.claude/$d "$BK/$d"
-done
-for f in CLAUDE.md settings.json RECLAUDE.md; do
-  [ -f ~/.claude/$f ] && cp ~/.claude/$f "$BK/$f"
-done
-echo "backup: $BK"
+```text
+Use @kronael-install to install/update Kronael.
 ```
 
-### 3. Replace skills, agents, hooks
+Bridge-only invocation (for repair or existing installs):
+
+```text
+Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
+```
+
+Global installed-skill bridge:
+
+```text
+Use @kronael-install to bridge .claude/skills and hooks into Codex.
+```
+
+After the bridge, installed Kronael skills are invoked in Codex as
+`@skill-name` (for example, `@refine`). Codex hook nudges must use that form.
+
+Codex compatibility for Claude projects:
+
+- Add `CLAUDE.md` to `project_doc_fallback_filenames` in
+  `~/.codex/config.toml` for projects without `AGENTS.md`.
+- If a project already has `AGENTS.md`, make that file tell Codex to read
+  `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
+- To expose project `.claude/skills` to Codex, symlink
+  `.agents/skills -> ../.claude/skills` instead of copying.
+- To expose globally installed Kronael skills to Codex, symlink
+  `~/.agents/skills -> ~/.claude/skills` when possible; if
+  `~/.agents/skills` is already a directory, add per-skill symlinks for
+  source-owned Kronael skills. Codex does not scan `~/.claude/skills`
+  directly.
+
+If `@kronael-install` cannot find the source root, refresh the GitHub
+marketplace with `codex plugin marketplace upgrade kronael` (or
+`kronael-local` for older installs). NEVER make the bridge copy source bundle
+files into `plugins/kronael/`.
+
+Shell translations for the non-obvious steps:
+
+**Copy skills, skipping `global/`** (its body becomes the wisdom file;
+copying it as a skill too would duplicate always-loaded content). NEVER
+`rm -rf ~/.claude/skills/` first. Run the sync protocol from
+`kronael/install/SKILL.md` before this copy so local installed edits are
+merged or explicitly overwritten, never clobbered silently:
 
 ```sh
-mkdir -p ~/.claude/skills ~/.claude/agents ~/.claude/hooks
-# Copy every skill except global/ — its body lands in ~/.claude/CLAUDE.md (step 4),
-# copying it as a skill too would duplicate the always-loaded content.
 for d in skills/*/; do
   [ "$(basename "$d")" = "global" ] && continue
   cp -r "$d" ~/.claude/skills/
 done
-cp skills/README.md ~/.claude/skills/ 2>/dev/null || true
-cp -r agents/. ~/.claude/agents/
-cp -r hooks/.  ~/.claude/hooks/
 ```
 
-NEVER `rm -rf ~/.claude/skills/` first — the user may have org overlays
-or personal skills there. `cp -r` overwrites matching files and leaves
-others alone.
-
-### 4. Install wisdom file
-
-`skills/global/SKILL.md` body (minus YAML frontmatter) becomes
-`~/.claude/CLAUDE.md`. Use awk so the frontmatter stripper actually
-matches both fences:
+**Install the wisdom file** — strip the YAML frontmatter from
+`skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
+content, diff and ask first:
 
 ```sh
 awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
   skills/global/SKILL.md > ~/.claude/CLAUDE.md
 ```
 
-If `~/.claude/CLAUDE.md` already exists with user content, `diff` it
-against the new version first and ask the user before overwriting. Any
-local paths, repo names, or secrets the user had go into
-`~/.claude/LOCAL.md` (auto-injected by the `local.py` hook). NEVER
-overwrite an existing `LOCAL.md`.
-
-### 5. Install RECLAUDE.md
-
-```sh
-cp RECLAUDE.md ~/.claude/RECLAUDE.md
-```
-
-### 6. Merge settings
-
-`settings-recommended.json` carries the recommended hook wiring,
-permissions, and sandbox config. Don't blind-overwrite — the user may
-have relaxed permissions or custom env vars.
-
-If `~/.claude/settings.json` doesn't exist, copy:
-
-```sh
-cp settings-recommended.json ~/.claude/settings.json
-```
-
-Otherwise diff and merge with `jq`. Minimum required: the **hooks**
-block (UserPromptSubmit, Stop, PreCompact, SessionEnd) — without it
-the hook scripts you copied in step 3 won't fire.
+**Merge settings** — if `~/.claude/settings.json` exists, splice the
+hooks block instead of overwriting (the event wiring is whatever
+`settings-recommended.json` says — don't restate it). For permissions
+and sandbox, show the diff and ask:
 
 ```sh
 jq -s '.[0].hooks = .[1].hooks | .[0]' \
@@ -126,29 +133,15 @@ jq -s '.[0].hooks = .[1].hooks | .[0]' \
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
-For permissions and sandbox: show the diff to the user, ask which
-restrictions to apply. NEVER touch `~/.claude/settings.local.json`.
+**Codex hooks** — copy `codex-hooks.json` to `~/.codex/hooks.json` after the
+Claude hook scripts are installed. This is part of Codex bridge-only repair,
+not only full installs. In a fresh Codex TUI session, the user must open
+`/hooks` once and trust changed command hooks.
 
-### 7. Verify and report
-
-```sh
-ls ~/.claude/skills/ | wc -l       # should match: ls skills/ | wc -l
-ls ~/.claude/agents/ | wc -l       # should match: ls agents/ | wc -l
-ls ~/.claude/hooks/*.py | wc -l    # should match: ls hooks/*.py | wc -l
-test -f ~/.claude/CLAUDE.md
-```
-
-Report to the user: `N skills, M agents, K hooks installed. Backup at $BK.`
-
-## Never-touch
-
-- `~/.claude/settings.local.json`
-- `~/.claude/LOCAL.md`
-- `~/.claude/CLAUDE.local.md`
-- Any file/dir in `~/.claude/` that's not in this source tree (org
-  overlays, user customizations)
-- `skipDangerousModePermissionPrompt` in settings — never sync from
-  user back to template
+**Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
+the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
+`~/.agents/skills` bridges to `~/.claude/skills`, and
+`~/.codex/hooks.json` exists. Report counts and the backup path.
 
 ## Conventions
 

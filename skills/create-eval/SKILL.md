@@ -1,7 +1,7 @@
 ---
 name: create-eval
-description: Generate project-specific service-eval skill. NOT for running existing evals or for adversarial audits (use cto-eval / ceo-eval).
-when_to_use: "create eval", create service-eval criteria, scaffold service-eval skill
+description: Generate project-specific service-eval skill. NOT for running existing evals or adversarial audits.
+when_to_use: "create eval, create service-eval criteria, scaffold service-eval skill"
 user-invocable: true
 ---
 
@@ -31,5 +31,6 @@ see `cto-eval` (code) and `ceo-eval` (demo).
 - ALWAYS read project docs before generating
 - NEVER include generic criteria — derive everything from the project
 - NEVER generate without asking the user first
-- ALWAYS express assertions as programmatically checkable (grep counts, thresholds, exit codes) — NEVER "looks healthy" / "works well"
+- ALWAYS express assertions as programmatically checkable (grep counts,
+  thresholds, exit codes) — NEVER "looks healthy" / "works well"
 - ALWAYS sanity-check the generated eval against real log samples before declaring it done

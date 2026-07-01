@@ -1,7 +1,7 @@
 ---
 name: wisdom
 description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md. NOT for general code (use go/rs/py/ts) or mining history (use learn).
-when_to_use: creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements
+when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements"
 ---
 
 # Wisdom Skill
@@ -39,6 +39,16 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - NEVER add obvious code examples LLMs already know.
 - NEVER duplicate content between skills or with the global wisdom file.
 - ALWAYS move reference material (>50 lines: API docs, tables) to sibling files; SKILL.md is workflow only.
+
+## Router skills
+
+- Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`).
+- ALWAYS make a router instead of N sibling skills when they share an audience and are rarely invoked — N preloaded descriptions collapse to 1.
+- Router body = explicit dispatch table mapping trigger keywords → data file; NEVER prose links alone.
+- Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/resolve` routes on them.
+- Light content lives flat (`<mode>.md`); heavy ported trees keep their subtree intact at `<mode>/<slug>/`.
+- NEVER name a data file `SKILL.md` — that is what makes it preload.
+- Maintenance procedure: `skills/CLAUDE.md`.
 
 ## CLAUDE.md (project)
 
