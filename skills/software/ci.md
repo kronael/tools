@@ -51,20 +51,4 @@ clean:
   For standalone repos, `uv sync` installs the project itself; PYTHONPATH
   is unnecessary.
 
-## `make demo` targets
-
-`demo` MUST use proper file targets with real prerequisites, e.g.:
-
-```makefile
-demo: tmp/demo.gif
-
-tmp/demo.cast: $(BIN) demo/script
-	...
-
-tmp/demo.gif: tmp/demo.cast
-	...
-```
-
-Output goes in `tmp/` (never committed). NEVER flatten into one phony
-target — Make must be able to skip the recording if the cast is fresh and
-only re-render the gif.
+`make demo` recording targets: see the `demo` skill.

@@ -9,7 +9,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | File | Holds |
 |---|---|
 | `docker.md` | Python+uv two-layer Dockerfile, m4 monorepo Dockerfile generation |
-| `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean), `make demo` targets |
+| `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
