@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.36] — 20260701
+
+> kronael v0.3.36 — engineering baseline consolidated into the software skill
+>
+> The language baseline moves into the software router (`code.md`), de-duping always-loaded wisdom; Codex config repair is more robust.
+>
+> • skills: the code baseline (naming, style, design, boring-code, grug) now lives in `software`'s `code.md`; language skills require it
+> • wisdom: dropped the duplicated code philosophy from the always-loaded file — it now points to `software`/`code.md`
+> • install: its report names pruned/removed skills so stale-file removal is visible
+> • codex: the `CLAUDE.md` config fallback is kept a top-level key in `config.toml`, never buried under a table header
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: folded the `software-engineering` baseline into the `software` router as `software/code.md` (naming, layout, design, boring-code, grug). Language skills (`py`/`ts`/`sh`/`sql`) now carry `requires: software`. The standalone `software-engineering` skill is removed and pruned on reinstall.
+- wisdom: the always-loaded global wisdom no longer inlines the code-style/design/philosophy sections (they duplicated the baseline) — it points to `software`/`code.md`. Verified lossless.
+- skills: synced back local refinements — Codex-scope search in `recall-memories`, test-typing rules in `testing`/`py`/`ts`, a `pr-draft` GitHub-markdown rule, `gh-comment`'s bare `🤖` prefix, `py` frozen-dataclass rules.
+- install: the report step now names every pruned dir/hook so removal of outdated files is visible; the prune list includes `software-engineering`.
+- codex: config repair keeps `project_doc_fallback_filenames = ["CLAUDE.md"]` a top-level key in `~/.codex/config.toml` — never appended under a `[table]` header.
+
 ## [v0.3.35] — 20260701
 
 > kronael v0.3.35 — dockbox effort/model tuning
