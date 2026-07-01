@@ -2,12 +2,12 @@
 name: sql
 description: SQL queries and schemas. NOT for ORM-only code (use go, py, ts, or rs).
 when_to_use: editing .sql files or writing SQL queries
-requires: software-engineering
+requires: software
 ---
 
 # SQL
 
-Requires the `software-engineering` skill for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, and design
 rules. Below are SQL-specific additions.
 
 ## Style

@@ -1,7 +1,7 @@
 ---
 name: software
-description: Router for deep engineering runbooks — Docker images, CI Makefiles, deploys, observability, Python tool distribution. NOT for terse Docker/systemd/config rules (ops keeps those hot) or app code (use language skills).
-when_to_use: "Python uv Dockerfile, m4 monorepo image, .dockerignore, Ansible docker-service role, deploy a service, Makefile for uv, CI make targets, logging format, Prometheus metrics, SLO burn-rate alerts, error-handling hierarchy, distribute a Python tool, PEP 723 script, uvx"
+description: Router for engineering knowledge — the language-agnostic code baseline (naming, style, boring-code, design) plus deep runbooks (Docker images, CI Makefiles, deploys, observability, Python tool distribution). NOT for language-specific idioms (use go/rs/py/ts/sh/sql) or terse Docker/systemd rules (ops keeps those hot).
+when_to_use: "writing or reviewing code in any language, naming a function or variable, boring code, abstraction discipline, explicit over clever, over-engineering, complected code, line width, file layout; Python uv Dockerfile, m4 monorepo image, .dockerignore, Ansible docker-service role, deploy a service, Makefile for uv, CI make targets, logging format, Prometheus metrics, SLO burn-rate alerts, error-handling hierarchy, distribute a Python tool, PEP 723 script, uvx"
 ---
 
 # Software — runbook router
@@ -11,6 +11,7 @@ Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
+| language-agnostic code baseline: naming, style, layout, design, boring-code, grug rules | `code.md` |
 | Python+uv two-layer Dockerfile, m4 monorepo Dockerfiles, .dockerignore | `docker.md` |
 | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) | `ci.md` |
 | Ansible docker-service role, per-deployable subdir layout | `deploy.md` |

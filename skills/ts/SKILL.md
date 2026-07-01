@@ -2,12 +2,12 @@
 name: ts
 description: TypeScript/Node.js. NOT for .tsx (use tsx).
 when_to_use: editing .ts files or writing TypeScript
-requires: software-engineering
+requires: software
 ---
 
 # TypeScript Style
 
-Requires the `software-engineering` skill for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, and design
 rules. Below are TypeScript-specific additions and deltas.
 
 ## Code Style

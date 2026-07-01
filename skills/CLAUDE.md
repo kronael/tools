@@ -9,7 +9,7 @@ repo CLAUDE.md links to this file.
   (`commit`, `refine`, `humanize`) and bare tech names (`rs`, `go`, `ops`).
 - **Router skill** = one `SKILL.md` (the ONLY preloaded file) + sibling cold
   data `.md` files, read on demand. Current routers: `create/` (artifact
-  generators), `software/` (engineering runbooks).
+  generators), `software/` (engineering baseline + runbooks).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars

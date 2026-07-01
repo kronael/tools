@@ -23,6 +23,7 @@ ALWAYS verify these exist at the source root before proceeding:
 - `agents/` — bundle of agents
 - `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
+- `kronael/install/codex_config_fallback.py` — TOML-safe Codex config repair
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 
@@ -91,7 +92,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
      `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
-     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here).
+     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
+     `software-engineering` (folded into the `software` router as `software/code.md`; language skills now `requires: software`).
      NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
      bundled again — `codex` is the canonical second-opinion skill, `oracle`
      is its alias; the v0.3.26 codex→oracle rename was reverted), or any
@@ -109,7 +111,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 5. **Install Codex bridge**. When running from Codex, or when the user asks
    for Codex support, install both bridges:
    - Ensure `project_doc_fallback_filenames` in `~/.codex/config.toml`
-     contains `CLAUDE.md`.
+     contains `CLAUDE.md` by running
+     `python3 "$SOURCE_ROOT/kronael/install/codex_config_fallback.py"`.
+     This is a top-level key; NEVER append it after a `[table]` header or edit
+     `[tui]` / `[tui.model_availability_nux]` for this fallback.
    - Ensure `~/.agents/skills` points at `~/.claude/skills` (symlink when
      possible; per-skill symlinks only when `~/.agents/skills` is already a
      directory).
@@ -170,8 +175,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    that tool as skipped and continue.
 
 8. **Report**: summary — fast drift result, X skills, Y agents, Z hooks,
-   RECLAUDE.md, Claude settings merged, Codex bridge installed/skipped,
-   W external tools, CLI tools installed/skipped. Claude skills are invocable
+   RECLAUDE.md, **pruned dirs/hooks** (name every stale skill/hook removed per
+   step 2 — renamed, consolidated, or dead; say "pruned: none" when nothing
+   matched so the user knows removal ran), Claude settings merged, Codex bridge
+   installed/skipped, W external tools, CLI tools installed/skipped. Claude skills are invocable
    bare (`/commit`, `/ship`, `/refine`, ...). Codex bridged skills are
    invocable as `@commit`, `@ship`, `@refine`, ...; remind the user that hook
    commands require `/hooks` trust after install/update.

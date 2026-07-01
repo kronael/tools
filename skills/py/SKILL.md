@@ -2,12 +2,12 @@
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
 when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
-requires: software-engineering
+requires: software
 ---
 
 # Python
 
-Requires the `software-engineering` skill for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, and design
 rules. Below are Python-specific additions and deltas.
 
 ## Verify before claiming
