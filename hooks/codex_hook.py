@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -20,6 +21,17 @@ TARGETS = {
     'stop': ['python3', str(HOOKS_DIR / 'stop.py')],
 }
 CONTEXT_EVENTS = {'UserPromptSubmit', 'PreToolUse', 'PostToolUse'}
+NUDGE_TARGETS = {'prompt_nudge', 'pretool_nudge', 'post_tool_nudge', 'stop'}
+CODEX_SKILL_NAMES_TEXT = (
+    'bugs ceo-eval cli codex commit create create-eval credit cto-eval '
+    'data data-reports diagrams diary dispatch distill explore eye-13yo '
+    'fable fin fix gh-comment go haiku hacker-eval humanize htmx improve '
+    'learn mk merge oracle opus ops pr-draft py readme recall-memories '
+    'refine release review rs scavenge service sh ship sonnet software '
+    'sql specs testing trader ts tsx tweet visual wisdom writing'
+)
+CODEX_SKILL_NAMES = frozenset(CODEX_SKILL_NAMES_TEXT.split())
+SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z][a-z0-9-]*)')
 
 
 def _first_str(data: dict[str, Any], names: tuple[str, ...], default: str = '') -> str:
@@ -88,13 +100,39 @@ def run_target(target: str, payload: dict[str, Any]) -> int:
         check=False,
     )
     if result.stdout:
-        print(translate_output(result.stdout, str(payload.get('hook_event') or '')), end='')
+        event = str(payload.get('hook_event') or '')
+        print(translate_output(result.stdout, event, target), end='')
     if result.stderr and os.environ.get('KRONAEL_CODEX_HOOK_DEBUG'):
         print(result.stderr, end='', file=sys.stderr)
     return result.returncode
 
 
-def translate_output(stdout: str, event: str) -> str:
+def rewrite_skill_refs(text: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        name = match.group('name')
+        if name in CODEX_SKILL_NAMES:
+            return f'@{name}'
+        return match.group(0)
+
+    return SKILL_REF_RE.sub(replace, text)
+
+
+def rewrite_nudge_output(output: dict[str, Any], target: str) -> None:
+    if target not in NUDGE_TARGETS:
+        return
+    for key in 'systemMessage', 'reason':
+        value = output.get(key)
+        if isinstance(value, str):
+            output[key] = rewrite_skill_refs(value)
+    hook_output = output.get('hookSpecificOutput')
+    if not isinstance(hook_output, dict):
+        return
+    context = hook_output.get('additionalContext')
+    if isinstance(context, str):
+        hook_output['additionalContext'] = rewrite_skill_refs(context)
+
+
+def translate_output(stdout: str, event: str, target: str = '') -> str:
     try:
         output = json.loads(stdout)
     except (json.JSONDecodeError, TypeError, ValueError):
@@ -102,6 +140,7 @@ def translate_output(stdout: str, event: str) -> str:
     if not isinstance(output, dict):
         return stdout
     output.pop('ok', None)
+    rewrite_nudge_output(output, target)
 
     if event == 'PreCompact':
         if output.get('decision') == 'block':
@@ -138,76 +177,6 @@ def main() -> None:
         data = {}
     payload = normalize(data, event)
     run_target(target, payload)
-
-
-def test_normalize_keeps_claude_shape() -> None:
-    payload = normalize(
-        {
-            'cwd': '/repo',
-            'session_id': 's1',
-            'prompt': 'commit this',
-            'tool_name': 'Read',
-            'tool_input': {'file_path': 'x.py'},
-        },
-        'UserPromptSubmit',
-    )
-    assert payload['cwd'] == '/repo'
-    assert payload['session_id'] == 's1'
-    assert payload['prompt'] == 'commit this'
-    assert payload['tool_name'] == 'Read'
-    assert payload['tool_input'] == {'file_path': 'x.py'}
-    assert payload['hook_event'] == 'UserPromptSubmit'
-
-
-def test_normalize_accepts_codex_camel_case() -> None:
-    payload = normalize(
-        {
-            'sessionId': 'abc',
-            'userPrompt': 'continue',
-            'tool': {'name': 'apply_patch', 'input': {'patch': '*** Begin Patch'}},
-        },
-        'PreToolUse',
-    )
-    assert payload['session_id'] == 'abc'
-    assert payload['prompt'] == 'continue'
-    assert payload['tool_name'] == 'apply_patch'
-    assert payload['tool_input'] == {'patch': '*** Begin Patch'}
-    assert payload['hook_event'] == 'PreToolUse'
-
-
-def test_translate_output_promotes_system_message_for_codex_prompt() -> None:
-    output = translate_output(
-        json.dumps({'ok': True, 'systemMessage': 'Use the project rules.'}),
-        'UserPromptSubmit',
-    )
-    parsed = json.loads(output)
-    assert 'ok' not in parsed
-    assert parsed['systemMessage'] == 'Use the project rules.'
-    assert parsed['hookSpecificOutput'] == {
-        'hookEventName': 'UserPromptSubmit',
-        'additionalContext': 'Use the project rules.',
-    }
-
-
-def test_translate_output_leaves_stop_block_unchanged() -> None:
-    original = json.dumps({'decision': 'block', 'reason': 'commit first'})
-    assert translate_output(original, 'Stop') == original
-
-
-def test_translate_output_suppresses_precompact_context_for_codex() -> None:
-    output = translate_output(
-        json.dumps({'ok': True, 'systemMessage': 'Reload context before compact.'}),
-        'PreCompact',
-    )
-    assert output == ''
-
-
-def test_translate_output_keeps_precompact_block_for_codex() -> None:
-    output = translate_output(
-        json.dumps({'ok': True, 'decision': 'block', 'reason': 'finish summary first'}),
-        'PreCompact',
-    )
-    assert json.loads(output) == {'decision': 'block', 'reason': 'finish summary first'}
 
 
 if __name__ == '__main__':

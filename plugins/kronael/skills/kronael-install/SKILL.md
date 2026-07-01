@@ -19,7 +19,7 @@ automatically after the Claude install succeeds.
 Users usually invoke:
 
 ```text
-Use $kronael-install to install/update Kronael.
+Use @kronael-install to install/update Kronael.
 ```
 
 If the user says "install kronael" without naming this skill, still run this
@@ -184,10 +184,11 @@ cp "$SOURCE_ROOT/codex-hooks.json" "$HOME/.codex/hooks.json"
 ```
 
 This config calls `~/.claude/hooks/codex_hook.py`, which normalizes Codex hook
-payloads and delegates to the installed Kronael hooks. The wrapper also
-suppresses Claude-style context-only output for Codex `PreCompact`, where Codex
-only accepts block decisions. Do not point Codex directly at the Claude hook
-scripts unless the wrapper is removed intentionally.
+payloads and delegates to the installed Kronael hooks. The wrapper also rewrites
+Kronael nudge references from `/skill` to `@skill` and suppresses Claude-style
+context-only output for Codex `PreCompact`, where Codex only accepts block
+decisions. Do not point Codex directly at the Claude hook scripts unless the
+wrapper is removed intentionally.
 
 Codex requires changed command hooks to be reviewed and trusted. After install,
 report that the user must open `/hooks` in a fresh Codex TUI session and trust
@@ -215,7 +216,7 @@ Report only:
 - Codex bridge paths changed: `~/.codex/config.toml`, `AGENTS.md`,
   `~/.agents/skills`, `.agents/skills`, `~/.codex/hooks.json`
 - whether Codex can now see the installed skills and hook wiring; tell the
-  user to start a new thread, use `/skills` or `$skill-name`, and open `/hooks`
+  user to start a new thread, use `/skills` or `@skill-name`, and open `/hooks`
   once to trust changed hooks
 
 NEVER duplicate the full installer report in the bridge. Link paths and say

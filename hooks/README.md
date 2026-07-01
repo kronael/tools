@@ -43,11 +43,11 @@ do not wire Codex directly to the Claude scripts unless their payload contract
 is intentionally changed.
 
 The adapter also translates Claude hook output for Codex: it strips Claude-only
-`ok`, and promotes `systemMessage` into
-`hookSpecificOutput.additionalContext` for prompt/tool hooks so the message is
-model-visible in Codex. Codex `PreCompact` does not accept context injection
-JSON, so the adapter suppresses context-only `systemMessage` output for that
-event and only forwards explicit `decision: block` responses.
+`ok`, promotes `systemMessage` into `hookSpecificOutput.additionalContext` for
+prompt/tool hooks, and rewrites Kronael nudge references from `/skill` to
+`@skill`. Codex `PreCompact` does not accept context injection JSON, so the
+adapter suppresses context-only `systemMessage` output for that event and only
+forwards explicit `decision: block` responses.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
@@ -64,8 +64,8 @@ instructing the model to preserve the wisdom across the compact.
 ### stop.py (Stop)
 
 Blocks the stop with a reason if `git status --porcelain -uno` shows
-uncommitted changes ("consider /commit") or `$cwd/.diary/` exists with
-today's entry missing or >1h stale ("consider /diary"). Pure script, no
-LLM call, NEVER pushes.
+uncommitted changes ("consider /commit"; Codex sees `@commit`) or
+`$cwd/.diary/` exists with today's entry missing or >1h stale ("consider
+/diary"; Codex sees `@diary`). Pure script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

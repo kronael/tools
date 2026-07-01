@@ -58,13 +58,13 @@ codex plugin add kronael@kronael
 Then start a fresh Codex thread and ask:
 
 ```text
-Use $kronael-install to install/update Kronael.
+Use @kronael-install to install/update Kronael.
 ```
 
 The same skill also handles bridge-only setup:
 
 ```text
-Use $kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
+Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
 The bridge does not duplicate `skills/`, `agents/`, or hook scripts into the
@@ -75,13 +75,16 @@ location, and copies `codex-hooks.json` into `~/.codex/hooks.json`.
 To repair or apply only the Codex side of that bridge, ask:
 
 ```text
-Use $kronael-install to bridge .claude/skills and hooks into Codex.
+Use @kronael-install to bridge .claude/skills and hooks into Codex.
 ```
 
 That links `~/.agents/skills` to `~/.claude/skills` when possible and copies
 `codex-hooks.json` to `~/.codex/hooks.json`. If `~/.agents/skills` already
 exists as a directory, the bridge adds per-skill symlinks for Kronael skills
 instead. Codex scans `~/.agents/skills`, not `~/.claude/skills`.
+In Codex, bridged Kronael skills are invoked as `@skill-name` (for example,
+`@refine`); installed hook nudges rewrite Claude `/skill` references to that
+form.
 
 Codex compatibility for Claude projects:
 
@@ -102,10 +105,10 @@ Troubleshooting:
 - Kronael hooks missing in Codex after install: run the bridge prompt above to
   refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open
   `/hooks`, and trust the changed command hooks.
-- Claude hooks missing after install: rerun `$kronael-install`; it merges hook
+- Claude hooks missing after install: rerun `@kronael-install`; it merges hook
   wiring from `settings-recommended.json`.
 - Codex says `Skipped loading ... invalid SKILL.md`: run
-  `make skills-frontmatter-fix`, reinstall/bridge with `$kronael-install`,
+  `make skills-frontmatter-fix`, reinstall/bridge with `@kronael-install`,
   then start a new Codex thread. The lint extracts SKILL.md frontmatter,
   validates it with PyYAML, and fixes known loose forms Claude Code tolerated.
 

@@ -171,8 +171,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 8. **Report**: summary — fast drift result, X skills, Y agents, Z hooks,
    RECLAUDE.md, Claude settings merged, Codex bridge installed/skipped,
-   W external tools, CLI tools installed/skipped. `/commit`, `/ship`,
-   `/refine` etc. invocable bare. In Codex, remind the user that hook
+   W external tools, CLI tools installed/skipped. Claude skills are invocable
+   bare (`/commit`, `/ship`, `/refine`, ...). Codex bridged skills are
+   invocable as `@commit`, `@ship`, `@refine`, ...; remind the user that hook
    commands require `/hooks` trust after install/update.
 
 ## Rules

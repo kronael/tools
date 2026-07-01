@@ -60,20 +60,23 @@ codex plugin add kronael@kronael
 Then start a fresh Codex thread and invoke:
 
 ```text
-Use $kronael-install to install/update Kronael.
+Use @kronael-install to install/update Kronael.
 ```
 
 Bridge-only invocation (for repair or existing installs):
 
 ```text
-Use $kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
+Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
 Global installed-skill bridge:
 
 ```text
-Use $kronael-install to bridge .claude/skills and hooks into Codex.
+Use @kronael-install to bridge .claude/skills and hooks into Codex.
 ```
+
+After the bridge, installed Kronael skills are invoked in Codex as
+`@skill-name` (for example, `@refine`). Codex hook nudges must use that form.
 
 Codex compatibility for Claude projects:
 
@@ -89,7 +92,7 @@ Codex compatibility for Claude projects:
   source-owned Kronael skills. Codex does not scan `~/.claude/skills`
   directly.
 
-If `$kronael-install` cannot find the source root, refresh the GitHub
+If `@kronael-install` cannot find the source root, refresh the GitHub
 marketplace with `codex plugin marketplace upgrade kronael` (or
 `kronael-local` for older installs). NEVER make the bridge copy source bundle
 files into `plugins/kronael/`.

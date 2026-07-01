@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.32] — 20260701
+
+> kronael v0.3.32 — Codex nudges use @skills
+>
+> Codex hook nudges now point at installed `@skill` commands, and prompt routing covers the reasonable workflow agents.
+>
+> • Codex: nudges rewrite `/refine`, `/commit`, and `/py` to `@refine`, `@commit`, and `@py`
+> • Prompt nudges: more workflow routes — release, specs, diagrams, security, UX, writing, model agents
+> • `/fix`: bundled in source so the existing bug-fix nudge points at an installed skill
+> • Hooks: adapter/pretool tests moved out of production scripts, keeping hook files under 200 lines
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Codex hook output now rewrites known Kronael nudge references from `/skill` to `@skill`, covering prompt nudges, file-extension skill nudges, and stop-time commit/diary nudges.
+- Prompt keyword routing covers the reasonably nudgeable workflow, evaluation, writing, UX, release, and model-agent skills; stale `/verify` and `/schedule` routes were removed.
+- Added source `skills/fix/SKILL.md` so the existing `/fix` nudge installs a bundled bug-fix workflow.
+- Split `codex_hook.py` and `pretool_nudge.py` tests into dedicated pytest files, keeping production hook scripts under 200 lines.
+- Codex install docs now teach `@kronael-install` and `@skill-name`, while Claude docs keep slash-command examples where they still apply.
+
 ## [v0.3.31] — 20260630
 
 > kronael v0.3.31 — dockbox keeps parallel sessions alive, codex aliases
