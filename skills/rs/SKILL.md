@@ -11,7 +11,18 @@ when_to_use: editing .rs files or writing Rust code
 - NEVER `use super::`, NEVER local `use` inside function bodies
   (exception: tests/main where scoping demands it)
 - ALWAYS `use crate::` for absolute paths
-- Use full path or canonical name; renaming erases origin
+- NEVER rename — full path or canonical name; renaming erases origin
+- **Common types in scope, rare types full-path — consistently project-wide.**
+  A type a crate uses pervasively (`Arc`, the project's main error type, common
+  wire/record types) gets a top-of-file single-line `use` so it reads bare
+  (`Arc<str>`, not `std::sync::Arc<str>`). A type used once or twice gets a full
+  inline path (`std::time::Duration`, `std::sync::atomic::AtomicU64`) instead of
+  a `use`. Pick the SAME side project-wide: if `Arc` is `use`d where it's common,
+  `use` it everywhere it's common — do NOT scatter bare `Arc` in some files and
+  `std::sync::Arc::...` full paths in others. Reduces import churn + makes every
+  file read the same way.
+- Keep files small enough to hold in one mental context; small files + uniform
+  imports make any file quick to reason about. Split a file that outgrows that.
 
 ## Naming
 - ALWAYS verb-based function names unless trivially a constructor
@@ -25,6 +36,11 @@ when_to_use: editing .rs files or writing Rust code
 - `.filter()` filters collections; it is NOT a conditional branch
 - `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
 
+## Comments
+- Comment only the NON-OBVIOUS (the why, the gotcha, the load-bearing invariant);
+  NEVER narrate what the code plainly does. Terse, wrap ≤80 like code.
+- A comment that re-says the next statement is worse than none — fix the code instead.
+
 ## Design Patterns
 - NEVER accessor methods — access fields directly with interior mutability
 - FxDashMap for concurrent access (but no locks best)
@@ -36,6 +52,11 @@ when_to_use: editing .rs files or writing Rust code
 - DB status/type columns as smallint, `#[repr(i16)]` enum in code
 
 ## Testing
+- Unit tests live alongside source as `src/<module>_test.rs`, imported with
+  `#[cfg(test)] mod <module>_test;` at the bottom of the source file —
+  NOT inline `#[cfg(test)] mod tests { ... }`, NOT in `tests/`
+- Integration tests (cross-crate, external API surface) go in `tests/`
+- Inside `src/<module>_test.rs` use `crate::` paths, not `super::*`
 - `--test-threads=1` if global state via DashMap/RwLock
 - Centralize setup in `tests/common/mod.rs`
 - Testcontainers: dynamic port via `.get_host_port_ipv4()`
@@ -89,10 +110,23 @@ fn main() -> eyre::Result<()> {
 ## Unwrap Safety
 - NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`
 - `.expect()` ok at startup (fail-fast) or on documented invariants; otherwise propagate
+- Prefer propagating to panicking: if the fn already returns `Result` (and the
+  caller has a retry/backoff/supervisor), `?` the error — don't `.expect()`. A
+  socket bind, PG connect, etc. can fail TRANSIENTLY; fail-fast-panic is only for
+  truly unrecoverable config. "It's at startup" is not a reason to panic if
+  startup is re-entered (e.g. a re-entrant `run_main` on demote/restart).
+- `.expect("msg")`: put the REASON in the message; do NOT prefix a `// SAFETY:`
+  comment (see Unsafe).
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
 ## Unsafe
 - ALWAYS `cargo +nightly miri test` on modules with `unsafe` blocks; NEVER ship `unsafe` without a `// SAFETY:` invariant comment
+- **`// SAFETY:` is RESERVED for justifying `unsafe`** — it documents the
+  invariants that make an unsafe block sound, and is the audit signal a reader
+  greps when reviewing `unsafe`. NEVER put `// SAFETY:` on SAFE code to justify a
+  `.expect()` / `panic!` / fail-fast / `.unwrap()`. That dilutes the convention
+  and is wrong. For a deliberate panic, the reason goes in the `.expect("…")`
+  message or a plain `//` comment — `// SAFETY:` means "this unsafe is sound", nothing else.
 
 ## Copy/Clone
 - NEVER derive Copy unless trivially copyable (i32, u64, bool, enum)

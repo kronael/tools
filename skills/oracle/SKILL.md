@@ -51,21 +51,18 @@ codex login status   # "Logged in using ChatGPT" / "Logged in using API key"
 **Path B — env var.** dockbox forwards `OPENAI_API_KEY` and
 `CODEX_API_KEY` from the host env when set.
 
-## Missing-auth fallback
+## Model
 
-ALWAYS probe before using — fail gracefully:
+The default model is pinned to a supported one in `~/.codex/config.toml`
+(`model = "gpt-5.5"`). Leave prompts model-agnostic — do NOT pass `-m` in
+skill commands (it goes stale) and do NOT probe for a working model first.
+Just run `codex exec "$prompt"` directly.
 
-```bash
-if ! codex login status >/dev/null 2>&1 \
-   && [ -z "${CODEX_API_KEY:-}${OPENAI_API_KEY:-}" ]; then
-  echo "oracle unavailable — no codex auth configured"
-  exit 0
-fi
-codex exec "$prompt"
-```
-
-Tell the user "oracle isn't configured" and continue without it. NEVER
-crash the turn.
+If a call ever fails with `400 ... 'gpt-5.x' is not supported when using
+Codex with a ChatGPT account`, the fix is one line in the config
+(`model = "gpt-5.5"` or whatever `[tui.model_availability_nux]` currently
+lists) — not a per-call probe. Surface that error to the user and continue;
+never crash the turn.
 
 ## Rules
 
