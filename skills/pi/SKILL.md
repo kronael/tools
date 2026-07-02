@@ -25,11 +25,10 @@ filesystem + shell. That's the codex `--dangerously-bypass-approvals-and-sandbox
 behavior built in, so NO sandbox flag is needed. The container is the perimeter.
 
 ```bash
-# Auth/health check first (no `login status` command exists — see Auth)
-if [ -z "${GEMINI_API_KEY:-}${ANTHROPIC_API_KEY:-}${OPENAI_API_KEY:-}" ] \
-   && [ ! -f "$HOME/.pi/agent/settings.json" ]; then
-  echo "pi unavailable — no API key and no ~/.pi login"; exit 0
-fi
+# There is NO reliable static auth check (no `login status`; a
+# ~/.pi/agent/settings.json can exist with defaultProvider but NO credentials —
+# that alone does NOT mean logged in). The actual `-p` call IS the check:
+# a `404 page not found` body or non-zero exit = not authed / endpoint down.
 
 # --no-session: don't persist a rollout file (a batch loop fills the disk otherwise)
 # --thinking high: match codex's "newest at high effort"
