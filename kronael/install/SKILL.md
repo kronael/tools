@@ -59,7 +59,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **Bundle** (skills + agents + hooks + wisdom file → `~/.claude/`) — the
     core; default on. Nothing else is useful without it.
   - **Settings restrictions** — permissions, sandbox, env (step 4).
-  - **External tools** — ship, agent-browser, codex, pyright, LSP servers,
+  - **External tools** — ship, agent-browser, codex, pi, pyright, LSP servers,
     pre-commit (step 6 core batch).
   - **CLI tools** — rig, udfix, clp (step 7).
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
@@ -136,13 +136,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
    | `agent-browser` | `bun install -g agent-browser` | /browse |
    | `codex` | `bun install -g @openai/codex` | /codex /oracle |
+   | `pi` | `bun install -g @mariozechner/pi-coding-agent` | /pi |
    | `pyright` | `bun install -g pyright` | /py /ts /tsx |
    | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
    | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
    | `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
-
-   `rm` the `sg` shim — it shadows shadow-utils' `/usr/bin/sg`; the canonical
-   binary is `ast-grep`.
 
    **Security audit** — ask separately (large, optional):
    | Tool | Command | Skills |
