@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.38] — 20260702
+
+> kronael v0.3.38 — Stop hook stops false-nagging on /fin
+>
+> The Stop hook now recognises /fin from the actual command instead of any text mentioning it, reminds once per session, and returns advisory context (not a blocking stop) when it fires from the periodic post-tool nudge.
+>
+> • /fin reminder fires once per session and only for a real /fin — the hook's own "finish mode" wording no longer re-triggers it
+> • the post-tool nudge path emits advisory context instead of a blocking stop decision
+> • reads the transcript tail with a bounded deque instead of loading the whole file
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- hooks/stop.py: `/fin` detection now parses transcript user messages for an exact `/fin` or its `<command-name>` marker instead of a raw substring scan, so the hook's own "finish mode" reminder text no longer counts as a fresh invocation. A per-session stamp file makes the reminder fire once rather than on every stop.
+- hooks/stop.py + post_tool_nudge.sh: when invoked from the periodic PostToolUse nudge (now passing `KRONAEL_HOOK_EVENT=PostToolUse`), stop.py emits `hookSpecificOutput.additionalContext` (advisory) instead of `decision: block`; the real Stop event still blocks.
+- hooks/stop.py: read the transcript tail with `deque(maxlen=60)` instead of `readlines()[-60:]`. Adds `test_stop.py` (6 cases) to the pytest set.
+
 ## [v0.3.37] — 20260701
 
 > kronael v0.3.37 — Codex fallback repair stays in the installer
