@@ -1,7 +1,7 @@
 ---
 name: writing
 description: Copywriting rules for tooltips, help text, UI strings, captions, labels, microcopy, prose in docs. NOT for PR descriptions (use pr-draft), tweets (use tweet), diary entries (use diary), or syncing existing docs (use readme).
-when_to_use: writing a tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, "make this clearer", "simpler wording", "13yo style", "rewrite this copy", explaining a metric or formula in plain English
+when_to_use: "writing a tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, simpler wording, 13yo style, rewrite this copy, explaining a metric or formula in plain English"
 ---
 
 # Writing

@@ -46,8 +46,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ## Response Style
 
 Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). One-sentence replies
-are fine when accurate. Exceptions — only when explicitly asked or the
+summaries of what you just did (the diff is visible). No tables, headers, or
+multi-section recaps for a chat reply — if the reader must scroll to find the
+point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
 task inherently requires it:
 
 - Generating content (writing specs, docs, prose, code explanations)
@@ -82,84 +83,13 @@ changes, cache external APIs.
 
 This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
-## Boring Code Philosophy
+## Code baseline
 
-**Write code simpler than you're capable of** - Debugging is 2x harder than
-writing. Leave mental headroom for fixing problems later. Choose clarity
-over cleverness.
-
-**Prefer explicit over idiomatic when equivalent** - A `for` loop over
-`for_each`/`forEach` when the body is non-trivial or the chain adds no
-clarity. When two constructs are equivalent, pick the one that needs least
-mental model to read.
-
-**Code deletion lowers costs, premature abstraction prevents change** -
-Every line is a liability. Copy 2-3 times before abstracting. Design for
-replaceability.
-
-**Abstraction must reduce total complexity, not just line count** - If the
-helper introduces concepts absent from call sites (fn pointers, closures,
-generics, combinator chains), it's not simpler. Judge by cognitive overhead,
-not diff size.
-
-**Simple-mostly-right beats complex-fully-correct** - Implementation
-simplicity trumps perfection. A 50% solution that's simple spreads and
-evolves. Complexity, once embedded, cannot be removed.
-
-**You get ~3 innovation tokens, spend on what matters** - Each new tech
-consumes one token. New tech = unknown failures. Boring tech = documented
-solutions. Spend tokens on competitive advantage, not fashion.
-
-**Good taste eliminates special cases by reframing the problem** - Don't
-handle edges with if-statements. Redesign so the edge case IS the normal
-case. One code path beats ten.
-
-**Develop "entanglement radar" to spot complecting** - If you can't
-understand component A without tracking B's state, they're braided
-together. Complected code has combinatorial complexity; separated code
-composes linearly.
-
-**State leaks complexity through all boundaries** - If f(x) returns
-different results over time, that complexity escapes to every caller.
-Values compose; stateful objects leak. Minimize state, make it explicit.
-
-**Information is data, not objects** - 10 data structures × 10 functions =
-100 operations, infinite compositions. 100 classes × 10 methods = 1000
-operations, zero composition. Encapsulate I/O, expose information.
+Code style, naming, layout, design, and the boring-code / grug philosophy live
+in the `software` skill (`code.md`) — the language-agnostic base every
+language skill pulls in. Read it when writing or reviewing code.
 
 # Development Principles
-
-## Code Style and Naming
-- Shorter is better: omit context-clear prefixes/suffixes
-- `parse_tokens(symbol)` not `parse_tokens_from_symbol()`
-- Short variable names OK: `n`, `k`, `r`, `i`, `x`, `y`, `z`, `m`; doubled (`kk`, `vv`); short descriptive (`data`, `msg`). Never visually ambiguous: `o`, `O`, `l`, `I`
-- NEVER rename what already has a name (aliases, intermediate bindings, import renames)
-- Short file extensions (.jl not .jsonl), short CLI flags
-- Entrypoint is ALWAYS called main
-- Line width: ≤80 code, ≤100 prose; 120 hard max, only where wrapping hurts (long URL/table)
-- Single import per line (cleaner git diffs)
-
-### TypeScript
-- ALWAYS use `function` keyword for top-level functions where possible
-- Arrow functions only for callbacks and inline lambdas
-- Adhere to gst lint rules
-- Match existing style when changing code
-
-## Design Patterns
-- Structs/objects only for state or dependency injection
-- Otherwise plain functions in modules
-- Explicit enum states, not implicit flags
-- ALWAYS validate BEFORE persistence
-
-## File Organization
-- *_utils.* for utility files
-- NEVER use /tmp, ALWAYS use ./tmp in project root
-- ./log for debug/smoke logs
-- ./dist or ./target for build artifacts
-
-## User Interface
-- Lowercase info, Capitalize errors (`"checking..."` vs `"Failed: ..."`)
-- Unix log format: "Sep 18 10:34:26 INFO subsystem: message"
 
 ## Data Storage
 - `${PREFIX:-/srv}/data/<project_name>/`
@@ -185,8 +115,12 @@ operations, zero composition. Encapsulate I/O, expose information.
 - NEVER add Co-Authored-By to commits
 - NEVER create or attach a local branch - ALWAYS work in detached HEAD, in the main repo AND in every worktree, no exceptions
 - For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
+- ALWAYS place worktrees inside the repo root as hidden dirs:
+  `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
+  siblings of the repo
 - NEVER `git push` - if asked, refuse and cite this rule
 - NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
+- ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution

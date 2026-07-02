@@ -8,7 +8,7 @@ as slash commands (`/refine`, `/diary`, ...).
 
 LLMs forget. Every conversation starts cold, every long generation
 drifts from the rules, and the right skill rarely fires on its own.
-Each skill in this directory addresses one of these problems:
+Each skill in this directory addresses one of five problems:
 
 - **Style alignment** — language conventions the model wouldn't guess
 - **Session continuity** — facts and history across conversations
@@ -46,12 +46,13 @@ the diff visible.
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
 
-## Shortcuts (fin, sub)
+## Shortcuts (fin, dispatch)
 
 Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
-- **sub**: "spawn this prompt as a background subagent and continue"
+- **dispatch**: "spawn this prompt as a background subagent and continue"
+- **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
@@ -62,15 +63,15 @@ Skills auto-activate by description match, but in practice the LLM
 often misses the right one. Hooks add explicit nudges: keyword →
 skill/agent routing on prompt submit, file extension → language skill
 on file touch, commit/diary checks on stop. Without them the LLM picks
-the wrong skill or none. The hook list and wiring live in
-`../hooks/README.md` — not restated here.
+the wrong skill or none. With them, common workflows surface
+automatically. The hook list and wiring live in `../hooks/README.md`.
 
 ## Skill categories
 
 A hand-maintained per-skill table drifts the moment a skill lands, so
 there isn't one. **Run `ls skills/` for the full set** — each dir has a
-`SKILL.md` whose frontmatter (`name`, `description`) is the
-authoritative entry. The categories:
+`SKILL.md` whose frontmatter (`name`, `description`, `when_to_use`) is
+the authoritative entry. The categories:
 
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
@@ -80,10 +81,12 @@ authoritative entry. The categories:
   `rs` + `cli`; a structural codemod loads `astgrep` + the target language.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice.
-- **Escalation + shortcuts** (`haiku`, `sonnet`, `opus`, `fable`,
-  `sub`, `fin`) — model routing and macro aliases.
+  `scavenge`, `codex`, `demo`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice, README
+  demo recordings.
+- **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
+  routing and macro aliases. Each model tier has its own skill; `dispatch` is
+  fire-and-forget at default model.
 - **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
   judge a codebase or practice from a fixed perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
@@ -117,7 +120,7 @@ Side-channels (escalation, communication) fire at any stage.
 ┌─ coding ─────▼──────────────┐
 │ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
 │ service data trader         ├────────►│ haiku sonnet opus   │
-└──────────────┬──────────────┘         │ fable sub fin       │
+└──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review code-review improve  │
@@ -147,8 +150,8 @@ them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. haiku → sonnet → opus → fable
-for increasing capability. `sub` for fire-and-forget; `fin` for no-confirmation runs.
+**escalation** — route to the right model/mode from any stage. `/haiku` → `/sonnet` → `/opus` → `/fable`
+for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
 
 ## Working with skills
 

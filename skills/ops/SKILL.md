@@ -1,7 +1,7 @@
 ---
 name: ops
 description: DevOps and deployment. Dockerfile, systemd, GitHub Actions, monitoring, Ansible. NOT for app code (use language skill).
-when_to_use: Dockerfile, docker-compose, systemd services, GitHub Actions CI, Ansible playbooks, monitoring setup, PID files
+when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, Ansible playbooks, monitoring setup, PID files"
 ---
 
 # Ops

@@ -63,6 +63,14 @@ echo '{"prompt": "where were we"}'                | python3 ~/.claude/hooks/loca
 
 ## Hook-by-Hook Smoke
 
+## codex_hook.py
+
+```bash
+echo '{"prompt": "refine this"}' \
+  | python3 ~/.claude/hooks/codex_hook.py UserPromptSubmit prompt_nudge \
+  | grep -q "@refine" && echo "✓ PASS"
+```
+
 ## prompt_nudge.py
 
 ```bash

@@ -8,6 +8,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 
 | File | Holds |
 |---|---|
+| `code.md` | language-agnostic code baseline: naming, layout, design, boring-code, grug — the base every language skill pulls in via `requires: software` |
 | `docker.md` | Python+uv two-layer Dockerfile, m4 monorepo Dockerfile generation |
 | `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |

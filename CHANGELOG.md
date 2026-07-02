@@ -1,5 +1,318 @@
 # Changelog
 
+## [v0.3.37] — 20260701
+
+> kronael v0.3.37 — Codex fallback repair stays in the installer
+>
+> Codex config repair now lives as skill guidance instead of a one-off helper script.
+>
+> • install: `CLAUDE.md` fallback repair is inline guidance, not a Python helper
+> • codex: installers keep `project_doc_fallback_filenames` top-level
+> • docs: AGENTS/README/ARCHITECTURE explain the top-level TOML rule
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- install: removed `kronael/install/codex_config_fallback.py`; the installer
+  skills now directly say to keep `project_doc_fallback_filenames` top-level.
+- codex: bridge-only repair no longer needs source-root discovery just to run a
+  config helper; agents edit the TOML key in place.
+- docs: AGENTS, README, and ARCHITECTURE keep the top-level TOML warning.
+
+## [v0.3.36] — 20260701
+
+> kronael v0.3.36 — engineering baseline consolidated into the software skill
+>
+> The language baseline moves into the software router (`code.md`), de-duping always-loaded wisdom; Codex config repair is more robust.
+>
+> • skills: the code baseline (naming, style, design, boring-code, grug) now lives in `software`'s `code.md`; language skills require it
+> • wisdom: dropped the duplicated code philosophy from the always-loaded file — it now points to `software`/`code.md`
+> • install: its report names pruned/removed skills so stale-file removal is visible
+> • codex: the `CLAUDE.md` config fallback is kept a top-level key in `config.toml`, never buried under a table header
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: folded the `software-engineering` baseline into the `software` router as `software/code.md` (naming, layout, design, boring-code, grug). Language skills (`py`/`ts`/`sh`/`sql`) now carry `requires: software`. The standalone `software-engineering` skill is removed and pruned on reinstall.
+- wisdom: the always-loaded global wisdom no longer inlines the code-style/design/philosophy sections (they duplicated the baseline) — it points to `software`/`code.md`. Verified lossless.
+- skills: synced back local refinements — Codex-scope search in `recall-memories`, test-typing rules in `testing`/`py`/`ts`, a `pr-draft` GitHub-markdown rule, `gh-comment`'s bare `🤖` prefix, `py` frozen-dataclass rules.
+- install: the report step now names every pruned dir/hook so removal of outdated files is visible; the prune list includes `software-engineering`.
+- codex: config repair keeps `project_doc_fallback_filenames = ["CLAUDE.md"]` a top-level key in `~/.codex/config.toml` — never appended under a `[table]` header.
+
+## [v0.3.35] — 20260701
+
+> kronael v0.3.35 — dockbox effort/model tuning
+>
+> dockbox opus now thinks at xhigh, and the sonnet launcher moves to claude-sonnet-5.
+>
+> • dockbox: `opus` (alias + bare default) now runs at xhigh reasoning effort
+> • dockbox: `dockbox sonnet` launches claude-sonnet-5
+> • /dispatch help now lists `/sonnet` as medium, matching the sonnet subagent
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: the `opus` alias and the bare default inject `--effort xhigh` (was high); the opus subagent was already xhigh, so the launcher now matches it.
+- dockbox: `dockbox sonnet` launches `claude-sonnet-5` (was claude-sonnet-4-6). The sonnet subagent stays at medium effort.
+- skills: `/dispatch`'s tier hint reads `/sonnet (coding/medium)` — was stale at `high`, now matches `agents/sonnet.md`.
+
+## [v0.3.34] — 20260701
+
+> kronael v0.3.34 — demo recording gets its own skill
+>
+> Terminal-demo GIF recording moves out of the always-loaded wisdom file into a standalone skill, release respects a project's own release rules, and Go gets error-suppression guidance.
+>
+> • New `/demo` skill: asciinema + agg recipe for README demo GIFs
+> • `/release`: reads a project's `CLAUDE.md` `## Release` section as an override before running defaults
+> • Go: explicit rules for suppressing errors with `_ =` and `//nolint:errcheck`, always with a reason
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Added `skills/demo/SKILL.md`: a flat, directly-invocable skill for recording
+  terminal demo GIFs (`asciinema` → `.cast` → `agg` → `.gif`), with the
+  Makefile-target recipe pulled from `rig/Makefile`.
+- Removed the `make demo` targets rule from the global wisdom file
+  (`skills/global/SKILL.md`) — it was too niche to load into every session;
+  it now lives only in the `demo` skill.
+- `/release` gained a step 0: read the project's `CLAUDE.md` for a
+  `## Release` section and apply any overrides (skip tagging, custom
+  checklist, pinned version file) before running the default process.
+- `go` skill: new Error Suppression section — intentionally dropped errors
+  must carry an explicit reason (`_ =` with a comment, or
+  `//nolint:errcheck` with the reason above it), never a bare linter-config
+  exclusion for a specific call site.
+
+## [v0.3.33] — 20260701
+
+> kronael v0.3.33 — eval skills stay compact
+>
+> CEO/CTO evals now route adoption and audit work cleanly, while stop hooks enforce `/fin` follow-through.
+>
+> • `/ceo-eval`: adoption checklist stays default; demo audit moved to cold docs
+> • `/cto-eval`: technical due diligence stays default; SLA audit moved to cold docs
+> • `/create-eval`: generates project health evals without colliding with CEO/CTO audits
+> • Stop hook: `/fin` sessions get one last open-items guard before stopping
+> • Wisdom: repo guidance points at global wisdom; facts/refs conventions are preserved
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/ceo-eval` and `/cto-eval` keep compact dispatch-only `SKILL.md` files:
+  incoming adoption checklists remain in `checklist.md`, while local demo/SLA
+  audit runbooks moved to `demo-audit.md` and `code-audit.md`.
+- `/create-eval` now targets project health checks, avoiding the overloaded
+  generic `eval` name and keeping adversarial audits under CEO/CTO evals.
+- `hooks/stop.py` keeps the incoming throttled commit/diary nudge behavior and
+  adds the local `/fin` open-items guard at stop time.
+- `CLAUDE.md` remains repo-specific; global wisdom stays sourced from
+  `skills/global/SKILL.md`, including the new facts/refs conventions.
+- `/oracle` remains a thin alias to `/codex`; duplicated runbook content stays
+  in the canonical codex skill.
+
+## [v0.3.32] — 20260701
+
+> kronael v0.3.32 — Codex nudges use @skills
+>
+> Codex hook nudges now point at installed `@skill` commands, and prompt routing covers the reasonable workflow agents.
+>
+> • Codex: nudges rewrite `/refine`, `/commit`, and `/py` to `@refine`, `@commit`, and `@py`
+> • Prompt nudges: more workflow routes — release, specs, diagrams, security, UX, writing, model agents
+> • `/fix`: bundled in source so the existing bug-fix nudge points at an installed skill
+> • Hooks: adapter/pretool tests moved out of production scripts, keeping hook files under 200 lines
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Codex hook output now rewrites known Kronael nudge references from `/skill` to `@skill`, covering prompt nudges, file-extension skill nudges, and stop-time commit/diary nudges.
+- Prompt keyword routing covers the reasonably nudgeable workflow, evaluation, writing, UX, release, and model-agent skills; stale `/verify` and `/schedule` routes were removed.
+- Added source `skills/fix/SKILL.md` so the existing `/fix` nudge installs a bundled bug-fix workflow.
+- Split `codex_hook.py` and `pretool_nudge.py` tests into dedicated pytest files, keeping production hook scripts under 200 lines.
+- Codex install docs now teach `@kronael-install` and `@skill-name`, while Claude docs keep slash-command examples where they still apply.
+
+## [v0.3.31] — 20260630
+
+> kronael v0.3.31 — dockbox keeps parallel sessions alive, codex aliases
+>
+> Quitting one dockbox session no longer kills the others sharing the box, and codex runs sandbox-free with gpt/mini/spark model aliases.
+>
+> • dockbox: a session exiting no longer tears down the container under other live sessions — it survives until the last one leaves
+> • dockbox: `codex` runs with no inner sandbox and no approval prompts, like the claude launcher
+> • dockbox: new codex model aliases — `gpt` (gpt-5.5), `mini` (gpt-5.4-mini), `spark` (gpt-5.3-codex-spark)
+> • rig: `rip HEAD^ ?` works — branch and commit in any order, and `?` opens the branch picker
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: the container now runs detached with a sleeper PID 1 (`--init` reaps zombies); every session is a ref-counted `docker exec`, and the container is removed only after the last session exits. Previously the first session owned PID 1, so quitting it killed every re-entry session and `--rm` tore the box down mid-work.
+- dockbox: `codex` and its aliases launch with `--dangerously-bypass-approvals-and-sandbox` — no inner bwrap, no approval prompts — matching the claude wrapper's posture inside the container.
+- dockbox: added codex model aliases paralleling the claude tiers — `gpt`→gpt-5.5, `mini`→gpt-5.4-mini, `spark`→gpt-5.3-codex-spark. Fixed the usage block that still claimed the default was sonnet@medium (it's opus@high).
+- rig: `rip` classifies args by role, so `rip HEAD^ ?`, `rip ? HEAD^`, `rip branch HEAD^`, and `rip branch:commit` all work; `?` opens the fzf branch picker instead of leaking into git as a bad refspec. The push command is built once, so `-n` dry-run prints exactly what runs.
+- skills: synced local refinements into the repo — merge safety-gate, codex bwrap/pkill-cleanup fix, browse Playwright-debugging section, py frozen-dataclass + ruff rules, review robot-head markers, pr-draft existing-PR flow, worktree-aware diary; fixed review/humanize descriptions per wisdom (dropped workflow text, added NOT clauses).
+
+## [v0.3.30] — 20260626
+
+> kronael v0.3.30 — dockbox defaults to Opus, .dockboxrc sets flags
+>
+> dockbox now launches Claude at opus/high by default, bakes in `udfix`, and lets `~/.dockboxrc` carry default flags like `-A`.
+>
+> • dockbox: bare `dockbox` runs opus @ high effort (was sonnet/medium); `dockbox sonnet` now launches at high effort
+> • dockbox: `~/.dockboxrc` sets dockbox flags — put `-A` there to always forward your SSH agent
+> • dockbox: `udfix` (box-drawing junction repair) is now built into the image
+> • rig: bare `gw` defaults to `git worktree list` instead of erroring on the missing subcommand
+> • the `/sonnet` subagent drops to medium effort
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default Claude tool is now opus at high effort (was sonnet/medium) — `--model claude-opus-4-8 --effort high` is injected when no `--model` is given. The `sonnet` launcher alias now passes `--effort high` too.
+- dockbox: `.dockboxrc` now carries dockbox flags instead of raw `docker run` args (which were injected too late to affect any dockbox flag). `~/.dockboxrc` is read before flag parsing and prepended so the command line overrides it — the full flag set, including `-A`/`-D`/`-S`. Project `.dockboxrc` runs through a gated pass that drops the privilege flags (`-A`/`-D`/`-S`) and tool/name flags (`-n`/`-d`/`-x`) so an untrusted repo can't auto-escalate. Flag reading (`read_rc`) and flag→effect (`apply_flag`) are now single shared helpers; `apply_flag` always returns 0 so a tokenless `-g` can't trip `set -e`, and `OPTARG` is defaulted for no-arg flags under `set -u`.
+- dockbox: `udfix` is built into the image from its own Makefile (`make -C udfix install PREFIX=/usr/local/bin`); the build context widened to the repo root, and udfix's Makefile gained an overridable `PREFIX`.
+- skills: the `/sonnet` subagent now runs at medium effort (was high) — the interactive `dockbox sonnet` launcher is the one at high effort.
+- rig: bare `gw` now runs `git worktree list` instead of erroring on the missing subcommand; explicit args still pass through.
+- install: the install skill detects its source root (`CLAUDE_PLUGIN_ROOT` vs CWD) and checks `~/.claude/plugins/installed_plugins.json` for `kronael@*`, explaining why `Skill("kronael:install")` fails when the plugin isn't registered (merged from origin/master).
+
+## [v0.3.29] — 20260623
+
+> kronael v0.3.29 — rig alias fix, dockbox re-entry, /codex restored
+>
+> Fixes rig's git-alias symlinks (they were passing their own name to git), re-enters a running dockbox, and restores `/codex`.
+>
+> • rig: `gl`/`gis`/`gig`/`gitg` symlinks now work — they were leaking their own name as a git arg
+> • rig: new `gw` alias for `git worktree`; an animated terminal demo gif is embedded in the README
+> • dockbox: re-running for an active project now `docker exec`s into the live box, not a new container
+> • `/codex` is the canonical second-opinion skill again; `/oracle` is a thin alias for it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: fixed `gl`/`gis`/`gig`/`gitg` — invoked as symlinks they passed their own name to git (`git log gl` → unknown revision) because the dispatch arm was missing a `shift`. Added `gw` → `git worktree`, wired through every install/usage/clean surface.
+- rig: committed the terminal demo as `rig/demo/demo.gif` (rendered headlessly via a virtual-clock recorder + `agg`), embedded it in the README, and pointed `make demo` at it. Demo now renders the title at t=0 and gives the graph its own screen.
+- dockbox: re-running `dockbox` for a project whose container is already up now `docker exec`s the requested tool into the live box as the host user, instead of spawning a second container — model/effort ride in the command so they still apply, while run-time mounts/network stay frozen at creation. The re-entry probe runs before provisioning, so it skips the settings-merge and `find` walk it would otherwise discard.
+- skills: restored `/codex` as the canonical second-opinion skill with `/oracle` as a thin alias (reverts the v0.3.26 codex→oracle rename); fixed the install prune list so reinstalls no longer delete `~/.claude/skills/codex`. Trimmed the duplicate `oracle` keyword from codex's `when_to_use`.
+
+## [v0.3.28] — 20260622
+
+> kronael v0.3.28 — rig demo, sonnet default
+>
+> rig gets an animated terminal demo, and dockbox now launches Claude at sonnet/medium by default instead of haiku.
+>
+> • dockbox: bare `dockbox` now runs sonnet @ medium effort — haiku is opt-in (`dockbox haiku`) for speed/cost
+> • rig: scripted asciinema demo walks the detached-HEAD workflow — checkout, push, rebase, merge, fixup
+> • rig demo: simulated fzf picker shows `rco ?` narrowing the branch list as you type
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- rig: added a scripted terminal demo (`rig/demo/run.ts` + `make demo`) covering the detached-HEAD workflow — orientation (`gl`/`gis`/`gig`), checkout, push, rebase, merge, fixup squash. Includes an honest fzf-picker simulation for `rco ?` that narrows the branch list by subsequence match as the query types, plus narrative framing (old-way contrast, inline jargon notes) so the detached-HEAD idea reads as intentional, not broken.
+- dockbox: default tool is now sonnet at medium effort (was haiku). `--model claude-sonnet-4-6 --effort medium` is injected only when no `--model` is given; explicit `dockbox haiku` drops to the fast/cheap model, and `dockbox sonnet`/`opus`/`fable` are unchanged.
+
+## [v0.3.27] — 20260622
+
+> kronael v0.3.27 — dockbox haiku default, settings fix, wisdom refinements, rig aliases
+>
+> • dockbox: default model haiku; sandbox restart loop fixed (patches settings.json directly)
+> • settings-recommended.json: rm deny glob fixed (`/)*` → `/*)`); gh-comment allow rules added
+> • global wisdom: Grug rules + no-tables response style added; gh-comment ALWAYS rule
+> • skills refined: oracle adversarial framing, gh-comment Codex fallback, bugs/py ALWAYS/NEVER
+> • hooks: post_tool_nudge.sh stderr fixed (2>&1 → 2>/dev/null)
+> • rig: git alias shortcuts gl, gis, gig, gitg, gp, gpc, gpa
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox: default model now `claude-haiku-4-5-20251001` — fast and cheap; re-select with `--model` or model alias when you need more. Sandbox restart loop fixed: dockbox now patches a merged `settings.json` with `sandbox.enabled: false` and mounts it `:ro` so the Claude Code instance never tries to restart into bubblewrap.
+- settings-recommended.json: rm deny rules had glob outside parens (`Bash(rm -rf /)*` → `Bash(rm -rf /*)`); fix makes `rm -rf /home` actually denied. Added `Bash(gh pr comment*)`, `Bash(gh api repos/*/pulls/*/reviews*)`, `Bash(gh api repos/*/pulls/*/comments*)` to allow — needed for `/gh-comment` workflow.
+- global wisdom (skills/global/SKILL.md → ~/.claude/CLAUDE.md): added Grug rules block (match tool to task weight, locality of behavior, Chesterton's fence); added no-tables/no-headers sentence to Response Style; added ALWAYS rule to use `/gh-comment` for PR comment/review posting.
+- skills/oracle: adversarial framing rules tightened; `-s danger-full-access` flag clarified as the correct flag for skipping bubblewrap in containers.
+- skills/gh-comment: Codex fallback — AskUserQuestion unavailable in Codex; replaced with explicit chat-confirmation requirement.
+- skills/bugs, skills/py: SHOULD→ALWAYS/NEVER; removed duplicate global rules; added NEVER yield individual items batch rule to py.
+- hooks/post_tool_nudge.sh: stderr was leaking into hook stdout (interpreted as JSON); fixed with `2>/dev/null`.
+- rig: added git alias shortcuts installed as symlinks — `gl` (log), `gis` (status -uno), `gig`/`gitg` (graph log), `gp`/`gpc`/`gpa` (cherry-pick).
+
+## [v0.3.26] — 20260622
+
+> kronael v0.3.26 — Codex hooks, dockbox tools, caveman style, oracle skill
+>
+> • Codex hooks install to `~/.codex/hooks.json` through `codex-hooks.json`
+> • `codex_hook.py` adapts Codex payloads before calling installed Claude hooks
+> • `PreCompact` no longer returns invalid context JSON in Codex
+> • dockbox: first positional arg selects tool (codex, haiku, sonnet, opus, fable, any binary)
+> • `output-styles/80-caveman.md` added; activated in settings-recommended.json
+> • `/codex` skill renamed to `/oracle`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Added Codex lifecycle hook wiring via `codex-hooks.json`, installed to
+  `~/.codex/hooks.json`.
+- Added `hooks/codex_hook.py` to normalize Codex hook payloads, translate prompt
+  and tool context output, and delegate to the installed Kronael hook scripts.
+- Fixed Codex `PreCompact` handling so Claude-style context output is suppressed
+  instead of being returned as invalid Codex hook JSON; block decisions still
+  pass through.
+- Updated install docs and bridge prompts so Codex installs `~/.agents/skills`
+  and `~/.codex/hooks.json`, with `/hooks` trust as the explicit review step.
+- Fixed `post_tool_nudge.sh` to pass the original hook payload through to
+  `stop.py` when the periodic nudge fires.
+- dockbox: first positional arg is now the tool entrypoint; model aliases
+  (haiku/sonnet/opus/fable) map to `claude --model <id>`; `-d` flag added as
+  explicit tool selector; `-x` kept hidden for compat.
+- Added `output-styles/80-caveman.md` (stripped-not-broken output style);
+  `settings-recommended.json` activates it via `outputStyle`.
+- Renamed `skills/codex` → `skills/oracle`; `codex` added to install prune list.
+
+## [v0.3.25] — 20260618
+
+> kronael v0.3.25 — /sub fully removed
+>
+> The old /sub skill file is deleted and its "spawn a sub" trigger cleaned from /dispatch. No stray references remain.
+>
+> • `skills/sub/SKILL.md` deleted from repo
+> • /dispatch when_to_use: "spawn a sub" → "background agent"
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Deleted `skills/sub/SKILL.md` — the rename to `/dispatch` is now complete in git history
+- Removed "spawn a sub" trigger from `/dispatch` `when_to_use`; replaced with "background agent"
+
+## [v0.3.24] — 20260618
+
+> kronael v0.3.24 — eval skill polish
+>
+> /ceo-eval and /cto-eval checklists moved to sibling files; SKILL.md bodies are now workflow-only. Minor ALWAYS/NEVER fixes across model-tier skills.
+>
+> • /ceo-eval and /cto-eval: checklist bodies moved to checklist.md sibling files
+> • SKILL.md for each eval skill is now <10 lines — workflow dispatch only
+> • haiku/sonnet/fable: REJECT/Do NOT → NEVER/ALWAYS
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/ceo-eval` and `/cto-eval` checklists (tables, verdict templates, decision rubrics) moved to `checklist.md` sibling files; SKILL.md reduced to workflow-only dispatch per wisdom rules
+- `NEVER`/`ALWAYS` discipline applied to `/haiku`, `/sonnet`, `/fable` (replaced `REJECT` and `Do NOT`)
+
+## [v0.3.23] — 20260618
+
+> kronael v0.3.23 — model-tier skills restored; /dispatch replaces /sub
+>
+> Each model now has its own skill and agent definition. /haiku, /sonnet, /opus, /fable are back. /sub is renamed /dispatch for generic fire-and-forget. CEO and CTO eval lenses added.
+>
+> • `/haiku` restored — uses `subagent_type: "haiku"` via new agent definition
+> • `/sonnet`, `/opus`, `/fable` restored with consistent `subagent_type` dispatch
+> • `/dispatch` replaces `/sub` — generic background agent, no model override
+> • `/ceo-eval` and `/cto-eval` added — business and technical adoption evaluation
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Restored `/haiku`, `/sonnet`, `/opus`, `/fable` as individual skills; all use `subagent_type` (haiku now has an agent definition pinning the model)
+- Added `agents/haiku.md` — consistent with sonnet/opus/fable agent definitions
+- Renamed `/sub` → `/dispatch` for generic fire-and-forget background work; `/sub` added to install prune list
+- Added `/ceo-eval` (business adoption: ROI, TCO, license risk, lock-in, make-vs-buy) and `/cto-eval` (technical due diligence: build quality, arch, ops readiness, maintenance forecast)
+
+## [v0.3.22] — 20260618
+
+> kronael v0.3.22 — /sub absorbs model-tier skills
+>
+> Four separate model-routing skills (haiku, sonnet, opus, fable) are gone. Use `/sub haiku`, `/sub sonnet`, `/sub opus`, or `/sub fable` instead — one skill, same dispatch.
+>
+> • `/sub` now accepts an optional tier prefix: haiku/sonnet/opus/fable
+> • haiku uses `model: "haiku"` directly; sonnet/opus/fable use `subagent_type` to pin effort via agent definitions
+> • `/haiku`, `/sonnet`, `/opus`, `/fable` skills removed
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/sub` extended with optional model-tier prefix dispatch (haiku → `model: "haiku"`; sonnet/opus/fable → `subagent_type` pinning effort via agent definitions)
+- Removed `/haiku`, `/sonnet`, `/opus`, `/fable` skills — all model routing goes through `/sub`
+- `skills/README.md` updated to reflect consolidated escalation path
+
 ## [v0.3.21] — 20260614
 
 > kronael v0.3.21 — Install reaches the CLI tools

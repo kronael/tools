@@ -1,21 +1,28 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/. Copies skills, agents, hook scripts; merges hook wiring and recommended settings; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Copies skills, agents, hook scripts; merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
 ---
 
 # Install Kronael toolkit
 
-Deploy the bundle into `~/.claude/` so skills, agents, and hooks live in the user's persistent config and work bare (no `kronael:` prefix).
+Deploy the bundle into `~/.claude/` so skills, agents, and hook scripts live
+in the user's persistent config and work bare (no `kronael:` prefix). When
+running from Codex, also bridge the installed skills and hook wiring into
+Codex's `~/.agents/skills` and `~/.codex/hooks.json` surfaces.
 
 ## Source location
 
-- **Plugin path**: `${CLAUDE_PLUGIN_ROOT}`.
-- **Manual path**: current working directory (user opened Claude Code at the repo root and said "install").
+Source root: `CLAUDE_PLUGIN_ROOT` if set and assets exist there; else CWD.
+Stop if neither has assets — report which path to use.
+
+Check `~/.claude/plugins/installed_plugins.json` for `kronael@*`: if absent,
+note that `Skill("kronael:install")` won't resolve — user must say "install" here.
 
 ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
 - `agents/` — bundle of agents
-- `hooks/` — hook scripts (prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
+- `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
+- `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
 
@@ -53,10 +60,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
     core; default on. Nothing else is useful without it.
   - **Settings restrictions** — permissions, sandbox, env (step 4).
   - **External tools** — ship, agent-browser, codex, pyright, LSP servers,
-    pre-commit (step 5 core batch).
-  - **CLI tools** — rig, udfix, clp (step 6).
-  - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 6).
-  - **Heavy/optional** — security-audit + video tools (step 5 separate asks).
+    pre-commit (step 6 core batch).
+  - **CLI tools** — rig, udfix, clp (step 7).
+  - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
+  - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
 - **Update**: skip the questionnaire. Proceed with the per-step asks the steps
   already define (settings and tools still confirm before installing). NEVER
@@ -64,19 +71,32 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 ## Steps
 
-0. **Fast drift preflight**. Follow the sync protocol for
-   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` before backup/copy.
+0. **Skill lint preflight**. ALWAYS run `make skills-frontmatter` when available.
+   If it reports files, run `make skills-frontmatter-fix` before copying skills.
 
-1. **Backup**. ALWAYS copy current `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` to `~/.claude/backup/<timestamp>/` before overwriting.
+0. **Fast drift preflight**. Follow the sync protocol for
+   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` and
+   `~/.codex/hooks.json` before backup/copy.
+
+1. **Backup**. ALWAYS copy current
+   `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` and
+   `~/.codex/{config.toml,hooks.json}` to `~/.claude/backup/<timestamp>/`
+   before overwriting.
 
 2. **Copy assets** (replace strategy):
    - `skills/*` → `~/.claude/skills/` **but skip `skills/global/`** — its body is the wisdom file, deployed in step 3. Copying it as a skill would duplicate the always-loaded content.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
+   - `output-styles/*` → `~/.claude/output-styles/`
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
-     `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`.
-     NEVER delete `create-eval` (still bundled) or any skill dir not on this list — user-added skills stay.
+     `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
+     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
+     `software-engineering` (folded into the `software` router as `software/code.md`; language skills now `requires: software`).
+     NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
+     bundled again — `codex` is the canonical second-opinion skill, `oracle`
+     is its alias; the v0.3.26 codex→oracle rename was reverted), or any
+     skill dir not on this list — user-added skills stay.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
@@ -87,14 +107,35 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-5. **External tools** — run `which <tool>` to detect; skip if present and recent.
+5. **Install Codex bridge**. When running from Codex, or when the user asks
+   for Codex support, install both bridges:
+   - Ensure `project_doc_fallback_filenames` in `~/.codex/config.toml`
+     contains `CLAUDE.md`. ALWAYS keep this as a top-level TOML key: insert it
+     before the first `[table]` header, or append `CLAUDE.md` to the existing
+     top-level array. NEVER leave `CLAUDE.md` under `[tui]` or
+     `[tui.model_availability_nux]` — move it to the top-level key.
+   - Ensure `~/.agents/skills` points at `~/.claude/skills` (symlink when
+     possible; per-skill symlinks only when `~/.agents/skills` is already a
+     directory).
+   - Copy `codex-hooks.json` → `~/.codex/hooks.json` after the drift
+     preflight. This file wires Codex `UserPromptSubmit`, `PreToolUse`,
+     `PostToolUse`, `Stop`, and `PreCompact` into
+     `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads before
+     delegating to the installed Kronael hook scripts. The wrapper also
+     suppresses Claude-style context-only output for Codex `PreCompact`, where
+     Codex only accepts block decisions.
+   - Tell the user to open `/hooks` in the next Codex TUI session and trust
+     the changed hooks. For one-shot verification only, use
+     `--dangerously-bypass-hook-trust`; do not make that the normal path.
+
+6. **External tools** — run `which <tool>` to detect; skip if present and recent.
 
    **Core** — ask once, install as a batch:
    | Tool | Command | Skills |
    |------|---------|--------|
    | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
    | `agent-browser` | `bun install -g agent-browser` | /browse |
-   | `codex` | `bun install -g @openai/codex` | /codex |
+   | `codex` | `bun install -g @openai/codex` | /codex /oracle |
    | `pyright` | `bun install -g pyright` | /py /ts /tsx |
    | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
    | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
@@ -118,7 +159,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    |------|---------|--------|
    | `faster-whisper` | `uv tool install faster-whisper` | /create (video render) |
 
-6. **CLI tools** — install the repo's standalone CLI tools so their binaries
+7. **CLI tools** — install the repo's standalone CLI tools so their binaries
    in `~/.local/bin` track the repo (a stale binary is the failure this step
    prevents). ONLY possible when the tool's source dir exists at the source
    root (the cloned/manual path; the Codex marketplace snapshot has them too).
@@ -136,7 +177,14 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    NEVER fail the whole install if one tool's toolchain is missing — report
    that tool as skipped and continue.
 
-7. **Report**: summary — fast drift result, X skills, Y agents, Z hooks, RECLAUDE.md, settings merged, W external tools, CLI tools installed/skipped. `/commit`, `/ship`, `/refine` etc. invocable bare. Suggest running `/recall-memories` once to verify the recall flow.
+8. **Report**: summary — fast drift result, X skills, Y agents, Z hooks,
+   RECLAUDE.md, **pruned dirs/hooks** (name every stale skill/hook removed per
+   step 2 — renamed, consolidated, or dead; say "pruned: none" when nothing
+   matched so the user knows removal ran), Claude settings merged, Codex bridge
+   installed/skipped, W external tools, CLI tools installed/skipped. Claude skills are invocable
+   bare (`/commit`, `/ship`, `/refine`, ...). Codex bridged skills are
+   invocable as `@commit`, `@ship`, `@refine`, ...; remind the user that hook
+   commands require `/hooks` trust after install/update.
 
 ## Rules
 
@@ -145,6 +193,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 - NEVER touch `~/.claude/settings.local.json`, `~/.claude/LOCAL.md`, `~/.claude/CLAUDE.local.md`
 - ALWAYS replace skills/hooks with current versions on name conflict only after drift preflight clears installed-side edits
 - NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
+- NEVER copy Kronael skills into `~/.codex/skills`; Codex uses
+  `~/.agents/skills`
 
 ## Update flow
 

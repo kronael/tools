@@ -1,13 +1,22 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "prepare a release", "cut a release", "tag a release"
+when_to_use: "prepare a release, cut a release, tag a release"
 user-invocable: true
 ---
 
 # Release
 
 ## Process
+
+0. **Read local CLAUDE.md** — `Read` the project's `CLAUDE.md` (at CWD).
+   Look for a `## Release` section. Any directive there **overrides** the
+   defaults in this skill. Common overrides to watch for:
+   - `No tagged releases` → skip step 7 entirely (no `git tag`)
+   - Custom checklist → run those steps instead of (or in addition to) step 5
+   - Pinned version file or changelog path → use that instead of discovering
+   Apply found overrides before proceeding. If the section is absent, use
+   skill defaults throughout.
 
 1. **Detect scope** — `git tag --list` + `git log` since last tag.
    - No prior tags → first release. Default `v0.1.0` (matches pyproject's

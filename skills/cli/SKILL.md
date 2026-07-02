@@ -1,7 +1,7 @@
 ---
 name: cli
 description: CLI tools. NOT for one-off scripts (use sh).
-when_to_use: writing a CLI tool, argparse/click/clap, adding --help or subcommands
+when_to_use: "writing a CLI tool, argparse/click/clap, adding --help or subcommands"
 ---
 
 # CLI Style

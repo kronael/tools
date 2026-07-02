@@ -1,7 +1,7 @@
 ---
 name: testing
 description: Testing patterns. NOT for unit-test setup inside a language skill (handle there).
-when_to_use: writing tests, debugging test failures, reading test output
+when_to_use: "writing tests, debugging test failures, reading test output"
 ---
 
 # Testing
@@ -31,3 +31,5 @@ when_to_use: writing tests, debugging test failures, reading test output
 - conftest.py (Python) or common/mod.rs (Rust) for shared fixtures
 - Return `Result<()>` for clean error propagation
 - A test that fails from import/typo/fixture errors proves nothing — confirm the failure message names the missing behavior before writing code
+- NEVER reshape production typing around tests/fakes — ALWAYS keep production types on production contracts
+- ALWAYS relax pyright for test paths when strict test typing is impractical (exclude tests from strict source check or use a separate relaxed test config); NEVER weaken production types

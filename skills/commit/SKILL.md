@@ -1,7 +1,7 @@
 ---
 name: commit
 description: Git commits. NOT for PR descriptions (use pr-draft).
-when_to_use: "commit this", "make a commit", committing changes
+when_to_use: "commit this, make a commit, committing changes"
 user-invocable: true
 ---
 

@@ -49,6 +49,25 @@ dockbox prune [hours]             # remove exited containers older than N hours 
 
 Default command: claude. Use `-x` to override.
 
+### Re-entry into a running box
+
+If a dockbox for the project is already running, the next `dockbox`
+invocation enters that live container (`docker exec`) and runs the
+requested command there, rather than starting a second one:
+
+```bash
+dockbox ~/wk/project    # starts the box, runs claude
+dockbox sh              # 2nd terminal: shell inside the same box
+dockbox codex           # 3rd terminal: codex inside the same box
+```
+
+The entered session shares the container's `HOME`, mounts, and
+processes, and runs as your host user (not root). The **command** —
+tool, `--model`, `--effort`, args — takes effect; **run-time flags**
+(`-v`, `-H`, `-D`, `-g`, `-e`) do not, because mounts/network/env are
+fixed when the container is created. Use `-n <name>` to force a
+separate, fully-provisioned container instead.
+
 ## Configuration
 
 Extra docker args via `.dockboxrc` files (bash-style, `#` comments):

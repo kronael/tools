@@ -1,6 +1,6 @@
 ---
 name: kronael-install
-description: Install/update Kronael (bundle + CLI tools rig/udfix/clp/dockbox); bridge CLAUDE.md/.claude/skills into Codex.
+description: Install/update Kronael (bundle + CLI tools rig/udfix/clp/dockbox); bridge CLAUDE.md, .claude/skills, and Kronael hooks into Codex.
 ---
 
 # Kronael Install
@@ -11,15 +11,15 @@ snapshot. NEVER copy or port the bundle into the Codex plugin directory.
 The installed Codex plugin contains only this installer skill. It does NOT
 contain the Kronael Claude skills. Codex sees those skills only through the
 Codex Bridge (`~/.agents/skills` or project `.agents/skills`). For install
-requests from Codex, create the global bridge automatically after the Claude
-install succeeds.
+requests from Codex, create the global bridge and install Codex hook wiring
+automatically after the Claude install succeeds.
 
 ## Invocation
 
 Users usually invoke:
 
 ```text
-Use $kronael-install to install/update Kronael.
+Use @kronael-install to install/update Kronael.
 ```
 
 If the user says "install kronael" without naming this skill, still run this
@@ -45,6 +45,7 @@ The source root is the first directory where all of these exist:
 - `skills/`
 - `agents/`
 - `hooks/`
+- `codex-hooks.json`
 - `settings-recommended.json`
 - `RECLAUDE.md`
 
@@ -58,8 +59,10 @@ installs), then start a fresh Codex thread. NEVER invent paths. The Codex
 plugin is only an installer bridge; the GitHub marketplace snapshot owns the
 bundle.
 
-For Codex Bridge-only requests, skip source-root discovery and perform only the
-requested bridge step.
+For Codex Bridge-only requests, discover the source root when the requested
+bridge step needs source-owned files (`codex-hooks.json` or per-skill symlinks).
+Skip source-root discovery only for `CLAUDE.md` config fallback or the simple
+`~/.agents/skills -> ~/.claude/skills` symlink case.
 
 ## Install
 
@@ -69,14 +72,16 @@ requested bridge step.
    `/kronael:install`; that is a Claude Code slash command.
 4. Execute the canonical installer's steps exactly as written there — the
    new-install plan/consent questionnaire, sync protocol, backup, copy assets
-   (incl. the `create-*` prune list), install wisdom, merge the hooks block,
-   external tools, CLI tools (rig/udfix/clp/dockbox — the marketplace snapshot
-   carries their source dirs), verify. Present the questionnaire inline as
-   numbered options. NEVER restate or fork those steps here; that file is the
-   only source of truth and copies drift.
+   (incl. the `create-*` prune list), install wisdom, merge the Claude hooks
+   block, install Codex hook wiring, external tools, CLI tools
+   (rig/udfix/clp/dockbox — the marketplace snapshot carries their source
+   dirs), verify. Present the questionnaire inline as numbered options. NEVER
+   restate or fork those steps here; that file is the only source of truth and
+   copies drift.
 5. After successful install from Codex, run the **Global installed skills**
-   bridge below so Codex can see the installed skills and their scripts.
-   This is part of the Codex install path, not an optional extra.
+   bridge and **Codex hooks** bridge below so Codex can see the installed
+   skills, scripts, and lifecycle hooks. This is part of the Codex install
+   path, not an optional extra.
 
 ## Codex Bridge
 
@@ -93,8 +98,11 @@ instruction filename in `~/.codex/config.toml`:
 project_doc_fallback_filenames = ["CLAUDE.md"]
 ```
 
-If fallback names already exist, preserve them and append `CLAUDE.md` only if
-missing.
+ALWAYS keep this as a top-level TOML key: insert it before the first `[table]`
+header, or append `CLAUDE.md` to the existing top-level fallback array. NEVER
+hand-append it after the current table header; in TOML that makes it part of the
+table. NEVER leave `CLAUDE.md` under `[tui]` or `[tui.model_availability_nux]`
+— move it to the top-level key.
 
 If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
 fallback in the same directory. ALWAYS add a short `AGENTS.md` pointer that
@@ -165,6 +173,31 @@ else
 fi
 ```
 
+### Codex hooks
+
+Codex supports native lifecycle hooks from `~/.codex/hooks.json`,
+`~/.codex/config.toml`, project `.codex/` config, and enabled plugins.
+Kronael uses `~/.codex/hooks.json` as the user-level install target.
+
+After the Claude hook scripts are copied, install Codex hook wiring:
+
+```sh
+mkdir -p "$HOME/.codex"
+cp "$SOURCE_ROOT/codex-hooks.json" "$HOME/.codex/hooks.json"
+```
+
+This config calls `~/.claude/hooks/codex_hook.py`, which normalizes Codex hook
+payloads and delegates to the installed Kronael hooks. The wrapper also rewrites
+Kronael nudge references from `/skill` to `@skill` and suppresses Claude-style
+context-only output for Codex `PreCompact`, where Codex only accepts block
+decisions. Do not point Codex directly at the Claude hook scripts unless the
+wrapper is removed intentionally.
+
+Codex requires changed command hooks to be reviewed and trusted. After install,
+report that the user must open `/hooks` in a fresh Codex TUI session and trust
+the Kronael hooks. Use `--dangerously-bypass-hook-trust` only for automation or
+verification that already vets the source.
+
 ### Project .claude/skills
 
 For a project that stores Claude skills under `.claude/skills`, bridge with:
@@ -184,9 +217,10 @@ Report only:
 
 - canonical install result from `kronael/install/SKILL.md` if install ran
 - Codex bridge paths changed: `~/.codex/config.toml`, `AGENTS.md`,
-  `~/.agents/skills`, `.agents/skills`
-- whether Codex can now see the installed skills; tell the user to start a new
-  thread and use `/skills` or `$skill-name`
+  `~/.agents/skills`, `.agents/skills`, `~/.codex/hooks.json`
+- whether Codex can now see the installed skills and hook wiring; tell the
+  user to start a new thread, use `/skills` or `@skill-name`, and open `/hooks`
+  once to trust changed hooks
 
 NEVER duplicate the full installer report in the bridge. Link paths and say
 whether each bridge step was applied or skipped.

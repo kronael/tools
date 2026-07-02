@@ -1,7 +1,7 @@
 ---
 name: review
-description: Deep code review with discussion and GitHub posting. Reviews code by bucketing files into groups, applying orthogonal lenses, running parallel analysis agents, then presenting findings for discussion before optionally posting to a GitHub PR.
-when_to_use: reviewing code changes, "review this", "review the branch", "review PR <N>"
+description: Deep multi-agent code review, optionally posted to a GitHub PR. NOT for your own uncommitted diff (use /code-review).
+when_to_use: "reviewing code changes, review this, review the branch, review PR <N>"
 user-invocable: true
 ---
 
@@ -139,6 +139,17 @@ Trigger: "post", "upload", "comment on PR", or similar. If no PR number, `gh pr 
 
 Default to one PR review body via `gh pr review <N> --comment --body "$(cat <<'EOF' ... EOF)"`. For inline comments on specific lines, use the gh-comment skill.
 
+#### Robot head markers
+
+ALWAYS append a bare `🤖` on its own line at the very end of any review Claude posts — no
+explanation, just the head.
+
+ALSO prepend a bare `🤖` at the **top** of the review body when most of the PR under review was
+auto-generated / vibe-coded — again just the head, no explanation.
+
+When unsure whether the PR was mostly auto-generated, ASK the user before adding the top marker. If
+the user says "robothead it" (or similar), add the top marker without asking.
+
 ## Tiered model use
 
 - **Standalone PR review** — use `model="opus"` for all agents (step 3). High quality, no cost
@@ -157,3 +168,5 @@ requested.
   posting needs confirmation
 - ALWAYS present the report first and wait for discussion before posting
 - ALWAYS include `file:line` in every finding
+- ALWAYS end a posted review with a bare 🤖; add a bare 🤖 at the top only when the PR was mostly
+  auto-generated (ask if unsure, or when told to "robothead it") — just the head, no explanation

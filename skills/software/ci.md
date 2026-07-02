@@ -50,3 +50,5 @@ clean:
 - For monorepo components, set PYTHONPATH per-target (`PYTHONPATH=../lib/src:src`).
   For standalone repos, `uv sync` installs the project itself; PYTHONPATH
   is unnecessary.
+
+`make demo` recording targets: see the `demo` skill.

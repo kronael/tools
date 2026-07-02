@@ -3,10 +3,9 @@
 
 PYTEST := $(shell command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytest)
 
-# Test-bearing hook files. Other hooks (stop.py, local.py, prompt_nudge.py,
-# reclaude.py) read stdin at import time and break pytest collection — add
-# them here once they're refactored to put main() behind __name__ == '__main__'.
-TEST_FILES := pretool_nudge.py
+# Test-bearing files. Some hook scripts still read stdin at import time, so
+# collect only files known to be pytest-safe.
+TEST_FILES := test_pretool_nudge.py test_codex_hook.py
 
 help:
 	@echo "make test     - run bundled pytest cases ($(TEST_FILES))"

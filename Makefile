@@ -31,7 +31,7 @@ CI_WORKFLOWS := \
 	$(W)/test-hooks.yml \
 	$(W)/lint.yml
 
-.PHONY: help test clean workflows gen-ci $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
@@ -40,6 +40,8 @@ help:
 	@echo "make clean-<dir> - clean one project"
 	@echo "make workflows   - regenerate PROJECTS from */Makefile"
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
+	@echo "make skills-frontmatter     - lint SKILL.md YAML for Codex"
+	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
 
 test: $(addprefix test-,$(PROJECTS))
 	@echo "all tests passed ($(PROJECTS))"
@@ -62,3 +64,9 @@ workflows:
 	echo "PROJECTS := $$dirs"
 
 gen-ci: $(CI_WORKFLOWS)
+
+skills-frontmatter:
+	python3 hooks/skill_frontmatter_lint.py skills
+
+skills-frontmatter-fix:
+	python3 hooks/skill_frontmatter_lint.py --write skills

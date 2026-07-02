@@ -41,7 +41,9 @@ Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
 skills available inside Codex, the install bridge exposes them with
 `~/.agents/skills -> ~/.claude/skills` when possible. If
 `~/.agents/skills` already exists as a directory, it adds per-skill symlinks
-for source-owned Kronael skills.
+for source-owned Kronael skills. Codex invokes those bridged skills as
+`@skill-name`, and `codex_hook.py` rewrites installed hook nudges from
+Claude-style `/skill` to Codex-style `@skill`.
 
 The procedure is documented in
 [`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
@@ -54,7 +56,7 @@ Codex can be configured to consume Claude project conventions without copying
 them:
 
 - `~/.codex/config.toml`: add `CLAUDE.md` to
-  `project_doc_fallback_filenames` for Claude-only projects.
+  top-level `project_doc_fallback_filenames` for Claude-only projects.
 - Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
   `CLAUDE.md`, because Codex loads at most one instruction file per directory.
 - Project `.claude/skills`: expose them to Codex with

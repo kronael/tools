@@ -26,9 +26,7 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ## Sign-off questionnaire
 
-ALWAYS present each finding to the user with `AskUserQuestion` before posting. One question, `multiSelect: true`, each finding as a short option label (e.g. `"index.ts:7 — internal exports"`) with the comment body in the description. Unselected findings are dropped silently.
-
-Max 4 options per question — split into multiple questions if more.
+ALWAYS present each finding to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
 ## Batch inline post
 
@@ -39,7 +37,7 @@ gh api repos/$REPO/pulls/<PR>/reviews --method POST --input - <<'EOF'
 {
   "commit_id": "<HEAD_SHA>",
   "comments": [
-    {"path": "src/file.ts", "line": 46, "side": "RIGHT", "body": "🤖 claude: <finding>"}
+    {"path": "src/file.ts", "line": 46, "side": "RIGHT", "body": "🤖 <finding>"}
   ]
 }
 EOF
@@ -58,12 +56,12 @@ Check hunk ranges: `gh pr diff <PR> | grep -A<N> "diff --git.*<filename>" | grep
 For lines outside the diff:
 
 ```bash
-gh pr comment <PR> --body "🤖 claude: <finding with file:line reference>"
+gh pr comment <PR> --body "🤖 <finding with file:line reference>"
 ```
 
 ## Rules
 
-- ALWAYS prefix comment body with `"🤖 claude: "`
+- ALWAYS prefix comment body with `"🤖 "`
 - ALWAYS leave the review PENDING — NEVER include `event` unless user asks to submit
 - ALWAYS batch inline comments into one POST — NEVER loop individual calls
 - ALWAYS fall back to a general PR comment with explicit `file:line` if a line is outside the diff
