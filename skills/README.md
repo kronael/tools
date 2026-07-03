@@ -86,8 +86,9 @@ the authoritative entry. The categories:
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
-- **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
-  judge a codebase or practice from a fixed perspective.
+- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `hacker-eval`,
+  `create-eval`, `eye-13yo`) — judge a codebase or practice from a fixed
+  perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
@@ -97,8 +98,10 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks extracted from `ops`. Structure
   rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared prose references** (`writing`, `humanize`) — copy rules and
-  the de-slop pass, cited by `tweet`, `pr-draft`, `readme`, `diary`.
+- **Shared references** (`writing`, `humanize`, `credits`) —
+  `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
+  `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
+  context, loaded as context, not a judgment lens.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -141,8 +144,9 @@ Skip for one-off tasks.
 shape skills (cli, service, data, trader) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
-**quality** — `review`/`code-review` for finding issues; `improve`/`refine` for fixing
-them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
+**quality** — `review`/`code-review` for finding issues (`code-review` is built-in,
+not in `skills/`); `improve`/`refine` for fixing them; `visual` for UI; `testing`
+for test patterns; `bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`. Use once work is verified.
 
