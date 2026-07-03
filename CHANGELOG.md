@@ -2,20 +2,21 @@
 
 ## [v0.3.40] — 20260703
 
-> kronael v0.3.40 — GitHub/utility skills, review split, hook safety, dockbox 2.1.199
+> kronael v0.3.40 — review give/take router, GitHub/utility skills, hook safety, dockbox 2.1.199
 >
-> Adds GitHub PR + utility skills, splits code review into local vs PR, hardens the hooks, and pins dockbox's Claude Code.
+> Unifies code review into one give/take router, adds GitHub + utility skills, hardens the hooks, and pins dockbox's Claude Code.
 >
-> • new skills: gh-review, gh-fix, gh-issue, ans, next, htmx, mk, agent-browser
-> • review now targets your local diff and supersedes /code-review; gh-review handles GitHub PRs
+> • `/review` is now a give/take router: `review give` produces findings, `review take` applies them — local by default, or a GitHub PR with `gh` (supersedes /code-review for local work)
+> • new skills: gh-issue, ans, next, htmx, mk, agent-browser
 > • Stop hook: real Stop blocks, the periodic post-tool nudge is advisory; /fin is detected from the command and nags once
 > • unsafe-command PreToolUse blockers + Codex self-invocation suppression
 > • dockbox pins Claude Code to 2.1.199 — rebuild the image to pick it up
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- skills: added `gh-review` (deep PR review posted back to the PR), `gh-fix` (apply a PR's review comments), `gh-issue` (file an issue with an approval gate), `ans` (answer-only read-only mode toggle), `next` (park a bug/TODO without stopping), `htmx` (server-rendered HTML + htmx), `mk` (Makefiles), `agent-browser` (browser automation). Indexed in `skills/README.md`.
-- skills/review: split into local vs GitHub. `review` now targets the local uncommitted diff / a branch / a range and supersedes the built-in `/code-review` for local work; the new `gh-review` handles PR review posted to GitHub.
+- skills/review: now a give/take router — `SKILL.md` dispatch + `give.md` (the review engine + a GitHub-PR section) + `take.md` (apply findings from a local list or a PR's comments). `review give [gh]` produces findings; `review take [gh]` applies them; supersedes the built-in `/code-review` for local work. Absorbs the short-lived `gh-review`/`gh-fix` (removed, pruned on reinstall). `gh-comment`/`gh-issue` stay as GitHub primitives.
+- skills: added `gh-issue` (file an issue with an approval gate), `ans` (answer-only read-only mode toggle), `next` (park a bug/TODO without stopping), `htmx` (server-rendered HTML + htmx), `mk` (Makefiles), `agent-browser` (browser automation). Indexed in `skills/README.md`.
+- skills: removed the inert `requires:` frontmatter field from 8 skills — it is not a real Claude Code field (the engine ignores it; verified against code.claude.com/docs/en/skills). The in-body "read `software/code.md`" pointer is the actual mechanism; fixed `mk`, which pointed at the removed `software-engineering` skill.
 - skills: `create-code-presentation` (reveal.js code-talk deck) folded into the `create/` router as `web/code-presentation.md` (no standalone `create-*` dir); org-specific paths genericized. Added to the install prune list.
 - skills: rule additions synced from local — `dispatch` gains `sub` triggers, `py` gains a tuple-vs-list rule, `software/code.md` gains a concept-naming rule and a stdout/stderr-only logging rule.
 - hooks: synced the installed hook safety work back to source: exact prompt
