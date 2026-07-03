@@ -146,10 +146,11 @@ Skip for one-off tasks.
 shape skills (cli, service, data, trader) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
-**quality** — `review` (local diff) / `gh-review` (GitHub PRs) for finding issues
-(`review` supersedes the built-in `/code-review` for local work); `improve`/`refine`
-for fixing them; `gh-fix` for applying a PR's review comments; `visual` for UI;
-`testing` for test patterns; `bugs` for the record-don't-fix queue.
+**quality** — `review` covers the whole loop: `review give` produces findings
+(local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
+or a PR's comments); it supersedes the built-in `/code-review` for local work.
+`improve`/`refine` for fixing; `visual` for UI; `testing` for test patterns;
+`bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 
