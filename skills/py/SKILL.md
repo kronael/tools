@@ -2,7 +2,6 @@
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
 when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
-requires: software
 ---
 
 # Python

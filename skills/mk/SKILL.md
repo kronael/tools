@@ -3,13 +3,12 @@ name: mk
 description: Makefiles. NOT for shell scripts (use sh) or build configs (use language skill).
 when_to_use: "editing Makefile, writing make targets, tool download targets, pattern rules"
 user-invocable: false
-requires: software-engineering
 ---
 
 # Make Style
 
-Requires the `software-engineering` skill for shared naming, style, and design
-rules. Below are Make-specific additions.
+ALWAYS read the `software` baseline (`software/code.md`) first for shared naming,
+style, and design rules. Below are Make-specific additions.
 
 ## Indirection has a much higher bar in Make than in code
 
