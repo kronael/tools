@@ -78,18 +78,19 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`) — patterns for a kind of program.
-  They compose with language skills: a Rust CLI loads `rs` + `cli`.
+  `testing`, `browse`, `diagrams`, `demo`) — patterns for a kind of
+  program or build task. They compose with language skills: a Rust CLI
+  loads `rs` + `cli`.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`, `demo`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice, README
-  demo recordings.
+  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
-- **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
-  judge a codebase or practice from a fixed perspective.
+- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `hacker-eval`,
+  `create-eval`, `eye-13yo`) — judge a codebase or practice from a fixed
+  perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
@@ -99,8 +100,10 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks extracted from `ops`. Structure
   rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared prose references** (`writing`, `humanize`) — copy rules and
-  the de-slop pass, cited by `tweet`, `pr-draft`, `readme`, `diary`.
+- **Shared references** (`writing`, `humanize`, `credits`) —
+  `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
+  `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
+  context, loaded as context, not a judgment lens.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -143,9 +146,10 @@ Skip for one-off tasks.
 shape skills (cli, service, data, trader) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
-**quality** — `review` (local diff) / `gh-review` (GitHub PRs) for finding issues;
-`improve`/`refine` for fixing them; `gh-fix` for applying a PR's review comments;
-`visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
+**quality** — `review` (local diff) / `gh-review` (GitHub PRs) for finding issues
+(`review` supersedes the built-in `/code-review` for local work); `improve`/`refine`
+for fixing them; `gh-fix` for applying a PR's review comments; `visual` for UI;
+`testing` for test patterns; `bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 

@@ -1,6 +1,6 @@
 ---
 name: cto-eval
-description: CTO evaluation — technical adoption by default; SLA/code audit on request.
+description: CTO evaluation — technical adoption by default; SLA/code audit on request. NOT for exploit/attack-surface security audit (use hacker-eval).
 when_to_use: "CTO evaluation, technical due diligence, production readiness, cto audit, code audit, SLA bet"
 user-invocable: true
 ---

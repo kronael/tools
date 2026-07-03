@@ -1,6 +1,6 @@
 ---
 name: demo
-description: Terminal demo GIF recordings for READMEs (asciinema + agg). NOT for general Makefile targets (use software's ci.md) or GUI screenshots (use visual).
+description: Terminal demo GIF recordings for READMEs (asciinema + agg). NOT for general Makefile targets (use software) or GUI screenshots (use visual).
 when_to_use: "record a demo, make demo, demo gif, asciinema, agg, terminal recording for README"
 ---
 

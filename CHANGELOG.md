@@ -1,14 +1,15 @@
 # Changelog
 
-## [v0.3.39] — 20260703
+## [v0.3.40] — 20260703
 
-> kronael v0.3.39 — GitHub + utility skills, review split, dockbox on Claude Code 2.1.199
+> kronael v0.3.40 — GitHub/utility skills, review split, hook safety, dockbox 2.1.199
 >
-> Adds GitHub PR skills and a few utilities, splits code review into local vs PR, and pins dockbox's Claude Code to the current release.
+> Adds GitHub PR + utility skills, splits code review into local vs PR, hardens the hooks, and pins dockbox's Claude Code.
 >
-> • new skills: gh-review (PR review), gh-fix (apply a PR's review comments), gh-issue (file issues), ans, next, htmx, mk, agent-browser
+> • new skills: gh-review, gh-fix, gh-issue, ans, next, htmx, mk, agent-browser
 > • review now targets your local diff and supersedes /code-review; gh-review handles GitHub PRs
-> • /create can now build a reveal.js code-talk deck
+> • Stop hook: real Stop blocks, the periodic post-tool nudge is advisory; /fin is detected from the command and nags once
+> • unsafe-command PreToolUse blockers + Codex self-invocation suppression
 > • dockbox pins Claude Code to 2.1.199 — rebuild the image to pick it up
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
@@ -25,23 +26,52 @@
   advisory context only.
 - install: drift detection now uses a checksum manifest instead of mtimes, so
   future reinstalls do not silently overwrite installed-side fixes.
+- hooks/stop.py: `/fin` is parsed from transcript user messages (an exact `/fin` or its `<command-name>` marker, not a raw substring, so the hook's own "finish mode" wording never re-triggers it) with a per-session one-shot stamp; the transcript tail is read via `deque(maxlen=60)`. Adds `test_stop.py`.
 - dockbox: pin `claude-code` to `2.1.199` (was `@latest`). Rebuild the image (`cd dockbox && make image`) to install it.
 
-## [v0.3.38] — 20260702
+## [v0.3.39] — 20260703
 
-> kronael v0.3.38 — Stop hook stops false-nagging on /fin
+> kronael v0.3.39 — skills route to the right place
 >
-> The Stop hook now recognises /fin from the actual command instead of any text mentioning it, reminds once per session, and returns advisory context (not a blocking stop) when it fires from the periodic post-tool nudge.
+> A discoverability pass across the bundle: sibling skills no longer fight over the same trigger words, and the language skills are correctly wired to the shared code baseline.
 >
-> • /fin reminder fires once per session and only for a real /fin — the hook's own "finish mode" wording no longer re-triggers it
-> • the post-tool nudge path emits advisory context instead of a blocking stop decision
-> • reads the transcript tail with a bounded deque instead of loading the whole file
+> • go/rs now declare `requires: software` and point at the shared `code.md` baseline (they claimed to, but didn't)
+> • De-collided trigger words: wisdom vs scavenge, cto-eval vs hacker-eval, sonnet vs explore
+> • hacker-eval and browse keywords moved into `when_to_use` where routing scans them
+> • README index: `credits` re-bucketed as ambient context, `code-review` marked built-in
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- hooks/stop.py: `/fin` detection now parses transcript user messages for an exact `/fin` or its `<command-name>` marker instead of a raw substring scan, so the hook's own "finish mode" reminder text no longer counts as a fresh invocation. A per-session stamp file makes the reminder fire once rather than on every stop.
-- hooks/stop.py + post_tool_nudge.sh: when invoked from the periodic PostToolUse nudge (now passing `KRONAEL_HOOK_EVENT=PostToolUse`), stop.py emits `hookSpecificOutput.additionalContext` (advisory) instead of `decision: block`; the real Stop event still blocks.
-- hooks/stop.py: read the transcript tail with `deque(maxlen=60)` instead of `readlines()[-60:]`. Adds `test_stop.py` (6 cases) to the pytest set.
+- `go` and `rs` skills now carry `requires: software` plus a body pointer to
+  `software/code.md`, matching py/ts/sh/sql; `code.md` no longer claims a
+  nonexistent `mk` skill reads the baseline.
+- De-collided sibling primary triggers that risked routing races: `wisdom` vs
+  `scavenge` ("create a skill"), `cto-eval` vs `hacker-eval` ("audit"), and
+  `sonnet` vs the `explore` skill ("explore") — via cross NOT-clauses and
+  reworded keywords.
+- `hacker-eval` and `browse` moved their retrieval keywords out of
+  `description` into `when_to_use` (both fields are scanned, but the split is
+  the convention); `resolve` gained a `when_to_use` and a tightened description.
+- `skills/README.md` index: `credits` moved from Evaluation lenses to Shared
+  references (it's ambient attribution context, not a judgment lens);
+  `code-review` annotated as built-in (not in `skills/`); the eval family added
+  to the Evaluation-lenses bullet.
+
+## [v0.3.38] — 20260703
+
+> kronael v0.3.38 — demo skill polish
+>
+> The `demo` skill's cross-references now match the bundle's own conventions.
+>
+> • demo: NOT-clause points at the `software` skill, not a data file
+> • skills index: `demo` listed as a build-task Domain skill, not a Workflow verb
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `demo` skill: `description` NOT-clause now names the `software` skill slug
+  instead of the `software/ci.md` data file, per the wisdom NOT-for convention.
+- `skills/README.md`: `demo` moved from the Workflow category (verb-macros) to
+  Domain (a build/tooling pattern, alongside `diagrams` and `browse`).
 
 ## [v0.3.37] — 20260701
 

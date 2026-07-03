@@ -1,7 +1,7 @@
 # Code — the engineering baseline
 
 The language-agnostic base every language skill builds on. `go`, `rs`, `py`,
-`ts`, `sh`, `sql`, and `mk` read this first (they say so in their body and
+`ts`, `sh`, and `sql` read this first (they say so in their body and
 carry a `requires: software` hint), then apply their language-specific overlay.
 Nothing here is language-specific; if a rule only holds for one language it
 belongs in that language's skill, not here.
