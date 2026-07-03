@@ -1,7 +1,7 @@
 ---
 name: gh-issue
 description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. Derived from gh-comment.
-when_to_use: filing a bug report or issue on a GitHub repo (often a different repo than the current one, e.g. an upstream dependency)
+when_to_use: "filing a bug report or issue on a GitHub repo, often a different repo than the current one (e.g. an upstream dependency), file an issue, open an issue, report a bug upstream"
 user-invocable: true
 ---
 

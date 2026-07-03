@@ -1,6 +1,7 @@
 ---
 name: htmx
 description: Server-rendered HTML with htmx attributes. USE when editing .html templates with hx-* attributes (Jinja, Go html/template, Tera, Rails ERB, Phoenix HEEx) or when the project lists htmx in deps. NOT for React/JSX (use tsx). NOT for plain TypeScript (use ts).
+when_to_use: "htmx, hx-get, hx-post, hx-swap, hx-target, server-rendered HTML, HTML over the wire, partial templates, Jinja/Tera/HEEx/ERB with htmx"
 user-invocable: false
 ---
 
