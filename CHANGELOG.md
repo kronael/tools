@@ -1,5 +1,33 @@
 # Changelog
 
+## [v0.3.39] — 20260703
+
+> kronael v0.3.39 — skills route to the right place
+>
+> A discoverability pass across the bundle: sibling skills no longer fight over the same trigger words, and the language skills are correctly wired to the shared code baseline.
+>
+> • go/rs now declare `requires: software` and point at the shared `code.md` baseline (they claimed to, but didn't)
+> • De-collided trigger words: wisdom vs scavenge, cto-eval vs hacker-eval, sonnet vs explore
+> • hacker-eval and browse keywords moved into `when_to_use` where routing scans them
+> • README index: `credits` re-bucketed as ambient context, `code-review` marked built-in
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `go` and `rs` skills now carry `requires: software` plus a body pointer to
+  `software/code.md`, matching py/ts/sh/sql; `code.md` no longer claims a
+  nonexistent `mk` skill reads the baseline.
+- De-collided sibling primary triggers that risked routing races: `wisdom` vs
+  `scavenge` ("create a skill"), `cto-eval` vs `hacker-eval` ("audit"), and
+  `sonnet` vs the `explore` skill ("explore") — via cross NOT-clauses and
+  reworded keywords.
+- `hacker-eval` and `browse` moved their retrieval keywords out of
+  `description` into `when_to_use` (both fields are scanned, but the split is
+  the convention); `resolve` gained a `when_to_use` and a tightened description.
+- `skills/README.md` index: `credits` moved from Evaluation lenses to Shared
+  references (it's ambient attribution context, not a judgment lens);
+  `code-review` annotated as built-in (not in `skills/`); the eval family added
+  to the Evaluation-lenses bullet.
+
 ## [v0.3.38] — 20260703
 
 > kronael v0.3.38 — demo skill polish
