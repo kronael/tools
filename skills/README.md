@@ -53,6 +53,8 @@ Macros for instructions you'd otherwise type out every time:
 - **fin**: "finish all pending tasks without stopping for confirmation"
 - **dispatch**: "spawn this prompt as a background subagent and continue"
 - **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
+- **next**: "park a discovered bug/TODO for later without stopping current work"
+- **ans**: "answer-only read-only mode — explain, never edit files or run shell"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
@@ -141,10 +143,11 @@ Skip for one-off tasks.
 shape skills (cli, service, data, trader) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
-**quality** — `review`/`code-review` for finding issues; `improve`/`refine` for fixing
-them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
+**quality** — `review` (local diff) / `gh-review` (GitHub PRs) for finding issues;
+`improve`/`refine` for fixing them; `gh-fix` for applying a PR's review comments;
+`visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
 
-**output** — `commit`, `pr-draft`, `release`, `gh-comment`. Use once work is verified.
+**output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
