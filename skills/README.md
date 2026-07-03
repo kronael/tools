@@ -76,13 +76,13 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`) — patterns for a kind of program.
-  They compose with language skills: a Rust CLI loads `rs` + `cli`.
+  `testing`, `browse`, `diagrams`, `demo`) — patterns for a kind of
+  program or build task. They compose with language skills: a Rust CLI
+  loads `rs` + `cli`.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`, `demo`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice, README
-  demo recordings.
+  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
