@@ -1,7 +1,7 @@
 ---
 name: sonnet
 description: /sonnet — launch a background subagent at sonnet+medium effort. Coding, exploration, pre-review, flagging, template-filling. NOT for routine mechanical tasks (use /haiku).
-when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, explore, pre-review, flagging, template, coding, exploration, investigation"
+when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, background exploration, pre-review, flagging, template, coding, exploratory sub, investigation"
 user-invocable: true
 ---
 
