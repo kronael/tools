@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.39] — 20260703
+
+> kronael v0.3.39 — GitHub + utility skills, review split, dockbox on Claude Code 2.1.199
+>
+> Adds GitHub PR skills and a few utilities, splits code review into local vs PR, and pins dockbox's Claude Code to the current release.
+>
+> • new skills: gh-review (PR review), gh-fix (apply a PR's review comments), gh-issue (file issues), ans, next, htmx, mk, agent-browser
+> • review now targets your local diff and supersedes /code-review; gh-review handles GitHub PRs
+> • /create can now build a reveal.js code-talk deck
+> • dockbox pins Claude Code to 2.1.199 — rebuild the image to pick it up
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: added `gh-review` (deep PR review posted back to the PR), `gh-fix` (apply a PR's review comments), `gh-issue` (file an issue with an approval gate), `ans` (answer-only read-only mode toggle), `next` (park a bug/TODO without stopping), `htmx` (server-rendered HTML + htmx), `mk` (Makefiles), `agent-browser` (browser automation). Indexed in `skills/README.md`.
+- skills/review: split into local vs GitHub. `review` now targets the local uncommitted diff / a branch / a range and supersedes the built-in `/code-review` for local work; the new `gh-review` handles PR review posted to GitHub.
+- skills: `create-code-presentation` (reveal.js code-talk deck) folded into the `create/` router as `web/code-presentation.md` (no standalone `create-*` dir); org-specific paths genericized. Added to the install prune list.
+- skills: rule additions synced from local — `dispatch` gains `sub` triggers, `py` gains a tuple-vs-list rule, `software/code.md` gains a concept-naming rule and a stdout/stderr-only logging rule.
+- dockbox: pin `claude-code` to `2.1.199` (was `@latest`). Rebuild the image (`cd dockbox && make image`) to install it.
+
 ## [v0.3.38] — 20260702
 
 > kronael v0.3.38 — Stop hook stops false-nagging on /fin
