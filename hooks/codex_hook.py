@@ -90,12 +90,15 @@ def run_target(target: str, payload: dict[str, Any]) -> int:
     if not isinstance(cwd, str) or not cwd:
         cwd = os.getcwd()
 
+    env = os.environ.copy()
+    env['KRONAEL_IN_CODEX'] = '1'
     result = subprocess.run(
         command,
         input=json.dumps(payload),
         text=True,
         capture_output=True,
         cwd=cwd,
+        env=env,
         timeout=30,
         check=False,
     )
@@ -110,6 +113,8 @@ def run_target(target: str, payload: dict[str, Any]) -> int:
 def rewrite_skill_refs(text: str) -> str:
     def replace(match: re.Match[str]) -> str:
         name = match.group('name')
+        if name == 'codex':
+            return 'the current Codex session'
         if name in CODEX_SKILL_NAMES:
             return f'@{name}'
         return match.group(0)

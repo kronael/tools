@@ -6,10 +6,10 @@
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
                                  ──> local.py        (LOCAL.md on first prompt)
 
-Tool call ──> PreToolUse  ──> pretool_nudge.py   (file → language-skill nudge)
+Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py (commit + diary nudge)
+Claude stops ──> Stop ──> stop.py (commit + diary block)
 
 Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
                           ──> reclaude.py (RECLAUDE.md + preservation note)
@@ -51,42 +51,51 @@ and Claude to use different lifecycle wiring.
 1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
 2. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-3. Tokenise prompt, fuzzy-match each word against `AGENT_KEYWORDS` by
-   edit distance (allowance scales with keyword length).
-4. If prompt contains `commit`, append `COMMIT_RULES` and short-circuit;
-   otherwise emit the first fuzzy-matched agent route.
+3. Match explicit Codex second-opinion phrases in Claude only: `ask codex`,
+   `oracle`, and `second opinion`.
+4. Match model escalation only when explicit: `/fable`, `use fable`,
+   `spawn fable`, `/opus`, etc.
+5. Tokenise prompt and exact-match words against `AGENT_KEYWORDS`. A trailing
+   `s` singular/plural alias is allowed; edit-distance matching is not.
+6. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the
+   first exact route as `info`.
 
 **Routes:** `AGENT_KEYWORDS` dict in the source.
 Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 ### pretool_nudge.py (PreToolUse)
 
-**Input:** JSON with `tool_name`, `tool_input` (`file_path` /
-`notebook_path`), `session_id`.
-**Output:** `hookSpecificOutput.additionalContext` nudge, or silent.
+**Input:** JSON with `tool_name`, `tool_input` (`file_path`, `notebook_path`,
+`command`, `cmd`, or `apply_patch` patch text), `session_id`.
+**Output:** `{"decision": "block", "reason": "..."}`,
+`hookSpecificOutput.additionalContext`, or silent.
 
 **Flow:**
-1. Ignore tools outside Read/Edit/Write/MultiEdit/NotebookEdit.
-2. Map path to a skill: special filenames first (`Makefile` → `/mk`,
+1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
+   push, amend, hard reset, broad add, no-verify commits, `rm -rf`, and
+   recursive Codex execution inside Codex.
+2. For file tools, extract `file_path`, `notebook_path`, or explicit
+   `apply_patch` file headers.
+3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
    `Dockerfile`/compose/workflows → `/ops`), then extension via
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
-3. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
+4. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
    each nudge fires once.
-4. Emit "Editing/reading <file> — follow <skill> conventions."
+5. Emit "Editing/reading <file> — follow <skill> conventions."
 Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### post_tool_nudge.sh (PostToolUse)
 
 **Input:** original hook payload; state in the current repo's git dir
 (`post_tool_nudge`, ts + count).
-**Output:** `stop.py`'s output every 100 tool calls or 10 minutes,
-otherwise silent. Always exits 0 — never blocks a tool call.
+**Output:** `stop.py`'s advisory `hookSpecificOutput` every 100 tool calls or
+10 minutes, otherwise silent. Always exits 0 — never blocks a tool call.
 
 **Flow:**
 1. Increment the call counter.
 2. At 100 calls or 600 s, reset state and pipe the original payload to
-   `stop.py` so the commit/diary nudge also fires mid-session, not only on
-   Stop.
+   `stop.py` with `KRONAEL_HOOK_EVENT=PostToolUse`, so the commit/diary nudge
+   also fires mid-session as advisory context.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
@@ -121,17 +130,21 @@ unwired.
 ### stop.py (Stop)
 
 **Input:** JSON with `cwd`, `stop_hook_active`.
-**Output:** `{"decision": "block", "reason": "..."}` or silent.
+**Output:** `{"decision": "block", "reason": "..."}` on real Stop,
+advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 **Flow:**
 1. Bail early if `stop_hook_active` is set (prevents recursion).
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
    with `git diff --stat`.
-3. If `$cwd/.diary/` exists, check for today's `YYYYMMDD.md` (local time).
+3. If the repo has a `.diary/`, check for today's `YYYYMMDD.md` (UTC).
    Missing or >1h stale → append a diary nudge.
-4. Block with the combined message if any nudges accumulated.
+4. If recent `/fin` usage is detected, append an open-items reminder.
+5. Real Stop blocks with the combined message. Periodic PostToolUse emits the
+   same message as advisory context only.
 
-Pure script, no LLM call. NEVER pushes.
+Pure script, no LLM call. NEVER pushes. The hook may append a blank diary
+header when the diary is missing or stale.
 
 ## Data Flow
 

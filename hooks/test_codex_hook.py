@@ -64,6 +64,17 @@ def test_translate_output_rewrites_prompt_nudge_refs_for_codex() -> None:
     assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine.'
 
 
+def test_translate_output_never_rewrites_codex_ref_recursively() -> None:
+    output = translate_output(
+        json.dumps({'ok': True, 'systemMessage': 'Invoke /codex.'}),
+        'UserPromptSubmit',
+        'prompt_nudge',
+    )
+    parsed = json.loads(output)
+    assert parsed['systemMessage'] == 'Invoke the current Codex session.'
+    assert '@codex' not in parsed['hookSpecificOutput']['additionalContext']
+
+
 def test_translate_output_rewrites_pretool_refs_for_codex() -> None:
     output = translate_output(
         json.dumps(

@@ -17,6 +17,14 @@
 - skills/review: split into local vs GitHub. `review` now targets the local uncommitted diff / a branch / a range and supersedes the built-in `/code-review` for local work; the new `gh-review` handles PR review posted to GitHub.
 - skills: `create-code-presentation` (reveal.js code-talk deck) folded into the `create/` router as `web/code-presentation.md` (no standalone `create-*` dir); org-specific paths genericized. Added to the install prune list.
 - skills: rule additions synced from local — `dispatch` gains `sub` triggers, `py` gains a tuple-vs-list rule, `software/code.md` gains a concept-naming rule and a stdout/stderr-only logging rule.
+- hooks: synced the installed hook safety work back to source: exact prompt
+  routing, Codex self-invocation suppression, command blockers for unsafe shell
+  commands, Codex `exec_command`/Claude `Bash` PreToolUse wiring, and tests.
+- hooks: restored the installed Stop hook to the v0.3.38 dual-mode behavior:
+  real Stop emits top-level `decision: block`; periodic PostToolUse emits
+  advisory context only.
+- install: drift detection now uses a checksum manifest instead of mtimes, so
+  future reinstalls do not silently overwrite installed-side fixes.
 - dockbox: pin `claude-code` to `2.1.199` (was `@latest`). Rebuild the image (`cd dockbox && make image`) to install it.
 
 ## [v0.3.38] — 20260702

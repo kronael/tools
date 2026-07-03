@@ -5,7 +5,7 @@ PYTEST := $(shell command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytes
 
 # Test-bearing files. Some hook scripts still read stdin at import time, so
 # collect only files known to be pytest-safe.
-TEST_FILES := test_pretool_nudge.py test_codex_hook.py test_stop.py
+TEST_FILES := test_pretool_nudge.py test_prompt_nudge.py test_codex_hook.py test_stop.py
 
 help:
 	@echo "make test     - run bundled pytest cases ($(TEST_FILES))"

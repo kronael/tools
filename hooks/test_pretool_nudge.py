@@ -51,6 +51,25 @@ PATH_CASES = [
     ({'tool_input': 'not-a-dict'}, ''),
     ({'tool_input': {}}, ''),
     ({'tool_input': {'file_path': None}}, ''),
+    (
+        {
+            'tool_name': 'apply_patch',
+            'tool_input': {
+                'patch': '*** Begin Patch\n*** Update File: src/app.py\n@@\n',
+            },
+        },
+        'src/app.py',
+    ),
+    (
+        {
+            'tool_name': 'apply_patch',
+            'tool_input': {
+                'patch': '*** Begin Patch\n*** Add File: Dockerfile\n+FROM scratch\n',
+            },
+        },
+        'Dockerfile',
+    ),
+    ({'tool_name': 'apply_patch', 'tool_input': {'patch': 'not a patch'}}, ''),
     ({}, ''),
     (None, ''),
     ('not-a-dict', ''),
@@ -62,6 +81,13 @@ PROCESS_CASES = [
     ({'tool_name': 'Write', 'tool_input': {'file_path': '/x.rs'}}, '/rs'),
     ({'tool_name': 'MultiEdit', 'tool_input': {'file_path': '/x.tsx'}}, '/tsx'),
     ({'tool_name': 'NotebookEdit', 'tool_input': {'notebook_path': '/n.py'}}, '/py'),
+    (
+        {
+            'tool_name': 'apply_patch',
+            'tool_input': {'patch': '*** Begin Patch\n*** Update File: /x.py\n'},
+        },
+        '/py',
+    ),
     ({'tool_name': 'Bash', 'tool_input': {'file_path': '/x.py'}}, None),
     ({'tool_name': 'Read'}, None),
     ({'tool_name': 'Read', 'tool_input': {'file_path': '/x.xyz'}}, None),
@@ -69,6 +95,16 @@ PROCESS_CASES = [
     ({}, None),
     ([], None),
     (None, None),
+]
+
+BLOCK_CASES = [
+    'git push',
+    'git reset --hard',
+    'git add -A',
+    'git add --all',
+    'git commit --amend',
+    'git commit -m fix --no-verify',
+    'rm -rf tmp/build',
 ]
 
 
@@ -94,3 +130,19 @@ def test_process(payload: object, expected_skill: str | None) -> None:
         assert result['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
         context = result['hookSpecificOutput']['additionalContext']
         assert f'follow {expected_skill} conventions.' in context
+
+
+@pytest.mark.parametrize('command', BLOCK_CASES)
+def test_process_blocks_unsafe_commands(command: str) -> None:
+    result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
+    assert result is not None
+    assert result['decision'] == 'block'
+    assert 'unsafe command blocked' in result['reason']
+
+
+def test_process_blocks_recursive_codex_inside_codex(monkeypatch) -> None:
+    monkeypatch.setenv('KRONAEL_IN_CODEX', '1')
+    result = process({'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}})
+    assert result is not None
+    assert result['decision'] == 'block'
+    assert 'recursive codex' in result['reason']
