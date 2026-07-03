@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.38] — 20260703
+
+> kronael v0.3.38 — demo skill polish
+>
+> The `demo` skill's cross-references now match the bundle's own conventions.
+>
+> • demo: NOT-clause points at the `software` skill, not a data file
+> • skills index: `demo` listed as a build-task Domain skill, not a Workflow verb
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `demo` skill: `description` NOT-clause now names the `software` skill slug
+  instead of the `software/ci.md` data file, per the wisdom NOT-for convention.
+- `skills/README.md`: `demo` moved from the Workflow category (verb-macros) to
+  Domain (a build/tooling pattern, alongside `diagrams` and `browse`).
+
 ## [v0.3.37] — 20260701
 
 > kronael v0.3.37 — Codex fallback repair stays in the installer
