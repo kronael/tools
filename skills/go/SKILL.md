@@ -2,9 +2,13 @@
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
 when_to_use: editing .go files or writing Go code
+requires: software
 ---
 
 # Go
+
+Requires the `software` skill's `code.md` for shared naming, style, and design
+rules. Below are Go-specific additions.
 
 ## Concurrency
 

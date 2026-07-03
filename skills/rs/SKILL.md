@@ -2,9 +2,13 @@
 name: rs
 description: Rust development. NOT for non-Rust code (use go, py, ts, tsx, or sh).
 when_to_use: editing .rs files or writing Rust code
+requires: software
 ---
 
 # Rust
+
+Requires the `software` skill's `code.md` for shared naming, style, and design
+rules. Below are Rust-specific additions.
 
 ## Imports
 - NEVER arbitrary `as` aliases to rename external types
