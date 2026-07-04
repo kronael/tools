@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.42] — 20260704
+
+> kronael v0.3.42 — con/fin: separate goal scopes
+>
+> con and fin are now framed as distinct goal-scoped modes instead of con reading as "fin plus a context-recovery step."
+>
+> • `con` reframed as goal mode: recall every interrupted/paused/abandoned task, plan, or goal from the session (not just live agent processes) and drive each to actual completion — its own persistence requirement, not borrowed `/fin` semantics
+> • `fin` reframed to pair with it: drive the *current* goal to completion, explicitly narrower in scope than `con`'s multi-goal recall
+> • mechanics of both skills unchanged — description/intro wording only
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: `con`'s description and intro rewritten to lead with "goal mode" — recall-then-resume across every interrupted/paused/abandoned task or goal this session, not a subordinate mode of `fin`. Step 5 ("Run to completion (/fin semantics)") renamed to "Pursue every recalled goal to actual completion," framed as con's own requirement.
+- skills: `fin`'s description updated to pair with con's new framing — "drive the current goal to completion" — and its `NOT for` clause now points at "con, the multi-goal recall mode." Procedure/mechanics unchanged.
+
 ## [v0.3.41] — 20260704
 
 > kronael v0.3.41 — sweep audits, /con session resume
