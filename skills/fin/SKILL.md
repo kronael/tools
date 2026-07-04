@@ -1,6 +1,6 @@
 ---
 name: fin
-description: /fin — finish mode, no confirmation stops. NOT for a single command (just run it).
+description: /fin — finish mode, no confirmation stops. NOT for a single command (just run it), NOT for resuming interrupted/paused agents or tasks from earlier in the session (use con).
 when_to_use: "finish this, keep going, don't stop, just do it"
 user-invocable: true
 ---
