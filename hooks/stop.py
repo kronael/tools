@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 """Stop hook: nudge commit and diary if needed."""
 
-import hashlib
 import json
 import os
 import subprocess
 import sys
-import tempfile
-from collections import deque
 from datetime import UTC
 from datetime import datetime
 
 NUDGE_INTERVAL = 600
 HEADER_RECENT = 300
-FIN_STAMP_DIR = 'claude-fin-stop'
 
 
 def git_run(cwd, *args):
@@ -52,89 +48,6 @@ def nudge_due(stamp, now):
     if stamp is None or not os.path.exists(stamp):
         return True
     return now.timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
-
-
-def is_fin_text(text):
-    text = text.strip()
-    compact = ''.join(text.split())
-    return (
-        text == '/fin'
-        or '<command-name>fin</command-name>' in compact
-        or '<command-name>/fin</command-name>' in compact
-    )
-
-
-def iter_content_texts(value):
-    if isinstance(value, str):
-        yield value
-        return
-    if not isinstance(value, list):
-        return
-    for item in value:
-        if isinstance(item, str):
-            yield item
-        elif isinstance(item, dict):
-            text = item.get('text')
-            if isinstance(text, str):
-                yield text
-
-
-def iter_transcript_user_texts(lines):
-    for line in lines:
-        try:
-            item = json.loads(line)
-        except json.JSONDecodeError:
-            if is_fin_text(line):
-                yield line
-            continue
-        if not isinstance(item, dict) or item.get('type') != 'user':
-            continue
-        message = item.get('message')
-        if isinstance(message, dict):
-            yield from iter_content_texts(message.get('content'))
-        yield from iter_content_texts(item.get('content'))
-
-
-def get_fin_stamp(data):
-    token = data.get('session_id') or data.get('sessionId') or data.get('transcript_path')
-    if not isinstance(token, str) or not token:
-        return None
-    tmpdir = os.environ.get('TMPDIR')
-    if tmpdir is None:
-        tmpdir = tempfile.gettempdir()
-    name = hashlib.sha256(token.encode()).hexdigest()[:32]
-    return os.path.join(tmpdir, FIN_STAMP_DIR, name)
-
-
-def mark_fin_seen(data):
-    stamp = get_fin_stamp(data)
-    if stamp is None:
-        return
-    try:
-        os.makedirs(os.path.dirname(stamp), exist_ok=True)
-        with open(stamp, 'w') as f:
-            f.write(datetime.now(tz=UTC).isoformat())
-    except OSError:
-        pass
-
-
-def fin_recent(data):
-    stamp = get_fin_stamp(data)
-    if stamp is not None and os.path.exists(stamp):
-        return False
-    transcript = data.get('transcript_path')
-    if not transcript or not os.path.exists(transcript):
-        return False
-    try:
-        with open(transcript, encoding='utf-8') as f:
-            recent = deque(f, maxlen=60)
-    except OSError:
-        return False
-    for text in iter_transcript_user_texts(recent):
-        if is_fin_text(text):
-            mark_fin_seen(data)
-            return True
-    return False
 
 
 def hook_event(data):
@@ -225,13 +138,6 @@ def main():
                 f'Diary not updated in over an hour (now {hhmm}). '
                 'Entry header appended — fill it in.'
             )
-
-    if hook_event(data) != 'PostToolUse' and fin_recent(data):
-        parts.append(
-            '/fin (finish mode) was invoked. Before stopping, re-run the '
-            'open-items pass: every item must be done, blocked, or explicitly '
-            'deferred with a reason.'
-        )
 
     if parts:
         emit(parts, data)
