@@ -1,20 +1,22 @@
 ---
 name: con
-description: /con — resume every interrupted, paused, or unfinished agent
-  and task in the current session, then drive everything to completion. NOT
-  for simply pushing the current in-flight task to completion without
-  stopping (use fin).
+description: /con — goal mode. Recall every interrupted, paused, or
+  abandoned task/plan/goal from this session (not just live agent
+  processes) and drive each to actual completion. NOT for just pushing the
+  single current in-flight task to completion without stopping (use fin).
 when_to_use: >
   "continue", "resume", "pick up where we left off", "finish the unfinished",
   "resume the agents", "resume the paused work", "what was left"
 user-invocable: true
 ---
 
-# /con — continue mode
+# /con — continue mode (goal mode)
 
-Resume all interrupted, paused, or unfinished agents and tasks from this
-session, then run everything to completion. Combines context recovery with
-/fin semantics: no stopping early, no unnecessary questions.
+A persistent goal-tracking mode: recall everything interrupted, paused, or
+left abandoned this session — tasks, plans, agent runs, half-finished
+goals, however they surfaced — and pursue each to real completion. The
+scope is recall-then-resume, not a single task; fin's scope is one
+in-flight task, narrower and already running.
 
 ## Procedure
 
@@ -49,9 +51,9 @@ session, then run everything to completion. Combines context recovery with
 - ALWAYS verify with the actual command this turn — NEVER treat confidence
   or a success report as evidence; check the diff or run the command.
 
-### 5. Run to completion (/fin semantics)
+### 5. Pursue every recalled goal to actual completion
 
-- NEVER stop early.
+- NEVER stop early — a goal recalled in step 2 isn't done until verified done.
 - NEVER ask except on **genuine ambiguity**: two approaches with real
   tradeoffs, contradictory requirements, missing info that cannot be
   inferred — ALWAYS pick one and go on plain implementation details instead.
