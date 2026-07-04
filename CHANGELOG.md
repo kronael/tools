@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.43] — 20260704
+
+> kronael v0.3.43 — con cut to a real mode-toggle; stop hook simplified
+>
+> con went through two more rounds of trimming down to its actual reference shape, and the stop hook dropped logic that duplicated skill-level behavior.
+>
+> • `con` cut from a 40-line procedure doc to a 16-line explore/ans-style mode-toggle (title, one-line intent, short Behavior list) — matches the actual reference pattern for this skill shape instead of re-deriving a bespoke structure
+> • `hooks/stop.py`: removed `/fin` transcript-detection nudging (`is_fin_text`/`fin_recent`/`mark_fin_seen`/`get_fin_stamp` and their tests) — that discipline now lives in the `fin`/`con` skills themselves, not externally enforced by the stop hook; the hook's unrelated commit-nudge and diary-freshness checks are untouched
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: `con` rewritten twice more — first to a plain 5-step recall-and-resume procedure (dropped the `/fin`-style "NEVER stop early / self-correct harder" coaching that just re-derived fin's job inside con, and the CLAUDE.md constraints restatement), then cut further to match `explore`/`ans`'s actual mode-toggle shape: title, one-line description, short `## Behavior` list. 79 → 40 → 16 lines.
+- hooks: `stop.py`'s `/fin`-session-detection logic removed entirely (transcript scanning for `/fin`/`/con` invocation, one-shot-per-session stamp file). This was originally going to be broadened to also detect `/con`, then reconsidered: goal-mode discipline is internal to the skills now, the stop hook doesn't need to know about it at all. `test_stop.py` updated to match (4 tests removed, 3 `emit`-behavior tests kept).
+
 ## [v0.3.42] — 20260704
 
 > kronael v0.3.42 — con/fin: separate goal scopes
