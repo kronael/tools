@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.41] — 20260704
+
+> kronael v0.3.41 — sweep audits, /con session resume
+>
+> Adds two workflow skills: a background bug-category sweep and a session-resume macro.
+>
+> • new skill `sweep`: dispatches a background audit for one bug CATEGORY across the whole repo, filing each real instance in `BUGS.md` (record-only, never fixes — see CLAUDE.md Bug Triage Protocol)
+> • new skill `con`: resumes every interrupted, paused, or unfinished agent and task from the current session, then drives everything to completion (context recovery + `/fin` semantics)
+> • de-collided `con`'s "keep going" trigger from `fin`'s pre-existing one — cross `NOT for ...` clauses added to both descriptions, `con`'s `when_to_use` reworded
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills: added `sweep` (background agent audits the entire codebase for one bug category and files each real instance as its own `BUGS.md` entry per `/bugs`'s format/ID rules; record-only) and `con` (resumes every interrupted/paused/unfinished agent and task from the current session — memory + diary + in-flight agent inventory — then drives everything to completion under `/fin` semantics). Indexed in `skills/README.md`'s Shortcuts section.
+- skills: de-collided `con`'s "keep going" `when_to_use` trigger from `fin`'s pre-existing "keep going" trigger (fin already owns continuing the current in-flight task without stopping; con is specifically about resuming interrupted/paused work). Added cross `NOT for ...` clauses to both descriptions; reworded `con`'s trigger to "resume the paused work".
+- `.claude-plugin/plugin.json`: version bump `0.3.33` → `0.3.41` (had drifted since the last bump at v0.3.33; brought back in step with the release version).
+
 ## [v0.3.40] — 20260703
 
 > kronael v0.3.40 — review give/take router, GitHub/utility skills, hook safety, dockbox 2.1.199
