@@ -1,13 +1,13 @@
 ---
 name: fin
-description: /fin — finish mode, no confirmation stops. NOT for a single command (just run it), NOT for resuming interrupted/paused agents or tasks from earlier in the session (use con).
+description: /fin — drive the current goal to completion, no confirmation stops. NOT for a single command (just run it), NOT for resuming interrupted/paused agents or tasks from earlier in the session (use con, the multi-goal recall mode).
 when_to_use: "finish this, keep going, don't stop, just do it"
 user-invocable: true
 ---
 
-# /fin — finish mode
+# /fin — finish mode (the current goal, to done)
 
-Execute until complete. Don't stop until all tasks are done.
+Drive the current goal to completion. Don't stop until it's actually done.
 
 ## Behavior
 
