@@ -14,11 +14,17 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
+| `strict-typing.md` | un-circumventable strict type config (basedpyright/ruff, tsconfig/eslint) — bans `Any`, `# type: ignore`, `as any` |
 
 ## Editing rules
 
 - A runbook (>10 lines, code blocks, procedures) goes HERE; a one-line
   ALWAYS/NEVER rule goes in `../ops/SKILL.md`. NEVER both — no duplication.
 - New runbook → new `<topic>.md` + dispatch row in `SKILL.md` + keywords in
-  its `when_to_use` (trimmed — it preloads) + row in ops' pointer table.
-- ops links here as `../software/<topic>.md` — keep both tables in sync.
+  its `when_to_use` (trimmed — it preloads).
+- ops' pointer table mirrors ONLY the devops runbooks (docker/ci/deploy/
+  observe/uvx-tools) — ops was split off from software. A non-devops page
+  (e.g. `code.md`, `strict-typing.md`) gets NO ops row; it routes via this
+  SKILL.md only.
+- When you do add/rename a devops runbook, keep ops' table in sync:
+  ops links here as `../software/<topic>.md`.

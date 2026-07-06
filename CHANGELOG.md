@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.43] — 20260704
+## [v0.3.45] — 20260706
 
-> kronael v0.3.43 — con cut to a real mode-toggle; stop hook simplified
+> kronael v0.3.45 — con cut to a real mode-toggle; stop hook simplified
 >
 > con went through two more rounds of trimming down to its actual reference shape, and the stop hook dropped logic that duplicated skill-level behavior.
 >
@@ -14,9 +14,9 @@
 - skills: `con` rewritten twice more — first to a plain 5-step recall-and-resume procedure (dropped the `/fin`-style "NEVER stop early / self-correct harder" coaching that just re-derived fin's job inside con, and the CLAUDE.md constraints restatement), then cut further to match `explore`/`ans`'s actual mode-toggle shape: title, one-line description, short `## Behavior` list. 79 → 40 → 16 lines.
 - hooks: `stop.py`'s `/fin`-session-detection logic removed entirely (transcript scanning for `/fin`/`/con` invocation, one-shot-per-session stamp file). This was originally going to be broadened to also detect `/con`, then reconsidered: goal-mode discipline is internal to the skills now, the stop hook doesn't need to know about it at all. `test_stop.py` updated to match (4 tests removed, 3 `emit`-behavior tests kept).
 
-## [v0.3.42] — 20260704
+## [v0.3.44] — 20260706
 
-> kronael v0.3.42 — con/fin: separate goal scopes
+> kronael v0.3.44 — con/fin: separate goal scopes
 >
 > con and fin are now framed as distinct goal-scoped modes instead of con reading as "fin plus a context-recovery step."
 >
@@ -29,9 +29,9 @@
 - skills: `con`'s description and intro rewritten to lead with "goal mode" — recall-then-resume across every interrupted/paused/abandoned task or goal this session, not a subordinate mode of `fin`. Step 5 ("Run to completion (/fin semantics)") renamed to "Pursue every recalled goal to actual completion," framed as con's own requirement.
 - skills: `fin`'s description updated to pair with con's new framing — "drive the current goal to completion" — and its `NOT for` clause now points at "con, the multi-goal recall mode." Procedure/mechanics unchanged.
 
-## [v0.3.41] — 20260704
+## [v0.3.43] — 20260706
 
-> kronael v0.3.41 — sweep audits, /con session resume
+> kronael v0.3.43 — sweep audits, /con session resume
 >
 > Adds two workflow skills: a background bug-category sweep and a session-resume macro.
 >
@@ -43,7 +43,51 @@
 
 - skills: added `sweep` (background agent audits the entire codebase for one bug category and files each real instance as its own `BUGS.md` entry per `/bugs`'s format/ID rules; record-only) and `con` (resumes every interrupted/paused/unfinished agent and task from the current session — memory + diary + in-flight agent inventory — then drives everything to completion under `/fin` semantics). Indexed in `skills/README.md`'s Shortcuts section.
 - skills: de-collided `con`'s "keep going" `when_to_use` trigger from `fin`'s pre-existing "keep going" trigger (fin already owns continuing the current in-flight task without stopping; con is specifically about resuming interrupted/paused work). Added cross `NOT for ...` clauses to both descriptions; reworded `con`'s trigger to "resume the paused work".
-- `.claude-plugin/plugin.json`: version bump `0.3.33` → `0.3.41` (had drifted since the last bump at v0.3.33; brought back in step with the release version).
+- `.claude-plugin/plugin.json`: version bump `0.3.33` → `0.3.43` (had drifted since the last bump at v0.3.33; brought back in step with the release version).
+## [v0.3.42] — 20260706
+
+> kronael v0.3.42 — pi upgraded to gpt-5.5
+>
+> The /pi second-opinion agent now defaults to gpt-5.5 instead of the older gpt-5.2-codex.
+>
+> • pi — default model is now gpt-5.5 (newest served; gpt-5.6 does not exist yet)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- pi: default model `gpt-5.2-codex` → `gpt-5.5` — skill doc + `~/.pi/agent/settings.json`.
+
+## [v0.3.41] — 20260706
+
+> kronael v0.3.41 — strict-typing runbook, /pi + /astgrep skills
+>
+> A new software page pins the linter settings that stop an LLM from typing `Any` past the checker; /pi and /astgrep join.
+>
+> • strict-typing.md — settings that turn `Any`, `# type: ignore`, `as any` into hard errors (Python + TS)
+> • /pi — a second-opinion coding agent, alongside /codex
+> • /astgrep — structural (AST) search and rewrite across a codebase
+> • model tiers: sonnet = investigation, opus = implementation; /sub auto-picks the tier
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- software: `strict-typing.md` — config-only settings that make effective
+  typing un-circumventable. Python via basedpyright (`reportAny`,
+  `reportExplicitAny`, `enableTypeIgnoreComments = false`) + ruff (`ANN401`,
+  `PGH003/004`, `RUF100`); TypeScript via `tsconfig` strict-plus +
+  typescript-eslint (`consistent-type-assertions: never`, `no-unsafe-*`,
+  `ban-ts-comment`). Escape-hatch→setting tables + residual-holes section.
+- pi: `/pi` second-opinion skill (pi coding agent) alongside `/codex`;
+  installer provisions pi.
+- astgrep: `/astgrep` structural search/rewrite skill; installer provisions
+  ast-grep.
+
+### Changed
+- skills: model-tier routing — sonnet = investigation, opus = implementation;
+  `/sub` auto-tier router with haiku/sonnet/opus proactive triggers.
+
+### Fixed
+- pi: auth check no longer treats `settings.json` presence as being logged in.
 
 ## [v0.3.40] — 20260703
 
