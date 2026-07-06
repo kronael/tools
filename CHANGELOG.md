@@ -1,5 +1,29 @@
 # Changelog
 
+## [v0.3.46] — 20260706
+
+> kronael v0.3.46 — reconciled the diverged local and remote lines
+>
+> Local and remote both branched from v0.3.40 and minted colliding v0.3.41/42 tags; this merges them with nothing dropped and renumbers the local releases to sit after remote's.
+>
+> • merged origin (strict-typing, /pi, /astgrep, model-tier) with local (sweep, /con, fin, stop hook) — no content lost from either side
+> • local releases renumbered to v0.3.43/44/45; remote keeps v0.3.41/42; duplicate tags removed
+> • indexed the merged-in /pi skill in the README second-opinion group
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Reconciled the two histories that had diverged from v0.3.40: origin/master
+  (v0.3.41 strict-typing + /pi + /astgrep + model-tier framing, v0.3.42 pi
+  gpt-5.5) and local (sweep, /con, fin/con goal scopes, stop-hook cut). Merge
+  kept all content from both sides; only `CHANGELOG.md` and `skills/README.md`
+  needed hand-resolution.
+- Removed the duplicated v0.3.41/42 tags: remote's now own v0.3.41/42, local's
+  three releases were renumbered to v0.3.43 (sweep/con), v0.3.44 (con/fin
+  scopes), v0.3.45 (con-toggle/stop) on their original commits — lineage
+  preserved, no history rewrite.
+- Indexed the `pi` skill in `skills/README.md` (it arrived in the merge but was
+  missing from the index).
+
 ## [v0.3.45] — 20260706
 
 > kronael v0.3.45 — con cut to a real mode-toggle; stop hook simplified
