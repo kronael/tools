@@ -85,7 +85,7 @@ the authoritative entry. The categories:
   `rs` + `cli`; a structural codemod loads `astgrep` + the target language.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
+  `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
   scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
