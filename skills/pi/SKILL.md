@@ -13,7 +13,7 @@ agent loop, its own tools (read/bash/edit/write). Methodology + citations:
 `docs/pi/research-pi.md`.
 
 Why alongside `/codex`: pi answers from a **different model** than this Claude
-harness (its default here is `codex-serve/gpt-5.2-codex`; configurable to
+harness (its default here is `codex-serve/gpt-5.5`; configurable to
 Gemini/GPT/Claude), so it's a real second opinion. Use it to cross-check codex
 or when you want a non-Claude view. NEVER use a raw `Agent(...)` for a second
 opinion — use this skill or `/codex`.
@@ -47,7 +47,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 ## Model — newest available, high effort
 
 - Discover with `pi --list-models`; it prints the providers/models the current
-  auth can reach (here: `claude-serve` haiku/sonnet, `codex-serve gpt-5.2-codex`).
+  auth can reach (here: `claude-serve` haiku/sonnet + a `codex-serve` gpt model).
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
   strongest configured model. Add `--thinking high` (or `xhigh`) for max reasoning.
