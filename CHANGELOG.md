@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.3.41] — 20260706
+
+> kronael v0.3.41 — strict-typing runbook, /pi + /astgrep skills
+>
+> A new software page pins the linter settings that stop an LLM from typing `Any` past the checker; /pi and /astgrep join.
+>
+> • strict-typing.md — settings that turn `Any`, `# type: ignore`, `as any` into hard errors (Python + TS)
+> • /pi — a second-opinion coding agent, alongside /codex
+> • /astgrep — structural (AST) search and rewrite across a codebase
+> • model tiers: sonnet = investigation, opus = implementation; /sub auto-picks the tier
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- software: `strict-typing.md` — config-only settings that make effective
+  typing un-circumventable. Python via basedpyright (`reportAny`,
+  `reportExplicitAny`, `enableTypeIgnoreComments = false`) + ruff (`ANN401`,
+  `PGH003/004`, `RUF100`); TypeScript via `tsconfig` strict-plus +
+  typescript-eslint (`consistent-type-assertions: never`, `no-unsafe-*`,
+  `ban-ts-comment`). Escape-hatch→setting tables + residual-holes section.
+- pi: `/pi` second-opinion skill (pi coding agent) alongside `/codex`;
+  installer provisions pi.
+- astgrep: `/astgrep` structural search/rewrite skill; installer provisions
+  ast-grep.
+
+### Changed
+- skills: model-tier routing — sonnet = investigation, opus = implementation;
+  `/sub` auto-tier router with haiku/sonnet/opus proactive triggers.
+
+### Fixed
+- pi: auth check no longer treats `settings.json` presence as being logged in.
+
 ## [v0.3.40] — 20260703
 
 > kronael v0.3.40 — review give/take router, GitHub/utility skills, hook safety, dockbox 2.1.199
