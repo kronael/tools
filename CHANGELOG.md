@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.42] — 20260706
+
+> kronael v0.3.42 — pi upgraded to gpt-5.5
+>
+> The /pi second-opinion agent now defaults to gpt-5.5 instead of the older gpt-5.2-codex.
+>
+> • pi — default model is now gpt-5.5 (newest served; gpt-5.6 does not exist yet)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- pi: default model `gpt-5.2-codex` → `gpt-5.5` — skill doc + `~/.pi/agent/settings.json`.
+
 ## [v0.3.41] — 20260706
 
 > kronael v0.3.41 — strict-typing runbook, /pi + /astgrep skills
