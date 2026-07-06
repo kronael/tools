@@ -2,7 +2,6 @@
 name: ts
 description: TypeScript/Node.js. NOT for .tsx (use tsx).
 when_to_use: editing .ts files or writing TypeScript
-requires: software
 ---
 
 # TypeScript Style

@@ -1,7 +1,7 @@
 # Code — the engineering baseline
 
 The language-agnostic base every language skill builds on. `go`, `rs`, `py`,
-`ts`, `sh`, `sql`, and `mk` read this first (they say so in their body and
+`ts`, `sh`, and `sql` read this first (they say so in their body and
 carry a `requires: software` hint), then apply their language-specific overlay.
 Nothing here is language-specific; if a rule only holds for one language it
 belongs in that language's skill, not here.
@@ -17,7 +17,9 @@ Single-letter and short variable names are fine where the scope is small and the
 meaning is obvious: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`;
 doubled forms for nested or plural (`kk`, `vv`); and short descriptive words
 (`data`, `msg`). Never use the visually ambiguous singles `o`, `O`, `l`, `I` —
-they read as `0` and `1`.
+they read as `0` and `1`. But those singles are for generic values — indices,
+counts, math. A value that stands for a specific concept keeps that concept's
+name (`url`, `slot`, `epoch`), never collapsed to its bare initial.
 
 Never rename something that already has a name — aliases, intermediate bindings,
 import renames. A rename erases where the value came from and forces the reader
@@ -36,6 +38,12 @@ the project root, with `./log` for debug and smoke logs and `./dist` or
 For user-facing output, lowercase informational messages and Capitalize errors
 (`"checking..."` vs `"Failed: ..."`), and follow the Unix log format:
 `Sep 18 10:34:26 INFO subsystem: message`.
+
+Services and CLI entrypoints write logs to stdout/stderr only. Never install
+file log handlers or pass log-file paths through application code — let the
+supervisor, container runtime, CI, or top-level runner persist logs. If the
+whole orchestration stack is Python, implement artifact capture/compression in
+that top-level Python runner instead of requiring shell redirection.
 
 ## Design
 

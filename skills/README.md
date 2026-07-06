@@ -53,6 +53,8 @@ Macros for instructions you'd otherwise type out every time:
 - **fin**: "finish all pending tasks without stopping for confirmation"
 - **dispatch**: "spawn this prompt as a background subagent and continue"
 - **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
+- **next**: "park a discovered bug/TODO for later without stopping current work"
+- **ans**: "answer-only read-only mode — explain, never edit files or run shell"
 
 These don't add new behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
@@ -76,19 +78,19 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`, `astgrep`) — patterns for a kind of
+  `testing`, `browse`, `diagrams`, `astgrep`, `demo`) — patterns for a kind of
   program or tool. They compose with language skills: a Rust CLI loads
   `rs` + `cli`; a structural codemod loads `astgrep` + the target language.
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`, `demo`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice, README
-  demo recordings.
+  `scavenge`, `codex`) — multi-pass refinement, git flow, memory,
+  scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
-- **Evaluation lenses** (e.g. `hacker-eval`, `credits`, `eye-13yo`) —
-  judge a codebase or practice from a fixed perspective.
+- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `hacker-eval`,
+  `create-eval`, `eye-13yo`) — judge a codebase or practice from a fixed
+  perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
@@ -98,8 +100,10 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks extracted from `ops`. Structure
   rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared prose references** (`writing`, `humanize`) — copy rules and
-  the de-slop pass, cited by `tweet`, `pr-draft`, `readme`, `diary`.
+- **Shared references** (`writing`, `humanize`, `credits`) —
+  `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
+  `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
+  context, loaded as context, not a judgment lens.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -142,10 +146,13 @@ Skip for one-off tasks.
 shape skills (cli, service, data, trader) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
-**quality** — `review`/`code-review` for finding issues; `improve`/`refine` for fixing
-them; `visual` for UI; `testing` for test patterns; `bugs` for the record-don't-fix queue.
+**quality** — `review` covers the whole loop: `review give` produces findings
+(local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
+or a PR's comments); it supersedes the built-in `/code-review` for local work.
+`improve`/`refine` for fixing; `visual` for UI; `testing` for test patterns;
+`bugs` for the record-don't-fix queue.
 
-**output** — `commit`, `pr-draft`, `release`, `gh-comment`. Use once work is verified.
+**output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.

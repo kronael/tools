@@ -1,13 +1,10 @@
 ---
 name: resolve
 description: >
-  Universal entry point for every user message — invoke this BEFORE any
-  domain skill. Domain skills skip context loading; resolve loads diary/facts
-  first so you have project history before acting. It also prevents
-  wrong-skill pattern-matching: you see all skill descriptions together and
-  pick the best one, rather than jumping at the first description that fits.
-  Continuations re-use the prior skill set instead of re-matching from
-  scratch. NOT for first-time skill authoring (use wisdom).
+  Universal entry point — invoke BEFORE any domain skill. Loads diary/facts
+  context first, then picks the best-matching skill instead of jumping at the
+  first fit. NOT for first-time skill authoring (use wisdom).
+when_to_use: "which skill, what should I use, start of task, before acting, route this request"
 user-invocable: false
 ---
 

@@ -2,7 +2,6 @@
 name: tsx
 description: Frontend React/Next.js. NOT for plain TypeScript without JSX (use ts).
 when_to_use: editing .tsx files or writing React components with JSX
-requires: ts
 ---
 
 # Frontend (React / Next.js)

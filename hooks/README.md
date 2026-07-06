@@ -1,7 +1,8 @@
 # Kronael Hooks
 
 Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
-commit/diary nudges. Scripts install to `~/.claude/hooks/`.
+unsafe-command blocks, and commit/diary stop checks. Scripts install to
+`~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
 its `hooks` block is merged into `~/.claude/settings.json` by the install
@@ -13,19 +14,27 @@ hook scripts.
 
 ### prompt_nudge.py (UserPromptSubmit)
 
-Fuzzy-matches prompt keywords and emits a system message telling Claude
-to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
-the source — read the dict, don't duplicate it. Also injects
-`COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions. Meta
-prompts (hook/agent debugging) are skipped so the hook doesn't
-interfere with its own maintenance.
+Exact-matches prompt keywords and emits an informational system message telling
+Claude to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
+the source. Codex second-opinion routing is explicit only (`ask codex`,
+`oracle`, `second opinion`) and suppressed inside Codex so it never nudges
+Codex to invoke itself.
 
-### pretool_nudge.py (PreToolUse: Read|Edit|Write|MultiEdit|NotebookEdit)
+Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
+Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
+with its own maintenance.
+
+### pretool_nudge.py (PreToolUse)
 
 Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
-nudge, once per session+file.
+nudge, once per session+file. It also blocks true unsafe shell commands:
+`git push`, `git reset --hard`, broad `git add`, amend/no-verify commits,
+`rm -rf`, and recursive Codex execution inside Codex.
+
+Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
+`apply_patch`, and `exec_command`.
 
 ### post_tool_nudge.sh (PostToolUse)
 
@@ -63,9 +72,14 @@ instructing the model to preserve the wisdom across the compact.
 
 ### stop.py (Stop)
 
-Blocks the stop with a reason if `git status --porcelain -uno` shows
-uncommitted changes ("consider /commit"; Codex sees `@commit`) or
-`$cwd/.diary/` exists with today's entry missing or >1h stale ("consider
-/diary"; Codex sees `@diary`). Pure script, no LLM call, NEVER pushes.
+Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
+-uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
+the repo diary has today's entry missing or >1h stale ("consider /diary";
+Codex sees `@diary`). When called from periodic `PostToolUse`, the same checks
+emit advisory `hookSpecificOutput.additionalContext` and never block a tool
+call.
+
+The hook may append a blank diary header for missing/stale diary entries. Pure
+script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

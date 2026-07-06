@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import re
 import sys
 
@@ -21,7 +22,6 @@ AGENT_KEYWORDS = {
     'background': '/dispatch',
     'bugs': '/bugs',
     'ceo': '/ceo-eval',
-    'codex': '/codex',
     'create': '/create',
     'cto': '/cto-eval',
     'design': '/specs',
@@ -31,7 +31,6 @@ AGENT_KEYWORDS = {
     'draft': '/pr-draft',
     'eval': '/create-eval',
     'explore': '/explore',
-    'fable': '/fable',
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',
@@ -41,8 +40,6 @@ AGENT_KEYWORDS = {
     'merge': '/merge',
     'microcopy': '/writing',
     'novice': '/eye-13yo',
-    'opus': '/opus',
-    'oracle': '/oracle',
     'pentest': '/hacker-eval',
     'recall': '/recall-memories',
     'refine': '/refine',
@@ -73,39 +70,30 @@ AGENT_KEYWORDS = {
     'browse': '/browse',
 }
 
+CODEX_PATTERNS = [
+    r'\bask\s+codex\b',
+    r'\boracle\b',
+    r'\bsecond\s+opinion\b',
+]
 
-def edit_distance(a, b):
-    if len(a) < len(b):
-        return edit_distance(b, a)
-    if not b:
-        return len(a)
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a):
-        curr = [i + 1]
-        for j, cb in enumerate(b):
-            cost = 0 if ca == cb else 1
-            curr.append(min(curr[j] + 1, prev[j + 1] + 1, prev[j] + cost))
-        prev = curr
-    return prev[-1]
+ESCALATION_PATTERNS = [
+    (r'(?<!\S)/(fable|opus)\b', {'fable': '/fable', 'opus': '/opus'}),
+    (
+        r'\b(?:use|spawn|run|invoke|switch to)\s+(fable|opus)\b',
+        {'fable': '/fable', 'opus': '/opus'},
+    ),
+]
 
 
-def fuzzy_match(word, keywords):
+def exact_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
-    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs)
+    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs).
     if word.endswith('s') and word[:-1] in keywords:
         return keywords[word[:-1]]
     if word + 's' in keywords:
         return keywords[word + 's']
-    if len(word) < 4:
-        return None
-    for kw, agent in keywords.items():
-        if len(kw) < 4:
-            continue
-        dist = edit_distance(word, kw)
-        if dist <= max(1, len(kw) // 4):
-            return agent
     return None
 
 
@@ -115,6 +103,28 @@ META_PATTERNS = [
     r'\b(check|fix|debug)\b.*(hook|agent|nudge|settings)',
     r'invoke.*agent',
 ]
+
+
+def in_codex():
+    return os.environ.get('KRONAEL_IN_CODEX') == '1'
+
+
+def explicit_route(prompt):
+    lower = prompt.lower()
+    if not in_codex():
+        for pattern in CODEX_PATTERNS:
+            if re.search(pattern, lower):
+                return '/codex'
+    for pattern, routes in ESCALATION_PATTERNS:
+        match = re.search(pattern, lower)
+        if match:
+            return routes.get(match.group(1))
+    words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
+    for word in words:
+        matched = exact_match(word, AGENT_KEYWORDS)
+        if matched:
+            return matched
+    return None
 
 
 def main():
@@ -138,17 +148,12 @@ def main():
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
-    words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
-    matched = None
-    for word in words:
-        matched = fuzzy_match(word, AGENT_KEYWORDS)
-        if matched:
-            break
+    matched = explicit_route(prompt)
 
     if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
         parts.append(COMMIT_RULES)
     elif matched:
-        parts.append(f'Invoke {matched}.')
+        parts.append(f'info: Invoke {matched}.')
 
     if parts:
         print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))

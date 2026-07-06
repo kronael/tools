@@ -1,6 +1,7 @@
 ---
 name: browse
 description: Browser automation via the agent-browser CLI. USE when a real browser is needed (login flows, screenshots, page interaction, DOM extraction). NOT for plain HTTP fetches. ALWAYS invoke via Bash tool — this is NOT an Agent subagent type, never pass it to Agent(subagent_type=...).
+when_to_use: "login flow, screenshot, fill form, click button, DOM extraction, scrape page, interact with web app, browser automation, headless browser, Playwright"
 allowed-tools: Bash(agent-browser:*)
 ---
 

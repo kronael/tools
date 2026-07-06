@@ -2,7 +2,6 @@
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
 when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
-requires: software
 ---
 
 # Python
@@ -66,6 +65,7 @@ rules. Below are Python-specific additions and deltas.
 - ALWAYS `@dataclass(frozen=True)` over a heterogeneous tuple used as a dict/map key — positional `key[2]` or `key[:4]` access is a smell; name the fields
 - A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
 - NEVER `kw_only=True` / `InitVar` to dodge dataclass field-ordering — if every caller passes a value the default is dead, so make the field required
+- NEVER use tuple as a generic collection just because the values are not mutated — ALWAYS use `list` for ordinary sequences; reserve tuple for dict/set keys, deliberate immutability boundaries, varargs/returns where positional shape is the point, or small fixed heterogeneous records when a dataclass would be overkill.
 
 ## Datetime
 - `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`

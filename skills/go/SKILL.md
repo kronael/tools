@@ -6,6 +6,9 @@ when_to_use: editing .go files or writing Go code
 
 # Go
 
+Requires the `software` skill's `code.md` for shared naming, style, and design
+rules. Below are Go-specific additions.
+
 ## Concurrency
 
 - Single goroutine owns all state: direct access, no locks, deterministic order

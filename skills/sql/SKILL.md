@@ -2,7 +2,6 @@
 name: sql
 description: SQL queries and schemas. NOT for ORM-only code (use go, py, ts, or rs).
 when_to_use: editing .sql files or writing SQL queries
-requires: software
 ---
 
 # SQL

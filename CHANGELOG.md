@@ -1,5 +1,79 @@
 # Changelog
 
+## [v0.3.40] — 20260703
+
+> kronael v0.3.40 — review give/take router, GitHub/utility skills, hook safety, dockbox 2.1.199
+>
+> Unifies code review into one give/take router, adds GitHub + utility skills, hardens the hooks, and pins dockbox's Claude Code.
+>
+> • `/review` is now a give/take router: `review give` produces findings, `review take` applies them — local by default, or a GitHub PR with `gh` (supersedes /code-review for local work)
+> • new skills: gh-issue, ans, next, htmx, mk, agent-browser
+> • Stop hook: real Stop blocks, the periodic post-tool nudge is advisory; /fin is detected from the command and nags once
+> • unsafe-command PreToolUse blockers + Codex self-invocation suppression
+> • dockbox pins Claude Code to 2.1.199 — rebuild the image to pick it up
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- skills/review: now a give/take router — `SKILL.md` dispatch + `give.md` (the review engine + a GitHub-PR section) + `take.md` (apply findings from a local list or a PR's comments). `review give [gh]` produces findings; `review take [gh]` applies them; supersedes the built-in `/code-review` for local work. Absorbs the short-lived `gh-review`/`gh-fix` (removed, pruned on reinstall). `gh-comment`/`gh-issue` stay as GitHub primitives.
+- skills: added `gh-issue` (file an issue with an approval gate), `ans` (answer-only read-only mode toggle), `next` (park a bug/TODO without stopping), `htmx` (server-rendered HTML + htmx), `mk` (Makefiles), `agent-browser` (browser automation). Indexed in `skills/README.md`.
+- skills: removed the inert `requires:` frontmatter field from 8 skills — it is not a real Claude Code field (the engine ignores it; verified against code.claude.com/docs/en/skills). The in-body "read `software/code.md`" pointer is the actual mechanism; fixed `mk`, which pointed at the removed `software-engineering` skill.
+- skills: `create-code-presentation` (reveal.js code-talk deck) folded into the `create/` router as `web/code-presentation.md` (no standalone `create-*` dir); org-specific paths genericized. Added to the install prune list.
+- skills: rule additions synced from local — `dispatch` gains `sub` triggers, `py` gains a tuple-vs-list rule, `software/code.md` gains a concept-naming rule and a stdout/stderr-only logging rule.
+- hooks: synced the installed hook safety work back to source: exact prompt
+  routing, Codex self-invocation suppression, command blockers for unsafe shell
+  commands, Codex `exec_command`/Claude `Bash` PreToolUse wiring, and tests.
+- hooks: restored the installed Stop hook to the v0.3.38 dual-mode behavior:
+  real Stop emits top-level `decision: block`; periodic PostToolUse emits
+  advisory context only.
+- install: drift detection now uses a checksum manifest instead of mtimes, so
+  future reinstalls do not silently overwrite installed-side fixes.
+- hooks/stop.py: `/fin` is parsed from transcript user messages (an exact `/fin` or its `<command-name>` marker, not a raw substring, so the hook's own "finish mode" wording never re-triggers it) with a per-session one-shot stamp; the transcript tail is read via `deque(maxlen=60)`. Adds `test_stop.py`.
+- dockbox: pin `claude-code` to `2.1.199` (was `@latest`). Rebuild the image (`cd dockbox && make image`) to install it.
+
+## [v0.3.39] — 20260703
+
+> kronael v0.3.39 — skills route to the right place
+>
+> A discoverability pass across the bundle: sibling skills no longer fight over the same trigger words, and the language skills are correctly wired to the shared code baseline.
+>
+> • go/rs now declare `requires: software` and point at the shared `code.md` baseline (they claimed to, but didn't)
+> • De-collided trigger words: wisdom vs scavenge, cto-eval vs hacker-eval, sonnet vs explore
+> • hacker-eval and browse keywords moved into `when_to_use` where routing scans them
+> • README index: `credits` re-bucketed as ambient context, `code-review` marked built-in
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `go` and `rs` skills now carry `requires: software` plus a body pointer to
+  `software/code.md`, matching py/ts/sh/sql; `code.md` no longer claims a
+  nonexistent `mk` skill reads the baseline.
+- De-collided sibling primary triggers that risked routing races: `wisdom` vs
+  `scavenge` ("create a skill"), `cto-eval` vs `hacker-eval` ("audit"), and
+  `sonnet` vs the `explore` skill ("explore") — via cross NOT-clauses and
+  reworded keywords.
+- `hacker-eval` and `browse` moved their retrieval keywords out of
+  `description` into `when_to_use` (both fields are scanned, but the split is
+  the convention); `resolve` gained a `when_to_use` and a tightened description.
+- `skills/README.md` index: `credits` moved from Evaluation lenses to Shared
+  references (it's ambient attribution context, not a judgment lens);
+  `code-review` annotated as built-in (not in `skills/`); the eval family added
+  to the Evaluation-lenses bullet.
+
+## [v0.3.38] — 20260703
+
+> kronael v0.3.38 — demo skill polish
+>
+> The `demo` skill's cross-references now match the bundle's own conventions.
+>
+> • demo: NOT-clause points at the `software` skill, not a data file
+> • skills index: `demo` listed as a build-task Domain skill, not a Workflow verb
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `demo` skill: `description` NOT-clause now names the `software` skill slug
+  instead of the `software/ci.md` data file, per the wisdom NOT-for convention.
+- `skills/README.md`: `demo` moved from the Workflow category (verb-macros) to
+  Domain (a build/tooling pattern, alongside `diagrams` and `browse`).
+
 ## [v0.3.37] — 20260701
 
 > kronael v0.3.37 — Codex fallback repair stays in the installer

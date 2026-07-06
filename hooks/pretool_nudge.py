@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
-# PreToolUse hook: emit a per-language skill nudge based on file extension.
-# Production: silent-fail on any error (NEVER block a tool call). Tests:
+# PreToolUse hook: block unsafe commands and emit per-language file nudges.
+# Production: silent-fail on any error except explicit unsafe-command blocks. Tests:
 # `pytest hooks/pretool_nudge.py` or `make test`.
 import contextlib
 import json
 import os
+import re
 import sys
 
-TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit'})
+TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit', 'apply_patch'})
+COMMAND_TOOLS = frozenset({'Bash', 'exec_command'})
+UNSAFE_COMMAND_PATTERNS = (
+    (r'(?<!\S)git\s+push\b', 'git push'),
+    (r'(?<!\S)git\s+reset\s+--hard\b', 'git reset --hard'),
+    (r'(?<!\S)git\s+add\s+(?:-A|--all)\b', 'broad git add'),
+    (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--amend\b', 'git commit --amend'),
+    (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--no-verify\b', 'git commit --no-verify'),
+    (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
+    (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
+)
 
 EXT_SKILLS = {
     '.go': '/go',
@@ -52,11 +63,62 @@ def extract_path(data: object) -> str:
     ti = data.get('tool_input')
     if not isinstance(ti, dict):
         return ''
+    if data.get('tool_name') == 'apply_patch':
+        path = extract_apply_patch_path(ti)
+        if path:
+            return path
     return ti.get('file_path') or ti.get('notebook_path') or ''
+
+
+def extract_apply_patch_path(tool_input: dict) -> str:
+    patch = tool_input.get('patch')
+    if not isinstance(patch, str):
+        return ''
+    prefixes = (
+        '*** Add File: ',
+        '*** Update File: ',
+        '*** Delete File: ',
+    )
+    for line in patch.splitlines():
+        for prefix in prefixes:
+            if line.startswith(prefix):
+                return line[len(prefix) :].strip()
+    return ''
+
+
+def extract_command(data: object) -> str:
+    if not isinstance(data, dict):
+        return ''
+    ti = data.get('tool_input')
+    if not isinstance(ti, dict):
+        return ''
+    value = ti.get('command') or ti.get('cmd')
+    if isinstance(value, str):
+        return value
+    return ''
+
+
+def unsafe_command_reason(command: str) -> str | None:
+    for pattern, reason in UNSAFE_COMMAND_PATTERNS:
+        if re.search(pattern, command):
+            return reason
+    if os.environ.get('KRONAEL_IN_CODEX') == '1' and re.search(r'(?<!\S)codex\b', command):
+        return 'recursive codex execution'
+    return None
 
 
 def process(data: object) -> dict | None:
     """Pure: parsed hook JSON → hookSpecificOutput dict, or None for silent."""
+    if isinstance(data, dict) and data.get('tool_name') in COMMAND_TOOLS:
+        command = extract_command(data)
+        reason = unsafe_command_reason(command)
+        if reason:
+            return {
+                'decision': 'block',
+                'reason': f'block: unsafe command blocked ({reason}).',
+            }
+        return None
+
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
         return None
     path = extract_path(data)

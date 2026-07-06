@@ -16,7 +16,9 @@ now=$(date +%s)
 
 if (( now - ts >= 600 )) || (( cnt >= 100 )); then
     printf '%s 0\n' "$now" > "$STATE_FILE"
-    printf '%s\n' "$PAYLOAD" | python3 ~/.claude/hooks/stop.py 2>/dev/null || true
+    printf '%s\n' "$PAYLOAD" \
+        | KRONAEL_HOOK_EVENT=PostToolUse python3 ~/.claude/hooks/stop.py 2>/dev/null \
+        || true
 else
     printf '%s %s\n' "$ts" "$cnt" > "$STATE_FILE"
 fi

@@ -33,17 +33,25 @@ If missing, you're in the wrong directory — stop and ask.
 Install is a fast copy only when installed source-owned files are unchanged.
 When local installed edits exist, install becomes a merge workflow.
 
-- ALWAYS run a quiet checksum/`cmp` drift check before backup/copy.
+- Manifest path: `~/.claude/kronael-install-manifest.json`.
+- ALWAYS run a quiet checksum/manifest drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
-- **Determine direction automatically** for every differing file — compare
-  content (`cmp`) AND mtime (installed vs source):
-  - **source-newer** (installed mtime ≤ source, content differs): this is a
-    normal update where the repo advanced. Overwrite silently — do NOT ask.
-    A uniform installed mtime across the differing set (one prior-install
-    timestamp) confirms no hand-edits.
-  - **installed-newer** (installed mtime > source): a real local edit may
-    exist. ONLY here show a diff summary and ask: sync back to repo,
-    overwrite from source, or skip that path.
+- For each source-owned installed path, compare:
+  - current source sha256
+  - current installed sha256
+  - last installed source sha256 from the manifest, when present
+- **Determine direction automatically**:
+  - **unchanged installed** (installed hash equals manifest hash): source-only
+    update. Overwrite silently.
+  - **installed changed only** (source hash equals manifest hash): local edit.
+    Show a diff summary and ask: sync back to repo, overwrite from source, or
+    skip that path.
+  - **both changed** (neither hash equals manifest hash): conflict. Show a diff
+    summary and ask; NEVER overwrite silently.
+  - **no manifest entry** and content differs: treat as installed changed.
+    Ask instead of guessing from mtime.
+- ALWAYS write/update the manifest after a successful copy, recording the
+  installed path and the source hash just installed.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
 
@@ -90,9 +98,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `output-styles/*` → `~/.claude/output-styles/`
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
-     `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
+     `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-code-presentation`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
      `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
-     `software-engineering` (folded into the `software` router as `software/code.md`; language skills now `requires: software`).
+     `software-engineering` (folded into the `software` router as `software/code.md`; language skills point at it in-body),
+     `gh-review`, `gh-fix` (folded into the `review` router — `/review give gh` and `/review take gh`).
      NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
      bundled again — `codex` is the canonical second-opinion skill, `oracle`
      is its alias; the v0.3.26 codex→oracle rename was reverted), or any

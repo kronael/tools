@@ -3,7 +3,7 @@ FROM debian:forky
 ARG TZ=UTC
 ENV TZ="$TZ"
 
-ARG CLAUDE_CODE_VERSION=latest
+ARG CLAUDE_CODE_VERSION=2.1.199
 
 # Base apt deps. gh isn't packaged in forky's apt — add GitHub CLI's
 # official repo before installing it.
