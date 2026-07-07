@@ -169,7 +169,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    **Video rendering** — ask separately (heavy, rarely needed):
    | Tool | Command | Skills |
    |------|---------|--------|
-   | `faster-whisper` | `uv tool install faster-whisper` | /create (video render) |
+   | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 7. **CLI tools** — install the repo's standalone CLI tools so their binaries
    in `~/.local/bin` track the repo (a stale binary is the failure this step
