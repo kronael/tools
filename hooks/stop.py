@@ -101,10 +101,11 @@ def main():
             msg += '\n' + diff.stdout.strip()
         msg += (
             '\nCommit your work — but split it into coherent chunks: one '
-            '[section] commit per logical change, related files together, '
+            'commit per logical change, related files together, '
             'unrelated work in separate commits. Not one mega-commit, not '
             'premature fragments. Run /commit.\n'
-            'Rules: "[section] Message", subject <= 72 chars (overflow -> second '
+            'Rules: "type(scope): Message" (scope optional), subject <= 72 chars '
+            '(overflow -> second '
             '-m body); NEVER add -A, -a, --amend, push, squash, Co-Authored-By, '
             '--no-verify.'
         )

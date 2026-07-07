@@ -109,7 +109,7 @@ language skill pulls in. Read it when writing or reviewing code.
 - ALWAYS make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
 - NEVER improve beyond what's asked
-- ALWAYS use commit format: "[section] Message"
+- ALWAYS use commit format: `type(scope): Message` (scope optional)
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
