@@ -11,12 +11,15 @@ user-invocable: true
 
 # /continue — continue mode (goal mode)
 
-Recall interrupted or abandoned work this session and resume it.
+Resume interrupted work this session; if there is none, look forward.
 
 ## Behavior
 
 - Check memory, diary, agent notifications, and conversation for anything unfinished
 - Resume or relaunch each; report what was resumed
-- If nothing is unfinished: read the diary + `TODO.md`/`BUGS.md` + recent commits,
-  then ASK the user which thread to pick up — present the top candidates, never
-  guess and start work unprompted
+- If nothing is unfinished, do NOT stall — say the session/repo is in a clean
+  state, then help the user look forward:
+  - suggest `/recall-memories` to surface prior context and open threads
+  - read the diary + `TODO.md`/`BUGS.md` + recent commits, then present where to
+    go from here as a few concrete candidate directions
+  - ASK which to pick up; never guess and start work unprompted
