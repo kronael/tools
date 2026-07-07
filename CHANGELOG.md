@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.47] — 20260707
+
+> kronael v0.3.47 — /con becomes /continue
+>
+> The continue-mode skill is now /continue; typing "continue" nudges you to it, and it asks what to resume when nothing's half-finished.
+>
+> • /con renamed to /continue — the full word, matching how you actually ask for it
+> • typing "continue" or "cont" now nudges to /continue (like "fin" → /fin)
+> • /continue with nothing unfinished confirms you're in a clean state, suggests /recall-memories, and lays out where to go next
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Renamed the `con` skill to `continue` (it was briefly `cont`) — the full word reads as the verb and matches the nudge trigger. Old `con`/`cont` dirs added to the install prune list so reinstalls drop the orphans.
+- `/continue` now handles the empty case as a forward-looking mode: when nothing is interrupted, it confirms the session/repo is in a clean state, suggests `/recall-memories`, then reads the diary + `TODO.md`/`BUGS.md` + recent commits and presents where to go from here as candidate directions instead of guessing or stalling.
+- `prompt_nudge` routes `continue`/`cont` → `/continue` (parallel to `fin` → `/fin`), with a guard test.
+
 ## [v0.3.46] — 20260706
 
 > kronael v0.3.46 — reconciled the diverged local and remote lines
