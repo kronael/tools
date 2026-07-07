@@ -1,9 +1,13 @@
+// Command udfix rewrites Unicode box-drawing junction characters in an ASCII
+// diagram so each junction matches the segments that actually touch it. It
+// reads a diagram from stdin and writes the corrected diagram to stdout.
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 )
 
 type sides struct{ up, down, left, right bool }
@@ -39,6 +43,9 @@ func init() {
 	}
 }
 
+// fix rewrites each box-drawing junction in place to the character whose sides
+// exactly match the neighboring cells that connect toward it. Cells outside the
+// box-drawing set (including arrows and ragged short lines) are left untouched.
 func fix(lines [][]rune) {
 	h := len(lines)
 	get := func(r, c int) rune {
@@ -66,22 +73,43 @@ func fix(lines [][]rune) {
 	}
 }
 
-func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	var lines [][]rune
-	for scanner.Scan() {
-		lines = append(lines, []rune(scanner.Text()))
+// process fixes an entire diagram. It preserves the input's trailing-newline
+// state and returns empty output for empty input.
+func process(input []byte) []byte {
+	if len(input) == 0 {
+		return nil
 	}
-	if err := scanner.Err(); err != nil {
+	text := string(input)
+	trailingNewline := strings.HasSuffix(text, "\n")
+	if trailingNewline {
+		text = text[:len(text)-1]
+	}
+	rawLines := strings.Split(text, "\n")
+	lines := make([][]rune, len(rawLines))
+	for i, line := range rawLines {
+		lines[i] = []rune(line)
+	}
+	fix(lines)
+	var b strings.Builder
+	for i, line := range lines {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+		b.WriteString(string(line))
+	}
+	if trailingNewline {
+		b.WriteByte('\n')
+	}
+	return []byte(b.String())
+}
+
+func main() {
+	input, err := io.ReadAll(os.Stdin)
+	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	fix(lines)
-	w := bufio.NewWriter(os.Stdout)
-	for _, line := range lines {
-		fmt.Fprintln(w, string(line))
-	}
-	if err := w.Flush(); err != nil {
+	if _, err := os.Stdout.Write(process(input)); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
