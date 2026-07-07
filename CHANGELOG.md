@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.48] — 20260707
+
+> kronael v0.3.48 — install always offers tools + dockbox on re-run
+>
+> Re-running install now reliably offers the external-tool and CLI-tool/dockbox steps instead of silently skipping them, and stops trying to install faster-whisper as a CLI.
+>
+> • install: every update runs the tool + dockbox asks — a stale binary or an un-offered dep is the failure this prevents
+> • install: faster-whisper is documented as a library pulled via `uv run --with`, not a broken `uv tool install`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- install: on an update, ALWAYS run the external-tools (step 6) and CLI-tools/dockbox (step 7) asks — detect and install any missing core tools, ask once for the heavy security/video batch, and offer the CLI-tool + dockbox (re)install. Previously a re-run could silently skip these, leaving a stale binary or an un-offered dependency.
+- install: corrected the `faster-whisper` entry — it is a library with no CLI entrypoint (so `uv tool install` fails), pulled by the render script via `uv run --with faster-whisper`.
+
 ## [v0.3.47] — 20260707
 
 > kronael v0.3.47 — /con becomes /continue
