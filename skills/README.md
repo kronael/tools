@@ -55,7 +55,7 @@ Macros for instructions you'd otherwise type out every time:
 - **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 - **next**: "park a discovered bug/TODO for later without stopping current work"
 - **ans**: "answer-only read-only mode — explain, never edit files or run shell"
-- **cont**: "resume every interrupted/paused agent or task from this session, then drive everything to completion"
+- **continue**: "resume every interrupted/paused agent or task from this session; if none, ask which thread to pick up"
 - **sweep**: "dispatch a background audit for one bug category across the whole repo, filing each hit in BUGS.md"
 
 These don't add new behavior — they're aliases. The win is muscle

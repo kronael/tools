@@ -24,8 +24,8 @@ def test_fable_requires_explicit_escalation(monkeypatch) -> None:
     assert explicit_route('/fable handle this') == '/fable'
 
 
-def test_continue_routes_to_cont(monkeypatch) -> None:
+def test_continue_routes_to_continue_skill(monkeypatch) -> None:
     monkeypatch.delenv('KRONAEL_IN_CODEX', raising=False)
-    assert explicit_route('continue') == '/cont'
-    assert explicit_route('cont') == '/cont'
+    assert explicit_route('continue') == '/continue'
+    assert explicit_route('cont') == '/continue'
     assert explicit_route('pick up where we left off') is None
