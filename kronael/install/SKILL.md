@@ -101,7 +101,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-code-presentation`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
      `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
      `software-engineering` (folded into the `software` router as `software/code.md`; language skills point at it in-body),
-     `gh-review`, `gh-fix` (folded into the `review` router — `/review give gh` and `/review take gh`).
+     `gh-review`, `gh-fix` (folded into the `review` router — `/review give gh` and `/review take gh`),
+     `con` (renamed to `cont`).
      NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
      bundled again — `codex` is the canonical second-opinion skill, `oracle`
      is its alias; the v0.3.26 codex→oracle rename was reverted), or any

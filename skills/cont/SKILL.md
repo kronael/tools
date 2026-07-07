@@ -1,6 +1,6 @@
 ---
-name: con
-description: /con — goal mode. Recall every interrupted, paused, or
+name: cont
+description: /cont — goal mode. Recall every interrupted, paused, or
   abandoned task/plan/goal from this session and resume each. NOT for just
   pushing the single current in-flight task without stopping (use fin).
 when_to_use: >
@@ -9,7 +9,7 @@ when_to_use: >
 user-invocable: true
 ---
 
-# /con — continue mode (goal mode)
+# /cont — continue mode (goal mode)
 
 Recall interrupted or abandoned work this session and resume it.
 
