@@ -73,13 +73,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
   - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
-- **Update**: skip the first-time questionnaire, but ALWAYS still run the
-  step-6 and step-7 asks — never silently skip tools or dockbox on a re-run (a
-  stale binary or an un-offered dep is the failure this prevents). Every update:
-  detect external tools and install any missing core batch, ask once for the
-  heavy security/video batch, and offer the CLI-tools + dockbox (re)install.
-  Settings still confirm before applying. NEVER replay the full first-time
-  questionnaire otherwise.
+- **Update**: skip the first-time questionnaire, but ALWAYS still run steps 6–7
+  — NEVER silently skip tools or dockbox on a re-run (a stale binary or an
+  un-offered dep is the failure this prevents). Detect external tools + install
+  missing core, ask once for the heavy security/video batch, offer CLI-tools +
+  dockbox (re)install. Settings still confirm before applying.
 
 ## Steps
 
