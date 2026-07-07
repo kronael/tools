@@ -22,6 +22,8 @@ AGENT_KEYWORDS = {
     'background': '/dispatch',
     'bugs': '/bugs',
     'ceo': '/ceo-eval',
+    'cont': '/cont',
+    'continue': '/cont',
     'create': '/create',
     'cto': '/cto-eval',
     'design': '/specs',
