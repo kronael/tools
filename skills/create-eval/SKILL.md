@@ -12,7 +12,8 @@ Generate `.claude/skills/service-eval/SKILL.md` for the current project.
 The service-eval skill runs periodically to read logs, verify
 correctness, and generate improvement specs when issues are found. It
 is the routine-health pass; for adversarial pre-publication review,
-see `cto-eval` (code), `ceo-eval` (demo), and `hacker-eval` (security/red-team).
+see `cto-eval` (code/operations), `ceo-eval` (demo/business), and
+`red-eval` (deep adversarial failure modes).
 
 ## Process
 

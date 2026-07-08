@@ -93,7 +93,7 @@ the authoritative entry. The categories:
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
-- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `hacker-eval`,
+- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
   `create-eval`, `eye-13yo`) — judge a codebase or practice from a fixed
   perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`

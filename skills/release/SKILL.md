@@ -105,6 +105,18 @@ user-invocable: true
    Skip when nothing version-shaped is documented.
 5. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
+5.5. **Critique gate when unclear.** If verification passes but the release is
+   still not obviously good enough from context, run the relevant critique lens
+   before committing:
+   - demo/readiness uncertainty → `ceo-eval`
+   - production/SLA/operations uncertainty → `cto-eval`
+   - hostile input, corrupted state, replay, concurrency, exploitability, or
+     "this needs a no-bullshit deep pass" → `red-eval`
+   - first-run comprehensibility or local tryability uncertainty →
+     `eye-13yo`
+
+   Treat any hold from those lenses as release-blocking unless the user
+   explicitly accepts the risk in the release notes.
 6. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
 7. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
    versions track in their own pyprojects). **Collision-safe, ALWAYS:**
@@ -129,6 +141,8 @@ user-invocable: true
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
 - Default to patch bump unless user says otherwise
 - No changes since last tag → "nothing to release", stop
+- If the release evidence is ambiguous, do not guess. Run the smallest critique
+  lens that can resolve the ambiguity before the release commit.
 - First release with no prior tag → tag whatever pyproject already
   says (typically 0.1.0). Don't fabricate a 0.0.0 → 0.1.0 bump just
   to have a delta.
