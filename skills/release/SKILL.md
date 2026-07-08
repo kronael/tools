@@ -113,7 +113,7 @@ user-invocable: true
    - hostile input, corrupted state, replay, concurrency, exploitability, or
      "this needs a no-bullshit deep pass" → `red-eval`
    - first-run comprehensibility or local tryability uncertainty →
-     `eye-13yo`
+     `13yo-eval`
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.

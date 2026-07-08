@@ -94,7 +94,7 @@ the authoritative entry. The categories:
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
-  `create-eval`, `eye-13yo`) — judge a codebase or practice from a fixed
+  `create-eval`, `13yo-eval`) — judge a codebase or practice from a fixed
   perspective.
 - **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the

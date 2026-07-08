@@ -150,7 +150,7 @@ material.
 - NEVER skip step 3 codex.
 - NEVER let the produced artifact exceed 200 lines.
 - NEVER name artifacts as workflow summaries — ALWAYS a punchy
-  compound that says the point (`last30days`, `eye-13yo`).
+  compound that says the point (`last30days`, `13yo-eval`).
 
 ## Anti-patterns
 
@@ -173,6 +173,6 @@ material.
 
 ## Reference
 
-This skill was itself scavenged + dogfooded — `eye-13yo` was the first
+This skill was itself scavenged + dogfooded - `13yo-eval` was the first
 artifact it produced. The methodology + codex critiques live under
 `<cwd>/docs/<topic>/` per the pipeline above.
