@@ -20,3 +20,9 @@ Rules:
   a liability.
 - NEVER blur CTO and CEO outputs: CTO owns technical production readiness; CEO
   owns ROI and demo judgment.
+- NEVER open a browser or run the UI for the code lens — read source, specs,
+  tests, commit history. If judging correctness *requires* the running system,
+  that gap IS a finding ("the code isn't auditable from source alone").
+- When paired with a CEO eval, keep the two reports separate and run a synthesis
+  pass after: both lenses flagged it → top priority; one lens only → that
+  domain's work; they disagree → escalate to the owner.
