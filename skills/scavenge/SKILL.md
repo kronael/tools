@@ -149,8 +149,11 @@ material.
 - ALWAYS pick the shape by REUSE + INVOCATION pattern.
 - NEVER skip step 3 codex.
 - NEVER let the produced artifact exceed 200 lines.
-- NEVER name artifacts as workflow summaries — ALWAYS a punchy
-  compound that says the point (`last30days`, `13yo-eval`).
+- NEVER name artifacts as workflow summaries. Use a short compound name
+  that states the artifact's durable purpose: the object being evaluated,
+  the lens being applied, or the recurring operation it performs. A good
+  name should still make sense months later in a skill list without needing
+  the original chat context.
 
 ## Anti-patterns
 
@@ -173,6 +176,6 @@ material.
 
 ## Reference
 
-This skill was itself scavenged + dogfooded - `13yo-eval` was the first
-artifact it produced. The methodology + codex critiques live under
-`<cwd>/docs/<topic>/` per the pipeline above.
+This skill was itself scavenged + dogfooded. Methodology notes and codex
+critiques for produced artifacts live under `<cwd>/docs/<topic>/` per the
+pipeline above.
