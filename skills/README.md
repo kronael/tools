@@ -80,7 +80,7 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`, `astgrep`, `demo`, `markdown-converter`) —
+  `browse`, `diagrams`, `astgrep`, `demo`, `markdown-converter`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
   language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
@@ -103,7 +103,8 @@ the authoritative entry. The categories:
   [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative)
   and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
-  `software/` holds engineering runbooks extracted from `ops`. Structure
+  `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
+  and observability. Structure
   rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
