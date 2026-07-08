@@ -40,6 +40,7 @@ For readme agent: list what changed (file + one-line each).
 
 ## Rules
 
+- critique/review/planning/creative second opinions → `oracle`.
 - NEVER do improvement work yourself - delegate to improve agent
 - NEVER summarize user intent - pass original request
 - Explicit scope > vague "review these files"
