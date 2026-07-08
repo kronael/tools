@@ -1,17 +1,21 @@
 ---
 name: bugs
 description: >
-  The `BUGS.md` open-issues queue — entry format, lifecycle, pruning to diary.
-  NOT for the record-don't-fix policy (that's CLAUDE.md Bug Triage Protocol), NOT
-  for resolved-bug history (use /diary), NOT for feature backlog (use TODO.md/specs).
+  The `BUGS.md` review queue — entry format, dated grouping, inline resolution,
+  pruning. NOT for the record-don't-fix policy (that's CLAUDE.md Bug Triage
+  Protocol), NOT for resolved-bug history (that lives in git + CHANGELOG), NOT
+  for feature backlog (use TODO.md/specs).
 when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
 # Bugs
 
-`BUGS.md` at the project root is the **open-issues queue**. Complementary to
-`.diary/` (the resolution log) and `TODO.md` (forward-looking backlog:
-features, refactors).
+`BUGS.md` at the project root is the **review queue: OPEN and DEFERRED items
+only.** Resolved bugs live in git (commit refs) and `CHANGELOG.md` — not here.
+Complementary to `TODO.md` (forward-looking backlog: features, refactors).
+
+(Filename is uppercase `BUGS.md`. Some projects may use lowercase `bugs.md` —
+match whatever the project already has.)
 
 **Policy is in CLAUDE.md "Bug Triage Protocol"** — record during audits, never
 fix on discovery, let the user prioritise. This skill is the file mechanics
@@ -19,58 +23,59 @@ only; do not restate the policy.
 
 ## When NOT to record
 
-- NEVER record when user is currently driving a fix — just fix
+- NEVER record when the user is currently driving a fix — just fix
 - NEVER record trivial / one-shot issues a code comment covers
 - NEVER record feature requests — those go in `TODO.md` or a new spec
 - NEVER duplicate — when an open entry covers the same root cause, append
   context to it instead
 
-## Bug ID format
+## Structure
 
-IDs use a short prefix + number, e.g. `D5`, `P2`. All characters must be
-**base58-safe**: no `0` (zero), `O` (capital O), `I` (capital I), or `l`
-(lowercase L). These are excluded from base58 because they are visually
-ambiguous with each other and with digits.
+The file opens with the one-line purpose, then groups entries under **dated
+status headers** — one block per audit / review / session:
+
+```markdown
+## Status — <YYYY-MM-DD> — <short title of the audit or finding>
+```
+
+Each block collects that one review's findings together. A short lead line
+under the header can note provenance ("Record-only per triage; full evidence
+in <report>. Do NOT fix without founder go.").
 
 ## Entry format
 
-H2 heading per entry. Date in parens; status appended once resolved.
+One **bullet** per bug: bold UPPERCASE-KEBAB id, a `(SEVERITY, type)` tag, an
+em-dash, then the body.
 
 ```markdown
-## <ID> — <one-line title> (<YYYY-MM-DD>[, open | proposed | partial | fixed])
-
-<paragraph: what's broken, observed impact, suspected root cause>
-
-- **Severity:** high | medium | low
-- **Scope:** <subsystem / area>
-- **Affected:** <component(s) or instance(s)>
-- **Source:** <file:line OR log timestamp>
-- **Status:** open | proposed (redesign, needs sign-off) | in-progress | resolved-not-yet-removed
-- **Fix:** <commit SHA if fixed, else blank>
+- **COMPONENT-SHORT-NAME** (SEVERITY, type) — <what's broken>, at `file:line`;
+  <why / failure mode>. **Fix:** <sketch>.
 ```
 
-## Lifecycle
+- **ID** — `COMPONENT-DESCRIPTIVE-NAME`, UPPERCASE-KEBAB, component-prefixed
+  and self-describing (`ME-SNAPSHOT-NO-INDEX-DEDUP-REBUILD`,
+  `GW-OUTBOUND-UNBOUNDED`, `DOC-RT-FLOOR-DRIFT`), not a short opaque code.
+- **SEVERITY** — `CRITICAL | HIGH | MED | LOW` (or `MED-HIGH`). A non-defect
+  carries a marker instead: `(roadmap, not a defect)`, `(design — not a
+  correctness bug)`.
+- **type** — one word for the class: `latency`, `correctness`, `docs`,
+  `design`, `duplication`, `perf`, `ops`, `config`, `bench`, `resource/DoS`,
+  `hardening`, `traceability`.
+- **body** — concrete `file:line` cites, the failure/why, and often a
+  **Fix:** sketch. Multi-line prose is fine for a hard one.
 
-1. **Record** — add an entry when a bug surfaces and a fix isn't authorized.
-2. **Mark in place** — when the fix ships, prepend `✅ FIXED <date>` to the
-   title and fill the **Fix** line with the commit SHA. Keep the entry.
-3. **Prune to diary** — periodically (per release, per refine pass) sweep
-   ✅-marked entries: for each, write a one-line `.diary/YYYYMMDD.md` note
-   citing the bug title + commit SHA (see `/diary`), then delete from
-   `BUGS.md`.
+## Resolution & pruning
 
-Remove an entry only after all three hold: fixed-in-code (or closed
-won't-fix), referenced in the diary, and deployed to affected targets (or
-marked not-deployed). Invoke with `prune` to sweep ✅-marked entries.
+Status is inline on the entry — appended after the tag or bolded at the top:
 
-## Aggregation (optional)
+- `— CONFIRMED` — verified real, still open.
+- `— FIXED <date> (<commitref>)` / `**Status: FIXED <date>.**` — fixed.
+- `— Record-only per triage` — logged, not to be actioned yet.
 
-If a project accumulates issue reports in multiple scratch files, consolidate
-into root `BUGS.md` periodically (per release, or on request via `aggregate`):
+When a whole dated block is fixed, a one-line `**RESOLVED <date> — all N
+FIXED.**` cap with commit refs can precede its removal.
 
-1. Enumerate post-date entries across the scratch files (read-only).
-2. Synthesize into one root section grouped by cross-cutting pattern,
-   debounced against prior aggregations.
-3. Note in each scratch file: "Consolidated to root `BUGS.md` <date>".
-
-Scratch files stay as-is; the owner wipes them after merge.
+**Prune resolved entries out.** FIXED bugs live in git + CHANGELOG, not here —
+once an entry is fixed and committed, delete it. DEFERRED and BY-DESIGN entries
+stay as a standing record (with their marker). Invoke with `prune` to sweep
+FIXED entries.
