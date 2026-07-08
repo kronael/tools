@@ -1,7 +1,7 @@
 ---
 name: haiku
-description: /haiku — launch a cheap, fast background subagent for mechanical single-file work. NOT for multi-step reasoning, design calls, or cross-file refactors (use /sonnet or /dispatch).
-when_to_use: find and replace, rename a field, rename a variable, update a constant, add a column to a table, fix a typo everywhere, grep and report, summarize one file, list all X in file, boilerplate generation, test stub, repetitive struct fields, apply a style rule, one-liner change, swap a class name, update an import path, change a string literal, mechanical task, quick lookup, single-file edit, cheap sub, fast sub, haiku sub
+description: /haiku — launch a cheap, fast background subagent for exploration, research, mapping, grep-style surveys, and bounded mechanical edits. NOT for multi-step reasoning, design calls, or cross-file refactors (use /sonnet or /dispatch).
+when_to_use: explore cheaply, research quickly, map files, map routes, map references, grep and report, summarize one file, list all X in file, find and replace, rename a field, rename a variable, update a constant, add a column to a table, fix a typo everywhere, boilerplate generation, test stub, repetitive struct fields, apply a style rule, one-liner change, swap a class name, update an import path, change a string literal, mechanical task, quick lookup, single-file edit, cheap sub, fast sub, haiku sub
 user-invocable: true
 ---
 
@@ -10,6 +10,7 @@ Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /haiku without being asked when the task is:
 - One file, clear spec, no design judgment needed
+- Cheap exploration, research, mapping, and grep-style surveys
 - Find-and-replace / rename across a bounded set of files
 - Grep + summarize (read-only survey of one area)
 - Boilerplate: test stub, repetitive struct, constant list

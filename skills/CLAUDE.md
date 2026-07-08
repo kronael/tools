@@ -40,6 +40,32 @@ repo CLAUDE.md links to this file.
 - `writing`, `humanize` = shared references cited by prose skills
   (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
 
+## Subagent effort defaults
+
+- `opus` and `fable` subagents default to high effort. Do not make xhigh the
+  default; reserve xhigh for explicit planning work and security/deep-audit
+  work, or when the user explicitly asks for maximum effort.
+- `sonnet` subagents default to high effort for investigations, bug hunts,
+  pre-review, and implementation support. Use medium only when the task is
+  clear enough that `haiku` could plausibly do it, but `sonnet` is chosen for
+  slightly better judgment or context handling.
+- `haiku` subagents are for cheap exploration, research, mapping, grep-style
+  surveys, and mechanical bounded edits. Escalate once the work requires
+  multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
+- NEVER rely on prompt text like "think harder" to set effort. Encode the
+  intended model/effort in the launcher skill or agent definition.
+
+## Prompt examples and context
+
+- Treat examples as steering tokens, not neutral documentation.
+- Prefer explicit rules over examples when the rule can be stated directly.
+- Keep examples scarce, ordinary, and representative; label what property
+  should generalize.
+- Do not keep examples merely as history or proof of dogfooding. They prime
+  future runs and spend context.
+- Move example galleries, research notes, and test cases to cold references;
+  keep preloaded skills as decision surfaces.
+
 ## Editing a router
 
 1. Add/keep content in the cold data file (size is irrelevant — it loads

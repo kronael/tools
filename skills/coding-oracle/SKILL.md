@@ -19,7 +19,7 @@ For creative work (naming, prose, narrative, novel ideation) use
 
 Launch a background `fable` agent (Agent tool, `subagent_type: "fable"`,
 `run_in_background: true`) — see the `fable` skill for the exact call
-shape. The fable agent definition sets xhigh effort; do not substitute a
+shape. The fable agent definition sets high effort; do not substitute a
 default/medium agent for code second opinions. NEVER use a raw `Agent(...)`
 call without going through this routing when you need a code second opinion.
 

@@ -40,28 +40,8 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - NEVER duplicate content between skills or with the global wisdom file.
 - ALWAYS push overflow (anything >50 lines — API docs, tables, deep dives) into adjacent sibling files linked from the SKILL.md, loaded on demand; SKILL.md stays workflow-only. The SKILL.md MAY tell the LLM to force-read a sibling when it's mandatory, not optional.
 
-## Examples and context budget
-
-Research basis: OpenAI and Anthropic prompt guidance treat examples as
-behavior-steering demonstrations; Zhao et al. show few-shot performance shifts
-with prompt/example choice and order; Liu et al. show long-context use degrades
-for facts buried in the middle; Anthropic's context-engineering guidance frames
-agent reliability as curation of the whole token state.
-
-- ALWAYS treat examples as steering tokens, not neutral documentation.
-- ALWAYS prefer explicit rules over examples when the rule can be stated
-  directly.
-- ALWAYS keep examples scarce, ordinary, and representative when they are
-  needed to disambiguate a pattern.
-- ALWAYS label examples as examples and state what property should generalize.
-- NEVER use cute, extreme, stale, one-off, or domain-loaded examples unless
-  that exact style/domain should generalize.
-- NEVER include an example merely as history or proof of dogfooding — it primes
-  the next run and spends context.
-- NEVER bury load-bearing exceptions in the middle of long prose — put critical
-  rules near the top, bottom, or dispatch point.
-- ALWAYS move example galleries, research notes, and test cases to cold
-  references; keep the preloaded skill as a decision surface.
+- For example/context-budget and subagent effort defaults, follow
+  `skills/CLAUDE.md`; keep this skill as the compact writing checklist.
 
 ## Router skills
 
