@@ -1,6 +1,6 @@
 ---
 name: codex
-description: Ask the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. /oracle is an alias for this skill.
+description: Ask the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Invoked by creative-oracle for creative critique; for code critique see coding-oracle (fable) instead.
 when_to_use: "codex, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex. NOT for routine lookups"
 user-invocable: true
 ---
@@ -9,7 +9,11 @@ user-invocable: true
 
 Runs `codex exec` as a subprocess for a one-shot second opinion.
 NEVER use a raw `Agent(...)` call when you need a second opinion — ALWAYS use this skill instead.
-`/oracle` is an alias that points here.
+
+Routing: creative critique (naming, prose, narrative, ideation) → `creative-oracle`,
+which uses this skill for mechanics. Code critique (review, bug-hunt, design) →
+`coding-oracle` (fable), not this skill. `oracle` is a legacy alias that now
+points to `coding-oracle` by default.
 
 ## Invoke
 
@@ -35,6 +39,7 @@ fi
 # --ephemeral: skip session-rollout files (a long batch loop fills the disk otherwise)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
 codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral \
+  -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -45,12 +50,11 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 ## Model — ALWAYS the newest, at high effort
 
 - ALWAYS run on `~/.codex/config.toml`'s default model — codex pins the
-  newest there and auto-migrates via its model-migration notices (currently
-  `model = "gpt-5.5"`, `model_reasoning_effort = "high"`).
+  newest there and auto-migrates via its model-migration notices.
 - NEVER pass `-m` with an older model — that silently downgrades the second
   opinion. Omit `-m` to inherit the newest default.
-- To force max reasoning regardless of config, add
-  `-c model_reasoning_effort="high"`.
+- ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work.
+  Do not trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 

@@ -1,13 +1,18 @@
 ---
 name: oracle
-description: Alias for /codex — ask codex CLI for a second opinion. NOT for routine lookups or Agent delegation.
-when_to_use: "oracle, second opinion, sanity check, ask codex, disagreement after reasoning"
+description: Legacy alias — routes to coding-oracle (fable) for code critique or creative-oracle (codex) for creative critique. NOT for routine lookups or Agent delegation.
+when_to_use: "oracle, second opinion, sanity check, ask oracle, disagreement after reasoning"
 user-invocable: true
 ---
 
 # Oracle
 
-Alias for **/codex**. The full runbook lives in `skills/codex/SKILL.md`.
+`oracle` split in two, by what's being critiqued:
 
-Load that skill and follow it. Auth checks, sandbox flags, adversarial
-framing, and model-pinning rules all live there.
+- **Code** (review, bug-hunt, design/architecture critique) → load
+  `coding-oracle` (routes to fable).
+- **Creative** (naming, prose, narrative, novel ideation) → load
+  `creative-oracle` (routes to codex).
+
+Default to `coding-oracle` if the target is ambiguous but touches code at
+all. Load the matched skill and follow it.
