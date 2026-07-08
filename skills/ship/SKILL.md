@@ -1,125 +1,98 @@
 ---
 name: ship
-description: Ship multi-session work. NOT for one-off or <30min work.
-when_to_use: "ship this feature, track this project"
+description: Drive a spec-sized feature from plan to shipped — fable plans, sonnet implements step-by-step, refine polishes. NOT for one-off or <30min fixes (use improve), and NOT for tracking without driving execution (use TODO.md).
+when_to_use: "ship this feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
 user-invocable: true
 ---
 
 # Ship
 
+Plan → ship → refine, for work that warrants a spec (multi-file,
+multi-session, or architecturally nontrivial). Not for a quick fix —
+use `improve` for that.
+
 ## Folder layout
 
-`.ship/NN-NAME/` — NN is a zero-padded sequential number,
-NAME is UPPERCASE-KEBAB.
+`.ship/NN-NAME/` — NN zero-padded sequential, NAME UPPERCASE-KEBAB.
+Next NN: `ls .ship/ | grep -E '^[0-9]' | tail -1` + 1.
+Plan lives at `.ship/NN-NAME/PLAN.md`.
 
-- Chronological delivery order visible in `ls`
-- Each project self-contained (own PROJECT + PLAN +
-  PROGRESS + tasks.json)
-- No phase grouping — each ship project IS a phase
-- Next NN: `ls .ship/ | grep -E '^[0-9]' | tail -1` + 1
-
-Example: `.ship/01-SIM/`, `.ship/02-SCENARIOS/`,
-`.ship/03-CLI/`, `.ship/04-PERF-VERIFICATION/`,
-`.ship/05-TRADE-UI/`, `.ship/06-PUBLISH/`
+**Check the project's CLAUDE.md for a `.ship/` policy override before
+pruning** — default is gitignored/ephemeral (delete on close-out), but
+some repos keep `.ship/` checked in as a build log. Don't force-delete
+against an explicit override.
 
 ## Workflow
 
-1. **Explore** — Explore agent to understand the task
-2. **Write PROJECT.md** — goals, IO surfaces, tasks,
-   acceptance criteria, out-of-scope
-3. **Write PLAN.md** — file-level concrete changes per task
-4. **Run** — `ship .ship/NN-NAME/PLAN.md`
-5. **Verify** — `make build && make test`
-6. **Update PROGRESS.md** after each session
-7. **Close-out + prune** (see below) — once shipped, distill
-   durable bits to their permanent homes and `git rm -rf`
-   the sprint dir. The default is to delete, not archive.
+1. **Plan (fable)** — spawn one `fable` subagent (foreground) to
+   research the codebase and produce `.ship/NN-NAME/PLAN.md`: a
+   comprehensive spec — architecture, tradeoffs, gaps, and a
+   step-by-step build order where **each step has a green-gate**
+   (build/test/lint command that must pass before the next step).
+   Fable does research and writes the plan only — it does not
+   implement. See `prompt.md` for the planning brief template.
+2. **Confirm** — read PLAN.md yourself, summarize it for the user in
+   a few lines (steps + gates), and get a go-ahead before spending
+   implementation budget. Skip this only if the user already approved
+   the scope.
+3. **Ship (sonnet)** — for each PLAN.md step in order: spawn one
+   `sonnet` subagent to implement that step, then run the step's
+   green-gate yourself. **Never take a sub's report at face value —
+   check the diff.** One code-editing sub at a time on the shared
+   tree; if a step is genuinely parallelizable, isolate each sub in
+   its own `git worktree add --detach` and merge sequentially — never
+   run overlapping edits on the same tree. See `prompt.md` for the
+   implementation brief template.
+4. **Refine** — once all steps are green, run the `refine` skill on
+   the touched paths to finalize (dead code, minimization, polish).
+5. **Close-out** — distill durable bits (decisions → `.diary/`,
+   architecture → `specs/`, release notes → `CHANGELOG.md`) then
+   prune `.ship/NN-NAME/` per the folder-layout note above.
 
-## Close-out + prune (step 7)
+## Guardrails (apply throughout, not just at close-out)
 
-`.ship/` is **scratch**, not an archive. Per the global
-CLAUDE.md rule (`ALWAYS gitignored, ephemeral working dir
-... Clean after shipping: delete completed artifacts`),
-sprint dirs are temporary. When the work ships, distill
-durable bits to their permanent homes, then delete.
+- **Detached HEAD only** — never create or attach a local branch, in
+  the main tree or any worktree. Isolated work uses
+  `git worktree add --detach <path> <ref>`.
+- **Path-scoped commits**, format `[section] message` — never
+  `git add -A`/`-A`-equivalents, never `--amend`, never push, never a
+  `Co-Authored-By` trailer unless the project asks for one.
+- **Green-gate every step** — use the project's real commands (e.g.
+  `make check && make test && make lint`), not "looks right."
+- **Subagent budget**: 1-2 subs typical, never more than 4 concurrent.
+- **No external publishing** (crates.io/npm/PyPI/blog/push) unless the
+  user explicitly asks — respect the project's publishing policy.
 
-**Distillation routing — for each thing in .ship/NN-NAME/,
-ask "where does this belong long-term?":**
-
-| Kind of content | Permanent home |
-|---|---|
-| Decisions, discoveries, bug post-mortems | `.diary/YYYYMMDD.md` (today's entry) |
-| Architectural decisions, design choices | `specs/N/<topic>.md` (move + add `status: shipped`) |
-| Release-notes-worthy changes | `CHANGELOG.md` |
-| Recurring rules / preferences / patterns | project `CLAUDE.md` or `MEMORY.md` |
-| Bench numbers worth tracking | `bench-baseline.json` + a short note in CHANGELOG |
-| Critique / review findings | resolved → fold into diary; deferred → `TODO.md` |
-| Forced-rank punch lists for "next sprint" | `TODO.md` + maybe seed `.ship/NN+1-NAME/PROJECT.md` |
-
-**Then prune:**
-```
-git rm -rf .ship/NN-NAME/
-git commit -m "[chore] ship NN-NAME complete: distilled + pruned"
-```
-
-**Rules:**
-- Don't keep `.ship/NN-NAME/REPORT.md` "for reference."
-  The repo's commit history + diary IS the reference.
-- Don't keep `PROGRESS.md` after the work ships. The
-  progress is `git log` now.
-- Don't archive into `.ship/archive/`. That's the same
-  hoarding under a different name.
-- Exception: if a sprint genuinely produced a long-lived
-  reference document (a spec, a runbook), move it to
-  `specs/` or `docs/` before pruning the rest.
-
-**When NOT to prune:**
-- Sprint is paused mid-flight (not shipped yet) — keep
-  `.ship/NN-NAME/` until it ships or is explicitly
-  cancelled.
-- Critique/audit doc is the input to the NEXT sprint —
-  keep until that sprint starts; then fold into its
-  PROJECT.md and prune the source.
-
-## PROJECT.md format
+## PLAN.md shape (what fable writes)
 
 ```markdown
-# PROJECT.md — <name>
+# NN — <feature name>
 
 ## Goal
-<one paragraph>
+<what and why, one paragraph>
 
-## Non-goals
-- <deferred scope>
+## Architecture / tradeoffs
+<key decisions, alternatives considered, why this one>
 
-## IO Surfaces
-- <external APIs, files, ports, processes touched>
+## Steps
+### Step 1 — <title>
+<files, concrete changes>
+**Gate:** <build/test/lint command that must pass>
 
-## Tasks
-### 1. <title>
-<what / files>
+### Step 2 — ...
 
 ## Acceptance
-- <verifiable check>
+- <verifiable, observable checks — not "looks done">
+
+## Out of scope
+- <deferred items>
 ```
 
 ## Relationship to other tracking
 
 | Location | Purpose |
 |----------|---------|
-| `TaskCreate` | In-session multi-step tracking, <30min |
-| `TODO.md` | Light backlog — items not yet a ship project |
-| `.ship/NN-NAME/` | >1-session work with fixed acceptance |
-| `specs/N/*.md` | Long-lived architectural reference |
-
-Items graduate: `TODO.md` item grows acceptance criteria →
-becomes `.ship/NN-NAME/`. A shipped ship project's
-learnings feed back to `specs/` if architectural.
-
-## Notes
-
-- Design specs (`specs/N/*.md`) can be passed directly to
-  ship if they already contain concrete deliverables, file
-  paths, and acceptance criteria
-- ship runs adversarial verification rounds and auto-commits
-- NEVER spawn readme/improve agents for work ship can handle
+| `TaskCreate` | in-session multi-step tracking, <30min |
+| `TODO.md` | backlog item not yet worth a spec |
+| `.ship/NN-NAME/` | this workflow — spec-sized, multi-step, gated |
+| `specs/N/*.md` | long-lived architectural reference (plan may cite or graduate into these) |
