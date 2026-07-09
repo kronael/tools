@@ -156,8 +156,12 @@ RUN mkdir -p /etc/zsh && printf '%s\n' \
 
 # claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
 # honored; falls back to the symlinked default node otherwise.
+# Strip the host's install-topology keys from the copied config: a native host
+# install (installMethod=native, ~/.local/bin/claude) makes the container's
+# npm-global claude warn "claude … missing or broken" because that path does
+# not exist here. jq keeps auth/onboarding; cp is the fallback if jq fails.
 RUN printf '#!/bin/sh\n\
-[ -f /tmp/host-claude.json ] && cp /tmp/host-claude.json "$HOME/.claude.json"\n\
+[ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative)" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
 [ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true}" > "$HOME/.claude.json"\n\
 export NVM_DIR="/opt/dev-tools/nvm"\n\
 unset NPM_CONFIG_PREFIX\n\
