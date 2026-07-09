@@ -359,10 +359,27 @@ fi
 [[ -n "$gcloud_creds" && -d "$HOME/.config/gcloud" ]] && \
     mounts+=(-v "$HOME/.config/gcloud:/home/dockbox/.config/gcloud:ro")
 
+_gitmounts=()
 for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
+    # Git worktree: its .git is a gitlink file pointing at the main repo's
+    # .git/worktrees/<name>, which lives OUTSIDE this mount, so git would be
+    # dead in the container. Mount the backing common git dir (the shared
+    # object/ref store; the per-worktree gitdir nests under it) at its own
+    # path. A normal repo's common dir is already inside the mount — the
+    # prefix test skips it. If the backing store is gone (a broken gitlink),
+    # warn and continue rather than fail the launch.
+    gc=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
+    [[ "$gc" == "$dir" || "$gc" == "$dir"/* ]] && continue
+    case " ${_gitmounts[*]} " in *" $gc "*) continue ;; esac
+    if gcr=$(realpath -e "$gc" 2>/dev/null); then
+        _gitmounts+=("$gc")
+        mounts+=(-v "$gcr:$gc:rw")
+    else
+        echo "dockbox: worktree git dir missing ($gc) — git disabled in box; repair the .git gitlink" >&2
+    fi
 done
 
 for vol in "${extra_vols[@]}"; do

@@ -93,6 +93,12 @@ Automatic:
 
 Project dirs are mounted at exact paths with read-write access.
 
+If a project dir is a **git worktree**, its `.git` is a gitlink into the
+main repo's `.git/worktrees/<name>`, which lives outside the mount. dockbox
+detects this and also mounts the backing common `.git` at its own path, so
+`git` works inside the box. A broken gitlink (missing backing store) is
+reported and the launch continues without git.
+
 `~/.claude` is rw so the boxed agent can update skills, settings, and
 memory just like a normal session. This is intentional — treat the
 container as a full peer that should continuously improve shared config.
