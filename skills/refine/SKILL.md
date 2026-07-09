@@ -13,8 +13,8 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 
 1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "[checkpoint]")`
 2. **Validate** - run build/test, fix failures
-3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) read a code sample and propose 3-5 orthogonal lenses.
-4. **Review** - parallel read-only `Task(agent="improve")` per (bucket × lens). Prompt: "Lens: <X>. Skills: <list>. Files: <bucket>. Report findings only, NO edits."
+3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) read a code sample and propose 1-5 orthogonal lenses (scaled to the diff — see Rules), each tagged `simplify` (reuse / dead-code / minimization) or `correctness` (bugs, logic errors, edge cases).
+4. **Review** - parallel read-only `Task(agent="improve", model=<by tag>)` per (bucket × lens), report findings only, NO edits. Prompt: "Lens: <X>. Skills: <list>. Files: <bucket>. Report findings only, NO edits."
 4b. **Triage findings as they return** - drop findings that (a) add abstractions, (b) target unused code (grep first), (c) conflict with the original Intent, (d) can't be verified against the codebase. Pass only survivors to Apply.
 5. **Apply** - serial Task(agent="improve") per bucket. Run build/test between buckets — abort bucket on failure. Prompt: "Skills: <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions and cleverness."
 6. **Document** - spawn `Task(agent="readme")`
@@ -45,4 +45,6 @@ For readme agent: list what changed (file + one-line each).
 - NEVER do improvement work yourself - delegate to improve agent
 - NEVER summarize user intent - pass original request
 - Explicit scope > vague "review these files"
+- ALWAYS scale the review to the diff: a few files / tens of lines / one logical change → 1-2 lenses or an inline review in main context; NEVER fan out 3-5 agents over a ~40-line diff. Full bucket × lens fan-out is for large or risky work only.
+- ALWAYS set the review `model=` by lens tag: `simplify` → sonnet, `correctness` → opus. NEVER hunt bugs on sonnet; NEVER burn opus on candidate-finding. (improve pins no model — the call site controls it.)
 - ALWAYS run all steps; NEVER skip commit unless no file changes
