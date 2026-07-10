@@ -83,8 +83,9 @@ the authoritative entry. The categories:
   `testing`, `browse`, `diagrams`, `astgrep`, `demo`, `markdown-converter`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
-  language. `markdown-converter` (any file → Markdown via `uvx markitdown`) is
-  adapted from [steipete/agent-scripts](https://github.com/steipete/agent-scripts).
+  language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
+  `media-ingest` (URL → transcript/audio/video via `yt-dlp`) are adapted from
+  [steipete/agent-scripts](https://github.com/steipete/agent-scripts).
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
