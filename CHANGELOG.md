@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.3.49] — 20260710
+
+> kronael v0.3.49 — new skills, dockbox worktrees
+>
+> New skills ingest media, convert files, evaluate hiring candidates, and design logos; dockbox now works inside git worktrees.
+>
+> • media-ingest — pull a transcript, audio, or video from a YouTube (or most-site) URL with yt-dlp
+> • markdown-converter — turn a PDF, Office doc, EPub, or webpage into Markdown via markitdown
+> • /hiring-eval — evaluate an engineer from their repo, demo, or resume against an evidence bar
+> • create — new logo/emblem mode designs brand marks with a validated method
+> • data-reports — conventions for Vega-Lite multi-panel PNG report scripts
+> • dockbox — git worktrees now work inside the box (backing git dir is mounted)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `media-ingest` skill: ingest media from a URL (YouTube + most sites) via `yt-dlp`/`ffmpeg` — transcript, audio, video, subtitles, or format listing; encodes rolling-VTT dedup and human-subs-first. Adapted from steipete/agent-scripts (credited in README).
+- `markdown-converter` skill: convert a local file (PDF, Office, HTML, EPub, data, image, audio, ZIP) to Markdown via `uvx markitdown`. Adapted from steipete/agent-scripts.
+- `create`: new logo/emblem design mode in the `create` router — generates brand marks and favicons with a validated method.
+- `hiring-eval` skill: evaluate an engineer from artifacts, repo, demo, or resume — evidence order, judgment dimensions, HFT/low-latency addendum, and an explicit "what would change my mind" bar. Deployed for weeks but never in source until now.
+- `data-reports` skill: conventions for Vega-Lite multi-panel PNG report scripts (Bun + vega + sharp). Deployed but previously uncommitted.
+- `dockbox`: mount the backing git dir so host-created worktrees resolve inside the container; strip host install-topology keys from the injected Claude config.
+- `refine`: scale the number of review lenses to diff size and pick the review model by tag. `hooks/commit`: emit the standard `type(scope): message` format.
+
 ## [v0.3.48] — 20260707
 
 > kronael v0.3.48 — install always offers tools + dockbox on re-run
