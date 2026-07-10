@@ -80,9 +80,11 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `testing`, `browse`, `diagrams`, `astgrep`, `demo`) — patterns for a kind of
-  program or tool. They compose with language skills: a Rust CLI loads
-  `rs` + `cli`; a structural codemod loads `astgrep` + the target language.
+  `testing`, `browse`, `diagrams`, `astgrep`, `demo`, `markdown-converter`) —
+  patterns for a kind of program or tool. They compose with language skills: a
+  Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
+  language. `markdown-converter` (any file → Markdown via `uvx markitdown`) is
+  adapted from [steipete/agent-scripts](https://github.com/steipete/agent-scripts).
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
