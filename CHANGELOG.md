@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.50] — 20260712
+
+> kronael v0.3.50 — dockbox worktree docs
+>
+> Explains how to get working git in a dockbox when the project is a git worktree — run in the repo root, or mount the root with `-v`.
+>
+> • dockbox — new "Git worktrees" README section: mount the root and the shared `.git` (plus every worktree under it) comes along
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`: documented the git-worktree workflow in the README. Auto-detect already covers a worktree used as the project dir; for worktrees reached via `-v` (not auto-detected), run dockbox at the repo root or add the root as a `-v` mount so the backing `.git` is present.
+
 ## [v0.3.49] — 20260710
 
 > kronael v0.3.49 — new skills, dockbox worktrees
