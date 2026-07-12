@@ -7,6 +7,7 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 
 | File | Holds | Origin |
 |---|---|---|
+| `cv.md` | Evidence-led CV/resume workflow with visual-style preservation | distilled from production CV revision |
 | `web.md` | Claude Design process/taste + § Sketch (2-3 throwaway variants) | create-claude-design, create-sketch |
 | `web/design-md.md` + `web/design-md/` | Google DESIGN.md token specs | create-design-md |
 | `web/popular-web-designs.md` + `web/popular-web-designs/templates/` | 54 brand design systems | create-popular-web-designs |

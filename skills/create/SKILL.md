@@ -1,7 +1,7 @@
 ---
 name: create
-description: Router for creative artifact generation — web pages, videos, generative art, diagrams. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
-when_to_use: "logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram"
+description: Router for creative artifact generation — CVs, web pages, videos, generative art, diagrams. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
+when_to_use: "CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram"
 user-invocable: true
 ---
 
@@ -15,6 +15,7 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 
 | If the request is | Read |
 |---|---|
+| CV, resume, curriculum vitae, role-targeted application | `cv.md` |
 | landing page, deck, HTML prototype, from-scratch design with taste | `web.md` § Claude Design |
 | reveal.js slides / code talk from a feature-work doc for a knowledge session | `web/code-presentation.md` |
 | throwaway mockups — 2-3 design variants to compare before building | `web.md` § Sketch |
