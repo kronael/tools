@@ -93,11 +93,28 @@ Automatic:
 
 Project dirs are mounted at exact paths with read-write access.
 
-If a project dir is a **git worktree**, its `.git` is a gitlink into the
-main repo's `.git/worktrees/<name>`, which lives outside the mount. dockbox
-detects this and also mounts the backing common `.git` at its own path, so
-`git` works inside the box. A broken gitlink (missing backing store) is
+### Git worktrees
+
+A worktree's `.git` is a gitlink into the main repo's
+`.git/worktrees/<name>`, which lives **outside** the worktree dir. If that
+backing store isn't mounted, `git` is dead in the box.
+
+When the worktree is the **project dir**, dockbox handles this
+automatically — it detects the gitlink and also mounts the backing common
+`.git` at its own path. A broken gitlink (missing backing store) is
 reported and the launch continues without git.
+
+Auto-detect runs on project dirs only, not `-v` mounts. So to work across a
+repo and its worktrees, keep the real `.git` in a mount yourself — run
+dockbox at the **repo root**, or add the **root as a `-v`**:
+
+```bash
+dockbox ~/wk/repo          # root mount: .git plus every worktree under it
+dockbox -v ~/wk/repo .     # carry the root while working in another dir
+```
+
+Worktrees created under the root (e.g. `<repo>/.<name>`) come along for
+free either way — the root mount already holds both them and `.git`.
 
 `~/.claude` is rw so the boxed agent can update skills, settings, and
 memory just like a normal session. This is intentional — treat the
