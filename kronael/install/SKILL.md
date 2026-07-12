@@ -81,7 +81,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 0. **Preflight**. Run `make skills-frontmatter` (then `-fix` if it reports files)
    before copying skills. Then run the sync-protocol drift check for
-   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` and `~/.codex/hooks.json`.
+   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}`, the Kronael-managed
+   block in `~/.codex/AGENTS.md`, and `~/.codex/hooks.json`.
 
 1. **Backup**. ALWAYS copy current
    `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` and
@@ -94,8 +95,12 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - `codex/AGENTS.md` → `~/.codex/AGENTS.md` when running from Codex. This is
-     the Codex equivalent of the selected Claude output style.
+   - Merge the block between `<!-- kronael:start -->` and
+     `<!-- kronael:end -->` from `codex/AGENTS.md` into
+     `~/.codex/AGENTS.md` when running from Codex. Replace only an existing
+     Kronael block; otherwise append it. NEVER overwrite content outside the
+     markers. This makes Codex load Claude guidance in addition to AGENTS
+     guidance and applies the selected terse response policy.
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
      `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-code-presentation`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,

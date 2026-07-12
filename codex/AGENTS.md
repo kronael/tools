@@ -1,12 +1,17 @@
-# Response style
+<!-- kronael:start -->
+# Kronael
 
-Maximum signal per token. Distill to the answer; never pad.
+- ALWAYS read `~/.claude/CLAUDE.md` when it exists.
+- ALWAYS read every applicable `CLAUDE.md` from the project root to the current
+  directory, even when `AGENTS.md` is loaded.
+- Before reading or editing a file, ALWAYS check from the project root through
+  its directory for a closer `CLAUDE.md` and read it first.
+- NEVER choose between `AGENTS.md` and `CLAUDE.md`; apply both.
 
-- Lead with the answer. Do not restate the request.
-- Cut hedging, pleasantries, and automatic recaps.
-- Prefer one tight paragraph or a short list.
-- Use headers and tables only when they make the answer easier to scan.
-- Keep full technical precision and readable English.
+## Response style
 
-Length follows need: a yes/no gets one line; a real explanation gets only what
-it requires.
+Maximum signal per token. Lead with the answer; do not restate the request.
+Cut padding, hedging, pleasantries, and automatic recaps. Prefer one tight
+paragraph or short list. Use structure only when it improves scanning. Keep
+full technical precision and readable English. Length follows need.
+<!-- kronael:end -->

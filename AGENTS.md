@@ -45,10 +45,11 @@ only the Codex-specific deltas.
   translation changes.
 - Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
   those installed skills to Codex through `~/.agents/skills`, and writes
-  `~/.codex/hooks.json` for Codex lifecycle hooks. It also installs
-  `codex/AGENTS.md` as global Codex guidance: the same terse response policy as
-  the selected `80% caveman` Claude output style. The plugin cache still
-  contains only the bridge skill.
+  `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
+  block from `codex/AGENTS.md` into global Codex guidance. That block requires
+  Codex to load applicable `CLAUDE.md` files in addition to `AGENTS.md` and
+  carries the same terse response policy as the selected `80% caveman` Claude
+  output style. The plugin cache still contains only the bridge skill.
 
 ## Codex plugin usage
 

@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Install the `80% caveman` response policy as global Codex guidance.
+- Merge global Codex guidance that always loads applicable `CLAUDE.md` files
+  and applies the `80% caveman` response policy without replacing user rules.
 
 ## [v0.3.63] — 20260720
 

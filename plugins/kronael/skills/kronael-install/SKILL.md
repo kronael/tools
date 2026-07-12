@@ -117,8 +117,10 @@ table. NEVER leave `CLAUDE.md` under `[tui]` or `[tui.model_availability_nux]`
 — move it to the top-level key.
 
 If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
-fallback in the same directory. ALWAYS add a short `AGENTS.md` pointer that
-tells Codex to read `CLAUDE.md` first.
+fallback in the same directory. The installed global Kronael block in
+`~/.codex/AGENTS.md` therefore ALWAYS tells Codex to actively read applicable
+`CLAUDE.md` files in addition to loaded `AGENTS.md` files. For repositories
+shared without Kronael, ALSO add a short project `AGENTS.md` pointer.
 
 Example pointer:
 
