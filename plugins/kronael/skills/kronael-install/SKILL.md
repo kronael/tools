@@ -48,6 +48,7 @@ The source root is the first directory where all of these exist:
 - `codex-hooks.json`
 - `settings-recommended.json`
 - `RECLAUDE.md`
+- `codex/AGENTS.md`
 
 NEVER use the installed plugin cache as the bundle source unless it contains
 all files above; normal plugin installs cache only this bridge skill.

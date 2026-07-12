@@ -44,9 +44,11 @@ only the Codex-specific deltas.
   `kronael/install/SKILL.md` and update the bridge only when Codex-specific
   translation changes.
 - Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
-  global wisdom through `~/.codex/AGENTS.md`, installed skills through
-  `~/.agents/skills`, and lifecycle hooks through `~/.codex/hooks.json`. The
-  plugin cache still contains only the bridge skill.
+  those installed skills to Codex through `~/.agents/skills`, and writes
+  `~/.codex/hooks.json` for Codex lifecycle hooks. It also installs
+  `codex/AGENTS.md` as global Codex guidance: the same terse response policy as
+  the selected `80% caveman` Claude output style. The plugin cache still
+  contains only the bridge skill.
 
 ## Codex plugin usage
 

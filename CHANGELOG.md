@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Install the `80% caveman` response policy as global Codex guidance.
+
 ## [v0.3.63] — 20260720
 
 > kronael v0.3.63 — collision-safe releases + refinements
