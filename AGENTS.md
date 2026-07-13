@@ -123,12 +123,14 @@ awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
 ```
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
-hooks block instead of overwriting (the event wiring is whatever
-`settings-recommended.json` says — don't restate it). For permissions
-and sandbox, show the diff and ask:
+hooks block and `cleanupPeriodDays` instead of overwriting (the event
+wiring is whatever `settings-recommended.json` says — don't restate it).
+`cleanupPeriodDays` is always applied, never asked — the 30-day default
+silently deletes session transcripts at startup. For permissions and
+sandbox, show the diff and ask:
 
 ```sh
-jq -s '.[0].hooks = .[1].hooks | .[0]' \
+jq -s '.[0].hooks = .[1].hooks | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays | .[0]' \
    ~/.claude/settings.json settings-recommended.json \
    > ~/.claude/settings.json.new \
   && mv ~/.claude/settings.json.new ~/.claude/settings.json

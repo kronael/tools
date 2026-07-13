@@ -123,5 +123,6 @@
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   },
-  "outputStyle": "80% caveman"
+  "outputStyle": "80% caveman",
+  "cleanupPeriodDays": 3650000
 }
