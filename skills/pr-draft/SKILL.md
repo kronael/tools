@@ -34,6 +34,10 @@ requires `read:org`; the REST endpoint needs only `repo`:
 gh api -X PATCH repos/<owner>/<repo>/pulls/<N> -f body="$(cat tmp/body.md)" --jq '.body | length'
 ```
 
+NEVER change an existing PR's title — the PATCH sends `body` alone, never
+`title`. Rewrite the title ONLY when the user explicitly asks; otherwise the
+author's title stands even if it doesn't match your body.
+
 STILL NEVER `gh pr create` (new PR) or `gh pr merge`.
 
 ## GitHub Markdown Uploads
