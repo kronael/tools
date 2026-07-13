@@ -63,8 +63,10 @@ dockbox codex           # 3rd terminal: codex inside the same box
 
 The entered session shares the container's `HOME`, mounts, and
 processes, and runs as your host user (not root). The **command** —
-tool, `--model`, `--effort`, args — takes effect; **run-time flags**
-(`-v`, `-H`, `-D`, `-g`, `-e`) do not, because mounts/network/env are
+tool, `--model`, `--effort`, args — takes effect, and **env flags**
+(`-e`, `-g`) are forwarded into the session, so a box first started
+without `-g` still gets the token when a later `dockbox -g` re-enters
+it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
 fixed when the container is created. Use `-n <name>` to force a
 separate, fully-provisioned container instead.
 

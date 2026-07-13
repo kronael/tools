@@ -145,9 +145,9 @@ Examples:
 
 Re-entry: if a dockbox for the project is already running, the command
 runs inside that live container (shared HOME, mounts, processes) instead
-of starting a new one. Tool/model/effort apply; run-time flags (-v, -H,
--D, -g, -e) don't — they belong to the existing container. Use -n <name>
-to force a separate, fully-provisioned box.
+of starting a new one. Tool/model/effort and env flags (-e, -g) apply to the
+session; mount/network flags (-v, -H, -D) don't — they're fixed when the
+container is created. Use -n <name> to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
@@ -291,7 +291,10 @@ enter_session() {
     trap '' TSTP
     local sid="$$"
     docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$sid" 2>/dev/null
-    docker exec -it -u "$(id -u):$(id -g)" -e TERM "$@" "$CONTAINER_NAME" "${cmd[@]}"
+    # Forward run-time env (-e / -g token) into this exec too: unlike mounts and
+    # network, env CAN be set per-exec, so a box first started without -g still
+    # gets the token when a later invocation passes it.
+    docker exec -it -u "$(id -u):$(id -g)" -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" "${cmd[@]}"
     local rc=$? left
     left=$(docker exec "$CONTAINER_NAME" sh -c \
         "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)
