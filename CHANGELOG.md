@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.52] — 20260713
+
+> kronael v0.3.52 — port-to-go transcode skill + language library
+>
+> A language-agnostic "faithful into-Go transcode" skill lands with a per-language quirk library (Python, TypeScript, Java) modelling the seams where each source language behaves unlike Go's naive equivalent.
+>
+> • port-to-go — new skill: differential-testing + golden-trace method, 0–7 phase model, and a divergence root-cause catalogue for byte-for-byte Go ports
+> • port-to-go/py.md, ts.md, java.md — cold-loaded companions: RNG reproducibility, rounding, iteration order, serialization, and string seams per language
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `port-to-go` skill: faithful into-Go transcode of any source language, proven by differential decision traces under a bit-exact float gate. Carries the language-agnostic method — make the source deterministic → 1-to-1 module port → scalar parity harness → swappable-component split → Go drop-in → trace-parity grind → scale/tier → N-way parity — plus the Parity-Source-Of-Truth (worktree oracle), Behavior-Preserving-Refactor-Mirror, Crash-vs-Guard, and running-the-harness sections, and a genericized divergence root-cause catalogue (1-ULP constants, compensated-sum, libm, map-iteration, missing-reset, transport read-limits, dup-id gates, error-path state clears).
+- `port-to-go/py.md`, `port-to-go/ts.md`, `port-to-go/java.md`: cold-loaded per-language behavioral-fidelity references (type/numeric model, RNG reproducibility, rounding, iteration & ordering, equality/null-ish, JSON serialization, strings, harness invocation, seam catalogue). TypeScript and Java are modelled from first principles; all three refine as more porting experience accrues.
+
 ## [v0.3.51] — 20260713
 
 > kronael v0.3.51 — CV authoring mode, PR-title guard
