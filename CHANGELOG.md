@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.54] — 20260713
+
+> kronael v0.3.54 — SKILL.md 200-line rule sharpened
+>
+> A skill's `SKILL.md` never grows past 200 lines — overflow moves to linked sibling files loaded on demand, which the skill can force-read.
+>
+> • wisdom — 200-line cap is firm; deep content lives in adjacent siblings, not a longer preloaded file
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `wisdom` / `CLAUDE.md`: sharpened the 200-line rule — a `SKILL.md` never grows past 200; overflow (>50 lines: API docs, tables, deep dives) moves to adjacent sibling files linked from the `SKILL.md` and loaded on demand (router pattern), which the `SKILL.md` may direct the LLM to force-read.
+
 ## [v0.3.53] — 20260713
 
 > kronael v0.3.53 — dockbox forwards the GH token on re-entry
