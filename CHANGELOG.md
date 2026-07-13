@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.53] — 20260713
+
+> kronael v0.3.53 — dockbox forwards the GH token on re-entry
+>
+> `gh` stopped working inside a re-entered dockbox because the GitHub token wasn't carried in; now `-e`/`-g` env forwards into every session.
+>
+> • dockbox — re-entering a running box with `-g` (or `-e`) now forwards the token, so `gh` works even if the box was first started without it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`: forward run-time env (`-e`, `-g`) into re-entry `docker exec` sessions. A box first started without `-g` never received `GH_TOKEN`, so `gh` failed inside it; env (unlike mounts/network) can be set per-exec. Tip: put `-g` in `~/.dockboxrc` to forward on every launch and re-entry.
+
 ## [v0.3.52] — 20260713
 
 > kronael v0.3.52 — port-to-go transcode skill + language library
