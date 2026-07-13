@@ -35,10 +35,10 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 - ALWAYS use ALWAYS/NEVER; NEVER use SHOULD (too soft).
 - ALWAYS pair NEVER with ALWAYS: "NEVER X — ALWAYS Y instead."
-- ALWAYS keep under 200 lines; skills persist in context all session. EXCEPTION: a deeply specialized single-domain skill loaded only when its domain is active (e.g. `port-to-go`, `humanize`) MAY run to ~1000 lines — its body costs tokens only on invoke, not all session.
+- ALWAYS keep under 200 lines; skills persist in context all session. No exceptions — overflow goes to sibling files, never a longer SKILL.md.
 - NEVER add obvious code examples LLMs already know.
 - NEVER duplicate content between skills or with the global wisdom file.
-- ALWAYS move reference material (>50 lines: API docs, tables) to sibling files; SKILL.md is workflow only.
+- ALWAYS push overflow (anything >50 lines — API docs, tables, deep dives) into adjacent sibling files linked from the SKILL.md, loaded on demand; SKILL.md stays workflow-only. The SKILL.md MAY tell the LLM to force-read a sibling when it's mandatory, not optional.
 
 ## Router skills
 

@@ -96,10 +96,10 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   `skills/CLAUDE.md`. Only port skills that work **locally** — no paid APIs,
   no cloud accounts, no required external apps (local CLI/lib deps like
   ffmpeg, manim, pyfiglet are fine).
-- **Files under 200 lines** — except a deeply specialized single-domain skill
-  (e.g. `port-to-go`, `humanize`), which may reach ~1000 since its body loads
-  only when that domain is active. Skill/CLAUDE content uses **ALWAYS/NEVER**
-  statements and targets non-obvious patterns LLMs miss — not generic advice.
+- **Files under 200 lines** — overflow moves to linked sibling files loaded on
+  demand (router pattern), never a longer SKILL.md. Skill/CLAUDE content uses
+  **ALWAYS/NEVER** statements and targets non-obvious patterns LLMs miss — not
+  generic advice.
 - **NEVER put local paths, org-specific refs, or secrets in source.** Those
   live in `~/.claude/LOCAL.md` (auto-injected by the `local` hook), which is
   never committed.
