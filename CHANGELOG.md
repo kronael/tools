@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.55] — 20260713
+
+> kronael v0.3.55 — install keeps all transcripts
+>
+> Install now always sets `cleanupPeriodDays` so Claude Code stops deleting your session history — the 30-day default silently drops old transcripts at startup.
+>
+> • install — applies the transcript-retention setting on every install, never asks; raises a lower value, never lowers it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `install`: always apply `cleanupPeriodDays` (recommended value 3650000) when merging settings — the 30-day default deletes session transcripts at startup, and the toolkit keeps all history. Added to `settings-recommended.json`; install/`AGENTS.md` merge splices it alongside the hooks block, no prompt.
+
 ## [v0.3.54] — 20260713
 
 > kronael v0.3.54 — SKILL.md 200-line rule sharpened
