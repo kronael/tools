@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.51] — 20260713
+
+> kronael v0.3.51 — CV authoring mode, PR-title guard
+>
+> The create router gains a CV mode for evidence-led resume revision, and PR drafting no longer overwrites a PR's existing title.
+>
+> • create — new CV mode: revise a resume against evidence, keep its visual style, validate the rendered file
+> • pr-draft — leaves an existing PR's title alone unless you ask; only the description is updated
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `create`: new CV authoring mode in the router — evidence-led revision, visual-style preservation, metric semantics, and rendered-artifact validation, cold-loaded as `cv.md`.
+- `pr-draft`: never rewrite an existing PR's title — the PATCH updates the body only; rewrite the title solely when the user explicitly asks.
+
 ## [v0.3.50] — 20260712
 
 > kronael v0.3.50 — dockbox worktree docs
