@@ -12,7 +12,7 @@ help:
 	@echo "make clean    - remove installed binary and docker image"
 
 image:
-	$(SUDO) docker build --build-arg TZ=$(TZ) -t $(IMAGE) -f Dockerfile ..
+	$(SUDO) docker build --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
 
 install: image
 	install -m 755 dockbox $(PREFIX)/

@@ -3,7 +3,7 @@ FROM debian:forky
 ARG TZ=UTC
 ENV TZ="$TZ"
 
-ARG CLAUDE_CODE_VERSION=2.1.199
+ARG CLAUDE_CODE_VERSION=latest
 
 # Base apt deps. gh isn't packaged in forky's apt — add GitHub CLI's
 # official repo before installing it.
@@ -125,10 +125,7 @@ RUN curl -fsSL https://get.sdkman.io | bash
 RUN curl -fsSL https://dot.net/v1/dotnet-install.sh \
   | bash -s -- --install-dir /opt/dev-tools/dotnet --channel LTS
 
-RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
-
 RUN bun install -g \
-  @openai/codex \
   @mariozechner/pi-coding-agent \
   agent-browser \
   pyright \
@@ -227,3 +224,14 @@ exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-in
 
 # World-readable + writable tooling so any runtime UID can use it
 RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox
+
+# claude + codex CLIs last, in a cache-busted layer, so every `make image`
+# refreshes them to latest without re-running the heavier layers above. The
+# Makefile passes a fresh AGENTS_CACHEBUST each build to defeat the layer cache;
+# pin by building with --build-arg CLAUDE_CODE_VERSION=<v>. chmod only the two
+# install trees so the big chmod above stays cached.
+ARG AGENTS_CACHEBUST=0
+RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
+  && npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+  && bun install -g @openai/codex \
+  && chmod -R a+rwX /usr/local/share/npm-global /opt/dev-tools/bun
