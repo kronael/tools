@@ -12,7 +12,7 @@ user-invocable: false
 
 Triage every incoming message. Internal only — never emit the section
 headings below or words like "Classification:", "Continuation —", "New
-task —". Keep all triage reasoning out of the reply.
+task —". Wrap reasoning in `<think>…</think>`.
 
 ## 1. Classify
 
