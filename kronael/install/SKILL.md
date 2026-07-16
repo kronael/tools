@@ -8,7 +8,7 @@ description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge 
 Deploy the bundle into `~/.claude/` so skills, agents, and hook scripts live
 in the user's persistent config and work bare (no `kronael:` prefix). When
 running from Codex, also bridge the installed skills and hook wiring into
-Codex's `~/.agents/skills` and `~/.codex/hooks.json` surfaces.
+Codex's global guidance, `~/.agents/skills`, and `~/.codex/hooks.json` surfaces.
 
 ## Source location
 
@@ -90,7 +90,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 1. **Backup**. ALWAYS copy current
    `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` and
-   `~/.codex/{config.toml,hooks.json}` to `~/.claude/backup/<timestamp>/`
+   `~/.codex/{AGENTS.md,AGENTS.override.md,config.toml,hooks.json}` to
+   `~/.claude/backup/<timestamp>/`
    before overwriting.
 
 2. **Copy assets** (replace strategy):
@@ -121,7 +122,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
 5. **Install Codex bridge**. When running from Codex, or when the user asks
-   for Codex support, install both bridges:
+   for Codex support, install every bridge:
+   - Ensure Codex loads the installed global wisdom. If neither
+     `~/.codex/AGENTS.override.md` nor `~/.codex/AGENTS.md` exists, symlink
+     `~/.codex/AGENTS.md` to `~/.claude/CLAUDE.md`. If that symlink already
+     resolves to the wisdom file, leave it. Any other existing global Codex
+     guidance is a conflict: show it and ask whether to replace, merge, or
+     skip. NEVER rely on project fallback names for global guidance.
    - Ensure `project_doc_fallback_filenames` in `~/.codex/config.toml`
      contains `CLAUDE.md`. ALWAYS keep this as a top-level TOML key: insert it
      before the first `[table]` header, or append `CLAUDE.md` to the existing
@@ -191,7 +198,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 8. **Report**: summary — fast drift result, X skills, Y agents, Z hooks,
    RECLAUDE.md, **pruned dirs/hooks** (name every stale skill/hook removed per
    step 2 — renamed, consolidated, or dead; say "pruned: none" when nothing
-   matched so the user knows removal ran), Claude settings merged, Codex bridge
+   matched so the user knows removal ran), Claude settings merged, Codex global
+   guidance + skills + hooks bridge
    installed/skipped, W external tools, CLI tools installed/skipped. Claude skills are invocable
    bare (`/commit`, `/ship`, `/refine`, ...). Codex bridged skills are
    invocable as `@commit`, `@ship`, `@refine`, ...; remind the user that hook
@@ -206,6 +214,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 - NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
 - NEVER copy Kronael skills into `~/.codex/skills`; Codex uses
   `~/.agents/skills`
+- NEVER duplicate global wisdom into Codex — symlink it, or surface a conflict
 
 ## Update flow
 

@@ -44,9 +44,9 @@ only the Codex-specific deltas.
   `kronael/install/SKILL.md` and update the bridge only when Codex-specific
   translation changes.
 - Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
-  those installed skills to Codex through `~/.agents/skills`, and writes
-  `~/.codex/hooks.json` for Codex lifecycle hooks. The plugin cache still
-  contains only the bridge skill.
+  global wisdom through `~/.codex/AGENTS.md`, installed skills through
+  `~/.agents/skills`, and lifecycle hooks through `~/.codex/hooks.json`. The
+  plugin cache still contains only the bridge skill.
 
 ## Codex plugin usage
 
@@ -80,6 +80,9 @@ After the bridge, installed Kronael skills are invoked in Codex as
 
 Codex compatibility for Claude projects:
 
+- Symlink `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md` so Codex loads the
+  installed global wisdom automatically. A non-empty `AGENTS.override.md`
+  takes precedence and must be handled as a conflict.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` for projects without `AGENTS.md`. The key is
   top-level, not under `[tui]` or any other table.
@@ -143,6 +146,7 @@ not only full installs. In a fresh Codex TUI session, the user must open
 
 **Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
 the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
+`~/.codex/AGENTS.md` resolves to it,
 `~/.agents/skills` bridges to `~/.claude/skills`, and
 `~/.codex/hooks.json` exists. Report counts and the backup path.
 

@@ -1,6 +1,6 @@
 ---
 name: kronael-install
-description: Install/update Kronael (bundle + CLI tools rig/udfix/clp/dockbox); bridge CLAUDE.md, .claude/skills, and Kronael hooks into Codex.
+description: Install/update Kronael (bundle + CLI tools rig/udfix/clp/dockbox); bridge global/project CLAUDE.md, skills, and hooks into Codex.
 ---
 
 # Kronael Install
@@ -61,8 +61,8 @@ bundle.
 
 For Codex Bridge-only requests, discover the source root when the requested
 bridge step needs source-owned files (`codex-hooks.json` or per-skill symlinks).
-Skip source-root discovery only for `CLAUDE.md` config fallback or the simple
-`~/.agents/skills -> ~/.claude/skills` symlink case.
+Skip source-root discovery only for global/project `CLAUDE.md` bridging or the
+simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 
 ## Install
 
@@ -78,18 +78,29 @@ Skip source-root discovery only for `CLAUDE.md` config fallback or the simple
    dirs), verify. Present the questionnaire inline as numbered options. NEVER
    restate or fork those steps here; that file is the only source of truth and
    copies drift.
-5. After successful install from Codex, run the **Global installed skills**
-   bridge and **Codex hooks** bridge below so Codex can see the installed
-   skills, scripts, and lifecycle hooks. This is part of the Codex install
-   path, not an optional extra.
+5. After successful install from Codex, run the global guidance, installed
+   skills, and hooks bridges below. This is part of the Codex install path.
 
 ## Codex Bridge
 
-Use these steps when the user asks Codex to use Claude project guidance,
-Claude project skills, or the globally installed Kronael skills. NEVER copy
-skills; bridge with symlinks.
+Use these steps when the user asks Codex to use Claude global/project guidance
+or installed skills. Bridge with symlinks instead of copying.
 
-### CLAUDE.md
+### Global CLAUDE.md
+
+Codex loads global instructions from `~/.codex/AGENTS.override.md`, or from
+`~/.codex/AGENTS.md` when no override exists. It does not discover
+`~/.claude/CLAUDE.md` globally. If both Codex files are absent, create:
+
+```sh
+ln -s ~/.claude/CLAUDE.md ~/.codex/AGENTS.md
+```
+
+If the symlink already resolves to `~/.claude/CLAUDE.md`, report "already
+bridged". Treat any other existing `AGENTS.md` or `AGENTS.override.md` as a
+conflict and ask whether to replace, merge, or skip. NEVER overwrite it.
+
+### Project CLAUDE.md
 
 To make Claude-only projects work in Codex, add `CLAUDE.md` as a fallback
 instruction filename in `~/.codex/config.toml`:
@@ -216,9 +227,9 @@ symlinks, or skip the bridge.
 Report only:
 
 - canonical install result from `kronael/install/SKILL.md` if install ran
-- Codex bridge paths changed: `~/.codex/config.toml`, `AGENTS.md`,
+- Codex bridge paths changed: `~/.codex/AGENTS.md`, `~/.codex/config.toml`, project `AGENTS.md`,
   `~/.agents/skills`, `.agents/skills`, `~/.codex/hooks.json`
-- whether Codex can now see the installed skills and hook wiring; tell the
+- whether Codex can now see global guidance, installed skills, and hook wiring; tell the
   user to start a new thread, use `/skills` or `@skill-name`, and open `/hooks`
   once to trust changed hooks
 

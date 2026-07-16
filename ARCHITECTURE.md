@@ -37,6 +37,10 @@ identical.
 `kronael/install/SKILL.md` from the GitHub marketplace snapshot and deploys the
 bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
 
+Codex does not discover `~/.claude/CLAUDE.md` as global guidance. The bridge
+exposes it with `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md`; an existing
+`AGENTS.override.md` or unrelated `AGENTS.md` is a merge conflict.
+
 Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
 skills available inside Codex, the install bridge exposes them with
 `~/.agents/skills -> ~/.claude/skills` when possible. If
@@ -50,13 +54,15 @@ The procedure is documented in
 truth for all paths. Codex/non-Claude agents follow
 [`AGENTS.md`](AGENTS.md).
 
-## Codex project bridge
+## Codex guidance bridge
 
 Codex can be configured to consume Claude project conventions without copying
 them:
 
 - `~/.codex/config.toml`: add `CLAUDE.md` to
   top-level `project_doc_fallback_filenames` for Claude-only projects.
+- Global installed wisdom: expose it with
+  `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md`.
 - Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
   `CLAUDE.md`, because Codex loads at most one instruction file per directory.
 - Project `.claude/skills`: expose them to Codex with
@@ -97,6 +103,7 @@ install step provides the smart merge. Each layer does one thing.
 |---|---|
 | `skills/`, `agents/`, `hooks/` | Replace (preserve user-added files not in source) |
 | `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
+| `~/.codex/AGENTS.md` | Symlink to `~/.claude/CLAUDE.md` (conflict, ask) |
 | `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask) |
 | `~/.claude/settings.local.json` | NEVER touch |
 | `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |

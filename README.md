@@ -45,8 +45,8 @@ install path from the GitHub marketplace snapshot.
 
 The Codex plugin is only the installer bridge. It contains one Codex skill
 (`kronael-install`); the Kronael bundle installs to `~/.claude/`, then the
-bridge exposes those installed skills to Codex through `~/.agents/skills` and
-wires Codex lifecycle hooks through `~/.codex/hooks.json`.
+bridge exposes global wisdom through `~/.codex/AGENTS.md`, installed skills
+through `~/.agents/skills`, and lifecycle hooks through `~/.codex/hooks.json`.
 
 **Codex plugin path**:
 
@@ -88,6 +88,8 @@ form.
 
 Codex compatibility for Claude projects:
 
+- Symlink `~/.codex/AGENTS.md` to `~/.claude/CLAUDE.md` so every Codex session
+  loads the installed global wisdom. Global fallback filenames do not do this.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` so Codex reads Claude-only project instructions.
   The key must stay top-level instead of landing inside the current TOML table.
@@ -103,6 +105,9 @@ Troubleshooting:
   `codex plugin add kronael@kronael`.
 - Kronael skills missing in Codex after install: run the bridge prompt above,
   then start a new Codex thread and open `/skills`.
+- Global wisdom missing in Codex: run the bridge prompt, verify
+  `~/.codex/AGENTS.md` resolves to `~/.claude/CLAUDE.md`, then start a new
+  thread. `AGENTS.override.md` takes precedence when present.
 - Kronael hooks missing in Codex after install: run the bridge prompt above to
   refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open
   `/hooks`, and trust the changed command hooks.
