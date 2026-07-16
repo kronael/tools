@@ -64,8 +64,8 @@ For Codex matches, ALWAYS name the originating `cwd` and session/trace path.
 
 ### Step 3 — Deliberate
 
-In `<think>`: list sources, state what each says, identify gaps, verdict
-(use or research fresh).
+Weigh sources privately: what each says, the gaps, verdict (use or
+research fresh).
 
 ALWAYS verify matches against current repo state (git log, file
 contents). ALWAYS mark stale findings explicitly — NEVER act on
