@@ -80,6 +80,11 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/stop.py",
             "timeout": 1000
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/memory_nudge.py",
+            "timeout": 500
           }
         ]
       }
@@ -96,6 +101,11 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/reclaude.py",
+            "timeout": 500
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/memory_nudge.py",
             "timeout": 500
           }
         ]

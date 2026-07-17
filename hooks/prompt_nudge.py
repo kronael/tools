@@ -64,7 +64,6 @@ AGENT_KEYWORDS = {
     'wisdom': '/wisdom',
     'writing': '/writing',
     'readme': '@readme',
-    'learn': '@learn',
     'improve': '@improve',
     'visual': '@visual',
     'distill': '@distill',

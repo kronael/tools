@@ -18,7 +18,9 @@ Exact-matches prompt keywords and emits an informational system message telling
 Claude to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
 the source. Codex second-opinion routing is explicit only (`ask codex`,
 `oracle`, `second opinion`) and suppressed inside Codex so it never nudges
-Codex to invoke itself.
+Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
+invoked only explicitly or by `memory_nudge.py`, never because the word
+appeared in a prompt.
 
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
 Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
@@ -81,5 +83,25 @@ call.
 
 The hook may append a blank diary header for missing/stale diary entries. Pure
 script, no LLM call, NEVER pushes.
+
+### memory_nudge.py (PreCompact + Stop)
+
+Reminds the assistant to evaluate the session for memory-worthy content
+(corrections, confirmed decisions, project facts, reference pointers) and save
+it via the auto-memory mechanism or `/learn` — much rarer than the diary
+nudge, tied to the moment context would otherwise be lost:
+
+- **PreCompact** — always nudges (manual or auto). Emits `systemMessage`, the
+  same idiom `local.py`/`reclaude.py` use to survive compaction. Also writes a
+  per-session `done` marker so the Stop fallback below stays quiet.
+- **Stop** — the fallback for sessions that never compact. Fires **at most
+  once per session**, on the first Stop where either `SESSION_THRESHOLD`
+  (30 min) wall-clock has elapsed OR `STOP_COUNT_THRESHOLD` (3) Stops have
+  occurred. The count path covers *short* sessions that never near 30 min;
+  one/two-turn trivia stays under the count and never nudges. Emits
+  `hookSpecificOutput.additionalContext`, like `stop.py`'s PostToolUse path.
+
+State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. The `start`
+file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

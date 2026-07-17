@@ -9,10 +9,12 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py (commit + diary block)
+Claude stops ──> Stop ──> stop.py       (commit + diary block)
+                      ──> memory_nudge.py (session memory, once/session fallback)
 
-Compaction ──> PreCompact ──> local.py    (LOCAL.md + RULES)
-                          ──> reclaude.py (RECLAUDE.md + preservation note)
+Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
+                          ──> reclaude.py     (RECLAUDE.md + preservation note)
+                          ──> memory_nudge.py (session memory, unconditional)
 ```
 
 Claude event/matcher wiring is owned by `../settings-recommended.json`.
@@ -145,6 +147,29 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 Pure script, no LLM call. NEVER pushes. The hook may append a blank diary
 header when the diary is missing or stale.
+
+### memory_nudge.py (PreCompact + Stop)
+
+**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`, and hook event
+identity (`hook_event`/`hook_event_name`/`hookEventName`).
+**Output:** `PreCompact` → `{"ok": true, "systemMessage": "..."}` (local.py /
+reclaude.py idiom). `Stop` → `hookSpecificOutput.additionalContext` (stop.py
+PostToolUse idiom). Silent otherwise.
+
+**Flow:**
+1. Bail if `stop_hook_active` is set.
+2. On `PreCompact`: always emit the memory-review nudge, then write a
+   per-session `done` marker so the Stop fallback stays silent.
+3. On `Stop`: silent if the `done` marker exists. Otherwise read the `start`
+   file (`started_ts count`); the first Stop just records `now 1` and waits.
+   Each later Stop bumps the count; once `now - started >= SESSION_THRESHOLD`
+   (30 min) OR `count >= STOP_COUNT_THRESHOLD` (3), emit once and mark `done`.
+   The count gate is what reaches *short* sessions that never compact and
+   never approach 30 min.
+
+State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. Much lower
+frequency than stop.py's recurring diary/commit nudges — at most once via
+PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
 
 ## Data Flow
 

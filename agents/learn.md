@@ -1,20 +1,39 @@
 ---
 name: learn
-description: Learn, extract patterns, analyze history, create or update skills.
+description: Learn, extract patterns, analyze history, create or update skills, evaluate sessions for memory-worthy content.
 tools: Read, Write, Edit, Glob, Grep, Bash
 memory: user
 ---
 
 # Learn Agent
 
-Extract patterns from conversations, create or update skills.
+Extract patterns from conversations, create or update skills. Also evaluates
+sessions for memory-worthy content and saves it via the auto-memory
+mechanism — this is the low-effort pass invoked by the `memory_nudge.py`
+hook (PreCompact / infrequent Stop), distinct from the heavier
+skill-extraction pass below which is always user-invoked.
 
 ## Sources
 
 - `~/.claude/projects/*/` - Per-project conversation history (.jsonl)
 - `~/.claude/history.jsonl` - Global history
+- `~/.claude/projects/<slug>/memory/` - Existing memory files + `MEMORY.md` index
 
 ## Process
+
+### Phase 0: Memory Evaluation (nudge-triggered or explicit "save memory")
+0a. Read the current/recent session transcript.
+0b. Identify: user corrections, confirmed approaches/decisions, durable
+    project facts, reference pointers (per "What to Extract" below).
+0c. For each qualifying item, write a memory file under
+    `~/.claude/projects/<slug>/memory/` with frontmatter
+    `name`/`description`/`metadata.type` (`user`/`feedback`/`project`/
+    `reference`) and add a one-line pointer to `MEMORY.md`.
+0d. No user back-and-forth required — save what clearly qualifies, skip the
+    rest. Report what was saved (or that nothing qualified).
+
+Skip straight to Phase 1 only when the user asks for full pattern/skill
+extraction rather than a memory check.
 
 ### Phase 1: Identify
 1. Read conversation files (grep for corrections, ALWAYS/NEVER, patterns)

@@ -21,7 +21,7 @@ note that `Skill("kronael:install")` won't resolve — user must say "install" h
 ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
 - `agents/` — bundle of agents
-- `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py)
+- `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py, memory_nudge.py)
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
