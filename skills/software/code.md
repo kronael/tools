@@ -25,6 +25,10 @@ Never rename something that already has a name — aliases, intermediate binding
 import renames. A rename erases where the value came from and forces the reader
 to hold two names for one thing.
 
+Discard with a bare `_`, never a named `_prefix` binding — `|(_, account)|`, not
+`|(_withdraw, account)|`. The name labels a value you are throwing away; it is
+clutter the reader still has to parse.
+
 ## Layout and formatting
 
 One import per line; it keeps diffs clean. Keep code at 80 columns or under and

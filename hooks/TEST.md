@@ -34,16 +34,17 @@ echo '{"prompt": "recap_session"}'   | python3 ~/.claude/hooks/local.py
 
 Expected: exit 0, no `systemMessage` in output.
 
-## 4. Keyword Routing (fuzzy match)
+## 4. Prompt Routing (exact match)
 
 ```bash
 echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@improve" && echo "✓ PASS"
 echo '{"prompt": "visual"}'       | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@visual"  && echo "✓ PASS"
 echo '{"prompt": "ship"}'         | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/ship"    && echo "✓ PASS"
 echo '{"prompt": "diary"}'        | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/diary"   && echo "✓ PASS"
+echo '{"prompt": "write code"}'   | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "codex" && echo "✗ FAIL" || echo "✓ PASS"
 ```
 
-Expected: all four print `✓ PASS`.
+Expected: all five print `✓ PASS`.
 
 ## 5. Negation Detection
 
@@ -91,8 +92,9 @@ echo "{\"prompt\": \"don't continue\", \"cwd\": \"/tmp\"}"       | python3 ~/.cl
 # Clean tree, no diary dir → silent
 echo '{"cwd": "/tmp"}' | python3 ~/.claude/hooks/stop.py
 
-# Diary dir with no entry for today → nudge
+# Git repo with diary dir and no entry for today → warning, no file write
 mkdir -p /tmp/stoptest/.diary
+git -C /tmp/stoptest init
 echo '{"cwd": "/tmp/stoptest"}' | python3 ~/.claude/hooks/stop.py
 rm -rf /tmp/stoptest
 ```

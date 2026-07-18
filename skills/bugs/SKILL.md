@@ -1,15 +1,15 @@
 ---
 name: bugs
 description: >
-  The `bugs.md` open-issues queue — entry format, lifecycle, pruning to diary.
+  The `BUGS.md` open-issues queue — entry format, lifecycle, pruning to diary.
   NOT for the record-don't-fix policy (that's CLAUDE.md Bug Triage Protocol), NOT
   for resolved-bug history (use /diary), NOT for feature backlog (use TODO.md/specs).
-when_to_use: "log this bug, open issues, what's broken, what's the queue, prune bugs.md, audit-record-only, debugging-but-not-fixing-now"
+when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
 # Bugs
 
-`bugs.md` at the project root is the **open-issues queue**. Complementary to
+`BUGS.md` at the project root is the **open-issues queue**. Complementary to
 `.diary/` (the resolution log) and `TODO.md` (forward-looking backlog:
 features, refactors).
 
@@ -57,7 +57,7 @@ H2 heading per entry. Date in parens; status appended once resolved.
 3. **Prune to diary** — periodically (per release, per refine pass) sweep
    ✅-marked entries: for each, write a one-line `.diary/YYYYMMDD.md` note
    citing the bug title + commit SHA (see `/diary`), then delete from
-   `bugs.md`.
+   `BUGS.md`.
 
 Remove an entry only after all three hold: fixed-in-code (or closed
 won't-fix), referenced in the diary, and deployed to affected targets (or
@@ -66,12 +66,11 @@ marked not-deployed). Invoke with `prune` to sweep ✅-marked entries.
 ## Aggregation (optional)
 
 If a project accumulates issue reports in multiple scratch files, consolidate
-into root `bugs.md` periodically (per release, or on request via `aggregate`):
+into root `BUGS.md` periodically (per release, or on request via `aggregate`):
 
 1. Enumerate post-date entries across the scratch files (read-only).
 2. Synthesize into one root section grouped by cross-cutting pattern,
    debounced against prior aggregations.
-3. Note in each scratch file: "Consolidated to root `bugs.md` <date>".
+3. Note in each scratch file: "Consolidated to root `BUGS.md` <date>".
 
 Scratch files stay as-is; the owner wipes them after merge.
-

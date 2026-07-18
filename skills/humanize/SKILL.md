@@ -492,6 +492,25 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 
 **Fix:** fold the aside into the sentence, promote it to its own sentence, or cut it.
 
+
+### 31. Function-Naming Headings and Labels
+
+**Signs to watch:** headings that name a section's rhetorical job instead of its topic — "The business case", "The engineering evidence", "Evidence, not claims"; also bold lead-in labels ("**Cost and risk posture.**") and audience-addressed sections ("For the CEO", "For developers:").
+
+**Problem:** AI writes headings that name the rhetorical function; humans write headings that name the topic. "For the CEO" or "The engineering evidence" is how people *think* about a document's structure, not how they *write* it. It's a strong AI tell, sibling to "Conclusion"-style scaffolding leaking into the prose.
+
+**Before:**
+> ## The business case
+> ## The engineering evidence
+> ## Evidence, not claims
+
+**After:**
+> ## Why run it
+> ## How it holds up
+> ## What it costs to try
+
+**Fix:** name the topic or the reader's actual question, not the section's role in your argument. Same for bold lead-in labels and "For X:" openers.
+
 ---
 
 ## Process

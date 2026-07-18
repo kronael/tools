@@ -42,6 +42,7 @@ NEVER trust existing doc text — ALWAYS grep every referenced function/variable
 |---------|-------|
 | Installation, usage, examples | README |
 | Component design, data flows | ARCHITECTURE |
+| Deployment, CI, container/k8s config | ops/infra repo |
 | Language-specific patterns | skills (rs, py, sql) |
 | Project gotchas, ALWAYS/NEVER rules | CLAUDE.md |
 
@@ -53,6 +54,7 @@ CLAUDE.md target: <200 lines.
 - NEVER duplicate content across files — ALWAYS reference instead
 - NEVER use marketing language ("powerful", "flexible", "robust", "easy", "simple") — one sell sentence in README intro only
 - NEVER call SPEC.md "documentation" — it's a specification
+- NEVER document how the service is deployed in its README — container base image, Dockerfile, CI, k8s manifests, deploy steps — ALWAYS keep the README to how to RUN it (install, usage, running, config) and route deploy details to the ops/infra repo
 - ALWAYS keep README under 150 lines, ARCHITECTURE under 300, CLAUDE.md under 200
 - ALWAYS use concrete copy-paste examples in README
 - ALWAYS fix doc to match code, NEVER the reverse
