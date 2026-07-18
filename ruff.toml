@@ -1,6 +1,12 @@
-target-version = "py314"
+target-version = "py314"  # CLI tools run under uv (requires-python >=3.14)
 line-length = 100
 exclude = [".venv", "tmp", "tweetfeed_cookies", "skills/create"]  # skills/create = ported bundle data, kept verbatim
+
+[per-file-target-version]
+# Hooks run under the USER's own python3, not uv's 3.14. Pin them to an old
+# floor so ruff-format never rewrites to 3.14-only syntax (e.g. paren-free
+# `except A, B:` per PEP 758), which would SyntaxError on any pre-3.14 python.
+"hooks/**" = "py39"
 
 [lint]
 select = ["ALL"]
