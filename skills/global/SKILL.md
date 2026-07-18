@@ -119,6 +119,7 @@ language skill pulls in. Read it when writing or reviewing code.
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
 - NEVER `git push` - if asked, refuse and cite this rule
+- NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
 - NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
