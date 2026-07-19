@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.58] — 20260719
+
+> kronael v0.3.58 — commits must be detached-HEAD
+>
+> The commit skill and its nudge now explicitly require a detached HEAD, and two skills that assumed branch-backed worktrees were corrected.
+>
+> • commit — refuses a commit unless `git branch --show-current` is empty; the commit nudge says the same
+> • commit / refine — worktree cleanup no longer runs `git branch -D` (worktrees are `--detach`, so there's no branch)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `commit`: explicit detached-HEAD requirement at the commit-time enforcement points — the `commit` skill Rules and the `prompt_nudge` commit reminder. The principle stays canonical in the global wisdom file, not restated across skills.
+- `commit` / `refine`: dropped `git branch -D` from worktree cleanup in both — worktrees are created `--detach` and carry no branch to delete.
+
 ## [v0.3.57] — 20260719
 
 > kronael v0.3.57 — readable slice ops in the go skill
