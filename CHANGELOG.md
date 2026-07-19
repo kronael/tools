@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.3.60] — 20260720
+
+> kronael v0.3.60 — tighter replies, tougher discipline
+>
+> Replies cap at ~17 lines with the point last, /merge now finishes rebases and cherry-picks, and a fail-loud engineering discipline joins the wisdom.
+>
+> • Replies default to ~17 lines and end on the single most important point (mobile-terminal friendly)
+> • /merge now detects and finishes a rebase or cherry-pick, not just a merge — with --skip/--abort
+> • New wisdom: fail loud to the user, retry only transient errors, fix causes, sign-off redesigns
+> • refine derives review lenses from the live wisdom and tags each simplify or correctness
+> • install activates the output style and propagates the wisdom to pi via ~/.pi/agent/AGENTS.md
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Response style: the global wisdom and the `80% caveman` output style now cap a normal reply to ~17 lines (ideal 12, max 20) and close on the single most important point — on a mobile terminal the last line is what stays visible.
+- `merge`: detects the in-flight operation (merge / rebase / cherry-pick / revert) from `.git` state and drives it to completion — `--continue` in a loop, `--skip` for an obsolete replayed commit, `--abort` to bail. Documents that in a rebase the conflict sides are reversed (`HEAD` is the base, `>>>>>>>` is the replayed commit).
+- Wisdom: new **System-change discipline** section — amend the original (no parallel second path), fail loud to the user (never swallow errors), retry only transient errors, fix causes not symptoms, and record redesigns in `BUGS.md` as `proposed` for sign-off before shipping.
+- `refine`: review lenses are now derived from the live wisdom (1-3 per sub), tagged `simplify` / `correctness` with model-by-tag routing; redesign findings route to `BUGS.md`. `bugs`: adds the `proposed` status to the entry format.
+- `install`: sets the live `~/.claude/settings.json` `outputStyle` (without the key the shipped style never activates) and symlinks `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md` so the wisdom reaches pi.
+- Known issue logged (`BUGS.md`): `uv tool install faster-whisper` fails — it's a library with no CLI entrypoint.
+
 ## [v0.3.59] — 20260720
 
 > kronael v0.3.59 — richer linter + runtime-checker guidance for go/rust/python
