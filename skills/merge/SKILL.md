@@ -1,7 +1,7 @@
 ---
 name: merge
-description: Resolve git merge conflicts. NOT for ambiguous semantic conflicts (resolve manually).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts"
+description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion. NOT for ambiguous semantic conflicts (resolve manually).
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick"
 user-invocable: true
 ---
 
@@ -27,15 +27,20 @@ Before resolving ANYTHING, size the merge and decide whether to ask first.
 - Only skip the ask for small, obviously-trivial merges (a handful of
   complementary/formatting conflicts). When in doubt, ask.
 
-## 1. Orient
+## 1. Orient — which operation is in flight
 
-`git log --oneline -5`, check `MERGE_HEAD` / stash if present.
+Detect the operation FIRST; it decides the finish command AND which side is "ours":
 
-Identify:
-- **HEAD branch**: what we had (usually the feature branch — the more important one)
-- **Incoming**: what we're merging in (often origin/main simplifications)
+| `.git/` state | Operation | Finish command | `<<<<<<< HEAD` side is |
+|---|---|---|---|
+| `MERGE_HEAD` | merge | `git commit` | your current branch (ours) |
+| `rebase-merge/` or `rebase-apply/` | rebase | `git rebase --continue` | rebased-ONTO base + already-replayed commits |
+| `CHERRY_PICK_HEAD` | cherry-pick | `git cherry-pick --continue` | the branch you're picking ONTO |
+| `REVERT_HEAD` | revert | `git revert --continue` | current branch |
 
-If unclear, state what you see and ask which branch takes priority.
+`git status` also names it ("You are currently rebasing"). **In a rebase/cherry-pick the sides are REVERSED vs a merge**: `HEAD` is the target you're replaying onto, and the `>>>>>>>` label is the commit being applied — so "keep HEAD" means keep the base, NOT your feature work. Read the `>>>>>>>` commit subject to know what's being applied.
+
+`git log --oneline -5`; note the merge base / rebased-onto commit. For a merge, identify HEAD (usually the feature branch) vs Incoming (often origin/main simplifications). If unclear, state what you see and ask which side takes priority.
 
 ## 2. Find all conflicts
 
@@ -86,16 +91,33 @@ After resolving all conflicts:
 3. Check for missing module declarations
 4. Check for files deleted by one branch that the other needs
 
-## 7. Commit
+## 7. Finish — by operation type
 
-```bash
-git add -u
-git commit -m "[merge] Resolve conflicts: <brief summary>"
-```
+Stage resolutions (`git add <resolved files>`), then finish per step 1's operation:
 
-If pre-commit reformats, retry once.
+- **merge**: `git commit -m "[merge] Resolve conflicts: <summary>"`.
+- **rebase**: `GIT_EDITOR=true git rebase --continue` (GIT_EDITOR avoids the
+  message editor; a `pick` reuses its original message). This is a **LOOP** — a
+  rebase replays many commits, so the next may conflict immediately: re-run
+  steps 2-6 and `--continue` again until `git status` shows no rebase in flight.
+- **cherry-pick**: `git add`, then `GIT_EDITOR=true git cherry-pick --continue`;
+  loops the same way for a multi-commit pick.
+
+Escape hatches (per replayed patch):
+- `git rebase --skip` (or `cherry-pick --skip`) when a replayed commit is
+  **obsolete** — its change is already on the base, or its target no longer
+  exists (an old refactor rebased onto a newer base). Confirm it adds nothing
+  novel FIRST; skipping drops that commit.
+- `git rebase --abort` / `cherry-pick --abort` / `git merge --abort` to bail
+  entirely to the pre-op state. NEVER leave a half-finished rebase.
+
+If pre-commit reformats (merge only), retry once. NEVER `--amend` / `--no-verify` / `push`.
 
 ## Priority rule (when user says "prioritize HEAD / feature branch")
+
+In a **rebase/cherry-pick** your feature work is the `>>>>>>>` (replayed) side,
+NOT HEAD — so "keep my work" means keep the incoming side, the reverse of a
+merge. Map "feature branch" to the side that actually carries the user's commits.
 
 - ALWAYS keep HEAD's features and additions
 - ONLY take incoming changes that are pure simplifications:
