@@ -37,7 +37,7 @@ ambiguous with each other and with digits.
 H2 heading per entry. Date in parens; status appended once resolved.
 
 ```markdown
-## <ID> — <one-line title> (<YYYY-MM-DD>[, open | partial | fixed])
+## <ID> — <one-line title> (<YYYY-MM-DD>[, open | proposed | partial | fixed])
 
 <paragraph: what's broken, observed impact, suspected root cause>
 
@@ -45,7 +45,7 @@ H2 heading per entry. Date in parens; status appended once resolved.
 - **Scope:** <subsystem / area>
 - **Affected:** <component(s) or instance(s)>
 - **Source:** <file:line OR log timestamp>
-- **Status:** open | in-progress | resolved-not-yet-removed
+- **Status:** open | proposed (redesign, needs sign-off) | in-progress | resolved-not-yet-removed
 - **Fix:** <commit SHA if fixed, else blank>
 ```
 

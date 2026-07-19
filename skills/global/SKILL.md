@@ -110,6 +110,13 @@ language skill pulls in. Read it when writing or reviewing code.
 - `BUGS.md` is the review queue — log it, move on, let the user prioritise
 - ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
+## System-change discipline
+- **No duplication — amend the original.** Before adding a mechanism (guard, helper, table, log site, config), grep for an existing one. If it exists, fix/extend the ORIGINAL; NEVER add a parallel second path — two paths drift. If the original is wrong, fix it or call it out; NEVER route around it.
+- **Fail loud, fail to the user.** An error on a user-facing path MUST surface to the user (thrown / returned non-2xx / delivered to the chat), not just logged — a logged-but-invisible failure is still silent. NEVER swallow (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
+- **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
+- **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
+- **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off BEFORE you ship. Only symptom-level loud-logging ships inline.
+
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
