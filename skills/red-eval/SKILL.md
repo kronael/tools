@@ -33,13 +33,24 @@ Use one to four focused passes. Prefer separate passes when the project is
 large; keep them serial in the main context when the target is small.
 
 1. **Claim busting** - pick the claims that would be costly if false and
-   verify from code, tests, fresh output, or logs.
-2. **State and durability** - crash/restart, partial writes, replay, idempotency,
-   sequence gaps, corruption, migrations, recovery.
-3. **Trust boundaries** - auth/authz, input validation, protocol parsing,
-   dependency/supply-chain, secrets, unsafe code, shell/database/path edges.
-4. **Pressure and abuse** - concurrency, slow consumers, backpressure, resource
-   limits, rate limits, infinite retries, queue growth, timeout behavior.
+   verify from code, tests, fresh output, or logs. For the most valuable
+   claim, sketch a quick attack tree (Schneier): the claim's failure at the
+   root, OR the paths beneath it, attack the cheapest leaf first — it
+   replaces random poking with directed search.
+2. **State and durability** - crash/restart, torn/partial writes (crash
+   between write, fsync, and rename; fsync-error semantics), replay,
+   idempotency, sequence gaps, corruption, migrations, recovery, split-brain
+   after partition, leases + clock skew + process pauses (wall clocks and GC
+   stalls lie - the Jepsen/Kingsbury canon).
+3. **Trust boundaries** - sweep each boundary with STRIDE (spoofing,
+   tampering, repudiation, info disclosure, DoS, elevation) as the coverage
+   checklist, not the report format: auth/authz, input validation, protocol
+   parsing, dependency/supply-chain, secrets, unsafe code,
+   shell/database/path edges.
+4. **Pressure and abuse** - concurrency, slow consumers, backpressure,
+   resource limits, rate limits, infinite retries, queue growth, timeout
+   behavior. Walk Deutsch's eight fallacies against every remote call:
+   reliable network? zero latency? stable topology? one administrator?
 
 For each pass, report only actionable findings with:
 
@@ -50,7 +61,10 @@ Expected: <what should happen>
 Observed/risk: <what happens or can happen>
 ```
 
-Severity: `critical`, `high`, `medium`, `low`, `info`.
+Severity: `critical`, `high`, `medium`, `low`, `info`. Calibrate by
+reachability × blast radius: `critical`/`high` require a named, reachable
+trigger (entry point + preconditions an attacker or unlucky runtime can
+actually meet). No reachable path → `medium` at most, filed as hardening.
 
 ## Required Checks
 
@@ -60,6 +74,9 @@ Severity: `critical`, `high`, `medium`, `low`, `info`.
   runtime behavior.
 - Verify at least five load-bearing claims when the project makes claims.
 - Check whether failures are visible to operators, not just handled internally.
+- When the system can run, prefer an injected fault over a source-only
+  hypothesis (chaos discipline: state the steady-state expectation first,
+  then inject; without an observed deviation it stays a hypothesis).
 - Separate confirmed findings from hypotheses. Hypotheses need the next command
   or file that would confirm them.
 

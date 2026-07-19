@@ -23,8 +23,14 @@ Do not confirm by re-reading the same doc. Verify against code or fresh output.
 
 ### 2. Trace three attack scenarios
 
+A bounded three-trace sample for the SLA bet — not the deep sweep. If every
+trace draws blood, stop and recommend a dedicated `red-eval` instead of
+extending this audit.
+
 For each: describe the attack, trace from entry point through code to where it
-is caught or missed, and cite file:line. Useful categories:
+is caught or missed, and cite file:line. Rank by reachability — name the real
+entry point an attacker or operator uses to reach the flaw; a flaw with no
+reachable path is a hardening note, not a headline finding. Useful categories:
 
 - Malicious peer on a trusted network.
 - Crash + restart with partial state.
@@ -66,5 +72,6 @@ Pattern references: `.ship/20-CTO-CEO-REVIEW-2/CTO-REPORT.md` and
 - Re-reading docs and pronouncing them correct.
 - Bullet lists of "things to consider" with no verdict.
 - CONFIRMED claims without grep / bench evidence.
+- Findings ranked by cleverness instead of reachability.
 - Grade above 70 with critical findings unaddressed.
 - Grade below 40 without naming the subsystem that needs rewriting.

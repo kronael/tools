@@ -31,6 +31,8 @@ npx jest --coverage
 
 **Check:** concurrency paths, error paths, timeout paths — happy path alone is not enough.
 
+**Coverage measures execution, not verification.** A test with weak asserts still counts every line it touches. Spot-check assert density in 3 tests; weigh failure-path and invariant/property tests over the headline %.
+
 ## 3. Architecture Analysis
 
 **Separation of concerns:**
@@ -57,6 +59,8 @@ npx jest --coverage
 | Dimension | Check |
 |-----------|-------|
 | Observability | Structured logs? Metrics endpoint? Trace IDs? |
+| Metrics shape | RED per service (rate/errors/duration — Wilkie), USE per resource (utilization/saturation/errors — Gregg) |
+| Alerts | Symptom/SLO-based with a runbook each — not one alert per cause (Ewaschuk, Google SRE) |
 | Health check | `/health` reflects real readiness? |
 | Config | 12-factor compliant? Flags/env/file? |
 | Deploy artifact | Single binary / container image / pip package? |
@@ -66,12 +70,15 @@ npx jest --coverage
 
 **Flag:** `log.Println` without structure, hardcoded timeouts, config in binary.
 
+**Litmus:** can an on-call answer "is it healthy, and why not?" without SSHing into the box? If diagnosis requires a shell, observability failed.
+
 ## 5. Scalability & State
 
 - Where does state live? (In-memory = single-instance only)
 - What's the bottleneck? Degrades gracefully under load?
 - Back-pressure mechanism present?
 - Global mutable singletons blocking horizontal scale?
+- What is the measured limit? One load-tested number (max rps / connections / dataset size) beats a scalable-architecture diagram. If nobody can name the limit, nobody has found it — flag.
 
 ## 6. Dependency Audit
 
@@ -80,6 +87,8 @@ grep -E "^\trequire|^require" go.mod | grep -v "^//"
 ```
 
 For each direct dep: actively maintained? (< 1yr), governance or solo? replaceable in a weekend?
+
+Supply chain: lockfile committed and CI-enforced? Advisories clean (`cargo audit` / `npm audit` / `pip-audit`)? For critical deps, check OpenSSF Scorecard (maintained, fuzzed, pinned workflows) — their risk is inherited risk.
 
 **Rule of thumb:** Each dep is a future security patch, API break, or abandonment. Fewer is better.
 
@@ -104,6 +113,9 @@ Read 3 random non-trivial functions: understood in 30 seconds? error paths handl
 | Protocol | Open standard | Proprietary |
 | Docs | README + arch doc | None |
 | CI | Automated | Manual |
+| Upstream churn | Stable, boring deps | Fast-moving frameworks |
+
+Burden ≈ expected lifetime × change rate of everything beneath it — "software engineering is programming integrated over time" (Titus Winters). A 10-year system on fast-churning deps pays the upgrade tax annually.
 
 ## 9. Team Fit
 

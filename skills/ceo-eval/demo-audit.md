@@ -11,11 +11,18 @@ Document the boot sequence. Time cold-start from "start" to ready for first
 request. Name every failed process, red health check, and retry storm. If boot
 breaks, cite the file, symptom, observed behavior, and log line when available.
 
+Boot twice: cold start, then stop + start again. The second boot catches state
+pollution — the classic live-demo killer.
+
 ### 2. Run the demo flow end-to-end
 
 Run the full happy path a counterparty would see: submit input, watch the side
 effect, verify persistence, and verify downstream observables. Time every
 endpoint. Flag 5xx, unexpected 4xx, and hangs over 2 seconds.
+
+Run the flow at least once from a truly empty state (fresh reset). The friendly
+first customer starts with no data — warm seeded databases hide empty-state
+and first-run breakage.
 
 Be concrete. "The order didn't trade" is weak; "WAL `10_active.wal` is 0
 bytes, ME log shows `accepted=0`, marketdata WS emits nothing on direct
@@ -63,6 +70,7 @@ Pattern references: `.ship/20-CTO-CEO-REVIEW-2/CEO-REPORT.md` and
 
 - "I read the docs and they say it works." Run it.
 - "Looks good!" without a timed endpoint or fault injection.
+- Demoing only from a warm, seeded database — first customers start empty.
 - Potential issues with no repro.
 - Grade above 70 when the demo cannot perform its core action.
 - Grade below 30 without naming the next three fixes.

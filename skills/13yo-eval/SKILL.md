@@ -1,6 +1,6 @@
 ---
 name: 13yo-eval
-description: UX walkthrough of a web app from a 13-year-old novice's eyes (with manual access). NOT for functional/e2e testing (use software) or visual polish (use visual).
+description: UX walkthrough of a web app from a 13-year-old novice's eyes (with manual access). NOT for functional/e2e testing (use software), design-craft critique (use design-eval), or visual fixes (use visual).
 when_to_use: "UX walkthrough, novice walkthrough, test as a 13yo, see this with fresh eyes, find what's confusing, evaluate-as-new-user, dashboard usability pass, screen-by-screen UX evaluation, find jargon and intimidation"
 user-invocable: true
 ---
@@ -18,9 +18,9 @@ by `scavenge`.
 INVOKE: UX walkthrough, fresh-eyes pass, novice walkthrough, "test as
 a 13yo", post-feature usability check, periodic hygiene pass.
 
-NOT for: functional/e2e tests (use `testing`), visual polish
-(use `visual`), a11y conformance audit, performance/load testing,
-apps with no users beyond the team.
+NOT for: functional/e2e tests (use `software`), design-craft critique
+(use `design-eval`), visual fixes (use `visual`), a11y conformance
+audit, performance/load testing, apps with no users beyond the team.
 
 ## The persona
 
@@ -30,6 +30,12 @@ density, moments where they can't predict what a click will do,
 buttons whose verbs have specialised meaning.
 
 Blind to: financial judgement, expert pain, performance, correctness.
+
+Walkthrough lens for every task probe (cognitive walkthrough, Wharton
+& Polson): (1) does the persona know what to try, (2) do they notice
+the control, (3) do they connect control to effect, (4) after acting,
+do they see progress? Record WHICH question failed — it names the fix
+(discoverability vs labeling vs feedback).
 
 ## Consequence overlay — automatic, not optional
 
@@ -75,13 +81,19 @@ Six prompts, fixed order, each `pass / fail / NA` + one sentence:
 
 ALWAYS in order. Append to the scaffolded file after each step.
 
-1. **Land cold.** Fresh tab, no scroll, 5 sec. One sentence: what is
-   this for, who? Skip for inner-only panels.
-2. **Trunk test** (Krug). Site? Page? Main sections — without scrolling?
+1. **Land cold** (Perfetti's 5-second test). Fresh tab, no scroll,
+   5 sec. One sentence: what is this for, who? Skip for inner-only
+   panels — 5-second tests only mean something on landing/overview.
+2. **Trunk test** (Krug). Site ID? Page name? Main sections? Where
+   am I in them ("you are here")? — all without scrolling.
 3. **Primary job(s).** Plural allowed for dashboards.
 4. **Concrete user question.** Pick one. Answer using only the screen.
-5. **First-click probe.** Two tasks. Note first click. Flag wrong
-   first clicks (no statistic; label "first-click, single evaluator").
+5. **First-click probe.** Two tasks. BEFORE each click, write the
+   expected outcome (think-aloud discipline); click; record match or
+   mismatch — a violated expectation IS the finding. Flag wrong first
+   clicks: a right first click predicts ~87% eventual task success vs
+   ~46% wrong (Bailey & Wolfson) — that ratio motivates the flag, but
+   n=1 carries no statistic; label "first-click, single evaluator".
 6. **Hover & inspect.** Timebox 5–8 min. Tooltips: present / missing /
    carrying essential content (essential content does not belong in
    a tooltip).
@@ -147,28 +159,24 @@ evidence + a minimal re-walk. Do NOT re-run the full protocol.
 
 ## Rules
 
-- ALWAYS scaffold per-screen report files BEFORE the walkthrough.
-  Append per step. NEVER write only at the end.
 - ALWAYS hard-separate `## Cold findings (pre-manual)` and
   `## Post-manual findings`. NEVER merge them.
-- ALWAYS run the consequence overlay automatically on any consequential
-  screen (see trigger list — quantified state + decisions, time-
-  sensitive data, external-consequence actions, recurring entities,
-  preview-vs-real distinctions).
-- ALWAYS render the overlay as exactly six lines in the fixed order.
+- ALWAYS run the consequence overlay on any trigger-listed screen;
+  render it as exactly six lines in the fixed order.
 - ALWAYS cite evidence per finding. Findings without evidence get cut.
 - ALWAYS use the `browse` skill for browser automation (spell out in
   subagent prompts).
-- ALWAYS default to 1–2 subagents. 3+ only with explicit acceptance of
-  contention risk.
-- ALWAYS include the salvage rule above.
+- NEVER let evaluator knowledge leak into persona narration — if you
+  (the model) know why the UI is that way, the persona doesn't; record
+  the confusion, not the excuse (a facilitator never explains the UI).
 - NEVER use severity adjectives in findings. Tags are `cite` /
   `inference` — evidence type, not severity.
 - NEVER use imagined error states as evidence — trigger them or mark
   not-observed.
 - NEVER claim multi-persona coverage from one run.
-- ALWAYS record methodology limits in `summary.md`: one evaluator,
-  one persona, one moment in time.
+- ALWAYS record methodology limits in `summary.md`: one evaluator, one
+  persona, one moment. One evaluator finds ~35% of problems (Nielsen);
+  overlap runs 5–65% (Hertzum & Jacobsen) — a sample, never a census.
 
 ## Anti-patterns
 
@@ -178,8 +186,6 @@ evidence + a minimal re-walk. Do NOT re-run the full protocol.
 - Letting the manual influence cold observations — read it AFTER.
 - Copy-editing instead of microcopy scanning — the question is
   "would a novice understand", not "is this the best wording".
-- 5-second testing every inner panel — only useful on landing /
-  overview screens.
 - Hardcoding 375 px viewport flags on desktop-first tools.
 - **Severity smuggling via adjectives.** "Major friction", "small
   issue" — replaced with `cite` / `inference` precisely to stop this.

@@ -1,6 +1,6 @@
 ---
 name: cto-eval
-description: CTO evaluation — technical adoption by default; SLA/code audit on request. NOT for deep adversarial failure-mode review (use red-eval).
+description: CTO evaluation — technical adoption by default; SLA/code audit on request. NOT for deep adversarial failure-mode review (use red-eval) or ROI/demo judgment (use ceo-eval).
 when_to_use: "CTO evaluation, technical due diligence, production readiness, cto audit, code audit, SLA bet, how do we run this, observe this, operate this"
 user-invocable: true
 ---
@@ -16,6 +16,9 @@ Rules:
 
 - ALWAYS run build + test first for adoption evaluations.
 - ALWAYS produce a verdict using the selected mode's template.
+- ALWAYS anchor "production-ready" to an explicit target: what load, what
+  availability objective, what failure budget (SRE production-readiness-review
+  discipline). An unanchored readiness claim is an opinion.
 - NEVER skip maintenance burden. Impressive code with one maintainer is still
   a liability.
 - NEVER blur CTO and CEO outputs: CTO owns technical production readiness; CEO
