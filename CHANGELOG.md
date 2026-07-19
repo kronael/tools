@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.57] — 20260719
+
+> kronael v0.3.57 — readable slice ops in the go skill
+>
+> The go skill now points at `samber/lo` for filter/map/reduce so those read as intent, while stdlib `slices` stays the answer for insert/delete/sort.
+>
+> • go — use `samber/lo` (`lo.Filter`/`lo.Map`) for functional slice work; stdlib `slices` for mutate/sort/search, no dep
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `go`: added a Slices section — stdlib `slices` for insert/delete/sort/search (never add a dep for those), `samber/lo` for filter/map/reduce/group where a manual loop hurts readability.
+
 ## [v0.3.56] — 20260719
 
 > kronael v0.3.56 — session-memory nudge + safer defaults
