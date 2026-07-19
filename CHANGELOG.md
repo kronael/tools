@@ -1,7 +1,21 @@
 # Changelog
 
-## [v0.3.60] — 20260720
+## [v0.3.61] — 20260720
 
+> kronael v0.3.61 — four skills back in source
+>
+> Four skills that lived only in local installs are now in the repo: adversarial assessment, a defer-to-later verb, a multi-step audit checklist, and subagent worktree isolation.
+>
+> • /assess — adversarial product/code critique from a ceo/cto/ciso/buyer lens, saved to .ship/
+> • /later — defer an idea or follow-up to TODO.md; recurring items route to /schedule
+> • /sweep-fix-verify — gating checklist so large multi-subagent changes don't silently break HEAD
+> • /worktree — isolate every code-editing subagent in its own git worktree
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Captured four skills that existed only in local installs into source, org-specific examples genericized: `assess` (adversarial ceo/cto/ciso/buyer/investor/competitor critique → `.ship/critique-*.md`), `later` (defer to `TODO.md`; recurring items point at `/schedule`), `sweep-fix-verify` (gating checklist for multi-step / multi-subagent changes — verify writes not just runs), `worktree` (per-subagent git-worktree isolation).
+
+## [v0.3.60] — 20260720
 > kronael v0.3.60 — tighter replies, tougher discipline
 >
 > Replies cap at ~17 lines with the point last, /merge now finishes rebases and cherry-picks, and a fail-loud engineering discipline joins the wisdom.
