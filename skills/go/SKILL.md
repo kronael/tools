@@ -11,13 +11,9 @@ rules. Below are Go-specific additions.
 
 ## Build output
 
-- ALWAYS build into `dist/` in the tree root: `go build -o dist/<name>`. Bare
-  `go build` drops the binary in the cwd — never leave it there or in the repo
-  root where it gets committed by accident.
-- `dist/` is GoReleaser's own default output dir, so hand-builds and released
-  artifacts land in the same place — one `dist/` line in `.gitignore` covers
-  both, no per-binary ignores. (`bin/` is the older GOPATH-era convention; use
-  `dist/` here for the GoReleaser alignment.)
+- ALWAYS `go build -o dist/<name>` — NEVER leave a binary in the package dir or
+  repo root. `dist/` (not `bin/`) matches GoReleaser's default, so dev and
+  release builds share one gitignored dir.
 
 ## Concurrency
 
