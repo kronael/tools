@@ -118,6 +118,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
+   - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`80% caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
@@ -137,6 +138,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - Ensure `~/.agents/skills` points at `~/.claude/skills` (symlink when
      possible; per-skill symlinks only when `~/.agents/skills` is already a
      directory).
+   - If pi is installed, ensure `~/.pi/agent/AGENTS.md` symlinks to
+     `~/.claude/CLAUDE.md` — pi's global context file (its candidates are
+     `AGENTS.md` then `CLAUDE.md`), so the same wisdom reaches pi. Skip if a
+     real file already exists.
    - Copy `codex-hooks.json` → `~/.codex/hooks.json` after the drift
      preflight. This file wires Codex `UserPromptSubmit`, `PreToolUse`,
      `PostToolUse`, `Stop`, and `PreCompact` into

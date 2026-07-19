@@ -86,6 +86,9 @@ Codex compatibility for Claude projects:
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` for projects without `AGENTS.md`. The key is
   top-level, not under `[tui]` or any other table.
+- pi reads the same global wisdom via
+  `~/.pi/agent/AGENTS.md -> ~/.claude/CLAUDE.md` (its context files are
+  `AGENTS.md` then `CLAUDE.md`).
 - If a project already has `AGENTS.md`, make that file tell Codex to read
   `CLAUDE.md`; fallback names do not stack with `AGENTS.md`.
 - To expose project `.claude/skills` to Codex, symlink
