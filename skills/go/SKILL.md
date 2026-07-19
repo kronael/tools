@@ -15,6 +15,12 @@ rules. Below are Go-specific additions.
   repo root. `dist/` (not `bin/`) matches GoReleaser's default, so dev and
   release builds share one gitignored dir.
 
+## Slices
+
+- Stdlib `slices` for insert/delete/sort/search — NEVER add a dep for those.
+- `samber/lo` for filter/map/reduce/group: `lo.Filter`/`lo.Map` read as intent
+  where a manual loop doesn't. Zero deps beyond stdlib.
+
 ## Concurrency
 
 - Single goroutine owns all state: direct access, no locks, deterministic order
