@@ -72,7 +72,7 @@ when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data s
 
 ## Pipeline (file-based stages)
 
-- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap with `monkeypatch`.
+- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap via an injected dependency param (see the `py` skill), NEVER `monkeypatch`.
 - Pipeline = stages of typed files. Each stage owns a directory. Stage N+1 reads stage N. Path = `{batch}/{key_path}/{date}.{pqt|jl}`. Day file = unit of work.
 - ALWAYS tidy at ingestion: one row/observation, one col/variable, one table/entity. NEVER re-clean downstream.
 - Raw is append-only. ALWAYS rebuild downstream from raw. NEVER UPDATE/DELETE raw.

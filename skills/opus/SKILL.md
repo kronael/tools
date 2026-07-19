@@ -1,6 +1,6 @@
 ---
 name: opus
-description: "/opus — high-effort subagent for implementation, multi-file fixes/features, and design decisions. NOT for investigation/hunting (use /sonnet) or mechanical single-file work (use /haiku)."
+description: "/opus — xhigh-effort subagent for implementation, multi-file fixes/features, and design decisions. NOT for investigation/hunting (use /sonnet) or mechanical single-file work (use /haiku)."
 when_to_use: "do this in an opus sub, spawn an opus sub, use opus, implement, apply the fix, write the code, execute changes, multi-file implementation, feature implementation, write tests, refactor, fix the bug, cross-package change, new daemon, complex reasoning, architecture review, design decision, deep analysis, cross-cutting, opus sub"
 user-invocable: true
 ---
@@ -15,8 +15,8 @@ ALWAYS reach for /opus without being asked when the task is:
 - A design/architecture decision or deep cross-cutting analysis
 - Any task where the output is working code, not a report
 
-- ALWAYS use `subagent_type: "opus"` on the Agent tool — the `opus` agent definition pins model=opus + high effort.
-- NEVER make xhigh the default. Reserve xhigh for explicit planning work, security/deep-audit work, or a user request for maximum effort.
+- ALWAYS use `subagent_type: "opus"` on the Agent tool (NOT `model: "opus"`). The `opus` agent definition pins `model: opus` AND `effort: xhigh` — effort is INHERITED from the parent session when not pinned, so `model: "opus"` alone would just carry over whatever effort the parent (often Fable/Opus at xhigh already, but not always) is running at.
+- NEVER reach for `/opus` just to get xhigh cheaply on a task `/sonnet` (medium) could handle — the fixed xhigh cost applies on every call regardless of task size.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
 - For mechanical single-file work, prefer `/haiku`. For investigation/hunting with no code changes, use `/sonnet` first. For planning or security/deep-audit work that warrants the most capable subagent, escalate to `/fable`.

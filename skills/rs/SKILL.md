@@ -70,7 +70,7 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 ## Threading
 - Pin OS threads to specific CPU cores via core_affinity
 - Document exact core assignments in CLAUDE.md
-- ALWAYS set panic handler: `std::panic::set_hook(Box::new(|_| std::process::exit(0)));`
+- Generic services: set a panic handler `std::panic::set_hook(Box::new(|_| std::process::exit(0)));`. NEVER where the project bans `process::exit` — graceful-shutdown-sensitive code (e.g. trading engines that must cancel orders first) must signal the shutdown path instead.
 
 ## CLI with Clap
 - ALWAYS derive API, never builder

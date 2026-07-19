@@ -33,7 +33,7 @@ steps are out of scope for you.
 
 Follow the project's CLAUDE.md conventions exactly (naming, commit
 format, detached-HEAD-only, no git add -A / --amend / push). Make a
-path-scoped commit per logical change, message "[section] message".
+path-scoped commit per logical change, message "type(scope): message".
 
 When done, run this step's Gate command yourself and report the
 actual output — not "should pass." If the gate fails, fix it before

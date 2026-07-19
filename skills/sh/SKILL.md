@@ -47,4 +47,4 @@ SEED="/preferred/path"
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
-- NEVER `sudo` (ask user for privileged ops)
+- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per WISDOM.

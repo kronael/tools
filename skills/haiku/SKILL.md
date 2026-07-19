@@ -15,7 +15,8 @@ ALWAYS reach for /haiku without being asked when the task is:
 - Grep + summarize (read-only survey of one area)
 - Boilerplate: test stub, repetitive struct, constant list
 
-- ALWAYS use `subagent_type: "haiku"` on the Agent tool.
+- ALWAYS use `subagent_type: "haiku"` on the Agent tool (NOT `model: "haiku"`). The `haiku` agent definition sets `model: haiku` AND `effort: low` — effort is INHERITED from the parent session when not set explicitly, so without this the sub could silently run at the parent's (possibly high/xhigh) effort.
+- NEVER add text prompts like "Effort: low" — effort is set at the API level via the agent definition, not via prompt text.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
 - NEVER accept multi-step reasoning, ambiguous design calls, or cross-file refactors — ALWAYS escalate to `/sonnet` or `/dispatch`.

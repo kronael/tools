@@ -41,7 +41,7 @@ the diff visible.
 
 - **improve**: DO → CRITICIZE → EVALUATE → IMPROVE on changed code
 - **readme**: sync README/ARCHITECTURE/CHANGELOG with what shipped
-- **refine**: orchestrates both, validates build/test, commits `[refined]`
+- **refine**: orchestrates both, validates build/test, commits `refa: …`
 
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
