@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.3.56] — 20260719
+
+> kronael v0.3.56 — session-memory nudge + safer defaults
+>
+> A new nudge reminds you to save durable memory before the context is lost, and Go builds now land in `dist/`.
+>
+> • memory_nudge — new hook: at Stop/PreCompact, prompts you to persist session-worthy facts, throttled so it isn't every turn
+> • go — always `go build -o dist/<name>`, matching GoReleaser so one gitignore covers dev + release
+> • global — NEVER recursive-remove (`rm -r`): delete named files only, or leave cleanup to the user
+> • hooks — pinned to py39 so autoformat never emits 3.14-only syntax that breaks older Python
+> • dockbox — rebuilds against the latest claude + codex in a cache-busted layer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `memory_nudge` hook: low-frequency Stop/PreCompact nudge to evaluate the session for memory-worthy facts and persist them; wired into `settings-recommended.json` (Stop + PreCompact), with tests.
+- `go`: always build binaries into `dist/` — GoReleaser's default output, so dev and release builds share one gitignored dir.
+
+### Changed
+- `global` wisdom: added a hard "NEVER recursive removal (`rm -r`/`-rf`/`-R`)" rule — delete explicitly named files or leave cleanup to the user.
+- `codex`: load the global wisdom file by default.
+- `dockbox`: build the latest claude + codex in a cache-busted final layer.
+- bundle sync: back-ported runtime-only skill edits into source; dropped deprecated skills (`create-code-presentation`, `gh-fix`, `gh-review`) now folded into the create/review routers.
+
+### Fixed
+- `ruff`: pin `hooks/**` to the py39 target so `ruff-format` never rewrites to 3.14-only syntax (paren-free `except A, B:`, PEP 758) that SyntaxErrors on older interpreters.
+
 ## [v0.3.55] — 20260713
 
 > kronael v0.3.55 — install keeps all transcripts
