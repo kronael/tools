@@ -12,6 +12,7 @@ DOCS_RULES = """Documentation naming rules:
 
 COMMIT_RULES = """Commit rules:
 - Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
+- ALWAYS commit in detached HEAD - NEVER on or creating a branch
 - NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash
 - NEVER add Co-Authored-By, NEVER skip pre-commit hooks
 - Pre-commit reformats on first run - ALWAYS retry commit once

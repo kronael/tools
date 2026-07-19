@@ -20,12 +20,10 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 6. **Document** - spawn `Task(agent="readme")`
 7. **Verify** - final build/test
 8. **Commit** - if changes, invoke `Skill(commit, "[refined]")`
-9. **Cleanup** - remove stale agent worktrees:
+9. **Cleanup** - remove stale agent worktrees (detached — no branch to delete):
    ```bash
    for d in .claude/worktrees/*/; do
-     branch=$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null)
      git worktree remove "$d" --force
-     [ -n "$branch" ] && git branch -D "$branch" 2>/dev/null
    done
    ```
 10. **Summary** - what changed, main impact, no fluff, not marketing

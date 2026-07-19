@@ -57,6 +57,7 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 
 ## Rules
 
+- ALWAYS commit in detached HEAD — verify `git branch --show-current` prints nothing before committing. NEVER create or attach a branch.
 - NEVER `git commit` without `-m "msg" -- file1 file2` (no staging, explicit files)
 - NEVER `git commit --amend`
 - NEVER Co-Authored-By
@@ -70,5 +71,5 @@ Only applies to Claude-managed worktrees under `.claude/worktrees/`. Never touch
 
 1. `git worktree list` — note its base commit.
 2. `git -C <wt> diff` — superseded by HEAD, or unique?
-3. Superseded + lock pid dead → remove: `git worktree unlock <wt> && git worktree remove --force <wt> && git branch -D <branch>`
+3. Superseded + lock pid dead → remove: `git worktree unlock <wt> && git worktree remove --force <wt>` (detached worktree — no branch to delete)
 4. Holds unique work you did NOT create → surface to user, do NOT remove.
