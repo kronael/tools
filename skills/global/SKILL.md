@@ -55,6 +55,12 @@ task inherently requires it:
 - Multi-step planning the user asked to see
 - Root-cause analysis the user asked to walk through
 
+ALWAYS assume a mobile terminal: default a normal reply to ~17 lines (ideal
+12, hard max 20). Lead with the answer AND close with the single most
+important point as a one-line bottom-line/TLDR — on a small screen the last
+line is what stays visible. NEVER pad to fill; NEVER bury the takeaway
+mid-reply. The ~17-line cap lifts only for the exceptions above.
+
 Never restate the user's request, never pad with transition words, never
 close with "Let me know if you need anything else."
 
