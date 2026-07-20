@@ -54,6 +54,12 @@ When local installed edits exist, install becomes a merge workflow.
   installed path and the source hash just installed.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
+- **Installed-only skills are NOT auto-captured into source.** An installed skill
+  with no source counterpart may be an org/local skill (arizuko/dashd/ant/routd,
+  local paths, secrets) that must NOT enter public source. Reverse-sync
+  (installed → repo) ONLY on the user's explicit ask: flag each installed-only
+  skill, exclude or genericize the org-specific ones, add only the generic ones
+  the user opts into.
 
 ## Plan & consent
 
