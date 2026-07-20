@@ -15,6 +15,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
+| `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
 
 ## Editing rules
 

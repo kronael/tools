@@ -7,7 +7,9 @@ when_to_use: editing .rs files or writing Rust code
 # Rust
 
 Requires the `software` skill's `code.md` for shared naming, style, and design
-rules. Below are Rust-specific additions.
+rules, and `software/dynamic-analysis.md` for runtime checkers wired as test
+targets (Miri, `-Zsanitizer`, loom, cargo-fuzz, cargo-mutants, nextest). Below
+are Rust-specific additions.
 
 ## Imports
 - NEVER arbitrary `as` aliases to rename external types
