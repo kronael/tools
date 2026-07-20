@@ -41,7 +41,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Environment
 
-- `sudo` is available — use `sudo docker ...` for all docker commands
+- `sudo` is available — use `sudo docker ...` for docker commands YOU run via
+  the Bash tool (in authored/committed scripts, parameterize privilege instead
+  — see the `sh` skill)
 
 ## Response Style
 
@@ -122,7 +124,10 @@ language skill pulls in. Read it when writing or reviewing code.
 - ALWAYS make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
 - NEVER improve beyond what's asked
-- ALWAYS use commit format: `type(scope): Message` (scope optional)
+- ALWAYS use conventional-commit format: "type(scope): message" —
+  fix/feat/docs/test/chore/refactor (scope optional); "merge:"/"release:" for those
+- Invoking /refine, /ship, /commit, /release IS the ask to commit (those
+  workflows commit by design); otherwise commit only when the user asks
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
@@ -206,6 +211,12 @@ language skill pulls in. Read it when writing or reviewing code.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
+- Brief subagents by GOAL, not numbered steps (current models degrade on
+  over-prescription): give the goal (what + why), the context it needs, what's
+  out of bounds, and what "done" looks like — then let it choose the path.
+  Shape: "I'm working on [larger task] for [who]. They need [what the output
+  enables]. With that in mind: [request]." KEEP the verify-the-diff and
+  evidence-backed-report nudges — those are load-bearing, not over-prompting.
 - ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
 - NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
