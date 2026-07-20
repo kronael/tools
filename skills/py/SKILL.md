@@ -6,10 +6,9 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 
 # Python
 
-Requires the `software` skill's `code.md` for shared naming, style, and design
-rules, and `software/dynamic-analysis.md` for runtime checkers wired as test
-targets (`-X dev -W error`, faulthandler, hypothesis, pytest-memray, TSan).
-Below are Python-specific additions and deltas.
+Requires `software/code.md` (naming, style, design) and
+`software/dynamic-analysis.md` (test-target checkers: `-X dev -W error`,
+hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas.
 
 ## Verify before claiming
 - ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge.

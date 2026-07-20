@@ -2,10 +2,8 @@
 
 `strict-typing.md` catches what is wrong in the *source*; these catch what only
 appears when the code *runs* — data races, undefined behavior, memory errors,
-leaks, deadlocks, crashes on odd inputs. All are too slow (or need
-nightly/clang/time budget) for pre-commit. Wire each behind its own `make`
-target and run it in `make test-all` (CI), keeping `make test` fast (<5s).
-Runtime tools only see executed paths — their value scales with coverage.
+leaks, deadlocks, crashes on odd inputs. Runtime tools only see executed paths,
+so their value scales with coverage. Wiring (make targets, CI) is at the bottom.
 
 ---
 
