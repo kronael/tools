@@ -1,6 +1,7 @@
 ---
 name: doc-topology
 description: Structure a project's docs by the question each file answers — README (what/why/how-to-start), ARCHITECTURE (how it's built), notes/ (why this design), compare/ (versus alternatives), facts/ (dated numbers) — plus a "how to read this" index and an anti-marketing discipline. Use when writing or auditing a project/crate/service README, ARCHITECTURE, or design docs; when docs are one mixed wall; or when someone asks for "good docs matching X quality". NOT for a single doc's prose polish (use writing), a design spec (use specs), or syncing docs after shipping (use readme).
+when_to_use: "structure project docs, doc topology, README vs ARCHITECTURE split, how to organize docs, docs are one wall, good docs like X quality, notes/compare/facts layout, anti-marketing docs, audit doc structure, how-to-read-this index"
 ---
 
 # Documentation topology
