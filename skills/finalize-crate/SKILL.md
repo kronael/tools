@@ -1,7 +1,7 @@
 ---
 name: finalize-crate
-description: Finalize a Rust crate for external audience: competition research, honest benchmarks, rtrb-style README.
-when_to_use: "finalize the X crate", "prepare X for release", "document X for external audience"
+description: Finalize a Rust crate for external audience — competition research, honest benchmarks, rtrb-style README. NOT for in-flight feature work (use ship) or doc-only sync (use readme).
+when_to_use: "finalize the X crate, prepare X for release, document X for external audience"
 user-invocable: true
 ---
 
