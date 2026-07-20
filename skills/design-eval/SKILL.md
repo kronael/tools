@@ -53,7 +53,7 @@ Okabe-Ito) and NN/g's heuristics.
 
 ## Output
 
-One report per subject (do not merge two apps). Ten dimension scores (1–5), the
-ranked findings each tagged `[system]` or `[screen]` with the fix + where it
-lives, and a two-line verdict. When run before an improvement pass, the findings
-ARE the work list — hand them straight to the fix.
+One report per subject (do not merge two apps). Observed dimension scores (1–5;
+otherwise N/A), the ranked findings each tagged `[system]` or `[screen]` with
+the fix + where it lives, and a two-line verdict. When run before an improvement
+pass, the findings ARE the work list — hand them straight to the fix.

@@ -41,9 +41,12 @@ reachable path is a hardening note, not a headline finding. Useful categories:
 
 ### 3. Grade honestly
 
-Grade `X / 100` for "would I bet my SLA on this today?" Justify in two or
-three sentences. Below 50 means rewrite a subsystem before shipping. Above 80
-means ready for a friendly first customer.
+ALWAYS set the verdict from the worst CONFIRMED load-bearing evidence before
+choosing the number: NEVER score an unverified requirement as passed, and
+NEVER let polish or prose offset a failed build, test, perf target, or
+load-bearing claim. Grade `X / 100` for "would I bet my SLA on this today?"
+Justify in two or three sentences. Below 50 means rewrite a subsystem before
+shipping. Above 80 means ready for a friendly first customer.
 
 ### 4. Spot-check recent sprint work
 
@@ -57,7 +60,7 @@ spec sync update reality or wishes?
 - Don't write code, don't commit fixes. Findings only.
 - Cite file:line for every claim.
 - Don't run the full benchmark suite; pick the 3-5 benches tied to claims.
-- Don't grade-inflate. Don't fabricate gotchas.
+- Don't fabricate gotchas.
 
 ## Output
 

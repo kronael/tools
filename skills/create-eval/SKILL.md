@@ -25,9 +25,11 @@ see `cto-eval` (code/operations), `ceo-eval` (demo/business), and
 3. Ask user: what does "good" look like? What does "best" look like?
 4. Ask user about known failure modes
    - Logs: check ops skill, /srv/log, /var/log, or ask
-5. Measure the baseline: run the candidate greps/commands against
-   live logs NOW and derive thresholds from the observed values.
-   NEVER invent a threshold without a baseline measurement.
+5. ALWAYS derive thresholds from invariants, explicit SLOs, or
+   known-good/known-bad evidence; measure the current baseline only
+   to test threshold sensitivity. NEVER make today's observed value
+   or the user's desired "good/best" answer the threshold — a
+   degraded system would define its own degradation as healthy.
 6. Write `.claude/skills/service-eval/SKILL.md` with:
    - Log locations and what to grep for
    - Health checks (pass/fail criteria from logs)
@@ -35,9 +37,7 @@ see `cto-eval` (code/operations), `ceo-eval` (demo/business), and
 
 ## Rules
 
-- ALWAYS read project docs before generating
 - NEVER include generic criteria — derive everything from the project
-- NEVER generate without asking the user first
 - ALWAYS express assertions as programmatically checkable (grep counts,
   thresholds, exit codes) — NEVER "looks healthy" / "works well"
 - Every check = signal source + pass criterion + action-on-fail (what

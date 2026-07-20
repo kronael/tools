@@ -1,8 +1,10 @@
 # design-eval — the rubric
 
-Score each dimension 1–5 (1 broken, 3 acceptable, 5 exemplary). Tag every finding
-`[system]` (the visual language) or `[screen]` (this instance's use of it). Rank
-by reader impact. Cite the pixel / token / number.
+Score each observed dimension 1–5 (1 broken, 3 acceptable, 5 exemplary); mark an
+unobserved dimension N/A — NEVER infer interaction, responsiveness, motion, or
+consistency from a static frame. Tag every finding `[system]` (the visual
+language) or `[screen]` (this instance's use of it). Rank by reader impact.
+Cite the pixel / token / number measured this run, never an estimate.
 
 ## The ten dimensions
 
@@ -75,7 +77,7 @@ hard-block over a fat-finger cap, withhold an overflow rather than wrap it.
 # design-eval: <subject>  (mode: review | system-audit)
 Pixels seen: <goldens/screens read>   Palette source: <file>
 
-Scores (1–5):
+Scores (1–5; N/A = unobserved):
   hierarchy N · colour+tokens N · contrast N · redundant-channel N ·
   typography/numerics N · spacing/density N · layout/responsive N ·
   consistency N · data-density/minimalism N · feedback/honesty N

@@ -1,6 +1,6 @@
 ---
 name: red-eval
-description: Deep adversarial engineering evaluation: correctness, failure modes, exploitability, and "no bullshit" source review. NOT for routine refinement (use refine) or high-level production readiness (use cto-eval).
+description: Deep adversarial engineering evaluation — correctness, failure modes, exploitability, and "no bullshit" source review. NOT for routine refinement (use refine) or high-level production readiness (use cto-eval).
 when_to_use: "red eval, red-team review, adversarial code review, deep developer eval, no bullshit review, find what breaks, failure-mode audit, exploitability review, security-minded code audit"
 user-invocable: true
 ---
@@ -104,8 +104,7 @@ specified:
 
 - Do not duplicate a standard security checklist when a dedicated security
   audit skill is available.
-- Do not blur with `cto-eval`: CTO owns adoption/SLA judgment; Red Eval owns
-  the adversarial trace.
-- Do not blur with `refine`: Red Eval finds; Refine fixes.
 - Do not grade-inflate. If the core claim fails, say so plainly.
-- Do not invent gotchas. Every finding needs a trace, repro, or cited source.
+- ALWAYS try to DISPROVE each finding via its strongest benign explanation or
+  counter-test; NEVER promote it past hypothesis unless disconfirmation fails.
+  Every finding needs a this-run trace, repro, or cited source, not memory.

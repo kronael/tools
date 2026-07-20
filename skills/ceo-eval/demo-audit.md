@@ -39,11 +39,12 @@ subscribe" is useful.
 
 For each: what you did, what happened, what should have happened.
 
-### 4. Produce at least five new findings
+### 4. Report findings
 
-Each finding needs repro steps, observed vs expected, and severity
-(critical / major / moderate / minor). NEW means absent from prior audit
-reports such as `.ship/*/CEO-REPORT.md`; repeated findings are regressions.
+NEVER target a finding count or manufacture novelty. Report every supported
+finding, even "none found in this pass," with repro, observed vs expected, and
+severity (critical / major / moderate / minor). NEW = absent from
+`.ship/*/CEO-REPORT.md`; a repeat is a regression.
 
 ### 5. Grade honestly
 
@@ -55,7 +56,8 @@ the gaps honestly.
 
 - Run the actual system. NOT a code review (`cto-eval` owns that).
 - Don't fix bugs. CEO finds; the fix sprint fixes.
-- Cite file:line for code-related findings and log excerpts for runtime ones.
+- Cite file:line for code findings and this run's log excerpts for runtime
+  ones; unobserved evidence is UNVERIFIED, never reconstructed from memory.
 - Don't grade-inflate. If the core demo action fails, say so.
 
 ## Output
@@ -73,4 +75,3 @@ Pattern references: `.ship/20-CTO-CEO-REVIEW-2/CEO-REPORT.md` and
 - Demoing only from a warm, seeded database — first customers start empty.
 - Potential issues with no repro.
 - Grade above 70 when the demo cannot perform its core action.
-- Grade below 30 without naming the next three fixes.

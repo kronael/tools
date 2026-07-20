@@ -125,13 +125,14 @@ Each observation gets one:
 
 ```
 **[cite|inference] [location]** — what happened. Persona narration
-(verbatim if surfaced): "<quote>". Classification: CLEAR / MANUAL /
-STILL UNCLEAR (sub). Evidence: <screenshot path or quote>.
+(inference). Classification: CLEAR / MANUAL /
+STILL UNCLEAR (sub). Evidence: <screenshot path or observed text>.
 ```
 
 Tags are **evidence types**, not severity:
-- **cite** — direct evidence (screenshot, verbatim quote, click path)
-- **inference** — persona reasoning without literal evidence
+- **cite** — observed this run: UI text, screenshots, click outcomes
+- **inference** — persona reasoning; persona narration is ALWAYS
+  `inference`, NEVER `cite` — there is no real 13-year-old to quote
 
 NEVER use severity adjectives: small, minor, major, critical, huge,
 tiny, serious, important. Triage adds severity later — that's their job.
@@ -163,7 +164,7 @@ evidence + a minimal re-walk. Do NOT re-run the full protocol.
   `## Post-manual findings`. NEVER merge them.
 - ALWAYS run the consequence overlay on any trigger-listed screen;
   render it as exactly six lines in the fixed order.
-- ALWAYS cite evidence per finding. Findings without evidence get cut.
+- ALWAYS cite evidence captured this run; findings without it get cut.
 - ALWAYS use the `browse` skill for browser automation (spell out in
   subagent prompts).
 - NEVER let evaluator knowledge leak into persona narration — if you
@@ -180,15 +181,11 @@ evidence + a minimal re-walk. Do NOT re-run the full protocol.
 
 ## Anti-patterns
 
-- Findings as census instead of sample.
 - Importing Bailey & Wolfson 87/46 % as if it applied to solo
   screenshot tests — it doesn't; the ratio is the heuristic.
-- Letting the manual influence cold observations — read it AFTER.
 - Copy-editing instead of microcopy scanning — the question is
   "would a novice understand", not "is this the best wording".
 - Hardcoding 375 px viewport flags on desktop-first tools.
-- **Severity smuggling via adjectives.** "Major friction", "small
-  issue" — replaced with `cite` / `inference` precisely to stop this.
 
 ## Reference
 
