@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.59] — 20260720
+
+> kronael v0.3.59 — richer linter + runtime-checker guidance for go/rust/python
+>
+> The software skill now says which linters to run and which runtime checkers to wire as test targets — race detectors, sanitizers, fuzzing, Miri, memory/leak — across Go, Rust, and Python.
+>
+> • strict-typing — adds the Go golangci-lint set (errcheck, staticcheck, nolintlint …) alongside the existing py/ts config
+> • dynamic-analysis — new runbook: runtime checkers as make/CI targets, not pre-commit (go -race/fuzz/goleak, rust Miri/sanitizers/loom, python -X dev/hypothesis/memray)
+> • go / rs / py — each links to the runbooks for its linter set and test-target checkers
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `software/dynamic-analysis.md`: new runbook for runtime/dynamic checkers wired as `make test`/CI targets (never pre-commit) — Go (`-race`, `-shuffle`, `-fuzz`, goleak, `-asan`/`-msan`, govulncheck), Rust (Miri, `-Zsanitizer`, cargo careful, loom, cargo-fuzz, nextest, cargo-mutants), Python (`-X dev -W error`, faulthandler, pytest-randomly, hypothesis, pytest-memray, free-threaded ThreadSanitizer).
+- `software/strict-typing.md`: Go section — golangci-lint v2 set (`errcheck` with `check-type-assertions`, `staticcheck`, `govet`, `errorlint`, `bodyclose`, `exhaustive`, `nolintlint` `require-specific`/`require-explanation`, …) with the escape-hatch→linter table.
+
+### Changed
+- `go` / `rs` / `py` skills link to the `strict-typing` and `dynamic-analysis` runbooks for their linter set and test-target checkers; `software` router dispatch table, `when_to_use`, and edit-reference updated to route on them.
+
 ## [v0.3.58] — 20260719
 
 > kronael v0.3.58 — commits must be detached-HEAD
