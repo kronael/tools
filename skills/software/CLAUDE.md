@@ -14,7 +14,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
-| `strict-typing.md` | un-circumventable strict type config (basedpyright/ruff, tsconfig/eslint) — bans `Any`, `# type: ignore`, `as any` |
+| `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 
 ## Editing rules
 

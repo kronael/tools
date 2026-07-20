@@ -175,6 +175,57 @@ export default tseslint.config(
 
 ---
 
+## Go
+
+Go has no `Any` epidemic, but the same "go green by weakening, not fixing"
+moves exist: an ignored error, an unchecked type assertion `x.(T)`, or a
+blanket `//nolint`. `go vet` alone catches almost none of these — **golangci-lint
+v2** is the runner, and the set below turns each move into a failure.
+`staticcheck` subsumes the old separate `gosimple`/`stylecheck`; `govet` runs
+inside golangci-lint, so there is no separate `go vet` step.
+
+### `.golangci.yml`
+
+```yaml
+version: "2"
+linters:
+  enable:
+    - errcheck      # unchecked errors — and unchecked type assertions (see settings)
+    - govet         # suspicious constructs
+    - staticcheck   # the deep analyzer: SA bugs, S simplifications, ST/QF style
+    - errorlint     # wrong %w / errors.Is/As, comparing wrapped errors with ==
+    - bodyclose     # unclosed HTTP response bodies
+    - exhaustive    # non-exhaustive enum switch
+    - ineffassign   # dead assignments
+    - unparam       # unused params / always-same returns
+    - nolintlint    # the suppression kill-switch (see settings)
+    - revive        # golint replacement — style
+  settings:
+    errcheck:
+      check-type-assertions: true  # `x.(T)` without `, ok` is now an error — Go's unsound cast
+    nolintlint:
+      require-explanation: true    # every //nolint must state why
+      require-specific: true       # every //nolint must name the linter — no blanket //nolint
+```
+
+`forcetypeassert` is deliberately absent — `errcheck check-type-assertions`
+covers the same unchecked-`x.(T)` hole and is the maintained path.
+
+### Go escape hatch → linter that blocks it
+
+| The move | Blocked by |
+|---|---|
+| ignored error return | `errcheck` |
+| unchecked type assertion `x.(T)` | `errcheck` `check-type-assertions` |
+| blanket `//nolint` (no linter named) | `nolintlint` `require-specific` |
+| `//nolint` with no reason | `nolintlint` `require-explanation` |
+| unclosed HTTP body | `bodyclose` |
+| non-exhaustive enum `switch` | `exhaustive` |
+| comparing a wrapped error with `==` | `errorlint` |
+| dead assignment / unused param | `ineffassign` / `unparam` |
+
+---
+
 ## Residual holes settings cannot close
 
 Honest limits — the model can still, in principle:

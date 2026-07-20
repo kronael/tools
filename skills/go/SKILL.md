@@ -7,7 +7,8 @@ when_to_use: editing .go files or writing Go code
 # Go
 
 Requires the `software` skill's `code.md` for shared naming, style, and design
-rules. Below are Go-specific additions.
+rules, and `software/strict-typing.md` for which linters to run (the
+golangci-lint set + config). Below are Go-specific additions.
 
 ## Build output
 
