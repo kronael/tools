@@ -1,9 +1,37 @@
 # Changelog
 
-## Unreleased
+## [v0.3.64] — 20260720
 
-- Merge global Codex guidance that always loads applicable `CLAUDE.md` files
-  and applies the `80% caveman` response policy without replacing user rules.
+> kronael v0.3.64 — skills quality wave + self-describing installs
+>
+> Reinstalls now tell you which releases they're about to apply, five new skills land, and the eval lenses get sharper.
+>
+> • install records the installed release — a reinstall reports the version/commit delta before touching anything
+> • new skills: doc-topology, finalize-crate, go-gl, speed-demo, port-to-go
+> • eval lenses sharpened — hacker-eval → red-eval, anti-fabrication guards, best-practice grounding
+> • merge skill now drives rebases and cherry-picks to completion, not just merges
+> • Codex loads applicable CLAUDE.md alongside AGENTS.md, with the terse caveman reply policy
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `doc-topology` skill: structure project docs by the question each file answers (README/ARCHITECTURE/notes/compare/facts) plus a how-to-read index and anti-marketing discipline.
+- New skills `finalize-crate`, `go-gl` (native OpenGL desktop apps in Go), `speed-demo` (benchmark-reveal GIFs), and `port-to-go` (faithful into-Go transcode with differential traces).
+- install: an installed-release marker in `~/.claude/kronael-install-manifest.json` (version, git commit/describe, timestamp) with a per-file sha baseline; preflight reports the installed→source delta and which releases a reinstall will apply.
+- Global wisdom: a mobile-terminal reply cap (~17 lines, bottom-line last), a System-change discipline section (no-duplication, fail-loud, retry-only-transient, fix-causes, redesign sign-off), and a no-recursive-`rm` rule.
+- Codex: global guidance now loads every applicable `CLAUDE.md` alongside `AGENTS.md` and applies the `80% caveman` response policy without replacing user rules.
+
+### Changed
+- Eval family: `hacker-eval` → `red-eval`, `eye-13yo` → `13yo-eval`; added LLM-behavior / anti-fabrication guards and best-practice grounding.
+- `merge` skill (renamed from `merge-trivial`) now drives merges, rebases, and cherry-picks to completion, finishing by operation type.
+- `software` router folded `testing` in as `software/testing.md`; `release` tagging is collision-safe and re-points tags orphaned by a rebase.
+- `ship` skill rewritten as a fable-plan → sonnet-ship → refine pipeline; `oracle` routing consolidated through high-effort critics; subagent effort defaults set.
+- `bugs` skill reconciled to real practice: dated blocks, kebab IDs, inline resolution.
+- Plugin manifests bumped to track the release (`.claude-plugin` and `.codex-plugin` were stale at 0.3.47 / 0.3.33).
+
+### Fixed
+- `finalize-crate` / `red-eval` frontmatter: quoted colons so YAML parses the real description (they were loading with an H1 fallback).
+- `udfix`: 64 KB line-limit and trailing-newline handling; strengthened tests.
 
 ## [v0.3.63] — 20260720
 
