@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.63] — 20260720
+
+> kronael v0.3.63 — collision-safe releases + refinements
+>
+> The release skill now guards against tag collisions, plus fixes to eval-all logging and a leaner install runbook.
+>
+> • release — picks an untagged version, recreates tags that collide or point at orphaned commits, re-points after a rebase renumber
+> • eval-all — the run prompt owns the per-lens memo save (the eval skills don't all persist by default)
+> • install runbook trimmed 232→209 lines (sync protocol, Codex bridge, preflight)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `release`: tag step is now collision-safe — pick a version not already tagged (bump past collisions), recreate (`git tag -d` + re-tag) any tag that collides or points at an orphaned commit, and re-point every tag after a rebase renumbers releases. Commit format `release: vX.Y.Z`.
+- `eval-all`: corrected the logging note — the individual eval skills don't all write `.ship/critique-*` memos, so eval-all's run prompt instructs each subagent to save its own (and verify it landed).
+- `install`: re-compressed the sync protocol, Codex bridge, and preflight (232 → 209 lines); the duplicate `0.` preflight steps merged. Full <200 still needs a structural split (deferred).
+
 ## [v0.3.62] — 20260720
 
 > kronael v0.3.62 — eval panel + sharper caveman
