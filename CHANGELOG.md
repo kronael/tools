@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.62] — 20260720
+
+> kronael v0.3.62 — eval panel + sharper caveman
+>
+> Adds /eval-all to run every review lens and log the verdict, sharpens the 80% caveman style with ADHD-friendly patterns, and trims two skills that duplicated existing ones.
+>
+> • /eval-all — runs ceo/cto/security/ux lenses as subagents, logs memos + a diary pointer for later context
+> • 80% caveman gains multi-turn patterns: restate progress, cap-5 + do-now/later, minute estimates, first/last-line check
+> • drops assess (dup of ceo/cto-eval) and sweep-fix-verify (its discipline already in the wisdom + worktree)
+> • commit format is now type(scope): everywhere; reverse-sync flags local skills before adding to source
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `eval-all`: new skill — runs every applicable eval lens (`ceo-eval`, `cto-eval`, `hacker-eval`, `hiring-eval`, `eye-13yo`) as independent subagents, then persists each memo to `.ship/`, a consolidated roll-up, a `/diary` pointer, and real defects to `BUGS.md` — so a later session has the eval context.
+- `80% caveman` output style: folded in multi-turn / low-cognitive-load patterns — restate progress ("step 3 of 5"), cap lists at ~5 with a do-now/later split, minute-level effort estimates, one-thread-at-a-time, first/last-line pre-send check, action-first. Adapted from `i-have-adhd` by Ayoub Ghriss (MIT), attributed in `NOTICE`.
+- Dropped `assess` (redundant with `ceo-eval`/`cto-eval`/`hiring-eval`) and `sweep-fix-verify` (discipline already in the wisdom, `commit`, `worktree`, `refine`) — both were installed-only and org-tinged. `worktree` + `later` stay.
+- Commit convention finalized as `type(scope):` across the bundle (AGENTS.md + COOKBOOK.md were the last `[section]` holdouts).
+- Install sync protocol: installed-only skills are not auto-captured into source; org/local ones are flagged and added only on explicit opt-in.
+
 ## [v0.3.61] — 20260720
 
 > kronael v0.3.61 — four skills back in source
