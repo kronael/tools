@@ -34,8 +34,10 @@ Install is a fast copy only when installed source-owned files are unchanged.
 When local installed edits exist, install becomes a merge workflow.
 
 - Manifest path: `~/.claude/kronael-install-manifest.json`. Shape:
-  `{ "release": { "version", "gitCommit", "gitDescribe", "installedAt" },
-  "files": { "<installed-path>": "<source-sha256>" } }`.
+  `{ "version": 1, "release": { "version", "gitCommit", "gitDescribe",
+  "installedAt" }, "files": { "<installed-path>": { "source": "<repo-rel-path>",
+  "source_sha256": "<sha256>" } } }`. Add `release` alongside the existing
+  `files` map; NEVER drop or rewrite unrelated `files` entries.
 - **Installed-release marker.** `release` records what was last installed:
   `version` (latest `## [vX.Y.Z]` in source `CHANGELOG.md`), `gitCommit`
   (source `git rev-parse HEAD`), `gitDescribe` (`git describe --tags`),
