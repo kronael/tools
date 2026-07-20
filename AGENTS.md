@@ -159,6 +159,6 @@ the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
 - Files under 200 lines.
 - ALWAYS/NEVER statements in skill content.
 - No secrets, no local paths, no org-specific references in source.
-- Commit format: `[section] Message`.
+- Commit format: `type(scope): Message` (scope optional).
 - NEVER use `git add -A`, `git commit --amend`, or `git push`.
 - NEVER delete files in `~/.claude/` that aren't in this source tree.

@@ -150,7 +150,7 @@ The Stop hook nudges you when there are uncommitted changes or no
 diary entry for today.
 
 ```bash
-/commit                    # cohesive [section] commit
+/commit                    # cohesive type(scope): commit
 /diary                     # append `## HH:MM` to .diary/YYYYMMDD.md
 ```
 
