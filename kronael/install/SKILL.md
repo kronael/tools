@@ -41,11 +41,9 @@ When local installed edits exist, install becomes a merge workflow.
 - **Installed-release marker.** `release` records what was last installed:
   `version` (latest `## [vX.Y.Z]` in source `CHANGELOG.md`), `gitCommit`
   (source `git rev-parse HEAD`), `gitDescribe` (`git describe --tags`),
-  `installedAt` (UTC timestamp). ALWAYS read it at preflight and REPORT the
-  delta — installed `version`/commit vs the source's now, plus the count and
-  titles of intervening `## [vX.Y.Z]` CHANGELOG sections — so a re-install
-  states which releases it is about to apply before touching files. A missing
-  marker means "first tracked install"; fall back to full drift scan.
+  `installedAt` (UTC timestamp). Preflight (step 0) reads it and reports the
+  installed→source delta; a missing marker means "first tracked install" —
+  fall back to a full drift scan.
 - ALWAYS run a quiet checksum/manifest drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
 - Per source-owned path, compare source / installed / manifest sha256, then
