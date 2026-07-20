@@ -105,13 +105,25 @@ user-invocable: true
    Skip when nothing version-shaped is documented.
 5. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
-6. **Commit** — version files + CHANGELOG(s) in one `[release]` commit.
-7. **Tag** — `git tag vX.Y.Z`. ONE tag per repo even when there are
-   multiple deployables; subdir versions track in their own pyprojects.
+6. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
+7. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
+   versions track in their own pyprojects). **Collision-safe, ALWAYS:**
+   - Pick a version NOT already tagged. If `git rev-parse -q --verify vX.Y.Z`
+     succeeds, that version is taken — bump to the next free patch (prevents a
+     duplicate when a rebase or a parallel release already minted it).
+   - If the tag name exists but points at a DIFFERENT / orphaned commit (e.g.
+     rebased away), recreate it: `git tag -d vX.Y.Z && git tag vX.Y.Z`. NEVER
+     leave a version tag on an orphaned commit.
+   - After a rebase renumbers releases, re-point EVERY affected tag (delete the
+     stale ones, re-tag the rebased release commits) and verify each `vX.Y.Z`
+     resolves to a commit on HEAD's history.
 
 ## Rules
 
-- ALWAYS `git tag vX.Y.Z` on the release commit
+- ALWAYS `git tag vX.Y.Z` on the release commit; pick a version NOT already
+  tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
+  that collides or points at an orphaned commit — NEVER mint a duplicate or
+  leave a dangling version tag
 - NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill

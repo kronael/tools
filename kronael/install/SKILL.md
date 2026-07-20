@@ -36,20 +36,12 @@ When local installed edits exist, install becomes a merge workflow.
 - Manifest path: `~/.claude/kronael-install-manifest.json`.
 - ALWAYS run a quiet checksum/manifest drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
-- For each source-owned installed path, compare:
-  - current source sha256
-  - current installed sha256
-  - last installed source sha256 from the manifest, when present
-- **Determine direction automatically**:
-  - **unchanged installed** (installed hash equals manifest hash): source-only
-    update. Overwrite silently.
-  - **installed changed only** (source hash equals manifest hash): local edit.
-    Show a diff summary and ask: sync back to repo, overwrite from source, or
-    skip that path.
-  - **both changed** (neither hash equals manifest hash): conflict. Show a diff
-    summary and ask; NEVER overwrite silently.
-  - **no manifest entry** and content differs: treat as installed changed.
-    Ask instead of guessing from mtime.
+- Per source-owned path, compare source / installed / manifest sha256, then
+  **determine direction automatically**:
+  - installed == manifest → source-only update: overwrite silently.
+  - source == manifest → local edit: show diff, ask (sync back / overwrite / skip).
+  - neither == manifest → conflict: show diff, ask; NEVER overwrite silently.
+  - no manifest entry + content differs → treat as local edit: ask, don't guess.
 - ALWAYS write/update the manifest after a successful copy, recording the
   installed path and the source hash just installed.
 - NEVER treat a backup as permission to discard installed-side edits.
@@ -87,12 +79,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 ## Steps
 
-0. **Skill lint preflight**. ALWAYS run `make skills-frontmatter` when available.
-   If it reports files, run `make skills-frontmatter-fix` before copying skills.
-
-0. **Fast drift preflight**. Follow the sync protocol for
-   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` and
-   `~/.codex/hooks.json` before backup/copy.
+0. **Preflight**. Run `make skills-frontmatter` (then `-fix` if it reports files)
+   before copying skills. Then run the sync-protocol drift check for
+   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}` and `~/.codex/hooks.json`.
 
 1. **Backup**. ALWAYS copy current
    `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` and
@@ -128,36 +117,24 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
-5. **Install Codex bridge**. When running from Codex, or when the user asks
-   for Codex support, install every bridge:
-   - Ensure Codex loads the installed global wisdom. If neither
-     `~/.codex/AGENTS.override.md` nor `~/.codex/AGENTS.md` exists, symlink
-     `~/.codex/AGENTS.md` to `~/.claude/CLAUDE.md`. If that symlink already
-     resolves to the wisdom file, leave it. Any other existing global Codex
-     guidance is a conflict: show it and ask whether to replace, merge, or
-     skip. NEVER rely on project fallback names for global guidance.
-   - Ensure `project_doc_fallback_filenames` in `~/.codex/config.toml`
-     contains `CLAUDE.md`. ALWAYS keep this as a top-level TOML key: insert it
-     before the first `[table]` header, or append `CLAUDE.md` to the existing
-     top-level array. NEVER leave `CLAUDE.md` under `[tui]` or
-     `[tui.model_availability_nux]` — move it to the top-level key.
-   - Ensure `~/.agents/skills` points at `~/.claude/skills` (symlink when
-     possible; per-skill symlinks only when `~/.agents/skills` is already a
-     directory).
-   - If pi is installed, ensure `~/.pi/agent/AGENTS.md` symlinks to
-     `~/.claude/CLAUDE.md` — pi's global context file (its candidates are
-     `AGENTS.md` then `CLAUDE.md`), so the same wisdom reaches pi. Skip if a
-     real file already exists.
-   - Copy `codex-hooks.json` → `~/.codex/hooks.json` after the drift
-     preflight. This file wires Codex `UserPromptSubmit`, `PreToolUse`,
-     `PostToolUse`, `Stop`, and `PreCompact` into
-     `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads before
-     delegating to the installed Kronael hook scripts. The wrapper also
-     suppresses Claude-style context-only output for Codex `PreCompact`, where
-     Codex only accepts block decisions.
-   - Tell the user to open `/hooks` in the next Codex TUI session and trust
-     the changed hooks. For one-shot verification only, use
-     `--dangerously-bypass-hook-trust`; do not make that the normal path.
+5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
+   support), install every bridge:
+   - Global wisdom: if neither `~/.codex/AGENTS.override.md` nor
+     `~/.codex/AGENTS.md` exists, symlink `~/.codex/AGENTS.md` →
+     `~/.claude/CLAUDE.md` (leave it if already resolved). Any other existing
+     global Codex guidance is a conflict — show and ask. NEVER rely on project
+     fallback names for global guidance.
+   - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
+     contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
+   - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if
+     it is already a directory). If pi is installed, symlink
+     `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md` (skip if a real file exists).
+   - Copy `codex-hooks.json` → `~/.codex/hooks.json` (after the drift preflight).
+     It wires Codex's lifecycle events into `~/.claude/hooks/codex_hook.py`, which
+     normalizes Codex payloads before delegating to the Kronael hooks (and drops
+     context-only output for Codex `PreCompact`, which only accepts block decisions).
+   - Tell the user to open `/hooks` in the next Codex TUI session and trust the
+     changed hooks. One-shot verify only: `--dangerously-bypass-hook-trust`.
 
 6. **External tools** — run `which <tool>` to detect; skip if present and recent.
 

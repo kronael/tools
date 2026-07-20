@@ -29,8 +29,9 @@ verdict, so a later session has the context instead of re-deriving it.
    (agent success reports are not evidence).
 
 ## Log (so it has context later) — ALWAYS persist, never just print
-- Each lens's full memo → `.ship/critique-<lens>-<YYYYMMDD>.md` (the eval skills
-  already write these).
+- Each lens's full memo → `.ship/critique-<lens>-<YYYYMMDD>.md`. The individual
+  eval skills don't all persist by default, so the RUN prompt above tells each
+  subagent to write its memo there — verify the file landed.
 - A consolidated roll-up → `.ship/eval-all-<YYYYMMDD>.md`: per-lens verdict +
   blockers, the cross-cutting kill-shot, and the one next action.
 - A one-line pointer via `/diary`: "eval-all `<target>`: N lenses, worst verdict
