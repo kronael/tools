@@ -33,7 +33,17 @@ If missing, you're in the wrong directory — stop and ask.
 Install is a fast copy only when installed source-owned files are unchanged.
 When local installed edits exist, install becomes a merge workflow.
 
-- Manifest path: `~/.claude/kronael-install-manifest.json`.
+- Manifest path: `~/.claude/kronael-install-manifest.json`. Shape:
+  `{ "release": { "version", "gitCommit", "gitDescribe", "installedAt" },
+  "files": { "<installed-path>": "<source-sha256>" } }`.
+- **Installed-release marker.** `release` records what was last installed:
+  `version` (latest `## [vX.Y.Z]` in source `CHANGELOG.md`), `gitCommit`
+  (source `git rev-parse HEAD`), `gitDescribe` (`git describe --tags`),
+  `installedAt` (UTC timestamp). ALWAYS read it at preflight and REPORT the
+  delta — installed `version`/commit vs the source's now, plus the count and
+  titles of intervening `## [vX.Y.Z]` CHANGELOG sections — so a re-install
+  states which releases it is about to apply before touching files. A missing
+  marker means "first tracked install"; fall back to full drift scan.
 - ALWAYS run a quiet checksum/manifest drift check before backup/copy.
 - NEVER run recursive diffs on the happy path.
 - Per source-owned path, compare source / installed / manifest sha256, then
@@ -43,7 +53,9 @@ When local installed edits exist, install becomes a merge workflow.
   - neither == manifest → conflict: show diff, ask; NEVER overwrite silently.
   - no manifest entry + content differs → treat as local edit: ask, don't guess.
 - ALWAYS write/update the manifest after a successful copy, recording the
-  installed path and the source hash just installed.
+  installed path and the source hash just installed, AND refresh the `release`
+  marker (version, gitCommit, gitDescribe, installedAt) to the source just
+  installed.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
 - **Installed-only skills are NOT auto-captured into source.** An installed skill
@@ -80,9 +92,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 ## Steps
 
 0. **Preflight**. Run `make skills-frontmatter` (then `-fix` if it reports files)
-   before copying skills. Then run the sync-protocol drift check for
-   `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}`, the Kronael-managed
-   block in `~/.codex/AGENTS.md`, and `~/.codex/hooks.json`.
+   before copying skills. Read the manifest's `release` marker and REPORT the
+   installed→source delta (installed version/commit vs source now, and the
+   intervening `## [vX.Y.Z]` CHANGELOG sections). Then run the sync-protocol
+   drift check for `~/.claude/{skills,agents,hooks,CLAUDE.md,RECLAUDE.md}`, the
+   Kronael-managed block in `~/.codex/AGENTS.md`, and `~/.codex/hooks.json`.
 
 1. **Backup**. ALWAYS copy current
    `~/.claude/{skills,agents,hooks,CLAUDE.md,settings.json,RECLAUDE.md}` and
@@ -107,7 +121,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
      `software-engineering` (folded into the `software` router as `software/code.md`; language skills point at it in-body),
      `gh-review`, `gh-fix` (folded into the `review` router — `/review give gh` and `/review take gh`),
-     `con`, `cont` (renamed to `continue`).
+     `con`, `cont` (renamed to `continue`),
+     `merge-trivial` (renamed to `merge`, which now also covers rebase + cherry-pick),
+     `docs-audit` (removed in the skills cleanup pass — not folded, deliberately dropped).
      NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
      bundled again — `codex` is the canonical second-opinion skill, `oracle`
      is its alias; the v0.3.26 codex→oracle rename was reverted), or any
@@ -190,7 +206,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    NEVER fail the whole install if one tool's toolchain is missing — report
    that tool as skipped and continue.
 
-8. **Report**: summary — fast drift result, X skills, Y agents, Z hooks,
+8. **Report**: summary — **release delta** (installed vX.Y.Z → source vX.Y.Z,
+   or "first tracked install"), fast drift result, X skills, Y agents, Z hooks,
    RECLAUDE.md, **pruned dirs/hooks** (name every stale skill/hook removed per
    step 2 — renamed, consolidated, or dead; say "pruned: none" when nothing
    matched so the user knows removal ran), Claude settings merged, Codex global
