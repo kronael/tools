@@ -14,7 +14,7 @@ Every spec file starts with YAML frontmatter:
 
 ```yaml
 ---
-status: draft|experiment|planned|partial|shipped
+status: draft|experiment|planned|partial|shipped|reference
 ---
 ```
 
