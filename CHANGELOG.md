@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.64] — 20260721
+
+> kronael v0.3.64 — tighter specs + learn dispatch
+>
+> The specs skill gets flat numbered filenames, a per-spec index row, and a clean 4-state status; "learn" now routes to @learn.
+>
+> • specs — flat `NN-topic.md` names + an index.md row per spec; phases only for multi-stream efforts
+> • specs — status trimmed to draft → planned → partial → shipped (dropped experiment/reference)
+> • prompt nudge — "learn" now dispatches to the @learn agent
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs`: default flat `specs/NN-topic.md` numbering (phase subdirs only for large multi-stream efforts); ALWAYS add an `index.md` row on create and update Status on ship.
+- `specs`: status enum trimmed to the four lifecycle states `draft → planned → partial → shipped`; dropped `experiment` and `reference`.
+- `prompt_nudge`: `learn` keyword routes to the `@learn` agent.
+
 ## [v0.3.63] — 20260720
 
 > kronael v0.3.63 — collision-safe releases + refinements
