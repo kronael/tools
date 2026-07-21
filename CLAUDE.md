@@ -106,6 +106,14 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Testing bundle changes**: re-run `/kronael:install` (or "say install") and
   use the result in a real project. There's no unit test for skill behavior.
 
+## Release
+
+- Canonical version = git tag + `CHANGELOG.md`; the `release:` commit adds the
+  CHANGELOG entry and tags `vX.Y.Z` (patch default). Use the `release` skill.
+- ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
+  the same release — it silently drifted (stuck at 0.3.47 across many releases).
+  Keep it synced so the plugin manifest reports the shipped version.
+
 ## Docs map
 
 The full map is `README.md#documentation`. Most-used here:
