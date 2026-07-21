@@ -15,6 +15,7 @@
 - `specs`: default flat `specs/NN-topic.md` numbering (phase subdirs only for large multi-stream efforts); ALWAYS add an `index.md` row on create and update Status on ship.
 - `specs`: status enum trimmed to the four lifecycle states `draft → planned → partial → shipped`; dropped `experiment` and `reference`.
 - `prompt_nudge`: `learn` keyword routes to the `@learn` agent.
+- `plugin.json`: version synced to the release tag (was stale at 0.3.47); CLAUDE.md now requires this bump on every release.
 
 ## [v0.3.63] — 20260720
 
