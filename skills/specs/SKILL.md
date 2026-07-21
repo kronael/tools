@@ -1,7 +1,7 @@
 ---
 name: specs
-description: Design specs in specs/. NOT for in-flight work (use ship).
-when_to_use: "spec this out, document architecture, write a spec, write a design doc"
+description: Design specs in specs/ — numbered files, status frontmatter, index.md. NOT for in-flight tracking (use ship) or code/API docs (use readme).
+when_to_use: "write a spec, spec this out, write a design doc, design document, architecture doc, technical design, RFC, ADR, proposal, SPEC.md, specs/ directory, spec out a feature, spec before coding, number a spec, add a spec, spec numbering, update the specs index"
 ---
 
 # Specs
@@ -34,23 +34,25 @@ Lifecycle: `draft` → `planned` → `partial` → `shipped`.
 
 ## File naming and ordering
 
-`<phase>/<N>-<topic>.md` — N is a plain integer, ordered within the phase.
+ALWAYS number spec files — the number gives stable ordering and a short handle
+("spec 3"). NEVER use an unnumbered by-content name like `specs/auth.md`.
 
-- Phases group related work: `specs/1/`, `specs/2/`, `specs/3/`, ...
-- N within a phase is sequential — next spec gets the next available number
-- To find the next N: `ls specs/<phase>/` and take max + 1
-- Phase directories are created as needed; no predefined list
+**Default (flat):** `specs/<NN>-<topic>.md`, NN a zero-padded integer.
+- Next number: `ls specs/[0-9]*-*.md | sed 's|.*/||' | cut -d- -f1 | sort -n | tail -1` then +1 (first is `01`).
+- `<topic>` is kebab-case content name: `specs/03-vote-tracking.md`.
 
-`specs/index.md` is the master table:
+**Phases (only for large multi-stream efforts):** `specs/<phase>/<N>-<topic>.md`,
+e.g. `specs/1/2-webhooks.md`. Use phase subdirs ONLY when specs cluster into
+distinct workstreams; a single-project corpus stays flat. Next N: `ls specs/<phase>/`, max + 1.
+
+`specs/index.md` is the master table — ALWAYS add a row on create, update Status on ship:
 
 ```markdown
 | Spec | Status | Summary |
 |------|--------|---------|
-| [1/1-auth.md](1/1-auth.md) | shipped | JWT auth flow |
-| [2/1-webhooks.md](2/1-webhooks.md) | planned | Outbound webhooks |
+| [01-auth.md](01-auth.md) | shipped | JWT auth flow |
+| [02-webhooks.md](02-webhooks.md) | planned | Outbound webhooks |
 ```
-
-Add a row when creating a spec. Update status when it ships.
 
 ## What specs contain
 
