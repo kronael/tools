@@ -25,3 +25,14 @@ uses it as a library (likely `uv run --with faster-whisper`), so a global
 tool install is both wrong and unnecessary. Fix: drop the row, or replace with
 a CLI wrapper like `whisper-ctranslate2` if a binary is actually wanted.
 Found 2026-07-07 during a full "install all tools" run.
+
+## install: `go install ...trufflehog/v3@latest` fails (replace directives)
+
+`kronael/install/SKILL.md` step 6 security-audit table installs `trufflehog`
+via `go install github.com/trufflesecurity/trufflehog/v3@latest`. That fails:
+its `go.mod` contains `replace` directives, so `go install` refuses ("must not
+contain directives that would cause it to be interpreted differently than if
+it were the main module"). Fix: install the release binary like gitleaks —
+`linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into
+`~/.local/bin`. Found 2026-07-21 during a full "install all tools" run; worked
+around with the release binary (v3.95.9) so the install completed.
