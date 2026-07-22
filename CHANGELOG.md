@@ -25,9 +25,10 @@
 - Eval family: `hacker-eval` → `red-eval`, `eye-13yo` → `13yo-eval`; added LLM-behavior / anti-fabrication guards and best-practice grounding.
 - `merge` skill (renamed from `merge-trivial`) now drives merges, rebases, and cherry-picks to completion, finishing by operation type.
 - `software` router folded `testing` in as `software/testing.md`; `release` tagging is collision-safe and re-points tags orphaned by a rebase.
+- install runbook: tool tables + removed-skills prune list moved to `kronael/install/reference.md`, keeping `SKILL.md` under the 200-line rule.
 - `ship` skill rewritten as a fable-plan → sonnet-ship → refine pipeline; `oracle` routing consolidated through high-effort critics; subagent effort defaults set.
 - `bugs` skill reconciled to real practice: dated blocks, kebab IDs, inline resolution.
-- Plugin manifests bumped to track the release (`.claude-plugin` and `.codex-plugin` were stale at 0.3.47 / 0.3.33).
+- Plugin manifests (`.claude-plugin`, `.codex-plugin`) bumped to 0.3.65 to track the release.
 
 ### Fixed
 - `finalize-crate` / `red-eval` frontmatter: quoted colons so YAML parses the real description (they were loading with an H1 fallback).
