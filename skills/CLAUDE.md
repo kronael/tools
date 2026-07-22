@@ -74,5 +74,6 @@ repo CLAUDE.md links to this file.
 3. Add the mode's trigger keywords to router `when_to_use` if missing
    (keep trimmed — it preloads).
 4. If a dir is removed/renamed, add it to the prune list in
-   `../kronael/install/SKILL.md` so reinstalls delete orphans.
+   `../kronael/install/reference.md` (§ "Removed kronael skills to prune") so
+   reinstalls delete orphans.
 5. Per-router edit notes: `create/CLAUDE.md`, `software/CLAUDE.md`.

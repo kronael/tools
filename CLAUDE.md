@@ -60,8 +60,10 @@ installer and runs the manual path. NEVER duplicate the bundle under
 Codex-specific directories.
 
 `kronael/install/SKILL.md` is the **single source of truth** for the
-procedure (the only plugin-exposed skill). When you change install behavior,
-change that file and keep `AGENTS.md` plus the Codex installer skill in sync.
+procedure (the only plugin-exposed skill); its cold data — tool commands and
+the removed-skills prune list — lives in the sibling `kronael/install/reference.md`.
+When you change install behavior, change those files and keep `AGENTS.md` plus
+the Codex installer skill in sync.
 Why the install step exists at all:
 `ARCHITECTURE.md#why-hybrid-plugin--install-step`.
 

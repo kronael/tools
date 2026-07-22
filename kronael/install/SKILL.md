@@ -116,18 +116,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      markers. This makes Codex load Claude guidance in addition to AGENTS
      guidance and applies the selected terse response policy.
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
-   - **Prune removed kronael skills**: AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present — consolidated into the `create/` router or renamed (`create-humanizer` → `humanize`). Orphans keep preloading their descriptions, defeating the router:
-     `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`, `create-claude-design`, `create-code-presentation`, `create-design-md`, `create-excalidraw`, `create-humanizer`, `create-manim-video`, `create-p5js`, `create-popular-web-designs`, `create-pretext`, `create-sketch`, `create-video-render`, `create-video-script`,
-     `sub` (renamed to `dispatch` in v0.3.23 — the individual model skills haiku/sonnet/opus/fable were also briefly removed in v0.3.22 then restored; both changes land together here),
-     `software-engineering` (folded into the `software` router as `software/code.md`; language skills point at it in-body),
-     `gh-review`, `gh-fix` (folded into the `review` router — `/review give gh` and `/review take gh`),
-     `con`, `cont` (renamed to `continue`),
-     `merge-trivial` (renamed to `merge`, which now also covers rebase + cherry-pick),
-     `docs-audit` (removed in the skills cleanup pass — not folded, deliberately dropped).
-     NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both
-     bundled again — `codex` is the canonical second-opinion skill, `oracle`
-     is its alias; the v0.3.26 codex→oracle rename was reverted), or any
-     skill dir not on this list — user-added skills stay.
+   - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
+     listed in `reference.md` § "Removed kronael skills to prune" from
+     `~/.claude/skills/` if present (consolidated or renamed — orphans keep
+     preloading their descriptions). NEVER delete a dir not on that list —
+     user-added skills stay.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
@@ -159,52 +152,17 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - Tell the user to open `/hooks` in the next Codex TUI session and trust the
      changed hooks. One-shot verify only: `--dangerously-bypass-hook-trust`.
 
-6. **External tools** — run `which <tool>` to detect; skip if present and recent.
+6. **External tools** — detect with `which <tool>`; skip if present and recent.
+   Install the missing ones from `reference.md` § "External tool commands":
+   the **Core** batch (ask once), then the **Security-audit** and **Video**
+   batches (each ask separately — large/heavy, rarely needed).
 
-   **Core** — ask once, install as a batch:
-   | Tool | Command | Skills |
-   |------|---------|--------|
-   | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
-   | `agent-browser` | `bun install -g agent-browser` | /browse |
-   | `codex` | `bun install -g @openai/codex` | /codex /oracle |
-   | `pi` | `bun install -g @mariozechner/pi-coding-agent` | /pi |
-   | `pyright` | `bun install -g pyright` | /py /ts /tsx |
-   | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
-   | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
-   | `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
-
-   **Security audit** — ask separately (large, optional):
-   | Tool | Command | Skills |
-   |------|---------|--------|
-   | `bandit` | `uv tool install bandit` | /hacker-eval |
-   | `pip-audit` | `uv tool install pip-audit` | /hacker-eval |
-   | `semgrep` | `uv tool install semgrep` | /hacker-eval |
-   | `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /hacker-eval |
-   | `trufflehog` | `go install github.com/trufflesecurity/trufflehog/v3@latest` | /hacker-eval |
-   | `gitleaks` | download from github.com/gitleaks/gitleaks releases | /hacker-eval |
-
-   **Video rendering** — ask separately (heavy, rarely needed):
-   | Tool | Command | Skills |
-   |------|---------|--------|
-   | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
-
-7. **CLI tools** — install the repo's standalone CLI tools so their binaries
-   in `~/.local/bin` track the repo (a stale binary is the failure this step
-   prevents). ONLY possible when the tool's source dir exists at the source
-   root (the cloned/manual path; the Codex marketplace snapshot has them too).
-   A plugin-only snapshot omits them — then say so and point to
-   `cd <tool> && make install` from a clone. For each opted-in tool run its
-   Makefile — idempotent, so ALWAYS (re)install to refresh a stale binary:
-
-   | Tool | Command | Notes |
-   |------|---------|-------|
-   | `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim/riq |
-   | `udfix` | `cd udfix && make install` | needs a Go toolchain |
-   | `clp` | `cd clp && make install` | sourceable bash; prints how to source it |
-   | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
-
-   NEVER fail the whole install if one tool's toolchain is missing — report
-   that tool as skipped and continue.
+7. **CLI tools** — (re)install the repo's standalone CLI tools per `reference.md`
+   § "CLI tools": rig/udfix/clp always (idempotent Makefiles refresh a stale
+   binary), dockbox only on its separate ask (needs Docker). Present only when
+   the source dirs exist at the source root; else point to `cd <tool> && make
+   install` from a clone and continue. NEVER fail the whole install on one
+   missing toolchain — report that tool skipped.
 
 8. **Report**: summary — **release delta** (installed vX.Y.Z → source vX.Y.Z,
    or "first tracked install"), fast drift result, X skills, Y agents, Z hooks,

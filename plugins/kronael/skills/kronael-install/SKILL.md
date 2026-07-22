@@ -42,6 +42,7 @@ For install/update requests, find the source root by checking, in order:
 The source root is the first directory where all of these exist:
 
 - `kronael/install/SKILL.md`
+- `kronael/install/reference.md`
 - `skills/`
 - `agents/`
 - `hooks/`
@@ -67,8 +68,9 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 
 ## Install
 
-1. Read `kronael/install/SKILL.md` completely.
-2. Follow it as the source of truth.
+1. Read `kronael/install/SKILL.md` completely, plus the
+   `kronael/install/reference.md` it points to (tool commands + prune list).
+2. Follow them as the source of truth.
 3. Treat the discovered source root as the canonical install source. NEVER run
    `/kronael:install`; that is a Claude Code slash command.
 4. Execute the canonical installer's steps exactly as written there — the
