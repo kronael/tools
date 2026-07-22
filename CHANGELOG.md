@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.64] — 20260720
+## [v0.3.65] — 20260722
 
-> kronael v0.3.64 — skills quality wave + self-describing installs
+> kronael v0.3.65 — skills quality wave + self-describing installs
 >
 > Reinstalls now tell you which releases they're about to apply, five new skills land, and the eval lenses get sharper.
 >
@@ -32,6 +32,23 @@
 ### Fixed
 - `finalize-crate` / `red-eval` frontmatter: quoted colons so YAML parses the real description (they were loading with an H1 fallback).
 - `udfix`: 64 KB line-limit and trailing-newline handling; strengthened tests.
+
+## [v0.3.64] — 20260721
+
+> kronael v0.3.64 — tighter specs + learn dispatch
+>
+> The specs skill gets flat numbered filenames, a per-spec index row, and a clean 4-state status; "learn" now routes to @learn.
+>
+> • specs — flat `NN-topic.md` names + an index.md row per spec; phases only for multi-stream efforts
+> • specs — status trimmed to draft → planned → partial → shipped (dropped experiment/reference)
+> • prompt nudge — "learn" now dispatches to the @learn agent
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs`: default flat `specs/NN-topic.md` numbering (phase subdirs only for large multi-stream efforts); ALWAYS add an `index.md` row on create and update Status on ship.
+- `specs`: status enum trimmed to the four lifecycle states `draft → planned → partial → shipped`; dropped `experiment` and `reference`.
+- `prompt_nudge`: `learn` keyword routes to the `@learn` agent.
+- `plugin.json`: version synced to the release tag (was stale at 0.3.47); CLAUDE.md now requires this bump on every release.
 
 ## [v0.3.63] — 20260720
 
