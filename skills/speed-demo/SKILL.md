@@ -57,6 +57,36 @@ reveals or when `uv`/`rich` are unavailable.
    apps (X included) render tall vertical media full-width; landscape gets
    pillarboxed smaller. Do NOT invert to landscape for "feed-friendly."
 5. **Honesty on screen.** Hardware, single-core/pinned, quiet box, n + percentile.
+   Cite the source bench (file + test name) and the commit/date the number
+   came from in the project's `demo/CLAUDE.md` — never just in the video.
+
+## Narrative arc — cold-open meme → data → flex + mascot (PROMPT for these on a new demo)
+A bare bench dump under-performs. When creating a NEW demo, SUGGEST this arc and
+PROMPT the user for the pieces before recording — the copy and the character are
+the user's creative call, so offer options, don't silently pick:
+1. **Cold-open meme (beginning).** ~2s that frames the PAIN or the design
+   progression — an expanding-brain of naive→clever, a relatable "when X…" — as
+   ASCII/terminal text (NOT an image card) so it stays one continuous GIF. This
+   is the scroll-stopping hook that buys the ~2s of retention infra content
+   needs; the numbers can't hook, they can only pay off. Flows top-down like the
+   narrative act, then the ONE clear into the data. Put the meme at the START,
+   not the end — a hook works harder than a victory lap (an end meme is seen
+   only by the people who already stayed).
+2. **The data (middle).** The real live bench — the credibility core, unchanged.
+3. **Flex + a mascot signature (end).** The headline result as the payoff,
+   closed by a SMALL on-brand ASCII mascot beside the wordmark. Keep it tiny and
+   tasteful — a big/cheesy mascot undercuts the credible numbers it follows.
+Worked example: `rsx-book/demo/bench-live.sh` — an expanding-brain `░▒▓█`
+intensity ramp (naive `BTreeMap` → slab+compression, palette worst→best) cold-
+open, the live depth-invariance bench, then the rsx mascot — the neutrino's
+train `····▸ rsx` (invisible particle, only its wake shows) + the CTA.
+
+Canonical reference SET (not just one crate): every RSX per-crate demo
+(`rsx-book`, `rsx-matching`, `rsx-risk`, `rsx-cast`, `rsx-term` — each a
+`demo/bench-live.sh` or `demo/pitch.py` + `demo/CLAUDE.md` + tracked
+`<crate>-live-opt.gif`) runs this exact arc. Read that crate's `demo/CLAUDE.md`
+first as the template before writing a new script. Detail in `lessons.md`
+("RSX demo family").
 
 ## Recording gotcha: pin `--cols`/`--rows` at RECORD time, not just render time
 Any redraw animation (bar-fill, cursor-up-then-overwrite race) MUST be
@@ -182,6 +212,10 @@ and the thing you're actually tuning.
 
 ## ALWAYS / NEVER
 - ALWAYS re-run the bench and quote the CURRENT number — NEVER a remembered one.
+- ALWAYS cite the exact bench file + test name and the commit/date it ran at
+  in the project's `demo/CLAUDE.md` — NEVER a number with no traceable source.
+- ALWAYS, on a NEW demo, suggest a cold-open meme + a small mascot signature and
+  PROMPT the user for the copy/character — NEVER default to a bare bench dump.
 - ALWAYS portrait (tall+narrow) + motion — NEVER landscape, NEVER a static table.
 - ALWAYS keep the honesty caveat on screen — NEVER blend lab micro-numbers with
   system throughput or imply production.

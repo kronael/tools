@@ -68,6 +68,22 @@ as typing crosses each line break. Fix: always render every line's slot
 up front — the box is the final size from frame one, only the text inside
 fills in.
 
+## RSX demo family — the canonical reference SET, not one crate
+Don't treat `rsx-book/demo/bench-live.sh` as the only worked example — by
+2026-07-22 five RSX crates each ship the full arc: `rsx-book` (expanding-brain
+`░▒▓█` ramp: naive `BTreeMap` → slab+compression → the depth-invariant match
+bench), `rsx-matching`, `rsx-risk`, `rsx-cast` (a `pitch.py`+`rich` narrative
+variant, not bash), `rsx-term`. Each lives at `rsx-<crate>/demo/` with a
+`bench-live.sh` or `pitch.py`, a `demo/CLAUDE.md` (the per-crate story +
+honesty caveats + regeneration steps), and exactly one tracked artifact
+`<crate>-live-opt.gif` (raw `.gif`/`.cast` gitignored). All five share: the
+project's canonical palette (documented once, `rsx-cast/demo/CLAUDE.md`),
+warm-dark `agg --theme monokai` base, the neutrino mascot close
+(`····▸ rsx`), and a single closing CTA ("Read the code." + repo URL). When
+prompted for "the RSX demo," read the target crate's own `demo/CLAUDE.md` —
+each has crate-specific honesty caveats (e.g. rsx-book's single-core/shared-
+host variance note) that don't belong in this project-agnostic skill.
+
 ## A shorter-bar-wins comparison reads backwards to a casual viewer
 A latency chart where less is better still LOOKS like the longer bar is
 winning to someone skimming a feed for two seconds. Show the reciprocal
