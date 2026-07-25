@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.66] — 20260725
+
+> kronael v0.3.66 — dockbox uses one package manager
+>
+> The dockbox image now installs both Claude Code and Codex with bun; npm is gone.
+>
+> • dockbox — claude-code installs via bun like codex; ripgrep is embedded in claude's compiled binary (verified in-image), so nothing regresses
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`: install `@anthropic-ai/claude-code` via `bun install -g --trust` instead of npm, so both CLIs use one package manager. claude-code 2.x ships a compiled binary with ripgrep embedded, so the bun install is identical to npm's; the `claude` wrapper now points at `$BUN_INSTALL/bin/claude` and the final chmod is narrowed to the bun tree.
+
 ## [v0.3.65] — 20260722
 
 > kronael v0.3.65 — skills quality wave + self-describing installs
