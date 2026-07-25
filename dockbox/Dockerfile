@@ -153,7 +153,7 @@ RUN mkdir -p /etc/zsh && printf '%s\n' \
 
 # claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
 # honored; falls back to the symlinked default node otherwise. jq strips the
-# host's native-install keys so the container's npm claude doesn't warn about a
+# host's native-install keys so the container's bun claude doesn't warn about a
 # ~/.local/bin/claude that only exists on the host.
 RUN printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative)" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
@@ -161,7 +161,7 @@ RUN printf '#!/bin/sh\n\
 export NVM_DIR="/opt/dev-tools/nvm"\n\
 unset NPM_CONFIG_PREFIX\n\
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
-exec /usr/local/share/npm-global/bin/claude --dangerously-skip-permissions "$@"\n' \
+exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
 
 # dockbox-init: register the runtime user in /etc/passwd, chown overmounts
@@ -228,10 +228,11 @@ RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/d
 # claude + codex CLIs last, in a cache-busted layer, so every `make image`
 # refreshes them to latest without re-running the heavier layers above. The
 # Makefile passes a fresh AGENTS_CACHEBUST each build to defeat the layer cache;
-# pin by building with --build-arg CLAUDE_CODE_VERSION=<v>. chmod only the two
-# install trees so the big chmod above stays cached.
+# pin by building with --build-arg CLAUDE_CODE_VERSION=<v>. chmod only the bun
+# install tree so the big chmod above stays cached. Both CLIs install via bun
+# (--trust runs claude-code's postinstall so its bundled ripgrep is fetched).
 ARG AGENTS_CACHEBUST=0
 RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
-  && npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+  && bun install -g --trust @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   && bun install -g @openai/codex \
-  && chmod -R a+rwX /usr/local/share/npm-global /opt/dev-tools/bun
+  && chmod -R a+rwX /opt/dev-tools/bun
