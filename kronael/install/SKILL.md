@@ -130,7 +130,16 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
    - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`80% caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
+   - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
+     `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
+     and keep them even when the user declines the rest of the permissions
+     block; they enforce the wisdom file's no-recursive-removal rule. Narrower
+     forms like `Bash(rm -rf /*)` only cover two literal paths and still allow
+     `rm -rf build/`. NEVER write the glob outside the parens
+     (`Bash(rm -rf /)*`) — it matches nothing and silently disables the guard,
+     so verify the four entries are present and paren-closed after merging.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
+     The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
