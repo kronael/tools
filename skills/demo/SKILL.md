@@ -79,3 +79,15 @@ Reference implementation: `rig/Makefile`.
   request to that endpoint and its result. Filtering with `jq`, `grep`, or a
   small named helper is fine when the raw response is too large, but do not
   replace real endpoints with invented demo objects.
+
+## Versus-scoreboard intro
+
+A "who-wins" character scoreboard that hard-CUTS into the bench GIF. ALWAYS
+build it drop-in: a Pillow compositor (images → frames, labeled placeholders
+when missing) + ffmpeg concat → `*-versus.{mp4,gif}` — never blocked on art.
+
+- ALWAYS make the four art slots replaceable by filename.
+- ALWAYS commit project-owned art and any final GIF referenced by a runtime.
+- NEVER commit frame sequences or codec intermediates — ALWAYS gitignore them.
+
+Exemplar: `rsx-book/demo/assets/` — `gen_collage.py`, `build.sh`, `README.md`.
