@@ -64,13 +64,14 @@ Development assisted by Claude Code (Anthropic).
 This is not legally required for most licenses, but sets accurate expectations
 for contributors and auditors about the project's provenance.
 
-## License compatibility quick reference
+## License compatibility
 
-| Upstream license | Can include in Unlicense/MIT project? | Condition |
-|-----------------|--------------------------------------|-----------|
-| MIT             | ✅ | Keep copyright notice |
-| Apache-2.0      | ✅ | Keep NOTICE file, copyright header |
-| BSD-2/3         | ✅ | Keep copyright notice |
-| GPL-2/3         | ❌ | Contaminates — do not port |
-| AGPL-3          | ❌ | Contaminates — do not port |
-| Unlicense       | ✅ | Nothing required |
+NEVER assume the destination license. Read the repository's current `LICENSE`,
+package metadata, and `NOTICE` first. Preserve upstream copyright and notice
+requirements. Describe copyleft obligations neutrally; NEVER call a license
+"contamination."
+
+Compatibility depends on the exact source and destination licenses and how
+the work is linked and distributed. When distribution rights are not clear
+from the license texts, surface the narrow uncertainty instead of inventing a
+blanket prohibition.
