@@ -86,6 +86,16 @@ A "who-wins" character scoreboard that hard-CUTS into the bench GIF. ALWAYS
 build it drop-in: a Pillow compositor (images → frames, labeled placeholders
 when missing) + ffmpeg concat → `*-versus.{mp4,gif}` — never blocked on art.
 
+- ALWAYS lock the asset class from the brief before composing. A recognizable
+  meme template, project-owned original art, emoji/emoticons, ASCII, and
+  placeholder art are different deliverables.
+- NEVER silently substitute one asset class for another or call the result
+  complete because the expected filenames exist. Inspect the source images
+  and state what actually shipped.
+- Copyright and provenance are sourcing/NOTICE checks, not a blanket reason to
+  refuse feasible asset work. Preserve required notices. If original art
+  replaces a requested reference image, keep the item open until the user
+  accepts the substitution.
 - ALWAYS make the four art slots replaceable by filename.
 - ALWAYS commit project-owned art and any final GIF referenced by a runtime.
 - NEVER commit frame sequences or codec intermediates — ALWAYS gitignore them.
