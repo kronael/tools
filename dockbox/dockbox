@@ -223,7 +223,7 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
             case "$_tool" in
                 haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
                 sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5 --effort high "${claude_args[@]}") ;;
-                opus)   entrypoint=claude; claude_args=(--model claude-opus-4-8 --effort xhigh "${claude_args[@]}") ;;
+                opus)   entrypoint=claude; claude_args=(--model claude-opus-5 --effort xhigh "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5 "${claude_args[@]}") ;;
                 gpt)    entrypoint=codex; claude_args=(-m gpt-5.5 "${claude_args[@]}") ;;
                 mini)   entrypoint=codex; claude_args=(-m gpt-5.4-mini "${claude_args[@]}") ;;
