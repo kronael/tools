@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.67] — 20260804
+
+> kronael v0.3.67 — three wisdom rules the bundle was missing
+>
+> The global wisdom file gains three rules that had only ever lived in a running install.
+>
+> • no claude.ai publishing — produce local files, never upload reports/pages via the Artifact tool
+> • comments earn their place — never restate the code; never reference an earlier version (history lives in .diary/)
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `global`: back-port three rules that had drifted into a running `~/.claude/CLAUDE.md` but never into source — never publish to claude.ai hosting (local files only), never write a comment that restates the code, and never reference an earlier version in comments/docs/skills (state what is true now; history lives in `.diary/`).
+
 ## [v0.3.66] — 20260725
 
 > kronael v0.3.66 — dockbox uses one package manager
