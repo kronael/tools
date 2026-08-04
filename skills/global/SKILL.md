@@ -182,7 +182,16 @@ language skill pulls in. Read it when writing or reviewing code.
 - Complex case: directory with lowercase files (specs/, docs/)
 - CLAUDE.md <200 lines: shocking patterns, project layout
 - NEVER marketing language, cut fluff
+- NEVER publish to claude.ai hosting — do NOT use the Artifact tool or upload
+  any report/page/output to claude.ai. ALWAYS produce local files (HTML, MD)
+  the user opens themselves. Local HTML is fine; the online upload is not.
 - Describe what code does, not its history
+- NEVER add a comment or doc-comment that restates the code or a name — ALWAYS
+  reserve comments for what the code cannot say: WHY a choice was made, or
+  behavior that is surprising / non-obvious / easy to get wrong.
+- NEVER reference an earlier version anywhere — no "used to be", "previously",
+  "renamed from", "an earlier revision", or a dated removal, in comments, docs,
+  skills or agent definitions. State what is true now; history lives in .diary/
 - NEVER add comments unless the behavior is shocking and not apparent from code or logging
 - NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
