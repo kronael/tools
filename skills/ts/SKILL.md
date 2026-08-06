@@ -13,8 +13,9 @@ rules. Below are TypeScript-specific additions and deltas.
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
 - Adhere to `gst` lint rules; match existing style when changing code
 - Single-letter vars only in trivial one-line callbacks (`arr.find(v => v.id === x)`)
-- ALWAYS name types — NEVER inline/anonymous object types (tests exempt)
+- ALWAYS name reusable or domain-significant object types; NEVER name a one-use alias that only hides `Pick` or `Omit` — ALWAYS inline that utility projection
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
+- NEVER repeat a module or domain name in a type when import context makes it unambiguous — ALWAYS use the shortest precise name
 - Single-line guards: omit braces, body indented on next line:
   ```
   if (x)
@@ -30,7 +31,10 @@ rules. Below are TypeScript-specific additions and deltas.
 ## Types
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
-- ALWAYS discriminated unions for state, NEVER boolean flag combos. ALWAYS exhaust with `default: const _:never = x` in switches.
+- ALWAYS use discriminated unions for mutually exclusive state; NEVER force a union onto independent results — ALWAYS use a named result object with one field per result
+- For fixed-shape result objects, ALWAYS use required `T | undefined` fields; NEVER use optional fields unless key presence carries meaning
+- ALWAYS use `value != null` for an intentionally nullish guard; NEVER expand it into separate null and undefined checks
+- ALWAYS exhaust discriminated-union switches with `default: const _:never = x`
 - NEVER `any` — use `unknown` and narrow. ALWAYS `import type { T }` for type-only imports.
 
 ## Design
