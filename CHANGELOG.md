@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.68] — 20260806
+
+> kronael v0.3.68 — stricter recall + dockbox protoc
+>
+> Recall now insists on grepping session transcripts, not just diary and memory, and dockbox images can build protobuf code.
+>
+> • recall-memories — every recall MUST grep the session JSONLs; diary + memory alone no longer counts
+> • dockbox — the image ships protoc (protobuf-compiler) so protobuf-generating builds work
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `recall-memories`: every recall now hard-gates on grepping the project's session transcripts (`~/.claude/projects/<slug>/*.jsonl`); diary + memory alone is no longer a recall.
+- `dockbox`: the image build installs `protoc` (protobuf-compiler) so builds that compile `.proto` files work.
+
 ## [v0.3.67] — 20260804
 
 > kronael v0.3.67 — three wisdom rules the bundle was missing
