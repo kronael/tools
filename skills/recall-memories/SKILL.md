@@ -1,6 +1,6 @@
 ---
 name: recall-memories
-description: Search diary, memory, and session history. NOT for writing entries (use diary).
+description: Search session transcripts FIRST, then diary and memory (+ Codex history). Session JSONLs are mandatory — never answer recall from diary/memory alone. NOT for writing entries (use diary).
 when_to_use: "what did we decide, recall, find context from a prior session"
 user-invocable: true
 arg: <question>
@@ -10,6 +10,14 @@ arg: <question>
 
 Read-only search across Claude diary, Claude memory/session transcripts, and
 Codex local history, session traces, and generated memories.
+
+> **HARD GATE — session transcripts are step 0, not optional.** Every recall
+> MUST grep the project's `~/.claude/projects/<slug>/*.jsonl` session histories.
+> If you did not grep the session JSONLs, you did NOT recall — do not answer.
+> Diary + memory are the curated summary; the raw transcripts hold the decisions,
+> reasoning, addresses, commands, and dead-ends that never reached the diary. An
+> ad-hoc `MEMORY.md`/diary grep is NOT a recall — invoke this skill and run
+> sources 1–3 together, sessions included, every time.
 
 ## Protocol
 
@@ -29,15 +37,30 @@ same pass when the topic plausibly spans projects (cross-cutting tool,
 shared skill, vague "where did we discuss X") — NEVER make the user
 re-ask to widen scope.
 
+**Session transcripts are NOT optional.** Every recall MUST grep the current
+project's `*.jsonl` session histories (item 3), in the SAME pass as diary and
+memory — diary + memory alone is NOT a recall. Diary/memory are the curated
+summary; the raw session transcripts hold decisions, reasoning, addresses,
+commands, and dead-ends that were never written to the diary. NEVER answer
+"recall" / "what did we decide" / "no prior context" from diary + memory only;
+if you did not grep the session JSONLs, you did not recall. Sources 1–3 (diary,
+memory, Claude sessions) ALWAYS run together; sources 4–7 (Codex) run when
+Codex history is present or the topic is Codex-related.
+
 1. **Claude diary** — `Glob` `<cwd>/.diary/*.md`. Cross-project: ALSO `Glob`
    `~/wk/*/.diary/*.md`. Grep `summary:` and body.
 2. **Claude memory** — Read `~/.claude/projects/<slug>/memory/MEMORY.md` and
    sibling `.md` files. Cross-project: ALSO `Glob`
    `~/.claude/projects/*/memory/*.md`.
-3. **Claude sessions** — `Glob` `~/.claude/projects/<slug>/*.jsonl`, sort by
-   mtime, read 2-3 newest. Cross-project: ALSO `Glob`
-   `~/.claude/projects/*/*.jsonl`, sort by mtime, grep the newest
-   handful. Lines are JSON messages; filter on `role` and content.
+3. **Claude sessions** (MANDATORY every recall) — `Glob`
+   `~/.claude/projects/<slug>/*.jsonl`, sort by mtime. ALWAYS `grep` the
+   transcripts for the topic across ALL of the project's sessions (not only
+   the current one), THEN read the newest 2-3 matching files in full around
+   the hits. Lines are JSON messages; filter on `role`/`type` and content.
+   Cross-project: ALSO `Glob` `~/.claude/projects/*/*.jsonl`, sort by mtime,
+   grep the newest handful. This step runs on EVERY recall, even when diary
+   and memory already returned a hit — the transcript often has the detail the
+   summary dropped.
 4. **Codex prompt history** — Search `${CODEX_HOME:-~/.codex}/history.jsonl`
    when present. It is JSONL with prompt text and session ids; grep first,
    then parse matching lines for `session_id`, `ts`, and `text`.
@@ -89,8 +112,12 @@ reads.
 
 ## Triggers
 
-- "what did we decide about X?" — diary + sessions
-- "what's the status of Y?" — diary summary
-- "what was wrong with Z?" — diary + sessions
-- Technical question about this project — diary + memory
-- "what did Codex do/say about X?" — Codex history + sessions + memories
+Every trigger below searches diary + memory + **Claude sessions** together
+(sources 1–3); the notes only add what else to weight.
+
+- "what did we decide about X?" — weight sessions (raw decisions)
+- "what's the status of Y?" — weight diary summary
+- "what was wrong with Z?" — weight sessions
+- Technical question about this project — diary + memory + sessions (NOT
+  diary + memory alone)
+- "what did Codex do/say about X?" — ALSO Codex history + sessions + memories
