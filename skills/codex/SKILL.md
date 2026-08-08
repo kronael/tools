@@ -24,6 +24,12 @@ command codex runs dies before executing. The ONLY reliable skip is the flag
 NEVER use `-s read-only` for an audit either — it sandboxes the network too, so
 codex's backend lookups fail (`failed to lookup address information`).
 
+ALWAYS launch via the `resume` subcommand so codex continues this project's
+existing thread instead of starting cold every call. `--last` picks the most
+recent session for the current cwd (`--all` disables that cwd filter); with no
+prior session it cold-starts cleanly (fresh id, exit 0, no error), so
+`resume --last` is the ONE universal invocation — no first-call special case.
+
 ```bash
 # Auth check first
 if ! codex login status >/dev/null 2>&1 \
@@ -32,14 +38,21 @@ if ! codex login status >/dev/null 2>&1 \
   exit 0
 fi
 
+# resume --last: continue this cwd's most recent codex session (cold-starts if
+#   none). Repeated calls fold into ONE growing session file, not N rollout
+#   files — so this is also the disk-friendly path, no --ephemeral needed.
 # --dangerously-bypass-approvals-and-sandbox: skip bwrap (container is the real
 #   perimeter; -s danger-full-access still runs bwrap, fails on no-userns kernels)
-# --ephemeral: skip session-rollout files (a long batch loop fills the disk otherwise)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
-codex exec --dangerously-bypass-approvals-and-sandbox --ephemeral \
+codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
   -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
+
+NEVER combine `resume` with `--ephemeral` — ephemeral skips persistence, so
+there is nothing to resume next call. Use plain `codex exec --ephemeral …`
+(no `resume`) ONLY for a genuinely isolated batch loop where each item must NOT
+inherit the others' context; everything else uses `resume --last`.
 
 NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 (which contains "codex") and kills the harness. Kill codex by numeric PID
@@ -93,5 +106,5 @@ ALWAYS verify codex's claim against the codebase before acting. NEVER implement 
 
 ## Output
 
-`codex exec "<prompt>"` writes the final message to stdout. `--json` emits JSON Lines. `--ephemeral` skips session persistence.
+`codex exec resume --last "<prompt>"` writes the final message to stdout. `--json` emits JSON Lines. `--ephemeral` skips session persistence (and defeats `resume` — see Invoke).
 Treat the answer as advisory. Cite when acting on it.
