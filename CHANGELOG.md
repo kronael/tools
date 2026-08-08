@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.69] — 20260808
+
+> kronael v0.3.69 — codex remembers your project
+>
+> The codex second-opinion skill now resumes your project's existing codex thread instead of starting cold every call.
+>
+> • codex — second opinions resume this project's codex session instead of starting cold each call
+> • first call in a project cold-starts cleanly — no setup, no first-run special case
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codex`: second-opinion calls launch via `codex exec resume --last`, continuing the current cwd's most recent codex session (cold-starts cleanly when none exists). Dropped `--ephemeral` from the default (incompatible with resume); it stays as the escape hatch for isolated batch loops.
+
 ## [v0.3.68] — 20260806
 
 > kronael v0.3.68 — stricter recall + dockbox protoc
