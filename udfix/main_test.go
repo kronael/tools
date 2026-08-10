@@ -87,3 +87,46 @@ func TestEdgeCases(t *testing.T) {
 		})
 	}
 }
+
+func lintOf(in string) []issue {
+	lines, _ := splitDiagram([]byte(in))
+	return lint(lines)
+}
+
+// TestLint covers the non-mutating checker: real junction defects and ASCII
+// arrows are reported, while correct diagrams and tree stubs are clean.
+func TestLint(t *testing.T) {
+	tests := []struct {
+		name, in string
+		want     int // number of issues expected
+	}{
+		{"correct box is clean", "┌─┬─┐\n│ │ │\n└─┴─┘", 0},
+		{"tree listing is clean (overspecified branches tolerated)",
+			"root\n├── a\n├── b\n└── c", 0},
+		{"corner where a tee is needed is flagged", "─┐─\n │", 1},
+		{"straight char at a real crossing is flagged", " │\n──\n │", 1},
+		{"ASCII arrow flagged", "a -> b", 1},
+		{"reverse ASCII arrow flagged", "a <- b", 1},
+		{"box arrows are clean", "──► x\n◄── y", 0},
+		{"empty is clean", "", 0},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := len(lintOf(tt.in)); got != tt.want {
+				t.Errorf("got %d issues, want %d: %+v", got, tt.want, lintOf(tt.in))
+			}
+		})
+	}
+}
+
+// TestLintPosition pins the 1-based row:col reporting. The ┐ on row 2 has a
+// segment entering from the right, so it should be a ┬ — a real defect at 2:2.
+func TestLintPosition(t *testing.T) {
+	got := lintOf("x\n─┐─\n │")
+	if len(got) != 1 {
+		t.Fatalf("want 1 issue, got %+v", got)
+	}
+	if got[0].row != 2 || got[0].col != 2 {
+		t.Errorf("want 2:2, got %d:%d", got[0].row, got[0].col)
+	}
+}
