@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.70] — 20260810
+
+> kronael v0.3.70 — udfix can check diagrams, not just fix them
+>
+> udfix gains a --lint mode that reports broken box-drawing junctions with line:col and exits non-zero, so docs diagrams can gate CI.
+>
+> • `--lint` reports `row:col` for each junction missing a segment that touches it, plus the right glyph
+> • Flags ASCII arrows `->` and `<-`, and points you at `► ◄ ▲ ▼`
+> • Tree-safe — tolerates a `├──` branch with nothing above, so it lints file trees too
+> • Exits 1 on any defect, 0 when clean; `-l` is short for `--lint`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `udfix`: new `--lint`/`-l` mode checks a diagram instead of rewriting it — prints `row:col: message` per defect and exits 1 if any. Flags underspecified junctions (a glyph missing a segment that touches it, naming the expected glyph) and ASCII `->`/`<-` arrows; tolerates overspecified junctions so file-tree listings (`├──`) pass clean. Shares `touching`/`splitDiagram` with fix mode, which is unchanged. Adds `TestLint`/`TestLintPosition`.
+
 ## [v0.3.69] — 20260808
 
 > kronael v0.3.69 — codex remembers your project

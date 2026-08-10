@@ -4,7 +4,7 @@ Command-line utilities and Claude Code configuration.
 
 ## CLI tools
 
-- [udfix](udfix/) — fix Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
+- [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
