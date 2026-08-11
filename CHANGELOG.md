@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.71] — 20260811
+
+> kronael v0.3.71 — Codex sees your skills inside dockbox
+>
+> dockbox now wires the installed Claude skills into Codex on every container start, so `@skill` and global guidance just work.
+>
+> • Symlinks `~/.agents/skills` → your `~/.claude/skills` so Codex lists every bundle skill
+> • Points `~/.codex/AGENTS.md` at `~/.claude/CLAUDE.md` for global guidance
+> • Idempotent and safe — no-op until the bundle is installed; never clobbers your own AGENTS.md
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`: the container entrypoint (`dockbox-init`) now runs a small idempotent `dockbox-codex-bridge` on every start. When `~/.claude/skills` exists it creates `~/.agents/skills → ~/.claude/skills` (Codex's skill root) and repoints `~/.codex/AGENTS.md → ~/.claude/CLAUDE.md`; it no-ops until the bundle is installed and leaves a real (non-symlink) `AGENTS.md` untouched. Rebuild with `make image`.
+
 ## [v0.3.70] — 20260810
 
 > kronael v0.3.70 — udfix can check diagrams, not just fix them
