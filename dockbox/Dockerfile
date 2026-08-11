@@ -164,6 +164,22 @@ unset NPM_CONFIG_PREFIX\n\
 exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
 
+# dockbox-codex-bridge: expose the installed Claude bundle to Codex for the
+# runtime user's $HOME. Codex scans ~/.agents/skills and loads global guidance
+# from ~/.codex/AGENTS.md; point both at the ~/.claude bundle. Idempotent and a
+# no-op until the bundle is installed into $HOME, so it is safe on every start.
+RUN printf '%s\n' \
+  '#!/bin/sh' \
+  'set -eu' \
+  '[ -d "$HOME/.claude/skills" ] || exit 0' \
+  'mkdir -p "$HOME/.agents"' \
+  '[ -e "$HOME/.agents/skills" ] || ln -s "$HOME/.claude/skills" "$HOME/.agents/skills"' \
+  'if [ -f "$HOME/.claude/CLAUDE.md" ] && { [ -L "$HOME/.codex/AGENTS.md" ] || [ ! -e "$HOME/.codex/AGENTS.md" ]; }; then' \
+  '  mkdir -p "$HOME/.codex"' \
+  '  ln -sfn "$HOME/.claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"' \
+  'fi' \
+  > /usr/local/bin/dockbox-codex-bridge && chmod +x /usr/local/bin/dockbox-codex-bridge
+
 # dockbox-init: register the runtime user in /etc/passwd, chown overmounts
 # and $HOME (top-level only — nested bind mounts must not be touched), then
 # gosu-drop to DOCKBOX_UID:DOCKBOX_GID before exec'ing the command.
@@ -217,9 +233,11 @@ if [ "$(id -u)" = "0" ]; then\n\
   done\n\
   mkdir -p /run/dockbox/sess && touch /run/dockbox/ready\n\
   [ "$#" -eq 0 ] && set -- /bin/zsh\n\
+  gosu "$USERNAME" env HOME="$HOME_DIR" /usr/local/bin/dockbox-codex-bridge || true\n\
   exec gosu "$USERNAME" "$@"\n\
 fi\n\
 [ "$#" -eq 0 ] && set -- /bin/zsh\n\
+/usr/local/bin/dockbox-codex-bridge || true\n\
 exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-init
 
 # World-readable + writable tooling so any runtime UID can use it
