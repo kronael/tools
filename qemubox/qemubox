@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE_URL="${QEMUBOX_BASE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2}"
+ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
+MEM="${QEMUBOX_MEM:-4096}"
+CPUS="${QEMUBOX_CPUS:-2}"
+USER="${QEMUBOX_USER:-sandbox}"
+QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
+
+name_override=""
+network=""
+args=()
+dirs=()
+
+usage() {
+    cat <<EOF
+Usage: qemubox [cmd] [options] [dirs...] [cmd-args...]
+       qemubox ls | rm [pattern] | prune [hours]
+
+Commands:
+    (default)   bash login shell in a copied project
+    sh|bash     bash login shell
+    ssh         raw SSH into the VM
+    <cmd>       command to run in the copied project
+
+Options:
+    -n name     override VM name (default: qemubox-<project>)
+    -N          no project copy; open VM home
+    -H          allow guest outbound network (default: SSH-only)
+
+Examples:
+    qemubox
+    qemubox ~/src/repo
+    qemubox cargo test ~/src/repo
+    qemubox -H cargo test ~/src/repo
+    qemubox ls
+    qemubox rm repo
+
+State: $ROOT
+EOF
+}
+
+box_name() {
+    printf '%s' "${1:-default}" | tr -c 'A-Za-z0-9_.-' '-'
+}
+
+box_dir() {
+    printf '%s/%s' "$ROOT" "$(box_name "$1")"
+}
+
+port_for() {
+    cksum=$(printf '%s' "$(box_name "$1")" | cksum | awk '{print $1}')
+    echo $((2200 + cksum % 1000))
+}
+
+missing_deps() {
+    miss=""
+    for dep in "$QEMU" qemu-img cloud-localds ssh ssh-keygen curl tar; do
+        command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
+    done
+    [ -z "$miss" ] || {
+        echo "Missing:$miss" >&2
+        echo "Debian: sudo apt install qemu-system-x86 qemu-utils cloud-image-utils openssh-client curl tar" >&2
+        exit 1
+    }
+}
+
+ensure_base() {
+    mkdir -p "$ROOT/base"
+    base="$ROOT/base/${BASE_URL##*/}"
+    [ -s "$base" ] || {
+        curl -fL "$BASE_URL" -o "$base.tmp"
+        mv "$base.tmp" "$base"
+    }
+    echo "$base"
+}
+
+ensure_box() {
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    mkdir -p "$dir"
+    base="$(ensure_base)"
+    [ -f "$dir/key" ] || ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
+    [ -f "$dir/seed.iso" ] || {
+        pub="$(cat "$dir/key.pub")"
+        {
+            echo "#cloud-config"
+            echo "users:"
+            echo "  - name: $USER"
+            echo "    sudo: ALL=(ALL) NOPASSWD:ALL"
+            echo "    groups: sudo"
+            echo "    shell: /bin/bash"
+            echo "    ssh_authorized_keys:"
+            echo "      - $pub"
+            echo "ssh_pwauth: false"
+        } > "$dir/user-data"
+        echo "instance-id: qemubox-$name" > "$dir/meta-data"
+        cloud-localds "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
+    }
+    [ -f "$dir/disk.qcow2" ] || \
+        qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" >/dev/null
+}
+
+running() {
+    dir="$(box_dir "$1")"
+    [ -s "$dir/pid" ] && kill -0 "$(cat "$dir/pid")" 2>/dev/null
+}
+
+ssh_box() {
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    shift
+    ssh -i "$dir/key" -p "$(port_for "$name")" \
+        -o UserKnownHostsFile="$dir/known_hosts" \
+        -o StrictHostKeyChecking=accept-new \
+        "$USER@127.0.0.1" "$@"
+}
+
+start_box() {
+    name="$(box_name "$1")"
+    missing_deps
+    ensure_box "$name"
+    running "$name" && return
+    dir="$(box_dir "$name")"
+    accel=()
+    [ -e /dev/kvm ] && accel=(-enable-kvm)
+    restrict=",restrict=on"
+    [ -n "$network" ] && restrict=""
+    "$QEMU" "${accel[@]}" \
+        -m "$MEM" -smp "$CPUS" \
+        -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2" \
+        -drive "file=$dir/seed.iso,media=cdrom,readonly=on" \
+        -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
+        -serial "file:$dir/serial.log" \
+        -display none -daemonize -pidfile "$dir/pid"
+    for _ in $(seq 1 90); do
+        ssh_box "$name" true >/dev/null 2>&1 && return
+        sleep 2
+    done
+    echo "SSH not ready; see $dir/serial.log" >&2
+    exit 1
+}
+
+copy_dir() {
+    name="$1"
+    src="$2"
+    dest="/home/$USER/work/${src##*/}"
+    ssh_box "$name" "mkdir -p '$dest'"
+    tar -C "$src" --exclude .git -cf - . | ssh_box "$name" "tar -C '$dest' -xf -"
+    workdir="$dest"
+}
+
+stop_box() {
+    name="$(box_name "$1")"
+    running "$name" || return 0
+    ssh_box "$name" sudo poweroff >/dev/null 2>&1 || true
+    pid="$(cat "$(box_dir "$name")/pid")"
+    for _ in $(seq 1 30); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 1
+    done
+    kill -0 "$pid" 2>/dev/null && {
+        echo "VM still running as PID $pid" >&2
+        exit 1
+    }
+    rm -f "$(box_dir "$name")/pid"
+}
+
+remove_box() {
+    name="$(box_name "$1")"
+    stop_box "$name" || true
+    dir="$(box_dir "$name")"
+    rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
+    rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub"
+    rmdir "$dir" 2>/dev/null || true
+    echo "removed qemubox-$name"
+}
+
+list_boxes() {
+    mkdir -p "$ROOT"
+    for dir in "$ROOT"/*; do
+        [ -d "$dir" ] || continue
+        [ "${dir##*/}" = base ] && continue
+        name="${dir##*/}"
+        state=stopped
+        running "$name" && state=running
+        echo "qemubox-$name $state ssh=127.0.0.1:$(port_for "$name")"
+    done
+}
+
+case "${1:-}" in
+    ls) list_boxes; exit 0 ;;
+    rm|destroy)
+        pat="${2:-}"
+        for dir in "$ROOT"/*; do
+            [ -d "$dir" ] || continue
+            name="${dir##*/}"
+            [ "$name" = base ] && continue
+            [ -n "$pat" ] && ! printf '%s' "$name" | grep -F "$pat" >/dev/null && continue
+            remove_box "$name"
+        done
+        exit 0 ;;
+    prune)
+        hours="${2:-2160}"
+        cutoff=$(date -d "-$hours hours" +%s 2>/dev/null) || cutoff=$(date -v-"$hours"H +%s)
+        for dir in "$ROOT"/*; do
+            [ -d "$dir" ] || continue
+            name="${dir##*/}"
+            [ "$name" = base ] && continue
+            running "$name" && continue
+            ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir")
+            [ "$ts" -lt "$cutoff" ] && remove_box "$name"
+        done
+        exit 0 ;;
+    -h|--help|help) usage; exit 0 ;;
+esac
+
+while getopts ":n:NH" opt; do
+    case "$opt" in
+        n) name_override="$OPTARG" ;;
+        N) no_copy=1 ;;
+        H) network=1 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+case "${1:-}" in
+    ""|sh|bash) cmd=(bash -l); [ "${1:-}" = "" ] || shift ;;
+    ssh)
+        name="$(box_name "${name_override:-default}")"
+        start_box "$name"
+        ssh_box "$name" -t bash -l
+        exit 0 ;;
+    /*|./*|.|~*) cmd=(bash -l) ;;
+    *) cmd=("$1"); shift ;;
+esac
+
+for arg in "$@"; do
+    case "$arg" in
+        /*|./*|.|~*) dirs+=("$(cd "$arg" && pwd)") ;;
+        *) args+=("$arg") ;;
+    esac
+done
+
+[ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
+primary="${dirs[-1]}"
+name="$(box_name "${name_override:-${primary##*/}}")"
+start_box "$name"
+
+workdir=""
+if [ -z "${no_copy:-}" ]; then
+    for dir in "${dirs[@]}"; do
+        copy_dir "$name" "$dir"
+    done
+fi
+
+remote=""
+for arg in "${cmd[@]}" "${args[@]}"; do
+    printf -v q "%q" "$arg"
+    remote="$remote $q"
+done
+
+if [ -n "$workdir" ]; then
+    ssh_box "$name" -t "cd '$workdir' && exec$remote"
+else
+    ssh_box "$name" -t "exec$remote"
+fi
