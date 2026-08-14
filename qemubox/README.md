@@ -3,9 +3,9 @@
 Disposable QEMU VM for inspecting untrusted repos before running build tools.
 
 It uses a Debian cloud image, a throwaway qcow2 overlay, cloud-init SSH keys,
-and localhost-only SSH forwarding. No host directories are shared into the VM.
-Guest networking is restricted by default: SSH works through the forwarded port,
-but the guest cannot initiate normal outbound connections.
+localhost-only SSH forwarding, and QEMU 9p mounts for host-backed paths.
+Guest networking is enabled so first-boot package provisioning and agent tools
+work like they do in `dockbox`.
 
 ## Install
 
@@ -14,28 +14,66 @@ cd qemubox
 make install
 ```
 
-System packages on Debian:
+System packages:
 
 ```sh
-sudo apt install qemu-system-x86 qemu-utils cloud-image-utils openssh-client curl
+# Debian / Ubuntu
+sudo apt install qemu-system-x86 qemu-utils cloud-image-utils openssh-client curl tar
+
+# Arch
+sudo pacman -S qemu-base cloud-image-utils openssh curl tar
+
+# Fedora
+sudo dnf install qemu cloud-utils-cloud-localds openssh-clients curl tar
+
+# openSUSE
+sudo zypper install qemu qemu-tools cloud-utils openssh-clients curl tar
+
+# Alpine
+sudo apk add qemu qemu-img qemu-system-x86_64 cloud-utils-localds openssh-client curl tar
 ```
+
+KVM acceleration needs `/dev/kvm` access. Without it, qemubox falls back to
+software emulation.
 
 ## Use
 
 ```sh
-qemubox                    # copy current dir, open bash in the VM
-qemubox ~/src/repo         # copy a repo, open bash there
-qemubox cargo test .       # run a command in the copied current dir
-qemubox sh                 # re-enter the project VM
-qemubox ssh                # raw SSH into the project VM
+qemubox                    # mount current dir, run claude in the VM
+qemubox ~/src/repo         # mount a repo, run claude there
+qemubox haiku ~/src/repo   # dockbox-style Claude model alias
+qemubox codex ~/src/repo   # dockbox-style Codex entrypoint
+qemubox cargo test .       # run a command in the mounted current dir
+qemubox bash               # re-enter the project VM with bash
+qemubox -n mybox bash      # named VM shell
+qemubox -A bash            # forward SSH agent
+qemubox -D docker ps       # forward Docker socket
 qemubox ls
 qemubox rm repo
 ```
 
-Like `dockbox`, the default VM name keys off the project directory basename;
-use `-n name` for a separate box. Unlike `dockbox`, source is copied over SSH
-instead of bind-mounted, so untrusted code cannot write back to the host tree.
-Use `-N` for an empty VM with no project copy.
+The command interface mirrors `dockbox`: first positional arg is the tool,
+`haiku` / `sonnet` / `opus` / `fable` select Claude models, and `gpt` / `mini`
+/ `spark` select Codex models. The default VM name keys off the project
+directory basename; use `-n name` for a separate box.
+
+Project dirs are mounted into the VM with QEMU 9p at their original host paths,
+read-write, including `.git`. Use `-v path` for extra read-only mounts and
+`-v path:rw` for extra read-write mounts. Use `-N` for an empty VM with no
+project mount.
+
+qemubox mirrors dockbox's agent surface with direct mounts: `~/.claude`,
+`~/.codex`, `~/.agents`, and `/opt/dev-tools` are host-backed inside the VM.
+Single-file config such as `~/.claude.json` and `~/.gitconfig` is linked from a
+read-only host-home mount. `-G` mounts `~/.config/gcloud` read-only.
+
+SSH agent forwarding uses `ssh -A`. GPG uses SSH Unix-socket forwarding for
+`~/.gnupg/S.gpg-agent`. `-D` forwards `/var/run/docker.sock` over SSH to a
+user-owned socket in the VM and sets `DOCKER_HOST`.
+
+On first boot, qemubox installs the base Debian packages needed for normal
+shell/git/gpg/runtime work. Agent entrypoints such as `claude` and `codex` run
+through guest wrappers that point at the host-mounted `/opt/dev-tools` tree.
 
 State lives in `~/.local/share/qemubox` unless `QEMUBOX_HOME` is set. The base
 image is kept for reuse; `rm` deletes the named VM overlay, seed, SSH key,
@@ -46,5 +84,5 @@ Useful knobs:
 ```sh
 QEMUBOX_MEM=8192 QEMUBOX_CPUS=4 qemubox -n big
 QEMUBOX_BASE_URL=https://.../image.qcow2 qemubox -n other
-qemubox -H .               # allow outbound network for apt/cargo downloads
+qemubox -H .               # accepted for dockbox muscle memory
 ```

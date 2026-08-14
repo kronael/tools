@@ -9,33 +9,76 @@ USER="${QEMUBOX_USER:-sandbox}"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
 
 name_override=""
-network=""
+entrypoint="claude"
+entrypoint_explicit=""
+network=1
+ssh_agent=""
+gpg_sock=""
+docker_sock=""
+docker_remote=""
+no_copy=""
+gcloud_creds=""
 args=()
 dirs=()
+extra_dirs=()
+extra_modes=()
+envs=()
+warnings=()
+mount_tags=()
+mount_srcs=()
+mount_dests=()
+mount_modes=()
 
 usage() {
     cat <<EOF
-Usage: qemubox [cmd] [options] [dirs...] [cmd-args...]
+Usage: qemubox [options] [tool] [dirs...] [tool-args...]
        qemubox ls | rm [pattern] | prune [hours]
+       qemubox [options] bash [dirs...]
 
-Commands:
-    (default)   bash login shell in a copied project
-    sh|bash     bash login shell
-    ssh         raw SSH into the VM
-    <cmd>       command to run in the copied project
+Tools (first positional arg -- no leading dash):
+    (default)       Claude Code, opus @ xhigh effort
+    claude          Claude Code, opus (same as default)
+    codex           OpenAI Codex
+    haiku           Claude Code --model claude-haiku-4-5-20251001
+    sonnet          Claude Code --model claude-sonnet-5 --effort high
+    opus            Claude Code --model claude-opus-5 --effort xhigh
+    fable           Claude Code --model claude-fable-5
+    gpt             Codex -m gpt-5.5
+    mini            Codex -m gpt-5.4-mini
+    spark           Codex -m gpt-5.3-codex-spark
+    bash|zsh|sh     Interactive shell (sh is an alias)
+    <any cmd>       Any binary installed in the VM
 
 Options:
-    -n name     override VM name (default: qemubox-<project>)
-    -N          no project copy; open VM home
-    -H          allow guest outbound network (default: SSH-only)
+    -n name    Override VM name (default: qemubox-<project>)
+    -d tool    Explicit tool (same as first-arg tool, useful in scripts)
+    -x tool    Alias for -d, matching dockbox
+    -e VAR     Forward env var into the SSH command
+    -v path    Extra 9p mount at same path ro by default; path:rw for read-write
+    -N         No project mount; run in VM home
+    -H         Accepted for dockbox parity; outbound networking is default
+    -A         Forward SSH agent
+    -D         Forward Docker socket over SSH
+    -S         Accepted for dockbox parity; guest user already has sudo
+    -g         Forward GH_TOKEN / GITHUB_TOKEN for this SSH command
+    -G         Mount ~/.config/gcloud ro
+    -P|-T      Accepted for dockbox parity; no ephemeral overmounts in qemubox
 
 Examples:
     qemubox
     qemubox ~/src/repo
+    qemubox haiku ~/src/repo
+    qemubox codex ~/src/repo
+    qemubox bash
+    qemubox -n mybox bash
     qemubox cargo test ~/src/repo
     qemubox -H cargo test ~/src/repo
+    qemubox -v ~/src/lib ~/src/repo
     qemubox ls
     qemubox rm repo
+
+Ingress: dirs and config are mounted into the VM with QEMU 9p.
+SSH is only the control channel used to enter the guest.
 
 State: $ROOT
 EOF
@@ -61,17 +104,25 @@ missing_deps() {
     done
     [ -z "$miss" ] || {
         echo "Missing:$miss" >&2
-        echo "Debian: sudo apt install qemu-system-x86 qemu-utils cloud-image-utils openssh-client curl tar" >&2
+        echo "Install qemubox system dependencies listed in qemubox/README.md." >&2
         exit 1
     }
+}
+
+note() {
+    echo "qemubox: $*" >&2
 }
 
 ensure_base() {
     mkdir -p "$ROOT/base"
     base="$ROOT/base/${BASE_URL##*/}"
     [ -s "$base" ] || {
+        note "downloading base cloud image"
+        note "source: $BASE_URL"
+        note "why: this is the reusable Debian disk template for new VM overlays"
         curl -fL "$BASE_URL" -o "$base.tmp"
         mv "$base.tmp" "$base"
+        note "saved base image: $base"
     }
     echo "$base"
 }
@@ -81,8 +132,14 @@ ensure_box() {
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
     base="$(ensure_base)"
-    [ -f "$dir/key" ] || ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
+    [ -f "$dir/key" ] || {
+        note "creating SSH key for qemubox-$name"
+        note "why: cloud-init uses this key so the host can enter the guest"
+        ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
+    }
     [ -f "$dir/seed.iso" ] || {
+        note "creating cloud-init seed for qemubox-$name"
+        note "why: it creates the sandbox user and installs the SSH key on first boot"
         pub="$(cat "$dir/key.pub")"
         {
             echo "#cloud-config"
@@ -98,8 +155,11 @@ ensure_box() {
         echo "instance-id: qemubox-$name" > "$dir/meta-data"
         cloud-localds "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
     }
-    [ -f "$dir/disk.qcow2" ] || \
+    [ -f "$dir/disk.qcow2" ] || {
+        note "creating disposable qcow2 overlay for qemubox-$name"
+        note "why: VM writes go to this overlay, not the cached base image"
         qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" >/dev/null
+    }
 }
 
 running() {
@@ -108,6 +168,25 @@ running() {
 }
 
 ssh_box() {
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    shift
+    agent=()
+    [ -n "$ssh_agent" ] && agent=(-A)
+    gpg=()
+    [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "/home/$USER/.gnupg/S.gpg-agent:$gpg_sock")
+    docker=()
+    [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
+    ssh -i "$dir/key" -p "$(port_for "$name")" \
+        "${agent[@]}" \
+        "${gpg[@]}" \
+        "${docker[@]}" \
+        -o UserKnownHostsFile="$dir/known_hosts" \
+        -o StrictHostKeyChecking=accept-new \
+        "$USER@127.0.0.1" "$@"
+}
+
+ssh_plain_box() {
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     shift
@@ -121,39 +200,153 @@ quote() {
     printf "%q" "$1"
 }
 
+add_mount() {
+    src="$1"
+    dest="$2"
+    mode="$3"
+    [ -e "$src" ] || return 0
+    case "$src" in
+        *,*) echo "Cannot 9p-mount path containing comma: $src" >&2; exit 2 ;;
+    esac
+    tag="qbx${#mount_tags[@]}"
+    mount_tags+=("$tag")
+    mount_srcs+=("$src")
+    mount_dests+=("$dest")
+    mount_modes+=("$mode")
+}
+
+qemu_mount_args() {
+    for i in "${!mount_tags[@]}"; do
+        ro=""
+        [ "${mount_modes[$i]}" = ro ] && ro=",readonly=on"
+        printf '%s\n' -virtfs
+        printf 'local,path=%s,mount_tag=%s,security_model=none%s\n' \
+            "${mount_srcs[$i]}" "${mount_tags[$i]}" "$ro"
+    done
+}
+
 start_box() {
     name="$(box_name "$1")"
     missing_deps
     ensure_box "$name"
-    running "$name" && return
+    running "$name" && {
+        note "reusing running VM qemubox-$name on 127.0.0.1:$(port_for "$name")"
+        return
+    }
     dir="$(box_dir "$name")"
     accel=()
     [ -e /dev/kvm ] && accel=(-enable-kvm)
     restrict=",restrict=on"
     [ -n "$network" ] && restrict=""
+    if [ "${#accel[@]}" -gt 0 ]; then
+        note "starting qemubox-$name with KVM acceleration"
+    else
+        note "starting qemubox-$name without KVM; software emulation is slower"
+    fi
+    if [ -n "$network" ]; then
+        note "guest network: outbound enabled"
+    else
+        note "guest network: restricted; only host SSH forwarding is open"
+    fi
+    mapfile -t mounts < <(qemu_mount_args)
     "$QEMU" "${accel[@]}" \
         -m "$MEM" -smp "$CPUS" \
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2" \
         -drive "file=$dir/seed.iso,media=cdrom,readonly=on" \
+        "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
         -serial "file:$dir/serial.log" \
         -display none -daemonize -pidfile "$dir/pid"
-    for _ in $(seq 1 90); do
-        ssh_box "$name" true >/dev/null 2>&1 && return
+    note "waiting for SSH on 127.0.0.1:$(port_for "$name")"
+    note "why: cloud-init must finish user/key setup before commands can run"
+    for i in $(seq 1 90); do
+        ssh_plain_box "$name" true >/dev/null 2>&1 && return
+        [ $((i % 10)) -eq 0 ] && note "still waiting for SSH; serial log: $dir/serial.log"
         sleep 2
     done
     echo "SSH not ready; see $dir/serial.log" >&2
     exit 1
 }
 
-copy_dir() {
+detect_gpg() {
+    gpg_sock="$(gpgconf --list-dirs agent-socket 2>/dev/null || true)"
+    [ -S "$gpg_sock" ] || gpg_sock=""
+}
+
+setup_guest_auth() {
     name="$1"
-    src="$2"
-    dest="/home/$USER/work/${src##*/}"
-    qdest="$(quote "$dest")"
-    ssh_box "$name" "mkdir -p $qdest"
-    tar -C "$src" --exclude .git -cf - . | ssh_box "$name" "tar -C $qdest -xf -"
-    workdir="$dest"
+    ssh_plain_box "$name" "mkdir -p ~/.gnupg && chmod 700 ~/.gnupg"
+    if [ -n "$gpg_sock" ]; then
+        note "forwarding gpg-agent into qemubox-$name over SSH"
+        note "why: this mirrors dockbox's gpg-agent socket mount without sharing a host filesystem"
+    fi
+}
+
+mount_host_paths() {
+    name="$1"
+    note "mounting host paths into qemubox-$name with 9p"
+    note "why: qemubox mirrors dockbox access patterns without copying files"
+    for i in "${!mount_tags[@]}"; do
+        tag="${mount_tags[$i]}"
+        dest="${mount_dests[$i]}"
+        opts="trans=virtio,version=9p2000.L,msize=104857600"
+        [ "${mount_modes[$i]}" = ro ] && opts="$opts,ro"
+        ssh_plain_box "$name" "sudo mkdir -p $(quote "$dest")"
+        ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
+    done
+}
+
+provision_guest_packages() {
+    name="$1"
+    marker="/var/lib/qemubox/packages-v1"
+    if ! ssh_plain_box "$name" "[ -f $marker ]" >/dev/null 2>&1; then
+        note "installing guest base packages in qemubox-$name"
+        note "why: qemubox needs the same practical shell/git/gpg/runtime layer as dockbox"
+        ssh_plain_box "$name" 'sudo mkdir -p /var/lib/qemubox
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends \
+  ca-certificates curl tar xz-utils make \
+  less git procps sudo fzf zsh man-db unzip zip \
+  openssh-client gnupg2 jq bc nano vim \
+  iproute2 dnsutils pkg-config libssl-dev libudev-dev \
+  bubblewrap socat
+sudo touch /var/lib/qemubox/packages-v1'
+    fi
+    if [ -n "$docker_sock" ]; then
+        note "installing Docker CLI in qemubox-$name for -D"
+        ssh_plain_box "$name" 'command -v docker >/dev/null 2>&1 || \
+sudo apt-get install -y --no-install-recommends docker.io'
+    fi
+}
+
+setup_guest_runtime() {
+    name="$1"
+    note "provisioning qemubox-$name guest wrappers"
+    note "why: claude/codex run from the host-mounted /opt/dev-tools tree"
+    ssh_plain_box "$name" 'sudo mkdir -p /usr/local/bin ~/.gnupg && chmod 700 ~/.gnupg'
+    ssh_plain_box "$name" 'node_bin=$(ls -d /opt/dev-tools/nvm/versions/node/*/bin 2>/dev/null | sort | tail -1 || true)
+if [ -n "$node_bin" ]; then
+  sudo ln -sf "$node_bin/node" /usr/local/bin/node
+  sudo ln -sf "$node_bin/npm" /usr/local/bin/npm
+  sudo ln -sf "$node_bin/npx" /usr/local/bin/npx
+fi
+sudo ln -sf /opt/dev-tools/bun/bin/bun /usr/local/bin/bun
+sudo tee /usr/local/bin/claude >/dev/null <<'\''EOF'\''
+#!/bin/sh
+exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"
+EOF
+sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
+#!/bin/sh
+exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
+EOF
+sudo chmod 755 /usr/local/bin/claude /usr/local/bin/codex'
+    ssh_plain_box "$name" 'mkdir -p ~/.docker/run'
+    ssh_plain_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
+[ -e /mnt/qemubox-home/.gitconfig ] && ln -sf /mnt/qemubox-home/.gitconfig ~/.gitconfig || true
+[ -e /mnt/qemubox-home/.dockbox_history ] && ln -sf /mnt/qemubox-home/.dockbox_history ~/.bash_history || true
+[ -e /mnt/qemubox-home/.gnupg/pubring.kbx ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.kbx ~/.gnupg/pubring.kbx || true
+[ -e /mnt/qemubox-home/.gnupg/pubring.gpg ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.gpg ~/.gnupg/pubring.gpg || true'
 }
 
 stop_box() {
@@ -184,27 +377,109 @@ remove_box() {
 
 list_boxes() {
     mkdir -p "$ROOT"
+    found=""
     for dir in "$ROOT"/*; do
         [ -d "$dir" ] || continue
         [ "${dir##*/}" = base ] && continue
+        [ -n "$found" ] || printf "NAME\tSTATUS\tSSH\tPATH\n"
+        found=1
         name="${dir##*/}"
         state=stopped
         running "$name" && state=running
-        echo "qemubox-$name $state ssh=127.0.0.1:$(port_for "$name")"
+        printf "qemubox-%s\t%s\t127.0.0.1:%s\t%s\n" \
+            "$name" "$state" "$(port_for "$name")" "$dir"
     done
+    [ -n "$found" ] || echo "no qemubox VMs"
+}
+
+add_env() {
+    var="$1"
+    case "$var" in
+        ""|*[!A-Za-z0-9_]*|[0-9]*)
+            echo "Invalid env var: $var" >&2
+            exit 2 ;;
+    esac
+    eval "val=\${$var-}"
+    envs+=("$var=$val")
+}
+
+copy_arg() {
+    path="${1%%:*}"
+    case "$path" in
+        /*|./*|.|~*) printf '%s' "$path" ;;
+        *) echo "Invalid -v path: $1" >&2; exit 2 ;;
+    esac
+}
+
+apply_flag() {
+    case "$1" in
+        n) name_override="$2" ;;
+        d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
+        e) add_env "$2" ;;
+        v)
+            extra_dirs+=("$(copy_arg "$2")")
+            case "$2" in
+                *:rw) extra_modes+=(rw) ;;
+                *) extra_modes+=(ro) ;;
+            esac ;;
+        N) no_copy=1 ;;
+        H) network=1 ;;
+        A) ssh_agent=1 ;;
+        D)
+            if [ -S /var/run/docker.sock ]; then
+                docker_sock=/var/run/docker.sock
+                docker_remote="/home/$USER/.docker/run/docker.sock"
+                envs+=("DOCKER_HOST=unix://$docker_remote")
+            else
+                warnings+=("-D ignored: /var/run/docker.sock is not available")
+            fi ;;
+        S) warnings+=("-S ignored: qemubox guest user already has passwordless sudo") ;;
+        P|T) warnings+=("-$1 ignored: qemubox copies dirs instead of overmounting build dirs") ;;
+        g)
+            [ -n "${GH_TOKEN:-}" ] && envs+=("GH_TOKEN=$GH_TOKEN")
+            [ -n "${GITHUB_TOKEN:-}" ] && envs+=("GITHUB_TOKEN=$GITHUB_TOKEN") ;;
+        G) gcloud_creds=1 ;;
+        *) usage >&2; exit 2 ;;
+    esac
+}
+
+tool_cmd() {
+    case "$1" in
+        claude) cmd=(claude --model claude-opus-4-8 --effort xhigh) ;;
+        codex) cmd=(codex) ;;
+        haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
+        sonnet) cmd=(claude --model claude-sonnet-5 --effort high) ;;
+        opus) cmd=(claude --model claude-opus-5 --effort xhigh) ;;
+        fable) cmd=(claude --model claude-fable-5) ;;
+        gpt) cmd=(codex -m gpt-5.5) ;;
+        mini) cmd=(codex -m gpt-5.4-mini) ;;
+        spark) cmd=(codex -m gpt-5.3-codex-spark) ;;
+        sh|bash) cmd=(bash -l) ;;
+        zsh) cmd=(zsh -l) ;;
+        *) cmd=("$1") ;;
+    esac
 }
 
 case "${1:-}" in
     ls) list_boxes; exit 0 ;;
     rm|destroy)
         pat="${2:-}"
+        found=""
         for dir in "$ROOT"/*; do
             [ -d "$dir" ] || continue
             name="${dir##*/}"
             [ "$name" = base ] && continue
             [ -n "$pat" ] && ! printf '%s' "$name" | grep -F "$pat" >/dev/null && continue
+            found=1
             remove_box "$name"
         done
+        if [ -z "$found" ]; then
+            if [ -n "$pat" ]; then
+                echo "no match for '$pat'"
+            else
+                echo "no qemubox VMs"
+            fi
+        fi
         exit 0 ;;
     prune)
         hours="${2:-2160}"
@@ -221,25 +496,29 @@ case "${1:-}" in
     -h|--help|help) usage; exit 0 ;;
 esac
 
-while getopts ":n:NH" opt; do
-    case "$opt" in
-        n) name_override="$OPTARG" ;;
-        N) no_copy=1 ;;
-        H) network=1 ;;
-        *) usage >&2; exit 2 ;;
+_args=()
+for a in "$@"; do
+    case "$a" in
+        --no-ephemeral) warnings+=("--no-ephemeral ignored: qemubox has no ephemeral overmounts") ;;
+        *) _args+=("$a") ;;
     esac
+done
+set -- "${_args[@]}"
+
+while getopts ":n:d:x:e:v:HADgGPTSN" opt; do
+    apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
 
-case "${1:-}" in
-    ""|sh|bash) cmd=(bash -l); [ "${1:-}" = "" ] || shift ;;
-    ssh)
-        name="$(box_name "${name_override:-${PWD##*/}}")"
-        start_box "$name"
-        ssh_box "$name" -t bash -l
-        exit 0 ;;
-    /*|./*|.|~*) cmd=(bash -l) ;;
-    *) cmd=("$1"); shift ;;
+if [ -z "$entrypoint_explicit" ] && [ "$#" -gt 0 ]; then
+    case "$1" in
+        /*|./*|.|~*) : ;;
+        *) entrypoint="$1"; shift ;;
+    esac
+fi
+
+case "$entrypoint" in
+    *) tool_cmd "$entrypoint" ;;
 esac
 
 for arg in "$@"; do
@@ -252,23 +531,53 @@ done
 [ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
 primary="${dirs[-1]}"
 name="$(box_name "${name_override:-${primary##*/}}")"
+
+add_mount "/opt/dev-tools" "/opt/dev-tools" ro
+add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
+add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
+add_mount "$HOME" "/mnt/qemubox-home" ro
+add_mount "$HOME/.claude" "/home/$USER/.claude" rw
+add_mount "$HOME/.claude/plugins" "/home/$USER/.claude/plugins" ro
+add_mount "$HOME/.codex" "/home/$USER/.codex" rw
+add_mount "$HOME/.agents" "/home/$USER/.agents" rw
+[ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
+
+if [ -z "${no_copy:-}" ]; then
+    for dir in "${dirs[@]}"; do
+        add_mount "$dir" "$dir" rw
+    done
+fi
+for i in "${!extra_dirs[@]}"; do
+    dir="$(cd "${extra_dirs[$i]}" && pwd)"
+    add_mount "$dir" "$dir" "${extra_modes[$i]}"
+done
+
+detect_gpg
 start_box "$name"
+mount_host_paths "$name"
+provision_guest_packages "$name"
+setup_guest_runtime "$name"
+setup_guest_auth "$name"
+
+for warning in "${warnings[@]}"; do
+    note "$warning"
+done
 
 workdir=""
 if [ -z "${no_copy:-}" ]; then
-    for dir in "${dirs[@]}"; do
-        copy_dir "$name" "$dir"
-    done
+    workdir="$primary"
 fi
 
 remote=""
-for arg in "${cmd[@]}" "${args[@]}"; do
+for arg in "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     printf -v q "%q" "$arg"
     remote="$remote $q"
 done
 
 if [ -n "$workdir" ]; then
-    ssh_box "$name" -t "cd $(quote "$workdir") && exec$remote"
+    note "running in qemubox-$name:$workdir"
+    ssh_box "$name" -t "cd $(quote "$workdir") && exec env$remote"
 else
-    ssh_box "$name" -t "exec$remote"
+    note "running in qemubox-$name home"
+    ssh_box "$name" -t "exec env$remote"
 fi
