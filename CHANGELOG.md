@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.3.72] — 20260814
+
+> kronael v0.3.72 — install skill can rsync without prompting
+>
+> The recommended permission set now allows the install skill's rsync into `~/.claude/`, so setup doesn't stop for a permission prompt.
+>
+> • Allows `rsync * ~/.claude/*` in `settings-recommended.json`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Adds `Bash(rsync * ~/.claude/*)` to the recommended permission allowlist so the install skill's rsync step to `~/.claude/` runs without a manual approval.
+
 ## [v0.3.71] — 20260811
 
 > kronael v0.3.71 — Codex sees your skills inside dockbox
