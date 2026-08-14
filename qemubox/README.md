@@ -27,6 +27,7 @@ qemubox                    # copy current dir, open bash in the VM
 qemubox ~/src/repo         # copy a repo, open bash there
 qemubox cargo test .       # run a command in the copied current dir
 qemubox sh                 # re-enter the project VM
+qemubox ssh                # raw SSH into the project VM
 qemubox ls
 qemubox rm repo
 ```
@@ -43,6 +44,7 @@ known-hosts file, pid file, and serial log.
 Useful knobs:
 
 ```sh
-QEMUBOX_MEM=8192 QEMUBOX_CPUS=4 qemubox up big
-QEMUBOX_BASE_URL=https://.../image.img qemubox up other
+QEMUBOX_MEM=8192 QEMUBOX_CPUS=4 qemubox -n big
+QEMUBOX_BASE_URL=https://.../image.qcow2 qemubox -n other
+qemubox -H .               # allow outbound network for apt/cargo downloads
 ```

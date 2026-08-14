@@ -229,7 +229,7 @@ shift $((OPTIND - 1))
 case "${1:-}" in
     ""|sh|bash) cmd=(bash -l); [ "${1:-}" = "" ] || shift ;;
     ssh)
-        name="$(box_name "${name_override:-default}")"
+        name="$(box_name "${name_override:-${PWD##*/}}")"
         start_box "$name"
         ssh_box "$name" -t bash -l
         exit 0 ;;
