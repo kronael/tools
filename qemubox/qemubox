@@ -117,6 +117,10 @@ ssh_box() {
         "$USER@127.0.0.1" "$@"
 }
 
+quote() {
+    printf "%q" "$1"
+}
+
 start_box() {
     name="$(box_name "$1")"
     missing_deps
@@ -146,8 +150,9 @@ copy_dir() {
     name="$1"
     src="$2"
     dest="/home/$USER/work/${src##*/}"
-    ssh_box "$name" "mkdir -p '$dest'"
-    tar -C "$src" --exclude .git -cf - . | ssh_box "$name" "tar -C '$dest' -xf -"
+    qdest="$(quote "$dest")"
+    ssh_box "$name" "mkdir -p $qdest"
+    tar -C "$src" --exclude .git -cf - . | ssh_box "$name" "tar -C $qdest -xf -"
     workdir="$dest"
 }
 
@@ -263,7 +268,7 @@ for arg in "${cmd[@]}" "${args[@]}"; do
 done
 
 if [ -n "$workdir" ]; then
-    ssh_box "$name" -t "cd '$workdir' && exec$remote"
+    ssh_box "$name" -t "cd $(quote "$workdir") && exec$remote"
 else
     ssh_box "$name" -t "exec$remote"
 fi
