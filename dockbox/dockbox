@@ -70,13 +70,16 @@ case "${1:-}" in
         done
         exit 0 ;;
     sh)
-        entrypoint=/bin/zsh
+        entrypoint=/bin/bash
+        shift ;;
+    bash|zsh)
+        entrypoint="/bin/$1"
         shift ;;
     -h|--help)
         cat <<EOF
-Usage: dockbox [tool] [options] [dirs...] [tool-args...]
+Usage: dockbox [options] [tool] [dirs...] [tool-args...]
        dockbox ls | rm [pattern] | prune [hours]
-       dockbox sh [options] [dirs...]
+       dockbox [options] bash [dirs...]
 
 Tools (first positional arg — no leading dash):
     (default)       Claude Code, opus @ xhigh effort — the workhorse
@@ -89,7 +92,7 @@ Tools (first positional arg — no leading dash):
     gpt             Codex -m gpt-5.5             (big)
     mini            Codex -m gpt-5.4-mini        (workhorse)
     spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
-    sh|zsh|bash     Interactive shell
+    bash|zsh|sh     Interactive shell (sh is an alias)
     <any cmd>       Any binary installed in the image
 
 Options:
@@ -131,7 +134,8 @@ Examples:
     dockbox ~/wk/project              # mount project, sonnet
     dockbox haiku ~/wk/project        # drop to haiku for speed/cost
     dockbox codex ~/wk/project        # OpenAI Codex
-    dockbox sh                        # interactive shell
+    dockbox bash                      # interactive shell
+    dockbox -n mybox bash             # named shell box
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
@@ -140,7 +144,7 @@ Examples:
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
-    dockbox sh                        # 2nd session: enters the running box
+    dockbox bash                      # 2nd session: enters the running box
     dockbox codex                     # enters running box, launches codex
 
 Re-entry: if a dockbox for the project is already running, the command

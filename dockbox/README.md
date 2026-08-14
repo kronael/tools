@@ -41,7 +41,7 @@ dockbox -P                        # persist host build dirs (no overmount)
 dockbox -T                        # tmpfs backend for ephemeral dirs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
-dockbox -x bash .                 # run bash instead
+dockbox bash .                    # run bash instead
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
@@ -57,7 +57,7 @@ requested command there, rather than starting a second one:
 
 ```bash
 dockbox ~/wk/project    # starts the box, runs claude
-dockbox sh              # 2nd terminal: shell inside the same box
+dockbox bash            # 2nd terminal: shell inside the same box
 dockbox codex           # 3rd terminal: codex inside the same box
 ```
 
