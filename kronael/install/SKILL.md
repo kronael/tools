@@ -138,6 +138,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `rm -rf build/`. NEVER write the glob outside the parens
      (`Bash(rm -rf /)*`) — it matches nothing and silently disables the guard,
      so verify the four entries are present and paren-closed after merging.
+   - **Sandbox / permission posture is loosen-only.** NEVER tighten what the
+     user already chose — ALWAYS leave a looser installed value in place.
+     Concretely: never flip `sandbox.enabled` false → true, never narrow
+     `sandbox.excludedCommands`, never move `permissions.defaultMode` from
+     `bypassPermissions` toward `default`, never drop an installed `allow`
+     entry. Install may only widen (add `allow` entries, relax the sandbox).
+     The recursive-removal deny guard is the one exception — it always applies.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
