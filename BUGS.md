@@ -82,3 +82,29 @@ line ref checked against the source.
 Checked safe (not bugs): `%q` quoting is consistent (`:199,294,572`); `add_env`
 `eval` is guarded by a strict charset check (`:398`); per-box `known_hosts`
 (`:184`); `-A`/`-D` are disclosed opt-in trades.
+
+## qemubox/dockbox: confine mounts to the dockbox contract (2026-08-19)
+
+Plan for finding #1. dockbox already does this right: its guest `$HOME` is a
+fresh tmpfs (`dockbox:410`) with only a curated bind list nested in
+(`dockbox:11-18`) — it never mounts the whole host home. qemubox's
+`add_mount "$HOME" "/mnt/qemubox-home" ro` (`qemubox:538`) is the sole
+divergence, and it exists only to feed the 5 single-file configs the guest
+links (`setup_guest_runtime:345-349`).
+
+- **FIX A — curated host-home mount (implementing 2026-08-19, qemubox only).**
+  Replace the blanket `$HOME` 9p mount with a per-box staging dir holding only
+  `.claude.json`, `.gitconfig`, `.dockbox_history`, and the gpg public keyrings,
+  9p-mounted ro at `/mnt/qemubox-home`. Mirrors dockbox's file set; the guest can
+  no longer read `~/.ssh`, cloud creds, or other repos. Keeps `~/.claude` /
+  `~/.codex` / `~/.agents` rw (matches current dockbox).
+- **FIX B — config read-only (PROPOSAL, needs sign-off, qemubox + dockbox).**
+  Make `~/.claude`, `~/.codex`, `~/.agents` read-only so guest code cannot
+  persist a hook/`settings.json` back onto the host. Caveat: a *pure* ro mount
+  breaks codex (writes sqlite state/session DBs at startup) and claude (token
+  refresh, transcript writes). Correct shape: copy a config **snapshot** into the
+  disposable guest (host untouched, guest writes its own copy), not a live ro
+  mount. Applies to dockbox too (`dockbox:12,18` mount these rw today). Held
+  until snapshot-vs-ro is chosen.
+- **DEFER — network confinement (`-H`).** The `restrict=on` path exists but no
+  flag wires it (`qemubox:240,426`); `-H` is a no-op. Not needed for v1 per owner.
