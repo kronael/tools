@@ -98,13 +98,19 @@ links (`setup_guest_runtime:345-349`).
   9p-mounted ro at `/mnt/qemubox-home`. Mirrors dockbox's file set; the guest can
   no longer read `~/.ssh`, cloud creds, or other repos. Keeps `~/.claude` /
   `~/.codex` / `~/.agents` rw (matches current dockbox).
-- **FIX B — config read-only (PROPOSAL, needs sign-off, qemubox + dockbox).**
-  Make `~/.claude`, `~/.codex`, `~/.agents` read-only so guest code cannot
-  persist a hook/`settings.json` back onto the host. Caveat: a *pure* ro mount
-  breaks codex (writes sqlite state/session DBs at startup) and claude (token
-  refresh, transcript writes). Correct shape: copy a config **snapshot** into the
-  disposable guest (host untouched, guest writes its own copy), not a live ro
-  mount. Applies to dockbox too (`dockbox:12,18` mount these rw today). Held
-  until snapshot-vs-ro is chosen.
+- **FIX B — config isolated via copy-in (DONE qemubox 2026-08-19; dockbox TODO).**
+  Guest code must not persist a hook/`settings.json` back onto the host, but a
+  *pure* read-only mount breaks codex (writes sqlite state at startup) and claude
+  (token refresh, transcripts). Overlay copy-on-write was ruled out: the kernel
+  overlayfs docs disallow network filesystems as the upper layer, and virtio-fs
+  confirms overlay-on-9p/virtiofs fails ("upper fs does not support tmpfile/xattr")
+  — plus in-container overlay needs CAP_SYS_ADMIN. So: mount `~/.claude`/`~/.codex`/
+  `~/.agents` **read-only** at `/mnt/qemubox-cfg`, then copy into the guest's own
+  writable home at startup (`setup_guest_runtime`), excluding bulky/other-context
+  state (sqlite, `sessions/`, `projects/`, logs). Host stays read-only; guest
+  writes stay in the disposable VM; tools find config at the normal paths.
+  **dockbox TODO:** same shape — its home is already a fresh tmpfs, so mount the
+  three dirs ro to a staging path and copy them into the tmpfs home in
+  `dockbox-init` instead of the current live rw binds (`dockbox:12,18`).
 - **DEFER — network confinement (`-H`).** The `restrict=on` path exists but no
   flag wires it (`qemubox:240,426`); `-H` is a no-op. Not needed for v1 per owner.
