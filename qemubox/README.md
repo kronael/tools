@@ -64,8 +64,10 @@ project mount.
 
 qemubox mirrors dockbox's agent surface with direct mounts: `~/.claude`,
 `~/.codex`, `~/.agents`, and `/opt/dev-tools` are host-backed inside the VM.
-Single-file config such as `~/.claude.json` and `~/.gitconfig` is linked from a
-read-only host-home mount. `-G` mounts `~/.config/gcloud` read-only.
+Single-file config (`~/.claude.json`, `~/.gitconfig`, gpg public keyrings) is
+copied into a per-box read-only staging mount — the guest never sees the rest
+of your home (no `~/.ssh`, cloud credentials, or other projects). `-G` mounts
+`~/.config/gcloud` read-only.
 
 SSH agent forwarding uses `ssh -A`. GPG uses SSH Unix-socket forwarding for
 `~/.gnupg/S.gpg-agent`. `-D` forwards `/var/run/docker.sock` over SSH to a

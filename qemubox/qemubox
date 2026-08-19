@@ -29,6 +29,11 @@ mount_srcs=()
 mount_dests=()
 mount_modes=()
 
+# Single-file host configs copied into a per-box staging dir and 9p-mounted
+# read-only at /mnt/qemubox-home. Only these leave the host -- never all of
+# $HOME -- so the guest cannot read ~/.ssh, cloud creds, or other projects.
+host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnupg/pubring.gpg)
+
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
@@ -215,6 +220,18 @@ add_mount() {
     mount_modes+=("$mode")
 }
 
+stage_host_cfg() {
+    cfg="$1"
+    mkdir -p "$cfg/.gnupg"
+    for rel in "${host_cfg_files[@]}"; do
+        if [ -f "$HOME/$rel" ]; then
+            cp -pL "$HOME/$rel" "$cfg/$rel"
+        else
+            rm -f "$cfg/$rel"
+        fi
+    done
+}
+
 qemu_mount_args() {
     for i in "${!mount_tags[@]}"; do
         ro=""
@@ -371,6 +388,8 @@ remove_box() {
     dir="$(box_dir "$name")"
     rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub"
+    for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
+    rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
     rmdir "$dir" 2>/dev/null || true
     echo "removed qemubox-$name"
 }
@@ -535,7 +554,9 @@ name="$(box_name "${name_override:-${primary##*/}}")"
 add_mount "/opt/dev-tools" "/opt/dev-tools" ro
 add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
 add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
-add_mount "$HOME" "/mnt/qemubox-home" ro
+host_cfg="$(box_dir "$name")/hostcfg"
+stage_host_cfg "$host_cfg"
+add_mount "$host_cfg" "/mnt/qemubox-home" ro
 add_mount "$HOME/.claude" "/home/$USER/.claude" rw
 add_mount "$HOME/.claude/plugins" "/home/$USER/.claude/plugins" ro
 add_mount "$HOME/.codex" "/home/$USER/.codex" rw
