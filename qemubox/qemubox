@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${QEMUBOX_BASE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2}"
+# Debian "generic" (not "genericcloud"): the genericcloud kernel is trimmed and
+# omits the 9p filesystem module, so `mount -t 9p` fails with "unknown filesystem
+# type '9p'". The generic image ships the full module set including 9p.
+BASE_URL="${QEMUBOX_BASE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2}"
 ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
 MEM="${QEMUBOX_MEM:-4096}"
 CPUS="${QEMUBOX_CPUS:-2}"
@@ -304,9 +307,17 @@ mount_host_paths() {
     name="$1"
     note "mounting host paths into qemubox-$name with 9p"
     note "why: qemubox mirrors dockbox access patterns without copying files"
-    # Debian cloud images ship the 9p modules but do not auto-load them; without
-    # this the first `mount -t 9p` fails with "unknown filesystem type '9p'".
+    # 9p fs + virtio transport are kernel modules; load them, then verify the
+    # guest kernel actually provides 9p before mounting. A trimmed "cloud" kernel
+    # omits it entirely (no modprobe can help) — fail loud with the fix instead of
+    # a cryptic "unknown filesystem type '9p'".
     ssh_plain_box "$name" 'sudo modprobe 9p 9pnet_virtio 2>/dev/null || true'
+    ssh_plain_box "$name" 'grep -qw 9p /proc/filesystems' || {
+        echo "qemubox: guest kernel lacks 9p filesystem support." >&2
+        echo "qemubox: use a full-kernel base image (Debian 'generic', not 'genericcloud')" >&2
+        echo "qemubox: then rebuild: qemubox rm $name" >&2
+        exit 1
+    }
     for i in "${!mount_tags[@]}"; do
         tag="${mount_tags[$i]}"
         dest="${mount_dests[$i]}"

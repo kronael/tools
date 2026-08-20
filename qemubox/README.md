@@ -2,10 +2,12 @@
 
 Disposable QEMU VM for inspecting untrusted repos before running build tools.
 
-It uses a Debian cloud image, a throwaway qcow2 overlay, cloud-init SSH keys,
-localhost-only SSH forwarding, and QEMU 9p mounts for host-backed paths.
-Guest networking is enabled so first-boot package provisioning and agent tools
-work like they do in `dockbox`.
+It uses the Debian **generic** cloud image (the `genericcloud` kernel omits the
+9p filesystem module), a throwaway qcow2 overlay, cloud-init SSH keys,
+localhost-only SSH forwarding, and QEMU 9p mounts for host-backed paths. Each VM
+gets its own SSH key on a private localhost port, so guests cannot reach or log
+into each other. Guest networking is enabled so first-boot package provisioning
+and agent tools work like they do in `dockbox`.
 
 ## Install
 
