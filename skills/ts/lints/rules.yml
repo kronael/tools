@@ -1,18 +1,19 @@
+---
 id: ts-no-push-spread
 language: typescript
 severity: warning
 rule:
-  pattern: $ARR.push(...$REST)
-message: 'NEVER arr.push(...other) — spread blows the call stack past ~65k items; use concat or a loop. See skill:ts.'
+    pattern: $ARR.push(...$REST)
+message: NEVER arr.push(...other) — spread blows the call stack past ~65k items; use concat or a loop. See skill:ts.
 note: 'source: skills/ts/SKILL.md — Array Operations'
 ---
 id: ts-no-redundant-spread
 language: typescript
 severity: warning
 rule:
-  any:
-    - pattern: '[...$A.filter($$$)]'
-    - pattern: '[...$A.map($$$)]'
-    - pattern: '[...$A.slice($$$)]'
-message: 'NEVER spread a fresh array — filter/map/slice already copy; drop the spread. See skill:ts.'
+    any:
+        - pattern: '[...$A.filter($$$)]'
+        - pattern: '[...$A.map($$$)]'
+        - pattern: '[...$A.slice($$$)]'
+message: NEVER spread a fresh array — filter/map/slice already copy; drop the spread. See skill:ts.
 note: 'source: skills/ts/SKILL.md — Array Operations'

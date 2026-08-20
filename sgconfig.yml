@@ -1,7 +1,8 @@
+---
 # ast-grep config for the kronael lint pack. Rules are co-located with the
 # language skill that owns them (skills/<lang>/lints/); list each dir here.
 # The fixture harness (lints/check.py, `make lints`) proves every rule.
 ruleDirs:
-  - skills/ts/lints
-  - skills/rs/lints
-  - skills/py/lints
+    - skills/ts/lints
+    - skills/rs/lints
+    - skills/py/lints
