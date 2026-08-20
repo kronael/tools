@@ -40,6 +40,7 @@ ignore = [
 
 [lint.per-file-ignores]
 "hooks/*.py"   = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess
+"lints/*.py"   = ["T20", "S603", "S607"]   # lint harness prints results, runs ast-grep
 "**/main.py"   = ["T20"]                   # CLI entry points print status to stdout
 "tg-fetch/*.py" = ["T20"]                  # tg-fetch contains CLI entry-point scripts
 

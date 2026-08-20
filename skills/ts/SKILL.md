@@ -52,6 +52,12 @@ rules. Below are TypeScript-specific additions and deltas.
 - NEVER trust external APIs/user input with `as Type`
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
+## Lints
+- Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
+  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
+- Native linters own the rest — eslint (`no-explicit-any`), tsc. ast-grep only
+  fills the kronael-specific gap; NEVER duplicate an eslint rule here.
+
 ## Testing
 - ALWAYS a JSDoc block above every `test(...)` / `it(...)` call: what it
   does, what preconditions it assumes, what it verifies — one sentence per

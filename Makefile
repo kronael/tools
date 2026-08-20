@@ -37,7 +37,7 @@ CI_WORKFLOWS := \
 	$(W)/test-bhctl.yml \
 	$(W)/lint.yml
 
-.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix lints $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
@@ -48,6 +48,7 @@ help:
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
 	@echo "make skills-frontmatter     - lint SKILL.md (frontmatter YAML + wisdom body rules)"
 	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
+	@echo "make lints       - prove co-located ast-grep lint rules against fixtures"
 
 test: $(addprefix test-,$(PROJECTS))
 	bash tests/drift_test.sh
@@ -77,3 +78,6 @@ skills-frontmatter:
 
 skills-frontmatter-fix:
 	python3 hooks/skill_frontmatter_lint.py --write skills
+
+lints:
+	python3 lints/check.py
