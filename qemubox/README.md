@@ -62,15 +62,17 @@ read-write, including `.git`. Use `-v path` for extra read-only mounts and
 `-v path:rw` for extra read-write mounts. Use `-N` for an empty VM with no
 project mount.
 
-qemubox mirrors dockbox's agent surface. `/opt/dev-tools` is host-backed
-read-only. `~/.claude`, `~/.codex`, and `~/.agents` are mounted read-only, then
-copied into the disposable guest's own home at first setup: the guest reads your
-config and skills, but its writes (tokens, transcripts, todos) stay in the VM
-and never touch the host. Bulky, unrelated state (sqlite logs, `sessions/`,
-`projects/`) is skipped. Single-file config (`~/.claude.json`, `~/.gitconfig`,
-gpg public keyrings) is likewise copied into a per-box read-only staging mount —
-the guest never sees the rest of your home (no `~/.ssh`, cloud credentials, or
-other projects). `-G` mounts `~/.config/gcloud` read-only.
+qemubox mirrors dockbox's agent surface in two layers. `/opt/dev-tools` is
+host-backed read-only. Agent **config** — `~/.claude`, `~/.codex`, `~/.agents`
+(settings, credentials, skills, plugins) — is mounted read-only then copied into
+the disposable guest's own home, so guest edits to config never touch the host.
+Agent **session data** — `~/.claude/projects` (transcripts + auto-memory),
+`~/.claude/todos`, `~/.codex/sessions` — is mounted read-write so recall and
+history persist past the VM. Bulky indexes (sqlite logs) are neither copied nor
+mounted. Single-file config (`~/.claude.json`, `~/.gitconfig`, gpg public
+keyrings) is copied into a per-box read-only staging mount — the guest never
+sees the rest of your home (no `~/.ssh`, cloud credentials, or other projects).
+`-G` mounts `~/.config/gcloud` read-only.
 
 SSH agent forwarding uses `ssh -A`. GPG uses SSH Unix-socket forwarding for
 `~/.gnupg/S.gpg-agent`. `-D` forwards `/var/run/docker.sock` over SSH to a

@@ -362,8 +362,8 @@ sudo chmod 755 /usr/local/bin/claude /usr/local/bin/codex'
     note "copying agent config into qemubox-$name (writable guest copy; host stays read-only)"
     ssh_plain_box "$name" 'for d in .claude .codex .agents; do
   s="/mnt/qemubox-cfg/$d"; [ -d "$s" ] || continue
-  mkdir -p ~/"$d"
-  ( cd "$s" && tar -cpf - --exclude=./projects --exclude=./sessions --exclude="./*.sqlite*" --exclude=./log --exclude=./cache --exclude=./.cache --exclude=./.tmp --exclude=./history.jsonl --exclude=./statsig --exclude=./file-history --exclude=./shell_snapshots --exclude=./shell-snapshots . ) | tar -C ~/"$d" -xpf -
+  sudo mkdir -p ~/"$d"; sudo chown "$(id -u):$(id -g)" ~/"$d"
+  ( cd "$s" && tar -cpf - --exclude=./projects --exclude=./todos --exclude=./sessions --exclude="./*.sqlite*" --exclude=./log --exclude=./cache --exclude=./.cache --exclude=./.tmp --exclude=./history.jsonl --exclude=./statsig --exclude=./file-history --exclude=./shell_snapshots --exclude=./shell-snapshots . ) | tar -C ~/"$d" -xpf -
 done'
     ssh_plain_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
 [ -e /mnt/qemubox-home/.gitconfig ] && ln -sf /mnt/qemubox-home/.gitconfig ~/.gitconfig || true
@@ -564,11 +564,18 @@ host_cfg="$(box_dir "$name")/hostcfg"
 stage_host_cfg "$host_cfg"
 add_mount "$host_cfg" "/mnt/qemubox-home" ro
 # Agent config: mounted read-only at a staging path, then copied into the
-# guest's own writable home (setup_guest_runtime). Guest writes never reach the
-# host, and the guest sees config at the normal paths so the tools find it.
+# guest's own writable home (setup_guest_runtime). Guest writes to config never
+# reach the host, and the guest sees config at the normal paths so tools find it.
 for d in .claude .codex .agents; do
     add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
 done
+# Session data (transcripts, auto-memory, todos, codex sessions) is mounted rw
+# over the copied config so recall/history persist past the disposable VM.
+[ -d "$HOME/.claude" ] && mkdir -p "$HOME/.claude/projects" "$HOME/.claude/todos"
+[ -d "$HOME/.codex" ] && mkdir -p "$HOME/.codex/sessions"
+add_mount "$HOME/.claude/projects" "/home/$USER/.claude/projects" rw
+add_mount "$HOME/.claude/todos" "/home/$USER/.claude/todos" rw
+add_mount "$HOME/.codex/sessions" "/home/$USER/.codex/sessions" rw
 [ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
 
 if [ -z "${no_copy:-}" ]; then
