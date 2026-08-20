@@ -2,6 +2,8 @@
 # PreToolUse hook: block unsafe commands and emit per-language file nudges.
 # Production: silent-fail on any error except explicit unsafe-command blocks. Tests:
 # `pytest hooks/pretool_nudge.py` or `make test`.
+from __future__ import annotations
+
 import contextlib
 import json
 import os
@@ -16,6 +18,12 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)git\s+add\s+(?:-A|--all)\b', 'broad git add'),
     (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--amend\b', 'git commit --amend'),
     (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--no-verify\b', 'git commit --no-verify'),
+    (r'(?<!\S)git\s+commit\b[\s\S]*(?i:co-authored-by)', 'Co-Authored-By trailer'),
+    (r'(?<!\S)git\s+merge\b[^\n;|&]*\s--squash\b', 'git merge --squash'),
+    (r'(?<!\S)git\s+rebase\b[^\n;|&]*\s(?:-i|--interactive)\b', 'git rebase -i'),
+    (r'(?<!\S)git\s+(?:checkout|switch)\b[^\n;|&]*\s-[bBcC]\b', 'git branch creation'),
+    (r'(?<!\S)git\s+worktree\s+add\b(?![^\n;|&]*--detach)', 'git worktree add without --detach'),
+    (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
     (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
 )

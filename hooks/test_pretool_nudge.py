@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from pretool_nudge import extract_path
 from pretool_nudge import process
@@ -104,7 +106,24 @@ BLOCK_CASES = [
     'git add --all',
     'git commit --amend',
     'git commit -m fix --no-verify',
+    'git commit -m "fix\n\nCo-Authored-By: A <a@b.c>"',
+    'git merge --squash feature',
+    'git rebase -i HEAD~3',
+    'git checkout -b feature',
+    'git switch -c feature',
+    'git worktree add /repo/.wt origin/master',
+    'killall node',
     'rm -rf tmp/build',
+]
+
+NONBLOCK_CASES = [
+    'git commit -m "normal message"',
+    'git merge origin/master',
+    'git rebase origin/master',
+    'git checkout master',
+    'git checkout -- file.py',
+    'git worktree add --detach /repo/.wt origin/master',
+    'git status',
 ]
 
 
@@ -138,6 +157,11 @@ def test_process_blocks_unsafe_commands(command: str) -> None:
     assert result is not None
     assert result['decision'] == 'block'
     assert 'unsafe command blocked' in result['reason']
+
+
+@pytest.mark.parametrize('command', NONBLOCK_CASES)
+def test_process_allows_safe_commands(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
 
 def test_process_blocks_recursive_codex_inside_codex(monkeypatch) -> None:
