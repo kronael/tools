@@ -118,3 +118,16 @@ links (`setup_guest_runtime:345-349`).
   `dockbox:12,18`).
 - **DEFER — network confinement (`-H`).** The `restrict=on` path exists but no
   flag wires it (`qemubox:240,426`); `-H` is a no-op. Not needed for v1 per owner.
+
+Fable review + owner live-run (2026-08-20) surfaced three real defects, all fixed:
+- **9p modules not auto-loaded** — first `mount -t 9p` failed on real hardware
+  with "unknown filesystem type '9p'". Debian cloud images ship but don't load
+  them; `mount_host_paths` now `modprobe 9p 9pnet_virtio` before mounting.
+- **`setup_guest_runtime` aborted on every fresh VM** — `sudo mkdir -p
+  /usr/local/bin ~/.gnupg && chmod 700 ~/.gnupg` created `~/.gnupg` as root, so
+  the un-sudo'd `chmod` hit EPERM under `set -e`. Split so `~/.gnupg` is made by
+  the sandbox user.
+- **cross-project auto-memory poisoning** (Fix B residual) — mounting all of
+  `~/.claude/projects` rw let guest code plant a `projects/<other-slug>/memory/
+  MEMORY.md` a future host session auto-trusts. Now scoped to the active
+  project's slug only, matching the "only what's mounted, this project" promise.
