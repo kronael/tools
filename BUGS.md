@@ -104,13 +104,17 @@ links (`setup_guest_runtime:345-349`).
   (token refresh, transcripts). Overlay copy-on-write was ruled out: the kernel
   overlayfs docs disallow network filesystems as the upper layer, and virtio-fs
   confirms overlay-on-9p/virtiofs fails ("upper fs does not support tmpfile/xattr")
-  — plus in-container overlay needs CAP_SYS_ADMIN. So: mount `~/.claude`/`~/.codex`/
-  `~/.agents` **read-only** at `/mnt/qemubox-cfg`, then copy into the guest's own
-  writable home at startup (`setup_guest_runtime`), excluding bulky/other-context
-  state (sqlite, `sessions/`, `projects/`, logs). Host stays read-only; guest
-  writes stay in the disposable VM; tools find config at the normal paths.
-  **dockbox TODO:** same shape — its home is already a fresh tmpfs, so mount the
-  three dirs ro to a staging path and copy them into the tmpfs home in
-  `dockbox-init` instead of the current live rw binds (`dockbox:12,18`).
+  — plus in-container overlay needs CAP_SYS_ADMIN. So a two-layer split: **config** (`~/.claude`/`~/.codex`/`~/.agents` —
+  settings, credentials, skills, plugins) is mounted read-only at
+  `/mnt/qemubox-cfg` and copied into the guest's own home at startup
+  (`setup_guest_runtime`), so guest edits to config never reach the host;
+  **session data** (`~/.claude/projects` incl. auto-memory, `~/.claude/todos`,
+  `~/.codex/sessions`) is mounted **rw** so recall/history persist past the
+  disposable VM. The copy excludes the data dirs (they mount rw on top) and
+  bulky indexes (sqlite, logs). Tools find everything at the normal paths.
+  **dockbox TODO:** same shape — its home is already a fresh tmpfs, so copy
+  config into the tmpfs home in `dockbox-init` while keeping the session-data
+  dirs as live rw binds (today it binds whole `~/.claude`/`~/.codex` rw —
+  `dockbox:12,18`).
 - **DEFER — network confinement (`-H`).** The `restrict=on` path exists but no
   flag wires it (`qemubox:240,426`); `-H` is a no-op. Not needed for v1 per owner.
