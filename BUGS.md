@@ -24,6 +24,20 @@ them ro / redacted / not at all) — not a full config copy-in (that isn't
 needed). Lower priority — dockbox's README already discloses it is not a
 boundary for hostile code.
 
+### [proposal] wire the ast-grep lint pack into target repos (cross-repo install)
+
+The lint pack (`skills/<lang>/lints/`, aggregated by `sgconfig.yml`, proven by
+`make lints`) enforces code rules only in THIS repo. Getting it into a user's
+project is a new install contract — a redesign needing sign-off before ship.
+Options (see `.ship/plan-skills-as-lints.md` § Distribution):
+- **A (recommended)**: opt-in install step — "wire kronael lints into this
+  repo?" writes/updates the project's `sgconfig.yml` + `.pre-commit-config.yaml`
+  and references the pack. Matches the opt-in-skills posture.
+- **B**: publish the pack as a standalone `pre-commit` repo referenced by URL.
+- **C**: document a `sgconfig.yml` reference only, no installer.
+Also: CI enforcement here needs an ast-grep-provisioned job (`make lints` is not
+in pre-commit because the lint CI runner has no ast-grep). Proposed 2026-08-20.
+
 ### Deferred — need sign-off
 
 - **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,
