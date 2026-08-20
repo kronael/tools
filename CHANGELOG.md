@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.72] — 20260820
+
+> kronael v0.3.72 — qemubox: a disposable VM that shares only what a run needs
+>
+> New tool: qemubox runs agents in a throwaway QEMU VM that mounts your project and tool config — not your whole home.
+>
+> • Agent config (`~/.claude`/`~/.codex`/`~/.agents`) is copied in — guest edits never touch the host
+> • Only the active project's transcripts + auto-memory persist back; other projects stay private
+> • Your home is never mounted — no `~/.ssh`, cloud creds, or other repos reach the guest
+> • Loads the guest 9p modules and fixes first-boot setup so it runs on stock Debian cloud images
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `qemubox` CLI — a disposable QEMU + 9p VM wrapper mirroring dockbox's agent surface for inspecting untrusted repos.
+- Mount confinement: no blanket `$HOME` mount; single-file config (`.claude.json`, `.gitconfig`, gpg pubrings) staged read-only; `~/.claude`/`~/.codex`/`~/.agents` copied into the guest's own home (host read-only) so guest config edits never reach the host; session data scoped to the active project's slug (`~/.claude/projects/<slug>`, incl. auto-memory) mounted rw so recall persists without exposing other projects.
+- Guest boot fixes: `modprobe 9p 9pnet_virtio` before the first 9p mount (stock Debian cloud images don't auto-load it); `~/.gnupg` created by the sandbox user rather than root (a `sudo`+chmod mismatch aborted `setup_guest_runtime` under `set -e`); staging dir `chmod 700`.
+- Further hardening (gpg-agent forwarded unconditionally, predictable SSH ports, `-H`/network confinement, stuck-VM lifecycle) and the dockbox config-copy mirror are tracked in `BUGS.md`.
+
 ## [v0.3.71] — 20260811
 
 > kronael v0.3.71 — Codex sees your skills inside dockbox
