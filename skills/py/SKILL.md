@@ -94,6 +94,11 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code
 
+## Lints
+- ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
+  `py-no-lambda-default-factory`, `py-no-property`. ruff owns the rest — NEVER
+  duplicate a ruff rule here.
+
 ## Build
 - uv for packages, pyright for types
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace

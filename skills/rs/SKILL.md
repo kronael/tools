@@ -169,6 +169,11 @@ tokio::spawn(fetch_and_process(client));
 ## Non-Workspace Repos
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members
 
+## Lints
+- ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
+  `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
+  duplicate a clippy lint here.
+
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)
 - Faster debug **builds/tests** (not `check` — it does no codegen): cranelift

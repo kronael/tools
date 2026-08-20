@@ -3,3 +3,5 @@
 # The fixture harness (lints/check.py, `make lints`) proves every rule.
 ruleDirs:
   - skills/ts/lints
+  - skills/rs/lints
+  - skills/py/lints

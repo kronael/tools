@@ -118,3 +118,8 @@ generated files, test path patterns, project-wide style choices (no-comment poli
 ## Testing
 - Test files: `*_test.go` next to code
 - Skip slow tests: `if testing.Short() { t.Skip() }`
+
+## Lints
+- No ast-grep pack: golangci-lint (errcheck, revive, the strict-typing set)
+  owns Go's structural checks. Add a rule under `skills/go/lints/` only for a
+  kronael-specific pattern golangci-lint cannot express — never duplicate it.
