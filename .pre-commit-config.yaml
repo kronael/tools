@@ -7,7 +7,7 @@ repos:
     - repo: local
       hooks:
           - id: skill-frontmatter
-            name: check SKILL.md frontmatter YAML
+            name: lint SKILL.md (frontmatter YAML + wisdom body rules)
             entry: python hooks/skill_frontmatter_lint.py --write --fail-on-write
             language: python
             additional_dependencies: [PyYAML]

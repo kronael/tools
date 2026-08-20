@@ -46,7 +46,7 @@ help:
 	@echo "make clean-<dir> - clean one project"
 	@echo "make workflows   - regenerate PROJECTS from */Makefile"
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
-	@echo "make skills-frontmatter     - lint SKILL.md YAML for Codex"
+	@echo "make skills-frontmatter     - lint SKILL.md (frontmatter YAML + wisdom body rules)"
 	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
 
 test: $(addprefix test-,$(PROJECTS))
