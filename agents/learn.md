@@ -54,6 +54,7 @@ extraction rather than a memory check.
 - Explicit rules ("ALWAYS do X", "NEVER do Y")
 - Patterns that worked
 - Domain-specific knowledge
+- Repeated structural mistakes on one language → candidate lint rule (below)
 
 ## Writing Good Skills
 
@@ -67,6 +68,17 @@ description: Specific trigger context. When to activate. What file types or keyw
 - Description is critical - semantic matching activates skills
 - Content: ALWAYS/NEVER rules, patterns, code examples
 - Under 500 lines, link to supporting files if larger
+
+## Extracting Lint Rules
+
+When the same structural, pattern-matchable mistake recurs across 2+ sessions
+on one language, propose an ast-grep rule, not only a prose reminder:
+- Draft it into `skills/<lang>/lints/rules.yml`: `id`, `rule`, `message` (name
+  the fix + `See skill:<lang>`), `severity: warning`, `note:` citing the skill.
+- Add a `<rule-id>.bad.<ext>` and `<rule-id>.good.<ext>` fixture; prove both
+  with `make lints`. Add the rule id to the skill's `## Lints` section.
+- NEVER lint judgment (naming, minimality) and NEVER auto-set `severity: error`
+  — land as `warning`; the user promotes it after review.
 
 ## Writing Good CLAUDE.md
 

@@ -19,6 +19,9 @@ Launch the @learn agent (Task tool, subagent_type: learn) to analyze conversatio
 2. **Pattern/skill extraction** (heavier pass, always user-invoked): read
    conversation history, identify recurring themes, and propose new/updated
    skills for the user to approve (see agent process).
+3. **Lint-rule extraction** (heavier pass, user-invoked): when the session
+   shows a repeated deterministic, language-specific correction, propose an
+   ast-grep lint rule so the next session is enforced, not re-reminded.
 
 Run memory evaluation first when triggered by the nudge; run full extraction
 when the user explicitly asks to learn from a session.
@@ -26,6 +29,16 @@ when the user explicitly asks to learn from a session.
 ## Rules for extracted skills
 - ALWAYS read the session transcript and identify the specific failure/decision being captured BEFORE drafting (path: see global skill startup protocol).
 - NEVER promote a single-session story to a skill — need pattern in 2+ distinct sessions; otherwise record in .diary/.
+
+## Rules for extracted lint rules
+- ALWAYS gate on structure: only a pattern-matchable mistake becomes a lint.
+  Judgment (naming, minimality, "boring code") stays a skill — NEVER lint
+  judgment; a false positive trains the agent to reach for `--no-verify`.
+- ALWAYS co-locate and prove: write the rule into `skills/<lang>/lints/rules.yml`
+  with bad+good fixtures, `severity: warning`, `note:` citing the skill; add the
+  id to that skill's `## Lints`; prove it with `make lints`.
+- ALWAYS propose, NEVER auto-promote to `error` — the user promotes after review.
+- NEVER extract from a single session — need the same correction in 2+ sessions.
 
 ## Rules for memory evaluation
 - ALWAYS distinguish the four memory types (user/feedback/project/reference) per the auto-memory format — don't dump everything into one bucket.
