@@ -40,7 +40,7 @@ host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnu
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | rm [pattern] | prune [hours]
+       qemubox ls | rm [pattern] | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
 
 Tools (first positional arg -- no leading dash):
@@ -146,7 +146,18 @@ ensure_box() {
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
-    base="$(ensure_base)"
+    # Prefer the prebuilt base (packages baked in -> boxes skip first-boot apt);
+    # fall back to the raw generic image so the lazy-apt path still works if it
+    # was never built. build-base sets $backing_override to the raw base so it
+    # never bakes on top of an existing prebuilt base.
+    provisioned="$ROOT/base/provisioned.qcow2"
+    if [ -n "${backing_override:-}" ]; then
+        base="$backing_override"
+    elif [ -s "$provisioned" ]; then
+        base="$provisioned"
+    else
+        base="$(ensure_base)"
+    fi
     [ -f "$dir/key" ] || {
         note "creating SSH key for qemubox-$name"
         note "why: cloud-init uses this key so the host can enter the guest"
@@ -435,6 +446,45 @@ remove_box() {
     echo "removed qemubox-$name"
 }
 
+# Bake the apt package layer once into a reusable base image so new boxes skip
+# first-boot apt. Rides the same ensure_box/start_box/ssh/provision paths as a
+# normal box -- just a throwaway box in a hidden dir ($ROOT/.build, so ls/rm/prune
+# never see it) with no host mounts. Idempotent: skips if the base already exists
+# unless a rebuild is forced.
+build_base() {
+    force="${1:-}"
+    missing_deps
+    provisioned="$ROOT/base/provisioned.qcow2"
+    if [ -s "$provisioned" ] && [ -z "$force" ]; then
+        note "prebuilt base already present: $provisioned"
+        note "why: new boxes boot from it and skip apt; pass --force to rebuild"
+        return 0
+    fi
+    # Force the raw generic image as the build overlay's backing so we never bake
+    # on top of an existing prebuilt base; the flattened result replaces it below.
+    backing_override="$(ensure_base)"
+    name=".build"
+    dir="$(box_dir "$name")"
+    remove_box "$name" >/dev/null 2>&1 || true
+    note "building prebuilt base image in a throwaway box"
+    note "why: bake the apt layer once so every new box boots in seconds"
+    start_box "$name"
+    provision_guest_packages "$name"
+    note "cleaning cloud-init state so boxes built from this base re-run it fresh"
+    ssh_plain_box "$name" 'sudo cloud-init clean --logs --seed'
+    note "dropping the throwaway build key and powering off"
+    # Once the key is gone SSH cannot reconnect, so the power-off must ride the
+    # same connection; the dropped connection at poweroff is expected.
+    ssh_plain_box "$name" 'rm -f ~/.ssh/authorized_keys; sudo poweroff' >/dev/null 2>&1 || true
+    stop_box "$name"
+    note "flattening build overlay into a standalone base: $provisioned"
+    note "why: convert (not commit) leaves the pristine generic image untouched"
+    qemu-img convert -O qcow2 "$dir/disk.qcow2" "$provisioned.tmp"
+    mv "$provisioned.tmp" "$provisioned"
+    remove_box "$name" >/dev/null 2>&1 || true
+    note "prebuilt base ready; new boxes skip first-boot apt"
+}
+
 list_boxes() {
     mkdir -p "$ROOT"
     found=""
@@ -552,6 +602,14 @@ case "${1:-}" in
             ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir")
             [ "$ts" -lt "$cutoff" ] && remove_box "$name"
         done
+        exit 0 ;;
+    build-base)
+        force=""
+        case "${2:-}" in
+            ""|--force|-f|rebuild) [ -n "${2:-}" ] && force=1 ;;
+            *) echo "unknown build-base option: $2" >&2; exit 2 ;;
+        esac
+        build_base "$force"
         exit 0 ;;
     -h|--help|help) usage; exit 0 ;;
 esac

@@ -16,6 +16,14 @@ cd qemubox
 make install
 ```
 
+`make install` also runs `qemubox build-base` once to bake the guest apt
+packages into a prebuilt base image (`provisioned.qcow2`), so subsequent boxes
+boot in seconds instead of spending 1-2 min on first-boot `apt-get`. That step
+needs `/dev/kvm` and network; if either is missing it is skipped with a warning
+and the binary still installs — the first box then provisions lazily on boot.
+Run `qemubox build-base` (or `qemubox build-base --force`) later to build or
+rebuild the base by hand.
+
 System packages:
 
 ```sh
@@ -81,9 +89,11 @@ SSH agent forwarding uses `ssh -A`. GPG uses SSH Unix-socket forwarding for
 `~/.gnupg/S.gpg-agent`. `-D` forwards `/var/run/docker.sock` over SSH to a
 user-owned socket in the VM and sets `DOCKER_HOST`.
 
-On first boot, qemubox installs the base Debian packages needed for normal
-shell/git/gpg/runtime work. Agent entrypoints such as `claude` and `codex` run
-through guest wrappers that point at the host-mounted `/opt/dev-tools` tree.
+Guest base packages (shell/git/gpg/runtime) come from the prebuilt base image
+when it exists, so boxes skip first-boot `apt-get` entirely. Without a prebuilt
+base, the first boot installs them lazily and marks the box so later boots skip
+it. Agent entrypoints such as `claude` and `codex` run through guest wrappers
+that point at the host-mounted `/opt/dev-tools` tree.
 
 State lives in `~/.local/share/qemubox` unless `QEMUBOX_HOME` is set. The base
 image is kept for reuse; `rm` deletes the named VM overlay, seed, SSH key,
