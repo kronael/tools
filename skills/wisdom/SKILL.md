@@ -17,11 +17,12 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 ---
 ```
 
+- ALWAYS include `name`, `description`, `when_to_use` — enforced by lint: skill-keys (hard fail if any is missing).
 - ALWAYS keep `description` minimal — short summary + NOT clause only.
 - ALWAYS pack `when_to_use` with retrieval keywords: error messages, symptom words, tool/library names, synonyms.
 - `description` + `when_to_use` share a 1,536-char budget — both shown to Claude for routing.
 - NEVER write description as workflow summary ("summarizes X via Y") — Claude shortcuts past skills whose description states the process.
-- ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates neighbors.
+- ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates neighbors; warned by lint: skill-notfor.
 - NEVER write "This skill helps you…" or marketing prose.
 - NEVER use vague terms like "general utilities", "various tools".
 - NEVER use trigger words shared with a sibling skill's primary trigger — causes routing races.
@@ -33,9 +34,9 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 ## SKILL.md body
 
-- ALWAYS use ALWAYS/NEVER; NEVER use SHOULD (too soft).
+- ALWAYS use ALWAYS/NEVER for every directive, never the soft 'should' form — enforced by lint: skill-should.
 - ALWAYS pair NEVER with ALWAYS: "NEVER X — ALWAYS Y instead."
-- ALWAYS keep under 200 lines; skills persist in context all session. No exceptions — overflow goes to sibling files, never a longer SKILL.md.
+- ALWAYS keep under 200 lines; skills persist in context all session. No exceptions — overflow goes to sibling files, never a longer SKILL.md. Warned by lint: skill-length (workflow/runbook skills up to 500).
 - NEVER add obvious code examples LLMs already know.
 - NEVER duplicate content between skills or with the global wisdom file.
 - ALWAYS push overflow (anything >50 lines — API docs, tables, deep dives) into adjacent sibling files linked from the SKILL.md, loaded on demand; SKILL.md stays workflow-only. The SKILL.md MAY tell the LLM to force-read a sibling when it's mandatory, not optional.
@@ -50,7 +51,7 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - Router body = explicit dispatch table mapping trigger keywords → data file; NEVER prose links alone.
 - Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/resolve` routes on them.
 - Light content lives flat (`<mode>.md`); heavy ported trees keep their subtree intact at `<mode>/<slug>/`.
-- NEVER name a data file `SKILL.md` — that is what makes it preload.
+- NEVER name a data file `SKILL.md` — that is what makes it preload; warned by lint: skill-router.
 - Maintenance procedure: `skills/CLAUDE.md`.
 
 ## CLAUDE.md (project)

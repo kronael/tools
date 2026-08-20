@@ -28,7 +28,8 @@ repo CLAUDE.md links to this file.
 - Light content lives flat: `<mode>.md`.
 - Heavy content nests: `<mode>/<slug>.md` + `<mode>/<slug>/` keeping the
   ported tree intact (`references/`, `scripts/`, `templates/`).
-- NEVER name a data file `SKILL.md` — that is exactly what makes it preload.
+- NEVER name a data file `SKILL.md` — that is exactly what makes it preload
+  (warned by lint: skill-router in `hooks/skill_frontmatter_lint.py`).
 - Data-file frontmatter is inert provenance (author, license, tags) — keep
   it for attribution (NOTICE points at it), never trust it for routing.
 
