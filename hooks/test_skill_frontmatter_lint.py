@@ -29,7 +29,9 @@ def make(tmp_path: Path, text: str, name: str = 'demo') -> Path:
 
 def findings(path: Path) -> list:
     text = path.read_text()
-    meta, body = frontmatter(text)
+    split = frontmatter(text)
+    assert split is not None
+    meta, body = split
     return check_body(path, text, parse_meta(meta), body)
 
 
