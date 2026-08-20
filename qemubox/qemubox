@@ -117,12 +117,12 @@ missing_deps() {
     }
 }
 
-# Script voice: qemubox's own control/status lines. A bold-cyan glyph+prefix on
+# Script voice: qemubox's own control/status lines. A bold-cyan ">>>" prefix on
 # a TTY sets these apart from raw guest output; piped/non-interactive stays the
 # exact plain "qemubox: ..." text so logs and greps are unchanged.
 note() {
     if [ -t 2 ]; then
-        printf '\033[1;36m▸ qemubox:\033[0m %s\n' "$*" >&2
+        printf '\033[1;36m>>> qemubox:\033[0m %s\n' "$*" >&2
     else
         printf 'qemubox: %s\n' "$*" >&2
     fi
@@ -218,7 +218,7 @@ ssh_plain_box() {
 # ssh_plain_box (no pipe), so behavior and output stay byte-for-byte unchanged.
 ssh_stream_box() {
     if [ -t 2 ]; then
-        ssh_plain_box "$@" 2>&1 | sed $'s/^/\033[2m│\033[0m /' >&2
+        ssh_plain_box "$@" 2>&1 | sed $'s/^/\033[2m> \033[0m/' >&2
     else
         ssh_plain_box "$@"
     fi
