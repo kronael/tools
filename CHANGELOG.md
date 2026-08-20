@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.73] — 20260820
+
+> kronael v0.3.73 — qemubox actually mounts now
+>
+> qemubox now boots Debian's generic cloud image, whose kernel ships the 9p module the disposable VM needs to mount your project.
+>
+> • Base image is Debian `generic`, not `genericcloud` (whose trimmed kernel omits 9p — the mounts silently failed)
+> • If a guest kernel ever lacks 9p, you get a clear message and the fix, not a cryptic "unknown filesystem type '9p'"
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: default base image `genericcloud` → `generic`. The genericcloud kernel omits `CONFIG_9P_FS`, so every `mount -t 9p` failed with "unknown filesystem type '9p'" regardless of `modprobe`. Added a guest preflight (`grep 9p /proc/filesystems`) that fails with actionable guidance instead of the raw mount error. Existing VMs must be recreated (`qemubox rm <name>`) to rebuild on the new base.
+
 ## [v0.3.72] — 20260820
 
 > kronael v0.3.72 — qemubox: a disposable VM that shares only what a run needs
