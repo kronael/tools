@@ -223,6 +223,7 @@ add_mount() {
 stage_host_cfg() {
     cfg="$1"
     mkdir -p "$cfg/.gnupg"
+    chmod 700 "$cfg"
     for rel in "${host_cfg_files[@]}"; do
         if [ -f "$HOME/$rel" ]; then
             cp -pL "$HOME/$rel" "$cfg/$rel"
@@ -303,6 +304,9 @@ mount_host_paths() {
     name="$1"
     note "mounting host paths into qemubox-$name with 9p"
     note "why: qemubox mirrors dockbox access patterns without copying files"
+    # Debian cloud images ship the 9p modules but do not auto-load them; without
+    # this the first `mount -t 9p` fails with "unknown filesystem type '9p'".
+    ssh_plain_box "$name" 'sudo modprobe 9p 9pnet_virtio 2>/dev/null || true'
     for i in "${!mount_tags[@]}"; do
         tag="${mount_tags[$i]}"
         dest="${mount_dests[$i]}"
@@ -341,7 +345,7 @@ setup_guest_runtime() {
     name="$1"
     note "provisioning qemubox-$name guest wrappers"
     note "why: claude/codex run from the host-mounted /opt/dev-tools tree"
-    ssh_plain_box "$name" 'sudo mkdir -p /usr/local/bin ~/.gnupg && chmod 700 ~/.gnupg'
+    ssh_plain_box "$name" 'sudo mkdir -p /usr/local/bin; mkdir -p ~/.gnupg && chmod 700 ~/.gnupg'
     ssh_plain_box "$name" 'node_bin=$(ls -d /opt/dev-tools/nvm/versions/node/*/bin 2>/dev/null | sort | tail -1 || true)
 if [ -n "$node_bin" ]; then
   sudo ln -sf "$node_bin/node" /usr/local/bin/node
@@ -569,13 +573,14 @@ add_mount "$host_cfg" "/mnt/qemubox-home" ro
 for d in .claude .codex .agents; do
     add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
 done
-# Session data (transcripts, auto-memory, todos, codex sessions) is mounted rw
-# over the copied config so recall/history persist past the disposable VM.
-[ -d "$HOME/.claude" ] && mkdir -p "$HOME/.claude/projects" "$HOME/.claude/todos"
-[ -d "$HOME/.codex" ] && mkdir -p "$HOME/.codex/sessions"
-add_mount "$HOME/.claude/projects" "/home/$USER/.claude/projects" rw
-add_mount "$HOME/.claude/todos" "/home/$USER/.claude/todos" rw
-add_mount "$HOME/.codex/sessions" "/home/$USER/.codex/sessions" rw
+# Session data for THIS project persists to the host (transcripts + auto-memory),
+# scoped to the active project's slug so the guest never sees or writes any other
+# project's history. Everything else stays inside the disposable VM.
+if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ]; then
+    slug="${primary//\//-}"
+    mkdir -p "$HOME/.claude/projects/$slug"
+    add_mount "$HOME/.claude/projects/$slug" "/home/$USER/.claude/projects/$slug" rw
+fi
 [ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
 
 if [ -z "${no_copy:-}" ]; then
