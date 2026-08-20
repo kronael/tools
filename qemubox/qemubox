@@ -117,8 +117,15 @@ missing_deps() {
     }
 }
 
+# Script voice: qemubox's own control/status lines. A bold-cyan glyph+prefix on
+# a TTY sets these apart from raw guest output; piped/non-interactive stays the
+# exact plain "qemubox: ..." text so logs and greps are unchanged.
 note() {
-    echo "qemubox: $*" >&2
+    if [ -t 2 ]; then
+        printf '\033[1;36m▸ qemubox:\033[0m %s\n' "$*" >&2
+    else
+        printf 'qemubox: %s\n' "$*" >&2
+    fi
 }
 
 ensure_base() {
@@ -202,6 +209,19 @@ ssh_plain_box() {
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
         "$USER@127.0.0.1" "$@"
+}
+
+# Guest voice: run a guest command and stream its output behind a dim gutter so
+# it reads as "inside the VM". ONLY for standalone, human-facing calls whose
+# output is neither captured nor used for control flow -- the gutter pipe plus
+# `pipefail` would corrupt the exit status of those. Off a TTY it is exactly
+# ssh_plain_box (no pipe), so behavior and output stay byte-for-byte unchanged.
+ssh_stream_box() {
+    if [ -t 2 ]; then
+        ssh_plain_box "$@" 2>&1 | sed $'s/^/\033[2m│\033[0m /' >&2
+    else
+        ssh_plain_box "$@"
+    fi
 }
 
 quote() {
@@ -313,9 +333,9 @@ mount_host_paths() {
     # a cryptic "unknown filesystem type '9p'".
     ssh_plain_box "$name" 'sudo modprobe 9p 9pnet_virtio 2>/dev/null || true'
     ssh_plain_box "$name" 'grep -qw 9p /proc/filesystems' || {
-        echo "qemubox: guest kernel lacks 9p filesystem support." >&2
-        echo "qemubox: use a full-kernel base image (Debian 'generic', not 'genericcloud')" >&2
-        echo "qemubox: then rebuild: qemubox rm $name" >&2
+        note "guest kernel lacks 9p filesystem support."
+        note "use a full-kernel base image (Debian 'generic', not 'genericcloud')"
+        note "then rebuild: qemubox rm $name"
         exit 1
     }
     for i in "${!mount_tags[@]}"; do
@@ -334,7 +354,7 @@ provision_guest_packages() {
     if ! ssh_plain_box "$name" "[ -f $marker ]" >/dev/null 2>&1; then
         note "installing guest base packages in qemubox-$name"
         note "why: qemubox needs the same practical shell/git/gpg/runtime layer as dockbox"
-        ssh_plain_box "$name" 'sudo mkdir -p /var/lib/qemubox
+        ssh_stream_box "$name" 'sudo mkdir -p /var/lib/qemubox
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
 sudo apt-get install -y --no-install-recommends \
@@ -347,7 +367,7 @@ sudo touch /var/lib/qemubox/packages-v1'
     fi
     if [ -n "$docker_sock" ]; then
         note "installing Docker CLI in qemubox-$name for -D"
-        ssh_plain_box "$name" 'command -v docker >/dev/null 2>&1 || \
+        ssh_stream_box "$name" 'command -v docker >/dev/null 2>&1 || \
 sudo apt-get install -y --no-install-recommends docker.io'
     fi
 }
@@ -356,8 +376,8 @@ setup_guest_runtime() {
     name="$1"
     note "provisioning qemubox-$name guest wrappers"
     note "why: claude/codex run from the host-mounted /opt/dev-tools tree"
-    ssh_plain_box "$name" 'sudo mkdir -p /usr/local/bin; mkdir -p ~/.gnupg && chmod 700 ~/.gnupg'
-    ssh_plain_box "$name" 'node_bin=$(ls -d /opt/dev-tools/nvm/versions/node/*/bin 2>/dev/null | sort | tail -1 || true)
+    ssh_stream_box "$name" 'sudo mkdir -p /usr/local/bin; mkdir -p ~/.gnupg && chmod 700 ~/.gnupg'
+    ssh_stream_box "$name" 'node_bin=$(ls -d /opt/dev-tools/nvm/versions/node/*/bin 2>/dev/null | sort | tail -1 || true)
 if [ -n "$node_bin" ]; then
   sudo ln -sf "$node_bin/node" /usr/local/bin/node
   sudo ln -sf "$node_bin/npm" /usr/local/bin/npm
@@ -373,14 +393,14 @@ sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/claude /usr/local/bin/codex'
-    ssh_plain_box "$name" 'mkdir -p ~/.docker/run'
+    ssh_stream_box "$name" 'mkdir -p ~/.docker/run'
     note "copying agent config into qemubox-$name (writable guest copy; host stays read-only)"
-    ssh_plain_box "$name" 'for d in .claude .codex .agents; do
+    ssh_stream_box "$name" 'for d in .claude .codex .agents; do
   s="/mnt/qemubox-cfg/$d"; [ -d "$s" ] || continue
   sudo mkdir -p ~/"$d"; sudo chown "$(id -u):$(id -g)" ~/"$d"
   ( cd "$s" && tar -cpf - --exclude=./projects --exclude=./todos --exclude=./sessions --exclude="./*.sqlite*" --exclude=./log --exclude=./cache --exclude=./.cache --exclude=./.tmp --exclude=./history.jsonl --exclude=./statsig --exclude=./file-history --exclude=./shell_snapshots --exclude=./shell-snapshots . ) | tar -C ~/"$d" -xpf -
 done'
-    ssh_plain_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
+    ssh_stream_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
 [ -e /mnt/qemubox-home/.gitconfig ] && ln -sf /mnt/qemubox-home/.gitconfig ~/.gitconfig || true
 [ -e /mnt/qemubox-home/.dockbox_history ] && ln -sf /mnt/qemubox-home/.dockbox_history ~/.bash_history || true
 [ -e /mnt/qemubox-home/.gnupg/pubring.kbx ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.kbx ~/.gnupg/pubring.kbx || true
