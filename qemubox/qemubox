@@ -43,7 +43,7 @@ host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnu
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | status <name> | rm [pattern] | prune [hours] | build-base [--force]
+       qemubox ls | status <name> | rm <pattern|-a> | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
 
 Tools (first positional arg -- no leading dash):
@@ -753,7 +753,8 @@ case "${1:-}" in
         status_box "$2"; exit 0 ;;
     rm|destroy)
         pat="${2:-}"
-        [ -z "$pat" ] && { echo "qemubox rm: a name or glob is required ('*' removes all)" >&2; exit 2; }
+        [ -z "$pat" ] && { echo "qemubox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
+        case "$pat" in -a|--all) pat='*' ;; esac
         found=""
         for dir in "$ROOT"/*; do
             [ -d "$dir" ] || continue

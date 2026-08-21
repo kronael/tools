@@ -84,6 +84,7 @@ qemubox ls               # list VMs (name, status, SSH port, path)
 qemubox status repo      # readiness of one VM (process/ssh/boot) without a shell
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
+qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
 qemubox prune [hours]    # remove stopped VMs older than N hours (default 2160)
 qemubox build-base       # (re)bake the prebuilt base image
 ```

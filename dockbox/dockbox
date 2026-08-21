@@ -63,9 +63,9 @@ apply_flag() {
     return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
 }
 
-# Decide whether container $1 matches the user's rm pattern $2. Empty pattern ->
-# all; a pattern with * or ? is a glob, otherwise an exact match on the bare or
-# dockbox- prefixed name.
+# Decide whether container $1 matches the user's rm pattern $2. Empty never
+# matches (the caller requires a pattern); a pattern with * or ? is a glob,
+# otherwise an exact match on the bare or dockbox- prefixed name.
 rm_matches() {
     _n="$1"; _pat="$2"
     [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
@@ -89,7 +89,8 @@ case "${1:-}" in
         names=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
         [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
-        [[ -z "$pattern" ]] && { echo "dockbox rm: a name or glob is required ('*' removes all)" >&2; exit 2; }
+        [[ -z "$pattern" ]] && { echo "dockbox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
+        case "$pattern" in -a|--all) pattern='*' ;; esac
         matched=""
         while read -r n; do
             [[ -z "$n" ]] && continue
@@ -123,7 +124,7 @@ case "${1:-}" in
     -h|--help)
         cat <<EOF
 Usage: dockbox [options] [tool] [dirs...] [tool-args...]
-       dockbox ls | rm [pattern] | prune [hours]
+       dockbox ls | rm <pattern|-a> | prune [hours]
        dockbox [options] bash [dirs...]
 
 Tools (first positional arg — no leading dash):
