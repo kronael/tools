@@ -1,5 +1,5 @@
 fn run(x: Option<i32>) -> i32 {
-    // ast-grep-ignore: rs-no-unwrap
+    // config validated at startup; never None here
     x.unwrap()
 }
 

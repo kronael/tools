@@ -7,7 +7,18 @@ ignores:
     - '**/tests/**'
 rule:
     pattern: $X.unwrap()
-message: 'NEVER bare .unwrap() in non-test code — use .expect("why") or propagate with ?. Tests exempt; for a reviewed unwrap add "// ast-grep-ignore: rs-no-unwrap" above it. See skill:rs.'
+    not:
+        any:
+            - follows:
+                  kind: line_comment
+                  stopBy: neighbor
+            - inside:
+                  follows:
+                      kind: line_comment
+                      stopBy: neighbor
+                  stopBy: end
+message: NEVER bare .unwrap() in non-test code — use .expect("why"), propagate with ?, or justify it with a // comment on the line directly above. Tests
+    are exempt. See skill:rs.
 note: 'source: skills/rs/SKILL.md — Unwrap Safety'
 ---
 id: rs-no-from-value-clone
