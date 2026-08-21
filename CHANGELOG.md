@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.3.75] — 20260821
+
+> kronael v0.3.75 — qemubox hardened: kill-switch, untrusted mode, locking, tests
+>
+> qemubox gets a network kill-switch, a credential-free untrusted mode, lifecycle hardening, and a no-VM bash test suite.
+>
+> • `-H` egress kill-switch and `-U`/`--untrusted` (no creds, no network) for poking at code you don't trust
+> • `-K` makes gpg-agent forwarding opt-in (was always on); `-n` rejects path-traversal names
+> • Lifecycle hardened — per-box `flock`, port bind-test, orphan-kill on failed start, teardown that won't nuke a live box
+> • `qemubox status <name>`, base-image checksum, and a bash test suite (qemubox + dockbox) wired into CI
+> • `rm` exact-match+glob in both tools; security-audit skill `/hacker-eval` → `/red-eval`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: confinement flags — `-H` now disables outbound network (was a no-op; the `restrict=on` path is live), `-U`/`--untrusted` injects no host config/credentials and forces network off while still mounting the project (for shells/builds on untrusted code — the agent can't auth without creds), `-K` gates gpg-agent forwarding opt-in (both tools; was unconditional), `-n` rejects `.`/`..`/`base`/empty/slashed names (path traversal).
+- `qemubox`: lifecycle hardening — per-box `flock` around start (no same-name races), wider SSH ports + `/dev/tcp` bind-test with a clear "port busy" error, the daemonized qemu is killed if SSH never comes up, ref-count teardown is conservative on an ssh flake (won't tear down a live box), and re-entry is race-free (derived inside the lock). `prune` no longer aborts when a box dir vanishes mid-loop.
+- `qemubox`: `status <name>` (process/SSH/boot readiness without a shell) and base-image SHA512 verification (`QEMUBOX_BASE_SHA512` or Debian's `SHA512SUMS`).
+- `qemubox` + `dockbox`: `rm` matches exactly, `*`/`?` = glob (was substring). A no-VM bash test suite (`test.sh` each) asserts the security-load-bearing matrix (name guard, mount ro/rw per flag, `-U` injects nothing), plus a drift test guarding the shared model-alias table; both wired into `make test` + CI.
+- Install: security tools renamed `/hacker-eval` → `/red-eval` (table + `eval-all`); `trufflehog` installs from a release binary (not `go install`); the renamed/folded skill dirs added to the install prune list.
+
 ## [v0.3.74] — 20260821
 
 > kronael v0.3.74 — qemubox grows up: fast boot, auto-shutdown, honest about what it protects
