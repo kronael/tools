@@ -108,12 +108,13 @@ box_dir() {
 
 port_for() {
     cksum=$(printf '%s' "$(box_name "$1")" | cksum | awk '{print $1}')
-    echo $((2200 + cksum % 1000))
+    # Wide range keeps name-hash collisions rare (birthday ~1% at 30 boxes).
+    echo $((10000 + cksum % 50000))
 }
 
 missing_deps() {
     miss=""
-    for dep in "$QEMU" qemu-img cloud-localds ssh ssh-keygen curl tar; do
+    for dep in "$QEMU" qemu-img cloud-localds ssh ssh-keygen curl tar flock; do
         command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
     done
     [ -z "$miss" ] || {
@@ -286,12 +287,26 @@ qemu_mount_args() {
 start_box() {
     name="$(box_name "$1")"
     missing_deps
+    dir="$(box_dir "$name")"
+    mkdir -p "$dir"
+    port="$(port_for "$name")"
+    # Serialize concurrent same-name launches so two invocations don't both
+    # ssh-keygen / qemu-img / boot a second qemu on one disk and port. Held only
+    # through boot; released before the long-lived interactive session.
+    exec 9>"$dir/.lock"
+    flock 9
     ensure_box "$name"
     running "$name" && {
-        note "reusing running VM qemubox-$name on 127.0.0.1:$(port_for "$name")"
+        note "reusing running VM qemubox-$name on 127.0.0.1:$port"
+        flock -u 9
         return
     }
-    dir="$(box_dir "$name")"
+    # A running box short-circuits above, so a live listener on the port now is a
+    # foreign squatter -- fail loud instead of a cryptic qemu hostfwd bind error.
+    if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
+        echo "port $port busy for qemubox-$name; retry with -n <name>" >&2
+        exit 1
+    fi
     accel=()
     [ -e /dev/kvm ] && accel=(-enable-kvm)
     restrict=",restrict=on"
@@ -312,16 +327,21 @@ start_box() {
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2" \
         -drive "file=$dir/seed.iso,media=cdrom,readonly=on" \
         "${mounts[@]}" \
-        -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
+        -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
         -serial "file:$dir/serial.log" \
         -display none -daemonize -pidfile "$dir/pid"
-    note "waiting for SSH on 127.0.0.1:$(port_for "$name")"
+    note "waiting for SSH on 127.0.0.1:$port"
     note "why: cloud-init must finish user/key setup before commands can run"
     for i in $(seq 1 90); do
-        ssh_plain_box "$name" true >/dev/null 2>&1 && return
+        ssh_plain_box "$name" true >/dev/null 2>&1 && { flock -u 9; return; }
         [ $((i % 10)) -eq 0 ] && note "still waiting for SSH; serial log: $dir/serial.log"
         sleep 2
     done
+    # SSH never came up: kill the daemonized qemu so a boot that never reached
+    # SSH isn't orphaned holding RAM/CPU and the rw 9p mounts.
+    pid="$(cat "$dir/pid" 2>/dev/null || true)"
+    [ -n "$pid" ] && kill "$pid" 2>/dev/null || true
+    rm -f "$dir/pid"
     echo "SSH not ready; see $dir/serial.log" >&2
     exit 1
 }
@@ -452,7 +472,7 @@ remove_box() {
     # escalates to SIGKILL, so a failure here means it genuinely could not die.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
-    rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub"
+    rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
     rmdir "$dir" 2>/dev/null || true
@@ -683,7 +703,9 @@ case "${1:-}" in
             name="${dir##*/}"
             [ "$name" = base ] && continue
             running "$name" && continue
-            ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir")
+            # A dir vanishing between the glob and here (concurrent rm/prune)
+            # must skip, not trip set -e and abort the whole prune.
+            ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir" 2>/dev/null) || continue
             [ "$ts" -lt "$cutoff" ] && remove_box "$name" || true
         done
         exit 0 ;;
@@ -744,15 +766,24 @@ if [ -n "$untrusted" ]; then
             warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
     esac
 fi
+was_running=""
+running "$name" && was_running=1
 start_box "$name"
 # Drop this session's ref-count marker BEFORE provisioning, so a sibling session
 # exiting mid-setup cannot see left=0 and tear the VM down under us.
 sid="$$"
 ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
-mount_host_paths "$name"
-provision_guest_packages "$name"
-setup_guest_runtime "$name"
-setup_guest_auth "$name"
+# A running box's 9p device set is fixed at boot, so re-provisioning it with a
+# different mount set fails hard; skip it on re-entry (matches dockbox), where
+# mount/-v/dir changes don't apply. The tool/model still applies to the session.
+if [ -z "$was_running" ]; then
+    mount_host_paths "$name"
+    provision_guest_packages "$name"
+    setup_guest_runtime "$name"
+    setup_guest_auth "$name"
+else
+    note "re-entering running qemubox-$name; mount/-v/dir changes are ignored (use -n <name> for a separate box)"
+fi
 
 for warning in "${warnings[@]}"; do
     note "$warning"
@@ -781,8 +812,11 @@ else
     note "running in qemubox-$name home"
     ssh_box "$name" -t "exec env$remote" || rc=$?
 fi
-left="$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid; ls /run/qemubox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)"
-if [ "${left:-0}" -eq 0 ]; then
+# Only tear down when the remaining-session count SUCCEEDS and is zero. An ssh
+# hiccup while counting leaves $left empty -> keep the VM up (a sibling may still
+# hold it); prune reaps a genuinely idle box later. Never teardown on error.
+left="$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid; ls /run/qemubox/sess 2>/dev/null | wc -l" 2>/dev/null)" || left=""
+if [ -n "$left" ] && [ "$left" -eq 0 ]; then
     note "last session exited -- shutting down qemubox-$name"
     remove_box "$name" >/dev/null || true
 fi

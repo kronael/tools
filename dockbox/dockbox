@@ -323,9 +323,12 @@ enter_session() {
     # gets the token when a later invocation passes it.
     docker exec -it -u "$(id -u):$(id -g)" -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" "${cmd[@]}"
     local rc=$? left
+    # Only tear down when the count SUCCEEDS and is zero. A docker-exec hiccup
+    # leaves $left empty -> keep the container up (a sibling may still hold it)
+    # rather than removing it out from under a live session.
     left=$(docker exec "$CONTAINER_NAME" sh -c \
-        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)
-    [[ "${left:-0}" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null) || left=""
+    [[ -n "$left" && "$left" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
     exit "$rc"
 }
 

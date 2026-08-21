@@ -66,7 +66,7 @@ eq "-U sets untrusted"   "$untrusted" "1"
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
 true_ "port differs by name" '[ "$p1" != "$p3" ]'
-true_ "port in unprivileged range" '[ "$p1" -gt 1024 ] && [ "$p1" -le 65535 ]'
+true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 65535 ]'
 
 ## mount matrix -------------------------------------------------------------
 reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }

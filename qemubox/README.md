@@ -92,7 +92,9 @@ qemubox build-base       # (re)bake the prebuilt base image
 A box starts on first use and auto-shuts-down when the **last** session exits
 (ref-counted, like dockbox). Re-entering a running box from a second terminal
 joins the live VM; it stays up until every session has exited, so concurrent
-sessions don't tear it down under each other.
+sessions don't tear it down under each other. The tool/model applies to the
+new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
+ignored on re-entry — use `-n <name>` for a separately-mounted box.
 
 ## What crosses into the VM
 
