@@ -2,9 +2,12 @@
 id: rs-no-unwrap
 language: rust
 severity: warning
+ignores:
+    - '**/*_test.rs'
+    - '**/tests/**'
 rule:
     pattern: $X.unwrap()
-message: NEVER bare .unwrap() in non-test code — use .expect("why") or propagate with ?. See skill:rs.
+message: 'NEVER bare .unwrap() in non-test code — use .expect("why") or propagate with ?. Tests exempt; for a reviewed unwrap add "// ast-grep-ignore: rs-no-unwrap" above it. See skill:rs.'
 note: 'source: skills/rs/SKILL.md — Unwrap Safety'
 ---
 id: rs-no-from-value-clone

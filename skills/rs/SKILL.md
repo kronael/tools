@@ -173,6 +173,9 @@ tokio::spawn(fetch_and_process(client));
 - ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
   `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
   duplicate a clippy lint here.
+- `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`); for a reviewed
+  non-test unwrap add `// ast-grep-ignore: rs-no-unwrap` above it — NEVER
+  `// SAFETY:` (that stays reserved for `unsafe`).
 
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)

@@ -1,3 +1,8 @@
 fn run(x: Option<i32>) -> i32 {
-    x.expect("x is set at startup")
+    // ast-grep-ignore: rs-no-unwrap
+    x.unwrap()
+}
+
+fn safe(y: Option<i32>) -> i32 {
+    y.expect("y is set at startup")
 }
