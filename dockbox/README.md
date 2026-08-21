@@ -5,6 +5,18 @@ mounts whatever you point at. Docker provides working directory scoping and a cl
 environment. The boxed agent has full access to your tools, config, and
 credentials — treat it as yourself in a container.
 
+## ELI13
+
+A container is a lightweight box around a program: it gets its own filesystem
+view and process space but shares your computer's kernel. dockbox puts a coding
+agent (Claude Code or Codex) in one of those boxes, pointed at the folder you
+name, with your real tools and credentials handed in so it can actually work.
+It's fast and convenient, and it keeps builds and mess out of your host workdir
+— but because your live credentials are inside and the box shares your kernel,
+it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
+working in a container. If you want a stronger host-filesystem wall — a full VM
+with a throwaway disk — use [qemubox](../qemubox/) instead.
+
 ## Build
 
 ```bash
