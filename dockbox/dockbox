@@ -44,15 +44,20 @@ case "${1:-}" in
         names=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
         [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
-        if [[ -n "$pattern" ]]; then
-            names=$(echo "$names" | grep -F "$pattern" || true)
-            [[ -z "$names" ]] && {
-                echo "no match for '$pattern'"; exit 0
-            }
-        fi
-        echo "$names" | while read -r n; do
+        matched=""
+        while read -r n; do
+            [[ -z "$n" ]] && continue
+            if [[ -n "$pattern" ]]; then
+                # Exact match by default (bare or dockbox- prefixed); * or ? = glob.
+                case "$pattern" in
+                    *[*?]*) case "$n" in $pattern|dockbox-$pattern) ;; *) continue ;; esac ;;
+                    *) [[ "$n" == "$pattern" || "$n" == "dockbox-$pattern" ]] || continue ;;
+                esac
+            fi
             docker rm -f "$n" && echo "removed $n"
-        done
+            matched=1
+        done <<< "$names"
+        [[ -z "$matched" && -n "$pattern" ]] && echo "no match for '$pattern'"
         exit 0 ;;
     prune)
         hours="${2:-2160}"
