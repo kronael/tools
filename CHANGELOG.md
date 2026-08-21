@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.3.76] — 20260821
+
+> kronael v0.3.76 — safer rm, sticky ports, fresher toolchain
+>
+> qemubox/dockbox `rm` now needs an explicit target, qemubox boxes keep a stable SSH port, and the dockbox image toolchain is bumped.
+>
+> • `rm` with no argument refuses (no more accidental wipe); `rm -a` (or `'*'`) removes all
+> • qemubox persists each box's SSH port in `$dir/port` — stable across re-entry, auto-reallocates on collision
+> • dockbox image toolchain: nvm 0.40.7, nushell 0.115.0
+> • Internal simplification: dropped an `eval` and a one-arm `case`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox` + `dockbox`: `rm` with no argument now exits non-zero instead of removing every box; an exact name, a `*`/`?` glob, or `-a`/`--all` (or `'*'`) is required. Bare `rm` was a footgun that wiped all VMs.
+- `qemubox`: each box persists its SSH port in `$dir/port` — `start_box` walks up from the name-hash to the first free port and saves it, so re-entry and ssh reuse it and a name-hash collision reallocates instead of failing.
+- `dockbox`: image toolchain bumped — nvm 0.40.4→0.40.7, nushell 0.112.2→0.115.0 (rebuild with `make image`); git-delta/gitleaks already current and node/bun/go/dotnet/uv/claude/codex track latest/LTS at build time.
+- `qemubox`: internal cleanup — `add_env` uses `${!var}` indirect expansion instead of `eval`; dropped a one-arm `case` around `tool_cmd`.
+
 ## [v0.3.75] — 20260821
 
 > kronael v0.3.75 — qemubox hardened: kill-switch, untrusted mode, locking, tests
