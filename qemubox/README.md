@@ -1,7 +1,15 @@
 # qemubox
 
-A throwaway QEMU VM where a coding agent works on your project without writing
-to the rest of your machine.
+Real isolation with zero ceremony — **security that gets out of your way.**
+
+A throwaway QEMU VM where a coding agent works on your project behind a full
+hardware-virt boundary, driven by one command that feels exactly like running
+the agent bare. Because the VM *is* the perimeter, the agent runs at full tilt —
+no permission prompts, no babysitting — while your `~/.ssh`, your other repos,
+and the rest of your machine stay untouchable. Your project edits and the
+agent's memory for that project persist to the host; everything else evaporates
+when the box shuts down (which it does on its own). You get the safety for free
+and stop thinking about it.
 
 ## ELI13
 
