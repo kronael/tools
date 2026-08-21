@@ -577,6 +577,57 @@ tool_cmd() {
     esac
 }
 
+# Decide whether box $1 matches the user's rm pattern $2. Empty pattern -> all;
+# a pattern containing * or ? is a glob, otherwise an exact name match.
+rm_matches() {
+    _n="$1"; _pat="$2"
+    [ -z "$_pat" ] && return 0
+    case "$_pat" in
+        *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
+        *) [ "$_n" = "$_pat" ] ;;
+    esac
+}
+
+# Build the 9p mount list (mount_* arrays) for the resolved flag set. Reads the
+# globals set during argument parsing; called once from the main flow.
+assemble_mounts() {
+    add_mount "/opt/dev-tools" "/opt/dev-tools" ro
+    add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
+    add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
+    host_cfg="$(box_dir "$name")/hostcfg"
+    stage_host_cfg "$host_cfg"
+    add_mount "$host_cfg" "/mnt/qemubox-home" ro
+    # Agent config: mounted read-only at a staging path, then copied into the
+    # guest's own writable home (setup_guest_runtime). Guest writes to config never
+    # reach the host, and the guest sees config at the normal paths so tools find it.
+    for d in .claude .codex .agents; do
+        add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
+    done
+    # Session data for THIS project persists to the host (transcripts + auto-memory),
+    # scoped to the active project's slug so the guest never sees or writes any other
+    # project's history. Everything else stays inside the disposable VM.
+    if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ]; then
+        slug="${primary//\//-}"
+        mkdir -p "$HOME/.claude/projects/$slug"
+        add_mount "$HOME/.claude/projects/$slug" "/home/$USER/.claude/projects/$slug" rw
+    fi
+    [ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
+    if [ -z "${no_copy:-}" ]; then
+        for dir in "${dirs[@]}"; do
+            add_mount "$dir" "$dir" rw
+        done
+    fi
+    for i in "${!extra_dirs[@]}"; do
+        dir="$(cd "${extra_dirs[$i]}" && pwd)"
+        add_mount "$dir" "$dir" "${extra_modes[$i]}"
+    done
+    return 0
+}
+
+# Sourcing with QEMUBOX_LIB=1 loads the helpers above without running the CLI,
+# so tests can exercise them directly.
+[ -n "${QEMUBOX_LIB:-}" ] && return 0
+
 case "${1:-}" in
     ls) list_boxes; exit 0 ;;
     rm|destroy)
@@ -586,13 +637,7 @@ case "${1:-}" in
             [ -d "$dir" ] || continue
             name="${dir##*/}"
             [ "$name" = base ] && continue
-            # Exact match by default; treat a pattern with * or ? as a glob.
-            if [ -n "$pat" ]; then
-                case "$pat" in
-                    *[*?]*) case "$name" in $pat) ;; *) continue ;; esac ;;
-                    *) [ "$name" = "$pat" ] || continue ;;
-                esac
-            fi
+            rm_matches "$name" "$pat" || continue
             found=1
             remove_box "$name" || true
         done
@@ -663,37 +708,7 @@ done
 primary="${dirs[-1]}"
 name="$(box_name "${name_override:-${primary##*/}}")"
 
-add_mount "/opt/dev-tools" "/opt/dev-tools" ro
-add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
-add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
-host_cfg="$(box_dir "$name")/hostcfg"
-stage_host_cfg "$host_cfg"
-add_mount "$host_cfg" "/mnt/qemubox-home" ro
-# Agent config: mounted read-only at a staging path, then copied into the
-# guest's own writable home (setup_guest_runtime). Guest writes to config never
-# reach the host, and the guest sees config at the normal paths so tools find it.
-for d in .claude .codex .agents; do
-    add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
-done
-# Session data for THIS project persists to the host (transcripts + auto-memory),
-# scoped to the active project's slug so the guest never sees or writes any other
-# project's history. Everything else stays inside the disposable VM.
-if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ]; then
-    slug="${primary//\//-}"
-    mkdir -p "$HOME/.claude/projects/$slug"
-    add_mount "$HOME/.claude/projects/$slug" "/home/$USER/.claude/projects/$slug" rw
-fi
-[ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
-
-if [ -z "${no_copy:-}" ]; then
-    for dir in "${dirs[@]}"; do
-        add_mount "$dir" "$dir" rw
-    done
-fi
-for i in "${!extra_dirs[@]}"; do
-    dir="$(cd "${extra_dirs[$i]}" && pwd)"
-    add_mount "$dir" "$dir" "${extra_modes[$i]}"
-done
+assemble_mounts
 
 detect_gpg
 start_box "$name"
