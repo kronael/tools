@@ -1,0 +1,17 @@
+---
+name: Test — qemubox
+
+on:
+    push:
+        paths: [qemubox/**]
+    pull_request:
+        branches: [master]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - run: make -C qemubox test
+            - run: bash tests/drift_test.sh

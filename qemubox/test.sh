@@ -103,5 +103,12 @@ eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
 run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
 eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
 
+## status_box ---------------------------------------------------------------
+mkdir -p "$QEMUBOX_HOME/sbx"
+sout="$(status_box sbx)"
+true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
+true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
+exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
+
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

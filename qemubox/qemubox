@@ -42,7 +42,7 @@ host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnu
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | rm [pattern] | prune [hours] | build-base [--force]
+       qemubox ls | status <name> | rm [pattern] | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
 
 Tools (first positional arg -- no leading dash):
@@ -135,6 +135,28 @@ note() {
     fi
 }
 
+# Verify a freshly downloaded base image before it is trusted. A pinned
+# QEMUBOX_BASE_SHA512 wins (offline/deterministic); otherwise check Debian's
+# published SHA512SUMS beside the image. A checksum MISMATCH aborts; only an
+# unreachable/missing SHA512SUMS is warn-and-proceed, so a mirror hiccup does
+# not block installs.
+verify_base() {
+    tmp="$1"
+    want="${QEMUBOX_BASE_SHA512:-}"
+    if [ -z "$want" ]; then
+        sums="$(curl -fsL "${BASE_URL%/*}/SHA512SUMS" 2>/dev/null || true)"
+        [ -n "$sums" ] || { note "WARNING: could not fetch SHA512SUMS; skipping base checksum"; return 0; }
+        want="$(printf '%s\n' "$sums" | awk -v f="${BASE_URL##*/}" '$2==f {print $1}')"
+        [ -n "$want" ] || { note "WARNING: ${BASE_URL##*/} absent from SHA512SUMS; skipping checksum"; return 0; }
+    fi
+    note "verifying base image sha512"
+    printf '%s  %s\n' "$want" "$tmp" | sha512sum -c - >/dev/null 2>&1 || {
+        echo "qemubox: base image checksum MISMATCH -- refusing $tmp" >&2
+        rm -f "$tmp"
+        exit 1
+    }
+}
+
 ensure_base() {
     mkdir -p "$ROOT/base"
     base="$ROOT/base/${BASE_URL##*/}"
@@ -143,6 +165,7 @@ ensure_base() {
         note "source: $BASE_URL"
         note "why: this is the reusable Debian disk template for new VM overlays"
         curl -fL "$BASE_URL" -o "$base.tmp"
+        verify_base "$base.tmp"
         mv "$base.tmp" "$base"
         note "saved base image: $base"
     }
@@ -535,6 +558,25 @@ list_boxes() {
     [ -n "$found" ] || echo "no qemubox VMs"
 }
 
+# Report a box's readiness from the pidfile / serial log / SSH port only -- no
+# shell into the guest -- so a wedged VM (process up, SSH dead) is distinguishable
+# from a healthy one, which plain "running" in ls cannot show.
+status_box() {
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    [ -d "$dir" ] || { echo "no qemubox VM named '$name'" >&2; exit 1; }
+    port="$(port_for "$name")"
+    proc=stopped; running "$name" && proc=running
+    ssh_state=closed
+    (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && ssh_state=open
+    boot=pending
+    [ -f "$dir/serial.log" ] && grep -qiE 'cloud-init.*(finished|done)|login:' "$dir/serial.log" && boot=ready
+    printf "qemubox-%s\tprocess=%s\tssh=%s\tboot=%s\tport=%s\n" \
+        "$name" "$proc" "$ssh_state" "$boot" "$port"
+    # 9p mounts are set up post-boot over SSH, not at boot, so they never appear
+    # in the serial log; enter the box (qemubox bash) to inspect them.
+}
+
 add_env() {
     var="$1"
     case "$var" in
@@ -676,6 +718,9 @@ assemble_mounts() {
 
 case "${1:-}" in
     ls) list_boxes; exit 0 ;;
+    status)
+        [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
+        status_box "$2"; exit 0 ;;
     rm|destroy)
         pat="${2:-}"
         found=""

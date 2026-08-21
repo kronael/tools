@@ -21,6 +21,8 @@ endef
 
 $(eval $(call gen-ci,test-udfix,test-go,udfix,[udfix/**],10))
 $(eval $(call gen-ci,test-hooks,test-py,hooks,[hooks/**],5))
+$(eval $(call gen-ci,test-qemubox,test-bash,qemubox,[qemubox/**],5))
+$(eval $(call gen-ci,test-dockbox,test-bash,dockbox,[dockbox/**],5))
 
 # lint.yml.tmpl has no placeholders — pure copy keeps it regenerable too.
 $(W)/lint.yml: $(T)/lint.yml.tmpl
@@ -29,6 +31,8 @@ $(W)/lint.yml: $(T)/lint.yml.tmpl
 CI_WORKFLOWS := \
 	$(W)/test-udfix.yml \
 	$(W)/test-hooks.yml \
+	$(W)/test-qemubox.yml \
+	$(W)/test-dockbox.yml \
 	$(W)/lint.yml
 
 .PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
