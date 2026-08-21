@@ -62,11 +62,21 @@ network=1; untrusted=""; apply_flag U
 eq "-U disables network" "$network" ""
 eq "-U sets untrusted"   "$untrusted" "1"
 
+## -U neutralizes every credential-forwarding flag (not just config mounts) --
+ssh_agent=1; docker_sock=/x; docker_remote=/y; gpg_forward=1; gcloud_creds=1
+envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep"); warnings=()
+apply_untrusted
+eq "-U clears ssh_agent"   "$ssh_agent" ""
+eq "-U clears docker_sock" "$docker_sock" ""
+eq "-U clears gpg_forward" "$gpg_forward" ""
+eq "-U clears gcloud"      "$gcloud_creds" ""
+eq "-U drops cred envs, keeps the rest" "${envs[*]}" "MYVAR=keep"
+
 ## port_for -----------------------------------------------------------------
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
 true_ "port differs by name" '[ "$p1" != "$p3" ]'
-true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 65535 ]'
+true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 59999 ]'
 
 ## mount matrix -------------------------------------------------------------
 reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }

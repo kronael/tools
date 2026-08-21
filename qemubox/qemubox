@@ -23,6 +23,7 @@ no_copy=""
 gcloud_creds=""
 gpg_forward=""
 untrusted=""
+booted=""
 args=()
 dirs=()
 extra_dirs=()
@@ -321,6 +322,7 @@ start_box() {
     ensure_box "$name"
     running "$name" && {
         note "reusing running VM qemubox-$name on 127.0.0.1:$port"
+        booted=""
         flock -u 9
         return
     }
@@ -356,7 +358,7 @@ start_box() {
     note "waiting for SSH on 127.0.0.1:$port"
     note "why: cloud-init must finish user/key setup before commands can run"
     for i in $(seq 1 90); do
-        ssh_plain_box "$name" true >/dev/null 2>&1 && { flock -u 9; return; }
+        ssh_plain_box "$name" true >/dev/null 2>&1 && { booted=1; flock -u 9; return; }
         [ $((i % 10)) -eq 0 ] && note "still waiting for SSH; serial log: $dir/serial.log"
         sleep 2
     done
@@ -641,6 +643,7 @@ apply_flag() {
         G) gcloud_creds=1 ;;
         *) usage >&2; exit 2 ;;
     esac
+    return 0  # never let a falsey last branch (e.g. -g with no token) trip set -e
 }
 
 tool_cmd() {
@@ -668,6 +671,26 @@ rm_matches() {
     case "$_pat" in
         *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
         *) [ "$_n" = "$_pat" ] ;;
+    esac
+}
+
+# -U injects nothing: neutralize every credential-forwarding flag before mounts
+# and forwards are assembled. assemble_mounts already skips the config mounts
+# under $untrusted; this also drops -A/-D/-K/-G/-g so they cannot smuggle a live
+# credential into an "untrusted" box. Operates on the parsing globals.
+apply_untrusted() {
+    dropped=""
+    [ -n "$ssh_agent$docker_sock$gpg_forward$gcloud_creds" ] && dropped=1
+    ssh_agent=""; docker_sock=""; docker_remote=""; gpg_forward=""; gcloud_creds=""
+    kept=()
+    for e in "${envs[@]}"; do
+        case "$e" in GH_TOKEN=*|GITHUB_TOKEN=*|DOCKER_HOST=*) dropped=1 ;; *) kept+=("$e") ;; esac
+    done
+    envs=("${kept[@]}")
+    [ -n "$dropped" ] && warnings+=("-U: dropping credential-forwarding flags (-A/-D/-K/-G/-g); untrusted mode injects nothing")
+    case "${entrypoint:-}" in
+        claude|codex|haiku|sonnet|opus|fable|gpt|mini|spark)
+            warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
     esac
 }
 
@@ -802,17 +825,11 @@ done
 primary="${dirs[-1]}"
 name="$(box_name "${name_override:-${primary##*/}}")"
 
+[ -n "$untrusted" ] && apply_untrusted
+
 assemble_mounts
 
 [ -n "$gpg_forward" ] && detect_gpg
-if [ -n "$untrusted" ]; then
-    case "$entrypoint" in
-        claude|codex|haiku|sonnet|opus|fable|gpt|mini|spark)
-            warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
-    esac
-fi
-was_running=""
-running "$name" && was_running=1
 start_box "$name"
 # Drop this session's ref-count marker BEFORE provisioning, so a sibling session
 # exiting mid-setup cannot see left=0 and tear the VM down under us.
@@ -821,7 +838,9 @@ ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubo
 # A running box's 9p device set is fixed at boot, so re-provisioning it with a
 # different mount set fails hard; skip it on re-entry (matches dockbox), where
 # mount/-v/dir changes don't apply. The tool/model still applies to the session.
-if [ -z "$was_running" ]; then
+# $booted is set from inside start_box's flock (1 = we just booted; "" = reused),
+# so this is race-free against a concurrent first launch of the same box.
+if [ -n "$booted" ]; then
     mount_host_paths "$name"
     provision_guest_packages "$name"
     setup_guest_runtime "$name"
