@@ -13,12 +13,12 @@ verdict, so a later session has the context instead of re-deriving it.
 ## The panel
 - `ceo-eval` — business adoption / ROI / demo-readiness
 - `cto-eval` — technical adoption / production readiness
-- `hacker-eval` — security / attack surface
+- `red-eval` — security / attack surface
 - `hiring-eval` — engineer/candidate calibration (ONLY when the target is a person / portfolio / repo-as-signal)
-- `eye-13yo` — novice UX walkthrough (ONLY when there's a UI to click)
+- `13yo-eval` — novice UX walkthrough (ONLY when there's a UI to click)
 
 ## Run
-1. Pick the applicable lenses. Skip `hiring-eval` / `eye-13yo` when they don't
+1. Pick the applicable lenses. Skip `hiring-eval` / `13yo-eval` when they don't
    fit; SAY which you skipped and why (don't silently drop coverage).
 2. Dispatch one subagent per lens — parallel is safe (all read-only). Each runs
    its own SKILL and returns: one-line verdict (pass / fail / conditional), top-3

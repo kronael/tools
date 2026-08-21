@@ -24,12 +24,12 @@ Run `which <tool>` first; skip if present and recent.
 
 | Tool | Command | Skills |
 |------|---------|--------|
-| `bandit` | `uv tool install bandit` | /hacker-eval |
-| `pip-audit` | `uv tool install pip-audit` | /hacker-eval |
-| `semgrep` | `uv tool install semgrep` | /hacker-eval |
-| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /hacker-eval |
-| `trufflehog` | `go install github.com/trufflesecurity/trufflehog/v3@latest` | /hacker-eval |
-| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /hacker-eval |
+| `bandit` | `uv tool install bandit` | /red-eval |
+| `pip-audit` | `uv tool install pip-audit` | /red-eval |
+| `semgrep` | `uv tool install semgrep` | /red-eval |
+| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /red-eval |
+| `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /red-eval |
+| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /red-eval |
 
 **Video rendering** — ask separately (heavy, rarely needed):
 
@@ -72,7 +72,8 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 `/review give gh` and `/review take gh`), `con`, `cont` (renamed to
 `continue`), `merge-trivial` (renamed to `merge`, which now also covers rebase
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
-dropped, not folded).
+dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
+(renamed to `red-eval`), `testing` (folded into the `software` router).
 
 NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both bundled —
 `codex` is canonical, `oracle` its alias; the v0.3.26 codex→oracle rename was
