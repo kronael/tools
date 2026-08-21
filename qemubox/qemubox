@@ -421,23 +421,30 @@ done'
 stop_box() {
     name="$(box_name "$1")"
     running "$name" || return 0
+    dir="$(box_dir "$name")"
+    pid="$(cat "$dir/pid")"
     ssh_box "$name" sudo poweroff >/dev/null 2>&1 || true
-    pid="$(cat "$(box_dir "$name")/pid")"
-    for _ in $(seq 1 30); do
-        kill -0 "$pid" 2>/dev/null || break
-        sleep 1
-    done
-    kill -0 "$pid" 2>/dev/null && {
+    # Wait for a clean guest shutdown (systemd can take ~90s), then escalate
+    # SIGTERM -> SIGKILL so a wedged VM is terminated, never left as an orphaned
+    # qemu whose disk remove_box is about to unlink.
+    for _ in $(seq 1 90); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+    kill -0 "$pid" 2>/dev/null && kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+    kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
+    for _ in $(seq 1 5); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
+    if kill -0 "$pid" 2>/dev/null; then
         echo "VM still running as PID $pid" >&2
         return 1
-    }
-    rm -f "$(box_dir "$name")/pid"
+    fi
+    rm -f "$dir/pid"
 }
 
 remove_box() {
     name="$(box_name "$1")"
-    stop_box "$name" || true
     dir="$(box_dir "$name")"
+    # Never delete a box's disk/keys while its VM is still alive -- stop_box now
+    # escalates to SIGKILL, so a failure here means it genuinely could not die.
+    stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
@@ -587,7 +594,7 @@ case "${1:-}" in
                 esac
             fi
             found=1
-            remove_box "$name"
+            remove_box "$name" || true
         done
         if [ -z "$found" ]; then
             if [ -n "$pat" ]; then
@@ -606,7 +613,7 @@ case "${1:-}" in
             [ "$name" = base ] && continue
             running "$name" && continue
             ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir")
-            [ "$ts" -lt "$cutoff" ] && remove_box "$name"
+            [ "$ts" -lt "$cutoff" ] && remove_box "$name" || true
         done
         exit 0 ;;
     build-base)
@@ -690,6 +697,10 @@ done
 
 detect_gpg
 start_box "$name"
+# Drop this session's ref-count marker BEFORE provisioning, so a sibling session
+# exiting mid-setup cannot see left=0 and tear the VM down under us.
+sid="$$"
+ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
 mount_host_paths "$name"
 provision_guest_packages "$name"
 setup_guest_runtime "$name"
@@ -710,12 +721,10 @@ for arg in "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     remote="$remote $q"
 done
 
-# Ref-counted session lifecycle (mirrors dockbox): drop a per-invocation marker
-# in the guest, run the session, then remove it and count what is left. When the
-# last session exits, tear the disposable VM down so none is left idle running;
+# Ref-counted session lifecycle (mirrors dockbox): the marker was dropped right
+# after start_box; run the session, then remove the marker and count what's left.
+# When the last session exits, tear the disposable VM down so none is left idle;
 # concurrent sessions each hold a marker and keep it up until all have exited.
-sid="$$"
-ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
 rc=0
 if [ -n "$workdir" ]; then
     note "running in qemubox-$name:$workdir"
