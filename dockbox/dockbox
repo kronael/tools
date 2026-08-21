@@ -68,7 +68,7 @@ apply_flag() {
 # dockbox- prefixed name.
 rm_matches() {
     _n="$1"; _pat="$2"
-    [ -z "$_pat" ] && return 0
+    [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
     case "$_pat" in
         *[*?]*) case "$_n" in $_pat|dockbox-$_pat) return 0 ;; *) return 1 ;; esac ;;
         *) [[ "$_n" == "$_pat" || "$_n" == "dockbox-$_pat" ]] ;;
@@ -89,6 +89,7 @@ case "${1:-}" in
         names=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
         [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
+        [[ -z "$pattern" ]] && { echo "dockbox rm: a name or glob is required ('*' removes all)" >&2; exit 2; }
         matched=""
         while read -r n; do
             [[ -z "$n" ]] && continue

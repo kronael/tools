@@ -18,7 +18,8 @@ false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
 ## rm_matches (bare or dockbox- prefixed) -----------------------------------
-true_  "rm empty pattern matches all"      'rm_matches dockbox-repo ""'
+false_ "rm empty pattern matches nothing"  'rm_matches dockbox-repo ""'
+true_  "rm '\''*'\'' matches all"               'rm_matches dockbox-repo "*"'
 true_  "rm exact bare"                     'rm_matches dockbox-repo repo'
 true_  "rm exact full name"                'rm_matches dockbox-repo dockbox-repo'
 false_ "rm exact no substring"             'rm_matches dockbox-repo-facade repo'

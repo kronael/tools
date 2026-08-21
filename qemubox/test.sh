@@ -35,7 +35,8 @@ eq "box_name slash->dash" "$(box_name a/b)" "a-b"
 eq "box_name default" "$(box_name)" "default"
 
 ## rm_matches ---------------------------------------------------------------
-true_  "rm empty pattern matches all"        'rm_matches anything ""'
+false_ "rm empty pattern matches nothing"    'rm_matches anything ""'
+true_  "rm '\''*'\'' matches all"                 'rm_matches anything "*"'
 true_  "rm exact match"                      'rm_matches staking-rewards staking-rewards'
 false_ "rm exact does not substring-match"   'rm_matches staking-rewards-facade staking-rewards'
 true_  "rm glob star"                        'rm_matches repo-1 "repo-*"'
@@ -77,6 +78,8 @@ p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
 true_ "port differs by name" '[ "$p1" != "$p3" ]'
 true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 59999 ]'
+mkdir -p "$QEMUBOX_HOME/pbx"; echo 54321 > "$QEMUBOX_HOME/pbx/port"
+eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
 ## mount matrix -------------------------------------------------------------
 reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }

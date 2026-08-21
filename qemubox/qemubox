@@ -108,8 +108,11 @@ box_dir() {
 }
 
 port_for() {
+    _pf_dir="$(box_dir "$1")"
+    # A box persists its chosen port in $dir/port (start_box picks the first free
+    # one from the name-hash, so a collision reallocates). Read it back if set.
+    if [ -s "$_pf_dir/port" ]; then cat "$_pf_dir/port"; return; fi
     cksum=$(printf '%s' "$(box_name "$1")" | cksum | awk '{print $1}')
-    # Wide range keeps name-hash collisions rare (birthday ~1% at 30 boxes).
     echo $((10000 + cksum % 50000))
 }
 
@@ -326,11 +329,15 @@ start_box() {
         flock -u 9
         return
     }
-    # A running box short-circuits above, so a live listener on the port now is a
-    # foreign squatter -- fail loud instead of a cryptic qemu hostfwd bind error.
-    if (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; then
-        echo "port $port busy for qemubox-$name; retry with -n <name>" >&2
-        exit 1
+    # Fresh boot: from the name-hash port, walk up to the first free one and
+    # persist it to $dir/port, so re-entry and ssh reuse the same port and a
+    # name-hash collision with another box reallocates instead of failing.
+    if [ ! -s "$dir/port" ]; then
+        for _ in $(seq 1 100); do
+            (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || break
+            port=$(( (port - 10000 + 1) % 50000 + 10000 ))
+        done
+        echo "$port" > "$dir/port"
     fi
     accel=()
     [ -e /dev/kvm ] && accel=(-enable-kvm)
@@ -497,7 +504,7 @@ remove_box() {
     # escalates to SIGKILL, so a failure here means it genuinely could not die.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
-    rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock"
+    rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
     rmdir "$dir" 2>/dev/null || true
@@ -667,7 +674,7 @@ tool_cmd() {
 # a pattern containing * or ? is a glob, otherwise an exact name match.
 rm_matches() {
     _n="$1"; _pat="$2"
-    [ -z "$_pat" ] && return 0
+    [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
     case "$_pat" in
         *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
         *) [ "$_n" = "$_pat" ] ;;
@@ -746,6 +753,7 @@ case "${1:-}" in
         status_box "$2"; exit 0 ;;
     rm|destroy)
         pat="${2:-}"
+        [ -z "$pat" ] && { echo "qemubox rm: a name or glob is required ('*' removes all)" >&2; exit 2; }
         found=""
         for dir in "$ROOT"/*; do
             [ -d "$dir" ] || continue
