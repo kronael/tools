@@ -593,7 +593,7 @@ add_env() {
             echo "Invalid env var: $var" >&2
             exit 2 ;;
     esac
-    eval "val=\${$var-}"
+    val="${!var-}"
     envs+=("$var=$val")
 }
 
@@ -819,9 +819,7 @@ if [ -z "$entrypoint_explicit" ] && [ "$#" -gt 0 ]; then
     esac
 fi
 
-case "$entrypoint" in
-    *) tool_cmd "$entrypoint" ;;
-esac
+tool_cmd "$entrypoint"
 
 for arg in "$@"; do
     case "$arg" in
