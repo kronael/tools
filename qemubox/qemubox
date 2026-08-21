@@ -429,7 +429,7 @@ stop_box() {
     done
     kill -0 "$pid" 2>/dev/null && {
         echo "VM still running as PID $pid" >&2
-        exit 1
+        return 1
     }
     rm -f "$(box_dir "$name")/pid"
 }
@@ -579,7 +579,13 @@ case "${1:-}" in
             [ -d "$dir" ] || continue
             name="${dir##*/}"
             [ "$name" = base ] && continue
-            [ -n "$pat" ] && ! printf '%s' "$name" | grep -F "$pat" >/dev/null && continue
+            # Exact match by default; treat a pattern with * or ? as a glob.
+            if [ -n "$pat" ]; then
+                case "$pat" in
+                    *[*?]*) case "$name" in $pat) ;; *) continue ;; esac ;;
+                    *) [ "$name" = "$pat" ] || continue ;;
+                esac
+            fi
             found=1
             remove_box "$name"
         done
@@ -704,10 +710,23 @@ for arg in "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     remote="$remote $q"
 done
 
+# Ref-counted session lifecycle (mirrors dockbox): drop a per-invocation marker
+# in the guest, run the session, then remove it and count what is left. When the
+# last session exits, tear the disposable VM down so none is left idle running;
+# concurrent sessions each hold a marker and keep it up until all have exited.
+sid="$$"
+ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
+rc=0
 if [ -n "$workdir" ]; then
     note "running in qemubox-$name:$workdir"
-    ssh_box "$name" -t "cd $(quote "$workdir") && exec env$remote"
+    ssh_box "$name" -t "cd $(quote "$workdir") && exec env$remote" || rc=$?
 else
     note "running in qemubox-$name home"
-    ssh_box "$name" -t "exec env$remote"
+    ssh_box "$name" -t "exec env$remote" || rc=$?
 fi
+left="$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid; ls /run/qemubox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)"
+if [ "${left:-0}" -eq 0 ]; then
+    note "last session exited -- shutting down qemubox-$name"
+    remove_box "$name" >/dev/null || true
+fi
+exit "$rc"
