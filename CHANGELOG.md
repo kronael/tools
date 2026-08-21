@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.3.74] — 20260821
+
+> kronael v0.3.74 — qemubox grows up: fast boot, auto-shutdown, honest about what it protects
+>
+> qemubox now prebuilds its image so boxes boot in seconds, auto-shuts-down when done, and stops overselling what it isolates.
+>
+> • Prebuilt base image at install — boxes boot in seconds, not 1-2 min of first-boot `apt-get`
+> • Auto-shutdown when the last session exits (ref-counted, like dockbox); concurrent sessions keep it up
+> • `rm` matches exactly in both qemubox and dockbox — `*`/`?` glob only; no more accidental over-match
+> • Streamed, gutter-prefixed provisioning output (ASCII `>>>` / `>`) so you can tell the script from the guest
+> • Honest READMEs + ELI13: confines host-filesystem blast radius + disposability, NOT a jail for hostile code
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: prebuilt base image — `build-base` (run once by `make install`, non-fatal without KVM/network) bakes the guest apt layer into `provisioned.qcow2` via a throwaway `.build` box; new boxes overlay it and skip first-boot apt.
+- `qemubox`: ref-counted lifecycle — a per-session marker in `/run/qemubox/sess` (dropped right after boot, before provisioning); the VM is torn down when the last session exits, concurrent sessions keep it up. `stop_box` escalates poweroff→SIGTERM→SIGKILL (90s systemd wait) so a wedged VM is killed not orphaned, and `remove_box` never deletes a live VM's disk.
+- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm staking-rewards` also removed `staking-rewards-facade`).
+- `qemubox`: provisioning/guest output streams behind a dim `>` gutter, distinct from the `>>>` script voice; both ASCII, TTY-guarded (plain text when piped).
+- `qemubox` + `dockbox`: rewritten READMEs with an ELI13 section and an honest security-posture statement — the tools confine host-filesystem blast radius and give a disposable env, but inject real agent credentials and leave outbound network on, so they are not a boundary against hostile code. Tracked hardening (network kill-switch, gpg opt-in, `--untrusted` mode, behavioral tests) is in `BUGS.md`.
+
 ## [v0.3.73] — 20260820
 
 > kronael v0.3.73 — qemubox actually mounts now
