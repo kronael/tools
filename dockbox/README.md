@@ -99,8 +99,11 @@ Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
-- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent`
 - `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
+
+Opt-in:
+- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
+  (commit signing; off by default)
 - `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)

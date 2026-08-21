@@ -45,7 +45,22 @@ false_ "rm glob non-match"                   'rm_matches other "repo-*"'
 eq "copy_arg abs"        "$(copy_arg /a/b)" "/a/b"
 eq "copy_arg strip :rw"  "$(copy_arg /a/b:rw)" "/a/b"
 eq "copy_arg strip :ro"  "$(copy_arg /a/b:ro)" "/a/b"
-exits 2 'copy_arg relative' "copy_arg rel" "copy_arg rejects relative path"
+eq "copy_arg keep inner colon" "$(copy_arg /a:b:rw)" "/a:b"
+exits 2 'copy_arg rel' "copy_arg rejects relative path"
+
+## -n traversal guard ------------------------------------------------------
+exits 2 'apply_flag n ..'       "-n .. rejected"
+exits 2 'apply_flag n .'        "-n . rejected"
+exits 2 'apply_flag n base'     "-n base rejected"
+exits 2 'apply_flag n ""'       "-n empty rejected"
+exits 2 'apply_flag n a/b'      "-n with slash rejected"
+true_   "apply_flag n valid" 'apply_flag n goodname'
+
+## -H / -U set network off --------------------------------------------------
+network=1; apply_flag H; eq "-H disables network" "$network" ""
+network=1; untrusted=""; apply_flag U
+eq "-U disables network" "$network" ""
+eq "-U sets untrusted"   "$untrusted" "1"
 
 ## port_for -----------------------------------------------------------------
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
@@ -64,15 +79,29 @@ mount_mode() { # echo the mode for dest $1, or empty if absent
 run_assemble() { # $1 extra setup expr
     reset_mounts
     name=testbox; primary="$PROJ"; dirs=("$PROJ")
-    no_copy=""; gcloud_creds=""; untrusted="${untrusted:-}"; extra_dirs=(); extra_modes=()
+    no_copy=""; gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()
     eval "${1:-:}"
     assemble_mounts
 }
+slug_dest="/home/$USER/.claude/projects/${PROJ//\//-}"
+LIB="$fixture/lib"; mkdir -p "$LIB"
 
-untrusted=""; run_assemble
-eq "default: project rw"        "$(mount_mode "$PROJ")" "rw"
-eq "default: .claude cfg ro"    "$(mount_mode /mnt/qemubox-cfg/.claude)" "ro"
-eq "default: per-slug memory rw" "$(mount_mode "/home/$USER/.claude/projects/${PROJ//\//-}")" "rw"
+run_assemble
+eq "default: project rw"         "$(mount_mode "$PROJ")" "rw"
+eq "default: .claude cfg ro"     "$(mount_mode /mnt/qemubox-cfg/.claude)" "ro"
+eq "default: per-slug memory rw" "$(mount_mode "$slug_dest")" "rw"
+
+run_assemble 'untrusted=1'
+eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"
+eq   "untrusted: no .claude cfg mount" "$(mount_mode /mnt/qemubox-cfg/.claude)" ""
+eq   "untrusted: no qemubox-home"      "$(mount_mode /mnt/qemubox-home)" ""
+eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
+
+run_assemble 'no_copy=1'
+eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
+
+run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
+eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

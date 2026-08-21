@@ -117,7 +117,14 @@ any other project's history.
 
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't
 reach or log into each other. `-A` forwards your SSH agent, `-D` the Docker
-socket, `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
+socket, `-K` the gpg-agent (commit signing; off by default), `-G` mounts
+`~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
+
+`-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
+(or `--untrusted`) goes further — it injects **no** host config or credentials
+and forces the network off, while still mounting the project dir(s), so you can
+shell in and build/test code you don't trust. The agent can't authenticate with
+no credentials, so `-U` is for `bash`/build/test, not for running the agent.
 
 ## Security posture
 
@@ -134,17 +141,18 @@ What it does **not** give you — do **not** run genuinely hostile code here:
 - **Your real agent credentials are injected.** Like dockbox, qemubox copies
   your live `~/.claude` / `~/.codex` (tokens included) in so the agent can work.
   Hostile guest code can read and exfiltrate those tokens.
-- **Outbound network is always on.** `-H` is currently a no-op (accepted for
-  dockbox muscle-memory only) — there is no egress kill-switch today, so the
-  path for exfiltration is open.
+- **Outbound network is on by default.** Pass `-H` (egress kill-switch) to
+  disable it, or `-U` for a credential-free, network-off inspection mode.
+  Without either, the path for exfiltration is open.
 - **In-guest agents run with permission checks bypassed**
   (`--dangerously-skip-permissions` / `--dangerously-bypass-approvals-and-sandbox`)
   and the guest user has passwordless sudo.
 
 So the honest claim: qemubox confines **host-filesystem blast radius** and gives
-a **disposable, no-pollution** environment — not a boundary against code actively
-trying to steal your credentials. Tracked hardening (network kill-switch, gpg
-opt-in, a credential-minimized `--untrusted` mode) is in [`../BUGS.md`](../BUGS.md).
+a **disposable, no-pollution** environment. For code you actively distrust,
+combine `-U` (no credentials injected) with the disposable VM — but note the
+in-guest agent can't authenticate without credentials, so that mode is for
+shelling in and building/testing, not for running the agent.
 
 ## Configuration
 

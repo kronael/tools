@@ -27,6 +27,7 @@ ssh_agent=""
 docker_sock=""
 grant_sudo=""
 gcloud_creds=""
+gpg_forward=""
 dirs=()
 extra_vols=()
 extra_env=()
@@ -38,13 +39,19 @@ claude_args=()
 # the command line and both rc files.
 apply_flag() {
     case "$1" in
-        n) name_override="$2" ;;
+        n)
+            # Reject traversal/reserved names before they become a container name.
+            case "$2" in
+                ""|.|..|*/*) echo "dockbox: invalid -n name: '$2'" >&2; exit 2 ;;
+            esac
+            name_override="$2" ;;
         d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$2") ;;
         v) extra_vols+=("$2") ;;
         H) network_arg=(--network host) ;;
         A) ssh_agent=1 ;;
         D) docker_sock=1 ;;
+        K) gpg_forward=1 ;;
         S) grant_sudo=1 ;;
         P) persist_builds=1 ;;
         T) eph_no_tmpfs=1 ;;
@@ -142,6 +149,7 @@ Options:
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
+    -K         Forward gpg-agent (commit signing); off by default
     -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
@@ -227,7 +235,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:d:x:e:v:HADgGPTS" opt; do
+while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -270,9 +278,9 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 # or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
 read_rc "$_primary_dir/.dockboxrc"
 OPTIND=1
-while getopts ":n:d:x:e:v:HADgGPTS" opt "${rc_tokens[@]}"; do
+while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
     case "$opt" in
-        A|D|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+        A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
         *) apply_flag "$opt" "${OPTARG:-}" ;;
     esac
 done
@@ -365,8 +373,9 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
+# gpg-agent socket is a live signing credential: forward it only on -K.
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
+[[ -n "$gpg_forward" && -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
 for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
         mounts+=(-v "$HOME/.gnupg/$f:/home/dockbox/.gnupg/$f:ro")

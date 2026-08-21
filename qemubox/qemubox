@@ -21,6 +21,8 @@ docker_sock=""
 docker_remote=""
 no_copy=""
 gcloud_creds=""
+gpg_forward=""
+untrusted=""
 args=()
 dirs=()
 extra_dirs=()
@@ -64,9 +66,13 @@ Options:
     -e VAR     Forward env var into the SSH command
     -v path    Extra 9p mount at same path ro by default; path:rw for read-write
     -N         No project mount; run in VM home
-    -H         Accepted for dockbox parity; outbound networking is default
+    -H         Egress kill-switch: disable the guest's outbound network
+    -U         Untrusted: inject NO host config/credentials, force network off,
+               but still mount the project dir(s). --untrusted also works.
+               The agent cannot authenticate here -- use it for bash/build/test.
     -A         Forward SSH agent
     -D         Forward Docker socket over SSH
+    -K         Forward gpg-agent (commit signing); off by default
     -S         Accepted for dockbox parity; guest user already has sudo
     -g         Forward GH_TOKEN / GITHUB_TOKEN for this SSH command
     -G         Mount ~/.config/gcloud ro
@@ -521,7 +527,13 @@ add_env() {
 }
 
 copy_arg() {
-    path="${1%%:*}"
+    # Strip only a trailing mode suffix so paths that themselves contain a colon
+    # survive (the mode is parsed from the full arg by the caller).
+    path="$1"
+    case "$path" in
+        *:rw) path="${path%:rw}" ;;
+        *:ro) path="${path%:ro}" ;;
+    esac
     case "$path" in
         /*|./*|.|~*) printf '%s' "$path" ;;
         *) echo "Invalid -v path: $1" >&2; exit 2 ;;
@@ -530,7 +542,14 @@ copy_arg() {
 
 apply_flag() {
     case "$1" in
-        n) name_override="$2" ;;
+        n)
+            # box_name keeps '.', so reject traversal/reserved names here in the
+            # main shell (apply_flag runs un-subshelled) where exit stops the run.
+            case "$2" in
+                ""|.|..|base|.build|*/*)
+                    echo "qemubox: invalid -n name: '$2'" >&2; exit 2 ;;
+            esac
+            name_override="$2" ;;
         d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
         e) add_env "$2" ;;
         v)
@@ -540,7 +559,8 @@ apply_flag() {
                 *) extra_modes+=(ro) ;;
             esac ;;
         N) no_copy=1 ;;
-        H) network=1 ;;
+        H) network="" ;;
+        U) untrusted=1; network="" ;;
         A) ssh_agent=1 ;;
         D)
             if [ -S /var/run/docker.sock ]; then
@@ -550,6 +570,7 @@ apply_flag() {
             else
                 warnings+=("-D ignored: /var/run/docker.sock is not available")
             fi ;;
+        K) gpg_forward=1 ;;
         S) warnings+=("-S ignored: qemubox guest user already has passwordless sudo") ;;
         P|T) warnings+=("-$1 ignored: qemubox copies dirs instead of overmounting build dirs") ;;
         g)
@@ -594,19 +615,24 @@ assemble_mounts() {
     add_mount "/opt/dev-tools" "/opt/dev-tools" ro
     add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
     add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
-    host_cfg="$(box_dir "$name")/hostcfg"
-    stage_host_cfg "$host_cfg"
-    add_mount "$host_cfg" "/mnt/qemubox-home" ro
-    # Agent config: mounted read-only at a staging path, then copied into the
-    # guest's own writable home (setup_guest_runtime). Guest writes to config never
-    # reach the host, and the guest sees config at the normal paths so tools find it.
-    for d in .claude .codex .agents; do
-        add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
-    done
+    # Untrusted mode injects no host config or credentials: skip the single-file
+    # staging mount, the agent-config mounts, and the per-slug memory mount below.
+    # Only the project dir(s) and tool binaries above cross in.
+    if [ -z "$untrusted" ]; then
+        host_cfg="$(box_dir "$name")/hostcfg"
+        stage_host_cfg "$host_cfg"
+        add_mount "$host_cfg" "/mnt/qemubox-home" ro
+        # Agent config: mounted read-only at a staging path, then copied into the
+        # guest's own writable home (setup_guest_runtime). Guest writes to config never
+        # reach the host, and the guest sees config at the normal paths so tools find it.
+        for d in .claude .codex .agents; do
+            add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
+        done
+    fi
     # Session data for THIS project persists to the host (transcripts + auto-memory),
     # scoped to the active project's slug so the guest never sees or writes any other
     # project's history. Everything else stays inside the disposable VM.
-    if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ]; then
+    if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ] && [ -z "$untrusted" ]; then
         slug="${primary//\//-}"
         mkdir -p "$HOME/.claude/projects/$slug"
         add_mount "$HOME/.claude/projects/$slug" "/home/$USER/.claude/projects/$slug" rw
@@ -676,12 +702,13 @@ _args=()
 for a in "$@"; do
     case "$a" in
         --no-ephemeral) warnings+=("--no-ephemeral ignored: qemubox has no ephemeral overmounts") ;;
+        --untrusted) untrusted=1; network="" ;;
         *) _args+=("$a") ;;
     esac
 done
 set -- "${_args[@]}"
 
-while getopts ":n:d:x:e:v:HADgGPTSN" opt; do
+while getopts ":n:d:x:e:v:HKUADgGPTSN" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -710,7 +737,13 @@ name="$(box_name "${name_override:-${primary##*/}}")"
 
 assemble_mounts
 
-detect_gpg
+[ -n "$gpg_forward" ] && detect_gpg
+if [ -n "$untrusted" ]; then
+    case "$entrypoint" in
+        claude|codex|haiku|sonnet|opus|fable|gpt|mini|spark)
+            warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
+    esac
+fi
 start_box "$name"
 # Drop this session's ref-count marker BEFORE provisioning, so a sibling session
 # exiting mid-setup cannot see left=0 and tear the VM down under us.

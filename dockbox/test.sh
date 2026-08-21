@@ -25,5 +25,15 @@ false_ "rm exact no substring"             'rm_matches dockbox-repo-facade repo'
 true_  "rm glob star"                      'rm_matches dockbox-repo-1 "repo-*"'
 false_ "rm glob non-match"                 'rm_matches dockbox-other "repo-*"'
 
+## -n traversal guard ------------------------------------------------------
+exits 2 'apply_flag n ..'  "-n .. rejected"
+exits 2 'apply_flag n ""'  "-n empty rejected"
+exits 2 'apply_flag n a/b' "-n with slash rejected"
+true_   "apply_flag n valid" 'apply_flag n goodname'
+
+## -K gpg opt-in ------------------------------------------------------------
+gpg_forward=""; apply_flag K
+true_ "-K sets gpg_forward" '[ -n "$gpg_forward" ]'
+
 echo "dockbox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
