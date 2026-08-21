@@ -236,3 +236,47 @@ already listed above (network `-H`, gpg opt-in, `rm --all`, port entropy,
   test that diffs the two tool tables.
 - **Observability: `qemubox status <name>`** reporting boot/SSH/9p readiness from
   the serial log without a shell (a wedged VM currently shows "running").
+
+## Status — 2026-08-21 — robustness backlog shipped (a2d0537..43467d0)
+
+Serial C1→C4 execution of the approved minimal plan. All code-verified
+(`bash -n`, `make test`); live VM behavior still needs owner verification on
+leto (no /dev/kvm here). Resolved:
+
+- **`-H` egress kill-switch** (finding #2) — `-H` now sets `network=""`, wiring
+  the existing `restrict=on` path. [b26dc50]
+- **gpg opt-in `-K`** (finding #3) — `detect_gpg` (qemubox) and the gpg-agent
+  socket mount (dockbox) fire only on `-K`; off by default. Public keyrings
+  stay (not credentials). [b26dc50]
+- **`-n` traversal guard** (finding #4) — `apply_flag n)` rejects
+  `. .. base .build "" */*` in the main shell so `exit` stops the run. [b26dc50]
+- **`copy_arg` colon truncation** (finding #9) — strips only a trailing
+  `:rw`/`:ro`, so `-v` paths with a colon survive (matches dockbox). [b26dc50]
+- **`--untrusted` / `-U` mode** (product follow-up) — injects no host
+  config/credentials, forces network off, keeps project mounts; agent-can't-auth
+  warned. [b26dc50]
+- **port entropy + bind-test** (finding #6) — range widened to 10000-59999 and a
+  connect-probe fails loud on a foreign listener. [0bbae8e]
+- **`flock` + `prune` stat tolerance** (finding #7) — per-box `flock` around
+  ensure/boot; prune skips a dir that vanishes mid-loop. [0bbae8e]
+- **start-timeout orphan-kill** (finding #8) — a boot that never reaches SSH
+  kills its daemonized qemu instead of orphaning it. [0bbae8e]
+- **re-entry mount-tag mismatch** (QB-RM-REENTRY) — re-provisioning is skipped on
+  re-entry (mounts fixed at boot, documented). [0bbae8e]
+- **refcount ssh/exec flake** (QB-REFCOUNT / dockbox) — teardown only when the
+  remaining-session count SUCCEEDS and is 0; an error keeps the box up. [0bbae8e]
+- **base image checksum** (finding #9) — verify against Debian SHA512SUMS or a
+  pinned `QEMUBOX_BASE_SHA512`; mismatch aborts. [43467d0]
+- **`qemubox status <name>`** (product follow-up) — process/ssh/boot readiness
+  from pidfile/port/serial without a shell. [43467d0]
+- **behavioral tests + no-drift guard** (product follow-up) — sourceable helpers
+  behind `QEMUBOX_LIB`/`DOCKBOX_LIB`; `qemubox/test.sh` (37), `dockbox/test.sh`
+  (11), `tests/drift_test.sh`; both tools wired into `make test` + CI. [a2d0537]
+
+Still open (out of scope this pass):
+- **`rm`/`prune` with no pattern matches all boxes** (finding #5) — owner accepts
+  leaving it; no `--all` guard added.
+- **Deferred, need sign-off:** stateful `$dir/port` persistence for auto
+  port-reallocation (changes `port_for`'s contract); a shared sourced tool table
+  (violates the "tools are independent, no imports" rule) — the drift *test* is
+  the accepted guard instead.
