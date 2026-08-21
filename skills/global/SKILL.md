@@ -185,15 +185,18 @@ language skill pulls in. Read it when writing or reviewing code.
 - NEVER publish to claude.ai hosting — do NOT use the Artifact tool or upload
   any report/page/output to claude.ai. ALWAYS produce local files (HTML, MD)
   the user opens themselves. Local HTML is fine; the online upload is not.
-- Describe what code does, not its history
 - NEVER add a comment or doc-comment that restates the code or a name — ALWAYS
   reserve comments for what the code cannot say: WHY a choice was made, or
   behavior that is surprising / non-obvious / easy to get wrong.
-- NEVER reference an earlier version anywhere — no "used to be", "previously",
-  "renamed from", "an earlier revision", or a dated removal, in comments, docs,
-  skills or agent definitions. State what is true now; history lives in .diary/
+- NEVER reference an earlier version, prior design, or counterfactual in a
+  comment, doc, skill, or agent definition — no "used to be", "previously",
+  "renamed from", "as before", "instead of X", "no longer", "matching the old
+  <name>", or backwards-compat framing. Same bar for temporary-inside-permanent:
+  never narrate a transient artifact (a one-off backfill script) into a
+  permanent one (a migration, a long-lived module) — that belongs in the
+  transient file itself, if anywhere. State only what is true now and its
+  genuine quirks; history lives in .diary/
 - NEVER add comments unless the behavior is shocking and not apparent from code or logging
-- NEVER comments about past state or backwards compat — use .diary/
 - docs/ directory for project documentation (architecture, improvements)
 - specs/ directory for specifications, named by content; `specs/index.md` for master index
 - .ship/ directory for all shipping artifacts (plans, state, critiques)
