@@ -445,6 +445,11 @@ mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
 extra_env+=(-e CARGO_TARGET_DIR=/tmp/cargo-target)
 chown_paths=("/home/dockbox")
+# The -K gpg-socket mount makes Docker auto-create /home/dockbox/.gnupg as root;
+# gpg (running as the drop-in user) then can't write its trustdb lock there.
+# Chown just the dir (dockbox-init chowns non-recursively, so the mounted socket
+# inside is untouched) so signing works.
+[[ -n "$gpg_forward" ]] && chown_paths+=("/home/dockbox/.gnupg")
 
 # Ephemeral overmounts (default): each build-artifact dir found under workdir
 # becomes a fresh empty mount inside the container, chowned by dockbox-init.
