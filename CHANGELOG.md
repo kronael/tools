@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.77] — 20260824
+
+> kronael v0.3.77 — bhctl: bluetooth headphones in three words; -K gpg fixes
+>
+> New `bhctl` CLI drives bluetooth headphones from the terminal, and `-K` gpg forwarding actually works now in both boxes.
+>
+> • `bhctl` — `hifi` / `mic` / `off` over bluetoothctl + pactl; auto-finds the first paired audio sink, bare invocation prints name/connection/battery/mode
+> • dockbox `-K`: chowns `~/.gnupg` in the container so gpg can write its trustdb (was root-owned, gpg failed)
+> • qemubox + dockbox `-K`: probe gpg-agent liveness and warn instead of forwarding a dead socket
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bhctl`: new standalone CLI for bluetooth headphones. Three commands — `hifi` (A2DP playback, mic dead), `mic` (HFP headset mic, narrowband playback), `off` (disconnect) — plus a bare invocation that reports name/connection/battery/active mode. Finds the headphones itself (first paired device advertising an audio sink; no MAC to configure). Stubbed `test.sh` runs the full matrix with no adapter or daemon; wired into `make test` + CI.
+- `dockbox`: `-K` now chowns `/home/dockbox/.gnupg` during init — Docker auto-creates the gpg mount-parent as root, so gpg could not write its trustdb and signing failed silently.
+- `qemubox` + `dockbox`: `-K` probes `gpg-connect-agent /bye` before forwarding; a dead host agent now prints a clear "not forwarding, run gpgconf --launch gpg-agent" warning instead of mounting an unresponsive socket.
+
 ## [v0.3.76] — 20260821
 
 > kronael v0.3.76 — safer rm, sticky ports, fresher toolchain
