@@ -380,7 +380,15 @@ start_box() {
 
 detect_gpg() {
     gpg_sock="$(gpgconf --list-dirs agent-socket 2>/dev/null || true)"
-    [ -S "$gpg_sock" ] || gpg_sock=""
+    # A socket FILE can outlive its agent; probe liveness so -K doesn't forward a
+    # dead socket (which surfaces as a confusing "no agent" inside the guest).
+    if [ -S "$gpg_sock" ] && gpg-connect-agent /bye >/dev/null 2>&1; then
+        return
+    fi
+    if [ -n "$gpg_sock" ]; then
+        note "-K: host gpg-agent not answering ($gpg_sock); run 'gpgconf --launch gpg-agent' -- not forwarding"
+    fi
+    gpg_sock=""
 }
 
 setup_guest_auth() {

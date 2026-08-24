@@ -378,9 +378,17 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
-# gpg-agent socket is a live signing credential: forward it only on -K.
+# gpg-agent socket is a live signing credential: forward it only on -K, and only
+# when the agent actually answers -- a socket FILE can outlive its agent, and
+# forwarding a dead one gives the confusing "agent not running" inside the box.
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -n "$gpg_forward" && -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
+if [[ -n "$gpg_forward" ]]; then
+    if [[ -S "$gpg_sock" ]] && gpg-connect-agent /bye >/dev/null 2>&1; then
+        mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
+    else
+        echo "dockbox: -K set but the host gpg-agent is not answering ($gpg_sock) -- run 'gpgconf --launch gpg-agent'; not forwarding" >&2
+    fi
+fi
 for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
         mounts+=(-v "$HOME/.gnupg/$f:/home/dockbox/.gnupg/$f:ro")
