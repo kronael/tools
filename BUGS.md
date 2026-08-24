@@ -4,6 +4,15 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
+### root Makefile: per-project `test-%` targets are silent no-ops
+
+`make test-dockbox` (and every other `test-<project>`) prints "Nothing to be
+done" and runs nothing, so root `make test` reports "all tests passed" while
+executing only `tests/drift_test.sh`. The `test-%:` pattern rule at
+`Makefile:59` matches but its recipe never fires. `make -C <project> test` works
+and is what CI calls, so CI coverage is intact — the gap is local-only.
+Reproduce: `make test-dockbox`, `make -C dockbox test`.
+
 ### dockbox: guest-editable skills without exposing credentials (TODO)
 
 dockbox bind-mounts the whole `~/.claude` / `~/.codex` **rw** into the container
