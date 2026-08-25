@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip gh \
   iptables ipset iproute2 dnsutils aggregate \
   qemu-system-x86 qemu-utils cloud-image-utils openssh-client \
-  jq yq bc nano vim docker.io clang libclang-dev libudev-dev libssl-dev libpq-dev pkg-config protobuf-compiler \
+  jq yq bc nano vim docker.io clang libclang-dev libudev-dev libssl-dev libpq-dev postgresql-client pkg-config protobuf-compiler \
   bubblewrap socat gosu libicu78 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
