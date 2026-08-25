@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.78] — 20260825
+
+> kronael v0.3.78 — psql in both boxes
+>
+> Both sandboxes now ship the Postgres client, so `psql` works inside dockbox and qemubox without a manual install.
+>
+> • dockbox + qemubox — `psql` (postgresql-client) preinstalled; DB work no longer starts with an apt install
+> • qemubox — guest package marker bumped, so boxes provisioned earlier pick up psql on next boot
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`, `qemubox`: add `postgresql-client` (the `psql` CLI) to the base package set — dockbox's image apt layer and qemubox's guest provisioning. dockbox already carried `libpq-dev`; this adds the client binary.
+- `qemubox`: guest package marker bumped `packages-v1` → `packages-v2`, so already-provisioned boxes and the prebuilt base re-run apt and pick up psql.
+
 ## [v0.3.77] — 20260824
 
 > kronael v0.3.77 — bhctl: bluetooth headphones in three words; -K gpg fixes
