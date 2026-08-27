@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.79] — 20260827
+
+> kronael v0.3.79 — zero-comments baseline, sharper reviews
+>
+> The code baseline now bans redundant comments outright, and the review skills gained an invariant lens plus mandatory finding re-verification.
+>
+> • Comments — `software/code.md` carries a zero-comments policy; Claude stops narrating what names and types already say
+> • `/review` — new invariant/topology lens catches changes that read correct hunk-by-hunk but drop a structural guarantee
+> • `/review take` — re-verifies each finding against current code before editing; PR replies carry fixed/deferred/declined
+> • Wisdom file now mandates loading `code.md` before writing code, so the style rules can't be silently skipped
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: new § Comments — zero by default, one line only for a non-obvious WHY, redundancy test (a comment restating a neighbouring log/error is the canonical bug), no multi-line blocks, no line numbers or ticket IDs. Adapted from @ochaloup/claude (credited in NOTICE).
+- `review` (give/take): added an invariant/topology lens, stable tier IDs (C1/I2/M3), mandatory re-verification of each finding against current code, and per-thread PR reply dispositions (fixed/deferred/declined). Adapted from @ochaloup's PR-review pipeline.
+- `global` wisdom (→ `~/.claude/CLAUDE.md`): the code.md pointer is now a load-mandate — code.md is cold, so it names it, orders `/resolve` (or the software skill) before writing/reviewing code, and states unloaded rules only hide, not relax. Removed two inline comment-policy restatements now canonical in code.md.
+- `rs`: dropped its § Comments (pure duplicate of the new base); `go` keeps its inline-vs-above rule.
+- `review/give.md`: fixed a stale `gh-review` reference (folded into the router) that contradicted the file's own GitHub-PR section.
+
 ## [v0.3.78] — 20260825
 
 > kronael v0.3.78 — psql in both boxes
