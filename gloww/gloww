@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# wglow - read markdown with glow, at the terminal's real width.
+# gloww - read markdown with glow, at the terminal's real width.
 #
 # glow wraps each source line on its own, so a file hard-wrapped at 76
 # columns keeps those breaks at any width. mdformat --wrap no rejoins each
@@ -8,17 +8,17 @@ set -euo pipefail
 
 usage() {
     cat <<'USAGE'
-usage: wglow [-w WIDTH] [FILE]
+usage: gloww [-w WIDTH] [FILE]
 
 Renders FILE (or stdin) with glow, reflowing paragraphs to the terminal
 width. Any further arguments pass through to glow.
 
   -w WIDTH   wrap at WIDTH columns (default: the terminal width)
-  WGLOW_WIDTH  same, as an environment variable
+  GLOWW_WIDTH  same, as an environment variable
 USAGE
 }
 
-width=${WGLOW_WIDTH:-}
+width=${GLOWW_WIDTH:-}
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
     usage
     exit 0
@@ -32,7 +32,7 @@ if [ -z "$width" ]; then
 fi
 
 if ! command -v glow >/dev/null; then
-    echo "wglow: glow is not installed - go install github.com/charmbracelet/glow@latest" >&2
+    echo "gloww: glow is not installed - go install github.com/charmbracelet/glow@latest" >&2
     exit 1
 fi
 
@@ -41,14 +41,14 @@ if command -v mdformat >/dev/null; then
 elif command -v uvx >/dev/null; then
     reflow=(uvx --with mdformat-frontmatter mdformat)
 else
-    echo "wglow: needs mdformat or uv - pip install mdformat mdformat-frontmatter" >&2
+    echo "gloww: needs mdformat or uv - pip install mdformat mdformat-frontmatter" >&2
     exit 1
 fi
 
 file=/dev/stdin
 if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
     if [ ! -f "$1" ]; then
-        echo "wglow: no such file: $1" >&2
+        echo "gloww: no such file: $1" >&2
         exit 1
     fi
     file=$1

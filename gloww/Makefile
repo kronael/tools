@@ -2,10 +2,10 @@ DEST = $(HOME)/.local/bin
 
 install:
 	mkdir -p $(DEST)
-	cp wglow $(DEST)/wglow
-	chmod +x $(DEST)/wglow
+	cp gloww $(DEST)/gloww
+	chmod +x $(DEST)/gloww
 
 clean:
-	rm -f $(DEST)/wglow
+	rm -f $(DEST)/gloww
 
 .PHONY: install clean
