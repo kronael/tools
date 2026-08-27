@@ -14,8 +14,8 @@ Default = the **local uncommitted working diff** (`git diff` plus
 - **a branch** — "review the branch" → `git diff main...HEAD`
 - **a commit range** — e.g. `abc123..def456`
 
-`review` STOPS at the report — it never fetches from or posts to GitHub. For a
-GitHub PR use the `gh-review` skill.
+The local flow STOPS at the report — it never posts. For a GitHub PR use the
+`gh` variant (`/review give gh`), in § GitHub PR below.
 
 ## Workflow
 
