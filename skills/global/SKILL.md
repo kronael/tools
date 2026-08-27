@@ -93,9 +93,14 @@ This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Code baseline
 
-Code style, naming, layout, design, and the boring-code / grug philosophy live
-in the `software` skill (`code.md`) — the language-agnostic base every
-language skill pulls in. Read it when writing or reviewing code.
+Code style, naming, layout, design, comments, and the boring-code / grug
+philosophy live in the `software` skill (`code.md`) — the language-agnostic
+base every language skill pulls in. This content is COLD: it is NOT in this
+always-loaded file and stays invisible until the skill is invoked. ALWAYS load
+it — run `/resolve`, or invoke the `software` skill (or a language skill that
+requires it) — BEFORE writing or reviewing code. Skipping the load does not
+relax those rules, it only hides them, so the comments policy and the style
+baseline silently fail to apply.
 
 # Development Principles
 
@@ -185,9 +190,6 @@ language skill pulls in. Read it when writing or reviewing code.
 - NEVER publish to claude.ai hosting — do NOT use the Artifact tool or upload
   any report/page/output to claude.ai. ALWAYS produce local files (HTML, MD)
   the user opens themselves. Local HTML is fine; the online upload is not.
-- NEVER add a comment or doc-comment that restates the code or a name — ALWAYS
-  reserve comments for what the code cannot say: WHY a choice was made, or
-  behavior that is surprising / non-obvious / easy to get wrong.
 - NEVER reference an earlier version, prior design, or counterfactual in a
   comment, doc, skill, or agent definition — no "used to be", "previously",
   "renamed from", "as before", "instead of X", "no longer", "matching the old
@@ -196,7 +198,6 @@ language skill pulls in. Read it when writing or reviewing code.
   permanent one (a migration, a long-lived module) — that belongs in the
   transient file itself, if anywhere. State only what is true now and its
   genuine quirks; history lives in .diary/
-- NEVER add comments unless the behavior is shocking and not apparent from code or logging
 - docs/ directory for project documentation (architecture, improvements)
 - specs/ directory for specifications, named by content; `specs/index.md` for master index
 - .ship/ directory for all shipping artifacts (plans, state, critiques)
