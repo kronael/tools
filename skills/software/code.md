@@ -49,6 +49,26 @@ supervisor, container runtime, CI, or top-level runner persist logs. If the
 whole orchestration stack is Python, implement artifact capture/compression in
 that top-level Python runner instead of requiring shell redirection.
 
+## Comments
+
+ZERO comments by default. ALWAYS carry intent through names, types, and
+structure first; a comment is the last resort. When one earns its place, at most
+ONE short line, and only when the WHY is not derivable from the surrounding code
+— rationale, a non-obvious invariant, a cross-module assumption. NEVER restate
+WHAT the code does.
+
+Redundancy test — delete the comment if it fails: NEVER write a comment whose
+content is already visible in adjacent code, INCLUDING a log, warn, or error
+message on a neighbouring line. Paraphrasing that message in a comment above it
+is the canonical redundant comment.
+
+- NEVER a multi-line comment block — no `///`, no `/** */`, no stacked `//`. A
+  comment spanning more than one line is a bug; cut it to one line or drop it.
+- NEVER a source line number in a comment (`// see line 200`, `// as in L42`),
+  and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
+  name instead.
+- NEVER a ticket number or issue ID in a comment.
+
 ## Design
 
 Reach for a struct or object only when you need to hold state or inject
