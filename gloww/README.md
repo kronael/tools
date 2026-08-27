@@ -24,9 +24,14 @@ Installs to `~/.local/bin/gloww`. Needs `glow` on `PATH`, plus either
 ```sh
 gloww README.md              # paged, wrapped to the terminal width
 gloww -w 60 README.md        # wrapped to 60 columns
+gloww -w60 README.md         # -wN, --width N and --width=N also work
 cat README.md | gloww        # stdin
-gloww README.md --style dark # further arguments pass through to glow
+gloww README.md --style dark # unrecognised arguments pass through to glow
 ```
+
+The file may appear in any position. An argument that is not a flag and
+not an existing file is an error, so a mistyped path never turns into a
+silent wait on stdin.
 
 `GLOWW_WIDTH` sets the width from the environment. Output to a pipe is not
 paged and carries no color.
