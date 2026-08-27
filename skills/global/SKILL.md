@@ -150,6 +150,9 @@ baseline silently fail to apply.
 ## Bash / Tool Execution
 - NEVER run a command twice to inspect output; tee once and extract:
   `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+- NEVER use the `SendFeedback` tool, NEVER draft Claude Code product/model
+  feedback, and NEVER suggest the `/feedback` command — banned outright. Say
+  nothing about feedback even when a "high-signal moment" seems to arise.
 
 ## Scripts
 - ALWAYS use fixed working directory, simple relative paths
