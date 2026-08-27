@@ -34,8 +34,9 @@ Built on (paths under skills/):
     patterns adapted from i-have-adhd © 2026 Ayoub Ghriss (@ayghri) (MIT)
     https://github.com/ayghri/i-have-adhd
 
-  software/code.md § Comments — zero-comments policy adapted from
-    ochaloup/claude by @ochaloup (no explicit license)
+  software/code.md § Comments, review/give.md § invariant/topology lens,
+  review/take.md § finding re-verification and reply dispositions —
+    adapted from ochaloup/claude by @ochaloup (no explicit license)
     https://github.com/ochaloup/claude
 
 Sub-licenses are reproduced in skills/humanize/LICENSE.
