@@ -29,4 +29,14 @@ gloww README.md --style dark # further arguments pass through to glow
 ```
 
 `GLOWW_WIDTH` sets the width from the environment. Output to a pipe is not
-paged.
+paged and carries no color.
+
+When output is a terminal, gloww sets `GLOW_STYLE=dark` unless it is already
+set. glow's `auto` style queries the terminal for its background color and
+swallows any key pressed while it waits for the answer, so the pager then
+ignores `q`; an explicit style skips the query. On a light background, set
+`GLOW_STYLE=light`.
+
+Without a local `mdformat`, the `uvx` fallback resolves its packages over
+the network on the first run (a few seconds); later runs hit the uv cache
+(~0.2 s).

@@ -58,6 +58,10 @@ fi
 pager=()
 if [ -t 1 ]; then
     pager=(-p)
+    # glow's auto style queries the terminal (OSC 11 + CSI 6n) and eats any
+    # keystroke typed while it waits, so the pager then ignores q. An explicit
+    # style skips the query; dark is glow's own fallback when no answer comes.
+    export GLOW_STYLE=${GLOW_STYLE:-dark}
 fi
 
 "${reflow[@]}" --wrap no - < "$file" | glow -w "$width" "${pager[@]}" "$@" -
