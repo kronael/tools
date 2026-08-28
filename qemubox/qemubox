@@ -427,7 +427,7 @@ mount_host_paths() {
 
 provision_guest_packages() {
     name="$1"
-    marker="/var/lib/qemubox/packages-v2"
+    marker="/var/lib/qemubox/packages-v3"
     if ! ssh_plain_box "$name" "[ -f $marker ]" >/dev/null 2>&1; then
         note "installing guest base packages in qemubox-$name"
         note "why: qemubox needs the same practical shell/git/gpg/runtime layer as dockbox"
@@ -439,8 +439,8 @@ sudo apt-get install -y --no-install-recommends \
   less git procps sudo fzf zsh man-db unzip zip \
   openssh-client gnupg2 jq bc nano vim \
   iproute2 dnsutils pkg-config libssl-dev libudev-dev \
-  bubblewrap socat postgresql-client
-sudo touch /var/lib/qemubox/packages-v2'
+  mold bubblewrap socat postgresql-client
+sudo touch /var/lib/qemubox/packages-v3'
     fi
     if [ -n "$docker_sock" ]; then
         note "installing Docker CLI in qemubox-$name for -D"
