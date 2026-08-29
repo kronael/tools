@@ -43,6 +43,10 @@ rules. Below are TypeScript-specific additions and deltas.
 - NEVER JSDoc on self-explanatory functions
 - Library barrel files: `export * from './module'`
 
+## Performance
+- NEVER reason about speed from TS types — V8 erases them and specialises on runtime shapes alone
+- ALWAYS read the `software` skill's `js-perf.md` before tuning a hot path: shape discipline, elements kinds, deopts, typed arrays, Wasm/N-API batching
+
 ## Logging
 - NestJS: built-in Logger (wraps Pino)
 - Standalone: Pino directly
