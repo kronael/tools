@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.3.78] — 20260829
+
+> kronael v0.3.78 — markdown at real width + lint packs
+>
+> gloww renders hard-wrapped markdown at your real terminal width, and co-located ast-grep lint packs land for TypeScript, Rust, and Python.
+>
+> • gloww — rejoins hard-wrapped paragraphs so glow wraps them to your terminal width
+> • lint packs — ast-grep rules for ts/rust/python with a fixture harness; go and sql stay native
+> • skill lint — SKILL.md frontmatter and body now checked against wisdom rules at commit time
+> • hook guard — blocks squash, branch creation, worktree add without --detach, killall
+> • js-perf — new V8 runbook: hidden classes, elements kinds, deopts, Wasm/N-API batching
+> • emacs — optional setup skill for the completion, navigation, git, and AI package stack
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `gloww` CLI: reads markdown with glow at the terminal's real width — mdformat rejoins each hard-wrapped paragraph, glow wraps it to fit; fences, lists, tables, and frontmatter keep their breaks.
+- Co-located ast-grep lint packs with a fixture harness: ts, rust (`no-unwrap`, `no-from-value-clone`, `no-anon-spawn`), python (`except-var-e`, `no-lambda-default-factory`, `no-property`); go defers to golangci-lint, sql has no grammar.
+- hooks: SKILL.md lint — missing frontmatter keys and SHOULD directives hard-fail; NOT-for, length, and router hygiene warn.
+- hooks: the pretool guard also blocks squash merges and rebases, branch creation, `worktree add` without `--detach`, `killall`, and Co-Authored-By trailers.
+- software skill: `js-perf.md` runbook for writing JS/TS that V8 can optimise — hidden classes, elements kinds, IC states, tiering and deopts, typed arrays, Wasm/N-API batching, and the GraalVM/Truffle contrast.
+- emacs skill: per-section Emacs setup (completion, navigation, git, AI) for the krons package stack.
+- learn skill extracts co-located ast-grep lint rules from sessions.
+- create skill: collage mode — cut real material, judge it blind in a forced-choice tournament.
+- caveman style: ASD-STE100 Simplified Technical English as the language floor — plain words, active voice, one meaning per word.
+
+### Changed
+- agents: sonnet → Sonnet 5/high, opus → Opus 5.
+- wisdom skill rules name their lint ids; ts skill prefers minimal result and utility types.
+- ts skill sends hot-path tuning to the `js-perf` runbook instead of restating its rules.
+
+### Fixed
+- gloww: an interactive run looked hung — glow's auto style queries the terminal and eats any key typed while it waits, so the pager ignored `q`; an explicit style skips the query.
+- gloww: `-wN` parses as a width flag and the file is found in any argument position.
+- lints: rs-no-unwrap exempts tests and comment-justified unwraps; yamlfmt formats the rule packs; check-yaml allows multi-doc yaml.
+
 ## [v0.3.77] — 20260824
 
 > kronael v0.3.77 — bhctl: bluetooth headphones in three words; -K gpg fixes
