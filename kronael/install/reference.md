@@ -78,3 +78,17 @@ dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
 NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both bundled —
 `codex` is canonical, `oracle` its alias; the v0.3.26 codex→oracle rename was
 reverted), or any dir not on this list — user-added skills stay.
+
+## Legacy nested skill copies (step 2)
+
+For each source-owned `skills/<name>/`, inspect
+`~/.claude/skills/<name>/<name>/`. Delete that nested directory only when all
+of these hold:
+
+- the source has no `skills/<name>/<name>/` directory;
+- every nested file has a counterpart in `~/.claude/skills/<name>/`; and
+- no nested file is newer than its root counterpart.
+
+ALWAYS leave the nested directory in place and report a conflict when any
+condition fails. This prunes legacy duplicate layouts without deleting
+user-added or live-ahead content.

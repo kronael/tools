@@ -132,6 +132,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
      preloading their descriptions). NEVER delete a dir not on that list —
      user-added skills stay.
+   - **Prune legacy nested skill copies**: AFTER backup, follow
+     `reference.md` § "Legacy nested skill copies". These stale copies preload
+     duplicate skill definitions.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
