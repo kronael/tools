@@ -1,5 +1,36 @@
 # Changelog
 
+## [v0.3.80] — 20260901
+
+> kronael v0.3.80 — cleaner skills, safer installs
+>
+> Kronael now removes duplicate skill copies, preserves safe live edits during installs, and adds mold to both sandboxes.
+>
+> • Install — prunes stale skill/skill copies without touching newer or user-added files
+> • TypeScript — exported functions declare return types; obvious locals still use inference
+> • dockbox + qemubox — mold is preinstalled; existing qemubox bases reprovision
+> • Two-way sync — safe live-ahead additions flow back to source instead of being overwritten
+> • Agent workflows — restored clean prompts, Go comment guidance, and review-body distillation
+> • Feedback — blocks unsupported SendFeedback and /feedback paths
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `dockbox`, `qemubox`: install the `mold` linker; qemubox bumps its package marker so existing base images reprovision and receive it.
+- `gh-comment`: add a distillation pass that keeps posted review comments concise and actionable.
+
+### Changed
+
+- Install is now a two-way sync: clean live-ahead additions in source-owned files flow back into the repository instead of being overwritten.
+- TypeScript guidance requires explicit return types on exported functions while retaining inference for obvious locals and callbacks.
+- Subagent launchers pass raw task context without the parent agent's diagnosis; Go guidance points comment decisions back to the shared baseline.
+- Recommended settings and wisdom block unsupported `SendFeedback` and `/feedback` paths.
+
+### Fixed
+
+- Install safely prunes legacy `skill/skill` copies only when every nested file has a current root counterpart and no live-ahead content would be lost.
+
 ## [v0.3.79] — 20260827
 
 > kronael v0.3.79 — zero-comments baseline, sharper reviews
