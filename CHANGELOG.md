@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.87] — 20260902
+
+> kronael v0.3.87 — one name in the log too
+>
+> The changelog still called the output style by an older name in eleven places. It does not any more.
+>
+> • changed — the log names the style caveman throughout, matching the file, the skill and the settings
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- `CHANGELOG.md` names the output style `caveman` in all eleven entries that mention it. The three lines describing the rename itself are reworded rather than substituted, since a blind swap would have made them contradict themselves.
+
 ## [v0.3.86] — 20260902
 
 > kronael v0.3.86 — one name for the style
