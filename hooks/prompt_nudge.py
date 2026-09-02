@@ -3,7 +3,7 @@ import json
 import re
 import sys
 
-STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
+STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/80-caveman.md:
 - Lead with the answer. No preamble, no recap of what the diff already shows.
 - ~17 lines, hard max 20. No tables or headers in a normal reply.
 - Plain words, active voice, one instruction per sentence (ASD-STE100).
