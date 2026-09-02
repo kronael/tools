@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.84] — 20260902
+
+> kronael v0.3.84 — four orphan hooks withdrawn
+>
+> v0.3.83 restored four hook scripts that this repo had deliberately deleted in May. They are gone again.
+>
+> • withdrawn — redirect.py, context.py, learn.py, test_hooks.py, lib/toolchain.py; none registered
+> • cause — an install keeps files the source drops, so a leftover reads as new work next sync
+> • install — the prune list names them, so the next sync deletes them instead of restoring
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `hooks/redirect.py`, `hooks/context.py`, `hooks/learn.py`, `hooks/test_hooks.py`, `hooks/lib/toolchain.py`: removed again. All were deleted from this repo months ago as orphan hooks — none is registered in any settings file — but their copies survived in `~/.claude/hooks/`, because an install never deletes a file the source has dropped. The v0.3.83 sync read "absent from bundle, present in install" as live-ahead work and vendored them back. `lib/toolchain.py` had exactly one caller, `redirect.py`.
+- `kronael/install/SKILL.md`: the prune step names those files and states the failure mode, so an unpruned orphan cannot read as live-ahead work on a later sync.
+
+### Unchanged
+- The August work from v0.3.83 stands: `hooks/lib/state.py`, the single `hook_event()` reader, and the PreCompact, timeout, fail-open and non-dict-payload fixes.
+
 ## [v0.3.83] — 20260902
 
 > kronael v0.3.83 — compaction preservation actually preserves
