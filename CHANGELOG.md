@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.3.83] — 20260902
+
+> kronael v0.3.83 — compaction preservation actually preserves
+>
+> LOCAL.md and RECLAUDE.md survive compaction again — the hooks were reading a key Claude Code never sends.
+>
+> • compaction — LOCAL.md and RECLAUDE.md re-inject again; one reader replaces two copies, two bugs
+> • guards — the recursive-codex block read an env var nothing sets; now it reads a real field
+> • stop hook — a slow or locked git repo no longer kills it and drops both nudges
+> • skills — the gopls edit loop, sweep's fix/verify phases, create's nodes-as-data principle
+> • install — preflight verifies hooks/lib/, the directory every hook imports at startup
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `hooks/local.py`, `hooks/reclaude.py`: read `data['hook_event']`, but Claude Code sends `hook_event_name` — with a session stamp on disk both produced nothing on PreCompact, so neither LOCAL.md nor RECLAUDE.md ever re-injected. `hook_event()` now lives once in `hooks/lib/state.py`; `memory_nudge.py` and `stop.py` drop their private copies.
+- `hooks/pretool_nudge.py`: the recursive-codex block gated on `KRONAEL_IN_CODEX`, which nothing in the repo sets — the guard was permanently dead while its test passed via monkeypatch. It reads the payload `harness` field that `codex_hook.py` already stamps.
+- `hooks/stop.py`: `subprocess.TimeoutExpired` escaped `git_run`, so a slow or index-locked repo exited the Stop hook with a traceback and lost both nudges.
+- `hooks/local.py`: an unusable state root read as "not first prompt", silently suppressing LOCAL.md for the whole session. It now fails open.
+- `hooks/redirect.py`: crashed on a non-dict `tool_input`.
+- `hooks/test_hooks.py`: invoked `nudge.py`, renamed to `prompt_nudge.py` two versions ago — 12 of 25 checks died on a missing file.
+
+### Added
+- `hooks/lib/` — `state.py` (session stamps, state root, the one event-key reader) and `toolchain.py` (project-type detection), plus `redirect.py`, `learn.py` and `test_hooks.py`, adopted from the live install.
+- `skills/software/lsp.md`, `skills/create/divergence.md`, `skills/demo/cutout.md`, `skills/ship/cli.md`.
+
+### Changed
+- Fifty files that had drifted between the bundle and a live `~/.claude` install are reconciled on content: the bundle keeps its newer eval, tier and language guidance; the install contributes the gopls edit loop, sweep's fix/verify phases, the BUGS.md entry format that matches real practice, and the spec `experiment`/`reference` statuses.
+- `skills/global/SKILL.md` delegates response style to the `caveman` skill instead of restating it — one source, not two.
+- `kronael/install/SKILL.md` preflight verifies `hooks/lib/`; four hooks import it by absolute path at startup, so a partial copy passed the check and then tracebacked on every prompt.
+- `hooks/context.py` removed — a byte-identical copy of local.py's rules, registered nowhere.
+
 ## [v0.3.82] — 20260902
 
 > kronael v0.3.82 — the caveman skill ships
