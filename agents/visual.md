@@ -29,6 +29,11 @@ Convert text to paths or skip text entirely.
 NEVER use gradients without unique IDs - breaks when multiple SVGs on page.
 Prefer solid colors.
 
+NEVER use SVG for `og:image`/`twitter:image` - X/Twitter's card crawler does
+not render SVG and drops the image silently (no error, just no card). Ship a
+rasterized PNG/JPG (e.g. 1200x630), ideally generated from the same source
+SVG at build time so it cannot drift from it.
+
 Stroke widths for 100x100 viewBox:
 - Thin details: `stroke-width="2"`
 - Main elements: `stroke-width="4-5"`
