@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.85] — 20260902
+
+> kronael v0.3.85 — the style pointer resolves
+>
+> The caveman skill and the prompt nudge both named an output-style file that no install ever creates.
+>
+> • fixed — both now point at output-styles/80-caveman.md, the file the bundle actually ships
+> • effect — a fresh install no longer gets a skill and a per-prompt nudge aimed at a missing file
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `skills/caveman/SKILL.md` and `hooks/prompt_nudge.py` named `~/.claude/output-styles/caveman.md` as the style authority, but the bundle ships `output-styles/80-caveman.md` and `settings-recommended.json` activates `80% caveman`. On a fresh install the skill told the model to read a file that was never written, and the nudge repeated the path on every prompt.
+
 ## [v0.3.84] — 20260902
 
 > kronael v0.3.84 — four orphan hooks withdrawn
