@@ -36,6 +36,7 @@ spec = importlib.util.spec_from_file_location(
 hook_state = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hook_state)
 session_state = hook_state.session_state
+hook_event = hook_state.hook_event
 
 SESSION_THRESHOLD = 1800  # 30 min wall-clock — one path to the Stop fallback.
 STOP_COUNT_THRESHOLD = 3  # ...or this many Stops, whichever comes first, so a
@@ -53,14 +54,6 @@ NUDGE_TEXT = (
     'session-memory evaluation and skill/pattern extraction. Skip if '
     'nothing qualifies; do not force it.'
 )
-
-
-def hook_event(data):
-    for key in 'hook_event', 'hook_event_name', 'hookEventName':
-        value = data.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ''
 
 
 def emit_precompact():

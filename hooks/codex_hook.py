@@ -29,11 +29,11 @@ def codex_skill_names() -> frozenset[str]:
     """Read from disk, never typed — a typed list drifts out of the skills it
     names, and an unlisted skill reaches Codex as an unrewritten `/name`."""
     try:
-        return frozenset(
-            d.name for d in SKILLS_DIR.iterdir() if (d / 'SKILL.md').is_file()
-        )
+        return frozenset(d.name for d in SKILLS_DIR.iterdir() if (d / 'SKILL.md').is_file())
     except OSError:
         return frozenset()
+
+
 SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z][a-z0-9-]*)')
 
 

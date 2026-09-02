@@ -11,6 +11,7 @@ spec = importlib.util.spec_from_file_location(
 hook_state = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hook_state)
 session_state = hook_state.session_state
+hook_event = hook_state.hook_event
 
 RULES = """Development reminders:
 - ALWAYS use make for build/lint/test/clean
@@ -34,7 +35,7 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
-    event = data.get('hook_event') or ''
+    event = hook_event(data)
     session_id = data.get('session_id') or 'default'
     cwd = data.get('cwd') or '.'
 
@@ -43,7 +44,7 @@ def main():
     state_file = session_state('local', session_id)
 
     parts = []
-    first_prompt = state_file is not None and not os.path.isfile(state_file)
+    first_prompt = state_file is None or not os.path.isfile(state_file)
     is_compaction = event == 'PreCompact'
 
     if first_prompt or is_compaction:
@@ -60,7 +61,7 @@ def main():
                 except OSError:
                     pass
 
-        if first_prompt:
+        if first_prompt and state_file is not None:
             try:
                 open(state_file, 'w').close()
             except OSError:

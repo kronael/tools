@@ -5,6 +5,7 @@ Tests JSON parse guards, null/type guards, word-boundary matching,
 keyword routing, and negation handling for the hooks that ship with
 this template: prompt_nudge.py, local.py, learn.py, stop.py.
 """
+
 import json
 import subprocess
 import sys
@@ -16,14 +17,14 @@ class HooksTestSuite:
         self.passed = 0
         self.failed = 0
         self.tests = []
-        self.hooks_dir = Path.home() / ".claude" / "hooks"
+        self.hooks_dir = Path.home() / '.claude' / 'hooks'
 
     def test(self, name, script, input_data, expect_crash=False, expect_output=None):
         script_path = self.hooks_dir / script
         try:
             result = subprocess.run(
-                ["python3", str(script_path)],
-                input=input_data.encode() if input_data else b"",
+                ['python3', str(script_path)],
+                input=input_data.encode() if input_data else b'',
                 capture_output=True,
                 timeout=2,
             )
@@ -38,7 +39,7 @@ class HooksTestSuite:
             if not expect_crash and crashed:
                 self.failed += 1
                 stderr = result.stderr.decode()[:100]
-                self.tests.append(f"✗ {name} - Unexpected crash: {stderr}")
+                self.tests.append(f'✗ {name} - Unexpected crash: {stderr}')
                 return False
 
             if expect_output and expect_output not in output:
@@ -48,158 +49,158 @@ class HooksTestSuite:
 
             if expect_output is None and output:
                 self.failed += 1
-                self.tests.append(f"✗ {name} - Unexpected output: {output[:50]}")
+                self.tests.append(f'✗ {name} - Unexpected output: {output[:50]}')
                 return False
 
             self.passed += 1
-            self.tests.append(f"✓ {name}")
+            self.tests.append(f'✓ {name}')
             return True
 
         except subprocess.TimeoutExpired:
             self.failed += 1
-            self.tests.append(f"✗ {name} - Timeout")
+            self.tests.append(f'✗ {name} - Timeout')
             return False
         except Exception as e:
             self.failed += 1
-            self.tests.append(f"✗ {name} - Error: {e}")
+            self.tests.append(f'✗ {name} - Error: {e}')
             return False
 
     def run_all(self):
-        print("=" * 70)
-        print("HOOKS SYSTEM TEST SUITE")
-        print("=" * 70)
+        print('=' * 70)
+        print('HOOKS SYSTEM TEST SUITE')
+        print('=' * 70)
 
-        print("\n[JSON Parse Guards]")
-        print("-" * 70)
-        self.test("prompt_nudge.py - empty input", "prompt_nudge.py", "")
-        self.test("prompt_nudge.py - bad JSON", "prompt_nudge.py", "{incomplete")
-        self.test("prompt_nudge.py - array input", "prompt_nudge.py", "[]")
-        self.test("local.py - empty input", "local.py", "")
-        self.test("local.py - bad JSON", "local.py", "{x:")
-        self.test("local.py - array input", "local.py", "[]")
-        self.test("learn.py - empty input", "learn.py", "")
-        self.test("learn.py - bad JSON", "learn.py", "{incomplete json")
-        self.test("stop.py - empty input", "stop.py", "")
-        self.test("stop.py - bad JSON", "stop.py", "{bad")
+        print('\n[JSON Parse Guards]')
+        print('-' * 70)
+        self.test('prompt_nudge.py - empty input', 'prompt_nudge.py', '')
+        self.test('prompt_nudge.py - bad JSON', 'prompt_nudge.py', '{incomplete')
+        self.test('prompt_nudge.py - array input', 'prompt_nudge.py', '[]')
+        self.test('local.py - empty input', 'local.py', '')
+        self.test('local.py - bad JSON', 'local.py', '{x:')
+        self.test('local.py - array input', 'local.py', '[]')
+        self.test('learn.py - empty input', 'learn.py', '')
+        self.test('learn.py - bad JSON', 'learn.py', '{incomplete json')
+        self.test('stop.py - empty input', 'stop.py', '')
+        self.test('stop.py - bad JSON', 'stop.py', '{bad')
 
-        print("\n[Null & Type Guards]")
-        print("-" * 70)
+        print('\n[Null & Type Guards]')
+        print('-' * 70)
         self.test(
-            "prompt_nudge.py - null prompt",
-            "prompt_nudge.py",
-            json.dumps({"prompt": None}),
-            expect_output="Output style",
+            'prompt_nudge.py - null prompt',
+            'prompt_nudge.py',
+            json.dumps({'prompt': None}),
+            expect_output='Output style',
         )
         self.test(
-            "prompt_nudge.py - dict prompt",
-            "prompt_nudge.py",
-            json.dumps({"prompt": {"bad": "type"}}),
+            'prompt_nudge.py - dict prompt',
+            'prompt_nudge.py',
+            json.dumps({'prompt': {'bad': 'type'}}),
         )
         self.test(
-            "local.py - dict prompt",
-            "local.py",
-            json.dumps({"prompt": {"nested": "dict"}}),
+            'local.py - dict prompt',
+            'local.py',
+            json.dumps({'prompt': {'nested': 'dict'}}),
         )
 
-        print("\n[local.py Word Boundaries]")
-        print("-" * 70)
+        print('\n[local.py Word Boundaries]')
+        print('-' * 70)
         self.test(
             "local.py - 'thecontinueword' does NOT inject",
-            "local.py",
-            json.dumps({"prompt": "thecontinueword"}),
+            'local.py',
+            json.dumps({'prompt': 'thecontinueword'}),
             expect_output=None,
         )
         self.test(
             "local.py - 'recap_session' does NOT inject",
-            "local.py",
-            json.dumps({"prompt": "recap_session"}),
+            'local.py',
+            json.dumps({'prompt': 'recap_session'}),
             expect_output=None,
         )
 
-        print("\n[prompt_nudge.py Keyword Routing]")
-        print("-" * 70)
+        print('\n[prompt_nudge.py Keyword Routing]')
+        print('-' * 70)
         self.test(
             "prompt_nudge.py - 'improve code' → @improve",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "improve code"}),
-            expect_output="@improve",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'improve code'}),
+            expect_output='@improve',
         )
         self.test(
             "prompt_nudge.py - 'visual' → @visual",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "visual"}),
-            expect_output="@visual",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'visual'}),
+            expect_output='@visual',
         )
         self.test(
             "prompt_nudge.py - 'ship' → /ship",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "ship it"}),
-            expect_output="/ship",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'ship it'}),
+            expect_output='/ship',
         )
         self.test(
             "prompt_nudge.py - 'diary' → /diary",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "diary"}),
-            expect_output="/diary",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'diary'}),
+            expect_output='/diary',
         )
         self.test(
             "prompt_nudge.py - 'commit' → Commit rules",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "commit changes"}),
-            expect_output="Commit rules",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'commit changes'}),
+            expect_output='Commit rules',
         )
         self.test(
             "prompt_nudge.py - 'readme' → @readme",
-            "prompt_nudge.py",
-            json.dumps({"prompt": "write readme"}),
-            expect_output="@readme",
+            'prompt_nudge.py',
+            json.dumps({'prompt': 'write readme'}),
+            expect_output='@readme',
         )
 
-        print("\n[local.py Negation Handling]")
-        print("-" * 70)
+        print('\n[local.py Negation Handling]')
+        print('-' * 70)
         self.test(
             "local.py - 'dont continue' does NOT inject",
-            "local.py",
-            json.dumps({"prompt": "dont continue"}),
+            'local.py',
+            json.dumps({'prompt': 'dont continue'}),
             expect_output=None,
         )
         self.test(
             "local.py - 'never recap' does NOT inject",
-            "local.py",
-            json.dumps({"prompt": "never recap"}),
+            'local.py',
+            json.dumps({'prompt': 'never recap'}),
             expect_output=None,
         )
 
-        print("\n[local.py Positive Cases]")
-        print("-" * 70)
+        print('\n[local.py Positive Cases]')
+        print('-' * 70)
         self.test(
             "local.py - 'continue' → inject rules",
-            "local.py",
-            json.dumps({"prompt": "continue with implementation"}),
-            expect_output="systemMessage",
+            'local.py',
+            json.dumps({'prompt': 'continue with implementation'}),
+            expect_output='systemMessage',
         )
         self.test(
             "local.py - 'where were we' → inject rules",
-            "local.py",
-            json.dumps({"prompt": "where were we"}),
-            expect_output="systemMessage",
+            'local.py',
+            json.dumps({'prompt': 'where were we'}),
+            expect_output='systemMessage',
         )
 
-        print("\n" + "=" * 70)
-        print("TEST RESULTS")
-        print("=" * 70)
+        print('\n' + '=' * 70)
+        print('TEST RESULTS')
+        print('=' * 70)
         for t in self.tests:
             print(t)
 
-        print("\n" + "=" * 70)
+        print('\n' + '=' * 70)
         total = self.passed + self.failed
-        status = "✓ PASS" if self.failed == 0 else "✗ FAIL"
-        print(f"{status}: {self.passed}/{total} tests passed")
-        print("=" * 70)
+        status = '✓ PASS' if self.failed == 0 else '✗ FAIL'
+        print(f'{status}: {self.passed}/{total} tests passed')
+        print('=' * 70)
 
         return self.failed == 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     suite = HooksTestSuite()
     sys.exit(0 if suite.run_all() else 1)

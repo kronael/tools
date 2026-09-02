@@ -29,7 +29,10 @@ DIARY_STALE = 3600
 
 
 def git_run(cwd, *args):
-    return subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=cwd, check=False)
+    try:
+        return subprocess.run(args, capture_output=True, text=True, timeout=5, cwd=cwd, check=False)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args, 1, '', '')
 
 
 def append_header(diary_file, hhmm):
@@ -84,14 +87,7 @@ def touch(stamp, now):
 
 
 def hook_event(data):
-    env_event = os.environ.get('KRONAEL_HOOK_EVENT')
-    if env_event:
-        return env_event
-    for key in 'hook_event', 'hook_event_name', 'hookEventName':
-        value = data.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ''
+    return os.environ.get('KRONAEL_HOOK_EVENT') or hook_state.hook_event(data)
 
 
 def emit(parts, data):

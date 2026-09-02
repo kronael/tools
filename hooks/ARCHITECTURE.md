@@ -23,6 +23,15 @@ first runs through `codex_hook.py`.
 
 ## Components
 
+### lib/ (shared modules, not hooks)
+
+`state.py` — per-session throttle stamp paths, the state root, and
+`hook_event(data)`, the one reader of the event key across all three spellings.
+`toolchain.py` — project-type detection for the test/build command.
+
+Every hook imports these by absolute path from `~/.claude/hooks/lib/` at import
+time, so an install that omits the directory tracebacks on every prompt.
+
 ### codex_hook.py (Codex adapter)
 
 **Input:** Codex hook JSON, which may use Codex field names.
@@ -101,7 +110,8 @@ Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
-**Input:** JSON with `prompt`, `hook_event`, `session_id`, `cwd`.
+**Input:** JSON with `prompt`, `session_id`, `cwd`, and hook event identity
+(`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
 **Output:** `{"ok": true, "systemMessage": "<content>"}` or silent.
 Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
@@ -115,7 +125,8 @@ suppressed there to avoid invalid Codex hook JSON.
 
 ### reclaude.py (PreCompact)
 
-**Input:** JSON with `hook_event`.
+**Input:** JSON with hook event identity
+(`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
 **Output:** `{"ok": true, "systemMessage": "<RECLAUDE.md>"}` or silent.
 Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
@@ -151,7 +162,8 @@ header when the diary is missing or stale.
 ### memory_nudge.py (PreCompact + Stop)
 
 **Input:** JSON with `cwd`, `session_id`, `stop_hook_active`, and hook event
-identity (`hook_event`/`hook_event_name`/`hookEventName`).
+identity (`hook_event`/`hook_event_name`/`hookEventName`, read via
+`lib/state.py`).
 **Output:** `PreCompact` → `{"ok": true, "systemMessage": "..."}` (local.py /
 reclaude.py idiom). `Stop` → `hookSpecificOutput.additionalContext` (stop.py
 PostToolUse idiom). Silent otherwise.
