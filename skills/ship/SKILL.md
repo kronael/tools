@@ -31,6 +31,17 @@ against an explicit override.
    (build/test/lint command that must pass before the next step).
    Fable does research and writes the plan only — it does not
    implement. See `prompt.md` for the planning brief template.
+   - **Ship ALWAYS means plan + re-research, in a fresh subagent
+     (never a `fork` — it carries the stale context), against the
+     code as it is now** — even when this session already researched
+     the area or a PLAN.md / spec already exists. NEVER assemble the
+     plan from conversation context; NEVER take an existing plan or
+     spec at face value.
+   - An existing plan or spec is input to the sub, not its output:
+     the sub re-verifies every claim against the current code and
+     rewrites what drifted. A spec accurate when written is wrong a
+     few commits later, and a stale plan spends the implementation
+     budget on code that no longer exists.
 2. **Confirm** — read PLAN.md yourself, summarize it for the user in
    a few lines (steps + gates), and get a go-ahead before spending
    implementation budget. Skip this only if the user already approved

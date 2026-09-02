@@ -13,6 +13,11 @@ Read first: project CLAUDE.md, relevant specs/ files, 2-3 most recent
 .diary/*.md entries, and the code paths [feature] touches. Cite specs
 by path; don't restate what's already documented, extend it.
 
+If a plan or spec for this already exists ([path, if any]), it is
+input, not truth: re-verify each claim against the code as it is now,
+keep what still holds, rewrite what drifted, and name the drift in
+your report.
+
 Produce a PLAN.md with: Goal, Architecture/tradeoffs (alternatives
 considered and why this one), a Steps section broken into
 independently-gated chunks (each step: files touched, concrete
