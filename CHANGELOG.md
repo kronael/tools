@@ -2,16 +2,16 @@
 
 ## [v0.3.81] — 20260902
 
-> kronael v0.3.81 — markdown at real width + lint packs
+> kronael v0.3.81 — real-width markdown, lint packs, reply budget
 >
-> gloww renders hard-wrapped markdown at your real terminal width, and co-located ast-grep lint packs land for TypeScript, Rust, and Python.
+> gloww renders markdown at real terminal width, lint packs cover TypeScript, Rust, and Python, and caveman replies get a line budget.
 >
 > • gloww — rejoins hard-wrapped paragraphs so glow wraps them to your terminal width
-> • lint packs — ast-grep rules for ts/rust/python with a fixture harness; go and sql stay native
-> • skill lint — SKILL.md frontmatter and body now checked against wisdom rules at commit time
+> • lints — ast-grep packs for ts/rust/python (fixture-tested) + SKILL.md lint at commit time
 > • hook guard — blocks squash, branch creation, worktree add without --detach, killall
 > • js-perf — new V8 runbook: hidden classes, elements kinds, deopts, Wasm/N-API batching
 > • emacs — optional setup skill for the completion, navigation, git, and AI package stack
+> • caveman — reply budget in rendered lines: fact 1–3, action ≤12, explain ≤20; 2-sentence bullets
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
@@ -34,6 +34,7 @@
 ### Fixed
 - gloww: an interactive run looked hung — glow's auto style queries the terminal and eats any key typed while it waits, so the pager ignored `q`; an explicit style skips the query.
 - gloww: `-wN` parses as a width flag and the file is found in any argument position.
+- caveman style: the ~17-line cap never bound — it counted source lines, not rendered ones, and capped bullet count but not bullet size. The budget now counts rendered 80-column lines, tiered by question shape (fact 1–3, action ≤12, explanation ≤20, hard ceiling), holds each bullet to two sentences, and ends in a countable pre-send check; the flat rule list folds into a Shape section.
 - lints: rs-no-unwrap exempts tests and comment-justified unwraps; yamlfmt formats the rule packs; check-yaml allows multi-doc yaml.
 
 ## [v0.3.80] — 20260901
