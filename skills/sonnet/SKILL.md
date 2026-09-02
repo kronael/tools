@@ -17,5 +17,5 @@ ALWAYS reach for /sonnet without being asked when the task is:
 - NEVER expect sonnet to run cheap just because it's not opus/fable — it is pinned at medium, not low. For lighter work, use `/haiku` instead of assuming sonnet will scale down.
 - NEVER add text prompts like "Effort: high" — effort is set at the API level via the agent definition, not via prompt text.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
-- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
+- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (CLAUDE.md § Agents and Skills).
 - For cheap exploration, mapping, and mechanical work, prefer `/haiku`. For hard tasks (multi-file reasoning, design decisions), escalate to `/opus`.

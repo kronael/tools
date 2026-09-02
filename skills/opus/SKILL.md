@@ -18,5 +18,5 @@ ALWAYS reach for /opus without being asked when the task is:
 - ALWAYS use `subagent_type: "opus"` on the Agent tool (NOT `model: "opus"`). The `opus` agent definition pins `model: opus` AND `effort: xhigh` — effort is INHERITED from the parent session when not pinned, so `model: "opus"` alone would just carry over whatever effort the parent (often Fable/Opus at xhigh already, but not always) is running at.
 - NEVER reach for `/opus` just to get xhigh cheaply on a task `/sonnet` (medium) could handle — the fixed xhigh cost applies on every call regardless of task size.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
-- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
+- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (CLAUDE.md § Agents and Skills).
 - For mechanical single-file work, prefer `/haiku`. For investigation/hunting with no code changes, use `/sonnet` first. For planning or security/deep-audit work that warrants the most capable subagent, escalate to `/fable`.

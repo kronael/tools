@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.78] — 20260829
+## [v0.3.81] — 20260902
 
-> kronael v0.3.78 — markdown at real width + lint packs
+> kronael v0.3.81 — markdown at real width + lint packs
 >
 > gloww renders hard-wrapped markdown at your real terminal width, and co-located ast-grep lint packs land for TypeScript, Rust, and Python.
 >
@@ -35,6 +35,70 @@
 - gloww: an interactive run looked hung — glow's auto style queries the terminal and eats any key typed while it waits, so the pager ignored `q`; an explicit style skips the query.
 - gloww: `-wN` parses as a width flag and the file is found in any argument position.
 - lints: rs-no-unwrap exempts tests and comment-justified unwraps; yamlfmt formats the rule packs; check-yaml allows multi-doc yaml.
+
+## [v0.3.80] — 20260901
+
+> kronael v0.3.80 — cleaner skills, safer installs
+>
+> Kronael now removes duplicate skill copies, preserves safe live edits during installs, and adds mold to both sandboxes.
+>
+> • Install — prunes stale skill/skill copies without touching newer or user-added files
+> • TypeScript — exported functions declare return types; obvious locals still use inference
+> • dockbox + qemubox — mold is preinstalled; existing qemubox bases reprovision
+> • Two-way sync — safe live-ahead additions flow back to source instead of being overwritten
+> • Agent workflows — restored clean prompts, Go comment guidance, and review-body distillation
+> • Feedback — blocks unsupported SendFeedback and /feedback paths
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `dockbox`, `qemubox`: install the `mold` linker; qemubox bumps its package marker so existing base images reprovision and receive it.
+- `gh-comment`: add a distillation pass that keeps posted review comments concise and actionable.
+
+### Changed
+
+- Install is now a two-way sync: clean live-ahead additions in source-owned files flow back into the repository instead of being overwritten.
+- TypeScript guidance requires explicit return types on exported functions while retaining inference for obvious locals and callbacks.
+- Subagent launchers pass raw task context without the parent agent's diagnosis; Go guidance points comment decisions back to the shared baseline.
+- Recommended settings and wisdom block unsupported `SendFeedback` and `/feedback` paths.
+
+### Fixed
+
+- Install safely prunes legacy `skill/skill` copies only when every nested file has a current root counterpart and no live-ahead content would be lost.
+
+## [v0.3.79] — 20260827
+
+> kronael v0.3.79 — zero-comments baseline, sharper reviews
+>
+> The code baseline now bans redundant comments outright, and the review skills gained an invariant lens plus mandatory finding re-verification.
+>
+> • Comments — `software/code.md` carries a zero-comments policy; Claude stops narrating what names and types already say
+> • `/review` — new invariant/topology lens catches changes that read correct hunk-by-hunk but drop a structural guarantee
+> • `/review take` — re-verifies each finding against current code before editing; PR replies carry fixed/deferred/declined
+> • Wisdom file now mandates loading `code.md` before writing code, so the style rules can't be silently skipped
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: new § Comments — zero by default, one line only for a non-obvious WHY, redundancy test (a comment restating a neighbouring log/error is the canonical bug), no multi-line blocks, no line numbers or ticket IDs. Adapted from @ochaloup/claude (credited in NOTICE).
+- `review` (give/take): added an invariant/topology lens, stable tier IDs (C1/I2/M3), mandatory re-verification of each finding against current code, and per-thread PR reply dispositions (fixed/deferred/declined). Adapted from @ochaloup's PR-review pipeline.
+- `global` wisdom (→ `~/.claude/CLAUDE.md`): the code.md pointer is now a load-mandate — code.md is cold, so it names it, orders `/resolve` (or the software skill) before writing/reviewing code, and states unloaded rules only hide, not relax. Removed two inline comment-policy restatements now canonical in code.md.
+- `rs`: dropped its § Comments (pure duplicate of the new base); `go` keeps its inline-vs-above rule.
+- `review/give.md`: fixed a stale `gh-review` reference (folded into the router) that contradicted the file's own GitHub-PR section.
+
+## [v0.3.78] — 20260825
+
+> kronael v0.3.78 — psql in both boxes
+>
+> Both sandboxes now ship the Postgres client, so `psql` works inside dockbox and qemubox without a manual install.
+>
+> • dockbox + qemubox — `psql` (postgresql-client) preinstalled; DB work no longer starts with an apt install
+> • qemubox — guest package marker bumped, so boxes provisioned earlier pick up psql on next boot
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`, `qemubox`: add `postgresql-client` (the `psql` CLI) to the base package set — dockbox's image apt layer and qemubox's guest provisioning. dockbox already carried `libpq-dev`; this adds the client binary.
+- `qemubox`: guest package marker bumped `packages-v1` → `packages-v2`, so already-provisioned boxes and the prebuilt base re-run apt and pick up psql.
 
 ## [v0.3.77] — 20260824
 

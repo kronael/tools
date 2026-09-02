@@ -69,6 +69,10 @@ Why the install step exists at all:
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
+- **Install is a two-way sync, not a one-way copy** — source-advanced files
+  update the install; a clean live-ahead superset (source-owned file, additions
+  only) is reverse-synced INTO the repo, never overwritten. Overwriting a
+  live-ahead file downgrades local work.
 - **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org
   overlays and user-added skills must survive. NEVER delete anything in
   `~/.claude/` that isn't in this source tree.

@@ -12,5 +12,5 @@ Report what was launched. Continue immediately without waiting.
 - NEVER make xhigh the default. Reserve xhigh for explicit planning work, security/deep-audit work, or a user request for maximum effort.
 - NEVER add text prompts like "Think deeply / Effort: high" — effort is set at the API level via the agent definition, not via prompt text.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
-- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline.
+- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (CLAUDE.md § Agents and Skills).
 - Fable is the most capable and most expensive model — prefer `/opus` for tasks that don't require maximum intelligence.

@@ -105,6 +105,8 @@ generated files, test path patterns, project-wide style choices (no-comment poli
 
 ## Comments
 
+- What to comment and how to phrase it: canonical in `software/code.md`
+  Comments section. This is the only Go-specific addition — placement.
 - Prefer a comment on its own line ABOVE the code it describes; avoid trailing
   inline comments. Inline comments crowd the line, get truncated on wrap, and
   drift as the code changes. Even a short field annotation goes above:

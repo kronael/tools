@@ -14,8 +14,8 @@ Default = the **local uncommitted working diff** (`git diff` plus
 - **a branch** — "review the branch" → `git diff main...HEAD`
 - **a commit range** — e.g. `abc123..def456`
 
-`review` STOPS at the report — it never fetches from or posts to GitHub. For a
-GitHub PR use the `gh-review` skill.
+The local flow STOPS at the report — it never posts. For a GitHub PR use the
+`gh` variant (`/review give gh`), in § GitHub PR below.
 
 ## Workflow
 
@@ -34,7 +34,13 @@ If the diff is empty, say so and stop — nothing to review.
 
 Group files into ≤4 non-overlapping buckets by domain. Per bucket:
 - List applicable skills by extension (`.rs`→rs, `.ts/.tsx`→ts/tsx, `tests/`→testing, `.go`→go, `.py`→py, `.sql`→sql, `.sh`→sh)
-- Propose 3-5 orthogonal lenses from: correctness, simplicity, error handling, type safety, test coverage, security, performance, API contract
+- Propose 3-5 orthogonal lenses from: correctness, simplicity, error handling, type safety, test coverage, security, performance, API contract, invariant/topology
+
+**Invariant/topology lens** — topology/multiplicity/scope changes (one
+process split/merged with many, a new discriminator or scope-key added to
+shared storage, a type gaining a collection variant) can read locally correct
+hunk-by-hunk while a structurally-guaranteed property silently disappears.
+ALWAYS check for this shape.
 
 ### 3. Parallel review agents
 
@@ -123,21 +129,25 @@ ALWAYS verify each suggested fix by reading the surrounding code — agents prop
 ## Review: <scope>
 
 ### Critical
-- ...
+- C1 — ...
+- C2 — ...
 
 ### Important
-- ...
+- I1 — ...
 
 ### Minor
-- ...
+- M1 — ...
 
 ### No issues in
 - Bucket X: <reason>
 ```
 
-Then log every triaged finding that was not fixed to `BUGS.md` at repo root
-(per the Bug Triage Protocol) — do this immediately, NEVER ask permission
-to record. Then stop.
+ALWAYS give each finding a stable ID (tier prefix C/I/M + number) so triage,
+`take`, and PR replies can reference it.
+
+Then log every unfixed finding to `BUGS.md` (Bug Triage Protocol) immediately,
+without asking. Record the round — scope, IDs, dispositions — via `diary`,
+one line, no schema. Then stop.
 
 ## Tiered model use
 
@@ -154,7 +164,7 @@ requested.
 - NEVER make code edits — read-only analysis only
 - ALWAYS log unfixed findings to BUGS.md without asking
 - ALWAYS present the report and then stop
-- ALWAYS include `file:line` in every finding
+- ALWAYS include `file:line` and a stable tier+number ID (C1/I2/M3) in every finding
 
 ## GitHub PR (gh)
 

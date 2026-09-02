@@ -42,11 +42,6 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - `.filter()` filters collections; it is NOT a conditional branch
 - `.map()`, `.filter()` ok on iterators/collections, NEVER on `Option` to express control flow
 
-## Comments
-- Comment only the NON-OBVIOUS (the why, the gotcha, the load-bearing invariant);
-  NEVER narrate what the code plainly does. Terse, wrap ≤80 like code.
-- A comment that re-says the next statement is worse than none — fix the code instead.
-
 ## Design Patterns
 - NEVER accessor methods — access fields directly with interior mutability
 - FxDashMap for concurrent access (but no locks best)
