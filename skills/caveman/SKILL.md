@@ -1,13 +1,13 @@
 ---
 name: caveman
-description: "Caveman response style — terse, high-signal replies in ASD-STE100 simplified English. NOT for the rules themselves (use output-styles/80-caveman.md, the authority)."
+description: "Caveman response style — terse, high-signal replies in ASD-STE100 simplified English. NOT for the rules themselves (use output-styles/caveman.md, the authority)."
 when_to_use: "before drafting any reply, response style, how long should this reply be, terse mode, mobile terminal cap"
 user-invocable: true
 ---
 
 # Caveman
 
-Authority: `~/.claude/output-styles/80-caveman.md`. READ that file now. Do not
+Authority: `~/.claude/output-styles/caveman.md`. READ that file now. Do not
 guess or reconstruct its rules from memory or from this pointer.
 
 Two orthogonal controls, both defined there:
