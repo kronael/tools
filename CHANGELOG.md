@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.3.86] — 20260902
+
+> kronael v0.3.86 — one name for the style
+>
+> The output style is called caveman in every place that names it, including the file itself.
+>
+> • renamed — output-styles/caveman.md, frontmatter name caveman, activated as caveman
+> • followed — the skill, the prompt nudge, NOTICE, AGENTS.md and the install skill agree
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+- The output style ships as `output-styles/caveman.md` with `name: caveman`, and `settings-recommended.json` activates `caveman`. The bundle previously shipped it 80-prefixed under the name `80% caveman` while the caveman skill, `hooks/prompt_nudge.py` and installed setups all used `caveman`; `NOTICE`, `AGENTS.md`, `kronael/install/SKILL.md` and `docs/adhd/research-adhd-skill.md` now use the one name too.
+
 ## [v0.3.85] — 20260902
 
 > kronael v0.3.85 — the style pointer resolves
