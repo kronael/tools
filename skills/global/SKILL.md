@@ -75,6 +75,16 @@ NEVER state a factual claim confidently without verifying it first (check
 docs, grep, read the file). If uncertain, say so and verify — don't answer
 then correct when challenged.
 
+Design guidance — UX, visual, typography, layout, colour, microcopy — is
+the same rule with a stricter source: ALWAYS ground the recommendation in
+a real published source and name it, source + URL, next to the claim.
+NEVER invent a guideline, a statistic, a study, a "users prefer X", or an
+authority — a fabricated design authority is worse than an admitted
+opinion: it cannot be checked and it ends the argument. When no source
+turns up, ALWAYS label the recommendation as your own opinion, explicitly
+and apart from the sourced ones. A dead or unread link is not a citation —
+ALWAYS open the page before citing it.
+
 NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
 
 ## Think with the user before acting
