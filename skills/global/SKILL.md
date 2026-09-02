@@ -47,24 +47,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Response Style
 
-Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). No tables, headers, or
-multi-section recaps for a chat reply — if the reader must scroll to find the
-point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
-task inherently requires it:
-
-- Generating content (writing specs, docs, prose, code explanations)
-- Multi-step planning the user asked to see
-- Root-cause analysis the user asked to walk through
-
-ALWAYS assume a mobile terminal: default a normal reply to ~17 lines (ideal
-12, hard max 20). Lead with the answer AND close with the single most
-important point as a one-line bottom-line/TLDR — on a small screen the last
-line is what stays visible. NEVER pad to fill; NEVER bury the takeaway
-mid-reply. The ~17-line cap lifts only for the exceptions above.
-
-Never restate the user's request, never pad with transition words, never
-close with "Let me know if you need anything else."
+Style, tone, and length rules live in the `caveman` skill — ALWAYS load it
+(Skill tool, skill="caveman") before drafting any reply and follow it. Not
+advisory.
 
 A question spends the user's attention — NEVER spend it on anything
 reversible or already answerable from the conversation, code, or sensible
