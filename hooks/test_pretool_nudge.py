@@ -164,9 +164,10 @@ def test_process_allows_safe_commands(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
 
-def test_process_blocks_recursive_codex_inside_codex(monkeypatch) -> None:
-    monkeypatch.setenv('KRONAEL_IN_CODEX', '1')
-    result = process({'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}})
+def test_process_blocks_recursive_codex_inside_codex() -> None:
+    result = process(
+        {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
+    )
     assert result is not None
     assert result['decision'] == 'block'
     assert 'recursive codex' in result['reason']

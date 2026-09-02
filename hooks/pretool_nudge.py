@@ -106,11 +106,11 @@ def extract_command(data: object) -> str:
     return ''
 
 
-def unsafe_command_reason(command: str) -> str | None:
+def unsafe_command_reason(command: str, harness: str | None = None) -> str | None:
     for pattern, reason in UNSAFE_COMMAND_PATTERNS:
         if re.search(pattern, command):
             return reason
-    if os.environ.get('KRONAEL_IN_CODEX') == '1' and re.search(r'(?<!\S)codex\b', command):
+    if harness == 'codex' and re.search(r'(?<!\S)codex\b', command):
         return 'recursive codex execution'
     return None
 
@@ -119,7 +119,7 @@ def process(data: object) -> dict | None:
     """Pure: parsed hook JSON → hookSpecificOutput dict, or None for silent."""
     if isinstance(data, dict) and data.get('tool_name') in COMMAND_TOOLS:
         command = extract_command(data)
-        reason = unsafe_command_reason(command)
+        reason = unsafe_command_reason(command, data.get('harness'))
         if reason:
             return {
                 'decision': 'block',
