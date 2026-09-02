@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.3.82] — 20260902
+
+> kronael v0.3.82 — the caveman skill ships
+>
+> The caveman response style now travels with its skill wrapper, so a fresh install can load the reply budget before drafting.
+>
+> • caveman — the skill wrapper joins the bundle; v0.3.81 shipped the style with nothing to load it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `skills/caveman/`: the wrapper that points at `output-styles/80-caveman.md` and runs its pre-send count. The style shipped in v0.3.81 host-only, so a fresh install got the rules with no skill to load them before drafting.
+
 ## [v0.3.81] — 20260902
 
 > kronael v0.3.81 — real-width markdown, lint packs, reply budget
