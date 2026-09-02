@@ -64,7 +64,8 @@ ALWAYS wait for all agents before proceeding.
 
 ### 4. Fable deep-dive + reverification pass
 
-Run a **single** `Agent(model="fable")` that does two things simultaneously:
+Run a **single** `Agent(model="fable")` that does two things simultaneously.
+If fable is unavailable, fall back to `model="opus"` — NEVER skip this pass:
 
 1. **Independent deep review** — read the full diff and key changed files itself, hunting for:
    - Gross bugs (incorrect logic, wrong invariants, data loss, panic paths)

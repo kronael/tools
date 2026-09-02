@@ -32,6 +32,27 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 | pretext demos: text flowing around obstacles, text-as-geometry games | `art/pretext.md` |
 | hand-drawn-style diagram JSON for excalidraw.com | `diagram/excalidraw.md` |
 | dark-themed SVG architecture/cloud/infra diagram as HTML | `diagram/architecture-diagram.md` |
+| explore a creative space: 4 independent versions per stage, select, iterate | `divergence.md` |
+
+## Principle
+
+Every artifact is a graph of nodes defined as DATA first, then instantiated by
+a renderer that walks it: a node is `{parent, transform/props}`, children
+inherit the parent's transform, motion is a keyframe track sampled per
+property — NEVER per-frame `if` branches. Compose the graph (and its tracks)
+as consts BEFORE writing the renderer. Canonical worked example:
+`demo/cutout.md` § Rig it (parts hierarchy + motion paths + renderer).
+
+## Quality gate
+
+The maker NEVER certifies its own creative work — that is how amateur output
+ships. Judge every artifact against a WRITTEN rubric via an INDEPENDENT critic (a
+fresh agent, ideally a small panel) that did NOT make it, tasked adversarially:
+"where does this read amateur?". Rubric = a few criteria — concept · composition
+/ silhouette · craft (material unity) · motion/timing · "reads pro, not amateur"
+— each scored with a one-line descriptor. Ship ONLY when it clears the bar;
+iterate maker↔critic until it does. Ground the bar in real references first, not
+vibes.
 
 ## Rules
 
@@ -42,6 +63,14 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
   stays in `art/p5js.md`).
 - Manim via the script-to-video pipeline → `video/render.md` flavor table;
   Manim as the primary deliverable → `video/manim.md`.
+- Reviewing drafts: publish every version under your OWN draft dir in the web
+  root (CLAUDE.md § Publishing) and drop a SIMPLE auto-generated index OF THAT DIR
+  (plain file listing, NEVER a bespoke gallery). NEVER auto-index a shared /
+  multi-tenant root — it exposes other people's projects.
+
+Sibling creative skills (own their domain, not folded here): `demo` (terminal
+recordings + animated narrative shorts — its `cutout.md` holds the Monty Python
+cutout look), `visual` (headful UI/CSS render refinement).
 
 Related, NOT in this router: `humanize` (strip AI-isms from prose),
 `diagrams` (Unicode box diagrams inside docs), `create-eval` (scaffold a
