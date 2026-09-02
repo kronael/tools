@@ -27,12 +27,57 @@ ssh_agent=""
 docker_sock=""
 grant_sudo=""
 gcloud_creds=""
+gpg_forward=""
 dirs=()
 extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
 claude_args=()
+
+# Apply one parsed flag. Single source of truth for flag semantics, shared by
+# the command line and both rc files.
+apply_flag() {
+    case "$1" in
+        n)
+            # Reject traversal/reserved names before they become a container name.
+            case "$2" in
+                ""|.|..|*/*) echo "dockbox: invalid -n name: '$2'" >&2; exit 2 ;;
+            esac
+            name_override="$2" ;;
+        d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
+        e) extra_env+=(-e "$2") ;;
+        v) extra_vols+=("$2") ;;
+        H) network_arg=(--network host) ;;
+        A) ssh_agent=1 ;;
+        D) docker_sock=1 ;;
+        K) gpg_forward=1 ;;
+        S) grant_sudo=1 ;;
+        P) persist_builds=1 ;;
+        T) eph_no_tmpfs=1 ;;
+        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
+           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        G) gcloud_creds=1 ;;
+        *) claude_args+=("-$2") ;;
+    esac
+    return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
+}
+
+# Decide whether container $1 matches the user's rm pattern $2. Empty never
+# matches (the caller requires a pattern); a pattern with * or ? is a glob,
+# otherwise an exact match on the bare or dockbox- prefixed name.
+rm_matches() {
+    _n="$1"; _pat="$2"
+    [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
+    case "$_pat" in
+        *[*?]*) case "$_n" in $_pat|dockbox-$_pat) return 0 ;; *) return 1 ;; esac ;;
+        *) [[ "$_n" == "$_pat" || "$_n" == "dockbox-$_pat" ]] ;;
+    esac
+}
+
+# Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
+# so tests can exercise them directly.
+[ -n "${DOCKBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
     ls)
@@ -44,15 +89,16 @@ case "${1:-}" in
         names=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
         [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
-        if [[ -n "$pattern" ]]; then
-            names=$(echo "$names" | grep -F "$pattern" || true)
-            [[ -z "$names" ]] && {
-                echo "no match for '$pattern'"; exit 0
-            }
-        fi
-        echo "$names" | while read -r n; do
+        [[ -z "$pattern" ]] && { echo "dockbox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
+        case "$pattern" in -a|--all) pattern='*' ;; esac
+        matched=""
+        while read -r n; do
+            [[ -z "$n" ]] && continue
+            rm_matches "$n" "$pattern" || continue
             docker rm -f "$n" && echo "removed $n"
-        done
+            matched=1
+        done <<< "$names"
+        [[ -z "$matched" && -n "$pattern" ]] && echo "no match for '$pattern'"
         exit 0 ;;
     prune)
         hours="${2:-2160}"
@@ -70,13 +116,16 @@ case "${1:-}" in
         done
         exit 0 ;;
     sh)
-        entrypoint=/bin/zsh
+        entrypoint=/bin/bash
+        shift ;;
+    bash|zsh)
+        entrypoint="/bin/$1"
         shift ;;
     -h|--help)
         cat <<EOF
-Usage: dockbox [tool] [options] [dirs...] [tool-args...]
-       dockbox ls | rm [pattern] | prune [hours]
-       dockbox sh [options] [dirs...]
+Usage: dockbox [options] [tool] [dirs...] [tool-args...]
+       dockbox ls | rm <pattern|-a> | prune [hours]
+       dockbox [options] bash [dirs...]
 
 Tools (first positional arg — no leading dash):
     (default)       Claude Code, opus @ xhigh effort — the workhorse
@@ -89,7 +138,7 @@ Tools (first positional arg — no leading dash):
     gpt             Codex -m gpt-5.5             (big)
     mini            Codex -m gpt-5.4-mini        (workhorse)
     spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
-    sh|zsh|bash     Interactive shell
+    bash|zsh|sh     Interactive shell (sh is an alias)
     <any cmd>       Any binary installed in the image
 
 Options:
@@ -102,6 +151,7 @@ Options:
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
+    -K         Forward gpg-agent (commit signing); off by default
     -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
@@ -131,7 +181,8 @@ Examples:
     dockbox ~/wk/project              # mount project, sonnet
     dockbox haiku ~/wk/project        # drop to haiku for speed/cost
     dockbox codex ~/wk/project        # OpenAI Codex
-    dockbox sh                        # interactive shell
+    dockbox bash                      # interactive shell
+    dockbox -n mybox bash             # named shell box
     dockbox ~/wk/p1 ~/wk/p2           # multiple dirs, work in last
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
@@ -140,7 +191,7 @@ Examples:
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
-    dockbox sh                        # 2nd session: enters the running box
+    dockbox bash                      # 2nd session: enters the running box
     dockbox codex                     # enters running box, launches codex
 
 Re-entry: if a dockbox for the project is already running, the command
@@ -172,28 +223,6 @@ read_rc() {
     done < "$1"
 }
 
-# Apply one parsed flag. Single source of truth for flag semantics, shared by
-# the command line and both rc files.
-apply_flag() {
-    case "$1" in
-        n) name_override="$2" ;;
-        d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
-        e) extra_env+=(-e "$2") ;;
-        v) extra_vols+=("$2") ;;
-        H) network_arg=(--network host) ;;
-        A) ssh_agent=1 ;;
-        D) docker_sock=1 ;;
-        S) grant_sudo=1 ;;
-        P) persist_builds=1 ;;
-        T) eph_no_tmpfs=1 ;;
-        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
-           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
-        G) gcloud_creds=1 ;;
-        *) claude_args+=("-$2") ;;
-    esac
-    return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
-}
-
 # ~/.dockboxrc: default flags, prepended so the command line overrides them.
 read_rc "$HOME/.dockboxrc"
 set -- "${rc_tokens[@]}" "$@"
@@ -208,7 +237,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:d:x:e:v:HADgGPTS" opt; do
+while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -251,9 +280,9 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 # or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
 read_rc "$_primary_dir/.dockboxrc"
 OPTIND=1
-while getopts ":n:d:x:e:v:HADgGPTS" opt "${rc_tokens[@]}"; do
+while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
     case "$opt" in
-        A|D|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+        A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
         *) apply_flag "$opt" "${OPTARG:-}" ;;
     esac
 done
@@ -296,9 +325,12 @@ enter_session() {
     # gets the token when a later invocation passes it.
     docker exec -it -u "$(id -u):$(id -g)" -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" "${cmd[@]}"
     local rc=$? left
+    # Only tear down when the count SUCCEEDS and is zero. A docker-exec hiccup
+    # leaves $left empty -> keep the container up (a sibling may still hold it)
+    # rather than removing it out from under a live session.
     left=$(docker exec "$CONTAINER_NAME" sh -c \
-        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null || echo 0)
-    [[ "${left:-0}" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null) || left=""
+    [[ -n "$left" && "$left" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
     exit "$rc"
 }
 
@@ -346,8 +378,17 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
+# gpg-agent socket is a live signing credential: forward it only on -K, and only
+# when the agent actually answers -- a socket FILE can outlive its agent, and
+# forwarding a dead one gives the confusing "agent not running" inside the box.
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
-[[ -S "$gpg_sock" ]] && mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
+if [[ -n "$gpg_forward" ]]; then
+    if [[ -S "$gpg_sock" ]] && gpg-connect-agent /bye >/dev/null 2>&1; then
+        mounts+=(-v "$gpg_sock:/home/dockbox/.gnupg/S.gpg-agent")
+    else
+        echo "dockbox: -K set but the host gpg-agent is not answering ($gpg_sock) -- run 'gpgconf --launch gpg-agent'; not forwarding" >&2
+    fi
+fi
 for f in pubring.kbx pubring.gpg; do
     [[ -f "$HOME/.gnupg/$f" ]] && \
         mounts+=(-v "$HOME/.gnupg/$f:/home/dockbox/.gnupg/$f:ro")
@@ -412,6 +453,11 @@ mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
 extra_env+=(-e CARGO_TARGET_DIR=/tmp/cargo-target)
 chown_paths=("/home/dockbox")
+# The -K gpg-socket mount makes Docker auto-create /home/dockbox/.gnupg as root;
+# gpg (running as the drop-in user) then can't write its trustdb lock there.
+# Chown just the dir (dockbox-init chowns non-recursively, so the mounted socket
+# inside is untouched) so signing works.
+[[ -n "$gpg_forward" ]] && chown_paths+=("/home/dockbox/.gnupg")
 
 # Ephemeral overmounts (default): each build-artifact dir found under workdir
 # becomes a fresh empty mount inside the container, chowned by dockbox-init.

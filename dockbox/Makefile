@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help image install clean
+.PHONY: help image install test clean
 
 IMAGE := dockbox
 TZ := $(shell date +%Z 2>/dev/null || echo UTC)
@@ -9,7 +9,12 @@ PREFIX := $(HOME)/.local/bin
 help:
 	@echo "make image    - build docker image"
 	@echo "make install  - build image + install dockbox to ~/.local/bin"
+	@echo "make test     - syntax check + unit tests (no docker)"
 	@echo "make clean    - remove installed binary and docker image"
+
+test:
+	bash -n dockbox
+	bash test.sh
 
 image:
 	$(SUDO) docker build --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..

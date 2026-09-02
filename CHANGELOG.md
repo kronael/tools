@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.72] — 20260814
+## [v0.3.81] — 20260902
 
-> kronael v0.3.72 — install skill can rsync without prompting
+> kronael v0.3.81 — install skill can rsync without prompting
 >
 > The recommended permission set now allows the install skill's rsync into `~/.claude/`, so setup doesn't stop for a permission prompt.
 >
@@ -11,6 +11,175 @@
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 - Adds `Bash(rsync * ~/.claude/*)` to the recommended permission allowlist so the install skill's rsync step to `~/.claude/` runs without a manual approval.
+
+## [v0.3.80] — 20260901
+
+> kronael v0.3.80 — cleaner skills, safer installs
+>
+> Kronael now removes duplicate skill copies, preserves safe live edits during installs, and adds mold to both sandboxes.
+>
+> • Install — prunes stale skill/skill copies without touching newer or user-added files
+> • TypeScript — exported functions declare return types; obvious locals still use inference
+> • dockbox + qemubox — mold is preinstalled; existing qemubox bases reprovision
+> • Two-way sync — safe live-ahead additions flow back to source instead of being overwritten
+> • Agent workflows — restored clean prompts, Go comment guidance, and review-body distillation
+> • Feedback — blocks unsupported SendFeedback and /feedback paths
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `dockbox`, `qemubox`: install the `mold` linker; qemubox bumps its package marker so existing base images reprovision and receive it.
+- `gh-comment`: add a distillation pass that keeps posted review comments concise and actionable.
+
+### Changed
+
+- Install is now a two-way sync: clean live-ahead additions in source-owned files flow back into the repository instead of being overwritten.
+- TypeScript guidance requires explicit return types on exported functions while retaining inference for obvious locals and callbacks.
+- Subagent launchers pass raw task context without the parent agent's diagnosis; Go guidance points comment decisions back to the shared baseline.
+- Recommended settings and wisdom block unsupported `SendFeedback` and `/feedback` paths.
+
+### Fixed
+
+- Install safely prunes legacy `skill/skill` copies only when every nested file has a current root counterpart and no live-ahead content would be lost.
+
+## [v0.3.79] — 20260827
+
+> kronael v0.3.79 — zero-comments baseline, sharper reviews
+>
+> The code baseline now bans redundant comments outright, and the review skills gained an invariant lens plus mandatory finding re-verification.
+>
+> • Comments — `software/code.md` carries a zero-comments policy; Claude stops narrating what names and types already say
+> • `/review` — new invariant/topology lens catches changes that read correct hunk-by-hunk but drop a structural guarantee
+> • `/review take` — re-verifies each finding against current code before editing; PR replies carry fixed/deferred/declined
+> • Wisdom file now mandates loading `code.md` before writing code, so the style rules can't be silently skipped
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: new § Comments — zero by default, one line only for a non-obvious WHY, redundancy test (a comment restating a neighbouring log/error is the canonical bug), no multi-line blocks, no line numbers or ticket IDs. Adapted from @ochaloup/claude (credited in NOTICE).
+- `review` (give/take): added an invariant/topology lens, stable tier IDs (C1/I2/M3), mandatory re-verification of each finding against current code, and per-thread PR reply dispositions (fixed/deferred/declined). Adapted from @ochaloup's PR-review pipeline.
+- `global` wisdom (→ `~/.claude/CLAUDE.md`): the code.md pointer is now a load-mandate — code.md is cold, so it names it, orders `/resolve` (or the software skill) before writing/reviewing code, and states unloaded rules only hide, not relax. Removed two inline comment-policy restatements now canonical in code.md.
+- `rs`: dropped its § Comments (pure duplicate of the new base); `go` keeps its inline-vs-above rule.
+- `review/give.md`: fixed a stale `gh-review` reference (folded into the router) that contradicted the file's own GitHub-PR section.
+
+## [v0.3.78] — 20260825
+
+> kronael v0.3.78 — psql in both boxes
+>
+> Both sandboxes now ship the Postgres client, so `psql` works inside dockbox and qemubox without a manual install.
+>
+> • dockbox + qemubox — `psql` (postgresql-client) preinstalled; DB work no longer starts with an apt install
+> • qemubox — guest package marker bumped, so boxes provisioned earlier pick up psql on next boot
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox`, `qemubox`: add `postgresql-client` (the `psql` CLI) to the base package set — dockbox's image apt layer and qemubox's guest provisioning. dockbox already carried `libpq-dev`; this adds the client binary.
+- `qemubox`: guest package marker bumped `packages-v1` → `packages-v2`, so already-provisioned boxes and the prebuilt base re-run apt and pick up psql.
+
+## [v0.3.77] — 20260824
+
+> kronael v0.3.77 — bhctl: bluetooth headphones in three words; -K gpg fixes
+>
+> New `bhctl` CLI drives bluetooth headphones from the terminal, and `-K` gpg forwarding actually works now in both boxes.
+>
+> • `bhctl` — `hifi` / `mic` / `off` over bluetoothctl + pactl; auto-finds the first paired audio sink, bare invocation prints name/connection/battery/mode
+> • dockbox `-K`: chowns `~/.gnupg` in the container so gpg can write its trustdb (was root-owned, gpg failed)
+> • qemubox + dockbox `-K`: probe gpg-agent liveness and warn instead of forwarding a dead socket
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bhctl`: new standalone CLI for bluetooth headphones. Three commands — `hifi` (A2DP playback, mic dead), `mic` (HFP headset mic, narrowband playback), `off` (disconnect) — plus a bare invocation that reports name/connection/battery/active mode. Finds the headphones itself (first paired device advertising an audio sink; no MAC to configure). Stubbed `test.sh` runs the full matrix with no adapter or daemon; wired into `make test` + CI.
+- `dockbox`: `-K` now chowns `/home/dockbox/.gnupg` during init — Docker auto-creates the gpg mount-parent as root, so gpg could not write its trustdb and signing failed silently.
+- `qemubox` + `dockbox`: `-K` probes `gpg-connect-agent /bye` before forwarding; a dead host agent now prints a clear "not forwarding, run gpgconf --launch gpg-agent" warning instead of mounting an unresponsive socket.
+
+## [v0.3.76] — 20260821
+
+> kronael v0.3.76 — safer rm, sticky ports, fresher toolchain
+>
+> qemubox/dockbox `rm` now needs an explicit target, qemubox boxes keep a stable SSH port, and the dockbox image toolchain is bumped.
+>
+> • `rm` with no argument refuses (no more accidental wipe); `rm -a` (or `'*'`) removes all
+> • qemubox persists each box's SSH port in `$dir/port` — stable across re-entry, auto-reallocates on collision
+> • dockbox image toolchain: nvm 0.40.7, nushell 0.115.0
+> • Internal simplification: dropped an `eval` and a one-arm `case`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox` + `dockbox`: `rm` with no argument now exits non-zero instead of removing every box; an exact name, a `*`/`?` glob, or `-a`/`--all` (or `'*'`) is required. Bare `rm` was a footgun that wiped all VMs.
+- `qemubox`: each box persists its SSH port in `$dir/port` — `start_box` walks up from the name-hash to the first free port and saves it, so re-entry and ssh reuse it and a name-hash collision reallocates instead of failing.
+- `dockbox`: image toolchain bumped — nvm 0.40.4→0.40.7, nushell 0.112.2→0.115.0 (rebuild with `make image`); git-delta/gitleaks already current and node/bun/go/dotnet/uv/claude/codex track latest/LTS at build time.
+- `qemubox`: internal cleanup — `add_env` uses `${!var}` indirect expansion instead of `eval`; dropped a one-arm `case` around `tool_cmd`.
+
+## [v0.3.75] — 20260821
+
+> kronael v0.3.75 — qemubox hardened: kill-switch, untrusted mode, locking, tests
+>
+> qemubox gets a network kill-switch, a credential-free untrusted mode, lifecycle hardening, and a no-VM bash test suite.
+>
+> • `-H` egress kill-switch and `-U`/`--untrusted` (no creds, no network) for poking at code you don't trust
+> • `-K` makes gpg-agent forwarding opt-in (was always on); `-n` rejects path-traversal names
+> • Lifecycle hardened — per-box `flock`, port bind-test, orphan-kill on failed start, teardown that won't nuke a live box
+> • `qemubox status <name>`, base-image checksum, and a bash test suite (qemubox + dockbox) wired into CI
+> • `rm` exact-match+glob in both tools; security-audit skill `/hacker-eval` → `/red-eval`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: confinement flags — `-H` now disables outbound network (was a no-op; the `restrict=on` path is live), `-U`/`--untrusted` injects no host config/credentials and forces network off while still mounting the project (for shells/builds on untrusted code — the agent can't auth without creds), `-K` gates gpg-agent forwarding opt-in (both tools; was unconditional), `-n` rejects `.`/`..`/`base`/empty/slashed names (path traversal).
+- `qemubox`: lifecycle hardening — per-box `flock` around start (no same-name races), wider SSH ports + `/dev/tcp` bind-test with a clear "port busy" error, the daemonized qemu is killed if SSH never comes up, ref-count teardown is conservative on an ssh flake (won't tear down a live box), and re-entry is race-free (derived inside the lock). `prune` no longer aborts when a box dir vanishes mid-loop.
+- `qemubox`: `status <name>` (process/SSH/boot readiness without a shell) and base-image SHA512 verification (`QEMUBOX_BASE_SHA512` or Debian's `SHA512SUMS`).
+- `qemubox` + `dockbox`: `rm` matches exactly, `*`/`?` = glob (was substring). A no-VM bash test suite (`test.sh` each) asserts the security-load-bearing matrix (name guard, mount ro/rw per flag, `-U` injects nothing), plus a drift test guarding the shared model-alias table; both wired into `make test` + CI.
+- Install: security tools renamed `/hacker-eval` → `/red-eval` (table + `eval-all`); `trufflehog` installs from a release binary (not `go install`); the renamed/folded skill dirs added to the install prune list.
+
+## [v0.3.74] — 20260821
+
+> kronael v0.3.74 — qemubox grows up: fast boot, auto-shutdown, honest about what it protects
+>
+> qemubox now prebuilds its image so boxes boot in seconds, auto-shuts-down when done, and stops overselling what it isolates.
+>
+> • Prebuilt base image at install — boxes boot in seconds, not 1-2 min of first-boot `apt-get`
+> • Auto-shutdown when the last session exits (ref-counted, like dockbox); concurrent sessions keep it up
+> • `rm` matches exactly in both qemubox and dockbox — `*`/`?` glob only; no more accidental over-match
+> • Streamed, gutter-prefixed provisioning output (ASCII `>>>` / `>`) so you can tell the script from the guest
+> • Honest READMEs + ELI13: confines host-filesystem blast radius + disposability, NOT a jail for hostile code
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: prebuilt base image — `build-base` (run once by `make install`, non-fatal without KVM/network) bakes the guest apt layer into `provisioned.qcow2` via a throwaway `.build` box; new boxes overlay it and skip first-boot apt.
+- `qemubox`: ref-counted lifecycle — a per-session marker in `/run/qemubox/sess` (dropped right after boot, before provisioning); the VM is torn down when the last session exits, concurrent sessions keep it up. `stop_box` escalates poweroff→SIGTERM→SIGKILL (90s systemd wait) so a wedged VM is killed not orphaned, and `remove_box` never deletes a live VM's disk.
+- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm staking-rewards` also removed `staking-rewards-facade`).
+- `qemubox`: provisioning/guest output streams behind a dim `>` gutter, distinct from the `>>>` script voice; both ASCII, TTY-guarded (plain text when piped).
+- `qemubox` + `dockbox`: rewritten READMEs with an ELI13 section and an honest security-posture statement — the tools confine host-filesystem blast radius and give a disposable env, but inject real agent credentials and leave outbound network on, so they are not a boundary against hostile code. Tracked hardening (network kill-switch, gpg opt-in, `--untrusted` mode, behavioral tests) is in `BUGS.md`.
+
+## [v0.3.73] — 20260820
+
+> kronael v0.3.73 — qemubox actually mounts now
+>
+> qemubox now boots Debian's generic cloud image, whose kernel ships the 9p module the disposable VM needs to mount your project.
+>
+> • Base image is Debian `generic`, not `genericcloud` (whose trimmed kernel omits 9p — the mounts silently failed)
+> • If a guest kernel ever lacks 9p, you get a clear message and the fix, not a cryptic "unknown filesystem type '9p'"
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: default base image `genericcloud` → `generic`. The genericcloud kernel omits `CONFIG_9P_FS`, so every `mount -t 9p` failed with "unknown filesystem type '9p'" regardless of `modprobe`. Added a guest preflight (`grep 9p /proc/filesystems`) that fails with actionable guidance instead of the raw mount error. Existing VMs must be recreated (`qemubox rm <name>`) to rebuild on the new base.
+
+## [v0.3.72] — 20260820
+
+> kronael v0.3.72 — qemubox: a disposable VM that shares only what a run needs
+>
+> New tool: qemubox runs agents in a throwaway QEMU VM that mounts your project and tool config — not your whole home.
+>
+> • Agent config (`~/.claude`/`~/.codex`/`~/.agents`) is copied in — guest edits never touch the host
+> • Only the active project's transcripts + auto-memory persist back; other projects stay private
+> • Your home is never mounted — no `~/.ssh`, cloud creds, or other repos reach the guest
+> • Loads the guest 9p modules and fixes first-boot setup so it runs on stock Debian cloud images
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `qemubox` CLI — a disposable QEMU + 9p VM wrapper mirroring dockbox's agent surface for inspecting untrusted repos.
+- Mount confinement: no blanket `$HOME` mount; single-file config (`.claude.json`, `.gitconfig`, gpg pubrings) staged read-only; `~/.claude`/`~/.codex`/`~/.agents` copied into the guest's own home (host read-only) so guest config edits never reach the host; session data scoped to the active project's slug (`~/.claude/projects/<slug>`, incl. auto-memory) mounted rw so recall persists without exposing other projects.
+- Guest boot fixes: `modprobe 9p 9pnet_virtio` before the first 9p mount (stock Debian cloud images don't auto-load it); `~/.gnupg` created by the sandbox user rather than root (a `sudo`+chmod mismatch aborted `setup_guest_runtime` under `set -e`); staging dir `chmod 700`.
+- Further hardening (gpg-agent forwarded unconditionally, predictable SSH ports, `-H`/network confinement, stuck-VM lifecycle) and the dockbox config-copy mirror are tracked in `BUGS.md`.
 
 ## [v0.3.71] — 20260811
 

@@ -2,30 +2,43 @@
 
 Review queue. Log here, fix when prioritised — not on sight.
 
-## install: `go install ...trufflehog/v3@latest` fails (replace directives)
+## OPEN
 
-`kronael/install/reference.md` § "External tool commands" (Security audit)
-installs `trufflehog` via `go install github.com/trufflesecurity/trufflehog/v3@latest`.
-That fails: its `go.mod` contains `replace` directives, so `go install` refuses
-("must not contain directives that would cause it to be interpreted differently
-than if it were the main module"). Fix: install the release binary like gitleaks
-— `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into
-`~/.local/bin`. Found 2026-07-21 during a full "install all tools" run; worked
-around with the release binary (v3.95.9) so the install completed.
+### root Makefile: per-project `test-%` targets are silent no-ops
 
-## install: prune list omits eye-13yo/hacker-eval/testing renames
+`make test-dockbox` (and every other `test-<project>`) prints "Nothing to be
+done" and runs nothing, so root `make test` reports "all tests passed" while
+executing only `tests/drift_test.sh`. The `test-%:` pattern rule at
+`Makefile:59` matches but its recipe never fires. `make -C <project> test` works
+and is what CI calls, so CI coverage is intact — the gap is local-only.
+Reproduce: `make test-dockbox`, `make -C dockbox test`.
 
-The v0.3.67 renames — `eye-13yo`→`13yo-eval`, `hacker-eval`→`red-eval`,
-`testing` folded into the `software` router — were never added to the
-removed-skills prune list in `kronael/install/`. Reinstalls therefore leave the
-old dirs as orphans in `~/.claude/skills/` (the descriptions keep preloading).
-Per `skills/CLAUDE.md`, a removed/renamed dir MUST be added to that prune list.
-Fix: add the three to the prune list. Found 2026-08-05 during "sync and install
-all" (the three orphans were pruned by hand).
+### dockbox: guest-editable skills without exposing credentials (TODO)
 
-## install: reference.md security tools still cite /hacker-eval (now /red-eval)
+dockbox bind-mounts the whole `~/.claude` / `~/.codex` **rw** into the container
+(`dockbox:12,18`). The intent is that the guest can edit **skills**
+(`~/.claude/skills`, `~/.agents`) — but it does NOT need read/write to the
+**sensitive config** (the API tokens in `~/.claude`/`~/.codex`). Scope: keep the
+skill dirs editable while keeping credentials out of the guest's reach (mount
+them ro / redacted / not at all) — not a full config copy-in (that isn't
+needed). Lower priority — dockbox's README already discloses it is not a
+boundary for hostile code.
 
-`kronael/install/reference.md` security-audit table lists bandit, pip-audit,
-semgrep, govulncheck, trufflehog, gitleaks as serving `/hacker-eval`, but that
-skill was renamed to `red-eval` in v0.3.67. Fix: update the Skills column to
-`/red-eval`. Found 2026-08-05.
+### Deferred — need sign-off
+
+- **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,
+  the tool/model table, `ls`/`rm`/`prune`, and the lifecycle block. A shared
+  sourced file would violate the repo's "tools are independent, no imports"
+  rule (`CLAUDE.md`); `tests/drift_test.sh` is the accepted lightweight guard
+  instead. Revisit only with sign-off.
+
+---
+
+Resolved items are pruned to `.diary/` (20260818–20260821) and `CHANGELOG.md`
+(v0.3.72–v0.3.75): the 2026-08-18 qemubox security audit, the mount-confinement
+redesign (curated staging + config copy-in + per-slug session data), the
+9p/genericcloud boot fixes, the ref-counted-lifecycle audit, the CEO/CTO
+follow-ups, the robustness backlog (`a2d0537..43467d0`, `91f91a8`), and the
+install housekeeping (`ce7c39a`). This pass: `rm` now requires an explicit
+pattern (`'*'` = all) and qemubox persists its SSH port in `$dir/port`
+(`d80c486`); dockbox toolchain bumped (`c04c956`).

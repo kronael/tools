@@ -6,6 +6,8 @@ Command-line utilities and Claude Code configuration.
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
+- [qemubox](qemubox/) — disposable QEMU VM, dockbox-style, for untrusted repo inspection
+- [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — Twitter/X thread archiver
 - [tg-fetch](tg-fetch/) — Telegram channel/group archiver (telethon, TOML config)
@@ -13,7 +15,8 @@ Command-line utilities and Claude Code configuration.
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
 Go tools (`udfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts
-(`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` has its own Makefile.
+(`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` and `qemubox` have
+their own Makefiles.
 
 External tools used by the Claude Code config:
 

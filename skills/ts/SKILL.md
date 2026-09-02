@@ -28,6 +28,7 @@ rules. Below are TypeScript-specific additions and deltas.
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
 ## Types
+- ALWAYS annotate exported function return types; ALWAYS use inference for obvious local functions and callbacks.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
 - ALWAYS discriminated unions for state, NEVER boolean flag combos. ALWAYS exhaust with `default: const _:never = x` in switches.

@@ -5,6 +5,18 @@ mounts whatever you point at. Docker provides working directory scoping and a cl
 environment. The boxed agent has full access to your tools, config, and
 credentials — treat it as yourself in a container.
 
+## ELI13
+
+A container is a lightweight box around a program: it gets its own filesystem
+view and process space but shares your computer's kernel. dockbox puts a coding
+agent (Claude Code or Codex) in one of those boxes, pointed at the folder you
+name, with your real tools and credentials handed in so it can actually work.
+It's fast and convenient, and it keeps builds and mess out of your host workdir
+— but because your live credentials are inside and the box shares your kernel,
+it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
+working in a container. If you want a stronger host-filesystem wall — a full VM
+with a throwaway disk — use [qemubox](../qemubox/) instead.
+
 ## Build
 
 ```bash
@@ -41,7 +53,7 @@ dockbox -P                        # persist host build dirs (no overmount)
 dockbox -T                        # tmpfs backend for ephemeral dirs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # custom container name
-dockbox -x bash .                 # run bash instead
+dockbox bash .                    # run bash instead
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
@@ -57,7 +69,7 @@ requested command there, rather than starting a second one:
 
 ```bash
 dockbox ~/wk/project    # starts the box, runs claude
-dockbox sh              # 2nd terminal: shell inside the same box
+dockbox bash            # 2nd terminal: shell inside the same box
 dockbox codex           # 3rd terminal: codex inside the same box
 ```
 
@@ -87,8 +99,11 @@ Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
 - `~/.claude.json` -> copied at startup (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
-- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent`
 - `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
+
+Opt-in:
+- `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
+  (commit signing; off by default)
 - `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
 - `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)

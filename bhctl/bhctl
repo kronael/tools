@@ -1,0 +1,68 @@
+#!/bin/bash
+# bhctl - bluetooth headphones: hi-fi playback, headset mic, or disconnect.
+
+usage() {
+    cat <<'USAGE'
+bhctl - bluetooth headphones control
+
+usage: bhctl [command]
+
+  (none)   show state: name, connection, battery, active mode
+  hifi     connect and play over A2DP (LDAC/AAC) - best quality, mic dead
+  mic      connect and open the headset mic - HFP, playback drops to narrowband
+  off      disconnect; audio returns to the laptop speakers
+  -h       this help
+
+Bluetooth carries either high-quality playback or the mic, never both, so
+hifi and mic are exclusive. You rarely need either: a call app opening the
+mic flips the profile automatically and flips back when it closes. Use them
+when an app grabs the mic without triggering that, or leaves it stuck.
+
+The headphones are found automatically: the first paired device advertising
+an audio sink.
+
+  bhctl            WH-1000XM5  connected  70%  hifi (LDAC)
+  bhctl mic        during a call the laptop does not switch by itself
+  bhctl off        free them for your phone
+
+If connecting fails with a page timeout, the headset has gone to standby -
+power-cycle it. Powering them on reconnects and picks hifi on its own.
+USAGE
+}
+
+MAC=$(for m in $(bluetoothctl devices Paired | cut -d' ' -f2); do
+          bluetoothctl info "$m" | grep -q 'Audio Sink' && { echo "$m"; break; }
+      done)
+[ -n "$MAC" ] || { echo "no paired headphones"; exit 1; }
+CARD="bluez_card.${MAC//:/_}"
+
+set_profile() {
+    bluetoothctl info "$MAC" | grep -q 'Connected: yes' ||
+        bluetoothctl connect "$MAC" >/dev/null ||
+        { echo "connect failed - power-cycle the headphones"; exit 1; }
+    for _ in $(seq 10); do
+        pactl list short cards | grep -q "$CARD" && break
+        sleep 1
+    done
+    pactl list short cards | grep -q "$CARD" ||
+        { echo "no audio card for $MAC - is wireplumber running?"; exit 1; }
+    pactl set-card-profile "$CARD" "$1"
+}
+
+case "$1" in
+    hifi) set_profile a2dp-sink ;;
+    mic)  set_profile headset-head-unit ;;
+    off)  bluetoothctl disconnect "$MAC" >/dev/null ;;
+    -h|--help|help) usage ;;
+    "")   info=$(bluetoothctl info "$MAC")
+          name=$(sed -n 's/\tName: //p' <<<"$info")
+          if grep -q 'Connected: yes' <<<"$info"; then
+              batt=$(sed -n 's/.*Battery Percentage: .*(\([0-9]*\))/\1/p' <<<"$info")
+              prof=$(pactl list cards | grep -A200 "$CARD" | sed -n 's/.*Active Profile: //p' | head -1)
+              case $prof in a2dp*) mode="hifi (LDAC)" ;; headset*) mode="mic (narrowband)" ;; *) mode=$prof ;; esac
+              echo "$name  connected  ${batt}%  $mode"
+          else
+              echo "$name  off  (laptop speakers)"
+          fi ;;
+    *)    echo "unknown command: $1"; usage; exit 1 ;;
+esac

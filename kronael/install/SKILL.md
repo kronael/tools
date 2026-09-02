@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Copies skills, agents, hook scripts; merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
 ---
 
 # Install Kronael toolkit
@@ -30,8 +30,12 @@ If missing, you're in the wrong directory — stop and ask.
 
 ## Sync protocol
 
-Install is a fast copy only when installed source-owned files are unchanged.
-When local installed edits exist, install becomes a merge workflow.
+Install is ALWAYS a two-way sync, never a one-way deploy. It reconciles
+source ↔ installed in BOTH directions: source-advanced files update the
+install; installed-AHEAD files (local refinements the repo lacks) are surfaced
+and reverse-synced INTO the repo, NEVER silently overwritten — overwriting a
+live-ahead file downgrades the user's own work. A plain copy is only the
+degenerate case where nothing has drifted.
 
 - Manifest path: `~/.claude/kronael-install-manifest.json`. Shape:
   `{ "version": 1, "release": { "version", "gitCommit", "gitDescribe",
@@ -49,16 +53,23 @@ When local installed edits exist, install becomes a merge workflow.
 - Per source-owned path, compare source / installed / manifest sha256, then
   **determine direction automatically**:
   - installed == manifest → source-only update: overwrite silently.
-  - source == manifest → local edit: show diff, ask (sync back / overwrite / skip).
+  - source == manifest → local edit. If installed is a clean SUPERSET of source
+    (additions only, no source lines lost), reverse-sync installed → source to
+    capture the refinement; otherwise show diff and ask (sync back / overwrite /
+    skip). NEVER overwrite a superset silently — that drops the user's work.
   - neither == manifest → conflict: show diff, ask; NEVER overwrite silently.
-  - no manifest entry + content differs → treat as local edit: ask, don't guess.
+  - no manifest entry + content differs → treat as local edit: if installed is a
+    clean superset, reverse-sync installed → source; else show diff and ask.
+    NEVER blind-overwrite an unmanifested file — it can downgrade live-ahead work.
 - ALWAYS write/update the manifest after a successful copy, recording the
   installed path and the source hash just installed, AND refresh the `release`
   marker (version, gitCommit, gitDescribe, installedAt) to the source just
   installed.
 - NEVER treat a backup as permission to discard installed-side edits.
 - NEVER touch installed-only files except the explicit prune list below.
-- **Installed-only skills are NOT auto-captured into source.** An installed skill
+- **Installed-ONLY skills (no source counterpart) are NOT auto-captured** —
+  distinct from the live-ahead SOURCE-OWNED supersets above, which ARE
+  reverse-synced. An installed skill
   with no source counterpart may be an org/local skill (arizuko/dashd/ant/routd,
   local paths, secrets) that must NOT enter public source. Reverse-sync
   (installed → repo) ONLY on the user's explicit ask: flag each installed-only
@@ -121,6 +132,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
      preloading their descriptions). NEVER delete a dir not on that list —
      user-added skills stay.
+   - **Prune legacy nested skill copies**: AFTER backup, follow
+     `reference.md` § "Legacy nested skill copies". These stale copies preload
+     duplicate skill definitions.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
@@ -194,6 +208,9 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 ## Rules
 
 - ALWAYS backup before overwriting
+- ALWAYS treat install as a two-way sync — reverse-sync a clean live-ahead
+  superset (source-owned file, additions only) into the repo; NEVER overwrite a
+  live-ahead file with older source, it downgrades the user's work
 - NEVER delete files in `~/.claude/` not in source (org overlays, user customizations live there)
 - NEVER touch `~/.claude/settings.local.json`, `~/.claude/LOCAL.md`, `~/.claude/CLAUDE.local.md`
 - ALWAYS replace skills/hooks with current versions on name conflict only after drift preflight clears installed-side edits

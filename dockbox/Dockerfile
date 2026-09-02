@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   xz-utils make \
   less git procps sudo fzf zsh man-db unzip zip gh \
   iptables ipset iproute2 dnsutils aggregate \
-  jq yq bc nano vim docker.io clang libclang-dev libudev-dev libssl-dev libpq-dev pkg-config protobuf-compiler \
+  qemu-system-x86 qemu-utils cloud-image-utils openssh-client \
+  jq yq bc nano vim docker.io clang mold libclang-dev libudev-dev libssl-dev libpq-dev postgresql-client pkg-config protobuf-compiler \
   bubblewrap socat gosu libicu78 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -55,7 +56,7 @@ WORKDIR /workspace
 # Symlink the default node's binaries to /usr/local/bin so they're on PATH
 # without sourcing nvm.sh in every RUN. Runtime users can still `nvm use` per
 # project (the wrapper sources nvm.sh, so .nvmrc / nvm install <ver> works).
-RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash && \
+RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash && \
     unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
     nvm install --lts && nvm alias default 'lts/*' && \
     NODE_BIN="$NVM_DIR/versions/node/$(nvm version default)/bin" && \
@@ -105,7 +106,7 @@ RUN curl -sSL https://git.io/g-install | sh -s -- -y && \
 COPY udfix/ /tmp/udfix/
 RUN make -C /tmp/udfix install PREFIX=/usr/local/bin && rm -rf /tmp/udfix
 
-ARG NU_VERSION=0.112.2
+ARG NU_VERSION=0.115.0
 RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
   | tar xz --strip-components=1 -C /opt/dev-tools/cargo/bin

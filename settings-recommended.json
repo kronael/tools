@@ -29,7 +29,8 @@
       "Bash(gh pr merge*)",
       "Bash(gh pr review --approve*)",
       "Bash(gh release create*)",
-      "Bash(gh repo create*)"
+      "Bash(gh repo create*)",
+      "SendFeedback(*)"
     ],
     "defaultMode": "default"
   },

@@ -28,6 +28,28 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ALWAYS present each finding to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
+## Comment body — distilled
+
+ALWAYS write the shortest comment the author can act on: one line naming the
+defect, one optional line giving the fix. Cap at 2 lines / ~200 chars.
+
+- Lead with the defect — "Overflows at `u64::MAX`", NOT "I noticed this
+  arithmetic could potentially..."
+- NEVER restate the code, the diff, or what the function does — the reader is
+  looking at it
+- NEVER hedge ("might", "consider", "perhaps", "you may want to"). State the
+  failure or drop the finding
+- Fix line ONLY when non-obvious, written as code or an imperative — never a
+  paragraph
+- Severity is one leading token when it matters: `blocker:` / `nit:`
+- Rationale, repro steps, and alternatives belong in the chat report, NEVER in
+  the comment
+
+```
+🤖 blocker: charges `sold_lamports`, which is the RETAINED piece — liquidates the wrong account.
+Fix: use the sale leg's lamports here.
+```
+
 ## Batch inline post
 
 One API call per review, all comments in `comments[]`. Omit `event` — review stays PENDING for user to submit.
@@ -62,6 +84,7 @@ gh pr comment <PR> --body "🤖 <finding with file:line reference>"
 ## Rules
 
 - ALWAYS prefix comment body with `"🤖 "`
+- ALWAYS distill the body to the shape in § Comment body — a full-prose finding pasted into a PR comment is a defect
 - ALWAYS leave the review PENDING — NEVER include `event` unless user asks to submit
 - ALWAYS batch inline comments into one POST — NEVER loop individual calls
 - ALWAYS fall back to a general PR comment with explicit `file:line` if a line is outside the diff
