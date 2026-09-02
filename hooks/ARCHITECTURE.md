@@ -27,7 +27,6 @@ first runs through `codex_hook.py`.
 
 `state.py` — per-session throttle stamp paths, the state root, and
 `hook_event(data)`, the one reader of the event key across all three spellings.
-`toolchain.py` — project-type detection for the test/build command.
 
 Every hook imports these by absolute path from `~/.claude/hooks/lib/` at import
 time, so an install that omits the directory tracebacks on every prompt.

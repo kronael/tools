@@ -23,7 +23,7 @@ ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
 - `agents/` — bundle of agents
 - `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py, memory_nudge.py)
-- `hooks/lib/` — shared modules (state.py, toolchain.py); the hooks import them at runtime, so a copy without it tracebacks on every prompt
+- `hooks/lib/` — shared module (state.py); the hooks import it at runtime, so a copy without it tracebacks on every prompt
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
@@ -128,7 +128,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      Kronael block; otherwise append it. NEVER overwrite content outside the
      markers. This makes Codex load Claude guidance in addition to AGENTS
      guidance and applies the selected terse response policy.
-   - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
+   - **Prune renamed and removed hooks**: delete `~/.claude/hooks/nudge.py` and
+     `~/.claude/hooks/extnudge.py` (renamed to `prompt_nudge.py` /
+     `pretool_nudge.py`), and `redirect.py`, `context.py`, `learn.py`,
+     `test_hooks.py`, `lib/toolchain.py` (removed as orphan hooks — registered
+     in no settings file). Backup first per step 1. An install keeps files the
+     source has dropped, so an unpruned orphan reads as live-ahead work on the
+     NEXT sync and gets vendored back in; that is what this list prevents.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep

@@ -57,40 +57,6 @@ install housekeeping (`ce7c39a`). This pass: `rm` now requires an explicit
 pattern (`'*'` = all) and qemubox persists its SSH port in `$dir/port`
 (`d80c486`); dockbox toolchain bumped (`c04c956`).
 
-### [proposal] redirect.py rewrites commands on a bare substring match
-
-`hooks/redirect.py:56-67` searches `\be2e\b`, `\bintegration\b`, `\bsmoke\b`,
-`\bplaywright\b`, `\bcypress\b` anywhere in a Bash command and replaces the
-whole command via `updatedInput`, with `permissionDecision: "allow"` so the
-substitution skips the prompt. Executed in a uv project: `cat
-docs/integration.md` becomes `uv run pytest tests/`; `grep -rn smoke .` becomes
-`uv run pytest --smoke`; `pytest tests/test_x.py -k boom -x` becomes `uv run
-pytest`, dropping every argument so a targeted test runs the whole suite.
-`hooks/lib/toolchain.py:93` compounds it: `.PHONY:` plus the word "test"
-anywhere in a Makefile — a comment counts — returns `make test`. The documented
-escape hatch (`redirect.py:33`, prefix `!`) does not work: `bash -c '!make
-test'` is `bash: !make: command not found`.
-
-Currently inert: registered in no settings file. It is still copied to
-`~/.claude/hooks/` by the install, and `specs/0-committer.md` proposes building
-on it. Redesign, needs sign-off: anchor the detectors to the command head,
-preserve arguments, fix or drop the escape hatch — or drop the file.
-
-### [proposal] learn.py has written 1807 reports that all say "unknown"
-
-`hooks/learn.py:21` reads `data.get("hook_event", "unknown")`, but Claude Code
-sends `hook_event_name`, so every report is named `*-unknown.md`:
-`~/.claude/flow-reports` holds 1807 files and 1807 of them end in `unknown.md`
-(7.0 MB), never pruned. `:22` names files at one-second resolution, so two
-invocations in the same second overwrite each other — reproduced. `:17` runs
-`os.makedirs` at import with no guard, so an unwritable HOME is a traceback
-before the `except OSError` at `:58` can run.
-
-The hook is registered in no settings file, and the body it writes is a
-constant template that records nothing about the session beyond timestamp,
-session id and cwd. Redesign, needs sign-off: wire it and fix the key, or
-remove it.
-
 ### [proposal] the CLAUDE_EVAL guard has no producer
 
 `hooks/stop.py:120` suppresses the commit/diary block when `CLAUDE_EVAL` is

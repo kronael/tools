@@ -8,7 +8,6 @@ the nudge stamps on every hook:
 
 ```bash
 uv run --with pytest --with pyyaml python -m pytest hooks -q
-python3 hooks/test_hooks.py
 ```
 
 ## 1. JSON Error Handling (should NOT crash)
