@@ -3,7 +3,7 @@
 
 Tests JSON parse guards, null/type guards, word-boundary matching,
 keyword routing, and negation handling for the hooks that ship with
-this template: nudge.py, local.py, learn.py, stop.py.
+this template: prompt_nudge.py, local.py, learn.py, stop.py.
 """
 import json
 import subprocess
@@ -71,9 +71,9 @@ class HooksTestSuite:
 
         print("\n[JSON Parse Guards]")
         print("-" * 70)
-        self.test("nudge.py - empty input", "nudge.py", "")
-        self.test("nudge.py - bad JSON", "nudge.py", "{incomplete")
-        self.test("nudge.py - array input", "nudge.py", "[]")
+        self.test("prompt_nudge.py - empty input", "prompt_nudge.py", "")
+        self.test("prompt_nudge.py - bad JSON", "prompt_nudge.py", "{incomplete")
+        self.test("prompt_nudge.py - array input", "prompt_nudge.py", "[]")
         self.test("local.py - empty input", "local.py", "")
         self.test("local.py - bad JSON", "local.py", "{x:")
         self.test("local.py - array input", "local.py", "[]")
@@ -84,10 +84,15 @@ class HooksTestSuite:
 
         print("\n[Null & Type Guards]")
         print("-" * 70)
-        self.test("nudge.py - null prompt", "nudge.py", json.dumps({"prompt": None}))
         self.test(
-            "nudge.py - dict prompt",
-            "nudge.py",
+            "prompt_nudge.py - null prompt",
+            "prompt_nudge.py",
+            json.dumps({"prompt": None}),
+            expect_output="Output style",
+        )
+        self.test(
+            "prompt_nudge.py - dict prompt",
+            "prompt_nudge.py",
             json.dumps({"prompt": {"bad": "type"}}),
         )
         self.test(
@@ -111,41 +116,41 @@ class HooksTestSuite:
             expect_output=None,
         )
 
-        print("\n[nudge.py Keyword Routing]")
+        print("\n[prompt_nudge.py Keyword Routing]")
         print("-" * 70)
         self.test(
-            "nudge.py - 'improve code' → @improve",
-            "nudge.py",
+            "prompt_nudge.py - 'improve code' → @improve",
+            "prompt_nudge.py",
             json.dumps({"prompt": "improve code"}),
             expect_output="@improve",
         )
         self.test(
-            "nudge.py - 'visual' → @visual",
-            "nudge.py",
+            "prompt_nudge.py - 'visual' → @visual",
+            "prompt_nudge.py",
             json.dumps({"prompt": "visual"}),
             expect_output="@visual",
         )
         self.test(
-            "nudge.py - 'ship' → /ship",
-            "nudge.py",
+            "prompt_nudge.py - 'ship' → /ship",
+            "prompt_nudge.py",
             json.dumps({"prompt": "ship it"}),
             expect_output="/ship",
         )
         self.test(
-            "nudge.py - 'diary' → /diary",
-            "nudge.py",
+            "prompt_nudge.py - 'diary' → /diary",
+            "prompt_nudge.py",
             json.dumps({"prompt": "diary"}),
             expect_output="/diary",
         )
         self.test(
-            "nudge.py - 'commit' → Commit rules",
-            "nudge.py",
+            "prompt_nudge.py - 'commit' → Commit rules",
+            "prompt_nudge.py",
             json.dumps({"prompt": "commit changes"}),
             expect_output="Commit rules",
         )
         self.test(
-            "nudge.py - 'readme' → @readme",
-            "nudge.py",
+            "prompt_nudge.py - 'readme' → @readme",
+            "prompt_nudge.py",
             json.dumps({"prompt": "write readme"}),
             expect_output="@readme",
         )
