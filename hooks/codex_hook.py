@@ -22,15 +22,18 @@ TARGETS = {
 }
 CONTEXT_EVENTS = {'UserPromptSubmit', 'PreToolUse', 'PostToolUse'}
 NUDGE_TARGETS = {'prompt_nudge', 'pretool_nudge', 'post_tool_nudge', 'stop'}
-CODEX_SKILL_NAMES_TEXT = (
-    'bugs ceo-eval cli codex commit create create-eval credit cto-eval '
-    'data data-reports diagrams diary dispatch distill explore eye-13yo '
-    'fable fin fix gh-comment go haiku hacker-eval humanize htmx improve '
-    'learn mk merge oracle opus ops pr-draft py readme recall-memories '
-    'refine release review rs scavenge service sh ship sonnet software '
-    'sql specs testing trader ts tsx tweet visual wisdom writing'
-)
-CODEX_SKILL_NAMES = frozenset(CODEX_SKILL_NAMES_TEXT.split())
+SKILLS_DIR = Path.home() / '.claude' / 'skills'
+
+
+def codex_skill_names() -> frozenset[str]:
+    """Read from disk, never typed — a typed list drifts out of the skills it
+    names, and an unlisted skill reaches Codex as an unrewritten `/name`."""
+    try:
+        return frozenset(
+            d.name for d in SKILLS_DIR.iterdir() if (d / 'SKILL.md').is_file()
+        )
+    except OSError:
+        return frozenset()
 SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z][a-z0-9-]*)')
 
 
@@ -72,6 +75,9 @@ def normalize(data: object, event: str) -> dict[str, Any]:
     normalized['cwd'] = cwd
     normalized['session_id'] = session_id
     normalized['hook_event'] = event
+    # In the payload, not the environment: an env var is inherited, so a Claude
+    # Code session started from inside Codex would read it and believe it.
+    normalized['harness'] = 'codex'
     if prompt:
         normalized['prompt'] = prompt
     if tool_name:
@@ -90,15 +96,12 @@ def run_target(target: str, payload: dict[str, Any]) -> int:
     if not isinstance(cwd, str) or not cwd:
         cwd = os.getcwd()
 
-    env = os.environ.copy()
-    env['KRONAEL_IN_CODEX'] = '1'
     result = subprocess.run(
         command,
         input=json.dumps(payload),
         text=True,
         capture_output=True,
         cwd=cwd,
-        env=env,
         timeout=30,
         check=False,
     )
@@ -111,11 +114,13 @@ def run_target(target: str, payload: dict[str, Any]) -> int:
 
 
 def rewrite_skill_refs(text: str) -> str:
+    names = codex_skill_names()
+
     def replace(match: re.Match[str]) -> str:
         name = match.group('name')
         if name == 'codex':
             return 'the current Codex session'
-        if name in CODEX_SKILL_NAMES:
+        if name in names:
             return f'@{name}'
         return match.group(0)
 

@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 import json
-import os
 import re
 import sys
+
+STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
+- Lead with the answer. No preamble, no recap of what the diff already shows.
+- ~17 lines, hard max 20. No tables or headers in a normal reply.
+- Plain words, active voice, one instruction per sentence (ASD-STE100).
+- Last line carries the next action, or the bottom line.
+- Before sending: read ONLY your first and last line. If those two do not
+  say what to DO and what HAPPENED, the middle is padding."""
 
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
@@ -65,7 +72,6 @@ AGENT_KEYWORDS = {
     'wisdom': '/wisdom',
     'writing': '/writing',
     'readme': '@readme',
-    'learn': '@learn',
     'improve': '@improve',
     'visual': '@visual',
     'distill': '@distill',
@@ -108,13 +114,11 @@ META_PATTERNS = [
 ]
 
 
-def in_codex():
-    return os.environ.get('KRONAEL_IN_CODEX') == '1'
-
-
-def explicit_route(prompt):
+# Claude Code spellings only. codex_hook.py rewrites `/name` to Codex's
+# `@name`, and a spelling written here instead never reaches that rewriter.
+def explicit_route(prompt, harness=None):
     lower = prompt.lower()
-    if not in_codex():
+    if harness != 'codex':
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
                 return '/codex'
@@ -144,14 +148,17 @@ def main():
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        print(json.dumps({'ok': True, 'systemMessage': STYLE_RULES}))
         sys.exit(0)
 
-    parts = []
+    # Every turn. The style is in the system prompt and dilutes there; this is
+    # the copy that arrives next to the user's message.
+    parts = [STYLE_RULES]
 
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
-    matched = explicit_route(prompt)
+    matched = explicit_route(prompt, data.get('harness'))
 
     if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
         parts.append(COMMIT_RULES)

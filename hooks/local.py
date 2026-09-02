@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
+import importlib.util
 import json
 import os
 import re
 import sys
+
+spec = importlib.util.spec_from_file_location(
+    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
+)
+hook_state = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(hook_state)
+session_state = hook_state.session_state
 
 RULES = """Development reminders:
 - ALWAYS use make for build/lint/test/clean
@@ -30,11 +38,12 @@ def main():
     session_id = data.get('session_id') or 'default'
     cwd = data.get('cwd') or '.'
 
-    state_dir = os.path.join(cwd, '.claude', 'tmp')
-    state_file = os.path.join(state_dir, f'local-{session_id}')
+    # Session-keyed, not cwd-keyed: cd'ing to another repo mid-session used to
+    # reset this and re-inject LOCAL.md as if the session had just started.
+    state_file = session_state('local', session_id)
 
     parts = []
-    first_prompt = not os.path.isfile(state_file)
+    first_prompt = state_file is not None and not os.path.isfile(state_file)
     is_compaction = event == 'PreCompact'
 
     if first_prompt or is_compaction:
@@ -53,7 +62,6 @@ def main():
 
         if first_prompt:
             try:
-                os.makedirs(state_dir, exist_ok=True)
                 open(state_file, 'w').close()
             except OSError:
                 pass
