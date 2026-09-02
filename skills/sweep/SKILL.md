@@ -12,10 +12,6 @@ and 3 run only when the owner has asked for changes** — a sweep that fixes wha
 it finds violates the Bug Triage Protocol, which exists so the owner
 prioritises rather than the sweep.
 
-This skill absorbed `sweep-fix-verify` on 2026-08-20. Two skills split on
-whether fixing followed made the same phase-1 discipline get written twice and
-obeyed once.
-
 ## Phase 1 — Sweep (read-only, parallel OK)
 
 Spawn read-only subs (Sonnet/Explore) to FIND issues. Group by concern; each

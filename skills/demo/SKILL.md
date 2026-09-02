@@ -19,7 +19,7 @@ platforms accept.
 
 The strongest demos show *how* each result is produced: echo a shell
 prompt and the command being typed, then run it, with a one-line `#`
-comment before each step saying why. A viewer should be able to reproduce
+comment before each step saying why. A viewer must be able to reproduce
 the whole thing from the recording alone. Pattern (bash driver):
 
 ```bash
@@ -217,12 +217,7 @@ to a flat title-card in a different language (a plain dark background +
 sans-serif wordmark) just because the colors match. However well the bg color
 is matched, a flat card is a THIRD visual world the viewer has never seen
 before; it reads as leaving the story to show a poster, undoing the very
-immersion the theme built. (Caught late: an earlier germinal cut shipped
-exactly this — cut-paper farmer/flytrap opener, real terminal proof, then a
-crossfade to a plain `#0f130f` + sans-serif "schema" wordmark card. The fix
-was NOT a better crossfade; it was building the closer as a THIRD paper beat —
-same rig, same asset pipeline, a payoff sprout growing into cut-paper letters —
-so the short never leaves its own world.)
+immersion the theme built.
 
 - **Keep the whole short to the fewest deliberate worlds.** Two is usually
   right: the themed medium (carries the joke/story) and one real proof (a raw
