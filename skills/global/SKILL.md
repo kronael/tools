@@ -209,6 +209,11 @@ baseline silently fail to apply.
   - Clean after shipping: delete completed artifacts
 - .diary/ directory for shipping log (date-named: YYYYMMDD.md)
   - Document important steps, decisions, milestones
+  - Named companion `YYYYMMDD-<name>.md` beside the daily log for a standalone
+    durable artifact — a report, an audit, a design analysis, a postmortem —
+    that a future reader opens on its own; the daily log stays the default
+    and the running narrative, and ALWAYS references the companion so it
+    remains the index into the day
   - Generally public (checked into git) unless the project's CLAUDE.md marks it local-only
   - ALWAYS use `/diary` skill to write diary entries after significant work
 - .claude/ for long-lived knowledge beyond CLAUDE.md

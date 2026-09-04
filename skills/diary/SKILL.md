@@ -1,6 +1,6 @@
 ---
 name: diary
-description: "Write diary entries to .diary/YYYYMMDD.md (worktree-aware: tracked diary stays in the current worktree, gitignored diary goes to the main tree). NOT for searching entries (use recall-memories)."
+description: "Write diary entries to .diary/YYYYMMDD.md (worktree-aware: tracked diary stays in the current worktree, gitignored diary goes to the main tree). Standalone reports, audits, and analyses go beside the daily log as .diary/YYYYMMDD-<name>.md. NOT for searching entries (use recall-memories)."
 when_to_use: "after a commit, bug fix, or key decision, log this decision"
 user-invocable: true
 ---
@@ -8,6 +8,8 @@ user-invocable: true
 # Diary
 
 File: `.diary/YYYYMMDD.md`. Append to today's entry; create if missing.
+A standalone document goes beside it as `.diary/YYYYMMDD-<name>.md` — see
+"Named companions" below.
 
 ## Where to write (worktree-aware)
 
@@ -61,6 +63,24 @@ Update the summary on every diary write.
 - ALWAYS route preferences and recurring patterns to MEMORY.md, report to user verbatim
 - ALWAYS review MEMORY.md for stale entries when writing diary
 - ALWAYS apply the `writing` skill's copy rules — no preamble, plain verbs
+
+## Named companions
+
+`.diary/YYYYMMDD-<name>.md` — same directory, same tracked/ignored status, same
+date ordering as the daily log. Use it for a standalone durable artifact that
+does not belong inline in the day's running log: a report, an audit, a design
+analysis, a postmortem — a self-contained document a future reader will want
+to open on its own. The daily log `YYYYMMDD.md` stays the default and the place
+for the running narrative.
+
+- `<name>`: short, kebab-case, says what the document is
+  (`20260904-refactor-neutrality.md`)
+- ALWAYS reference a companion from that day's `YYYYMMDD.md` — the daily log
+  remains the index into the day
+- The `## HH:MM` / 250-char rules above scope the daily log; a companion is
+  free-form prose in its own structure
+- "Where to write" above applies unchanged — resolve the tree with the dated
+  file, write the companion beside it
 
 ## When to write
 
