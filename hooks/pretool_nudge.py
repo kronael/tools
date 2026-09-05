@@ -26,6 +26,9 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
     (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
+    # Any recursive removal, not only -rf: -r, -R and --recursive delete
+    # trees just as thoroughly, and the deny rules ban all three.
+    (r'(?<!\S)rm\s+(?:-[a-zA-Z]*[rR]|--recursive)', 'recursive rm'),
 )
 
 EXT_SKILLS = {
@@ -163,6 +166,14 @@ def main() -> None:
         return
     result = process(data)
     if not result:
+        return
+
+    # A block is a ban and must fire on EVERY unsafe command. The dedup cache
+    # below keys on (skill, path); a Bash call carries neither, so all of them
+    # share one key and the second unsafe command in a session goes through.
+    if result.get('decision') == 'block':
+        with contextlib.suppress(OSError, ValueError):
+            print(json.dumps(result))
         return
 
     path = extract_path(data)

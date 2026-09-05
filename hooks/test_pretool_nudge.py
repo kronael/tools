@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import io
+import json
+
 import pytest
 from pretool_nudge import extract_path
+from pretool_nudge import main
 from pretool_nudge import process
 from pretool_nudge import skill_for
 
@@ -171,3 +175,33 @@ def test_process_blocks_recursive_codex_inside_codex() -> None:
     assert result is not None
     assert result['decision'] == 'block'
     assert 'recursive codex' in result['reason']
+
+
+@pytest.mark.parametrize('command', ['rm -r build', 'rm -R build', 'rm --recursive build', 'sudo rm -r /srv/x', 'echo done && rm -r tmp'])
+def test_process_blocks_recursive_removal_without_force(command: str) -> None:
+    """Recursive removal deletes a tree with or without -f, so -r alone blocks."""
+    result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
+    assert result is not None, command
+    assert result['decision'] == 'block'
+
+
+@pytest.mark.parametrize('command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version'])
+def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> None:
+    """A block is a ban, not a nudge: the dedup cache must never swallow it.
+
+    A Bash call carries no file path, so every one shares a single dedup key.
+    Routing blocks through that cache disarmed the ban after the first hit.
+    """
+    monkeypatch.setenv('HOME', str(tmp_path))
+    payload = json.dumps({
+        'tool_name': 'Bash', 'session_id': 'same-session',
+        'tool_input': {'command': 'rm -r build'},
+    })
+    for attempt in range(3):
+        monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+        main()
+        assert '"block"' in capsys.readouterr().out, f'attempt {attempt + 1} not blocked'
