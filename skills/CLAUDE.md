@@ -23,7 +23,7 @@ repo CLAUDE.md links to this file.
 - `SKILL.md` — dispatch table: trigger keywords → data file. NEVER prose
   links alone. `description` = one-line summary + `NOT for…` clause — no
   keyword dump, no workflow text. `when_to_use` = trimmed keyword list,
-  at least one anchor per folded mode, no synonyms — `/resolve` scans both
+  at least one anchor per folded mode, no synonyms — `/solve` scans both
   fields.
 - Light content lives flat: `<mode>.md`.
 - Heavy content nests: `<mode>/<slug>.md` + `<mode>/<slug>/` keeping the

@@ -1,5 +1,5 @@
 ---
-name: resolve
+name: solve
 description: >
   Universal entry point — invoke BEFORE any domain skill. Loads diary/facts
   context first, then picks the best-matching skill instead of jumping at the

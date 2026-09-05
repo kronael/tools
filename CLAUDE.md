@@ -87,7 +87,7 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Skills** (`skills/<name>/SKILL.md`) auto-activate by file context
   (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
   `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
-  explicit dispatch (`/resolve`) is the intended path. Index: `skills/README.md`.
+  explicit dispatch (`/solve`) is the intended path. Index: `skills/README.md`.
 - **Agents** (`agents/*.md`) — task workers, mostly invoked via
   slash-command wrappers.
 - **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is

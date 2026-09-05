@@ -13,7 +13,7 @@ does not relax it.
 
 ## Routing
 
-- ALWAYS `/resolve` before any domain skill: it classifies the request,
+- ALWAYS `/solve` before any domain skill: it classifies the request,
   recalls context, scans every skill's `description` + `when_to_use`, and
   dispatches. Skills are NOT reliably auto-triggered — explicit dispatch is
   the path.

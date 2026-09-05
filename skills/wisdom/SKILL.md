@@ -49,7 +49,7 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`).
 - ALWAYS make a router instead of N sibling skills when they share an audience and are rarely invoked — N preloaded descriptions collapse to 1.
 - Router body = explicit dispatch table mapping trigger keywords → data file; NEVER prose links alone.
-- Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/resolve` routes on them.
+- Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/solve` routes on them.
 - Light content lives flat (`<mode>.md`); heavy ported trees keep their subtree intact at `<mode>/<slug>/`.
 - NEVER name a data file `SKILL.md` — that is what makes it preload; warned by lint: skill-router.
 - Maintenance procedure: `skills/CLAUDE.md`.
