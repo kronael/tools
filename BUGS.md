@@ -83,3 +83,36 @@ It is an external skill vendored intact (it ships its own LICENSE and
 Attribution section) and has no sibling files. Splitting the pattern catalogs
 (lines 109-548) into on-demand siblings is a restructuring of imported content,
 not a one-line fix.
+
+### hooks/prompt_nudge.py: three keyword routes name skills that do not exist
+
+`AGENT_KEYWORDS` sends `novice`/`ux`/`usability`/`walkthrough` to `/eye-13yo`,
+`pentest`/`security` to `/hacker-eval`, and `test`/`testing` to `/testing`.
+No skill or agent carries those names (`skills/13yo-eval`, `skills/red-eval`,
+and `skills/software/testing.md` are the nearest). The nudge tells Claude to
+invoke a command that fails, and the real skill stays unreached. Reproduce:
+`grep -oE "'/[a-z0-9-]+'" hooks/prompt_nudge.py | tr -d "'" | while read t;
+do [ -d skills/${t#/} ] || echo $t; done`.
+
+### skills/README.md still names the router `resolve`
+
+The workflow diagram and the orientation paragraph say `resolve`; the skill
+directory is `skills/solve/`. A reader following the README looks for a skill
+that is not there. Found 2026-09-05 while editing `solve`.
+
+### skills/software: frontmatter is 1,697 chars, past the 1,536 listing cap
+
+Claude Code lists `description - when_to_use` and cuts it at 1,536 chars
+(`skillListingMaxDescChars` default; the binary's `BTo=1536`). The last ~160
+chars of `software`'s `when_to_use` — the V8/js-perf and later keywords —
+never reach the model. `make skills-frontmatter` now warns (`skill-budget`).
+Fix is a trim of `when_to_use`, one anchor per folded mode.
+
+### qemubox: KVM check tests existence, not access
+
+`qemubox:343` passes `-enable-kvm` when `/dev/kvm` exists. On a host where the
+device is `root:kvm 0660` and the user is not in `kvm`, QEMU exits with
+"Could not access KVM kernel module: Permission denied" instead of the
+documented software-emulation fallback; `make install` prints its warning and
+`build-base` is skipped. Reproduce: `make -C qemubox install` as a user outside
+the `kvm` group (2026-09-05). Fix: test `[ -r /dev/kvm ] && [ -w /dev/kvm ]`.
