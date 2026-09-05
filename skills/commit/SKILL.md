@@ -11,6 +11,7 @@ user-invocable: true
 
 - `/commit`: ALWAYS proceed
 - Auto (hook): throttled ~once per 10 min — split accumulated work into coherent commits, don't dump it all in one.
+- Otherwise: commit only when the user asks. `/refine`, `/ship`, `/release` commit by design — invoking them IS the ask.
 
 ## Splitting
 
@@ -37,6 +38,7 @@ Format shapes:
 - `build: Change what`
 - `ci: Change what`
 - `revert: <subject>`
+- `merge: <subject>`
 - `release: vX.Y.Z`
 
 Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. Test: "If applied, this commit will: _____"

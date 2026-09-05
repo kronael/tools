@@ -21,6 +21,10 @@ tool, then adjust. Claude typically makes 3-5 changes blind before rendering.
 6. **Adjust** ONE thing
 7. **Repeat** from step 2
 
+Any design recommendation — UX, visual, typography, layout, colour — follows
+the `design-eval` skill's sourcing rule: a named published source + URL, or
+labeled as your own opinion.
+
 ## Critical SVG Gotchas
 
 NEVER use `<text>` elements - unreliable across contexts, especially favicons.

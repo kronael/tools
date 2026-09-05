@@ -54,6 +54,11 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - NEVER name a data file `SKILL.md` — that is what makes it preload; warned by lint: skill-router.
 - Maintenance procedure: `skills/CLAUDE.md`.
 
+## Installed copy vs source
+
+- `~/.claude/` is an install of the assistants repos (paths in `LOCAL.md`) —
+  ALWAYS sync a `~/.claude/` change to them; NEVER let install and source drift.
+
 ## CLAUDE.md (project)
 
 - Project-specific only — skills carry general knowledge.

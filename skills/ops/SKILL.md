@@ -14,6 +14,8 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 - Layer order: base+system deps -> lang deps (Cargo.toml, requirements.txt) -> fetch deps -> copy source -> build
 - Cross-compilation: volume mount source, NEVER copy
 - ALWAYS set memory limits (2GB typical) and build timeout (30m)
+- Multi-stage layers: deps in base, compile in build, runtime only in final. NEVER copy source into the base layer — it breaks the cache on every change
+- `sudo` is available: ALWAYS `sudo docker …` for docker commands you run ad hoc via the Bash tool. NEVER `sudo` inside an authored or committed script — parameterize privilege (`sh` skill)
 
 ## Container hardening
 
@@ -35,10 +37,16 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 - Use EWMA (not sliding windows) for window calculations
 - NEVER manually .close() async context managers
 
+## Process
+
+- NEVER `killall` — ALWAYS kill by PID
+- PID files for dev only
+- ALWAYS handle graceful shutdown on SIGINT/SIGTERM
+
 ## CI/CD
 
-- ALWAYS explicit make targets: `make prepare`, `make image`, `make test`
-- NEVER run release builds locally, mix debug/release artifacts
+- ALWAYS `make` for build/lint/test/clean — explicit targets: `make prepare`, `make image`, `make test`
+- ALWAYS debug builds locally (faster, better errors); NEVER run release builds locally, NEVER mix debug/release artifacts
 
 ## Runbooks (cold — read on demand)
 

@@ -2,9 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> Development conventions (response style, boring-code philosophy, commit/test
-> rules) live in the global wisdom file installed at `~/.claude/CLAUDE.md`
-> (sourced from `skills/global/SKILL.md`). This file is **repo-specific only**.
+> Skill routing, the map of where things live, and the safety NEVER list live
+> in the global wisdom file installed at `~/.claude/CLAUDE.md` (sourced from
+> `skills/global/SKILL.md`); each rule lives in the skill that owns it
+> (`commit`, `software`, `ops`, …). This file is **repo-specific only**.
 > Keep it under 200 lines.
 
 ## What this repo is

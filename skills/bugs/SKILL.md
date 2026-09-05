@@ -1,9 +1,9 @@
 ---
 name: bugs
 description: >
-  The `BUGS.md` open-issues queue — entry format, lifecycle, pruning to diary.
-  NOT for the record-don't-fix policy (that's CLAUDE.md Bug Triage Protocol), NOT
-  for resolved-bug history (use /diary), NOT for feature backlog (use TODO.md/specs).
+  The `BUGS.md` open-issues queue — the record-don't-fix policy, entry format,
+  lifecycle, pruning to diary. NOT for resolved-bug history (use /diary), NOT
+  for feature backlog (use TODO.md/specs).
 when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
@@ -16,9 +16,12 @@ features, refactors).
 (Filename is uppercase `BUGS.md`. Some projects may use lowercase `bugs.md` —
 match whatever the project already has.)
 
-**Policy is in CLAUDE.md "Bug Triage Protocol"** — record during audits, never
-fix on discovery, let the user prioritise. This skill is the file mechanics
-only; do not restate the policy.
+## Bug Triage Protocol
+
+- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
+- NEVER fix bugs immediately just because you found them during a general check
+- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
+- `BUGS.md` is the review queue — log it, move on, let the user prioritise
 
 ## When NOT to record
 

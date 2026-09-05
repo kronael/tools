@@ -19,7 +19,7 @@ when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data s
 
 ## State Management
 
-- state.json for recovery: resume from last_processed + 1
+- state.json for recovery: resume from last_processed + 1. NEVER re-fetch existing data — ALWAYS continue from the last state
 - Save state every 10,000 items, keep portable (JSON)
 - ALWAYS make pipeline writes idempotent (UPSERT by primary key, not INSERT) — retries must not duplicate
 - ALWAYS version raw payloads (store source schema_version with data); NEVER drop unknown fields silently — keep in raw blob
@@ -36,7 +36,7 @@ when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data s
 
 - restart_on_failure decorator for crash recovery
 - Retry with exponential backoff, NEVER trust external APIs
-- Cache-first: local cache before RPC fallback
+- Cache-first: local cache before RPC fallback. NEVER hit an external API per request — cache everything
 - LeakyBucket for expensive APIs (ChatGPT, etc.)
 
 ## Backfill

@@ -1,6 +1,6 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase, then optionally fix it. Record-only by default (CLAUDE.md Bug Triage Protocol) — filing each real instance in BUGS.md; the Fix and Verify phases run only when the owner asks for them. NOT for a single known bug (use /bugs), NOT for a targeted one-file change (use /improve), NOT for foreground/inline audits (use /dispatch directly).
+description: Find a class of problem across a codebase, then optionally fix it. Record-only by default (the `bugs` skill's Bug Triage Protocol) — filing each real instance in BUGS.md; the Fix and Verify phases run only when the owner asks for them. NOT for a single known bug (use /bugs), NOT for a targeted one-file change (use /improve), NOT for foreground/inline audits (use /dispatch directly).
 when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
 user-invocable: true
 ---
@@ -27,7 +27,7 @@ launch shape as `/dispatch`) a background agent that audits the **entire**
 codebase for one problem CATEGORY and files each real instance as its own
 `BUGS.md` entry, per `/bugs`'s format/ID rules (read that skill first — sweep
 is the search, not the file mechanics). Record only — never fix what it finds
-(CLAUDE.md Bug Triage Protocol).
+(the `bugs` skill's Bug Triage Protocol).
 
 #### Category
 
