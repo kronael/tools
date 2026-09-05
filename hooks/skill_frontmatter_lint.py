@@ -30,6 +30,10 @@ DEFAULT_MAX_LINES = 200
 # tiered length). Keyed on the skill's directory name.
 LONG_MAX_LINES = 500
 LONG_SKILLS = frozenset({'install', 'ship'})
+# Claude Code lists each skill as "<description> - <when_to_use>" and cuts that
+# text at this many characters (its skillListingMaxDescChars default); a
+# keyword past the cap never reaches the model.
+LISTING_CAP = 1536
 
 
 class Severity(Enum):
@@ -135,6 +139,31 @@ def check_notfor(path: Path, meta: dict | None) -> list[Finding]:
     ]
 
 
+def listing_text(meta: dict) -> str:
+    description = str(meta.get('description', '') or '')
+    when = meta.get('when_to_use', '') or ''
+    if isinstance(when, list):
+        when = ', '.join(str(item) for item in when)
+    return f'{description} - {when}' if when else description
+
+
+def check_budget(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []
+    length = len(listing_text(meta))
+    if length <= LISTING_CAP:
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-budget',
+            f'{path}:1: [skill-budget] description + when_to_use is {length} chars '
+            f'(> {LISTING_CAP}) — wisdom: the listing cuts the rest, keywords past the cap '
+            'never route (warn)',
+        )
+    ]
+
+
 def check_should(path: Path, body: str, body_line0: int) -> list[Finding]:
     findings: list[Finding] = []
     for offset, line in enumerate(body.splitlines()):
@@ -186,6 +215,7 @@ def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Find
     return [
         *check_keys(path, meta),
         *check_notfor(path, meta),
+        *check_budget(path, meta),
         *check_should(path, body, body_line0),
         *check_length(path, body),
         *check_router(path),

@@ -63,6 +63,16 @@ def test_over_cap_warns_never_errors(tmp_path: Path) -> None:
     assert 'skill-length' not in rules(found, Severity.ERROR)
 
 
+def test_over_listing_cap_warns(tmp_path: Path) -> None:
+    text = VALID.replace(
+        'when_to_use: demo, example, trigger words\n',
+        'when_to_use: ' + ', '.join(f'phrase {i}' for i in range(200)) + '\n',
+    )
+    found = findings(make(tmp_path, text))
+    assert 'skill-budget' in rules(found, Severity.WARN)
+    assert 'skill-budget' not in rules(found, Severity.ERROR)
+
+
 def test_allowlisted_skill_gets_higher_cap(tmp_path: Path) -> None:
     long_body = '\n'.join(f'- line {i}' for i in range(250))
     path = make(tmp_path, VALID + long_body, name='ship')
