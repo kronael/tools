@@ -1,7 +1,7 @@
 ---
 name: ship
 description: Drive a spec-sized feature from plan to shipped — fable plans, sonnet implements step-by-step, refine polishes. NOT for one-off or <30min fixes (use improve), and NOT for tracking without driving execution (use TODO.md).
-when_to_use: "ship this feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
+when_to_use: "ship this, ship it, let's ship, then ship, ship the feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
 user-invocable: true
 ---
 
