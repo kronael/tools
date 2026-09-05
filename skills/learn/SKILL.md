@@ -1,47 +1,39 @@
 ---
 name: learn
-description: /learn — extract patterns into skills from session history, and evaluate the session for memory-worthy content. NOT for writing skills from scratch (use wisdom). NOT auto-triggered by the word "learn" in a prompt — invoke explicitly or via the low-frequency memory_nudge hook (PreCompact/Stop).
-when_to_use: "learn from this session, save this pattern, extract reusable patterns, evaluate session for memory, session memory check"
+description: /learn — turn session history into memory entries, skills, or lint rules. NOT for writing a skill from scratch (use wisdom). NOT triggered by the word "learn" in a prompt — only the slash command or the memory_nudge hook (PreCompact/Stop) invokes it.
+when_to_use: "learn from this session, save this pattern, extract reusable patterns, evaluate session for memory, session memory check, save memory, remember this, make this correction a rule"
 user-invocable: true
 ---
 
-Launch the @learn agent (Task tool, subagent_type: learn) to analyze conversation history, evaluate it for memory-worthy content, and create or update skills.
+Launch the @learn agent (Task tool, subagent_type: learn) and name the pass.
 
-## Two capabilities, one skill
+## Three passes
 
-1. **Memory evaluation** (usually the low-effort pass, often nudge-triggered):
-   review the session for corrections, confirmed decisions, project facts, or
-   reference pointers and save them via the auto-memory mechanism
-   (`~/.claude/projects/<slug>/memory/`, frontmatter
-   `name`/`description`/`metadata.type` of `user`/`feedback`/`project`/
-   `reference`, indexed in `MEMORY.md`). This does not require user
-   back-and-forth — save what clearly qualifies, skip what doesn't.
-2. **Pattern/skill extraction** (heavier pass, always user-invoked): read
-   conversation history, identify recurring themes, and propose new/updated
-   skills for the user to approve (see agent process).
-3. **Lint-rule extraction** (heavier pass, user-invoked): when the session
-   shows a repeated deterministic, language-specific correction, propose an
-   ast-grep lint rule so the next session is enforced, not re-reminded.
+- **Memory** — the nudge, or "save memory": corrections, confirmed
+  decisions, durable project facts, reference pointers →
+  `~/.claude/projects/<slug>/memory/` plus a one-line `MEMORY.md` index
+  entry. No user round-trip: save what qualifies, skip the rest.
+- **Skill** — user-invoked: a theme that recurs across sessions → a
+  proposed new or updated skill; the user approves each before it is written.
+- **Lint** — user-invoked: the same structural, pattern-matchable
+  correction on one language → an ast-grep rule in
+  `skills/<lang>/lints/rules.yml`, so the next session is enforced, not reminded.
 
-Run memory evaluation first when triggered by the nudge; run full extraction
-when the user explicitly asks to learn from a session.
+The nudge runs the memory pass. "Learn from this session" runs the skill
+pass, then the lint pass.
 
-## Rules for extracted skills
-- ALWAYS read the session transcript and identify the specific failure/decision being captured BEFORE drafting (path: see global skill startup protocol).
-- NEVER promote a single-session story to a skill — need pattern in 2+ distinct sessions; otherwise record in .diary/.
+## Rules
 
-## Rules for extracted lint rules
-- ALWAYS gate on structure: only a pattern-matchable mistake becomes a lint.
-  Judgment (naming, minimality, "boring code") stays a skill — NEVER lint
-  judgment; a false positive trains the agent to reach for `--no-verify`.
-- ALWAYS co-locate and prove: write the rule into `skills/<lang>/lints/rules.yml`
-  with bad+good fixtures, `severity: warning`, `note:` citing the skill; add the
-  id to that skill's `## Lints`; prove it with `make lints`.
-- ALWAYS propose, NEVER auto-promote to `error` — the user promotes after review.
-- NEVER extract from a single session — need the same correction in 2+ sessions.
-
-## Rules for memory evaluation
-- ALWAYS distinguish the four memory types (user/feedback/project/reference) per the auto-memory format — don't dump everything into one bucket.
-- NEVER save routine operations or one-off trivia — only durable, reusable facts or confirmed corrections.
-- ALWAYS update `MEMORY.md`'s one-line index when adding an entry.
-- NEVER invoked by the bare word "learn" appearing in a user prompt — that keyword route was removed deliberately (see hooks/README.md). Only the slash command and the `memory_nudge.py` hook trigger it.
+- ALWAYS locate the specific failure or decision in the transcripts
+  (`~/.claude/projects/<slug>/*.jsonl`; recipe: `recall-memories` §1)
+  BEFORE drafting anything.
+- NEVER promote one session to a skill or a lint — the same pattern in
+  2+ distinct sessions; a single session goes to `.diary/`.
+- NEVER lint judgment (naming, minimality, "boring code") — a false
+  positive trains `--no-verify`. A lint ships with bad+good fixtures,
+  `severity: warning`, a `note:` citing the skill, its id in that skill's
+  `## Lints`, and passes `make lints`. Only the user promotes it to `error`.
+- ALWAYS write a skill per `wisdom` (frontmatter keys, `NOT for`,
+  ALWAYS/NEVER, length) and pass `make skills-frontmatter`.
+- NEVER save routine operations or one-off trivia — durable, reusable
+  facts only, typed `user` / `feedback` / `project` / `reference`.

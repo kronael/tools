@@ -56,19 +56,6 @@ extraction rather than a memory check.
 - Domain-specific knowledge
 - Repeated structural mistakes on one language → candidate lint rule (below)
 
-## Writing Good Skills
-
-```yaml
----
-name: short-name
-description: Specific trigger context. When to activate. What file types or keywords.
----
-```
-
-- Description is critical - semantic matching activates skills
-- Content: ALWAYS/NEVER rules, patterns, code examples
-- Under 500 lines, link to supporting files if larger
-
 ## Extracting Lint Rules
 
 When the same structural, pattern-matchable mistake recurs across 2+ sessions
@@ -80,12 +67,12 @@ on one language, propose an ast-grep rule, not only a prose reminder:
 - NEVER lint judgment (naming, minimality) and NEVER auto-set `severity: error`
   — land as `warning`; the user promotes it after review.
 
-## Writing Good CLAUDE.md
+## Writing skills and CLAUDE.md
 
-- Project-specific only (skills handle general knowledge)
-- Architecture, state machines, external systems
-- Under 200 lines
-- ALWAYS/NEVER statements or examples, not prose
+ALWAYS read `~/.claude/skills/wisdom/SKILL.md` before writing either and follow
+it — it owns the frontmatter keys (`when_to_use` is required), the `NOT for`
+clause, ALWAYS/NEVER form, and the length caps. NEVER carry a second copy of
+those rules here.
 
 ## Output
 
