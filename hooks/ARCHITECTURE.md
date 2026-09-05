@@ -55,7 +55,9 @@ and Claude to use different lifecycle wiring.
 ### prompt_nudge.py (UserPromptSubmit)
 
 **Input:** JSON with `prompt` field.
-**Output:** `{"ok": true, "systemMessage": "..."}` or silent exit.
+**Output:** `{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit",
+"additionalContext": "..."}}` or silent exit. `additionalContext` reaches the
+model; `systemMessage` reaches only the user.
 
 **Flow:**
 1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
@@ -196,7 +198,7 @@ stdin:
 }
 
 stdout (prompt_nudge.py match):
-{"ok": true, "systemMessage": "Invoke @improve."}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke @improve."}}
 ```
 
 ### Stop

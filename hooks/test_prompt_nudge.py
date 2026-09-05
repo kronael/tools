@@ -1,4 +1,9 @@
+import io
+import json
+
+import pytest
 from prompt_nudge import explicit_route
+from prompt_nudge import main
 
 
 def test_code_does_not_route_to_codex() -> None:
@@ -33,3 +38,20 @@ def test_continue_routes_to_continue_skill() -> None:
     assert explicit_route('continue') == '/continue'
     assert explicit_route('cont') == '/continue'
     assert explicit_route('pick up where we left off') is None
+
+
+def test_ship_phrasings_route_to_ship() -> None:
+    for prompt in ('ship this', 'ship it', "let's ship", 'and ship it'):
+        assert explicit_route(prompt) == '/ship', prompt
+
+
+def test_output_reaches_the_model(monkeypatch, capsys) -> None:
+    # Only hookSpecificOutput.additionalContext is added to the model's context;
+    # systemMessage is rendered for the user alone.
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps({'prompt': 'ship it'})))
+    with pytest.raises(SystemExit):
+        main()
+    out = json.loads(capsys.readouterr().out)
+    assert 'systemMessage' not in out
+    assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
+    assert 'info: Invoke /ship.' in out['hookSpecificOutput']['additionalContext']

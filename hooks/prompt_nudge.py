@@ -134,6 +134,22 @@ def explicit_route(prompt, harness=None):
     return None
 
 
+def emit(text):
+    # additionalContext is the only UserPromptSubmit field the model reads;
+    # systemMessage renders in the transcript for the user and never reaches
+    # the model.
+    print(
+        json.dumps(
+            {
+                'hookSpecificOutput': {
+                    'hookEventName': 'UserPromptSubmit',
+                    'additionalContext': text,
+                },
+            }
+        )
+    )
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -148,7 +164,7 @@ def main():
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        print(json.dumps({'ok': True, 'systemMessage': STYLE_RULES}))
+        emit(STYLE_RULES)
         sys.exit(0)
 
     # Every turn. The style is in the system prompt and dilutes there; this is
@@ -166,7 +182,7 @@ def main():
         parts.append(f'info: Invoke {matched}.')
 
     if parts:
-        print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
+        emit('\n\n'.join(parts))
 
     sys.exit(0)
 

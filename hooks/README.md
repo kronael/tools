@@ -14,8 +14,10 @@ hook scripts.
 
 ### prompt_nudge.py (UserPromptSubmit)
 
-Exact-matches prompt keywords and emits an informational system message telling
-Claude to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
+Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
+telling Claude to invoke the matching command or agent. That field is the one
+UserPromptSubmit output the model reads; `systemMessage` renders in the
+transcript for the user and never reaches the model. Routes are `AGENT_KEYWORDS` in
 the source. Codex second-opinion routing is explicit only (`ask codex`,
 `oracle`, `second opinion`) and suppressed inside Codex so it never nudges
 Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
