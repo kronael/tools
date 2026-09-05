@@ -4,6 +4,39 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
+### prompt_nudge: the first keyword in the prompt wins, so `/ship` loses to `/specs`, `/fable`, `/fix`
+
+`explicit_route` returns the route of the first `AGENT_KEYWORDS` word in prompt
+order. Measured over every session transcript (2026-09-05): of 51 user-typed
+prompts that say "ship it" / "and ship" / "then ship" / "ship the …", 18 route
+to `/ship` and 30 route elsewhere (`/specs` 7, `/fable` 6, `/fix` 4, `/create`
+3, `/opus` 2, `/review` 2, `/merge` 2, one each `/continue` `/eye-13yo` `/codex`
+`@improve`) because an earlier word matched. "spec this and build it" is in
+ship's own `when_to_use` and still routes `/specs`. Reproduce:
+`echo '{"prompt":"spec this and ship it"}' | python3 hooks/prompt_nudge.py`.
+Fix is a precedence rule (workflow verbs before nouns, or all matches listed),
+which is a routing redesign — needs sign-off.
+
+### prompt_nudge: `/testing`, `/eye-13yo`, `/hacker-eval` routes name skills that do not exist
+
+`AGENT_KEYWORDS` maps `test`/`testing` → `/testing`, `ux`/`novice`/`usability`/
+`walkthrough` → `/eye-13yo`, `security`/`pentest` → `/hacker-eval`. None of the
+three is an installed skill (`13yo-eval`, `red-eval`, `security-review` are).
+The nudge tells the model to invoke a skill the Skill tool rejects.
+
+### local.py, reclaude.py, memory_nudge.py: `systemMessage` output is shown to the user, not the model
+
+The same channel defect prompt_nudge had. `hook_system_message` maps to no API
+message in Claude Code 2.1.261 (`hook_system_message:()=>[]` in the attachment
+table; the docs define `systemMessage` as "a message shown to the user in the
+transcript"). Measured: 2409 `hook_system_message` attachments across all
+transcripts, 0 model-visible copies. So `local.py`'s LOCAL.md injection and its
+RULES re-injection on UserPromptSubmit never reach the model. The PreCompact
+paths (`local.py`, `reclaude.py`, `memory_nudge.py`) are the same field; whether
+Claude Code carries a PreCompact `systemMessage` across compaction is not
+measured. Fix for UserPromptSubmit is `hookSpecificOutput.additionalContext`,
+as in `prompt_nudge.emit`; PreCompact needs its own measurement first.
+
 ### root Makefile: per-project `test-%` targets are silent no-ops
 
 `make test-dockbox` (and every other `test-<project>`) prints "Nothing to be
