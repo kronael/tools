@@ -99,6 +99,11 @@ built to be provable was still a third short until someone attacked it.
   reading is blind to the second class.
 - NEVER accept a blocker a spec records without re-measuring it. It is dated
   to its writing.
+- ALWAYS derive the whole rule or none of it. A table over a type's field
+  names is usually several — which keys are allowed, and what each key's value
+  must be. Deriving the first alone deletes the error that forced the second to
+  be kept in step, so a new field is accepted and falls through to the loosest
+  check. Derive from `f.type` too, and raise on a declared type no rule covers.
 - NEVER fold a table on shared field names. Ask what question it answers; a
   seed table for a search is not a default table.
 - NEVER delete an indirection before asking what it delays. A forwarder that
