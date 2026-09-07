@@ -30,6 +30,11 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 - **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
 - **Agent-launcher** (visual/readme style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
+- **Runbook** (ship/merge/release style): numbered steps, each closing on a
+  `Completion criterion:` line — an observable pass/fail condition, not "done
+  when it looks right". Close with `## Review Checklist` restating the file's
+  ALWAYS rules as checkable bullets, and, only where one recurring wrong-but-
+  plausible shortcut exists, an `## Anti-Patterns` list naming it.
 
 ## SKILL.md body
 
@@ -58,3 +63,19 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - Project-specific only — skills carry general knowledge.
 - ALWAYS document architecture, state machines, external systems.
 - Put critical rules at the top or bottom — middle content is least reliably attended to.
+- ALWAYS wrap task-specific sections (testing conventions, API patterns, state
+  management, i18n) in `<important if="condition">…</important>` with one
+  narrow, single-trigger condition per block — Claude Code's own system
+  reminder tells the model project context "may or may not be relevant,"
+  and the tag overrides that framing so the block gets attention when its
+  condition actually matches, instead of being skimmed past by default.
+- NEVER wrap onboarding context relevant to 90%+ of tasks (project identity,
+  directory map, tech stack, the commands table) — leave those bare; gating
+  foundational context behind a narrow `if` starves it of attention on the
+  tasks that need it most.
+- NEVER give one `<important if>` block two unrelated trigger conditions —
+  split "testing + API conventions" into two blocks so a task matching only
+  one doesn't pull in the other's rules.
+- This does NOT apply to this repo's own installed `~/.claude/CLAUDE.md`
+  (the global wisdom file) — that file is always-loaded outside the
+  per-project relevance gate, so the tag has nothing to cut through there.
