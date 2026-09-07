@@ -1,6 +1,6 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox) and optional ripwire. First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
 ---
 
 # Install Kronael toolkit
@@ -93,6 +93,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **CLI tools** — rig, udfix, clp (step 7).
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
   - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
+  - **ripwire** — optional codebase-map tool for agents; installs a binary and
+    its own `ripwire-*` skills (step 6 separate ask).
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
 - **Update**: skip the first-time questionnaire, but ALWAYS still run steps 6–7
   — NEVER silently skip tools or dockbox on a re-run (a stale binary or an
@@ -178,7 +180,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 6. **External tools** — detect with `which <tool>`; skip if present and recent.
    Install the missing ones from `reference.md` § "External tool commands":
    the **Core** batch (ask once), then the **Security-audit** and **Video**
-   batches (each ask separately — large/heavy, rarely needed).
+   batches (each ask separately — large/heavy, rarely needed). Finally offer
+   **ripwire** (reference.md § "ripwire") on its own ask — SHOW the exact
+   install one-liner and let the user run it (curl-pipe, so never auto-run it
+   silently); mention the optional MCP interface via `ripwire wrap <agent>`
+   (Claude and Codex both — it also auto-activates its `ripwire-*` skills for
+   whichever agents it detects, `~/.claude/skills` and `~/.agents/skills`) and
+   that its hooks stay off by default.
 
 7. **CLI tools** — (re)install the repo's standalone CLI tools per `reference.md`
    § "CLI tools": rig/udfix/clp always (idempotent Makefiles refresh a stale

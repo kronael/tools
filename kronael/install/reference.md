@@ -37,6 +37,38 @@ Run `which <tool>` first; skip if present and recent.
 |------|---------|--------|
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
+## ripwire — deterministic codebase maps for agents (step 6)
+
+Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
+agent a ranked, deterministic call-graph map of a repo — relevant symbols,
+callers, change-risk, tests to run — instead of blind grepping. Offline C++
+binary: no API key, no embeddings, no daemon, no network calls. Install the
+prebuilt binary (the installer verifies a mandatory sha256 and prompts for
+consent):
+
+```sh
+RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+```
+
+- Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
+  skills into `~/.claude/skills` — namespaced, so they never collide with
+  kronael skills, and the kronael install never deletes them (they coexist).
+  It also detects `~/.codex`/`~/.agents` and activates for Codex.
+- Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
+  armed they log only a local hashed routing meter, never prompt/command/path
+  text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
+- `RIPWIRE_NO_ACTIVATE=1` installs the binary only, touching no agent config.
+- MCP (optional second interface — CLI + skills already work without it). Use
+  ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
+  and never edits any config — you run it:
+  - Claude Code: `ripwire wrap claude` → `claude mcp add ripwire -- ripwire --mcp`
+    (append `--scope user` for all projects; writes `mcpServers` into
+    `~/.claude.json`, NOT `settings.json`). NEVER put `mcpServers` in
+    `settings-recommended.json`.
+  - Codex: `ripwire wrap codex` → a `[mcp_servers.ripwire]` stanza for
+    `~/.codex/config.toml` (CLI-first; MCP restricted to audit/health verbs).
+  - `ripwire wrap --all` detects every installed agent and emits each config.
+
 ## CLI tools (step 7)
 
 Install the repo's standalone CLI tools so their `~/.local/bin` binaries track
