@@ -9,8 +9,8 @@ why each exists.
 - ALWAYS land every test improvement before any refactor. A test that ships
   after the code it measures records a result; it cannot prove the change safe.
 - ALWAYS order production layers deletions → moves → defaults → injection →
-  behaviour changes. A behaviour change ships alone on its own evidence —
-  NEVER inside a refactor.
+  bundling → behaviour changes. A behaviour change ships alone on its own
+  evidence — NEVER inside a refactor.
 - NEVER let a branch lean on a later one. Each is green on the branch below it.
 
 ## The dividing criterion
@@ -68,6 +68,20 @@ built to be provable was still a third short until someone attacked it.
 - ALWAYS measure the survivor's arms after a consolidation: arm each alone
   and count the tests it fails. An arm no test fails is a branch no test
   runs; an arm that fails tests only by raising is one a silent drop passes.
+- NEVER assert a method became a function — prove it. Apply the renames to
+  the parent's body as an AST transform — `self.x` to the parameter that
+  carries it, `self.helper(a)` to `helper(pre…, a)` — and compare with the
+  new body's AST: identical, or it is a behaviour change. A rename is
+  legitimate only when both names denote the same runtime object, and a
+  prepended argument is a bare name, so the original arguments keep their
+  evaluation order. Drop one rename and watch the proof fail before trusting it.
+- For a file no suite reaches — a line trace says which — that proof is the
+  whole evidence; a green gate and an unmoved golden say nothing there.
+- NEVER trust the linter on where an import points. A name imported from a
+  module that lacks it lints clean — imported and used is all it checks —
+  and fails only the type checker. Run both on the destination, and grep
+  each name the destination defines: a move can carry in a copy of a type
+  that lives elsewhere.
 - NEVER consolidate across packages without checking for an import edge. A
   package that imports nothing from the other is a boundary, and its own copy
   of a helper is the boundary's cost.
@@ -162,6 +176,37 @@ built to be provable was still a third short until someone attacked it.
   "Empty paths, so nothing loads" held until the loader's fallback to the
   packaged data was traced.
 
+## Bundling
+
+- Tunables scattered over a class become one slotted object every read and
+  every override reaches by one name. Neither a deletion, a move, a default
+  nor an injection: every value keeps its reader and its definition, and the
+  path changes at every site. Value-neutral by construction: compare the new
+  type's fields, defaults and order against the attributes they replace
+  through `fields()`, not by eye.
+- The failure to fear is not a wrong value but an override that stops
+  applying. An assignment to the old name on an object with a `__dict__`
+  binds a fresh attribute nobody reads, and the test passes while testing
+  nothing. The type checker names it where its config looks; a linter cannot
+  see it at all — the line is valid code. For the directories the type
+  checker excludes, rewrite mechanically and sweep: grep every tunable name
+  used as an attribute, drop those reaching the bundle, and name each
+  survivor with what feeds it. A homonym fed from a different tunable, or a
+  snapshot taken at construction, is where "the same name" changes a value
+  with no gate noticing.
+- ALWAYS declare the bundle with slots. It refuses a name it does not
+  declare, so the next stale override raises where the old class swallowed it.
+- NEVER assume an override the harness sets is measured. Freeze: make the
+  bundle ignore every write after construction except a set read at import,
+  run every gate, count. What fails is load-bearing; what stays green can
+  stop applying with every suite green. Then mutate one default per run and
+  count again. Record what neither run sees as a bug, not a pass.
+- The instrument is under the same guard as the code. Read its configuration
+  at import; an environment read in `__post_init__` is below the entry point.
+- The seam is finished when the sweep returns only named homonyms and no
+  default has a second copy — a policy hard-coding four of them, a module
+  global a harness mutates, a field with no reader are each their own seam.
+
 ## Gates
 
 - Each branch moves no golden. A moved pinned hash means the change leaves the
@@ -173,6 +218,9 @@ built to be provable was still a third short until someone attacked it.
 - ALWAYS run the gates before each commit, not each branch. The one defect
   that reached a stack tree was named by both the linter and the type
   checker; it landed from a commit made without them.
+- ALWAYS know what the type gate excludes. Its 0 errors cover the directories
+  its config includes; a defect in the rest — a test tree, an untyped
+  package — needs the sweep.
 
 ## Reporting
 
