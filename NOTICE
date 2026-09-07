@@ -48,6 +48,11 @@ Built on (paths under skills/):
     © 2026 HumanLayer (MIT)
     https://github.com/humanlayer/skills
 
+  tsx/SKILL.md § Props & State — folded from humanlayer/skills
+  `narrow-react-prop-types`
+    © 2026 HumanLayer (MIT)
+    https://github.com/humanlayer/skills
+
 Sub-licenses are reproduced in skills/humanize/LICENSE and skills/show-me/LICENSE.
 For all MIT and Apache-2.0 upstream works, copyright notices are retained
 in the respective data-file frontmatter where present.

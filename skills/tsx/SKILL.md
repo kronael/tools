@@ -20,6 +20,15 @@ Requires `ts` skill for base TypeScript rules.
 - `useState` only for UI state (open/closed, selected tab)
 - NEVER store derived data or sync props into state
 - Complex client state: `useReducer` over multiple `useState`
+- ALWAYS derive prop types from live (non-story/non-test/non-mock) call
+  sites — that's the contract's source of truth, not what Storybook/tests
+  find convenient
+- NEVER keep a prop optional just to ease Storybook/test/mock setup — ALWAYS
+  narrow the type and let the support code adapt to it
+- NEVER guard an always-rendered affordance with `onX?.()` or `?? []`
+  fallbacks for a value every live call site supplies — ALWAYS require it
+- Nullable is not optional: prefer `x: T | null` over `x?: T | null` when
+  every live call site passes the prop but the value can be empty
 
 ## Data & Forms
 - Fetch in server components, pass down as props
