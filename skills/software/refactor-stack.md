@@ -8,9 +8,9 @@ why each exists.
 
 - ALWAYS land every test improvement before any refactor. A test that ships
   after the code it measures records a result; it cannot prove the change safe.
-- ALWAYS order production layers deletions → moves → defaults → behaviour
-  changes. A behaviour change ships alone on its own evidence — NEVER inside
-  a refactor.
+- ALWAYS order production layers deletions → moves → defaults → injection →
+  behaviour changes. A behaviour change ships alone on its own evidence —
+  NEVER inside a refactor.
 - NEVER let a branch lean on a later one. Each is green on the branch below it.
 
 ## The dividing criterion
@@ -65,6 +65,9 @@ built to be provable was still a third short until someone attacked it.
 - NEVER consolidate two helpers on the claim they are identical — ALWAYS diff
   them normalised for comments, docstrings and formatting. An empty diff is a
   move; anything else is a behaviour change.
+- ALWAYS measure the survivor's arms after a consolidation: arm each alone
+  and count the tests it fails. An arm no test fails is a branch no test
+  runs; an arm that fails tests only by raising is one a silent drop passes.
 - NEVER consolidate across packages without checking for an import edge. A
   package that imports nothing from the other is a boundary, and its own copy
   of a helper is the boundary's cost.
@@ -112,6 +115,52 @@ built to be provable was still a third short until someone attacked it.
 - A seam is finished when no read carries a literal, every name table is
   derived, and the armed run counts zero on every suite. Each remaining
   fallback is its own seam.
+
+## Injecting
+
+- A component reads nothing from disk or the environment below its entry
+  point. The caller that builds it reads and hands in, and every
+  construction site — production, harness, test — reads at its own entry
+  point.
+- NEVER treat it as a deletion, a move or a default. Every read keeps its
+  reader and its value, so no consumer oracle applies; the signature changes
+  at every site, so nothing is byte-neutral. It is read-neutral — the same
+  reads, in the same order, from the frame above — and each half is proved
+  on its own.
+- ALWAYS prove the component's half with a guard: build it and run one cycle
+  under a fixture that fails on every file and environment call, then run
+  the loader under the same fixture and expect the raise. A guard nothing
+  trips is green on nothing.
+- ALWAYS arm the guard hole by hole. It is a list of names, and a name it
+  lacks is a hole a read passes through as proof of absence. Plant each call
+  in the guarded code and see it trip; a call that runs green is a hole.
+  List the holes left open, each with why, and name the tripping call from
+  the run, not from reading.
+- NEVER raise an `Exception` from a guard. A handler on the path catches it
+  and logs it, and formatting the traceback reads source from disk, so the
+  guard fires inside its own report. Raise a `BaseException` subclass.
+- ALWAYS write down what the guarded run runs. A near-empty cycle proves
+  construction and that cycle touch nothing, not that a busy one does.
+- NEVER quote a green suite or an unmoved golden for a statement no test
+  executes. Force the moved block to return nothing and count the failures;
+  zero means the gate is blind there. Record what stands in — the statements
+  no test runs, from a line trace, and the statement-by-statement comparison
+  against the block they came from — as a bug, not a pass.
+- What leaves a class leaves its logger. Every line the loader writes carries
+  the new name; grep for consumers of the old one — parsers, tests that tune
+  a logger — before the commit.
+- The leak runs both ways. A component that finds its own data cannot be
+  built in a test without it, so tests build the smallest object that
+  compiles, and a fake then justifies a production branch — a `hasattr` on a
+  mandatory field that exists so the fake can skip it. Injection lets the test
+  build the real object; the branch goes with the fake, never before it.
+- NEVER assume the fake's branch is load-bearing. Arm it to raise to see it is
+  reached at all, then force it off to see what fails. A branch that is
+  reached and whose removal breaks nothing is dead to the suite, which is a
+  different fact from one the suite depends on.
+- NEVER read a factory's claim about disk — measure it under the guard.
+  "Empty paths, so nothing loads" held until the loader's fallback to the
+  packaged data was traced.
 
 ## Gates
 
