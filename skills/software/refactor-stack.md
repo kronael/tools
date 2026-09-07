@@ -56,6 +56,26 @@ built to be provable was still a third short until someone attacked it.
 - ALWAYS append a cut record before the commit — name, readers, files and
   lines, commit — so the cut reverts from the record alone.
 
+- A dead parameter is two claims. *Nothing sets it* is settled by the oracles.
+  *The arithmetic collapses at the value everything sets* is an equivalence —
+  the claim that can be wrong with every gate green — so write out the algebra
+  and grep every literal, and treat each step of the collapse as load-bearing.
+- NEVER ship an oracle without a test proving it can fail. Pin the scan's size
+  and a key it really finds, assert a name that is genuinely live, and check
+  that injecting a live name into the cut list fails it.
+- ALWAYS ask why an oracle passed. A grep over config files none of which
+  mention the section proves nothing about names in that section.
+- NEVER read a characterization fixture as proof a parameter is inert. It shows
+  the cut changed nothing recorded. If every recorded input that multiplies the
+  parameter is zero, the fixture is invariant to its value.
+- A parameter nothing reads and a parameter parsed, settable and always given
+  an inert value are different things. Deleting the second turns a
+  silently-accepted key into a hard config error — deployment-visible, and it
+  belongs in the PR body, not in a list of removals.
+- ALWAYS measure what the gates would have caught: set each parameter to a
+  non-zero value at its source and run everything. If nothing objects, the
+  deletion rests on the static argument alone — say so.
+
 ## Moving
 
 - ALWAYS lint the destination module before committing a move. A name the old
