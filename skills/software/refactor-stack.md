@@ -9,8 +9,8 @@ why each exists.
 - ALWAYS land every test improvement before any refactor. A test that ships
   after the code it measures records a result; it cannot prove the change safe.
 - ALWAYS order production layers deletions → moves → defaults → injection →
-  bundling → behaviour changes. A behaviour change ships alone on its own
-  evidence — NEVER inside a refactor.
+  bundling → collapsing → behaviour changes. A behaviour change ships alone
+  on its own evidence — NEVER inside a refactor.
 - NEVER let a branch lean on a later one. Each is green on the branch below it.
 
 ## The dividing criterion
@@ -206,6 +206,43 @@ built to be provable was still a third short until someone attacked it.
 - The seam is finished when the sweep returns only named homonyms and no
   default has a second copy — a policy hard-coding four of them, a module
   global a harness mutates, a field with no reader are each their own seam.
+
+## Collapsing
+
+- A parameter list unpacked from objects the caller already holds becomes
+  those objects. Neither a deletion, a move, a default, an injection nor a
+  bundle: every value keeps its reader and its definition, and the call
+  site stops naming it. It is binding-neutral — each call site, each
+  parameter, the same value from the same place — and that is proved by
+  resolution, not by reading.
+- The danger is not the signature but the defaults. A function default and
+  the field it becomes are two definitions of one value, and a caller that
+  omits the parameter silently receives the other one. ALWAYS enumerate
+  every disagreement between the two before the first edit — the signature
+  against `fields()` — and make every caller that omitted one say what it
+  was getting.
+- ALWAYS resolve, on both branches, the value every moved parameter receives
+  at every call site — the argument, or whichever default applies — and
+  compare by value, by type and by provenance. Value-equal is not
+  type-equal: a float spelled at the site and an int inherited from the
+  field compare equal and are not the same binding.
+- NEVER drop an argument because it equals the new default. It is
+  value-neutral and moves the binding from visible to inherited, which
+  couples the test to a production default it never named. Measure it:
+  retune that default and count the tests that fail where the branch below
+  stays green. A value the site spells out, it keeps spelling out.
+- A parameter the signature declares and the body never loads vanishes in
+  the collapse. That is a deletion riding inside a move — count the name's
+  loads, say it in the commit, and name the field it leaves with no reader.
+- NEVER quote the green suite for this layer. Measure it: perturb one moved
+  parameter at one call site per run and count the runs that survive. A
+  site every perturbation survives checks nothing it passes; a parameter
+  that survives at every site is checked nowhere. The resolution is the
+  evidence; the run is not.
+- An optional that stays is one whose `None` the code reads differently
+  from empty. A `None` that logs where a dict rate-limits stays; one read as
+  `.get(k, 0)` behind `is not None` with an else of `0` is the empty dict,
+  and folds as its own edit.
 
 ## Gates
 

@@ -20,6 +20,6 @@ Paths are relative to this directory.
 | distributing Python tools: PEP 723 single-file, uvx, package layout | `uvx-tools.md` |
 | un-circumventable strict lint/type config — which linters to run + strict flags (py basedpyright+ruff, ts eslint, go golangci-lint) | `strict-typing.md` |
 | runtime/dynamic checkers as test-CI targets: race detector, sanitizers (ASan/TSan/MSan/LSan), fuzzing, Miri, memory/leak, property testing (go, rust, py) | `dynamic-analysis.md` |
-| re-shipping an unreviewable branch as a stack: tests first, the dividing criterion, mutation-proven tests, four passes, deletion oracles, byte-neutral moves and AST-proven method moves, one-definition defaults and the armed run, injection and the no-environment guard, slotted tunable bundles, the freeze run and the sweep, diffstat split | `refactor-stack.md` |
+| re-shipping an unreviewable branch as a stack: tests first, the dividing criterion, mutation-proven tests, four passes, deletion oracles, byte-neutral moves and AST-proven method moves, one-definition defaults and the armed run, injection and the no-environment guard, slotted tunable bundles, the freeze run and the sweep, collapsing a parameter list into the caller's objects, binding resolution per call site and the per-site perturbation count, diffstat split | `refactor-stack.md` |
 
 NEVER duplicate these runbooks into ops or language skills — link here instead.
