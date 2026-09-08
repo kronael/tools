@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.3.90] — 20260908
+
+> kronael v0.3.90 — config first, keys second
+>
+> tg-fetch held its API credentials in the same file as the group setting. The two files are apart now, as the CLI rule says.
+>
+> • fixed — main.py and users.py take <config.toml> then <keys.toml>
+> • replaced — config.example.toml becomes config.toml plus keys.toml
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `tg-fetch/main.py` and `tg-fetch/users.py` read two positional files: the config first, the API keys second, as `skills/cli/SKILL.md` requires. The credentials no longer sit beside the group setting, so a config can be shared while the keys file stays out of git.
+
+### Changed
+- `tg-fetch/config.example.toml` is replaced by `config.toml` (group only) and `keys.toml` (`api_id`, `api_hash`, `phone` or `bot_token`). It was the only `*.example.*` file in the repo.
+
 ## [v0.3.89] — 20260908
 
 > kronael v0.3.89 — a numeric group id now resolves
