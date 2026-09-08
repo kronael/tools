@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.89] — 20260908
+
+> kronael v0.3.89 — a numeric group id now resolves
+>
+> tg-fetch sent a digits-only group id to Telegram as a string, which resolves nothing. It sends an int now.
+>
+> • fixed — tg-fetch resolves a digits-only group id to an int, and strips a leading @ from a username
+> • documented — the supergroup -100 prefix must be given; the scripts add nothing
+> • listed — the tw-fetch row names both read paths
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+- `tg-fetch/main.py` and `tg-fetch/users.py` pass the configured group through `resolve_group` before `get_entity`. A digits-only value becomes an int, which is what Telethon needs for a chat id; a username stays a string with a leading `@` removed. Both scripts carry the function, matching the standalone shape the directory is built on.
+
+### Changed
+- `tg-fetch/README.md` and `config.example.toml` state that a supergroup id must already carry its `-100` prefix. The scripts add no prefix, because guessing one resolves the wrong chat.
+- `README.md` names both tw-fetch read paths in the tool inventory.
+
 ## [v0.3.88] — 20260908
 
 > kronael v0.3.88 — read an X post without an account
