@@ -9,23 +9,34 @@ resolves `telethon` automatically.
 ## Run
 
 ```sh
-cp config.example.toml my-group.toml
-$EDITOR my-group.toml          # fill api_id, api_hash, group, phone
-uv run main.py my-group.toml    # messages
-uv run users.py my-group.toml   # participants
+cp config.toml my-group.toml
+cp keys.toml my-keys.toml
+$EDITOR my-group.toml my-keys.toml
+uv run main.py my-group.toml my-keys.toml    # messages
+uv run users.py my-group.toml my-keys.toml   # participants
 ```
+
+Config first, keys second. The secrets live in their own file so you can keep
+it out of git and share the config freely.
 
 Both share the same session file (`./tmp/session_<group>.session`) — no
 re-auth between them.
 
 ## Config
 
+`config.toml` — no secrets:
+
 ```toml
-api_id    = 12345678                          # https://my.telegram.org/apps
+group     = "some_group"       # username, or numeric id (-100… for a supergroup)
+```
+
+`keys.toml` — secrets only:
+
+```toml
+api_id    = 12345678           # https://my.telegram.org/apps
 api_hash  = "abcdef…"
-group     = "some_group"                      # username, or numeric id (-100… for a supergroup)
-phone     = "+1234567890"                     # user auth — OTP prompted on stdin
-# bot_token = "123:AAF…"                      # OR bot auth (no read history)
+phone     = "+1234567890"      # user auth — OTP prompted on stdin
+# bot_token = "123:AAF…"       # OR bot auth (no read history)
 ```
 
 Pick exactly one of `phone` or `bot_token`. **Bot auth cannot read group

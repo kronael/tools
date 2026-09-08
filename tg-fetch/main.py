@@ -14,9 +14,13 @@ from telethon import TelegramClient
 from telethon.tl.types import Message
 
 
-def load_cfg(path: str) -> dict:
-    with open(path, 'rb') as f:
-        return tomllib.load(f)
+def load_cfg(config_path: str, keys_path: str) -> dict:
+    """Config first, keys second. The two files stay apart on disk."""
+    with open(config_path, 'rb') as f:
+        cfg = tomllib.load(f)
+    with open(keys_path, 'rb') as f:
+        cfg.update(tomllib.load(f))
+    return cfg
 
 
 def out_path(group: str) -> Path:
@@ -95,10 +99,10 @@ async def run(cfg: dict) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print('usage: uv run main.py <config.toml>', file=sys.stderr)
+    if len(sys.argv) < 3:
+        print('usage: uv run main.py <config.toml> <keys.toml>', file=sys.stderr)
         sys.exit(1)
-    asyncio.run(run(load_cfg(sys.argv[1])))
+    asyncio.run(run(load_cfg(sys.argv[1], sys.argv[2])))
 
 
 if __name__ == '__main__':
