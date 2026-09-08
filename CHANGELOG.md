@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.3.91] — 20260908
+
+> kronael v0.3.91 — tg-fetch is a rerunnable collector
+>
+> Groups are arguments, credentials are environment variables, and there is no config file left to keep in sync.
+>
+> • added — both scripts take many groups in one run and resume each one separately
+> • moved — TELEGRAM_API_ID, TELEGRAM_API_HASH and TELEGRAM_PHONE come from the environment
+> • removed — the TOML config and its template
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `tg-fetch/main.py` and `tg-fetch/users.py` take one or more groups as positional arguments and collect each in turn. `main.py` resumes each group from its own `.jl` file, so a rerun fetches only what arrived since.
+- Both scripts share one session file, `./tmp/session.session`. The login code is asked once per account rather than once per group.
+
+### Changed
+- Credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`. A missing variable stops the run with a message naming what to set and where to get it. This matches `dc-fetch`, which already reads `DISCORD_TOKEN` from the environment.
+- `users.py` imports `build_client`, `start_client` and `resolve_group` from `main.py` instead of repeating them.
+
+### Removed
+- `tg-fetch/config.toml` and `tg-fetch/keys.toml`. With the keys in the environment and the groups on the command line, no config file remains.
+
 ## [v0.3.90] — 20260908
 
 > kronael v0.3.90 — config first, keys second
