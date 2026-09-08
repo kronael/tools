@@ -24,6 +24,19 @@ def out_path(group: str) -> Path:
     return p / f'tg_{group}_users.jl'
 
 
+def resolve_group(group: str | int) -> str | int:
+    """Telethon takes an int for a chat id and a string for a username.
+
+    A supergroup id must already carry its -100 prefix; nothing is added here.
+    """
+    if isinstance(group, int):
+        return group
+    text = group.strip()
+    if text.lstrip('-').isdigit():
+        return int(text)
+    return text.removeprefix('@')
+
+
 def user_to_dict(u: User) -> dict:
     return {
         'id': u.id,
@@ -49,7 +62,7 @@ async def run(cfg: dict) -> None:
         await client.start(phone=lambda: cfg['phone'])
 
     async with client:
-        entity = await client.get_entity(group)
+        entity = await client.get_entity(resolve_group(group))
         n = 0
         with open(p, 'w') as f:  # noqa: ASYNC230
             async for u in client.iter_participants(entity):

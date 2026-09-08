@@ -23,13 +23,18 @@ re-auth between them.
 ```toml
 api_id    = 12345678                          # https://my.telegram.org/apps
 api_hash  = "abcdef…"
-group     = "some_group"                      # username (no @) or numeric id
+group     = "some_group"                      # username, or numeric id (-100… for a supergroup)
 phone     = "+1234567890"                     # user auth — OTP prompted on stdin
 # bot_token = "123:AAF…"                      # OR bot auth (no read history)
 ```
 
 Pick exactly one of `phone` or `bot_token`. **Bot auth cannot read group
 history** — use a user account if you want to backfill old messages.
+
+`group` may be a username or a numeric id, quoted or not. A digits-only value
+reaches Telegram as an integer; a name reaches it as a string, with a leading
+`@` stripped. A supergroup id must already carry its `-100` prefix — the
+scripts add nothing, because guessing the prefix would resolve the wrong chat.
 
 ## Output
 

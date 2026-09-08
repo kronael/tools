@@ -36,6 +36,19 @@ def last_id(p: Path) -> int:
     return last
 
 
+def resolve_group(group: str | int) -> str | int:
+    """Telethon takes an int for a chat id and a string for a username.
+
+    A supergroup id must already carry its -100 prefix; nothing is added here.
+    """
+    if isinstance(group, int):
+        return group
+    text = group.strip()
+    if text.lstrip('-').isdigit():
+        return int(text)
+    return text.removeprefix('@')
+
+
 def msg_to_dict(m: Message) -> dict:
     return {
         'id': m.id,
@@ -62,7 +75,7 @@ async def run(cfg: dict) -> None:
         await client.start(phone=lambda: cfg['phone'])
 
     async with client:
-        entity = await client.get_entity(group)
+        entity = await client.get_entity(resolve_group(group))
         total = (await client.get_messages(entity, limit=1)).total
         print(f'group total={total}, resuming after id={resume_id}')
 

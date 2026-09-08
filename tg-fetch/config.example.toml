@@ -2,7 +2,7 @@
 api_id = 12345678
 api_hash = "abcdef1234567890abcdef1234567890"
 
-# Target group: username (no @) or numeric ID
+# Target group: username (no @), or numeric ID (-100… for a supergroup)
 group = "some_group"
 
 # Auth — use one of:
