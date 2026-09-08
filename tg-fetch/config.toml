@@ -1,4 +1,0 @@
-# First positional param. No secrets here.
-
-# Target group: username (no @), or numeric ID (-100… for a supergroup)
-group = "some_group"

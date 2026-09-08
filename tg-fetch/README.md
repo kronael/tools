@@ -1,51 +1,35 @@
 # tg-fetch
 
-Telegram channel/group scrapers — single-file PEP 723 scripts, `uv run`
-resolves `telethon` automatically.
+Telegram collectors — single-file PEP 723 scripts, `uv run` resolves
+`telethon` automatically. Rerun either one to collect what is new.
 
 - `main.py` — message archiver, resumable
 - `users.py` — group participants snapshot
 
 ## Run
 
+Credentials live in the environment. Groups are arguments. There is no config
+file.
+
 ```sh
-cp config.toml my-group.toml
-cp keys.toml my-keys.toml
-$EDITOR my-group.toml my-keys.toml
-uv run main.py my-group.toml my-keys.toml    # messages
-uv run users.py my-group.toml my-keys.toml   # participants
+export TELEGRAM_API_ID=12345678        # https://my.telegram.org/apps
+export TELEGRAM_API_HASH=abcdef…
+export TELEGRAM_PHONE=+1234567890      # asks for the code on the first run
+
+uv run main.py some_group -1005125571890
+uv run users.py some_group
 ```
 
-Config first, keys second. The secrets live in their own file so you can keep
-it out of git and share the config freely.
+`TELEGRAM_BOT_TOKEN` replaces `TELEGRAM_PHONE` for bot auth. **A bot cannot
+read group history** — use a user account to backfill old messages.
 
-Both share the same session file (`./tmp/session_<group>.session`) — no
-re-auth between them.
+A group is a username or a numeric id. A digits-only argument reaches Telegram
+as an integer; a name reaches it as a string, with a leading `@` stripped. A
+supergroup id must already carry its `-100` prefix, because a guessed prefix
+resolves the wrong chat.
 
-## Config
-
-`config.toml` — no secrets:
-
-```toml
-group     = "some_group"       # username, or numeric id (-100… for a supergroup)
-```
-
-`keys.toml` — secrets only:
-
-```toml
-api_id    = 12345678           # https://my.telegram.org/apps
-api_hash  = "abcdef…"
-phone     = "+1234567890"      # user auth — OTP prompted on stdin
-# bot_token = "123:AAF…"       # OR bot auth (no read history)
-```
-
-Pick exactly one of `phone` or `bot_token`. **Bot auth cannot read group
-history** — use a user account if you want to backfill old messages.
-
-`group` may be a username or a numeric id, quoted or not. A digits-only value
-reaches Telegram as an integer; a name reaches it as a string, with a leading
-`@` stripped. A supergroup id must already carry its `-100` prefix — the
-scripts add nothing, because guessing the prefix would resolve the wrong chat.
+Both scripts share one session file (`./tmp/session.session`), so the code is
+asked for once per account, not once per group.
 
 ## Output
 
@@ -61,19 +45,18 @@ scripts add nothing, because guessing the prefix would resolve the wrong chat.
 {"id": 123, "username": "alice", "first_name": "Alice", "last_name": null, "is_bot": false, "is_deleted": false, "phone": null}
 ```
 
-Telethon session: `./tmp/session_<group>.session` — keeps you logged in
-across runs. Delete to force re-auth.
+Delete `./tmp/session.session` to force re-auth.
 
-## Resume
+## Rerun
 
-`main.py` reads `./tmp/tg_<group>.jl`, picks the max `id`, fetches with
-`min_id=<last>` in chronological order. Crash-safe: every message is
-flushed before the next is fetched (append mode).
+`main.py` reads `./tmp/tg_<group>.jl`, picks the max `id`, and fetches with
+`min_id=<last>` in chronological order. Every message is flushed before the
+next is fetched, so a crash costs nothing already written.
 
-`users.py` overwrites — group membership is a snapshot, not append-only.
+`users.py` overwrites — group membership is a snapshot, not a log.
 
 ## Limits
 
-Telegram throttles aggressive scrapers. The script doesn't rate-limit
-explicitly — Telethon's flood-wait handler kicks in automatically. For a
-fresh archive of a busy group, expect hours.
+Telegram throttles aggressive collectors. The scripts do not rate-limit
+explicitly; Telethon's flood-wait handler does it. For a fresh archive of a
+busy group, expect hours.

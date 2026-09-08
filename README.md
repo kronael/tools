@@ -10,7 +10,7 @@ Command-line utilities and Claude Code configuration.
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
-- [tg-fetch](tg-fetch/) — Telegram channel/group archiver (telethon, TOML config)
+- [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width

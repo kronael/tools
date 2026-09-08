@@ -1,8 +1,0 @@
-# Second positional param. Secrets only — keep your filled copy out of git.
-
-api_id   = 0                    # https://my.telegram.org/apps
-api_hash = ""
-
-# User auth. A bot cannot read group history.
-phone = "+1234567890"
-# bot_token = "123:AAF…"        # OR bot auth, no history
