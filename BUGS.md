@@ -71,6 +71,16 @@ Options (see `.ship/plan-skills-as-lints.md` § Distribution):
 Also: CI enforcement here needs an ast-grep-provisioned job (`make lints` is not
 in pre-commit because the lint CI runner has no ast-grep). Proposed 2026-08-20.
 
+### skills/diagrams: no sequence, swimlane, or state diagram patterns
+
+`skills/diagrams/SKILL.md` (52 lines) teaches only box-and-arrow component
+layout. It carries no pattern for the three other shapes that come up
+constantly: sequence (message order and who waits), swimlane (step ownership
+and the handoffs between actors), and state (the legal transitions of one
+entity). Each needs its own ASCII template plus a one-line rule for when to
+reach for it, in the same shape as the existing layout pattern.
+Reproduce: `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
+
 ### Deferred — need sign-off
 
 - **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,
