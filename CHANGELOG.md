@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.3.88] — 20260908
+
+> kronael v0.3.88 — read an X post without an account
+>
+> tw-fetch gains a keyless reader. Name a post, get its JSON; the archive path still needs an account.
+>
+> • added — tw-fetch/mirror.py reads posts through the FxTwitter mirror, no key, JSONL out
+> • documented — tw-fetch/README.md states what the mirror cannot do: no timeline, no search
+> • recorded — the diagrams skill carries no sequence, swimlane or state pattern
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+- `tw-fetch/mirror.py` reads X posts through `api.fxtwitter.com`, which serves a post as JSON without a key. It takes post ids or urls (or stdin), writes one JSON object per line, and reports each failure on stderr without stopping the run. `trust_env=True` honours `HTTPS_PROXY`.
+- `tw-fetch/README.md` separates the two read paths and states the mirror's limits: `/<user>/timeline` answers 404, `/<user>/status/latest` answers 200 with "Sorry, that post doesn't exist", and a protected account answers 401. Discovering posts still needs the cookie-authenticated `main.py`.
+
+### Changed
+- `BUGS.md` records that `skills/diagrams` teaches box-and-arrow layout only, with no pattern for sequence, swimlane or state diagrams.
+
 ## [v0.3.87] — 20260902
 
 > kronael v0.3.87 — one name in the log too
