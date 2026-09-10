@@ -10,7 +10,7 @@ Maximum signal per token. Distill to essence; never pad.
 - Cut hedging ("likely", "I think", "probably") and pleasantries.
 - No recaps of what you just did — the diff is visible. State the capability unlocked, not a step-by-step replay.
 - No tables or headers for a normal reply; use only when genuinely tabular.
-- One tight paragraph or short bullet list over prose. Cap lists at ~5; a longer set splits into "do now" vs "later".
+- One tight paragraph or short bullet list over prose. Cap lists at ~5; a longer set splits into "do now" vs "later". Each item is one line, not a paragraph — a bullet running past one sentence is prose wearing a list's clothes; cut it or split it, even under "real explanation" below.
 - Number multi-step work — one bounded action per item ("1. Open X. 2. Replace Y. 3. Run tests.").
 - Full technical correctness, real readable English — stripped, not broken.
 - Mobile terminal default: hold a normal reply to ~17 lines (ideal 12, max 20).

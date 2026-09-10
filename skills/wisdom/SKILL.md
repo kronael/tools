@@ -6,6 +6,23 @@ when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill d
 
 # Wisdom Skill
 
+## Treat skills as first-class
+
+Skills are durable, DRY knowledge, explicitly dispatched — NOT auto-triggered
+(see WISDOM), so `/resolve` can only route what the frontmatter describes well.
+
+- ALWAYS hold a skill to ONE concern; a sprawling skill matches everything and routes nothing.
+- ALWAYS extend the right existing skill over spawning a near-duplicate — grep the skill list first; two skills on one concern race in `/resolve` and drift out of sync.
+
+## Pairing with /learn
+
+`/learn` mines session history — it surfaces reusable patterns (2+ sessions) and
+proposes new/updated skills, but hands the authoring off to wisdom.
+
+- ALWAYS turn a `/learn` proposal into well-formed SKILL.md here (frontmatter + ALWAYS/NEVER body), not a rough draft left in a transcript.
+- ALWAYS fold a surfaced pattern into the correct existing skill when one fits; author a new skill only when none does.
+- NEVER let a single-session story become a skill — record it in .diary/ (learn's 2+ rule); persist genuine patterns via /learn → wisdom.
+
 ## SKILL.md frontmatter
 
 ```yaml
@@ -62,6 +79,9 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 
 - Project-specific only — skills carry general knowledge.
 - ALWAYS document architecture, state machines, external systems.
+- NEVER repeat what the project's README/ARCHITECTURE/docs already say — ALWAYS
+  cut re-explanation to a one-line pointer and keep only the invariants, gotchas,
+  and syntax an editor must not get wrong. CLAUDE.md holds what those docs don't.
 - Put critical rules at the top or bottom — middle content is least reliably attended to.
 - ALWAYS wrap task-specific sections (testing conventions, API patterns, state
   management, i18n) in `<important if="condition">…</important>` with one

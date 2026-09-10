@@ -79,10 +79,11 @@ NEVER claim work is done, tests pass, or a bug is fixed without running the veri
 
 ## Think with the user before acting
 
-NEVER take tool actions, commits, or other hard-to-reverse steps when the
-path is ambiguous, underspecified, or costly to undo. ALWAYS ask one
-clarifying question or pause in `<think>` first. Once the direction is
-clear, act decisively.
+NEVER take tool actions, pushes, force-resets, or other hard-to-reverse
+steps when the path is ambiguous, underspecified, or costly to undo. ALWAYS
+ask one clarifying question or pause in `<think>` first. Once the direction
+is clear, act decisively — finishing user-directed work includes committing
+it; that is not a separate ask (see Development Workflow).
 
 For triage of which skill or context a request needs, run `/resolve`.
 
@@ -122,7 +123,7 @@ baseline silently fail to apply.
 - **Fail loud, fail to the user.** An error on a user-facing path MUST surface to the user (thrown / returned non-2xx / delivered to the chat), not just logged — a logged-but-invisible failure is still silent. NEVER swallow (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
 - **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
 - **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
-- **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off BEFORE you ship. Only symptom-level loud-logging ships inline.
+- **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off on the DESIGN/APPROACH BEFORE you build it. Only symptom-level loud-logging ships inline. Once the approach is approved and the work is built and verified, committing it follows the normal default (Development Workflow) — sign-off does not reopen as a second, separate commit-permission question.
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
@@ -131,8 +132,13 @@ baseline silently fail to apply.
 - NEVER improve beyond what's asked
 - ALWAYS use conventional-commit format: "type(scope): message" —
   fix/feat/docs/test/chore/refactor (scope optional); "merge:"/"release:" for those
-- Invoking /refine, /ship, /commit, /release IS the ask to commit (those
-  workflows commit by design); otherwise commit only when the user asks
+- Committing finished, verified, user-directed work IS part of doing the
+  work — DEFAULT to committing once it's done, split into coherent commits
+  (one logical change each). Do NOT ask "should I commit this?" as a
+  separate question. /refine, /ship, /commit, /release commit by design too.
+  Hold off only for a genuinely user-owned call: scope is unclear, the
+  change wasn't what the user asked for, or it's an unapproved redesign
+  (see System-change discipline)
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
