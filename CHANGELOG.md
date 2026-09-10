@@ -1,5 +1,43 @@
 # Changelog
 
+## [v0.3.81] — 20260910
+
+> kronael v0.3.81 — a leaner wisdom file
+>
+> The always-loaded rule file drops 40% of its lines by keeping only what a model will not do on its own.
+>
+> • Wisdom — 254 to 159 lines; anything a fresh agent already does unprompted is gone
+> • Push rules — a repo can lift them now, but only with a written grant naming the command
+> • Config — flags plus env vars for simple cases; TOML-as-argv stays for nested shapes
+> • Testing and shell rules — moved into the skills that own them, read on demand
+> • Rule authoring — the `wisdom` skill gains a subtraction test that measures what to keep
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- Global wisdom: 254 to 159 lines. Two fresh subagents wrote their own default
+  guidelines for every topic it covers, without reading it, and marked what they
+  drift on; what they produced unprompted was cut, and the survivors were cut
+  again where the system prompt or the output style already says it. Kept: the
+  owned drifts, unguessable house facts, workflows, and the four git rules that
+  contradict the harness on purpose — now labelled as deliberate overrides.
+- Push rules are repo-overridable defaults: lifted only in writing, in that
+  repo, and only for what the grant names. An in-session ask is not a grant.
+- Config guidance prefers flags plus env vars — a short flag where a human types
+  it, a long name with an env var where the deploy sets it. TOML as first CLI
+  param stays for genuinely nested config.
+
+### Added
+
+- `wisdom` skill: the subtraction test, so the next pass measures what to keep
+  instead of guessing — fresh sub, no access to the file under audit, drifts
+  marked, two groups so agreement is the evidence.
+- `software/testing.md`: mocking policy, unit-vs-integration layout,
+  test-features-not-fixes, test-config-object typing, and that an environment
+  failure is a reported blocker rather than a skip, `xfail` or stub.
+- `sh`: fixed working directory and no `$0`/`__dirname` path resolution.
+
 ## [v0.3.80] — 20260901
 
 > kronael v0.3.80 — cleaner skills, safer installs
