@@ -155,10 +155,12 @@ RUN mkdir -p /etc/zsh && printf '%s\n' \
 # claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
 # honored; falls back to the symlinked default node otherwise. jq strips the
 # host's native-install keys so the container's bun claude doesn't warn about a
-# ~/.local/bin/claude that only exists on the host.
+# ~/.local/bin/claude that only exists on the host, and pins diffSidebarOpen so
+# the diff tab stays closed (it is global config in ~/.claude.json, not a
+# settings.json key, so it cannot be shipped in settings-recommended.json).
 RUN printf '#!/bin/sh\n\
-[ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative)" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
-[ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true}" > "$HOME/.claude.json"\n\
+[ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative) + {diffSidebarOpen:false}" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
+[ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true,\"diffSidebarOpen\":false}" > "$HOME/.claude.json"\n\
 export NVM_DIR="/opt/dev-tools/nvm"\n\
 unset NPM_CONFIG_PREFIX\n\
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\

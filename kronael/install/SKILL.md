@@ -155,6 +155,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
+   - **Diff sidebar off** — `diffSidebarOpen` is global config, not a settings
+     key, so it lives in `~/.claude.json` and CANNOT ship in
+     `settings-recommended.json`. Set it there with
+     `jq '.diffSidebarOpen=false' ~/.claude.json > t && mv t ~/.claude.json`,
+     preserving every other key. It takes effect on the next Claude Code start.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
    support), install every bridge:

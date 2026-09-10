@@ -145,6 +145,15 @@ jq -s '.[0].hooks = .[1].hooks | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
+**Diff sidebar off** — `diffSidebarOpen` is global config, not a settings key,
+so `settings-recommended.json` cannot carry it. Pin it in `~/.claude.json`,
+keeping every other key; it applies on the next Claude Code start:
+
+```sh
+jq '.diffSidebarOpen=false' ~/.claude.json > ~/.claude.json.new \
+  && mv ~/.claude.json.new ~/.claude.json
+```
+
 **Codex hooks** — copy `codex-hooks.json` to `~/.codex/hooks.json` after the
 Claude hook scripts are installed. This is part of Codex bridge-only repair,
 not only full installs. In a fresh Codex TUI session, the user must open

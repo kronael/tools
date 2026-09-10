@@ -97,7 +97,8 @@ container so the boxed agent can't modify it.
 
 Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
-- `~/.claude.json` -> copied at startup (fallback creates minimal file)
+- `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
+  (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
 - `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
 
