@@ -99,7 +99,10 @@ that message in a comment above it is the canonical redundant comment.
 Reach for a struct or object only when you need to hold state or inject
 dependencies; otherwise plain functions in modules compose better and leak less.
 Model states as explicit enum variants rather than implicit boolean flags, and
-always validate input before it reaches persistence.
+always validate input before it reaches persistence. Name a variant by what
+happens at the use site — the action or effect — never an interpretive label
+the reader has to decode: `Notify::Send`/`Notify::Skip`, not
+`Notify::Partners`/`Notify::Silent`.
 
 ## Boring code
 

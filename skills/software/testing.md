@@ -14,10 +14,13 @@
 
 ## Descriptions
 
-- A test module's doc-comment and a test's intro name the SCENARIO and the
-  BEHAVIOR under test — NEVER a restatement of the assertion or return value.
-  Bad: `Returns 413 when Processing` (echoes the assert). Good: `a report
-  mid-regeneration still serves the last coherent snapshot`.
+- A test module's doc-comment and a test's intro name BOTH the SCENARIO and
+  the OUTCOME it asserts — condition and concrete result, never one alone.
+  Bad: a bare list of return codes with no scenario (`200`, `413`). Bad: a
+  scenario with no stated outcome (`when processing`). Good: `an existing
+  withdrawer with data -> 200 with the report`, `a report mid-regeneration ->
+  200, still serves the last coherent snapshot`, `a never-generated report ->
+  413 not-ready`.
 
 ## Testcontainers
 
