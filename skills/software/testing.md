@@ -12,6 +12,13 @@
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
 
+## Descriptions
+
+- A test module's doc-comment and a test's intro name the SCENARIO and the
+  BEHAVIOR under test — NEVER a restatement of the assertion or return value.
+  Bad: `Returns 413 when Processing` (echoes the assert). Good: `a report
+  mid-regeneration still serves the last coherent snapshot`.
+
 ## Testcontainers
 
 - Centralize setup in `tests/common/mod.rs` or the language equivalent.

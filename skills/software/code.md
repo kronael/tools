@@ -73,16 +73,16 @@ that top-level Python runner instead of requiring shell redirection.
 
 ## Comments
 
-ZERO comments by default. ALWAYS carry intent through names, types, and
-structure first; a comment is the last resort. When one earns its place, at most
-ONE short line, and only when the WHY is not derivable from the surrounding code
-— rationale, a non-obvious invariant, a cross-module assumption. NEVER restate
-WHAT the code does.
+ZERO comments by default — most comments are noise; when in doubt, delete.
+ALWAYS carry intent through names, types, and structure first; a comment is the
+last resort. When one earns its place, distill it to ONE dense line carrying
+only the non-obvious WHY — rationale, a non-obvious invariant, a cross-module
+assumption. NEVER restate WHAT the code does.
 
-Redundancy test — delete the comment if it fails: NEVER write a comment whose
-content is already visible in adjacent code, INCLUDING a log, warn, or error
-message on a neighbouring line. Paraphrasing that message in a comment above it
-is the canonical redundant comment.
+Redundancy test — delete the comment if it fails: NEVER write, and NEVER leave
+standing, a comment whose content is already visible in adjacent code,
+INCLUDING a log, warn, or error message on a neighbouring line. Paraphrasing
+that message in a comment above it is the canonical redundant comment.
 
 - NEVER a multi-line comment block — no `///`, no `/** */`, no stacked `//`. A
   comment spanning more than one line is a bug; cut it to one line or drop it.
@@ -90,6 +90,9 @@ is the canonical redundant comment.
   and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
   name instead.
 - NEVER a ticket number or issue ID in a comment.
+- When editing existing code: DELETE a comment that fails the redundancy test
+  and DISTILL an over-long one to one line, on sight — leaving either stand is
+  a defect, not a no-op.
 
 ## Design
 
