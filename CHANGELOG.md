@@ -1,5 +1,57 @@
 # Changelog
 
+## [v0.3.81] — 20260910
+
+> kronael v0.3.81 — commit by default, leaner reviews
+>
+> Finished work now commits by default, review findings post distilled, and the bundle gains squash, solana and social-image skills.
+>
+> • Wisdom — verified, user-directed work commits as part of the work, not as a separate ask
+> • Review — every finding is distilled to two lines before it lands on a PR
+> • Refine — reads a PR's unresolved threads, fixes what is real, replies and resolves
+> • New skills — `squash`, `solana`, `create/social`, plus per-language refine lenses
+> • Hooks — the first prompt of a session nudges `/resolve`; the diary hook stopped writing empty headers
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Skills: `squash`, `solana` (+ its onchain/layout/deps/review data files), the
+  `create/social` mode with its render script, `software/money.md`,
+  `ts/node-cluster.md`, `ts/v8-deopt.md`, and `refine/{ts,tsx}.md` — the
+  language lenses `refine` step 2b reads.
+- `show-me` skill ported from humanlayer/skills: smallest useful visual for the
+  current conversation topic.
+- `prompt_nudge` nudges `/resolve` once per session, behind a `.claude/tmp` marker.
+- `wisdom`: `<important if>` guidance for project `CLAUDE.md`, the runbook body
+  pattern, skills-as-first-class rules and the `/learn` pairing.
+- `tsx`: prop-narrowing rules folded from humanlayer/skills.
+
+### Changed
+
+- Committing finished, verified, user-directed work is part of doing the work —
+  no separate "should I commit?" question.
+- `review give`/`take` and `gh-comment` distill each finding to at most two
+  lines before posting; `refine` gained PR review-thread intake and resolution.
+- Comments policy distilled to one dense why-line; test descriptions name the
+  scenario and behavior, never the assertion.
+- `merge` covers rebasing onto a squash-merged main by tree boundary; `next`
+  parks items via `TodoWrite` instead of a file.
+- dockbox and qemubox pin `claude-fable-5-1`, `gpt-6-astra`, and default to
+  `claude-opus-5`.
+
+### Fixed
+
+- The stop hook reports a missing or stale diary instead of appending an empty
+  `## HH:MM` header.
+- The pretool hook routes `SKILL.md`/`CLAUDE.md`/`AGENTS.md` edits to `/wisdom`.
+- The sandbox drift guard extracts each script's own default model and compares
+  them, instead of grepping one hardcoded model literal.
+- `software/money.md`, `ts/node-cluster.md` and `ts/v8-deopt.md` are reachable
+  from their owners' dispatch tables and pointers, so they actually load.
+- Published skill content carries no pointers to notes or services a reader
+  cannot reach.
+
 ## [v0.3.80] — 20260901
 
 > kronael v0.3.80 — cleaner skills, safer installs
