@@ -18,6 +18,12 @@ COMMIT_RULES = """Commit rules:
 - Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
 
+RESOLVE_NUDGE = (
+    'New task (first prompt this session): run /resolve before acting — it '
+    'loads diary + memory context and routes to the right skill. Skip only '
+    'if this prompt is a direct continuation of work already in context.'
+)
+
 AGENT_KEYWORDS = {
     'architecture': '/specs',
     'background': '/dispatch',
@@ -130,6 +136,23 @@ def explicit_route(prompt):
     return None
 
 
+def first_prompt_of_session(cwd, session_id):
+    """True the first time a session submits a prompt, recording a marker so
+    later prompts stay silent. False when the marker exists or cannot be
+    written, so an unwritable state dir never turns the nudge into per-prompt
+    spam."""
+    state_dir = os.path.join(cwd, '.claude', 'tmp')
+    state_file = os.path.join(state_dir, f'resolve-nudge-{session_id}')
+    if os.path.exists(state_file):
+        return False
+    try:
+        os.makedirs(state_dir, exist_ok=True)
+        open(state_file, 'w').close()
+    except OSError:
+        return False
+    return True
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -148,6 +171,15 @@ def main():
 
     parts = []
 
+    session_id = data.get('session_id') or 'default'
+    cwd = data.get('cwd') or '.'
+    if (
+        prompt.strip()
+        and first_prompt_of_session(cwd, session_id)
+        and not re.search(r'/resolve\b', prompt)
+    ):
+        parts.append(RESOLVE_NUDGE)
+
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
@@ -156,7 +188,7 @@ def main():
     if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
         parts.append(COMMIT_RULES)
     elif matched:
-        parts.append(f'info: Invoke {matched}.')
+        parts.append(f'info: {matched} matches this request.')
 
     if parts:
         print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))

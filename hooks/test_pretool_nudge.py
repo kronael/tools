@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from pretool_nudge import extract_path
 from pretool_nudge import process
@@ -37,6 +39,10 @@ SKILL_CASES = [
     ('app.service', '/ops'),
     ('cron.timer', '/ops'),
     ('proxy.socket', '/ops'),
+    ('/repo/skills/review/SKILL.md', '/wisdom'),
+    ('SKILL.md', '/wisdom'),
+    ('/repo/CLAUDE.md', '/wisdom'),
+    ('/home/user/.claude/AGENTS.md', '/wisdom'),
     ('foo.xyz', None),
     ('foo', None),
     ('README', None),

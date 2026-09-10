@@ -2,6 +2,8 @@
 # PreToolUse hook: block unsafe commands and emit per-language file nudges.
 # Production: silent-fail on any error except explicit unsafe-command blocks. Tests:
 # `pytest hooks/pretool_nudge.py` or `make test`.
+from __future__ import annotations
+
 import contextlib
 import json
 import os
@@ -43,6 +45,8 @@ def skill_for(path: str) -> str | None:
     if not isinstance(path, str) or not path:
         return None
     lower = os.path.basename(path).lower()
+    if lower == 'skill.md' or lower in ('claude.md', 'agents.md'):
+        return '/wisdom'
     if lower in ('makefile', 'gnumakefile') or lower.endswith(('.mk', '.make')):
         return '/mk'
     if lower == 'dockerfile' or lower.startswith('dockerfile.'):
