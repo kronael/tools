@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.3.82] — 20260910
+
+> kronael v0.3.82 — local work folded back onto master
+>
+> Two skill improvements that lived only on this machine are now in the repo, on top of master's own updates.
+>
+> • Install — offers ripwire, the optional codebase-map tool, for Claude and Codex
+> • finalize-crate — works for any language, not just Rust, and starts by extracting the library
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Install offers **ripwire** on its own ask: the binary plus its `ripwire-*`
+  skills, with the optional `ripwire wrap <agent>` MCP interface mentioned
+  rather than installed silently.
+
+### Changed
+
+- `finalize-crate` generalizes beyond Rust — "Finalize Library", a step 0 for
+  extracting a library out of a host repo, and release verification for
+  crates.io, npm and PyPI. Master had re-added this skill at its Rust-only
+  vintage; the live copy was ahead, and its body wins while master's frontmatter
+  YAML fix is kept.
+
 ## [v0.3.81] — 20260910
 
 > kronael v0.3.81 — a leaner wisdom file
