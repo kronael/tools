@@ -55,6 +55,13 @@ repo CLAUDE.md links to this file.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 
+## Earning a rule's place
+
+- ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
+  rules: a fresh sub writes its defaults for the topic, and whatever it produces
+  unprompted does not go in. Only drifts, unguessable local facts, workflows and
+  deliberate harness overrides survive.
+
 ## Prompt examples and context
 
 - Treat examples as steering tokens, not neutral documentation.
