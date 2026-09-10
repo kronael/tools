@@ -1,5 +1,44 @@
 # Changelog
 
+## [v0.3.83] — 20260910
+
+> kronael v0.3.83 — make test actually tests
+>
+> The root test target had been running nothing for every project; it now runs them all, and the two sandboxes agree on their model pins again.
+>
+> • `make test` — runs bhctl, dockbox, hooks, qemubox and udfix instead of silently skipping them
+> • qemubox — fable, gpt and the default model match dockbox again; help text follows
+> • hooks — learn.py and the smoke suite are tracked, and ruff is clean across hooks/
+> • README guidance — open with what it is, why to use it, then a runnable block
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- Root `Makefile`: `$(addprefix test-,$(PROJECTS))` in `.PHONY` registered
+  explicit commandless rules that shadowed the `test-%` pattern rule, so
+  `make test-hooks` ran nothing and `make test` still reported success while
+  executing only the drift script. Dropped from `.PHONY`; the pattern rule is
+  phony-in-effect since the target file never exists.
+- `qemubox` model pins had fallen behind `dockbox`: `fable` on
+  `claude-fable-5`, `gpt` on `gpt-5.5`, and the `claude` alias still on
+  `claude-opus-4-8` while its own `opus` alias had moved to `claude-opus-5`.
+  `tests/drift_test.sh` checked for the retired `claude-opus-4-8` default and
+  now checks `claude-opus-5`.
+- `hooks/`: `FA102` (PEP 604 unions without `from __future__ import
+  annotations`), `DTZ005` (naive `datetime.now()`) and `TRY300` are cleared;
+  ruff and ruff-format pass on `--all-files`.
+
+### Added
+
+- `hooks/learn.py` and `hooks/test_hooks.py` are tracked. The latter drives the
+  installed hooks under `~/.claude` by subprocess, so it is run by hand rather
+  than collected by pytest.
+- `agents/readme.md`: a README opens with what it is in one plain sentence, why
+  to use it, then a runnable block, and closes with a how-to-read-this map.
+  `readme` and `specs` skills point at `doc-topology`; `ts` gains the
+  Bun-as-package-manager and Node-24-floor rules.
+
 ## [v0.3.82] — 20260910
 
 > kronael v0.3.82 — local work folded back onto master
