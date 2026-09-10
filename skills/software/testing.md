@@ -12,6 +12,21 @@
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
 
+## Scope and layout
+
+- Prefer the real thing: integration/e2e wherever the seam is cheap (container
+  DB, real handler, tmpdir I/O). Mock ONLY what you cannot run — paid or
+  third-party APIs, clocks, randomness, cloud SDKs. NEVER mock your own modules
+  to keep a unit test tidy; that tests the mocks.
+- Unit tests next to the code (`*_test.go`, `test_*.py`); integration tests in a
+  dedicated top-level `tests/`.
+- Test features, not fixes: a runtime failure means fix the code — add a test
+  only where the feature itself lacks coverage.
+- Test config objects match the target type exactly; omit unknown properties
+  rather than widening the type.
+- An environment failure (missing binary, no docker, no credential) is a
+  reported blocker. NEVER skip, `xfail`, or stub the dependency to get green.
+
 ## Testcontainers
 
 - Centralize setup in `tests/common/mod.rs` or the language equivalent.
