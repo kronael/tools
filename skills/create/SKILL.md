@@ -1,7 +1,7 @@
 ---
 name: create
 description: Router for creative artifact generation — CVs, web pages, videos, generative art, diagrams. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
-when_to_use: "CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram"
+when_to_use: "CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, meme, X image, timeline image, code-shot explainer"
 user-invocable: true
 ---
 
@@ -29,6 +29,7 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 | ASCII video/animation, audio-reactive ASCII, matrix effects | `art/ascii-video.md` |
 | p5.js, generative art, shaders, canvas, interactive/3D/audio sketches | `art/p5js.md` |
 | pretext demos: text flowing around obstacles, text-as-geometry games | `art/pretext.md` |
+| social image for the X feed: meme PNG, looping GIF, code-shot explainer | `social.md` |
 | hand-drawn-style diagram JSON for excalidraw.com | `diagram/excalidraw.md` |
 | dark-themed SVG architecture/cloud/infra diagram as HTML | `diagram/architecture-diagram.md` |
 
