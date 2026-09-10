@@ -37,7 +37,12 @@ CI_WORKFLOWS := \
 	$(W)/test-bhctl.yml \
 	$(W)/lint.yml
 
-.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
+# NEVER list the `test-%`/`clean-%` expansions here: naming them as .PHONY
+# prerequisites registers explicit commandless rules for those exact targets,
+# and an explicit rule beats a pattern rule, so `make test-hooks` silently ran
+# nothing. The pattern rule is phony-in-effect anyway — the target file never
+# exists.
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
