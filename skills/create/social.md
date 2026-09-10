@@ -13,14 +13,14 @@ and preferred for reach (see § Render → GIF). Methodology + citations:
 one-line takeaway from the critique: **an image validates insight, not
 styling — anti-slop aesthetics on a generic claim is still slop.**
 
-**Verdicts from the go-from-rust project** (user-judged; bias toward the ✅):
+**Mode verdicts** (from shipped work; bias toward the ✅):
 - ✅ MEME, mascot/character gag (Ferris "very proper" vs gopher sprinting
-  past) — landed, the proven path (a GIF of it beats the static version).
-- ⚠️ EXPLAINER (code-shot / before-after) — experimental, so far BAD: read
-  flat and un-shareable ("terrible"). Use only if the code genuinely IS the
-  joke; expect heavy iteration.
-- ❌ Portrait "poster" (multi-section / 3-card) — BAD/slop, rejected as
-  "purest AI slop." Never ship one as a social image.
+  past) — the proven path (a GIF of it beats the static version).
+- ⚠️ EXPLAINER (code-shot / before-after) — unproven and reads flat and
+  un-shareable. Use only if the code genuinely IS the joke; expect heavy
+  iteration.
+- ❌ Portrait "poster" (multi-section / 3-card) — purest AI slop. NEVER ship
+  one as a social image.
 
 Default to MEME.
 
@@ -50,8 +50,7 @@ If you can't name the anchor, stop and find it before designing.
   text. **Thumbnail test:** view the PNG at ~500px / squint — is the one idea
   obvious in ~1s? If not, cut and enlarge (never shrink type to fit — see Rules).
 - Match the project's palette if it has one (krons/kronael → dark mono, bg
-  `#0a0e1a`, blue `#60a5fa`, amber `#fbbf24`, mono font — see the
-  krons-brand-palette memory).
+  `#0a0e1a`, blue `#60a5fa`, amber `#fbbf24`, mono font).
 - Keep the SELLING off the image (no feature list / CTA / marketing) — that's
   what reads as an ad. A small footer with the project name + a short URL
   (what it is + where to get it) IS fine and helps discovery; the primary link

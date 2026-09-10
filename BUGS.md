@@ -24,6 +24,17 @@ them ro / redacted / not at all) — not a full config copy-in (that isn't
 needed). Lower priority — dockbox's README already discloses it is not a
 boundary for hostile code.
 
+### create/social references narrate their own edit history
+
+`skills/create/social/references/research-social-meme.md:196-217` carries a
+"Corrections (post-codex)" section describing what the document itself changed
+("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
+`references/codex-critique.md` is framed as a verbatim audit trail of a review
+pass. Both are the pattern the wisdom file bans: prior-version narration inside
+permanent content. They are cold provenance files, not instructions, so nothing
+reads them by accident — the call is whether they stay as attribution material
+or move to `.diary/`. Needs the maintainer's decision, not a silent rewrite.
+
 ### Deferred — need sign-off
 
 - **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,

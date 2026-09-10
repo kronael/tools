@@ -4,7 +4,7 @@ Scaling a single-threaded, CPU-bound Node/NestJS service to N workers per pod
 with `node:cluster`, routing each connection to an idle worker without
 re-serialising payloads. Reference implementation: `cluster/cluster.dispatcher.ts`
 (`dispatcherLoop`), `cluster/cluster.worker.ts` (`workerLoop`),
-`cluster/cluster.protocol.ts` in staking-rewards-facade.
+`cluster/cluster.protocol.ts`.
 
 The Node cluster primary is named for its ROLE here — the dispatcher — because
 `primary` says nothing about what it does.

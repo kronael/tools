@@ -9,6 +9,14 @@ when_to_use: editing .ts files or writing TypeScript
 Requires the `software` skill's `code.md` for shared naming, style, and design
 rules. Below are TypeScript-specific additions and deltas.
 
+Read on demand, in this directory:
+- `node-cluster.md` — running one CPU-bound Node/NestJS service as N workers
+  with `node:cluster`: idle-first dispatch of raw socket handles over IPC,
+  pulled Prometheus metrics, worker count from the pod CPU limit.
+- `v8-deopt.md` — a hot path that measures slower than it should: proving
+  megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
+  profiling, and when to stop.
+
 ## Code Style
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
 - Adhere to `gst` lint rules; match existing style when changing code
