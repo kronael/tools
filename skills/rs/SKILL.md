@@ -53,9 +53,23 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - DB status/type columns as smallint, `#[repr(i16)]` enum in code
 
 ## Testing
-- Unit tests live alongside source as `src/<module>_test.rs`, imported with
-  `#[cfg(test)] mod <module>_test;` at the bottom of the source file —
-  NOT inline `#[cfg(test)] mod tests { ... }`, NOT in `tests/`
+- Unit tests live alongside source as `src/<module>_test.rs`, declared at the
+  BOTTOM of the source file — NOT inline `#[cfg(test)] mod tests { ... }`,
+  NOT a `<module>/tests.rs` subdirectory, NOT in `tests/`
+- **`#[path]` is REQUIRED on every module that is not the crate root or a
+  `mod.rs`.** A bare `#[cfg(test)] mod foo_test;` inside `src/a/foo.rs` resolves
+  to `src/a/foo/foo_test.rs`, not the sibling — you get a single-file directory
+  per module, or a compile error. Write it as:
+  ```rust
+  #[cfg(test)]
+  #[path = "foo_test.rs"]
+  mod foo_test;
+  ```
+  `#[path]` is relative to the DIRECTORY the declaring file sits in, so this
+  lands on `src/a/foo_test.rs`. The test module stays a CHILD of `foo`, which is
+  what keeps `foo`'s private items (private fns, private struct fields, consts)
+  reachable from the test. A sibling module cannot see them — that is why the
+  file must be wired this way and not declared from the parent.
 - Integration tests (cross-crate, external API surface) go in `tests/`
 - Inside `src/<module>_test.rs` use `crate::` paths, not `super::*`
 - `--test-threads=1` if global state via DashMap/RwLock

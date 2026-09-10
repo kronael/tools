@@ -62,3 +62,11 @@ rules. Below are TypeScript-specific additions and deltas.
   root = "src"
   ```
 - `make e2e`: Playwright, `make smoke`: against running server, `bun test`: unit only
+
+## Tooling
+- ALWAYS pin the bun runtime with a `.bun-version` file — CI `setup-bun` reads
+  it via `bun-version-file`, mise reads it as an idiomatic version file. NEVER
+  assume bun auto-switches: the runtime ignores the file, it's a convention.
+- An older local bun canNOT parse a lockfileVersion-2 `bun.lock` (written by bun
+  ≥1.4): it silently ignores it and rewrites a v1 lockfile. NEVER commit that
+  downgrade — `git checkout bun.lock` and `bun upgrade` to match CI's pin.

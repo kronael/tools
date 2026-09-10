@@ -29,6 +29,28 @@ Discard with a bare `_`, never a named `_prefix` binding — `|(_, account)|`, n
 `|(_withdraw, account)|`. The name labels a value you are throwing away; it is
 clutter the reader still has to parse.
 
+Inherit names; never invent one when the surrounding code already has it.
+Before naming a function, parameter, field, type, test helper, or
+commit-message term, check what the code, the schema, the domain, and
+existing callers already call that thing, and reuse it exactly. A new word is
+a claim that no existing name fits, and it has to be earned. Name a parameter
+or local after its own type or the domain concept it holds, not after a role
+you invented — a `&WithdrawerTracker` parameter is `tracker`, not `scope`. Use
+the domain's word, not a synonym you prefer — if the column and the
+surrounding code say `withdrawer`, the accessor is `withdrawers_of`, never
+`owners_of`. An API-visible function — anything `pub`/`pub(crate)`, called
+across modules, or that reads as part of the surface — is named by a verb
+phrase: the verb is the action, the type it returns is the verb's object —
+`filter_resolved_snapshots(...)`, not the value-shaped noun
+`snapshots_with_resolved_withdraw(...)` that reads like the thing returned
+rather than the act. A small local or inline helper may instead take the noun of
+the type it returns, not a structure it builds internally or a nearby map.
+Either way, `is_`/`has_` for predicates, `to_`/`into_` for conversions. If an
+existing name is genuinely wrong,
+change it everywhere — never coin a second name that competes with it. A
+rename is not licence to rewrite prose: the same word can be a variable in
+code and a domain term in a comment, and a blind rename corrupts the comment.
+
 ## Layout and formatting
 
 One import per line; it keeps diffs clean. Keep code at 80 columns or under and

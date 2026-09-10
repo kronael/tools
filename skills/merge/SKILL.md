@@ -1,7 +1,7 @@
 ---
 name: merge
 description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion. NOT for ambiguous semantic conflicts (resolve manually).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick"
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge"
 user-invocable: true
 ---
 
@@ -26,6 +26,20 @@ Before resolving ANYTHING, size the merge and decide whether to ask first.
   deletion isn't mistaken for lost work.
 - Only skip the ask for small, obviously-trivial merges (a handful of
   complementary/formatting conflicts). When in doubt, ask.
+
+## 0b. Rebasing onto a squash-merged main
+
+When your branch was squash-merged to main and local has diverged, `git rebase
+origin/main` replays EVERY commit and conflicts on work main already holds.
+
+- ALWAYS rebase only the post-merge commits: find the boundary (the local commit
+  whose tree matches `origin/main`), then
+  `git rebase --onto origin/main <boundary> HEAD`. Usually zero conflicts.
+- Find the boundary by tree, not by eyeballing:
+  `t=$(git rev-parse origin/main^{tree}); for c in $(git rev-list --first-parent
+  HEAD); do [ "$(git rev-parse $c^{tree})" = "$t" ] && echo "$c" && break; done`
+- ALWAYS prove nothing was lost: `git diff --quiet <old-tip> HEAD` (exit 0 =
+  identical tree). The old tip stays in reflog — NEVER trust the replay blind.
 
 ## 1. Orient — which operation is in flight
 

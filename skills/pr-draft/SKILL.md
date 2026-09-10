@@ -19,8 +19,16 @@ Run directly in main context (no subagent).
    ```
    The base is the merge-base with main, NOT `origin/main` itself — that misses commits
    already on the branch before the last merge. If both fail, ask the user.
-2. Draft title and body covering ALL changes since that base, then cut fluff to
-   essence — only the trimmed version is real (see format below)
+2. Draft title and body: title carries the business value; body is a reading
+   guide for the reviewer alone — where the logic lives, what to scrutinize,
+   what's risky — NOT a commit log, so skip renames, churn, and anything the
+   reviewer doesn't need to judge the change. NEVER sell a change to a
+   wire-visible contract (event name, API field, route) as neutral — verify
+   it against what's documented or already emitted, since absence from
+   `origin/main` isn't proof it's free to change — and flag it for the
+   reviewer instead. ALWAYS flag verified-but-unfixed issues as "known,
+   deferred" — never drop them to look clean. Then cut to essence (see
+   format below).
 3. Show draft, ask if they want to tweak anything
 4. Show draft. For a NEW PR, STOP — NEVER run `gh pr create` or open the PR.
 
@@ -49,25 +57,27 @@ NEVER hard-wrap Markdown uploaded to GitHub just for source width — ALWAYS kee
 **Title**: `[type] Short imperative sentence` (max 72 chars)
 Types: `fix` `feat` `refactor` `docs` `chore`
 
-**Body**: short prose, lead with the main point. No bullets, no "This PR...",
-no test plans or checklists. Prose follows the `writing` skill's copy rules.
+**Body**: short prose lead; a bulleted reading guide ONLY when it aids
+navigation, never to pad or restate the commit log. No "This PR...", no test
+plans or checklists. Prose follows the `writing` skill's copy rules.
 
 ALWAYS draft then cut — the first version is a draft, NEVER the deliverable.
-Once written, strip every word that doesn't change meaning: hedges, context the
-diff already shows, adjectives, any line kept only because it "sounds complete."
-Only the trimmed result is final and real. Shortest version that still says it
-wins — 2-3 lines beats 4; NEVER pad to look thorough.
+Strip every word that doesn't change meaning: hedges, context the diff
+already shows, adjectives, filler kept only because it "sounds complete."
+Only the trimmed result is real — shortest version that still gives the
+reviewer what they need; NEVER pad to look thorough.
 
 ALWAYS output the draft (title + body) in one fenced code block so it is easy
 to copy.
 
 Example:
 ```
-[feat] Extend dockbox with full headless browser support
+[feat] Send unstake quote and settlement events to Mixpanel
 
-Playwright installs as root with --with-deps, replacing 15 manually-listed Chrome libs.
-agent-browser CLI, playwright chromium, and puppeteer chrome are baked into the image.
+Instruments the instant-unstake flow so drop-off and settlement outcomes show up in Mixpanel instead of only server logs.
 
-Also adds skills for browser automation, PR drafting,
-and a py rule against empty __init__.py files.
+- `trackUnstakeEvent()` centralizes the event shape — every call site routes through it, so a bad field breaks all events at once.
+- Contract change to confirm: renames `instant_unstake_amount_adjusted` to `instant_unstake_adjustment_prompted` — confirm nothing downstream still keys on the old name.
+
+Known, deferred: the native-auction path can't attach a cost basis yet (`costsKnown: false`), logged as a follow-up.
 ```
