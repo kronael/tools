@@ -31,8 +31,8 @@ done
 
 # Shared default model (structured differently in each, so checked by presence).
 for f in "$qb" "$db"; do
-    grep -q 'claude-opus-4-8 --effort xhigh' "$f" || {
-        echo "DRIFT: default 'claude-opus-4-8 --effort xhigh' missing in $f" >&2; fail=1; }
+    grep -q 'claude-opus-5 --effort xhigh' "$f" || {
+        echo "DRIFT: default 'claude-opus-5 --effort xhigh' missing in $f" >&2; fail=1; }
 done
 
 [ "$fail" -eq 0 ] && echo "drift_test.sh: ok"

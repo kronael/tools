@@ -53,8 +53,8 @@ Tools (first positional arg -- no leading dash):
     haiku           Claude Code --model claude-haiku-4-5-20251001
     sonnet          Claude Code --model claude-sonnet-5 --effort high
     opus            Claude Code --model claude-opus-5 --effort xhigh
-    fable           Claude Code --model claude-fable-5
-    gpt             Codex -m gpt-5.5
+    fable           Claude Code --model claude-fable-5-1
+    gpt             Codex -m gpt-6-astra
     mini            Codex -m gpt-5.4-mini
     spark           Codex -m gpt-5.3-codex-spark
     bash|zsh|sh     Interactive shell (sh is an alias)
@@ -663,13 +663,13 @@ apply_flag() {
 
 tool_cmd() {
     case "$1" in
-        claude) cmd=(claude --model claude-opus-4-8 --effort xhigh) ;;
+        claude) cmd=(claude --model claude-opus-5 --effort xhigh) ;;
         codex) cmd=(codex) ;;
         haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
         sonnet) cmd=(claude --model claude-sonnet-5 --effort high) ;;
         opus) cmd=(claude --model claude-opus-5 --effort xhigh) ;;
-        fable) cmd=(claude --model claude-fable-5) ;;
-        gpt) cmd=(codex -m gpt-5.5) ;;
+        fable) cmd=(claude --model claude-fable-5-1) ;;
+        gpt) cmd=(codex -m gpt-6-astra) ;;
         mini) cmd=(codex -m gpt-5.4-mini) ;;
         spark) cmd=(codex -m gpt-5.3-codex-spark) ;;
         sh|bash) cmd=(bash -l) ;;
