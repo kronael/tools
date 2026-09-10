@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from pretool_nudge import extract_path
 from pretool_nudge import process
