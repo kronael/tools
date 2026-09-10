@@ -30,7 +30,7 @@ false_ "rm glob non-match"                 'rm_matches dockbox-other "repo-*"'
 exits 2 'apply_flag n ..'  "-n .. rejected"
 exits 2 'apply_flag n ""'  "-n empty rejected"
 exits 2 'apply_flag n a/b' "-n with slash rejected"
-true_   "apply_flag n valid" 'apply_flag n goodname'
+true_   "-n keys the dir, prefix stays" 'apply_flag n goodname; [ "$dir_override" = goodname ]'
 
 ## -K gpg opt-in ------------------------------------------------------------
 gpg_forward=""; apply_flag K

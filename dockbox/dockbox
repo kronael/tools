@@ -19,7 +19,7 @@ MOUNTS=(
     "/etc/localtime:/etc/localtime:ro"
 )
 
-name_override=""
+dir_override=""
 entrypoint="claude"
 entrypoint_explicit=""
 network_arg=()
@@ -40,11 +40,11 @@ claude_args=()
 apply_flag() {
     case "$1" in
         n)
-            # Reject traversal/reserved names before they become a container name.
+            # Reject traversal/reserved names before they become part of a container name.
             case "$2" in
                 ""|.|..|*/*) echo "dockbox: invalid -n name: '$2'" >&2; exit 2 ;;
             esac
-            name_override="$2" ;;
+            dir_override="$2" ;;
         d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$2") ;;
         v) extra_vols+=("$2") ;;
@@ -142,7 +142,7 @@ Tools (first positional arg — no leading dash):
     <any cmd>       Any binary installed in the image
 
 Options:
-    -n name    Override container name (default: dockbox-<project>)
+    -n name    Key the container on this name, not the primary dir basename
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
@@ -307,8 +307,10 @@ else
     cmd=("$entrypoint" "${claude_args[@]}")
 fi
 
-# Name keys on the primary dir's basename (= workdir basename below).
-CONTAINER_NAME="${name_override:-dockbox-${_primary_dir##*/}}"
+# Name keys on the primary dir's basename (= workdir basename below), or on
+# -n in its place. The dockbox- prefix is never overridable: ls, rm and prune
+# all filter on it, so a container without it is invisible and never reaped.
+CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 
 # Every session is a `docker exec` into a detached, long-lived container whose
 # PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
