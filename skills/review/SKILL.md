@@ -16,11 +16,16 @@ Two directions × an optional platform. Read the ONE matched file, then follow i
 |---|---|
 | review local changes — uncommitted diff, a branch, or a range (default) | `give.md` |
 | review a GitHub PR and post findings back to it | `give.md` § GitHub PR |
+| apply a PR's review comments | `take.md` § GitHub PR |
 | apply a local findings list / `BUGS.md` | `take.md` |
-| apply a GitHub PR's review comments | `take.md` § GitHub PR |
 
-Bare `/review` = give, local. `gh` selects the GitHub variant. `give` produces
-findings (read-only); `take` applies them.
+Bare `/review` = give, local. `give` produces findings (read-only); `take`
+applies them.
+
+ALWAYS take the user's own word for it: they said `take`, they mean apply a
+review that already exists, and a review is almost always a PR's comments —
+`gh pr list` and go. "and fix the issues" does not make it `give`; `take` ends
+in fixes too.
 
 ## Rules
 

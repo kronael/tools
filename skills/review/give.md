@@ -1,198 +1,96 @@
 # Give — produce a review
 
-The review engine (read-only; never edits code): bucket → lenses → parallel
-agents → fable deep-dive + reverification → per-hunk minimality → triage →
-report. Local diff by default; the GitHub-PR wrapper is the last section.
-Supersedes the built-in `/code-review` for local work.
+Read-only: bucket → parallel lens agents → fable deep-dive + reverification →
+minimality → triage → report. Supersedes the built-in `/code-review` locally.
 
-## Target
+## 1. Scope
 
-Default = the **local uncommitted working diff** (`git diff` plus
-`git diff --staged`). Override only when the user names something:
+Default = the local uncommitted diff (`git diff` + `git diff --staged`).
+Override only when the user names files, a branch (`main...HEAD`), or a range.
+Empty diff → say so and stop.
 
-- **files** — an explicit list they give
-- **a branch** — "review the branch" → `git diff main...HEAD`
-- **a commit range** — e.g. `abc123..def456`
+## 2. Bucket + lenses
 
-The local flow STOPS at the report — it never posts. For a GitHub PR use the
-`gh` variant (`/review give gh`), in § GitHub PR below.
+Group files into ≤4 non-overlapping buckets by domain. Per bucket pick 3-5
+orthogonal lenses: correctness, simplicity, error handling, type safety, test
+coverage, security, performance, API contract, invariant/topology.
 
-## Workflow
+**Invariant/topology lens** — topology/multiplicity/scope changes (one process
+split into many, a new scope-key on shared storage, a type gaining a collection
+variant) read locally correct hunk-by-hunk while a structurally-guaranteed
+property silently disappears. ALWAYS check for this shape.
 
-### 1. Gather scope
+## 3. Parallel lens agents
 
-```bash
-# default: local uncommitted work
-git diff --name-only; git diff --staged --name-only
-# branch: git diff --name-only main...HEAD
-# range:  git diff --name-only <base>..<head>
-```
+One `Agent(subagent_type="general-purpose", model="opus", run_in_background=true)`
+per bucket. Give each its lens, files, the language skills for those
+extensions, and the house rules from project CLAUDE.md — without them agents
+propose fixes the project forbids. Findings only, no edits, each as
+`file:line — [lens] what / why it matters / fix if non-obvious`.
 
-If the diff is empty, say so and stop — nothing to review.
+ALWAYS wait for all agents before step 4.
 
-### 2. Bucket + lenses
+## 4. Fable deep-dive + reverification
 
-Group files into ≤4 non-overlapping buckets by domain. Per bucket:
-- List applicable skills by extension (`.rs`→rs, `.ts/.tsx`→ts/tsx, `tests/`→testing, `.go`→go, `.py`→py, `.sql`→sql, `.sh`→sh)
-- Propose 3-5 orthogonal lenses from: correctness, simplicity, error handling, type safety, test coverage, security, performance, API contract, invariant/topology
+A single `Agent(model="fable")` doing both jobs at once:
 
-**Invariant/topology lens** — topology/multiplicity/scope changes (one
-process split/merged with many, a new discriminator or scope-key added to
-shared storage, a type gaining a collection variant) can read locally correct
-hunk-by-hunk while a structurally-guaranteed property silently disappears.
-ALWAYS check for this shape.
+1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
+   regression risks, and broken invariants. NEVER seed it with the sonnet
+   findings for this job; it approaches cold.
+2. **Reverify** — KEEP or DROP each sonnet finding with a one-line reason. KEEP
+   only what is real, impactful, in changed code, and non-obvious to the author.
 
-### 3. Parallel review agents
+Feed it the change goal and house rules. Final pool = its findings + the KEEPs.
+ALWAYS run this pass. ALWAYS trust its DROPs over the sonnet findings.
 
-Per bucket, spawn `Agent(subagent_type="general-purpose", model="opus", run_in_background=true)` with prompt:
+## 5. Minimality
 
-```
-Lens: <lens-name>
-Skills: <comma-separated skills>
-Files: <list of absolute paths>
-House rules: <relevant excerpts from project CLAUDE.md / WISDOM>
+Walk every hunk; flag any that don't serve the stated goal — behavior-free
+renames, reflow of untouched lines, unrelated refactors, whitespace churn,
+premature abstractions. ALWAYS prefer less diff for the same outcome, unless
+quality or aim suffers.
 
-Report findings only, NO edits. Format each finding as:
-- File:line — [Lens] Short description
-  Why it matters
-  Fix: (if non-obvious)
-```
+## 6. Triage
 
-ALWAYS pass house rules so suggestions don't violate them.
+Drop findings that add abstractions, target code outside the changed lines
+(grep to confirm), are style/formatting (CI catches those), or can't be
+verified by reading the files.
 
-ALWAYS wait for all agents before proceeding.
+ALWAYS read the surrounding code to verify each suggested fix — agents propose
+plausible fixes that don't work (wrong shell idioms, broken regexes). NEVER
+forward an unverified fix.
 
-### 4. Fable deep-dive + reverification pass
+## 7. Report
 
-Run a **single** `Agent(model="fable")` that does two things simultaneously:
+Critical / Important / Minor, each finding carrying `file:line` and a stable
+`C1`/`I2`/`M3` id so triage, `take`, and PR replies can reference it. Name the
+buckets that came back clean.
 
-1. **Independent deep review** — read the full diff and key changed files itself, hunting for:
-   - Gross bugs (incorrect logic, wrong invariants, data loss, panic paths)
-   - Regression risks (behavior changes not reflected in tests, broken API contracts)
-   - Things sonnet-tier agents are likely to miss or hallucinate fixes for
-   Do NOT rely on the sonnet findings for this — approach fresh.
+Then log every unfixed finding to `BUGS.md` immediately, without asking, and
+record the round in the diary — one line. Then stop.
 
-2. **Reverification of sonnet findings** — for each sonnet finding, decide:
-   - KEEP — real problem, clear impact, in changed code, non-obvious to the author
-   - DROP — false positive, style nit, out-of-scope, or a suggested fix that is wrong/worse
+## Model tier
 
-Prompt structure:
-```
-You are doing a deep adversarial code review. You have two jobs:
-
-**Job 1 — Independent deep review**
-Read the full diff and key files. Find gross bugs, regression risks, and invariant violations
-that a fast reviewer would miss. Focus on: [domain-specific invariants from the change goal].
-Format: FILE:LINE — [Type] Title / Problem / Fix
-
-**Job 2 — Sonnet findings reverification**
-For each finding below, answer KEEP or DROP with one-line justification.
-Only KEEP findings that are: real, clearly impactful, in changed code, non-obvious.
-Sonnet findings:
-<paste all findings>
-
-Change goal / context:
-<what the diff is meant to do>
-
-House rules:
-<relevant CLAUDE.md excerpts>
-```
-
-Output is: fable's own findings + KEEP list from sonnet. Merge both into the final pool.
-
-ALWAYS run this pass. ALWAYS trust fable's DROP judgements over sonnet's findings.
-
-### 5. Per-hunk minimality pass
-
-Walk every hunk in the diff. Flag any that don't serve the stated goal:
-- Renames with no behavior change
-- Reflow of untouched lines
-- Refactors bundled with an unrelated fix
-- Whitespace churn
-- Premature abstractions
-
-ALWAYS prefer less diff for the same outcome — unless quality or aim suffers.
-
-### 6. Triage
-
-Drop findings that:
-- add abstractions or new patterns
-- target code outside the changed lines (grep to verify)
-- are style/formatting (CI catches these)
-- can't be verified by reading the files
-
-ALWAYS verify each suggested fix by reading the surrounding code — agents propose plausible-looking fixes that don't actually work (wrong shell idioms, broken regexes). NEVER forward an unverified fix.
-
-### 7. Present report
-
-```markdown
-## Review: <scope>
-
-### Critical
-- C1 — ...
-- C2 — ...
-
-### Important
-- I1 — ...
-
-### Minor
-- M1 — ...
-
-### No issues in
-- Bucket X: <reason>
-```
-
-ALWAYS give each finding a stable ID (tier prefix C/I/M + number) so triage,
-`take`, and PR replies can reference it.
-
-Then log every unfixed finding to `BUGS.md` (Bug Triage Protocol) immediately,
-without asking. Record the round — scope, IDs, dispositions — via `diary`,
-one line, no schema. Then stop.
-
-## Tiered model use
-
-- **Standalone review** — use `model="opus"` for all agents (step 3). High quality, no cost
-  pressure.
-- **Flag pass for refine** — caller passes `model="sonnet"` to step-3 agents. Cheap, high-recall
-  flagging only. Opus verify+fix is handled by the subsequent `improve` call.
-
-ALWAYS respect the model the caller specifies. NEVER upgrade to Opus silently when Sonnet was
-requested.
-
-## Rules
-
-- NEVER make code edits — read-only analysis only
-- ALWAYS log unfixed findings to BUGS.md without asking
-- ALWAYS present the report and then stop
-- ALWAYS include `file:line` and a stable tier+number ID (C1/I2/M3) in every finding
+Standalone review → `model="opus"` for step 3. A `refine` flag pass → the
+caller passes `model="sonnet"` (cheap high-recall flagging; the subsequent
+`improve` call does opus verify+fix). ALWAYS respect the caller's model.
 
 ## GitHub PR (gh)
 
-Same engine, over a PR instead of the local diff — `/review give gh [<N>]`.
-
-### 1. Resolve + fetch
+Same engine over `gh pr diff <N>` — `/review give gh [<N>]`. No args = current
+branch.
 
 ```bash
-gh pr view --json number,headRefOid,baseRefName,title,body   # no args = current branch
-gh pr diff <N>                                                # diff to review
-gh pr view <N> --json comments                               # issue/general comments
+gh pr view --json number,headRefOid,baseRefName,title,body
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-gh api repos/$REPO/pulls/<N>/comments --paginate             # inline review comments
+gh api repos/$REPO/pulls/<N>/comments --paginate   # inline comments
 ```
 
-Capture the head SHA (inline anchoring) and title/body (feed as the change goal
-into fable's Job 1). ALWAYS read existing comments and DROP any finding that
-repeats a point already raised — never re-litigate resolved threads.
+Head SHA anchors inline comments; title/body is the change goal for fable's
+job 1. ALWAYS read existing comments and DROP anything already raised — never
+re-litigate a resolved thread.
 
-### 2. Review, present, post
-
-Run the engine above (bucket → … → triage) on the PR diff. Present the report
-and wait. When the user says post, hand the surviving findings to the
-`gh-comment` skill — it owns the approval gate, pending-review clearing, batch
-inline comments, the general-comment fallback for lines outside the diff, and
-the 🤖 markers. Prepend a bare 🤖 to a whole-PR summary body when most of the PR
-was auto-generated (ask if unsure, or when told to "robothead it"); append a
-bare 🤖 at the end.
-
-- NEVER post directly — ALWAYS route through `gh-comment` and its gate.
-- NEVER `gh pr create`, `gh pr merge`, `gh pr review --approve`, or `git push`.
+Present the report and WAIT. On "post", hand the survivors to `gh-comment`,
+which owns the gate, batching, out-of-diff fallback, and 🤖 markers. A whole-PR
+summary body gets a bare 🤖 prepended when most of the PR was auto-generated
+(ask if unsure), and a bare 🤖 appended.
