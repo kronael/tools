@@ -120,12 +120,6 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - Merge the block between `<!-- kronael:start -->` and
-     `<!-- kronael:end -->` from `codex/AGENTS.md` into
-     `~/.codex/AGENTS.md` when running from Codex. Replace only an existing
-     Kronael block; otherwise append it. NEVER overwrite content outside the
-     markers. This makes Codex load Claude guidance in addition to AGENTS
-     guidance and applies the selected terse response policy.
    - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
@@ -170,6 +164,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `~/.claude/CLAUDE.md` (leave it if already resolved). Any other existing
      global Codex guidance is a conflict — show and ask. NEVER rely on project
      fallback names for global guidance.
+   - AFTER installing wisdom and resolving the global guidance path, merge
+     the marked block from `codex/AGENTS.md` into `~/.codex/AGENTS.md`.
+     Replace only the existing Kronael block; otherwise append it. NEVER
+     overwrite content outside the markers. The path may symlink to the
+     wisdom file, so ALWAYS perform this merge after the wisdom write.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if

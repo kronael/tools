@@ -122,6 +122,10 @@ for d in skills/*/; do
 done
 ```
 
+**Install order** — ALWAYS write the wisdom file and resolve the global
+Codex guidance path before merging the marked `codex/AGENTS.md` block. The
+guidance path may symlink to wisdom; NEVER overwrite wisdom after that merge.
+
 **Install the wisdom file** — strip the YAML frontmatter from
 `skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
 content, diff and ask first:

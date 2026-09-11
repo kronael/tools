@@ -62,8 +62,8 @@ plugin is only an installer bridge; the GitHub marketplace snapshot owns the
 bundle.
 
 For Codex Bridge-only requests, discover the source root when the requested
-bridge step needs source-owned files (`codex-hooks.json` or per-skill symlinks).
-Skip source-root discovery only for global/project `CLAUDE.md` bridging or the
+bridge step needs source-owned files (`codex/AGENTS.md`, `codex-hooks.json`, or
+per-skill symlinks). Skip source-root discovery only for project guidance or the
 simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 
 ## Install
@@ -99,9 +99,14 @@ Codex loads global instructions from `~/.codex/AGENTS.override.md`, or from
 ln -s ~/.claude/CLAUDE.md ~/.codex/AGENTS.md
 ```
 
-If the symlink already resolves to `~/.claude/CLAUDE.md`, report "already
-bridged". Treat any other existing `AGENTS.md` or `AGENTS.override.md` as a
-conflict and ask whether to replace, merge, or skip. NEVER overwrite it.
+If the symlink already resolves to `~/.claude/CLAUDE.md`, keep it. Treat any
+other existing `AGENTS.md` or `AGENTS.override.md` as a conflict and ask
+whether to replace, merge, or skip. NEVER overwrite it.
+
+After resolving the guidance path, ALWAYS apply the managed-block merge in
+canonical installer step 5, including for an existing symlink. ALWAYS back up
+the target first and preserve content outside the markers. NEVER report the
+global bridge complete without checking that the managed block is present.
 
 ### Project CLAUDE.md
 
