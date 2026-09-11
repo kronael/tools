@@ -25,7 +25,6 @@
       "Bash(git pull*)",
       "Bash(ssh *)",
       "Bash(rsync *)",
-      "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
       "Bash(gh pr review --approve*)",
       "Bash(gh release create*)",
