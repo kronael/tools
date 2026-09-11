@@ -4,6 +4,22 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
+### qemubox/dockbox model aliases have drifted apart — `make test` is red
+
+`tests/drift_test.sh` fails on `origin/master` itself (reproduced in a clean
+worktree at `4f6b953`), so this arrived with the upstream dockbox model bump,
+not with the merge. Three mismatches, all with qemubox on the stale side:
+
+- `fable` — qemubox `claude-fable-5`, dockbox `claude-fable-5-1`
+- `gpt` — qemubox `gpt-5.5`, dockbox `gpt-6-astra`
+- default — qemubox `qemubox:666` still runs `claude-opus-4-8 --effort xhigh`
+  while its own `opus` alias (`qemubox:670`) and dockbox both use
+  `claude-opus-5`
+
+The fix is a judgment call on which pins are current, so it needs the user:
+bump qemubox to match dockbox, or pin both somewhere shared. Reproduce:
+`bash tests/drift_test.sh`.
+
 ### root Makefile: per-project `test-%` targets are silent no-ops
 
 `make test-dockbox` (and every other `test-<project>`) prints "Nothing to be
