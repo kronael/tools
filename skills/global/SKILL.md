@@ -47,6 +47,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Response Style
 
+ALWAYS read `~/.claude/output-styles/80-caveman.md` when it exists and apply
+its response rules. ALWAYS keep full analysis; use simple words in the reply.
+
 Be terse by default. Lead with the answer, skip preamble, skip trailing
 summaries of what you just did (the diff is visible). No tables, headers, or
 multi-section recaps for a chat reply — if the reader must scroll to find the

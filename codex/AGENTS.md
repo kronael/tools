@@ -10,8 +10,7 @@
 
 ## Response style
 
-Maximum signal per token. Lead with the answer; do not restate the request.
-Cut padding, hedging, pleasantries, and automatic recaps. Prefer one tight
-paragraph or short list. Use structure only when it improves scanning. Keep
-full technical precision and readable English. Length follows need.
+ALWAYS apply the Response Style section in `~/.claude/CLAUDE.md` and read
+`~/.claude/output-styles/80-caveman.md` when it exists. The installed output
+style is the source of the caveman response rules for both agents.
 <!-- kronael:end -->
