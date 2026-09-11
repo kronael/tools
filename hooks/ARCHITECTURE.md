@@ -9,7 +9,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py       (commit + diary block)
+Claude stops ──> Stop ──> stop.py       (commit + diary block, else turn recap)
                       ──> memory_nudge.py (session memory, once/session fallback)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
@@ -131,22 +131,33 @@ unwired.
 
 ### stop.py (Stop)
 
-**Input:** JSON with `cwd`, `stop_hook_active`.
+**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`.
 **Output:** `{"decision": "block", "reason": "..."}` on real Stop,
-advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
+advisory `hookSpecificOutput.additionalContext` on PostToolUse,
+`{"ok": true, "systemMessage": "<recap>"}` when nothing blocks, or silent.
 
 **Flow:**
-1. Bail early if `stop_hook_active` is set (prevents recursion).
+1. With `stop_hook_active` set, skip the nudges (prevents recursion) and go
+   straight to the recap.
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
    with `git diff --stat`.
 3. If the repo has a `.diary/`, check for today's `YYYYMMDD.md` (UTC).
    Missing or >1h stale → append a diary nudge.
-4. If recent `/fin` usage is detected, append an open-items reminder.
-5. Real Stop blocks with the combined message. Periodic PostToolUse emits the
-   same message as advisory context only.
+4. Real Stop blocks with the combined message and stops there. Periodic
+   PostToolUse emits the same message as advisory context only.
+5. Otherwise, on a real Stop outside Codex, build the recap: `git log
+   --since=<stamp>` (or `head` when the session has no stamp yet), `git status
+   --porcelain` filtered so untracked paths count only when touched after the
+   stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
+   for merge/rebase/cherry-pick/revert/bisect in progress. Each git call
+   shares one `RECAP_BUDGET` deadline; any failure drops the whole recap and
+   leaves the stamp untouched so the next turn's window still covers this one.
+6. Emit the recap as `systemMessage` and write the stamp.
 
 Pure script, no LLM call. NEVER pushes. The hook may append a blank diary
-header when the diary is missing or stale.
+header when the diary is missing or stale. State:
+`<git-dir>/claude-commit-nudge` (nudge throttle) and
+`<git-dir>/claude-recap-{session_id}` (ISO time of the last recap).
 
 ### memory_nudge.py (PreCompact + Stop)
 
@@ -201,6 +212,12 @@ stdout (dirty tree + stale diary):
 {
   "decision": "block",
   "reason": "Uncommitted changes detected.\n <diff stat>\nRun /commit.\nDiary not updated in over an hour. Run /diary."
+}
+
+stdout (nothing to block on):
+{
+  "ok": true,
+  "systemMessage": "since 14:02Z: 2 commits\n+ b78cf4c1 docs(bugs): Record B7E as resolved\n+ b0214954 docs(diary): The re-baseline was interrupted\nuncommitted: 1 changed, 1 untracked (+40 -3)\n  server/strategy.py server/foo.py"
 }
 ```
 
