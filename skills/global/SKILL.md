@@ -107,6 +107,12 @@ baseline silently fail to apply.
 - ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
 ## System-change discipline
+- **No duplication — amend the original.** Before adding a mechanism (guard,
+  helper, table, log site, config), grep for an existing one and extend it;
+  NEVER add a parallel second path, because two paths drift. Both models
+  reciting this rule also report ignoring repo-local helpers they did not
+  happen to grep for and reaching for the mainstream idiom instead — knowing it
+  is not doing it.
 - **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
 - **Fix causes, not symptoms.** The reflex is to patch the reported instance
   and stop; ALWAYS check whether the same shape of bug exists elsewhere in the
