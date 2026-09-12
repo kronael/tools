@@ -74,6 +74,8 @@ def yaml_error(text: str) -> str | None:
 
 def conformance(path: Path, meta: str) -> list[str]:
     data = yaml.safe_load(meta) or {}
+    if not isinstance(data, dict):
+        return ['frontmatter is not a mapping']
     problems = []
     unknown = sorted(set(data) - KNOWN_KEYS)
     if unknown:
@@ -118,25 +120,27 @@ def process(path: Path, write: bool) -> int:
         return 2
 
     meta, body = split
+    status = 0
     error = yaml_error(meta)
-    if error is None:
-        problems = conformance(path, meta)
-        for problem in problems:
-            print(f'{path}: {problem}', file=sys.stderr)
-        return 2 if problems else 0
-    if not write:
-        print(f'needs fix: {path} ({error})')
-        return 1
-
-    fixed = fix_frontmatter(meta)
-    error = yaml_error(fixed)
     if error is not None:
-        print(f'{path}: still invalid after fix: {error}', file=sys.stderr)
-        return 2
+        if not write:
+            print(f'needs fix: {path} ({error})')
+            return 1
+        meta = fix_frontmatter(meta)
+        error = yaml_error(meta)
+        if error is not None:
+            print(f'{path}: still invalid after fix: {error}', file=sys.stderr)
+            return 2
+        path.write_text(f'---\n{meta}---\n\n{body}')
+        print(f'fixed: {path}')
+        status = 1
 
-    path.write_text(f'---\n{fixed}---\n\n{body}')
-    print(f'fixed: {path}')
-    return 1
+    # A repaired file still has to conform; fixing the YAML says nothing about
+    # the name, the keys or the listing budget.
+    problems = conformance(path, meta)
+    for problem in problems:
+        print(f'{path}: {problem}', file=sys.stderr)
+    return 2 if problems else status
 
 
 def main() -> int:
