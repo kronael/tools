@@ -123,14 +123,17 @@ All three are verifiable; ALWAYS verify rather than assume.
 - SKILL.md frontmatter uses ONLY recognised keys. An unrecognised key is
   ignored locally and rejected by other Agent Skills consumers, so it is a
   defect, not a harmless extra. Free-form provenance — author, version,
-  homepage, upstream tags — goes under `metadata`, which is free-form by spec.
+  homepage, upstream tags — goes under `metadata`, whose contents Claude Code
+  ignores. Keep those values flat strings: the Agent Skills spec defines
+  string keys and values, so a nested map may not travel.
 - The DIRECTORY name is the slash command; frontmatter `name` is display only.
   ALWAYS keep them equal so the two never disagree about what a skill is called.
 - `description` + `when_to_use` are concatenated into the always-on listing and
   truncated past 1,536 characters, which drops a router's later triggers
   without any error. ALWAYS leave headroom; NEVER write to the limit.
-- Only `SKILL.md` loads. Sibling files are cold until `SKILL.md` names them, so
-  a data file no dispatch row points at is dead weight nothing can reach.
+- Only `SKILL.md` loads. Sibling files are cold until something reaches them
+  from it — a dispatch row, or a reference in a file a dispatch row already
+  named, as `create/` does. A file no such chain reaches is unreachable.
 
 `make skills-frontmatter` enforces the first three and MUST pass before a
 commit touching `skills/`. The fourth is a review check: a router's dispatch
@@ -142,9 +145,12 @@ directory whenever either changes.
 - Codex: `codex exec --ephemeral "name one rule from the Kronael block in your
   global guidance, and one skill you can see"`. A correct bridge quotes the
   block and names a skill from `~/.agents/skills`.
-- pi: `pi --version`. It ships a `#!/usr/bin/env node` shebang and needs Node
-  20+; on an older system node every invocation dies before doing anything.
-  `kronael/install/reference.md` carries the bun wrapper that fixes it.
+- pi, two separate claims. That it RUNS: `pi --version`, which exits before
+  loading any guidance, so it proves only the binary starts — it ships a
+  `#!/usr/bin/env node` shebang and needs Node 20+, and `reference.md` carries
+  the bun wrapper for older system nodes. That it is BRIDGED: check
+  `~/.pi/agent/AGENTS.md` resolves to `~/.claude/CLAUDE.md`, or ask it for a
+  rule from the wisdom file from a neutral directory.
 
 NEVER report either bridge installed on the strength of a symlink existing —
 the wiring being right and the tool running are different claims.
