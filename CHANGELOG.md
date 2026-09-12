@@ -1,5 +1,45 @@
 # Changelog
 
+## [v0.3.84] — 20260912
+
+> kronael v0.3.84 — skills that conform, bridges that are proven
+>
+> Skill frontmatter now matches what Claude Code actually reads, and the check runs in `make skills-frontmatter` instead of living in someone's memory.
+>
+> • Only recognised frontmatter keys — `arg` was silently doing nothing, and four provenance keys travel badly
+> • `name` must equal its directory, and `description` + `when_to_use` must stay inside the 1,536-char listing budget
+> • Both checks enforced by the linter; a repaired file is re-checked rather than passed
+> • pi runs again — its shebang picked a Node too old for its own regex
+> • `CLAUDE.md` mandates conformance and bridge verification, with the command for each
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — frontmatter conformance is now enforced
+
+`make skills-frontmatter` fails on an unrecognised key, a `name` that differs
+from its directory, or a `description` + `when_to_use` over 1,536 characters.
+All three previously failed silently at runtime: an unknown key is ignored, an
+over-budget listing is truncated mid-keyword, and a wrong name simply disagrees
+with the command. Run it before any commit touching `skills/`.
+
+### Added
+
+- `CLAUDE.md` gains a Conformance section: skills must use only the frontmatter keys Claude Code reads, keep `name` equal to the directory, stay inside the listing budget, and be reachable from `SKILL.md` — directly or through a file it already names. Both bridges must be proven by running them, and a symlink existing is explicitly not the same claim as the tool working.
+
+### Changed
+
+- `skills/software` trigger list cut from 1,520 characters to 1,068. It sat 16 short of the listing cap, where any edit would have truncated its later modes out of the always-on listing without an error.
+- `skills/wisdom/clean-room.sh` reduced from 50 lines to 18. Cleanup needed a `find` pipeline only because recursive removal is banned, so the room is left in `/tmp` and the trap that failed good runs is gone; reading the prompt into a variable lets `set -e` catch a missing file without a check.
+- Ported skills keep their provenance under `metadata` as flat strings, since the Agent Skills spec defines string keys and values.
+
+### Fixed
+
+- `recall-memories` declared `arg`, which is not a key — the autocomplete hint is `argument-hint`, so it was declaring nothing.
+- `credits` declared `name: credit` against its own directory, the only such mismatch in the bundle.
+- The linter returned success for a file whose YAML it had only repaired, leaving a wrong name and an unknown key in place, and raised `AttributeError` on frontmatter that was not a mapping.
+- The pi wrapper called bare `bun`, so pi died with `exec: bun: not found` whenever `~/.bun/bin` was off PATH.
+- `skills/software`'s dispatch table had one row listing fourteen sub-topics where every other row names a handful.
+
 ## [v0.3.83] — 20260912
 
 > kronael v0.3.83 — guidance measured against a model that cannot see it
