@@ -15,6 +15,35 @@ import yaml
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 FIX_FIELDS = {'description', 'when_to_use'}
 
+# Keys Claude Code reads (code.claude.com/docs/en/skills). Anything else is
+# ignored locally but rejected by other Agent Skills consumers, so it is an
+# error here. Free-form provenance belongs under `metadata`.
+KNOWN_KEYS = {
+    'name',
+    'description',
+    'when_to_use',
+    'argument-hint',
+    'arguments',
+    'disable-model-invocation',
+    'user-invocable',
+    'allowed-tools',
+    'disallowed-tools',
+    'model',
+    'effort',
+    'context',
+    'agent',
+    'background',
+    'shell',
+    'paths',
+    'hooks',
+    'metadata',
+    'license',
+    'compatibility',
+}
+# description + when_to_use are concatenated into the always-on listing and
+# truncated past this, which silently drops a router's later trigger keywords.
+LISTING_BUDGET = 1536
+
 
 def skill_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
@@ -41,6 +70,23 @@ def yaml_error(text: str) -> str | None:
     except yaml.YAMLError as exc:
         return str(exc).splitlines()[0]
     return None
+
+
+def conformance(path: Path, meta: str) -> list[str]:
+    data = yaml.safe_load(meta) or {}
+    problems = []
+    unknown = sorted(set(data) - KNOWN_KEYS)
+    if unknown:
+        problems.append(f'unrecognised key(s): {", ".join(unknown)}')
+    name = data.get('name')
+    if name is not None and name != path.parent.name:
+        problems.append(f'name {name!r} does not match directory {path.parent.name!r}')
+    listing = len(str(data.get('description') or '')) + len(str(data.get('when_to_use') or ''))
+    if listing > LISTING_BUDGET:
+        problems.append(
+            f'description + when_to_use is {listing} chars, over the {LISTING_BUDGET} listing budget'
+        )
+    return problems
 
 
 def fix_value(key: str, value: str) -> str:
@@ -74,7 +120,10 @@ def process(path: Path, write: bool) -> int:
     meta, body = split
     error = yaml_error(meta)
     if error is None:
-        return 0
+        problems = conformance(path, meta)
+        for problem in problems:
+            print(f'{path}: {problem}', file=sys.stderr)
+        return 2 if problems else 0
     if not write:
         print(f'needs fix: {path} ({error})')
         return 1
