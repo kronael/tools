@@ -2,6 +2,56 @@
 
 Review queue. Log here, fix when prioritised — not on sight.
 
+## OPEN — 2026-09-12 — Release review v0.3.83..ff4caa4
+
+Record-only release findings; no fixes applied.
+
+- **CLEAN-ROOM-INVALID-SUCCESS** (HIGH, correctness) —
+  `skills/wisdom/clean-room.sh:18` returns success for an empty answer or an
+  `unrecognized_model` warning plus a fallback answer. Both reproduced with a
+  CLI stub. This invalidates the two-model measurement used to justify rule
+  cuts. **Fix:** capture output and stderr, reject fallback warnings and empty
+  answers, and preserve nonzero CLI status.
+- **PI-WRAPPER-SYMLINK** (HIGH, correctness) —
+  `kronael/install/reference.md:30` redirects through an existing executable
+  symlink and overwrites its target with Bash. Reproduced with a link to a
+  JavaScript entrypoint. **Fix:** back up the existing file, write a regular
+  temporary wrapper, then rename it over the executable path.
+- **PI-WRAPPER-RUNTIME-PATH** (MED, ops) —
+  `kronael/install/reference.md:33` depends on bare `bun` being on PATH.
+  The installed wrapper exits 127 in the review environment although Bun is
+  installed; using its absolute executable runs pi successfully. **Fix:**
+  resolve the Bun executable during installation and verify the wrapper after
+  writing it.
+- **LINTER-FIX-CONFORMANCE** (MED, correctness) —
+  `hooks/skill_frontmatter_lint.py:131` repairs YAML without running
+  `conformance` on the result. `--write` returns 0 for a repaired description
+  while retaining a wrong skill name and unknown `author` key. **Fix:** run
+  conformance on repaired metadata and preserve status 2 for violations.
+- **LINTER-YAML-TYPES** (MED, correctness) —
+  `hooks/skill_frontmatter_lint.py:76` assumes a mapping with string keys;
+  valid YAML scalars, sequences, and mixed key types produce tracebacks.
+  Line 84 also accepts list-valued descriptions by stringifying them.
+  **Fix:** validate the mapping, key types, and text field types before key
+  comparison or listing measurement; return file-specific diagnostics.
+- **SKILL-METADATA-PORTABILITY** (MED, config) —
+  `skills/humanize/SKILL.md:10` puts a list in metadata, which also contains a
+  nested `hermes` mapping. `CLAUDE.md:126` calls metadata free-form by spec,
+  but agentskills.io/specification defines string keys and string values.
+  The linter accepts these values. **Fix:** flatten/stringify provenance for
+  spec portability and validate that shape; distinguish Claude extensions
+  from the portable schema in the conformance guidance.
+- **BRIDGE-PROBE-NO-CONTEXT** (MED, correctness) — `CLAUDE.md:145` uses
+  `pi --version` as bridge evidence. Installed pi exits on that option before
+  loading resources, so missing global guidance cannot make this check fail.
+  **Fix:** keep the runtime smoke check and separately verify a distinctive
+  bridged rule from a neutral working directory.
+- **ROUTER-TRANSITIVE-REACHABILITY** (LOW, docs) — `CLAUDE.md:132` treats
+  files without a direct dispatch row as unreachable. The create router
+  explicitly follows references from its selected mode, including
+  `art/p5js.md` to `art/p5js/references/core-api.md`. **Fix:** review
+  reachability through references rooted in SKILL.md, including indirect links.
+
 ## OPEN
 
 ### proposed: split `skills/global/SKILL.md` — 238 lines against a 200 cap
