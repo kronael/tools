@@ -30,7 +30,7 @@ claim on faith.
 
 Apply fixes for (a) ONE AT A TIME. For each: make the **minimal** edit that
 resolves it — no refactors, no scope creep. VERIFY in the same pass with the
-project's typecheck and tests, capturing once: `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log`.
+project's typecheck and tests, capturing once: `make test 2>&1 | tee test.log && tail -8 test.log`.
 
 ## 4. Surface (b), never guess
 
