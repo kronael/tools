@@ -48,7 +48,7 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ## Response Style
 
 ALWAYS read `~/.claude/output-styles/80-caveman.md` when it exists and apply
-its response rules. ALWAYS keep full analysis; use simple words in the reply.
+its response rules.
 
 Be terse by default. Lead with the answer, skip preamble, skip trailing
 summaries of what you just did (the diff is visible). No tables, headers, or
@@ -139,22 +139,22 @@ baseline silently fail to apply.
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
-- Work in detached HEAD by default, in the main repo AND in every worktree.
-  The ONE exception is a dated feature branch for review: `git switch -c
-  YYYYMMDD_<tag> <base>` is allowed when the user asks for a branch to push.
-  NEVER check out or attach `master`/`main` itself.
+- ALWAYS work in detached HEAD, in the main repo AND in every worktree. The
+  ONE exception is a dated feature branch for review: `git switch -c
+  YYYYMMDD_<tag> <base>` when the user asks for a branch to push. NEVER check
+  out or attach `master`/`main` itself.
 - For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
 - ALWAYS place worktrees inside the repo root as hidden dirs:
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
-- `git push` ONLY to a dated feature branch the user asked for:
-  `git push -u origin YYYYMMDD_<tag>`. NEVER push to `master`/`main`, NEVER
-  `--force`/`--force-with-lease`, NEVER push a branch the user did not name.
+- NEVER `git push` anywhere but a dated feature branch the user named —
+  ALWAYS `git push -u origin YYYYMMDD_<tag>`. NEVER push to `master`/`main`,
+  NEVER `--force`/`--force-with-lease`.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
-- `gh pr create` is allowed for a dated feature branch the user asked to publish;
-  ALWAYS show the title and body first and wait for approval. NEVER `gh pr merge`,
-  `gh pr review --approve`, `gh release create` or `gh repo create` - refuse those
-  and cite this rule.
+- NEVER run `gh pr create` unless the user asked to publish a dated feature
+  branch — ALWAYS show the title and body first and wait for approval. NEVER
+  `gh pr merge`, `gh pr review --approve`, `gh release create` or `gh repo
+  create` - refuse those and cite this rule.
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 

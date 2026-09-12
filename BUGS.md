@@ -4,6 +4,19 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
+### proposed: split `skills/global/SKILL.md` — 270 lines against a 200 cap
+
+`skills/wisdom/SKILL.md` sets the cap at 200 lines with "no exceptions —
+overflow goes to sibling files, never a longer SKILL.md". The wisdom file is
+270 and is the one file always loaded in every session, so the cap matters
+here most. `plugins/kronael/skills/kronael-install/SKILL.md` is 247.
+
+The fix is the router pattern: keep the always-true rules inline and move a
+themed block (the git/workflow rules are the largest candidate) to a sibling
+loaded on demand. That changes what is guaranteed present in context for every
+session, so it is a redesign, not an edit — needs sign-off before anyone ships
+it. Reproduce: `wc -l skills/global/SKILL.md`.
+
 ### root Makefile: per-project `test-%` targets are silent no-ops
 
 `make test-dockbox` (and every other `test-<project>`) prints "Nothing to be
