@@ -47,7 +47,7 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Response Style
 
-ALWAYS read `~/.claude/output-styles/80-caveman.md` when it exists and apply
+ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply
 its response rules.
 
 Be terse by default. Lead with the answer, skip preamble, skip trailing

@@ -11,6 +11,6 @@
 ## Response style
 
 ALWAYS apply the Response Style section in `~/.claude/CLAUDE.md` and read
-`~/.claude/output-styles/80-caveman.md` when it exists. The installed output
+`~/.claude/output-styles/caveman.md` when it exists. The installed output
 style is the source of the caveman response rules for both agents.
 <!-- kronael:end -->

@@ -120,7 +120,12 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
+   - **Prune renamed files**: delete `~/.claude/hooks/nudge.py`,
+     `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
+     if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
+     `output-styles/caveman.md` instead, and a stale copy keeps loading beside
+     its replacement. A stale output style also leaves `outputStyle` pointing
+     at a name no file answers to. Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
@@ -137,7 +142,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
-   - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`80% caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
+   - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions

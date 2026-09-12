@@ -48,7 +48,7 @@ only the Codex-specific deltas.
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
   block from `codex/AGENTS.md` into global Codex guidance. That block requires
   Codex to load applicable `CLAUDE.md` files in addition to `AGENTS.md` and
-  carries the same terse response policy as the selected `80% caveman` Claude
+  carries the same terse response policy as the selected `caveman` Claude
   output style. The plugin cache still contains only the bridge skill.
 
 ## Codex plugin usage

@@ -1,5 +1,5 @@
 ---
-name: 80% caveman
+name: caveman
 description: Maximum signal, minimum tokens — stripped, not broken English
 keep-coding-instructions: true
 ---

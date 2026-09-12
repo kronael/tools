@@ -1,4 +1,4 @@
-# Research: the "ADHD" communication skill (to sharpen 80% caveman)
+# Research: the "ADHD" communication skill (to sharpen caveman)
 
 Goal: find a real, citable ADHD-friendly output skill/prompt and extract
 communication patterns that ADD to our caveman style (maximum signal per
@@ -44,7 +44,7 @@ from burying the answer. ADHD-friendly output" and "Action first." It is real,
 MIT-licensed, named-author, and the most-starred skill in the space. Confident
 enough to fold in with attribution.
 
-## Patterns to fold into 80% caveman
+## Patterns to fold into caveman
 
 Each pattern below is quoted/paraphrased from ayghri's SKILL.md + README
 (10 rules) with its rationale: **"Working memory is small. Anything not on
