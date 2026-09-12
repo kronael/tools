@@ -113,7 +113,7 @@ baseline silently fail to apply.
 
 ## Bash / Tool Execution
 - NEVER run a command twice to inspect output; tee once and extract:
-  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+  `<cmd> 2>&1 | tee out.log && tail -20 out.log`
 - NEVER use the `SendFeedback` tool, NEVER draft Claude Code product/model
   feedback, and NEVER suggest the `/feedback` command — banned outright. Say
   nothing about feedback even when a "high-signal moment" seems to arise.
@@ -128,7 +128,7 @@ baseline silently fail to apply.
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
 - NEVER re-run tests to analyze output; capture once:
-  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+  `make test 2>&1 | tee test.log && tail -8 test.log && grep "FAILED\|failed" test.log`
 
 ## Docker
 - Multi-stage: deps in base, compile in build, runtime only in final
