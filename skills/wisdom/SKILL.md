@@ -104,6 +104,20 @@ subagent's summary unchecked, and cleaning up adjacent code nobody asked about
 — every one of those is a rule they can also recite. A rule a model states and
 breaks belongs in the file, stressed, not cut.
 
+ALWAYS ask the behaviour question per candidate rule, not once for the whole
+sweep. One confession list answers the rules it happens to name and says
+nothing about the rest; treating it as global licence cuts rules no evidence
+ever covered.
+
+When the criterion changes mid-sweep — and it will, because each pass exposes
+how the last one was fooled — ALWAYS re-examine every cut already made under
+the old criterion, including the ones that still look right. Correcting only
+the convenient ones leaves the rest standing on reasoning you have abandoned.
+
+A check that has never failed has not been tested. ALWAYS run a probe you
+expect to FAIL before trusting one that passes — a clean room that cannot leak,
+a linter that cannot flag, and a broken one look identical from a green run.
+
 ALWAYS scope this to normative content — wisdom, style, judgment. A workflow
 runbook encodes a chosen procedure and is not measurable this way.
 

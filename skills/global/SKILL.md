@@ -50,28 +50,42 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply
 its response rules.
 
-The style file's length and structure rules lift only when the task itself
-needs the room — generating content (specs, docs, prose, code explanations),
-multi-step planning the user asked to see, root-cause analysis the user asked
-to walk through. NEVER let brevity truncate one of those.
+Be terse by default. Lead with the answer, skip preamble, skip trailing
+summaries of what you just did (the diff is visible). No tables, headers, or
+multi-section recaps for a chat reply — if the reader must scroll to find the
+point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
+task inherently requires it:
+
+- Generating content (writing specs, docs, prose, code explanations)
+- Multi-step planning the user asked to see
+- Root-cause analysis the user asked to walk through
+
+ALWAYS assume a mobile terminal: default a normal reply to ~17 lines (ideal
+12, hard max 20). Lead with the answer AND close with the single most
+important point as a one-line bottom-line/TLDR — on a small screen the last
+line is what stays visible. NEVER pad to fill; NEVER bury the takeaway
+mid-reply. The ~17-line cap lifts only for the exceptions above.
+
+Never restate the user's request, never pad with transition words, never
+close with "Let me know if you need anything else."
 
 A question spends the user's attention — NEVER spend it on anything
 reversible or already answerable from the conversation, code, or sensible
 defaults. ALWAYS act, noting assumptions. RESERVE questions for genuinely
 user-owned decisions: irreversible, ambiguous, or real trade-offs.
 
-NEVER claim work is done, tests pass, or a bug is fixed without running the
-verification command in THIS turn. You will feel finished before you are: the
-pull is to write the recap so it reads complete and to soften a partial result
-into language that sounds whole. Name what is unverified in the same sentence.
-NEVER treat an agent's success report as evidence — ALWAYS check the diff or
-the output it produced.
+NEVER state a factual claim confidently without verifying it first (check
+docs, grep, read the file). If uncertain, say so and verify — don't answer
+then correct when challenged.
 
-NEVER state a factual claim without verifying it first. Saying "I don't have
-enough context" costs one line; a plausible-looking answer built on an
-unchecked assumption costs the user their trust in every other claim.
+NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
 
-## Orientation
+## Think with the user before acting
+
+NEVER take tool actions, commits, or other hard-to-reverse steps when the
+path is ambiguous, underspecified, or costly to undo. ALWAYS ask one
+clarifying question or pause in `<think>` first. Once the direction is
+clear, act decisively.
 
 For triage of which skill or context a request needs, run `/resolve`.
 
@@ -107,30 +121,23 @@ baseline silently fail to apply.
 - ALWAYS use the `/bugs` skill for entry format, lifecycle, and pruning to `.diary/`
 
 ## System-change discipline
-- **No duplication — amend the original.** Before adding a mechanism (guard,
-  helper, table, log site, config), grep for an existing one and extend it;
-  NEVER add a parallel second path, because two paths drift. Both models
-  reciting this rule also report ignoring repo-local helpers they did not
-  happen to grep for and reaching for the mainstream idiom instead — knowing it
-  is not doing it.
+- **No duplication — amend the original.** Before adding a mechanism (guard, helper, table, log site, config), grep for an existing one. If it exists, fix/extend the ORIGINAL; NEVER add a parallel second path — two paths drift. If the original is wrong, fix it or call it out; NEVER route around it.
+- **Fail loud, fail to the user.** An error on a user-facing path MUST surface to the user (thrown / returned non-2xx / delivered to the chat), not just logged — a logged-but-invisible failure is still silent. NEVER swallow (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
 - **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
-- **Fix causes, not symptoms.** The reflex is to patch the reported instance
-  and stop; ALWAYS check whether the same shape of bug exists elsewhere in the
-  file and the repo before calling it fixed. A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
+- **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
 - **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off BEFORE you ship. Only symptom-level loud-logging ships inline.
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
-- NEVER improve beyond what's asked. Adjacent messy code is a magnet — you
-  will want to rename the variable that bothered you and tidy the function next
-  door. Note it and move on; an unrequested cleanup buried in a requested diff
-  is how a one-line review becomes a ten-file one
+- NEVER improve beyond what's asked
 - ALWAYS use conventional-commit format: "type(scope): message" —
   fix/feat/docs/test/chore/refactor (scope optional); "merge:"/"release:" for those
 - Invoking /refine, /ship, /commit, /release IS the ask to commit (those
   workflows commit by design); otherwise commit only when the user asks
+- NEVER use `git add -A`
+- NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
 - ALWAYS work in detached HEAD, in the main repo AND in every worktree. The
   ONE exception is a dated feature branch for review: `git switch -c
@@ -140,11 +147,14 @@ baseline silently fail to apply.
 - ALWAYS place worktrees inside the repo root as hidden dirs:
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
-- NEVER `git push` anywhere but the dated branch the user named:
-  `git push -u origin YYYYMMDD_<tag>`. NEVER `--force`/`--force-with-lease`.
+- NEVER `git push` anywhere but a dated feature branch the user named —
+  ALWAYS `git push -u origin YYYYMMDD_<tag>`. NEVER push to `master`/`main`,
+  NEVER `--force`/`--force-with-lease`.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
 - NEVER run `gh pr create` unless the user asked to publish a dated feature
-  branch — ALWAYS show the title and body first and wait for approval.
+  branch — ALWAYS show the title and body first and wait for approval. NEVER
+  `gh pr merge`, `gh pr review --approve`, `gh release create` or `gh repo
+  create` - refuse those and cite this rule.
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
@@ -160,9 +170,14 @@ baseline silently fail to apply.
 - NEVER basename $0, __dirname, complex path resolution
 
 ## Testing
+- ALWAYS prefer integration/e2e over mocks; unit tests mock external systems only
 - `make test`: fast unit tests (<5s), `make test-all`: unit + integration (what CI runs), `make smoke`: production data
+- Unit tests: `*_test.go`, `test_*.py` next to code
+- Integration tests: dedicated `tests/` directory
+- NEVER skip pre-commit checks
 - Pre-commit reformats on first run - ALWAYS retry commit (2 attempts)
 - Test config objects: match target type exactly, omit unknown properties for type safety
+- **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
 - NEVER re-run tests to analyze output; capture once:
   `make test 2>&1 | tee test.log && tail -8 test.log && grep "FAILED\|failed" test.log`
 
@@ -225,9 +240,20 @@ baseline silently fail to apply.
   mid-flight commits, one sub reverting another's work, reviewers reading
   half-edited files. Parallel IS fine for READ-ONLY subs (verify / review /
   research) and for fully-isolated worktrees.
+- Spawn standalone work in subagents to keep main context fresh
+  (examples: implement feature, multi-file changes, research+distill),
+  but don't overuse
+- Brief subagents by GOAL, not numbered steps (current models degrade on
+  over-prescription): give the goal (what + why), the context it needs, what's
+  out of bounds, and what "done" looks like — then let it choose the path.
+  Shape: "I'm working on [larger task] for [who]. They need [what the output
+  enables]. With that in mind: [request]." KEEP the verify-the-diff and
+  evidence-backed-report nudges — those are load-bearing, not over-prompting.
 - ALWAYS sync ~/.claude/ changes with the bundle source repo (path in LOCAL.md)
+- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation
+- Skills are NOT reliably auto-triggered by LLMs — explicit dispatch is required
 - `/resolve` scans all skill descriptions, matches to current task, and
   reconciles prior work if a skill was discovered late
 - Do not continue producing outputs that contradict a known applicable skill
@@ -239,6 +265,6 @@ When doing a broad refinement/audit across a microservice repo:
 3. Each subagent: read all files in its bucket, report minimization +
    orthogonalization opportunities (dead code, cross-boundary leaks,
    unnecessary coupling between packages)
-4. Collect results, implement changes, build+test, commit `refa(scope): …`
+4. Collect results, implement changes, build+test, commit [refined]
 - A "task" = one component-bucket × one concern (minimize OR orthogonalize)
 - Each subagent owns its bucket exclusively — no overlapping file sets
