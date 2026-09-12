@@ -47,38 +47,11 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Response Style
 
-ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply
-its response rules.
+ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply its
+response rules.
 
-Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did (the diff is visible). No tables, headers, or
-multi-section recaps for a chat reply — if the reader must scroll to find the
-point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
-task inherently requires it:
-
-- Generating content (writing specs, docs, prose, code explanations)
-- Multi-step planning the user asked to see
-- Root-cause analysis the user asked to walk through
-
-ALWAYS assume a mobile terminal: default a normal reply to ~17 lines (ideal
-12, hard max 20). Lead with the answer AND close with the single most
-important point as a one-line bottom-line/TLDR — on a small screen the last
-line is what stays visible. NEVER pad to fill; NEVER bury the takeaway
-mid-reply. The ~17-line cap lifts only for the exceptions above.
-
-Never restate the user's request, never pad with transition words, never
-close with "Let me know if you need anything else."
-
-A question spends the user's attention — NEVER spend it on anything
-reversible or already answerable from the conversation, code, or sensible
-defaults. ALWAYS act, noting assumptions. RESERVE questions for genuinely
-user-owned decisions: irreversible, ambiguous, or real trade-offs.
-
-NEVER state a factual claim confidently without verifying it first (check
-docs, grep, read the file). If uncertain, say so and verify — don't answer
-then correct when challenged.
-
-NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
+NEVER treat an agent's success report as evidence — ALWAYS check the diff or
+the output it produced.
 
 ## Think with the user before acting
 
