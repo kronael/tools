@@ -1,5 +1,45 @@
 # Changelog
 
+## [v0.3.83] — 20260912
+
+> kronael v0.3.83 — guidance measured against a model that cannot see it
+>
+> The wisdom skill can now tell whether a rule earns the context it costs, by asking a model with no access to the file to write that guidance itself.
+>
+> • `wisdom` gains `clean-room.sh` — a throwaway HOME and empty cwd, so the model answers from training, not from your config
+> • Rules two clean models produce unprompted are cut; rules they state and then break are kept and stressed
+> • The four pre-kronael language skills are pruned; `sh`, `py`, `rs`, `ts`/`tsx` supersede them
+> • `tsx` gains the theme-variable rule: never hardcode a colour, fix `globals.css`
+> • The `./tmp` scratch-location rules are gone — the log path is the caller's choice
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — pruned language skills
+
+`bash`, `python`, `rust` and `typescript` never existed in this repo; they came
+from a pre-kronael install and their descriptions collide with `sh`, `py`, `rs`
+and `ts`/`tsx`, which is a routing race. Install now prunes them. Their content
+was checked line by line against the successors first — everything was already
+covered, usually more precisely, except the Tailwind theme-variable rule, which
+moved to `tsx`.
+
+### Added
+
+- `skills/wisdom/` gains the minimize method and `clean-room.sh`. A rule in an always-loaded file earns its place only when the model would not already behave that way, so the harness runs a prompt against a throwaway `HOME` (no wisdom file to load) in an empty working directory (no project `CLAUDE.md` to discover), and the skill requires verifying the room with a probe before any answer is trusted. It refuses an unknown model rather than silently answering from a resolved one, refuses an empty or missing prompt, keeps errors on stderr, and never prints an empty answer as a result.
+- `tsx`: theme variables are mandatory — `bg-card text-foreground border-border`, never `bg-[#1C1C1C]`; a wrong colour is fixed in `globals.css`, never worked around at the call site.
+
+### Changed
+
+- Guidance that two clean models produce unprompted is cut from `skills/global/SKILL.md` and `software/code.md`: the generic git safety mechanics, mock boundaries and test-file locations, subagent briefing and spawn thresholds, the no-duplication and fail-loud paragraphs, the rule of three and state minimisation. Workflow content stays regardless of reproducibility — make targets, the commit format, slash-command triggers, the `.ship/` and `.diary/` layout, the `BUGS.md` protocol, `/resolve` and `/gh-comment`.
+- Rules the models recite and then confess to breaking are kept and stressed with the pull that defeats each: never claim done before running the verification command, never state a claim unverified, never improve beyond what was asked, fix causes rather than the reported instance, and zero comments by default.
+- The `./tmp` scratch-location rules are removed from the wisdom file, `code.md`, `software/observe.md`, `software/testing.md`, `review/take.md`, `browse` and `agent-browser`. Capture-once, the failure screenshot and the heartbeat stand without a prescribed directory.
+
+### Fixed
+
+- The push rule had been rewritten from a prohibition into an unconditional order to push, which contradicted commit-only-when-asked and commanded an action `settings-recommended.json` denies outright. Restored, with the force-push ban.
+- `clean-room.sh` deleted only regular files, so a symlink or fifo in the room left `rmdir` with a non-empty directory and turned a successful run into exit 1 with the room leaked.
+- A heading whose rule had been cut is renamed to what sits under it; the subagent-report rule no longer appears twice in the wisdom file; the `review` skill no longer cites a rule that was removed; `code.md` no longer claims language skills carry a `requires: software` frontmatter hint, which none of them do.
+
 ## [v0.3.82] — 20260912
 
 > kronael v0.3.82 — Stop recaps the turn
