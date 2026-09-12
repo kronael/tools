@@ -1,5 +1,5 @@
 ---
-name: credit
+name: credits
 description: Attribution and licensing practice for LLM-assisted work — how to acknowledge upstream sources, ported code, and AI tools. NOT a slash command; loaded as ambient context.
 when_to_use: "porting code, adapting a skill, adding a dependency, shipping anything built on prior work"
 ---
