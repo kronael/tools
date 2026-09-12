@@ -52,8 +52,7 @@ that top-level Python runner instead of requiring shell redirection.
 ZERO comments by default. ALWAYS carry intent through names, types, and
 structure first; a comment is the last resort. When one earns its place, at most
 ONE short line, and only when the WHY is not derivable from the surrounding code
-— rationale, a non-obvious invariant, a cross-module assumption. NEVER restate
-WHAT the code does.
+— rationale, a non-obvious invariant, a cross-module assumption.
 
 Redundancy test — delete the comment if it fails: NEVER write a comment whose
 content is already visible in adjacent code, INCLUDING a log, warn, or error
@@ -71,8 +70,6 @@ is the canonical redundant comment.
 
 Reach for a struct or object only when you need to hold state or inject
 dependencies; otherwise plain functions in modules compose better and leak less.
-Model states as explicit enum variants rather than implicit boolean flags, and
-always validate input before it reaches persistence.
 
 ## Boring code
 
@@ -88,11 +85,8 @@ first; branch only when no existing mechanism can express it. Good taste
 eliminates the special case by redesigning so the edge *is* the normal path — one
 code path beats ten.
 
-Every line is a liability, so deletion lowers cost while premature abstraction
-freezes the wrong shape in place. Copy a thing two or three times before you
-abstract it, and design for replaceability. When you do abstract, the helper has
-to reduce *total* complexity, not just line count: if it introduces concepts that
-aren't at the call sites — function pointers, closures, generics, combinator
+When you abstract, the helper has to reduce *total* complexity, not just line
+count: if it introduces concepts that aren't at the call sites — function pointers, closures, generics, combinator
 chains — it is not simpler. Judge by cognitive overhead, not diff size. A simple
 solution that is mostly right beats a complex one that is fully correct, because
 the simple one spreads and evolves while embedded complexity can never be removed.
@@ -103,13 +97,9 @@ solved one. Don't spend a token on fashion.
 
 Watch for complecting — if you cannot understand component A without tracking B's
 state, they are braided together, and braided code grows combinatorially while
-separated code composes linearly. State is the usual culprit: if `f(x)` returns
-different results over time, that complexity escapes to every caller. Values
-compose; stateful objects leak. Minimize state and make what remains explicit.
-Prefer information as plain data over objects — ten data structures and ten
+separated code composes linearly. Prefer information as plain data over objects — ten data structures and ten
 functions give a hundred composable operations; a hundred classes with ten
-methods each give a thousand operations and no composition. Encapsulate I/O,
-expose information.
+methods each give a thousand operations and no composition.
 
 ## Grug rules
 
