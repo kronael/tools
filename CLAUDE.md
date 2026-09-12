@@ -112,6 +112,43 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Testing bundle changes**: re-run `/kronael:install` (or "say install") and
   use the result in a real project. There's no unit test for skill behavior.
 
+## Conformance — mandatory, and checked
+
+The bundle is worthless if Claude Code, Codex or pi silently fail to load it.
+All three are verifiable; ALWAYS verify rather than assume.
+
+**Skills match what Claude Code actually reads**
+(code.claude.com/docs/en/skills), not what looks reasonable:
+
+- SKILL.md frontmatter uses ONLY recognised keys. An unrecognised key is
+  ignored locally and rejected by other Agent Skills consumers, so it is a
+  defect, not a harmless extra. Free-form provenance — author, version,
+  homepage, upstream tags — goes under `metadata`, which is free-form by spec.
+- The DIRECTORY name is the slash command; frontmatter `name` is display only.
+  ALWAYS keep them equal so the two never disagree about what a skill is called.
+- `description` + `when_to_use` are concatenated into the always-on listing and
+  truncated past 1,536 characters, which drops a router's later triggers
+  without any error. ALWAYS leave headroom; NEVER write to the limit.
+- Only `SKILL.md` loads. Sibling files are cold until `SKILL.md` names them, so
+  a data file no dispatch row points at is dead weight nothing can reach.
+
+`make skills-frontmatter` enforces the first three and MUST pass before a
+commit touching `skills/`. The fourth is a review check: a router's dispatch
+table is the only path to its data files, so compare the table against the
+directory whenever either changes.
+
+**Both bridges work, proven by running them**
+
+- Codex: `codex exec --ephemeral "name one rule from the Kronael block in your
+  global guidance, and one skill you can see"`. A correct bridge quotes the
+  block and names a skill from `~/.agents/skills`.
+- pi: `pi --version`. It ships a `#!/usr/bin/env node` shebang and needs Node
+  20+; on an older system node every invocation dies before doing anything.
+  `kronael/install/reference.md` carries the bun wrapper that fixes it.
+
+NEVER report either bridge installed on the strength of a symlink existing —
+the wiring being right and the tool running are different claims.
+
 ## Release
 
 - Canonical version = git tag + `CHANGELOG.md`; the `release:` commit adds the
