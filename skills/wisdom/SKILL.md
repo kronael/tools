@@ -124,6 +124,10 @@ unusually (branch naming, worktree placement, line width) and confirm the reply
 gives the field default. Discard the whole run when repo-specific detail comes
 back.
 
+ALWAYS check the model name yourself — `claude` warns on stderr about one it
+does not recognise and then answers from whatever it resolves instead, which
+turns a two-model verdict into one model run twice without failing.
+
 NEVER quote or paraphrase our text in the prompt — ask for the guidance itself,
 never for a critique of ours. This includes the list of sub-topics: a "cover X,
 Y, Z" line built from our own section headings is our table of contents, and a
