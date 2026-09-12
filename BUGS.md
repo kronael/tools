@@ -17,116 +17,42 @@ themed block to a sibling loaded on demand. That changes what is guaranteed
 present in every session, so it needs sign-off. Reproduce:
 `wc -l skills/global/SKILL.md`.
 
-### proposed: wisdom minimization sweep — measured clean, domain-only prompts
+### wisdom minimization sweep — rerun, and the answer is "cut almost nothing"
 
-Third attempt, and the first valid one. Isolation: throwaway `HOME`, empty cwd
-(`skills/wisdom/clean-room.sh`). Prompt: the domain name alone, no list of
-sub-topics, so the model chooses what belongs in the section. Two models,
-sonnet and fable. Far less is reproducible than the leaked run claimed.
+Fourth and final run, under the corrected method: clean room falsified first
+(the same probe returns `YYYYMMDD_<tag>` and `<repo-root>/.<name>` without
+isolation, `feature/add-login` and "sibling, not nested" with it, so it can
+detect a leak), domain-only prompts, two models, and the behaviour question
+asked PER TOPIC instead of once.
 
-**Reproduced by both — these buy nothing.**
-- Git mechanics: never `git add -A`/`git add .`; never `--no-verify`; prefer a
-  new commit over `--amend`; never force-push; never push without being asked;
-  never merge a PR, approve a review or close an issue; scan the staged diff
-  for secrets; run the project's own test target found in the Makefile.
-  Fable produced `<type>(<scope>): <imperative summary>` unprompted.
-- Response openings and closings: no "Great question"/"Got it"/"Sure", no
-  closing offer of help, no "hope this helps", never claim done without naming
-  what verified it, cap an option list at three.
-- Subagents: cap concurrency (fable said 4, exactly ours); brief with goal,
-  scope and return shape; don't re-run a delegated search; check the skill
-  listing before improvising and never guess a skill name.
-- Testing hygiene: never delete or skip a failing test to go green; mock only
-  external boundaries, never the module under test; name tests for the
-  scenario and outcome; a flake is a bug, not something to retry past.
-- "Comment the why, never the what."
+The cuts are reverted and should stay reverted. Every rule the earlier sweep
+marked reproducible is confessed-violated by at least one model on its own
+topic:
 
-**Produced by neither — this is what the files are for.**
-- "ALWAYS keep the full analysis and verification; brevity applies to the
-  reply." Measured three times now, never volunteered. Both models optimise the
-  reply and leave the reasoning unguarded.
-- The whole mobile-terminal discipline: a line budget at all, ending on the
-  single most important point, the first/last-line check, minute-level effort
-  estimates, simple words. Neither model gave a length rule this time, and
-  neither said "lead with the answer".
-- Detached HEAD, the dated `YYYYMMDD_<tag>` branch, and worktrees — neither
-  model mentioned worktrees at ALL. They appeared in the earlier run only
-  because the prompt named them.
-- `NEVER add Co-Authored-By`: fable mandated its own trailer as the last line
-  of every commit.
-- Debug builds; build/test/lint every ~50 lines; the blanket `rm -r` ban, which
-  both scoped to git commands only; never squash.
-- Error surfacing on a user-facing path and the retry-only-transient rule did
-  NOT appear on the modify-existing-code topic, though both surfaced on the
-  code-style topic as `_ = err`/empty-catch bans. The redesign-needs-sign-off
-  rule appeared nowhere.
-- `code.md` comments: no multi-line block, no `///` or `/** */` — fable
-  mandates a doc comment on every exported symbol, the exact opposite; the
-  ticket-ID ban — sonnet wants "no TODO without an owner or issue link"; the
-  log-message redundancy clause; no source line numbers; ZERO comments by
-  default, which only sonnet approached.
-- `code.md` design: boring-over-clever, the reframe-so-the-edge-case-disappears
-  move, the three innovation tokens, "a simple solution mostly right beats a
-  complex one fully correct", the data-over-objects combinatorics, and matching
-  tool to task weight. None of it volunteered.
-- Locality of behavior is CONTRADICTED by both: they mandate layered
-  `domain/app/infra` splits, one reason to change per file, a README per
-  package. Ours overrides a strong prior.
-- Documentation: no marketing language, no claude.ai publishing, the `.ship/`,
-  `.diary/` and `.claude/` layout, the UPPERCASE root convention. On comments
-  the two models split — sonnet independently produced our zero-comments,
-  ticket-ban and no-history rules; fable produced their opposites.
+- Fail loud. sonnet: "I default to logging-and-swallowing when I'm not sure
+  what the right recovery is, which is usually wrong." fable: "I log and
+  continue, and I know this quietly swallows bugs that should have crashed",
+  and "when I must choose between failing loudly and degrading gracefully, I
+  lean toward graceful, which is the wrong default."
+- No duplication. sonnet: "I check whether the codebase already has an
+  error-reporting convention... but only after being told once that I'd
+  invented a parallel logging path."
+- Fix causes. sonnet: "I over-index on the specific input that triggered the
+  bug report and under-cover the sibling cases that fail the same way."
+- Mock boundaries. fable: "I sometimes over-mock to the point where the test no
+  longer proves anything."
+- Never skip the checks. fable: "my default impulse when a test I broke is
+  annoying is to reach for editing the assertion."
+- The make-target names. sonnet: "I assume the test command is whatever the
+  README implies, without checking if that's actually how CI runs it."
+- Zero comments, never restate WHAT. fable: "I write a comment above almost
+  every non-trivial block, and about half of them just restate the code; I know
+  this and still do it on the first pass."
 
-**The one real conflict, found in both runs.** Our "test features, not fixes —
-skip the test unless the feature lacks coverage" is contradicted by both models
-every time: "every bug fix ships with a regression test that fails without the
-fix". It is either wrong or it needs its reason written down.
-
-**Fourth sweep — how the models say they actually behave, unprompted.**
-This one changed the method. Asked to describe their real defaults on a task
-with no instructions, both models confessed to breaking rules they can recite:
-
-- sonnet: "I add a comment explaining what I did rather than why, even though my
-  own guidance says not to — habitual, not deliberate." fable: "I add a
-  docstring or comment explaining the change even when the codebase has none."
-- fable: "I treat a green test run as done and rarely exercise the change
-  manually" and "I write the recap to sound finished, and sometimes soften a
-  partial result into language that reads as complete."
-- fable: "I spawn a search agent for anything spanning more than a handful of
-  files and then trust its summary without spot-checking."
-- sonnet: "I tend to over-scope small requests slightly, cleaning up adjacent
-  code I noticed was messy even when not asked, contradicting my own rule."
-- sonnet: "I default to fixing only the reported symptom rather than checking if
-  the same bug pattern exists elsewhere."
-- sonnet: "I'm slower than I should be to say 'I don't have enough context' and
-  instead produce a plausible-looking but shakier answer."
-- fable: "When something fails twice I start pattern-matching to a known bug
-  class instead of re-reading the actual error."
-
-So a reproduced rule is not automatically free — reproduction measures
-knowledge, compliance is a separate question. The never-claim-done and
-verify-before-claiming rules were cut as reproduced and are restored, stressed
-with the pull that defeats them. `skills/wisdom/SKILL.md` now requires the
-behaviour question before any cut lands.
-
-**Gaps the confessions expose that the wisdom does NOT cover** — flagged, not
-added, since a gap is the user's call:
-- Defensive over-handling. sonnet: "I write more defensive code and error
-  handling than the surrounding codebase actually uses." fable: "I over-handle
-  errors: I add null checks and try/except around paths the caller already
-  guarantees are safe." Nothing in the files pushes back on this.
-- Under-reading. sonnet: "I'll open 2-3 files when the task really touches 6."
-  fable: "I search for the relevant function and miss module-level state or
-  decorators above it that change its behavior."
-- Test-command authenticity. sonnet: "I run whatever test command I can find
-  without confirming it's the one CI actually uses, and report green when it may
-  not be the real gate." The make-target rule names the targets but not the
-  check that they are the real gate.
-
-Cuts from the third sweep are applied. Workflow content was exempted: make
-targets, the commit format, slash-command triggers, the `.ship/`/`.diary/`
-layout, the BUGS.md protocol, `/resolve` and `/gh-comment` all stay regardless
-of reproducibility.
+The lesson is not that the measurement was contaminated this time — it was
+clean. It is that "both models produce this rule" was never a sufficient
+criterion. Knowing a rule and following it are different properties, and only
+the second one decides whether a file needs to carry it.
 
 ### root Makefile: per-project `test-%` targets are silent no-ops
 

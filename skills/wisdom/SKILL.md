@@ -104,6 +104,16 @@ subagent's summary unchecked, and cleaning up adjacent code nobody asked about
 — every one of those is a rule they can also recite. A rule a model states and
 breaks belongs in the file, stressed, not cut.
 
+Empirically, almost nothing survives this test. Run across error handling,
+testing and comments, every rule that looked freely reproducible turned out to
+be one the models confess to breaking: logging-and-swallowing when the recovery
+is unclear, degrading gracefully where crashing is correct, inventing a second
+logging path without grepping for the first, over-mocking until the test proves
+nothing, reaching for the assertion when a test they broke is annoying, and
+commenting above almost every block where half just restate the code — "I know
+this and still do it on the first pass". EXPECT the cut list to come out nearly
+empty, and treat a long one as evidence the behaviour question was skipped.
+
 ALWAYS ask the behaviour question per candidate rule, not once for the whole
 sweep. One confession list answers the rules it happens to name and says
 nothing about the rest; treating it as global licence cuts rules no evidence
