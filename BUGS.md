@@ -4,34 +4,74 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
-### proposed: wisdom minimization sweep — void a second time, prompt leaked
+### proposed: wisdom minimization sweep — measured clean, domain-only prompts
 
-Both attempts measured nothing. The first asked subagents, which are handed
-`~/.claude/CLAUDE.md` before their first token. The second used an isolated
-clean room — that part worked, and the probe proved it — but the prompts named
-our own rules as the topics to cover, so the models were completing a list I
-had copied out of the files.
+Third attempt, and the first valid one. Isolation: throwaway `HOME`, empty cwd
+(`skills/wisdom/clean-room.sh`). Prompt: the domain name alone, no list of
+sub-topics, so the model chooses what belongs in the section. Two models,
+sonnet and fable. Far less is reproducible than the leaked run claimed.
 
-The `p-sys` prompt asked the model to cover "adding a mechanism when a similar
-one may already exist; how errors on a user-facing path must behave; when
-retrying is legitimate and when it is not; whether to address a symptom or its
-cause; and how to handle a fix that turns out to require a redesign" — the five
-System-change bullets in order. The `p-design` prompt asked for "how to decide
-between adding a branch or reshaping the problem so the edge case disappears",
-which is the reframe rule verbatim, and "what to do with code you do not
-understand", which is Chesterton's fence. Every "both models reproduced it"
-verdict rests on that.
+**Reproduced by both — these buy nothing.**
+- Git mechanics: never `git add -A`/`git add .`; never `--no-verify`; prefer a
+  new commit over `--amend`; never force-push; never push without being asked;
+  never merge a PR, approve a review or close an issue; scan the staged diff
+  for secrets; run the project's own test target found in the Makefile.
+  Fable produced `<type>(<scope>): <imperative summary>` unprompted.
+- Response openings and closings: no "Great question"/"Got it"/"Sure", no
+  closing offer of help, no "hope this helps", never claim done without naming
+  what verified it, cap an option list at three.
+- Subagents: cap concurrency (fable said 4, exactly ours); brief with goal,
+  scope and return shape; don't re-run a delegated search; check the skill
+  listing before improvising and never guess a skill name.
+- Testing hygiene: never delete or skip a failing test to go green; mock only
+  external boundaries, never the module under test; name tests for the
+  scenario and outcome; a flake is a bug, not something to retry past.
+- "Comment the why, never the what."
 
-Cuts made on this evidence are reverted: `skills/global/SKILL.md` and
-`skills/software/code.md` are back to their pre-sweep content, minus the
-separately-requested `./tmp` removal.
+**Produced by neither — this is what the files are for.**
+- "ALWAYS keep the full analysis and verification; brevity applies to the
+  reply." Measured three times now, never volunteered. Both models optimise the
+  reply and leave the reasoning unguarded.
+- The whole mobile-terminal discipline: a line budget at all, ending on the
+  single most important point, the first/last-line check, minute-level effort
+  estimates, simple words. Neither model gave a length rule this time, and
+  neither said "lead with the answer".
+- Detached HEAD, the dated `YYYYMMDD_<tag>` branch, and worktrees — neither
+  model mentioned worktrees at ALL. They appeared in the earlier run only
+  because the prompt named them.
+- `NEVER add Co-Authored-By`: fable mandated its own trailer as the last line
+  of every commit.
+- Debug builds; build/test/lint every ~50 lines; the blanket `rm -r` ban, which
+  both scoped to git commands only; never squash.
+- Error surfacing on a user-facing path and the retry-only-transient rule did
+  NOT appear on the modify-existing-code topic, though both surfaced on the
+  code-style topic as `_ = err`/empty-catch bans. The redesign-needs-sign-off
+  rule appeared nowhere.
+- `code.md` comments: no multi-line block, no `///` or `/** */` — fable
+  mandates a doc comment on every exported symbol, the exact opposite; the
+  ticket-ID ban — sonnet wants "no TODO without an owner or issue link"; the
+  log-message redundancy clause; no source line numbers; ZERO comments by
+  default, which only sonnet approached.
+- `code.md` design: boring-over-clever, the reframe-so-the-edge-case-disappears
+  move, the three innovation tokens, "a simple solution mostly right beats a
+  complex one fully correct", the data-over-objects combinatorics, and matching
+  tool to task weight. None of it volunteered.
+- Locality of behavior is CONTRADICTED by both: they mandate layered
+  `domain/app/infra` splits, one reason to change per file, a README per
+  package. Ours overrides a strong prior.
+- Documentation: no marketing language, no claude.ai publishing, the `.ship/`,
+  `.diary/` and `.claude/` layout, the UPPERCASE root convention. On comments
+  the two models split — sonnet independently produced our zero-comments,
+  ticket-ban and no-history rules; fable produced their opposites.
 
-A valid rerun needs a prompt that names only the domain — "the software-design
-section", "the section on changing a system you did not write" — with NO list
-of sub-topics, because any such list is our table of contents. Ask for whatever
-the model thinks belongs there, then compare. A rule the model never thought to
-mention is the finding; the earlier design measured only whether it could write
-to a spec.
+**The one real conflict, found in both runs.** Our "test features, not fixes —
+skip the test unless the feature lacks coverage" is contradicted by both models
+every time: "every bug fix ships with a regression test that fails without the
+fix". It is either wrong or it needs its reason written down.
+
+Nothing has been cut on this evidence. The last two attempts both produced
+confident verdicts that were artefacts of method, so the cuts are proposals
+until signed off.
 
 ### root Makefile: per-project `test-%` targets are silent no-ops
 
