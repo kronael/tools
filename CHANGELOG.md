@@ -1,5 +1,53 @@
 # Changelog
 
+## [v0.3.85] — 20260912
+
+> kronael v0.3.85 — a rule you can recite is not a rule you follow
+>
+> The wisdom sweep is reverted — the rules it cut as already-known are ones the models confess to breaking.
+>
+> • Wisdom rules restored — fail-loud, no-duplication and fix-causes stay in every session
+> • `wisdom` asks the behaviour question per rule now — a long cut list means it was skipped
+> • Run a probe you expect to fail first; a broken check and a passing one look the same when green
+> • `refine` rewritten as a runbook — 9 steps, each closing on an observable pass/fail
+> • Its correctness lenses seed from what models admit they do, not a frozen checklist
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — the minimization criterion was wrong
+
+"The model reproduces this rule unprompted" does not mean the rule is
+redundant. Asked about their own defaults, both models named logging-and-
+swallowing, degrading where crashing is correct, inventing a second logging
+path without grepping for the first, over-mocking, and commenting above
+almost every block — each while able to recite the rule against it.
+
+Cuts made on that criterion are reverted in `skills/global/SKILL.md` and
+`skills/software/code.md`. Two unrelated fixes from the same sweep stay: the
+`./tmp` removal and the false `requires:` claim.
+
+### Changed
+
+- `skills/refine/SKILL.md` follows the runbook pattern — every step closes on
+  an observable criterion (`git status --porcelain` empty, test target exits 0,
+  no file in two buckets, `git worktree list` shows only the main tree).
+- Refine's correctness lenses seed from a **Confessed defaults** section —
+  the error, test and comment habits models report as their own first pass.
+- `skills/wisdom/SKILL.md` gains the method the sweep cost to learn: ask the
+  behaviour question per candidate rule, re-examine every earlier cut when the
+  criterion changes, and run a probe you expect to fail before trusting one
+  that passes. Expect a nearly empty cut list.
+- `CLAUDE.md` test and hooks notes match the repo: PROJECTS is five projects
+  and `make test` also runs `tests/drift_test.sh`; `make gen-ci` is listed.
+  The hooks note explains the real trap — `hooks/Makefile` names its test
+  files explicitly, so a new `test_*.py` is skipped in silence.
+
+### Fixed
+
+- The no-duplication rule is back in the wisdom file. Both models report
+  reaching for the mainstream idiom over a repo-local helper they never
+  grepped for, which is the rule's whole subject.
+
 ## [v0.3.84] — 20260912
 
 > kronael v0.3.84 — skills that conform, bridges that are proven
