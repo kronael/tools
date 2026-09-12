@@ -47,7 +47,39 @@ silently keep:
 Worth adopting, from the clean runs, absent from ours: "write for someone who
 sees only this reply — no reference to a tool call or result they cannot see."
 
-Still unmeasured: § Development Workflow, § Testing, § Documentation,
+**§ Development Workflow, measured clean.**
+
+Reproduced by both, so the text buys nothing: never `git add -A`/`git add .`,
+stage by name after reading `git status`/`git diff`; never commit unless asked
+this turn; imperative subject under ~72 chars with a body saying why; never
+`--no-verify`; prefer a new commit over `--amend`; never push to `main`/
+`master`; push only the current branch with `git push -u origin <branch>`;
+never force-push; never rewrite pushed history; run the project's own
+test/lint targets rather than guessing; narrow test first then the full suite;
+never claim success without running it; never `gh pr merge`/`close`/
+`review --approve` unless asked.
+
+Contradicted by both, so these are the highest-value lines in the file:
+- **Detached HEAD by default.** Neither model produced it — both instructed
+  creating a feature branch (`feat/<slug>`, `fix/parser-null-check`).
+- **Worktrees detached, hidden, inside the repo root.** Both placed them as
+  siblings (`git worktree add ../<dir> <branch>`) and both attached a branch.
+- **NEVER add Co-Authored-By.** Both did the opposite and mandated a trailer
+  naming themselves; fable also mandated the PR footer. This overrides a
+  default they carry unprompted.
+
+Produced by neither, so keep: debug builds; build/test/lint every ~50 lines;
+never improve beyond what is asked; the conventional-commit type vocabulary
+(neither produced `type(scope):` at all, only "imperative subject"); the dated
+`YYYYMMDD_<tag>` branch name; the blanket `rm -r` ban, which both scoped to
+git commands only; never squash; the `/gh-comment` and slash-command pointers.
+
+Worth adopting — both produced these and we lack them: scan the staged diff
+for secrets and `.env` before committing; never edit CI config or branch
+protection to make a check pass; never edit, skip or delete a failing test to
+make it pass.
+
+Still unmeasured: § Testing, § Documentation,
 § System-change discipline, § Agents and Skills, and all of `code.md`. The
 earlier readings of those came from contaminated subagents and were discarded.
 
