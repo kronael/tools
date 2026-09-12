@@ -4,14 +4,13 @@ description: "Humanize text: strip AI-isms and add real voice. NOT for drafting 
 when_to_use: "humanize text, strip AI-isms, de-slop, de-AI this writing, remove the AI voice, make it sound human, add real voice, less robotic"
 license: MIT
 metadata:
-  version: 2.5.1
-  author: Siqi Chen (@blader, https://github.com/blader/humanizer), ported by Hermes Agent
-  platforms: [linux, macos, windows]
-  hermes:
-    tags: [writing, editing, humanize, anti-ai-slop, voice, prose, text]
-    category: creative
-    homepage: https://github.com/blader/humanizer
-    related_skills: [songwriting-and-ai-music]
+  version: "2.5.1"
+  author: "Siqi Chen (@blader, https://github.com/blader/humanizer), ported by Hermes Agent"
+  homepage: "https://github.com/blader/humanizer"
+  platforms: "linux, macos, windows"
+  tags: "writing, editing, humanize, anti-ai-slop, voice, prose, text"
+  category: "creative"
+  related_skills: "songwriting-and-ai-music"
 ---
 
 # Humanizer: Remove AI Writing Patterns
