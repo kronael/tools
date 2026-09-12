@@ -50,18 +50,19 @@ def append_header(diary_file, hhmm):
         pass
 
 
-def git_dir(cwd):
-    r = git_run(cwd, 'git', 'rev-parse', '--git-dir')
-    if r.returncode != 0:
+def git_dir(cwd, deadline, run=git_run):
+    """Absolute git dir, or None outside a repo, on failure, or past the deadline."""
+    gd = recap_git(cwd, deadline, run, 'rev-parse', '--git-dir')
+    if gd is None:
         return None
-    gd = r.stdout.strip()
+    gd = gd.strip()
     if not os.path.isabs(gd):
         gd = os.path.join(cwd, gd)
     return gd
 
 
 def git_path(cwd, name):
-    gd = git_dir(cwd)
+    gd = git_dir(cwd, time.monotonic() + 5)
     if gd is None:
         return None
     return os.path.join(gd, name)
@@ -128,9 +129,14 @@ def nudges(cwd, now):
     parts = []
 
     # Uncommitted changes
-    r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
     stamp = git_path(cwd, 'claude-commit-nudge')
-    if r.returncode == 0 and r.stdout.strip() and nudge_due(stamp, now):
+    r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
+    if stamp is not None and r.returncode != 0:
+        parts.append(
+            'git status failed — cannot tell whether the tree is dirty:\n'
+            + (r.stderr.strip() or f'exit {r.returncode}')
+        )
+    elif r.returncode == 0 and r.stdout.strip() and nudge_due(stamp, now):
         diff = git_run(cwd, 'git', 'diff', '--stat')
         msg = 'Uncommitted changes detected.'
         if diff.stdout.strip():
@@ -175,7 +181,7 @@ def nudges(cwd, now):
 
 
 def recap_git(cwd, deadline, run, *args):
-    """stdout of a git command, or None once it fails or the recap budget is spent."""
+    """stdout of a git command, or None once it fails or the deadline is spent."""
     left = deadline - time.monotonic()
     if left <= 0:
         return None
@@ -186,12 +192,13 @@ def recap_git(cwd, deadline, run, *args):
 
 
 def landed_lines(cwd, deadline, run, since):
+    """Commits landed in the window, or None when the git call fails."""
     if not since:
         head = recap_git(cwd, deadline, run, 'log', '-n', '1', '--format=%h %s')
-        return [] if head is None else ['head ' + head.strip()]
+        return None if head is None else ['head ' + head.strip()]
     log = recap_git(cwd, deadline, run, 'log', f'--since={since}', '-n', '200', '--format=%h %s')
     if log is None:
-        return []
+        return None
     commits = log.splitlines()
     hhmm = datetime.fromisoformat(since).strftime('%H:%M')
     if not commits:
@@ -229,12 +236,19 @@ def dirty_lines(top, status, numstat, since_ts):
     changed = 0
     conflicted = 0
     untracked = 0
+    no_window = False
     paths = []
-    for line in status.splitlines():
-        code = line[:2]
-        path = line[3:]
+    records = iter(status.split('\0'))
+    for record in records:
+        if not record:
+            continue
+        code = record[:2]
+        path = record[3:]
+        if 'R' in code or 'C' in code:
+            next(records, None)  # rename/copy: the source path follows as its own record
         if code == '??':
             if not is_new(top, path, since_ts):
+                no_window = since_ts is None
                 continue
             untracked += 1
         elif code in CONFLICT_CODES:
@@ -243,7 +257,7 @@ def dirty_lines(top, status, numstat, since_ts):
             changed += 1
         paths.append(path)
     if not paths:
-        return ['nothing uncommitted']
+        return ['no tracked changes'] if no_window else ['nothing uncommitted']
     counts = []
     if changed:
         counts.append(f'{changed} changed')
@@ -267,23 +281,23 @@ def stuck_lines(gd):
 
 def build_recap(cwd, session_id, now, run=git_run, budget=RECAP_BUDGET):
     """Compact turn recap: commits landed, dirty tree, stuck git operations."""
-    gd = git_dir(cwd)
+    deadline = time.monotonic() + budget
+    gd = git_dir(cwd, deadline, run)
     if gd is None:
         return ''
-    deadline = time.monotonic() + budget
     session = str(session_id or 'default').replace('/', '_')
     stamp = os.path.join(gd, f'claude-recap-{session}')
     since = read_stamp(stamp)
     since_ts = datetime.fromisoformat(since).timestamp() if since else None
     lines = landed_lines(cwd, deadline, run, since)
-    status = recap_git(cwd, deadline, run, 'status', '--porcelain')
+    status = recap_git(cwd, deadline, run, 'status', '--porcelain', '-z')
     top = recap_git(cwd, deadline, run, 'rev-parse', '--show-toplevel')
-    if status is not None and top is not None:
-        numstat = recap_git(cwd, deadline, run, 'diff', '--numstat', 'HEAD')
-        lines += dirty_lines(top.strip(), status, numstat, since_ts)
+    if lines is None or status is None or top is None:
+        return ''
+    numstat = recap_git(cwd, deadline, run, 'diff', '--numstat', 'HEAD')
+    lines += dirty_lines(top.strip(), status, numstat, since_ts)
     lines += stuck_lines(gd)
-    if lines:
-        write_stamp(stamp, now.isoformat(timespec='seconds'))
+    write_stamp(stamp, now.isoformat(timespec='seconds'))
     return '\n'.join(lines)
 
 

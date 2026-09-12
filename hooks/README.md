@@ -81,6 +81,9 @@ Codex sees `@diary`). When called from periodic `PostToolUse`, the same checks
 emit advisory `hookSpecificOutput.additionalContext` and never block a tool
 call.
 
+A `git status` that fails inside a repo blocks with its stderr — the tree is
+reported as unreadable rather than assumed clean.
+
 The hook may append a blank diary header for missing/stale diary entries. Pure
 script, no LLM call, NEVER pushes.
 
@@ -91,7 +94,8 @@ uncommitted (tracked changes with `+added -deleted`, plus untracked paths
 touched inside the window — older untracked noise is skipped), and any
 merge/rebase/cherry-pick/revert/bisect left in progress. About ten lines, capped
 at `RECAP_COMMITS` commits and `RECAP_PATHS` paths. The first Stop of a session
-has no window and shows the `head` commit instead. The recap is best effort:
+has no window and shows the `head` commit instead; with no window the tree
+line reads `no tracked changes`, since untracked age cannot be judged yet. The recap is best effort:
 ALWAYS silent outside a git repository, when a git call fails, or once
 `RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse` or
 under Codex (`KRONAEL_IN_CODEX`). State: `<git-dir>/claude-recap-{session_id}`,

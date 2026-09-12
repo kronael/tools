@@ -140,15 +140,16 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse,
 1. With `stop_hook_active` set, skip the nudges (prevents recursion) and go
    straight to the recap.
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
-   with `git diff --stat`.
+   with `git diff --stat`. A failed `git status` inside a repo appends its
+   stderr instead — an unreadable tree is reported, never read as clean.
 3. If the repo has a `.diary/`, check for today's `YYYYMMDD.md` (UTC).
    Missing or >1h stale → append a diary nudge.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 5. Otherwise, on a real Stop outside Codex, build the recap: `git log
    --since=<stamp>` (or `head` when the session has no stamp yet), `git status
-   --porcelain` filtered so untracked paths count only when touched after the
-   stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
+   --porcelain -z` (`-z` never quotes, so non-ASCII and spaced paths survive)
+   filtered so untracked paths count only when touched after the stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
    for merge/rebase/cherry-pick/revert/bisect in progress. Each git call
    shares one `RECAP_BUDGET` deadline; any failure drops the whole recap and
    leaves the stamp untouched so the next turn's window still covers this one.
