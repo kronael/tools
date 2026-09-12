@@ -74,6 +74,19 @@ them ro / redacted / not at all) — not a full config copy-in (that isn't
 needed). Lower priority — dockbox's README already discloses it is not a
 boundary for hostile code.
 
+### hooks/Makefile: the comment above `TEST_FILES` states a fixed cause
+
+The comment reads "Some hook scripts still read stdin at import time, so
+collect only files known to be pytest-safe." That is no longer why the list is
+narrow — `local.py` and `reclaude.py` both read stdin inside a function and
+guard `main()` behind `__name__ == '__main__'`. They are absent from
+`TEST_FILES` because no `test_local.py` or `test_reclaude.py` exists.
+
+The comment sends a reader hunting an import-time bug that is not there, and
+it hides the real trap: the list is explicit, so a new `test_*.py` is skipped
+in silence until someone adds it. Reproduce: `grep -n '__main__' hooks/local.py
+hooks/reclaude.py`.
+
 ### Deferred — need sign-off
 
 - **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,

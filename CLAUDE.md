@@ -29,16 +29,17 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # run tests across all projects in PROJECTS (hooks udfix)
-make test-<dir>    # tests for one project, e.g. make test-udfix
+make test          # every project in PROJECTS, then tests/drift_test.sh
+make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
+make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
 ```
 
-- **Hooks** (`hooks/`): `make -C hooks test` runs pytest. Only `pretool_nudge.py`
-  is collected — `stop.py`, `local.py`, `prompt_nudge.py`, `reclaude.py` read
-  stdin at import time and break collection until `main()` is guarded behind
-  `__name__ == '__main__'`.
+- **Hooks** (`hooks/`): `make -C hooks test` runs pytest over the explicit
+  `TEST_FILES` list in `hooks/Makefile`, never the directory. A new
+  `test_*.py` does not run until it is added to that list — the suite passes
+  while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
   (installs to `~/.local/bin`). `dockbox` also has `make image`.
 - **Python scripts** (`tg-fetch`, `dc-fetch`): `uv run main.py` (PEP 723
@@ -160,8 +161,8 @@ the wiring being right and the tool running are different claims.
 - Canonical version = git tag + `CHANGELOG.md`; the `release:` commit adds the
   CHANGELOG entry and tags `vX.Y.Z` (patch default). Use the `release` skill.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
-  the same release — it silently drifted (stuck at 0.3.47 across many releases).
-  Keep it synced so the plugin manifest reports the shipped version.
+  the same release. Nothing enforces it, and the drift is invisible: the
+  manifest keeps reporting a version the bundle no longer is.
 
 ## Docs map
 
