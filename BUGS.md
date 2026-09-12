@@ -4,69 +4,24 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
-### proposed: wisdom minimization sweep — cut what a blank-context model reproduces
+### proposed: wisdom minimization sweep — method was invalid, needs a rerun
 
-Method: for each normative (not workflow) block, a fresh sonnet and a fresh
-fable with no repo access were asked to write that guidance from scratch.
-Anything both reproduced is costing always-loaded context to say what the model
-already does. Anything neither reproduced — especially anything that
-CONTRADICTS what both defaulted to — is the guidance actually earning its
-place. Round 1 covered two blocks.
+The first attempt asked fresh sonnet and fable subagents to write each block of
+guidance from scratch, then treated whatever they produced as "the model
+already knows this, cut it". The measurement was worthless: a subagent is
+handed `~/.claude/CLAUDE.md` and the project `CLAUDE.md` as context before it
+runs, and "do not read any files" does not remove what was already injected.
+The agents were paraphrasing the text back, not reproducing it.
 
-**Round 1a — `skills/global/SKILL.md` § Response Style (lines 48-82).**
-Both models independently reproduced: lead with the answer; ~12 default and
-hard cap 20 lines; one-sentence replies are fine; last line is the bottom line
-(fable gave the phone rationale unprompted); no headers/tables; never restate
-the request; never close with "let me know"; don't narrate what the diff shows;
-cut padding; act without asking on anything reversible and state the
-assumption; ask only when irreversible or genuinely ambiguous; say done only
-for work verified this turn; correct without apologising; the cap lifts for
-specs/plans/walkthroughs. Fable also reproduced the ~5-item list cap and, near
-verbatim, "a subagent's report is a claim, not evidence — check its diff".
+The tell, from the git block: `YYYYMMDD_<tag>` with this repo's underscore,
+`git worktree add --detach <repo-root>/.<name>` verbatim, "never a sibling
+directory", the `merge:`/`release:` addendum to the commit-type list, and
+`make test 2>&1 | tee ./tmp/test.log && tail -20 ./tmp/test.log` with the exact
+path and line count. Those are not priors.
 
-That is the whole section. Cut proposal: reduce § Response Style to the pointer
-at `output-styles/caveman.md` plus only what neither model produced — the
-keep-the-full-analysis guard, simple words, restate progress on multi-turn
-work, minute-level effort estimates, one thread at a time, the first/last-line
-pre-send check, and numbered one-action-per-item steps. Every one of those
-survivors already lives in `caveman.md`, so the section may collapse to the
-pointer alone.
-
-Load-bearing survivor worth naming: "ALWAYS keep the full analysis and
-verification; brevity applies to the reply". NEITHER model produced any guard
-against terseness degrading the thinking — they optimised the reply and left
-the reasoning unprotected. That is the rule holding the whole style together.
-
-**Round 1b — `skills/software/code.md` §§ Naming, Layout, Comments.**
-Reproduced by both, so dead weight: shorter names / no scope repetition; the
-80-100 column range; "comment the WHY never the WHAT"; "never restate what the
-code does". The wisdom file's "NEVER reference an earlier version in a comment"
-was also reproduced by both, in `code.md`'s neighbourhood — check
-§ Documentation before keeping it there.
-
-Not in `code.md` and reproduced by both, so correctly absent — do not add:
-file/function length caps, formatter deference, import grouping, nesting-depth
-caps, blank-line and trailing-whitespace rules, no-commented-out-code, no
-section banners, TODO-needs-an-owner.
-
-Earning their place, because neither model produced them: the entrypoint is
-always `main`; short file extensions and short CLI flags; the permissive
-single-letter list with the `o O l I` ban; never rename something that already
-has a name; discard with a bare `_`; never write under `/tmp`; lowercase info
-and Capitalized errors with the Unix log format; stdout/stderr only, never file
-log handlers.
-
-Earning their place HARDER, because both models actively defaulted the other
-way — these override a strong prior and are the highest-value lines in the
-file: ZERO comments by default (both treated comments as normal and mandated a
-doc comment on every exported symbol); at most ONE line (both wanted more);
-NEVER a multi-line block, no `///` or `/** */` (both mandated exactly those);
-NEVER a ticket or issue ID in a comment (both wanted issues linked); and the
-redundancy test's clause about a log or error message on a neighbouring line.
-
-One conflict to settle, not a cut: `code.md` mandates `*_utils.*` filenames
-while both models ban `utils`/`helper`/`manager` as names that say nothing.
-Either the rule is wrong or it needs the reason it overrides that default.
+A valid rerun needs the model to have no access to the wisdom: an empty working
+directory so no project `CLAUDE.md` is discovered, and no user memory loaded.
+Until that holds, no cut from this sweep is evidence of anything.
 
 ### proposed: split `skills/global/SKILL.md` — 270 lines against a 200 cap
 
