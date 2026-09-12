@@ -13,7 +13,7 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
 
 1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "chore: checkpoint before refine")`
 2. **Validate** - run build/test, fix failures
-3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) derive lenses from two sources — **code-quality lenses** from the file types AND **WISDOM lenses**: read the live WISDOM (global + project `CLAUDE.md` plus the loaded `SKILL.md` files), split it into thematic chunks (whatever the current WISDOM holds — minimality, orthogonality, fail-loud/error-handling, one-renderer-many-sinks, strict-not-magical, naming, testing, docs …), one chunk = one lens; derive from the live text, NEVER a frozen checklist. Tag each lens `simplify` (reuse / dead-code / minimization) or `correctness` (bugs, logic errors, edge cases), and scale the lens count to the diff (see Rules).
+3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) derive lenses from two sources — **code-quality lenses** from the file types AND **WISDOM lenses**: read the live WISDOM (global + project `CLAUDE.md` plus the loaded `SKILL.md` files), split it into thematic chunks (whatever the current WISDOM holds — minimality, orthogonality, fail-loud/error-handling, one-renderer-many-sinks, strict-not-magical, naming, testing, docs …), one chunk = one lens; derive from the live text, NEVER a frozen checklist. ALWAYS seed the correctness lenses from **Confessed defaults** below — those are the failures a model produces unprompted, so they are where a diff actually rots. Tag each lens `simplify` (reuse / dead-code / minimization) or `correctness` (bugs, logic errors, edge cases), and scale the lens count to the diff (see Rules).
 4. **Review** - parallel read-only `Task(agent="improve", model=<by tag>)`, **1-3 lenses per sub, never more** (a focused rubric beats a groupthink dump). Prompt: "Lenses: <1-3, each with the exact WISDOM excerpt or code-quality rule it checks>. Skills: <list>. Files: <bucket>. Report violations only, NO edits."
 4b. **Triage findings as they return** - drop findings that (a) add abstractions, (b) target unused code (grep first), (c) conflict with the original Intent, (d) can't be verified against the codebase. A survivor that needs a redesign (new contract, changed control flow, cross-cutting) → record in `BUGS.md` as `proposed` (CLAUDE.md System-change discipline), NOT applied without sign-off. Only inline-simple survivors go to Apply.
 5. **Apply** - serial Task(agent="improve") per bucket. Run build/test between buckets — abort bucket on failure. Prompt: "Skills: <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions and cleverness."
@@ -27,6 +27,34 @@ Orchestrates code refinement. Runs in main context for full conversation visibil
    done
    ```
 10. **Summary** - what changed, main impact, no fluff, not marketing
+
+## Confessed defaults — hunt these first
+
+Asked in isolation how they really behave, models name these as their own
+defaults while being able to recite the rule against each. Knowing a rule and
+following it are different properties; these are where the gap shows.
+
+**Error handling** — a broad catch that logs and continues "quietly swallows
+bugs that should have crashed"; a fallback `None`/`[]`/`0` returned so callers
+proceed on bad data; graceful degradation chosen where crashing is cheaper than
+corrupted output; a guard added to a path the caller already guarantees; a
+second logging or helper path invented because the first was never grepped for.
+
+**Scope** — adjacent code tidied that nobody asked about; the reported instance
+patched while the sibling cases that fail the same way are left.
+
+**Tests** — mocks stacked "to the point where the test no longer proves
+anything"; the assertion edited when a test you broke is annoying; whatever
+test command was guessed reported as green without checking it is the one CI
+runs.
+
+**Comments and naming** — a comment above almost every non-trivial block, "about
+half of them just restate the code"; docstrings added reflexively to a repo that
+has none; verbose names where the repo is terse.
+
+**Reporting** — done declared on a green run without exercising the path; the
+recap written to read complete and a partial result softened into language that
+sounds whole; a subagent's summary repeated without opening its diff.
 
 ## Prompt Structure
 
