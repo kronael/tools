@@ -50,7 +50,10 @@ that top-level Python runner instead of requiring shell redirection.
 ## Comments
 
 ZERO comments by default. ALWAYS carry intent through names, types, and
-structure first; a comment is the last resort. When one earns its place, at most
+structure first; a comment is the last resort. Writing one is habitual rather
+than deliberate — the urge is strongest right after making a change, to narrate
+the change — and it does not announce itself as a violation. Assume the comment
+you are about to add is that one. When one earns its place, at most
 ONE short line, and only when the WHY is not derivable from the surrounding code
 — rationale, a non-obvious invariant, a cross-module assumption.
 

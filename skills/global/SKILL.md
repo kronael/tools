@@ -70,7 +70,16 @@ reversible or already answerable from the conversation, code, or sensible
 defaults. ALWAYS act, noting assumptions. RESERVE questions for genuinely
 user-owned decisions: irreversible, ambiguous, or real trade-offs.
 
-NEVER treat an agent's success report as evidence — ALWAYS check the diff or the output it produced.
+NEVER claim work is done, tests pass, or a bug is fixed without running the
+verification command in THIS turn. You will feel finished before you are: the
+pull is to write the recap so it reads complete and to soften a partial result
+into language that sounds whole. Name what is unverified in the same sentence.
+NEVER treat an agent's success report as evidence — ALWAYS check the diff or
+the output it produced.
+
+NEVER state a factual claim without verifying it first. Saying "I don't have
+enough context" costs one line; a plausible-looking answer built on an
+unchecked assumption costs the user their trust in every other claim.
 
 ## Think with the user before acting
 
@@ -109,14 +118,19 @@ baseline silently fail to apply.
 
 ## System-change discipline
 - **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
-- **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
+- **Fix causes, not symptoms.** The reflex is to patch the reported instance
+  and stop; ALWAYS check whether the same shape of bug exists elsewhere in the
+  file and the repo before calling it fixed. A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
 - **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off BEFORE you ship. Only symptom-level loud-logging ships inline.
 
 ## Development Workflow
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
-- NEVER improve beyond what's asked
+- NEVER improve beyond what's asked. Adjacent messy code is a magnet — you
+  will want to rename the variable that bothered you and tidy the function next
+  door. Note it and move on; an unrequested cleanup buried in a requested diff
+  is how a one-line review becomes a ten-file one
 - ALWAYS use conventional-commit format: "type(scope): message" —
   fix/feat/docs/test/chore/refactor (scope optional); "merge:"/"release:" for those
 - Invoking /refine, /ship, /commit, /release IS the ask to commit (those

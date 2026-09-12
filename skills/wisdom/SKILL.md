@@ -87,10 +87,22 @@ A rule in an always-loaded file costs every session. It earns that only when
 the model would not already behave that way. Measure it: put the topic to a
 model that cannot see the rule, and compare.
 
-- Reproduced by the clean model → CUT. The text buys nothing.
+- Reproduced by the clean model → candidate CUT, not a verdict. See below.
 - Contradicted by it → KEEP, highest value. Overriding a strong prior is the
   one thing guidance can do that training cannot.
 - Produced by neither → KEEP.
+
+**Reproduction measures knowledge, not compliance.** A model will write a rule
+out cleanly and then break it unprompted, so a reproduced rule is only free if
+the model also FOLLOWS it by default. ALWAYS settle a candidate cut with a
+second question to the clean room — ask the model to describe how it actually
+behaves on a task with no instructions, its real defaults including the wrong
+ones — and KEEP anything it confesses to violating. Models report writing
+comments that narrate the change, declaring a task done on a green test run,
+softening a partial result into language that reads complete, trusting a
+subagent's summary unchecked, and cleaning up adjacent code nobody asked about
+— every one of those is a rule they can also recite. A rule a model states and
+breaks belongs in the file, stressed, not cut.
 
 ALWAYS scope this to normative content — wisdom, style, judgment. A workflow
 runbook encodes a chosen procedure and is not measurable this way.
