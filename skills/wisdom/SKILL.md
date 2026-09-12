@@ -80,11 +80,41 @@ user-invocable: true      # optional — exposes skill as /name slash command in
   (the global wisdom file) — that file is always-loaded outside the
   per-project relevance gate, so the tag has nothing to cut through there.
 
-## Data files
 
-| Trigger | File |
-|---------|------|
-| does this rule earn its context, cut the obvious, measure a rule against a model that cannot see it, trim an always-loaded file | `minimize.md` |
+## Minimize — does a rule earn its context?
 
-ALWAYS force-read `minimize.md` before cutting anything from an always-loaded
-file — the measurement is invalid without the isolation it specifies.
+A rule in an always-loaded file costs every session. It earns that only when
+the model would not already behave that way. Measure it: put the topic to a
+model that cannot see the rule, and compare.
+
+- Reproduced by the clean model → CUT. The text buys nothing.
+- Contradicted by it → KEEP, highest value. Overriding a strong prior is the
+  one thing guidance can do that training cannot.
+- Produced by neither → KEEP.
+
+ALWAYS scope this to normative content — wisdom, style, judgment. A workflow
+runbook encodes a chosen procedure and is not measurable this way.
+
+**NEVER measure with a subagent.** It is handed `~/.claude/CLAUDE.md` and every
+applicable project `CLAUDE.md` before its first token, so "do not read any
+files" removes nothing and it paraphrases the rule back as its own. The tell is
+specificity: a clean model gives the field default, a contaminated one returns
+this repo's exact paths, counts and separators.
+
+ALWAYS use `clean-room.sh <model> <prompt-file>` — a throwaway `HOME` so no
+wisdom file loads, an empty working directory so no project `CLAUDE.md` is
+discoverable. Export `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` first; a
+clean `HOME` puts OAuth and the keychain out of reach. ALWAYS run two models —
+one agreeing is a signal, two is a verdict.
+
+ALWAYS verify the room before trusting a run: ask a probe this repo answers
+unusually (branch naming, worktree placement, line width) and confirm the reply
+gives the field default. Discard the whole run when repo-specific detail comes
+back.
+
+NEVER quote or paraphrase our text in the prompt — ask for the guidance itself,
+never for a critique of ours. Name the topic and setting, demand committal
+rules with real numbers, forbid preamble.
+
+Findings go to `BUGS.md` as a proposal naming which model produced what. NEVER
+cut an always-loaded rule on sight — it changes every future session.

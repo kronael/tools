@@ -3,12 +3,12 @@
 # HOME so no wisdom file exists to load, and an empty working directory so no
 # project CLAUDE.md is discoverable. Prints the model's answer and nothing else.
 #
-# usage: minimize/scripts/clean-room.sh <model> <prompt-file>
+# usage: clean-room.sh <model> <prompt-file>
 # needs: CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY exported by the caller.
 set -euo pipefail
 
-model=${1:?usage: minimize/scripts/clean-room.sh <model> <prompt-file>}
-prompt_file=${2:?usage: minimize/scripts/clean-room.sh <model> <prompt-file>}
+model=${1:?usage: clean-room.sh <model> <prompt-file>}
+prompt_file=${2:?usage: clean-room.sh <model> <prompt-file>}
 
 if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}${ANTHROPIC_API_KEY:-}" ]; then
     echo "clean-room.sh: export CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY first" >&2
