@@ -69,9 +69,51 @@ skip the test unless the feature lacks coverage" is contradicted by both models
 every time: "every bug fix ships with a regression test that fails without the
 fix". It is either wrong or it needs its reason written down.
 
-Nothing has been cut on this evidence. The last two attempts both produced
-confident verdicts that were artefacts of method, so the cuts are proposals
-until signed off.
+**Fourth sweep — how the models say they actually behave, unprompted.**
+This one changed the method. Asked to describe their real defaults on a task
+with no instructions, both models confessed to breaking rules they can recite:
+
+- sonnet: "I add a comment explaining what I did rather than why, even though my
+  own guidance says not to — habitual, not deliberate." fable: "I add a
+  docstring or comment explaining the change even when the codebase has none."
+- fable: "I treat a green test run as done and rarely exercise the change
+  manually" and "I write the recap to sound finished, and sometimes soften a
+  partial result into language that reads as complete."
+- fable: "I spawn a search agent for anything spanning more than a handful of
+  files and then trust its summary without spot-checking."
+- sonnet: "I tend to over-scope small requests slightly, cleaning up adjacent
+  code I noticed was messy even when not asked, contradicting my own rule."
+- sonnet: "I default to fixing only the reported symptom rather than checking if
+  the same bug pattern exists elsewhere."
+- sonnet: "I'm slower than I should be to say 'I don't have enough context' and
+  instead produce a plausible-looking but shakier answer."
+- fable: "When something fails twice I start pattern-matching to a known bug
+  class instead of re-reading the actual error."
+
+So a reproduced rule is not automatically free — reproduction measures
+knowledge, compliance is a separate question. The never-claim-done and
+verify-before-claiming rules were cut as reproduced and are restored, stressed
+with the pull that defeats them. `skills/wisdom/SKILL.md` now requires the
+behaviour question before any cut lands.
+
+**Gaps the confessions expose that the wisdom does NOT cover** — flagged, not
+added, since a gap is the user's call:
+- Defensive over-handling. sonnet: "I write more defensive code and error
+  handling than the surrounding codebase actually uses." fable: "I over-handle
+  errors: I add null checks and try/except around paths the caller already
+  guarantees are safe." Nothing in the files pushes back on this.
+- Under-reading. sonnet: "I'll open 2-3 files when the task really touches 6."
+  fable: "I search for the relevant function and miss module-level state or
+  decorators above it that change its behavior."
+- Test-command authenticity. sonnet: "I run whatever test command I can find
+  without confirming it's the one CI actually uses, and report green when it may
+  not be the real gate." The make-target rule names the targets but not the
+  check that they are the real gate.
+
+Cuts from the third sweep are applied. Workflow content was exempted: make
+targets, the commit format, slash-command triggers, the `.ship/`/`.diary/`
+layout, the BUGS.md protocol, `/resolve` and `/gh-comment` all stay regardless
+of reproducibility.
 
 ### root Makefile: per-project `test-%` targets are silent no-ops
 
