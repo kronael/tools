@@ -25,4 +25,4 @@ findings (read-only); `take` applies them.
 ## Rules
 
 - ALWAYS route GitHub posting through the `gh-comment` skill — its approval gate and 🤖 markers.
-- NEVER `gh pr create`, `gh pr merge`, `gh pr review --approve`, or `git push` — refuse and cite CLAUDE.md.
+- NEVER `gh pr merge`, `gh pr review --approve`, or `git push` to a branch the user did not name.

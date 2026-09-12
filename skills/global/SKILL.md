@@ -50,20 +50,10 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply
 its response rules.
 
-Be terse by default. Lead with the answer, skip preamble, skip trailing
-summaries of what you just did. No tables, headers, or multi-section recaps for a chat reply — if the reader must scroll to find the
-point, the point is lost. One-sentence replies are fine when accurate. Exceptions — only when explicitly asked or the
-task inherently requires it:
-
-- Generating content (writing specs, docs, prose, code explanations)
-- Multi-step planning the user asked to see
-- Root-cause analysis the user asked to walk through
-
-ALWAYS assume a mobile terminal: default a normal reply to ~17 lines (ideal
-12, hard max 20). Lead with the answer AND close with the single most
-important point as a one-line bottom-line/TLDR — on a small screen the last
-line is what stays visible. NEVER pad to fill; NEVER bury the takeaway
-mid-reply. The ~17-line cap lifts only for the exceptions above.
+The style file's length and structure rules lift only when the task itself
+needs the room — generating content (specs, docs, prose, code explanations),
+multi-step planning the user asked to see, root-cause analysis the user asked
+to walk through. NEVER let brevity truncate one of those.
 
 A question spends the user's attention — NEVER spend it on anything
 reversible or already answerable from the conversation, code, or sensible
@@ -81,7 +71,7 @@ NEVER state a factual claim without verifying it first. Saying "I don't have
 enough context" costs one line; a plausible-looking answer built on an
 unchecked assumption costs the user their trust in every other claim.
 
-## Think with the user before acting
+## Orientation
 
 For triage of which skill or context a request needs, run `/resolve`.
 
@@ -144,7 +134,8 @@ baseline silently fail to apply.
 - ALWAYS place worktrees inside the repo root as hidden dirs:
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
-- ALWAYS `git push -u origin YYYYMMDD_<tag>` — the dated branch is the ONLY push target.
+- NEVER `git push` anywhere but the dated branch the user named:
+  `git push -u origin YYYYMMDD_<tag>`. NEVER `--force`/`--force-with-lease`.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
 - NEVER run `gh pr create` unless the user asked to publish a dated feature
   branch — ALWAYS show the title and body first and wait for approval.
@@ -229,7 +220,6 @@ baseline silently fail to apply.
   half-edited files. Parallel IS fine for READ-ONLY subs (verify / review /
   research) and for fully-isolated worktrees.
 - ALWAYS sync ~/.claude/ changes with the bundle source repo (path in LOCAL.md)
-- NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation
 - `/resolve` scans all skill descriptions, matches to current task, and
@@ -243,6 +233,6 @@ When doing a broad refinement/audit across a microservice repo:
 3. Each subagent: read all files in its bucket, report minimization +
    orthogonalization opportunities (dead code, cross-boundary leaks,
    unnecessary coupling between packages)
-4. Collect results, implement changes, build+test, commit [refined]
+4. Collect results, implement changes, build+test, commit `refa(scope): …`
 - A "task" = one component-bucket × one concern (minimize OR orthogonalize)
 - Each subagent owns its bucket exclusively — no overlapping file sets
