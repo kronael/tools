@@ -79,8 +79,46 @@ for secrets and `.env` before committing; never edit CI config or branch
 protection to make a check pass; never edit, skip or delete a failing test to
 make it pass.
 
-Still unmeasured: § Testing, § Documentation,
-§ System-change discipline, § Agents and Skills, and all of `code.md`. The
+**§ Testing, measured clean.**
+Reproduced by both: mock only process/external boundaries and never your own
+modules; unit tests colocated as `*_test.go`/`test_*.py`; integration tests in
+`tests/`; a unit/integration/e2e tier split with time budgets; never claim a
+pass without running it.
+Produced by neither, so keep: the `make test` / `make test-all` / `make smoke`
+target names and the smoke-on-production-data tier; the <5s unit budget, which
+is stricter than sonnet's 10s and fable's 30s; "pre-commit reformats on first
+run, retry the commit"; the test-config-object typing rule; and "capture once
+with tee, never re-run to re-read output".
+CONFLICT to settle: our "test features, not fixes — runtime failures fix the
+code, skip the test unless the feature lacks coverage" is contradicted by both.
+Fable: "every bug fix ships with a regression test that reproduces the original
+bug and fails without the fix." Sonnet says the same. Ours may be right for
+this repo, but it is a deliberate override and should say why.
+Worth adopting, both produced and we lack: never green a suite by deleting,
+skipping or widening an assertion; never add a sleep to fix flakiness, remove
+the nondeterminism; name tests for the behaviour, not the implementation.
+
+**§ Documentation, measured clean.**
+Reproduced by both: README plus CLAUDE.md at root with a line cap on each and
+"only what cannot be inferred from the code"; nested CLAUDE.md only where the
+subtree genuinely differs; `docs/` one topic per file; CHANGELOG for
+user-visible change; comments explain why, never what.
+Produced by neither, so keep: no marketing language; never publish to claude.ai
+hosting, always local files; `.ship/` as the gitignored ephemeral working dir;
+`.diary/YYYYMMDD.md` with named companions; `.claude/` for long-lived
+knowledge; no `todos/` and no `plans/` directories.
+Trim rather than keep whole: our "never reference an earlier version" rule is
+approached from both sides — sonnet bans narrating the diff in a doc because it
+rots, fable bans date-relative phrases like "recently" and "for now". Keep the
+part neither covers and drop the rest.
+Worth adopting, both produced and we lack: never commit a secret, token,
+internal hostname or customer data in any comment, doc or generated file; every
+path, command and filename cited in a doc must exist at that commit. And from
+fable, sharper than our Co-Authored-By ban and generalising it: no comment, doc
+or generated file ever contains the name of an AI model, the phrase "generated
+by", a transcript, or a reference to the prompt that produced it.
+
+Still unmeasured: § System-change discipline, § Agents and Skills, and all of `code.md`. The
 earlier readings of those came from contaminated subagents and were discarded.
 
 ### proposed: split `skills/global/SKILL.md` — 270 lines against a 200 cap
