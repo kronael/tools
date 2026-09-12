@@ -4,181 +4,34 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
-### proposed: wisdom minimization sweep — § Response Style, measured clean
+### proposed: wisdom minimization sweep — void a second time, prompt leaked
 
-Method and harness: `skills/wisdom/minimize.md`. Isolation is a throwaway
-`HOME` so no wisdom file loads and an empty cwd so no project `CLAUDE.md` is
-discoverable; both models volunteered that no project conventions were
-discoverable, and the verification probe returned `feature/add-login` and
-"worktree as a sibling, not nested inside it" — the field defaults, and the
-opposite of this repo's rules. The room is clean.
+Both attempts measured nothing. The first asked subagents, which are handed
+`~/.claude/CLAUDE.md` before their first token. The second used an isolated
+clean room — that part worked, and the probe proved it — but the prompts named
+our own rules as the topics to cover, so the models were completing a list I
+had copied out of the files.
 
-Reproduced by BOTH clean sonnet and clean fable, so the text buys nothing:
-lead with the answer; never restate the request; cut process narration and
-closing offers including "let me know"; lists only for 3+ parallel items,
-capped around 5; ask only when the readings diverge materially, otherwise act
-and state the assumption; never ask what reading the code would answer; never
-claim it works without running it — say unverified; own an earlier mistake in
-one sentence with no apology padding.
+The `p-sys` prompt asked the model to cover "adding a mechanism when a similar
+one may already exist; how errors on a user-facing path must behave; when
+retrying is legitimate and when it is not; whether to address a symptom or its
+cause; and how to handle a fix that turns out to require a redesign" — the five
+System-change bullets in order. The `p-design` prompt asked for "how to decide
+between adding a branch or reshaping the problem so the edge case disappears",
+which is the reframe rule verbatim, and "what to do with code you do not
+understand", which is Chesterton's fence. Every "both models reproduced it"
+verdict rests on that.
 
-Produced by NEITHER, so these are what the section is actually for:
-- "ALWAYS keep the full analysis and verification; brevity applies to the
-  reply." Neither model guarded the reasoning while compressing the reply.
-- "Agent success reports are not evidence — check the diff." Neither mentioned
-  subagents at all.
-- The mobile-terminal framing: end on the single most important point on its
-  own line, because on a small screen the last line is what stays visible.
-- Restate progress on multi-turn work ("step 3 of 5").
-- Effort estimates in minutes, never "a bit".
-- The first/last-line pre-send check.
+Cuts made on this evidence are reverted: `skills/global/SKILL.md` and
+`skills/software/code.md` are back to their pre-sweep content, minus the
+separately-requested `./tmp` removal.
 
-Three places the clean models actively disagree with us — decide, do not
-silently keep:
-- Length. Both cap a routine reply far tighter than our ~17 lines: sonnet 3-6
-  lines, fable under 6 lines and never over 300 words. Our cap is the loose
-  one.
-- Questions. Both want them batched — fable: do everything not depending on
-  the open question, then ask it in one sentence at the end; sonnet: batch
-  every open question into one message, no drip-feeding. `caveman.md` says one
-  thread at a time, which is the opposite.
-- Code in replies. Fable: commands, error text and snippets always in fenced
-  blocks, never inline. We say nothing.
-
-Worth adopting, from the clean runs, absent from ours: "write for someone who
-sees only this reply — no reference to a tool call or result they cannot see."
-
-**§ Development Workflow, measured clean.**
-
-Reproduced by both, so the text buys nothing: never `git add -A`/`git add .`,
-stage by name after reading `git status`/`git diff`; never commit unless asked
-this turn; imperative subject under ~72 chars with a body saying why; never
-`--no-verify`; prefer a new commit over `--amend`; never push to `main`/
-`master`; push only the current branch with `git push -u origin <branch>`;
-never force-push; never rewrite pushed history; run the project's own
-test/lint targets rather than guessing; narrow test first then the full suite;
-never claim success without running it; never `gh pr merge`/`close`/
-`review --approve` unless asked.
-
-Contradicted by both, so these are the highest-value lines in the file:
-- **Detached HEAD by default.** Neither model produced it — both instructed
-  creating a feature branch (`feat/<slug>`, `fix/parser-null-check`).
-- **Worktrees detached, hidden, inside the repo root.** Both placed them as
-  siblings (`git worktree add ../<dir> <branch>`) and both attached a branch.
-- **NEVER add Co-Authored-By.** Both did the opposite and mandated a trailer
-  naming themselves; fable also mandated the PR footer. This overrides a
-  default they carry unprompted.
-
-Produced by neither, so keep: debug builds; build/test/lint every ~50 lines;
-never improve beyond what is asked; the conventional-commit type vocabulary
-(neither produced `type(scope):` at all, only "imperative subject"); the dated
-`YYYYMMDD_<tag>` branch name; the blanket `rm -r` ban, which both scoped to
-git commands only; never squash; the `/gh-comment` and slash-command pointers.
-
-Worth adopting — both produced these and we lack them: scan the staged diff
-for secrets and `.env` before committing; never edit CI config or branch
-protection to make a check pass; never edit, skip or delete a failing test to
-make it pass.
-
-**§ Testing, measured clean.**
-Reproduced by both: mock only process/external boundaries and never your own
-modules; unit tests colocated as `*_test.go`/`test_*.py`; integration tests in
-`tests/`; a unit/integration/e2e tier split with time budgets; never claim a
-pass without running it.
-Produced by neither, so keep: the `make test` / `make test-all` / `make smoke`
-target names and the smoke-on-production-data tier; the <5s unit budget, which
-is stricter than sonnet's 10s and fable's 30s; "pre-commit reformats on first
-run, retry the commit"; the test-config-object typing rule; and "capture once
-with tee, never re-run to re-read output".
-CONFLICT to settle: our "test features, not fixes — runtime failures fix the
-code, skip the test unless the feature lacks coverage" is contradicted by both.
-Fable: "every bug fix ships with a regression test that reproduces the original
-bug and fails without the fix." Sonnet says the same. Ours may be right for
-this repo, but it is a deliberate override and should say why.
-Worth adopting, both produced and we lack: never green a suite by deleting,
-skipping or widening an assertion; never add a sleep to fix flakiness, remove
-the nondeterminism; name tests for the behaviour, not the implementation.
-
-**§ Documentation, measured clean.**
-Reproduced by both: README plus CLAUDE.md at root with a line cap on each and
-"only what cannot be inferred from the code"; nested CLAUDE.md only where the
-subtree genuinely differs; `docs/` one topic per file; CHANGELOG for
-user-visible change; comments explain why, never what.
-Produced by neither, so keep: no marketing language; never publish to claude.ai
-hosting, always local files; `.ship/` as the gitignored ephemeral working dir;
-`.diary/YYYYMMDD.md` with named companions; `.claude/` for long-lived
-knowledge; no `todos/` and no `plans/` directories.
-Trim rather than keep whole: our "never reference an earlier version" rule is
-approached from both sides — sonnet bans narrating the diff in a doc because it
-rots, fable bans date-relative phrases like "recently" and "for now". Keep the
-part neither covers and drop the rest.
-Worth adopting, both produced and we lack: never commit a secret, token,
-internal hostname or customer data in any comment, doc or generated file; every
-path, command and filename cited in a doc must exist at that commit. And from
-fable, sharper than our Co-Authored-By ban and generalising it: no comment, doc
-or generated file ever contains the name of an AI model, the phrase "generated
-by", a transcript, or a reference to the prompt that produced it.
-
-**§ System-change discipline, measured clean — almost entirely reproducible.**
-Both produced, near verbatim: grep for an existing mechanism and extend it
-rather than adding a sibling, with `*V2`/`*New` named as the anti-pattern; an
-error on a user-facing path must surface, never `except: pass`, `catch {}`,
-`.catch(() => null)`; retry only idempotent operations failing transiently,
-never on 4xx or validation; fix the producer, not the observation point; when a
-fix becomes a redesign, stop and write it up instead of smuggling it in. Only
-the `BUGS.md` destination is ours. Their versions are SHARPER than ours on
-retry: bounded attempts, backoff with jitter, a total deadline.
-Worth adopting: wrap errors with context on the way up (`%w`, `raise ... from
-e`); never substitute a fabricated default for a failure; a defensive check
-that exists only to tolerate a bug elsewhere is a symptom fix; a special case
-keyed on a caller, ID or env name means the abstraction is wrong; match the
-surrounding module's conventions over your own preference (both produced this,
-twice, across two blocks).
-
-**§ Agents and Skills, measured clean — reproducible, including one rule I
-wrongly kept earlier.** Both produced: a concurrency cap (fable said 4, exactly
-ours); never let two subagents edit the same file, read-only subagents may run
-concurrently; brief with goal, scope, out-of-scope, definition of done, output
-format; ask for evidence, not conclusions; scan the skill list against triggers
-before improvising and never guess a skill name.
-REVERSAL: "NEVER take a subagent's success report at face value — check the
-diff" is reproduced by BOTH here ("rerun the test command yourself before
-telling the user it is done"). I kept it after the Response Style run only
-because that prompt never mentioned subagents. It is measurable only on this
-topic, and here it is free. Cut it from § Response Style too.
-Produced by neither, so keep: the `/resolve` pointer, the bundle-source sync
-rule, and the ≤4-bucket cross-component refinement pattern.
-
-**`code.md`, measured clean — three earlier "highest value" calls were wrong.**
-REVERSALS, all reproduced by both: "ZERO comments by default" (both wrote
-"Default to zero comments"); "NEVER a ticket number in a comment" (both banned
-ticket, author and date); the reframe-the-edge-case rule (sonnet reshapes the
-contract, fable spends five minutes on a representation that makes the case
-impossible); Chesterton's fence, which both covered at length; the rule of
-three; duplication beats the wrong abstraction; illegal states unrepresentable;
-boolean parameters are two functions; push state to the edges; boring
-technology. The contaminated run had shown the opposite for the comment rules,
-which is how they got ranked highest.
-Still earning their place, produced by neither: no multi-line comment block, no
-`///` or `/** */` — both instead MANDATE doc comments on exported items, so
-this is a genuine override; the redundancy test's clause about a log or error
-message on a neighbouring line; no source line number in a comment; lowercase
-info and Capitalized errors with the Unix log format; stdout/stderr only, never
-file log handlers; one import per line; the data-over-objects combinatorics
-argument; "a simple solution mostly right beats a complex one fully correct".
-Split verdict: "never write under `/tmp`, use `./tmp`" — fable independently
-invented the same shape (`.scratch/` at repo root, gitignored), sonnet said the
-opposite. Keep it.
-Unsupported either way: `*_utils.*` filenames. Neither model produced or
-contradicted it this time; the earlier "both ban utils" reading was
-contamination. It stands on your preference alone.
-
-**Bottom line.** Measured properly, the large majority of the normative content
-is reproducible. The residue that genuinely earns always-loaded context is
-small: detached HEAD, worktree placement, the Co-Authored-By ban, the comment
-block/line-number/log-redundancy rules, the repo-root scratch rule, the logging
-format and destination, the make-target names and smoke tier, the tee-once
-rule, and the repo-specific pointers (`.ship/`, `.diary/`, `/resolve`,
-`/gh-comment`, no claude.ai publishing).
+A valid rerun needs a prompt that names only the domain — "the software-design
+section", "the section on changing a system you did not write" — with NO list
+of sub-topics, because any such list is our table of contents. Ask for whatever
+the model thinks belongs there, then compare. A rule the model never thought to
+mention is the finding; the earlier design measured only whether it could write
+to a spec.
 
 ### root Makefile: per-project `test-%` targets are silent no-ops
 

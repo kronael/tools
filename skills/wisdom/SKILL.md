@@ -113,8 +113,12 @@ gives the field default. Discard the whole run when repo-specific detail comes
 back.
 
 NEVER quote or paraphrase our text in the prompt — ask for the guidance itself,
-never for a critique of ours. Name the topic and setting, demand committal
-rules with real numbers, forbid preamble.
+never for a critique of ours. This includes the list of sub-topics: a "cover X,
+Y, Z" line built from our own section headings is our table of contents, and a
+model completing it proves only that it can write to a spec. Name the DOMAIN
+alone and let the model decide what belongs in it; a rule it never thought to
+mention is the finding. Before sending, read the prompt back and strike any
+phrase you could locate in the file being measured.
 
 Findings go to `BUGS.md` as a proposal naming which model produced what. NEVER
 cut an always-loaded rule on sight — it changes every future session.

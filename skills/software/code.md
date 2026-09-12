@@ -8,7 +8,9 @@ belongs in that language's skill, not here.
 
 ## Naming
 
-The entrypoint is always `main`. Use short file extensions (`.jl`, not `.jsonl`) and short CLI
+Shorter is better. Omit prefixes and suffixes the context already makes clear —
+`parse_tokens(symbol)`, not `parse_tokens_from_symbol()`. The entrypoint is
+always `main`. Use short file extensions (`.jl`, not `.jsonl`) and short CLI
 flags.
 
 Single-letter and short variable names are fine where the scope is small and the
@@ -47,7 +49,11 @@ that top-level Python runner instead of requiring shell redirection.
 
 ## Comments
 
-When a comment earns its place, at most ONE short line.
+ZERO comments by default. ALWAYS carry intent through names, types, and
+structure first; a comment is the last resort. When one earns its place, at most
+ONE short line, and only when the WHY is not derivable from the surrounding code
+— rationale, a non-obvious invariant, a cross-module assumption. NEVER restate
+WHAT the code does.
 
 Redundancy test — delete the comment if it fails: NEVER write a comment whose
 content is already visible in adjacent code, INCLUDING a log, warn, or error
@@ -59,16 +65,62 @@ is the canonical redundant comment.
 - NEVER a source line number in a comment (`// see line 200`, `// as in L42`),
   and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
   name instead.
+- NEVER a ticket number or issue ID in a comment.
 
 ## Design
 
-A simple solution that is mostly right beats a complex one that is fully correct,
-because the simple one spreads and evolves while embedded complexity can never
-be removed.
+Reach for a struct or object only when you need to hold state or inject
+dependencies; otherwise plain functions in modules compose better and leak less.
+Model states as explicit enum variants rather than implicit boolean flags, and
+always validate input before it reaches persistence.
 
-You get roughly three innovation tokens; don't spend one on fashion.
+## Boring code
 
-Braided code grows combinatorially while separated code composes linearly.
+Prefer the boring solution. Debugging is twice as hard as writing, so leave
+yourself mental headroom — write code simpler than you are capable of, and choose
+clarity over cleverness. When two constructs are equivalent, pick the one that
+takes the least mental model to read (a plain `for` loop over a combinator chain
+when the body is non-trivial).
+
+Before you add a branch, a fallback, or a config knob, check whether an existing
+parameter, path, or environment variable can make the edge case normal. Reframe
+first; branch only when no existing mechanism can express it. Good taste
+eliminates the special case by redesigning so the edge *is* the normal path — one
+code path beats ten.
+
+Every line is a liability, so deletion lowers cost while premature abstraction
+freezes the wrong shape in place. Copy a thing two or three times before you
+abstract it, and design for replaceability. When you do abstract, the helper has
+to reduce *total* complexity, not just line count: if it introduces concepts that
+aren't at the call sites — function pointers, closures, generics, combinator
+chains — it is not simpler. Judge by cognitive overhead, not diff size. A simple
+solution that is mostly right beats a complex one that is fully correct, because
+the simple one spreads and evolves while embedded complexity can never be removed.
+
+Spend your roughly three innovation tokens where they buy competitive advantage.
+Every new technology is an unknown failure mode; boring, documented tech is a
+solved one. Don't spend a token on fashion.
+
+Watch for complecting — if you cannot understand component A without tracking B's
+state, they are braided together, and braided code grows combinatorially while
+separated code composes linearly. State is the usual culprit: if `f(x)` returns
+different results over time, that complexity escapes to every caller. Values
+compose; stateful objects leak. Minimize state and make what remains explicit.
 Prefer information as plain data over objects — ten data structures and ten
 functions give a hundred composable operations; a hundred classes with ten
-methods each give a thousand operations and no composition.
+methods each give a thousand operations and no composition. Encapsulate I/O,
+expose information.
+
+## Grug rules
+
+Three reminders from grugbrain.dev that the above doesn't already cover:
+
+Match the tool to the weight of the task. If the scaffolding — subagents,
+generated machinery, a lookbehind regex — is bigger than the change it serves,
+it's the wrong tool. Small task, small tool.
+
+Prefer locality of behavior: put the code on the thing that does the thing, and
+don't scatter understanding across files just to honor separation of concerns.
+
+Respect Chesterton's fence. Never delete or "simplify" code you don't yet
+understand — the ugliness often encodes a real constraint. Understand it first.
