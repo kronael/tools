@@ -1,5 +1,50 @@
 # Changelog
 
+## [v0.3.82] — 20260912
+
+> kronael v0.3.82 — Stop recaps the turn
+>
+> Every Stop with nothing to block on now recaps what landed, what is still uncommitted, and any git operation left mid-flight.
+>
+> • Stop recap — commits landed, what is still uncommitted, and any merge/rebase in progress
+> • Output style renamed to `caveman` — installs prune the old file and repoint `outputStyle`
+> • show-me — ask for the smallest visual: pseudocode, call tree, mermaid, or a diff
+> • Codex bridge — the managed block now survives install instead of being overwritten
+> • dockbox + qemubox agree on claude-opus-5, claude-fable-5-1 and gpt-6-astra
+> • A dated feature branch, its push and `gh pr create` are permitted for review
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — output style renamed
+
+The response style is `caveman`: `output-styles/caveman.md`, frontmatter
+`name: caveman`, and `"outputStyle": "caveman"` in settings. Install repoints
+`outputStyle` and deletes `~/.claude/output-styles/80-caveman.md`; a hand-edited
+`settings.json` that still names the old style activates nothing, because no
+file answers to that name.
+
+### Added
+
+- `stop.py` emits a turn recap on a real Stop with nothing to block: commits landed since the session's previous Stop, tracked changes with `+added -deleted`, untracked paths touched inside the window, and any merge/rebase/cherry-pick/revert/bisect in progress. Capped at `RECAP_COMMITS` commits and `RECAP_PATHS` paths, bounded by one `RECAP_BUDGET` deadline, never emitted from periodic `PostToolUse` or under Codex.
+- `show-me` skill — the smallest visual for the current topic: pseudocode, call tree, component tree, mermaid, or a diff. Ported from humanlayer/skills (MIT, attributed in `NOTICE`).
+- `software` router gains the refactor-stack runbook: unreviewable-branch triage, tests before refactor, mutation-proven vs tautological tests, the dead-code oracle, and diffstat splitting.
+- `tsx`: prop-narrowing rules. `wisdom`: `<important if>` guidance for project `CLAUDE.md` and the runbook body-pattern. `diary`: named companion entries `YYYYMMDD-<name>.md`.
+
+### Changed
+
+- The `caveman` output style is the single source of the response rules for both Claude and Codex; the wisdom file and the Codex managed block point at it instead of carrying their own copies.
+- Wisdom permits a dated `YYYYMMDD_<tag>` review branch, `git push -u origin` to it, and `gh pr create` after showing title and body. `master`/`main` checkout, force push, `gh pr merge`, `gh pr review --approve`, `gh release create` and `gh repo create` stay forbidden; `settings-recommended.json` no longer denies `gh pr create`.
+- `codex` skill inherits the newest model rather than pinning a literal, confirms it against `models_cache.json` priority 1, and pins `-m` only when the resolved default is not that entry. It also never hands codex a list of suspected weaknesses.
+- `ship` requires re-research against current code in a subagent before planning.
+
+### Fixed
+
+- `stop.py`: a failed `git status` read as a clean tree, dropping the commit block and replacing it with a confident recap — an unreadable tree is now reported.
+- `stop.py`: a partial git failure emitted half a recap and advanced the session stamp past work the user never saw. Any required call failing now drops the whole recap with the stamp untouched, which also makes the spent-budget and timeout paths agree. The git-dir probe runs under the same deadline.
+- `stop.py`: status parses `-z` records, so non-ASCII and spaced paths reach the recap and a rename counts once; with no window the tree line reports what it can judge.
+- Install merges the Codex managed block after the wisdom write. The Codex guidance path may symlink to the wisdom file, so merging during asset copy was overwritten.
+- `qemubox` model aliases and default matched `dockbox`, turning `tests/drift_test.sh` green.
+
 ## [v0.3.81] — 20260902
 
 > kronael v0.3.81 — install skill can rsync without prompting
