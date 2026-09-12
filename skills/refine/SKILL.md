@@ -1,77 +1,81 @@
 ---
 name: refine
-description: Code refinement orchestrator. NOT for targeted fixes (use improve).
-when_to_use: "finalizing a finished feature, refine this, polish this"
+description: Code refinement orchestrator. NOT for a targeted fix (use improve) or a second opinion (use oracle).
+when_to_use: "refine this, polish this, refine the changes, final pass before shipping, tighten this before commit, clean up the diff, finalize a finished feature"
 user-invocable: true
 ---
 
 # Refine Skill
 
-Orchestrates code refinement. Runs in main context for full conversation visibility.
+Runs in main context so the whole conversation stays visible.
 
 ## Workflow
 
-1. **Checkpoint** - if uncommitted changes, invoke `Skill(commit, "chore: checkpoint before refine")`
-2. **Validate** - run build/test, fix failures
-3. **Bucket + lenses + skills** - group target files into ≤4 non-overlapping buckets. Per bucket: (a) list applicable skills by file extension and domain (e.g. .rs→rs, tests/→testing); (b) derive lenses from two sources — **code-quality lenses** from the file types AND **WISDOM lenses**: read the live WISDOM (global + project `CLAUDE.md` plus the loaded `SKILL.md` files), split it into thematic chunks (whatever the current WISDOM holds — minimality, orthogonality, fail-loud/error-handling, one-renderer-many-sinks, strict-not-magical, naming, testing, docs …), one chunk = one lens; derive from the live text, NEVER a frozen checklist. ALWAYS seed the correctness lenses from **Confessed defaults** below — those are the failures a model produces unprompted, so they are where a diff actually rots. Tag each lens `simplify` (reuse / dead-code / minimization) or `correctness` (bugs, logic errors, edge cases), and scale the lens count to the diff (see Rules).
-4. **Review** - parallel read-only `Task(agent="improve", model=<by tag>)`, **1-3 lenses per sub, never more** (a focused rubric beats a groupthink dump). Prompt: "Lenses: <1-3, each with the exact WISDOM excerpt or code-quality rule it checks>. Skills: <list>. Files: <bucket>. Report violations only, NO edits."
-4b. **Triage findings as they return** - drop findings that (a) add abstractions, (b) target unused code (grep first), (c) conflict with the original Intent, (d) can't be verified against the codebase. A survivor that needs a redesign (new contract, changed control flow, cross-cutting) → record in `BUGS.md` as `proposed` (CLAUDE.md System-change discipline), NOT applied without sign-off. Only inline-simple survivors go to Apply.
-5. **Apply** - serial Task(agent="improve") per bucket. Run build/test between buckets — abort bucket on failure. Prompt: "Skills: <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions and cleverness."
-6. **Document** - spawn `Task(agent="readme")`
-7. **Verify** - final build/test
-8. **Commit** - if changes, invoke `Skill(commit, "refa: apply refinements")`
-9. **Cleanup** - remove stale agent worktrees (detached — no branch to delete):
-   ```bash
-   for d in .claude/worktrees/*/; do
-     git worktree remove "$d" --force
-   done
-   ```
-10. **Summary** - what changed, main impact, no fluff, not marketing
+1. **Checkpoint** — uncommitted changes → `Skill(commit, "chore: checkpoint before refine")`.
+   → `git status --porcelain` is empty.
+2. **Validate** — build and test; fix failures before reviewing anything.
+   → the project's test target exits 0 in this turn.
+3. **Bucket and lens** — ≤4 non-overlapping buckets. Per bucket, list the skills
+   that apply by extension and domain, then derive lenses: code-quality ones
+   from the file types, WISDOM ones by splitting the live WISDOM into thematic
+   chunks, one chunk per lens. ALWAYS derive from the live text, NEVER a frozen
+   checklist. ALWAYS seed the correctness lenses from **Confessed defaults**.
+   Tag each lens `simplify` or `correctness`.
+   → every bucket carries 1-3 tagged lenses and no file appears in two buckets.
+4. **Review** — parallel read-only `Task(agent="improve", model=<by tag>)`.
+   Prompt: "Lenses: <each with the exact excerpt it checks>. Skills: <list>.
+   Files: <bucket>. Report violations only, NO edits."
+   → every bucket has returned.
+5. **Triage** — DROP a finding that adds an abstraction, targets unused code
+   (grep first), conflicts with the Intent, or cannot be verified against the
+   codebase. A survivor needing a redesign goes to `BUGS.md` as `proposed`;
+   NEVER apply one without sign-off.
+   → every surviving finding is a single inline edit.
+6. **Apply** — serial `Task(agent="improve")` per bucket. Prompt: "Skills:
+   <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions
+   and cleverness." Abort the bucket on a failure.
+   → build and test pass after each bucket.
+7. **Document** — `Task(agent="readme")` with what changed, one line per file.
+   → docs name every changed behaviour.
+8. **Verify and commit** — final build and test, then `Skill(commit, "refa:
+   apply refinements")` when files changed.
+   → tests pass in this turn and the tree is clean.
+9. **Clean up** — `git worktree remove --force` each stale Claude-managed
+   worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere.
+   → `git worktree list` shows only the main tree.
+
+Pass the agent `Intent:` (the user's original words), `Primary:` (files to
+modify) and `Context:` (read-only reference) — NEVER a summary of the request.
 
 ## Confessed defaults — hunt these first
 
-Asked in isolation how they really behave, models name these as their own
-defaults while being able to recite the rule against each. Knowing a rule and
-following it are different properties; these are where the gap shows.
+Asked in isolation, models name these as their own defaults while being able to
+recite the rule against each. Knowing a rule and following it differ; this is
+where the gap shows.
 
-**Error handling** — a broad catch that logs and continues "quietly swallows
-bugs that should have crashed"; a fallback `None`/`[]`/`0` returned so callers
-proceed on bad data; graceful degradation chosen where crashing is cheaper than
-corrupted output; a guard added to a path the caller already guarantees; a
-second logging or helper path invented because the first was never grepped for.
+- **Errors** — a broad catch that logs and continues; a fallback `None`/`[]`/`0`
+  letting callers proceed on bad data; graceful degradation where crashing is
+  cheaper than corrupted output; a guard on a path the caller already
+  guarantees; a second logging or helper path because the first was never
+  grepped for.
+- **Scope** — adjacent code tidied unasked; the reported instance patched while
+  sibling cases that fail the same way are left.
+- **Tests** — mocks stacked until the test proves nothing; the assertion edited
+  when a broken test is annoying; a guessed test command reported green.
+- **Comments** — a comment above almost every block, half restating the code;
+  docstrings added reflexively to a repo that has none; verbose names where the
+  repo is terse.
+- **Reporting** — done declared on a green run without exercising the path; a
+  partial result softened into language that reads complete; a subagent's
+  summary repeated without opening its diff.
 
-**Scope** — adjacent code tidied that nobody asked about; the reported instance
-patched while the sibling cases that fail the same way are left.
+## Review Checklist
 
-**Tests** — mocks stacked "to the point where the test no longer proves
-anything"; the assertion edited when a test you broke is annoying; whatever
-test command was guessed reported as green without checking it is the one CI
-runs.
-
-**Comments and naming** — a comment above almost every non-trivial block, "about
-half of them just restate the code"; docstrings added reflexively to a repo that
-has none; verbose names where the repo is terse.
-
-**Reporting** — done declared on a green run without exercising the path; the
-recap written to read complete and a partial result softened into language that
-sounds whole; a subagent's summary repeated without opening its diff.
-
-## Prompt Structure
-
-```
-Intent: [user's original request, not summary]
-Primary: [files to modify]
-Context: [read-only reference, if needed]
-```
-
-For readme agent: list what changed (file + one-line each).
-
-## Rules
-
-- critique/review/planning/creative second opinions → `oracle`.
-- NEVER do improvement work yourself - delegate to improve agent
-- NEVER summarize user intent - pass original request
-- Explicit scope > vague "review these files"
-- ALWAYS scale the review to the diff: a few files / tens of lines / one logical change → 1-2 lenses or an inline review in main context; NEVER fan out 3-5 agents over a ~40-line diff. Full bucket × lens fan-out is for large or risky work only.
-- ALWAYS set the review `model=` by lens tag: `simplify` → sonnet, `correctness` → opus. NEVER hunt bugs on sonnet; NEVER burn opus on candidate-finding. (improve pins no model — the call site controls it.)
-- ALWAYS run all steps; NEVER skip commit unless no file changes
+- ALWAYS scale to the diff: tens of lines or one logical change → 1-2 lenses or
+  an inline review; NEVER fan out agents over a ~40-line diff.
+- ALWAYS set `model=` by tag: `simplify` → sonnet, `correctness` → opus. NEVER
+  hunt bugs on sonnet; NEVER spend opus on candidate-finding.
+- ALWAYS delegate the edit to the improve agent; NEVER do the improvement work
+  in main context.
+- ALWAYS route a critique, plan or creative second opinion to `oracle` instead.
+- ALWAYS run every step; NEVER skip the commit unless no file changed.
