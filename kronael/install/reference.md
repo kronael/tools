@@ -30,7 +30,7 @@ it regardless, so when `pi --version` fails, put a wrapper earlier on PATH than
 cat > ~/.local/bin/pi <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
-exec bun "$HOME/.bun/install/global/node_modules/@mariozechner/pi-coding-agent/dist/cli.js" "$@"
+exec "$HOME/.bun/bin/bun" "$HOME/.bun/install/global/node_modules/@mariozechner/pi-coding-agent/dist/cli.js" "$@"
 SH
 chmod +x ~/.local/bin/pi
 ```
