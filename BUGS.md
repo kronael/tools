@@ -4,24 +4,52 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
-### proposed: wisdom minimization sweep — method was invalid, needs a rerun
+### proposed: wisdom minimization sweep — § Response Style, measured clean
 
-The first attempt asked fresh sonnet and fable subagents to write each block of
-guidance from scratch, then treated whatever they produced as "the model
-already knows this, cut it". The measurement was worthless: a subagent is
-handed `~/.claude/CLAUDE.md` and the project `CLAUDE.md` as context before it
-runs, and "do not read any files" does not remove what was already injected.
-The agents were paraphrasing the text back, not reproducing it.
+Method and harness: `skills/wisdom/minimize.md`. Isolation is a throwaway
+`HOME` so no wisdom file loads and an empty cwd so no project `CLAUDE.md` is
+discoverable; both models volunteered that no project conventions were
+discoverable, and the verification probe returned `feature/add-login` and
+"worktree as a sibling, not nested inside it" — the field defaults, and the
+opposite of this repo's rules. The room is clean.
 
-The tell, from the git block: `YYYYMMDD_<tag>` with this repo's underscore,
-`git worktree add --detach <repo-root>/.<name>` verbatim, "never a sibling
-directory", the `merge:`/`release:` addendum to the commit-type list, and
-`make test 2>&1 | tee ./tmp/test.log && tail -20 ./tmp/test.log` with the exact
-path and line count. Those are not priors.
+Reproduced by BOTH clean sonnet and clean fable, so the text buys nothing:
+lead with the answer; never restate the request; cut process narration and
+closing offers including "let me know"; lists only for 3+ parallel items,
+capped around 5; ask only when the readings diverge materially, otherwise act
+and state the assumption; never ask what reading the code would answer; never
+claim it works without running it — say unverified; own an earlier mistake in
+one sentence with no apology padding.
 
-A valid rerun needs the model to have no access to the wisdom: an empty working
-directory so no project `CLAUDE.md` is discovered, and no user memory loaded.
-Until that holds, no cut from this sweep is evidence of anything.
+Produced by NEITHER, so these are what the section is actually for:
+- "ALWAYS keep the full analysis and verification; brevity applies to the
+  reply." Neither model guarded the reasoning while compressing the reply.
+- "Agent success reports are not evidence — check the diff." Neither mentioned
+  subagents at all.
+- The mobile-terminal framing: end on the single most important point on its
+  own line, because on a small screen the last line is what stays visible.
+- Restate progress on multi-turn work ("step 3 of 5").
+- Effort estimates in minutes, never "a bit".
+- The first/last-line pre-send check.
+
+Three places the clean models actively disagree with us — decide, do not
+silently keep:
+- Length. Both cap a routine reply far tighter than our ~17 lines: sonnet 3-6
+  lines, fable under 6 lines and never over 300 words. Our cap is the loose
+  one.
+- Questions. Both want them batched — fable: do everything not depending on
+  the open question, then ask it in one sentence at the end; sonnet: batch
+  every open question into one message, no drip-feeding. `caveman.md` says one
+  thread at a time, which is the opposite.
+- Code in replies. Fable: commands, error text and snippets always in fenced
+  blocks, never inline. We say nothing.
+
+Worth adopting, from the clean runs, absent from ours: "write for someone who
+sees only this reply — no reference to a tool call or result they cannot see."
+
+Still unmeasured: § Development Workflow, § Testing, § Documentation,
+§ System-change discipline, § Agents and Skills, and all of `code.md`. The
+earlier readings of those came from contaminated subagents and were discarded.
 
 ### proposed: split `skills/global/SKILL.md` — 270 lines against a 200 cap
 

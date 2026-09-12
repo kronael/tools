@@ -1,7 +1,7 @@
 ---
 name: wisdom
 description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
-when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements"
+when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements, does this rule earn its context, cut what the model already knows, trim an always-loaded file"
 ---
 
 # Wisdom Skill
@@ -79,3 +79,12 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - This does NOT apply to this repo's own installed `~/.claude/CLAUDE.md`
   (the global wisdom file) — that file is always-loaded outside the
   per-project relevance gate, so the tag has nothing to cut through there.
+
+## Data files
+
+| Trigger | File |
+|---------|------|
+| does this rule earn its context, cut the obvious, measure a rule against a model that cannot see it, trim an always-loaded file | `minimize.md` |
+
+ALWAYS force-read `minimize.md` before cutting anything from an always-loaded
+file — the measurement is invalid without the isolation it specifies.
