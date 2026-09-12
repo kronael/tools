@@ -118,8 +118,67 @@ fable, sharper than our Co-Authored-By ban and generalising it: no comment, doc
 or generated file ever contains the name of an AI model, the phrase "generated
 by", a transcript, or a reference to the prompt that produced it.
 
-Still unmeasured: § System-change discipline, § Agents and Skills, and all of `code.md`. The
-earlier readings of those came from contaminated subagents and were discarded.
+**§ System-change discipline, measured clean — almost entirely reproducible.**
+Both produced, near verbatim: grep for an existing mechanism and extend it
+rather than adding a sibling, with `*V2`/`*New` named as the anti-pattern; an
+error on a user-facing path must surface, never `except: pass`, `catch {}`,
+`.catch(() => null)`; retry only idempotent operations failing transiently,
+never on 4xx or validation; fix the producer, not the observation point; when a
+fix becomes a redesign, stop and write it up instead of smuggling it in. Only
+the `BUGS.md` destination is ours. Their versions are SHARPER than ours on
+retry: bounded attempts, backoff with jitter, a total deadline.
+Worth adopting: wrap errors with context on the way up (`%w`, `raise ... from
+e`); never substitute a fabricated default for a failure; a defensive check
+that exists only to tolerate a bug elsewhere is a symptom fix; a special case
+keyed on a caller, ID or env name means the abstraction is wrong; match the
+surrounding module's conventions over your own preference (both produced this,
+twice, across two blocks).
+
+**§ Agents and Skills, measured clean — reproducible, including one rule I
+wrongly kept earlier.** Both produced: a concurrency cap (fable said 4, exactly
+ours); never let two subagents edit the same file, read-only subagents may run
+concurrently; brief with goal, scope, out-of-scope, definition of done, output
+format; ask for evidence, not conclusions; scan the skill list against triggers
+before improvising and never guess a skill name.
+REVERSAL: "NEVER take a subagent's success report at face value — check the
+diff" is reproduced by BOTH here ("rerun the test command yourself before
+telling the user it is done"). I kept it after the Response Style run only
+because that prompt never mentioned subagents. It is measurable only on this
+topic, and here it is free. Cut it from § Response Style too.
+Produced by neither, so keep: the `/resolve` pointer, the bundle-source sync
+rule, and the ≤4-bucket cross-component refinement pattern.
+
+**`code.md`, measured clean — three earlier "highest value" calls were wrong.**
+REVERSALS, all reproduced by both: "ZERO comments by default" (both wrote
+"Default to zero comments"); "NEVER a ticket number in a comment" (both banned
+ticket, author and date); the reframe-the-edge-case rule (sonnet reshapes the
+contract, fable spends five minutes on a representation that makes the case
+impossible); Chesterton's fence, which both covered at length; the rule of
+three; duplication beats the wrong abstraction; illegal states unrepresentable;
+boolean parameters are two functions; push state to the edges; boring
+technology. The contaminated run had shown the opposite for the comment rules,
+which is how they got ranked highest.
+Still earning their place, produced by neither: no multi-line comment block, no
+`///` or `/** */` — both instead MANDATE doc comments on exported items, so
+this is a genuine override; the redundancy test's clause about a log or error
+message on a neighbouring line; no source line number in a comment; lowercase
+info and Capitalized errors with the Unix log format; stdout/stderr only, never
+file log handlers; one import per line; the data-over-objects combinatorics
+argument; "a simple solution mostly right beats a complex one fully correct".
+Split verdict: "never write under `/tmp`, use `./tmp`" — fable independently
+invented the same shape (`.scratch/` at repo root, gitignored), sonnet said the
+opposite. Keep it.
+Unsupported either way: `*_utils.*` filenames. Neither model produced or
+contradicted it this time; the earlier "both ban utils" reading was
+contamination. It stands on your preference alone.
+
+**Bottom line.** Measured properly, the large majority of the normative content
+is reproducible. The residue that genuinely earns always-loaded context is
+small: detached HEAD, worktree placement, the Co-Authored-By ban, the comment
+block/line-number/log-redundancy rules, the repo-root scratch rule, the logging
+format and destination, the make-target names and smoke tier, the tee-once
+rule, and the repo-specific pointers (`.ship/`, `.diary/`, `/resolve`,
+`/gh-comment`, no claude.ai publishing).
 
 ### proposed: split `skills/global/SKILL.md` — 270 lines against a 200 cap
 
