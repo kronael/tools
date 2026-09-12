@@ -249,7 +249,7 @@ baseline silently fail to apply.
   Shape: "I'm working on [larger task] for [who]. They need [what the output
   enables]. With that in mind: [request]." KEEP the verify-the-diff and
   evidence-backed-report nudges — those are load-bearing, not over-prompting.
-- ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+- ALWAYS sync ~/.claude/ changes with the bundle source repo (path in LOCAL.md)
 - NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation
