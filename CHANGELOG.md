@@ -1,5 +1,35 @@
 # Changelog
 
+## [v0.3.86] — 20260913
+
+> kronael v0.3.86 — what you asked for is what ships
+>
+> Skills stop quietly swapping a requested result for a convenient one, and stop refusing art work on copyright grounds.
+>
+> • `demo` gains a versus-scoreboard intro — meme, original and placeholder art are distinct deliverables, locked from the brief
+> • Copyright is a sourcing and NOTICE check now, not a blanket reason to refuse a feasible asset
+> • `fin` keeps a scope ledger — rereads every message since the goal, so a deferred item can't be reported as done
+> • `credits` describes copyleft neutrally — read the actual LICENSE; never call a license "contamination"
+> • `speed-demo` routes meme openers to `demo` and moves ~120 lines of failure detail into `lessons.md`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `skills/demo/SKILL.md` documents the versus-scoreboard intro: a Pillow
+  compositor plus ffmpeg concat, four art slots replaceable by filename, and
+  an asset-class lock taken from the brief before composing.
+- Refusing feasible asset work on copyright grounds is replaced by a
+  provenance/NOTICE check. Substituted art keeps the item open until the user
+  accepts it.
+- `skills/fin/SKILL.md` gains **Scope ledger** — completion is semantic, and
+  "everything is done" is barred while any item is deferred or blocked.
+- `skills/credits/SKILL.md` gains **License compatibility** — compatibility
+  depends on the exact licenses and linkage, so surface the narrow uncertainty
+  rather than a blanket prohibition.
+- `skills/speed-demo/SKILL.md` drops ~120 lines of failure narration for a
+  pointer to `lessons.md` and routes recognizable-meme openers to `demo`.
+
 ## [v0.3.85] — 20260912
 
 > kronael v0.3.85 — a rule you can recite is not a rule you follow
