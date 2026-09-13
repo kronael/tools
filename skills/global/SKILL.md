@@ -152,6 +152,11 @@ baseline silently fail to apply.
   ship workflow — those end at the local commit or tag. ALWAYS state the exact
   remote and refspec first, and push only that. NEVER `--force` /
   `--force-with-lease`.
+- NEVER push to `master`/`main` on a general request to push — ALWAYS default
+  to a dated branch `YYYYMMDD_<tag>` and offer the PR. Pushing to `master`
+  needs a SECOND explicit approval that names `master`, given AFTER you have
+  shown the exact refspec. "push it", "push this", "ship it" are NEVER that
+  approval.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
 - ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo
   create` when the user asked for that action in that message — ALWAYS show
