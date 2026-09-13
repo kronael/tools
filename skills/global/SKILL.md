@@ -147,14 +147,16 @@ baseline silently fail to apply.
 - ALWAYS place worktrees inside the repo root as hidden dirs:
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
-- NEVER `git push` anywhere but a dated feature branch the user named —
-  ALWAYS `git push -u origin YYYYMMDD_<tag>`. NEVER push to `master`/`main`,
-  NEVER `--force`/`--force-with-lease`.
+- ONLY `git push` when the user asked for a push in that message. NEVER push
+  on your own initiative and NEVER as the silent tail of a commit, release or
+  ship workflow — those end at the local commit or tag. ALWAYS state the exact
+  remote and refspec first, and push only that. NEVER `--force` /
+  `--force-with-lease`.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
-- NEVER run `gh pr create` unless the user asked to publish a dated feature
-  branch — ALWAYS show the title and body first and wait for approval. NEVER
-  `gh pr merge`, `gh pr review --approve`, `gh release create` or `gh repo
-  create` - refuse those and cite this rule.
+- ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo
+  create` when the user asked for that action in that message — ALWAYS show
+  the title and body first and wait for approval. NEVER `gh pr review
+  --approve` on the user's behalf.
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
