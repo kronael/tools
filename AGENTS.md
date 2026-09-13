@@ -167,5 +167,7 @@ the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
 - ALWAYS/NEVER statements in skill content.
 - No secrets, no local paths, no org-specific references in source.
 - Commit format: `type(scope): Message` (scope optional).
-- NEVER use `git add -A`, `git commit --amend`, or `git push`.
+- NEVER use `git add -A` or `git commit --amend`.
+- ONLY `git push` when the user asked in that message, and NEVER to
+  `master`/`main` without a second approval naming the branch.
 - NEVER delete files in `~/.claude/` that aren't in this source tree.
