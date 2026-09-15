@@ -317,8 +317,6 @@ def test_periodic_and_codex_calls_never_recap(tmp_path) -> None:
 
 
 def test_missing_diary_warns_without_writing_a_file(tmp_path) -> None:
-    # The hook reports a missing entry and leaves .diary alone; ARCHITECTURE.md
-    # and README.md both document that it never writes a header.
     git(tmp_path, 'init', '-q')
     (tmp_path / '.diary').mkdir()
     commit(tmp_path, 'a.txt', 'one\n', 'feat: first')

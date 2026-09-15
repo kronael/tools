@@ -71,26 +71,29 @@ that top-level Python runner instead of requiring shell redirection.
 
 ## Comments
 
-ZERO comments by default — most comments are noise; when in doubt, delete.
-ALWAYS carry intent through names, types, and structure first; a comment is the
-last resort. When one earns its place, distill it to ONE dense line carrying
-only the non-obvious WHY — rationale, a non-obvious invariant, a cross-module
-assumption. NEVER restate WHAT the code does.
+NEVER write a comment. Intent travels in names, types and structure; a comment
+is not a fallback for code that failed to carry it. The ONE exception is a doc
+comment on a PUBLIC API item — an exported function, type, struct, module — and
+it states only what a caller cannot see from the signature: contract, units,
+ownership, error conditions. A private item gets none. A line inside a body
+gets none.
 
-Redundancy test — delete the comment if it fails: NEVER write, and NEVER leave
-standing, a comment whose content is already visible in adjacent code,
-INCLUDING a log, warn, or error message on a neighbouring line. Paraphrasing
-that message in a comment above it is the canonical redundant comment.
+ALWAYS sweep the WHOLE file when you touch it, not only the lines you edit:
+read every comment standing there and delete the ones this section bans.
+Leaving one standing is a defect, not a no-op.
 
-- NEVER a multi-line comment block — no `///`, no `/** */`, no stacked `//`. A
-  comment spanning more than one line is a bug; cut it to one line or drop it.
+Redundancy test — delete the comment if it fails: NEVER leave standing a
+comment whose content is already visible in adjacent code, INCLUDING a log,
+warn, or error message on a neighbouring line. Paraphrasing that message in a
+comment above it is the canonical redundant comment.
+
+- NEVER stack `//`, `#`, `///` or `/** */` lines inside a function body — the
+  ban is on the comment, not merely its length. A public-API doc comment MAY
+  span lines when the caller's contract needs the room.
 - NEVER a source line number in a comment (`// see line 200`, `// as in L42`),
   and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
   name instead.
 - NEVER a ticket number or issue ID in a comment.
-- When editing existing code: DELETE a comment that fails the redundancy test
-  and DISTILL an over-long one to one line, on sight — leaving either stand is
-  a defect, not a no-op.
 
 ## Design
 
