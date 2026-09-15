@@ -21,11 +21,6 @@ they read as `0` and `1`. But those singles are for generic values — indices,
 counts, math. A value that stands for a specific concept keeps that concept's
 name (`url`, `slot`, `epoch`), never collapsed to its bare initial.
 
-A closure parameter is short and generic — `x`, `item`, `elem`, or any short
-name that fits — never a restatement of the element's type: `.map(|x| x.ctime)`,
-never `.map(|mapping| mapping.ctime)`. The iterator says what the elements are;
-repeating it in the binding buys nothing and pushes the expression over a line.
-
 Never rename something that already has a name — aliases, intermediate bindings,
 import renames. A rename erases where the value came from and forces the reader
 to hold two names for one thing.
