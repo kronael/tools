@@ -171,15 +171,18 @@ exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
 # runtime user's $HOME. Codex scans ~/.agents/skills and loads global guidance
 # from ~/.codex/AGENTS.md; point both at the ~/.claude bundle. Idempotent and a
 # no-op until the bundle is installed into $HOME, so it is safe on every start.
+# The links are RELATIVE: ~/.codex and ~/.agents are bind-mounted from the host,
+# so an absolute link written here resolves to the container's home and dangles
+# on the host — silently costing the host Codex its global guidance.
 RUN printf '%s\n' \
   '#!/bin/sh' \
   'set -eu' \
   '[ -d "$HOME/.claude/skills" ] || exit 0' \
   'mkdir -p "$HOME/.agents"' \
-  '[ -e "$HOME/.agents/skills" ] || ln -s "$HOME/.claude/skills" "$HOME/.agents/skills"' \
+  '[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"' \
   'if [ -f "$HOME/.claude/CLAUDE.md" ] && { [ -L "$HOME/.codex/AGENTS.md" ] || [ ! -e "$HOME/.codex/AGENTS.md" ]; }; then' \
   '  mkdir -p "$HOME/.codex"' \
-  '  ln -sfn "$HOME/.claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"' \
+  '  ln -sfn ../.claude/CLAUDE.md "$HOME/.codex/AGENTS.md"' \
   'fi' \
   > /usr/local/bin/dockbox-codex-bridge && chmod +x /usr/local/bin/dockbox-codex-bridge
 
