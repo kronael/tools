@@ -3,9 +3,10 @@ name: show-me
 description: Explain the current conversation topic with the smallest visual — pseudocode, call tree, component/file tree, mermaid, or a diff. NOT for permanent architecture docs (use diagrams), generated decks/pages (use create), or CSS/UI implementation (use visual).
 when_to_use: "show me, draw this, diagram this, visualize this, sketch this, explain visually, show the call tree, show the component tree, quick diagram mid-conversation"
 user-invocable: true
-author: HumanLayer (https://github.com/humanlayer/skills)
 license: MIT
-homepage: https://github.com/humanlayer/skills/tree/main/plugins/show-me
+metadata:
+  author: HumanLayer (https://github.com/humanlayer/skills)
+  homepage: https://github.com/humanlayer/skills/tree/main/plugins/show-me
 ---
 
 # Show Me

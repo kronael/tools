@@ -1,8 +1,8 @@
 # Code — the engineering baseline
 
 The language-agnostic base every language skill builds on. `go`, `rs`, `py`,
-`ts`, `sh`, and `sql` read this first (they say so in their body and
-carry a `requires: software` hint), then apply their language-specific overlay.
+`ts`, `sh`, and `sql` read this first — they say so in their body — then apply
+their language-specific overlay.
 Nothing here is language-specific; if a rule only holds for one language it
 belongs in that language's skill, not here.
 
@@ -57,9 +57,7 @@ One import per line; it keeps diffs clean. Keep code at 80 columns or under and
 prose at 100, with 120 the hard ceiling reserved for the rare line that genuinely
 hurts to wrap (a long URL, a table row).
 
-Utility files are named `*_utils.*`. Never write under `/tmp` — use `./tmp` in
-the project root, with `./log` for debug and smoke logs and `./dist` or
-`./target` for build artifacts.
+Utility files are named `*_utils.*`.
 
 For user-facing output, lowercase informational messages and Capitalize errors
 (`"checking..."` vs `"Failed: ..."`), and follow the Unix log format:

@@ -1,56 +1,219 @@
 # Changelog
 
-## [v0.3.81] — 20260910
+## [v0.3.86] — 20260913
 
-> kronael v0.3.81 — commit by default, leaner reviews
+> kronael v0.3.86 — what you asked for is what ships
 >
-> Finished work now commits by default, review findings post distilled, and the bundle gains squash, solana and social-image skills.
+> Skills stop quietly swapping a requested result for a convenient one, and stop refusing art work on copyright grounds.
 >
-> • Wisdom — verified, user-directed work commits as part of the work, not as a separate ask
-> • Review — every finding is distilled to two lines before it lands on a PR
-> • Refine — reads a PR's unresolved threads, fixes what is real, replies and resolves
-> • New skills — `squash`, `solana`, `create/social`, plus per-language refine lenses
-> • Hooks — the first prompt of a session nudges `/resolve`; the diary hook stopped writing empty headers
+> • `demo` gains a versus-scoreboard intro — meme, original and placeholder art are distinct deliverables, locked from the brief
+> • Copyright is a sourcing and NOTICE check now, not a blanket reason to refuse a feasible asset
+> • `fin` keeps a scope ledger — rereads every message since the goal, so a deferred item can't be reported as done
+> • `credits` describes copyleft neutrally — read the actual LICENSE; never call a license "contamination"
+> • `speed-demo` routes meme openers to `demo` and moves ~120 lines of failure detail into `lessons.md`
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-### Added
+### Changed
 
-- Skills: `squash`, `solana` (+ its onchain/layout/deps/review data files), the
-  `create/social` mode with its render script, `software/money.md`,
-  `ts/node-cluster.md`, `ts/v8-deopt.md`, and `refine/{ts,tsx}.md` — the
-  language lenses `refine` step 2b reads.
-- `show-me` skill ported from humanlayer/skills: smallest useful visual for the
-  current conversation topic.
-- `prompt_nudge` nudges `/resolve` once per session, behind a `.claude/tmp` marker.
-- `wisdom`: `<important if>` guidance for project `CLAUDE.md`, the runbook body
-  pattern, skills-as-first-class rules and the `/learn` pairing.
-- `tsx`: prop-narrowing rules folded from humanlayer/skills.
+- `skills/demo/SKILL.md` documents the versus-scoreboard intro: a Pillow
+  compositor plus ffmpeg concat, four art slots replaceable by filename, and
+  an asset-class lock taken from the brief before composing.
+- Refusing feasible asset work on copyright grounds is replaced by a
+  provenance/NOTICE check. Substituted art keeps the item open until the user
+  accepts it.
+- `skills/fin/SKILL.md` gains **Scope ledger** — completion is semantic, and
+  "everything is done" is barred while any item is deferred or blocked.
+- `skills/credits/SKILL.md` gains **License compatibility** — compatibility
+  depends on the exact licenses and linkage, so surface the narrow uncertainty
+  rather than a blanket prohibition.
+- `skills/speed-demo/SKILL.md` drops ~120 lines of failure narration for a
+  pointer to `lessons.md` and routes recognizable-meme openers to `demo`.
+
+## [v0.3.85] — 20260912
+
+> kronael v0.3.85 — a rule you can recite is not a rule you follow
+>
+> The wisdom sweep is reverted — the rules it cut as already-known are ones the models confess to breaking.
+>
+> • Wisdom rules restored — fail-loud, no-duplication and fix-causes stay in every session
+> • `wisdom` asks the behaviour question per rule now — a long cut list means it was skipped
+> • Run a probe you expect to fail first; a broken check and a passing one look the same when green
+> • `refine` rewritten as a runbook — 9 steps, each closing on an observable pass/fail
+> • Its correctness lenses seed from what models admit they do, not a frozen checklist
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — the minimization criterion was wrong
+
+"The model reproduces this rule unprompted" does not mean the rule is
+redundant. Asked about their own defaults, both models named logging-and-
+swallowing, degrading where crashing is correct, inventing a second logging
+path without grepping for the first, over-mocking, and commenting above
+almost every block — each while able to recite the rule against it.
+
+Cuts made on that criterion are reverted in `skills/global/SKILL.md` and
+`skills/software/code.md`. Two unrelated fixes from the same sweep stay: the
+`./tmp` removal and the false `requires:` claim.
 
 ### Changed
 
-- Committing finished, verified, user-directed work is part of doing the work —
-  no separate "should I commit?" question.
-- `review give`/`take` and `gh-comment` distill each finding to at most two
-  lines before posting; `refine` gained PR review-thread intake and resolution.
-- Comments policy distilled to one dense why-line; test descriptions name the
-  scenario and behavior, never the assertion.
-- `merge` covers rebasing onto a squash-merged main by tree boundary; `next`
-  parks items via `TodoWrite` instead of a file.
-- dockbox and qemubox pin `claude-fable-5-1`, `gpt-6-astra`, and default to
-  `claude-opus-5`.
+- `skills/refine/SKILL.md` follows the runbook pattern — every step closes on
+  an observable criterion (`git status --porcelain` empty, test target exits 0,
+  no file in two buckets, `git worktree list` shows only the main tree).
+- Refine's correctness lenses seed from a **Confessed defaults** section —
+  the error, test and comment habits models report as their own first pass.
+- `skills/wisdom/SKILL.md` gains the method the sweep cost to learn: ask the
+  behaviour question per candidate rule, re-examine every earlier cut when the
+  criterion changes, and run a probe you expect to fail before trusting one
+  that passes. Expect a nearly empty cut list.
+- `CLAUDE.md` test and hooks notes match the repo: PROJECTS is five projects
+  and `make test` also runs `tests/drift_test.sh`; `make gen-ci` is listed.
+  The hooks note explains the real trap — `hooks/Makefile` names its test
+  files explicitly, so a new `test_*.py` is skipped in silence.
 
 ### Fixed
 
-- The stop hook reports a missing or stale diary instead of appending an empty
-  `## HH:MM` header.
-- The pretool hook routes `SKILL.md`/`CLAUDE.md`/`AGENTS.md` edits to `/wisdom`.
-- The sandbox drift guard extracts each script's own default model and compares
-  them, instead of grepping one hardcoded model literal.
-- `software/money.md`, `ts/node-cluster.md` and `ts/v8-deopt.md` are reachable
-  from their owners' dispatch tables and pointers, so they actually load.
-- Published skill content carries no pointers to notes or services a reader
-  cannot reach.
+- The no-duplication rule is back in the wisdom file. Both models report
+  reaching for the mainstream idiom over a repo-local helper they never
+  grepped for, which is the rule's whole subject.
+
+## [v0.3.84] — 20260912
+
+> kronael v0.3.84 — skills that conform, bridges that are proven
+>
+> Skill frontmatter now matches what Claude Code actually reads, and the check runs in `make skills-frontmatter` instead of living in someone's memory.
+>
+> • Only recognised frontmatter keys — `arg` was silently doing nothing, and four provenance keys travel badly
+> • `name` must equal its directory, and `description` + `when_to_use` must stay inside the 1,536-char listing budget
+> • Both checks enforced by the linter; a repaired file is re-checked rather than passed
+> • pi runs again — its shebang picked a Node too old for its own regex
+> • `CLAUDE.md` mandates conformance and bridge verification, with the command for each
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — frontmatter conformance is now enforced
+
+`make skills-frontmatter` fails on an unrecognised key, a `name` that differs
+from its directory, or a `description` + `when_to_use` over 1,536 characters.
+All three previously failed silently at runtime: an unknown key is ignored, an
+over-budget listing is truncated mid-keyword, and a wrong name simply disagrees
+with the command. Run it before any commit touching `skills/`.
+
+### Added
+
+- `CLAUDE.md` gains a Conformance section: skills must use only the frontmatter keys Claude Code reads, keep `name` equal to the directory, stay inside the listing budget, and be reachable from `SKILL.md` — directly or through a file it already names. Both bridges must be proven by running them, and a symlink existing is explicitly not the same claim as the tool working.
+
+### Changed
+
+- `skills/software` trigger list cut from 1,520 characters to 1,068. It sat 16 short of the listing cap, where any edit would have truncated its later modes out of the always-on listing without an error.
+- `skills/wisdom/clean-room.sh` reduced from 50 lines to 18. Cleanup needed a `find` pipeline only because recursive removal is banned, so the room is left in `/tmp` and the trap that failed good runs is gone; reading the prompt into a variable lets `set -e` catch a missing file without a check.
+- Ported skills keep their provenance under `metadata` as flat strings, since the Agent Skills spec defines string keys and values.
+
+### Fixed
+
+- `recall-memories` declared `arg`, which is not a key — the autocomplete hint is `argument-hint`, so it was declaring nothing.
+- `credits` declared `name: credit` against its own directory, the only such mismatch in the bundle.
+- The linter returned success for a file whose YAML it had only repaired, leaving a wrong name and an unknown key in place, and raised `AttributeError` on frontmatter that was not a mapping.
+- The pi wrapper called bare `bun`, so pi died with `exec: bun: not found` whenever `~/.bun/bin` was off PATH.
+- `skills/software`'s dispatch table had one row listing fourteen sub-topics where every other row names a handful.
+
+## [v0.3.83] — 20260912
+
+> kronael v0.3.83 — guidance measured against a model that cannot see it
+>
+> The wisdom skill can now tell whether a rule earns the context it costs, by asking a model with no access to the file to write that guidance itself.
+>
+> • `wisdom` gains `clean-room.sh` — a throwaway HOME and empty cwd, so the model answers from training, not from your config
+> • Rules two clean models produce unprompted are cut; rules they state and then break are kept and stressed
+> • The four pre-kronael language skills are pruned; `sh`, `py`, `rs`, `ts`/`tsx` supersede them
+> • `tsx` gains the theme-variable rule: never hardcode a colour, fix `globals.css`
+> • The `./tmp` scratch-location rules are gone — the log path is the caller's choice
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — pruned language skills
+
+`bash`, `python`, `rust` and `typescript` never existed in this repo; they came
+from a pre-kronael install and their descriptions collide with `sh`, `py`, `rs`
+and `ts`/`tsx`, which is a routing race. Install now prunes them. Their content
+was checked line by line against the successors first — everything was already
+covered, usually more precisely, except the Tailwind theme-variable rule, which
+moved to `tsx`.
+
+### Added
+
+- `skills/wisdom/` gains the minimize method and `clean-room.sh`. A rule in an always-loaded file earns its place only when the model would not already behave that way, so the harness runs a prompt against a throwaway `HOME` (no wisdom file to load) in an empty working directory (no project `CLAUDE.md` to discover), and the skill requires verifying the room with a probe before any answer is trusted. It refuses an unknown model rather than silently answering from a resolved one, refuses an empty or missing prompt, keeps errors on stderr, and never prints an empty answer as a result.
+- `tsx`: theme variables are mandatory — `bg-card text-foreground border-border`, never `bg-[#1C1C1C]`; a wrong colour is fixed in `globals.css`, never worked around at the call site.
+
+### Changed
+
+- Guidance that two clean models produce unprompted is cut from `skills/global/SKILL.md` and `software/code.md`: the generic git safety mechanics, mock boundaries and test-file locations, subagent briefing and spawn thresholds, the no-duplication and fail-loud paragraphs, the rule of three and state minimisation. Workflow content stays regardless of reproducibility — make targets, the commit format, slash-command triggers, the `.ship/` and `.diary/` layout, the `BUGS.md` protocol, `/resolve` and `/gh-comment`.
+- Rules the models recite and then confess to breaking are kept and stressed with the pull that defeats each: never claim done before running the verification command, never state a claim unverified, never improve beyond what was asked, fix causes rather than the reported instance, and zero comments by default.
+- The `./tmp` scratch-location rules are removed from the wisdom file, `code.md`, `software/observe.md`, `software/testing.md`, `review/take.md`, `browse` and `agent-browser`. Capture-once, the failure screenshot and the heartbeat stand without a prescribed directory.
+
+### Fixed
+
+- The push rule had been rewritten from a prohibition into an unconditional order to push, which contradicted commit-only-when-asked and commanded an action `settings-recommended.json` denies outright. Restored, with the force-push ban.
+- `clean-room.sh` deleted only regular files, so a symlink or fifo in the room left `rmdir` with a non-empty directory and turned a successful run into exit 1 with the room leaked.
+- A heading whose rule had been cut is renamed to what sits under it; the subagent-report rule no longer appears twice in the wisdom file; the `review` skill no longer cites a rule that was removed; `code.md` no longer claims language skills carry a `requires: software` frontmatter hint, which none of them do.
+
+## [v0.3.82] — 20260912
+
+> kronael v0.3.82 — Stop recaps the turn
+>
+> Every Stop with nothing to block on now recaps what landed, what is still uncommitted, and any git operation left mid-flight.
+>
+> • Stop recap — commits landed, what is still uncommitted, and any merge/rebase in progress
+> • Output style renamed to `caveman` — installs prune the old file and repoint `outputStyle`
+> • show-me — ask for the smallest visual: pseudocode, call tree, mermaid, or a diff
+> • Codex bridge — the managed block now survives install instead of being overwritten
+> • dockbox + qemubox agree on claude-opus-5, claude-fable-5-1 and gpt-6-astra
+> • A dated feature branch, its push and `gh pr create` are permitted for review
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — output style renamed
+
+The response style is `caveman`: `output-styles/caveman.md`, frontmatter
+`name: caveman`, and `"outputStyle": "caveman"` in settings. Install repoints
+`outputStyle` and deletes `~/.claude/output-styles/80-caveman.md`; a hand-edited
+`settings.json` that still names the old style activates nothing, because no
+file answers to that name.
+
+### Added
+
+- `stop.py` emits a turn recap on a real Stop with nothing to block: commits landed since the session's previous Stop, tracked changes with `+added -deleted`, untracked paths touched inside the window, and any merge/rebase/cherry-pick/revert/bisect in progress. Capped at `RECAP_COMMITS` commits and `RECAP_PATHS` paths, bounded by one `RECAP_BUDGET` deadline, never emitted from periodic `PostToolUse` or under Codex.
+- `show-me` skill — the smallest visual for the current topic: pseudocode, call tree, component tree, mermaid, or a diff. Ported from humanlayer/skills (MIT, attributed in `NOTICE`).
+- `software` router gains the refactor-stack runbook: unreviewable-branch triage, tests before refactor, mutation-proven vs tautological tests, the dead-code oracle, and diffstat splitting.
+- `tsx`: prop-narrowing rules. `wisdom`: `<important if>` guidance for project `CLAUDE.md` and the runbook body-pattern. `diary`: named companion entries `YYYYMMDD-<name>.md`.
+
+### Changed
+
+- The `caveman` output style is the single source of the response rules for both Claude and Codex; the wisdom file and the Codex managed block point at it instead of carrying their own copies.
+- Wisdom permits a dated `YYYYMMDD_<tag>` review branch, `git push -u origin` to it, and `gh pr create` after showing title and body. `master`/`main` checkout, force push, `gh pr merge`, `gh pr review --approve`, `gh release create` and `gh repo create` stay forbidden; `settings-recommended.json` no longer denies `gh pr create`.
+- `codex` skill inherits the newest model rather than pinning a literal, confirms it against `models_cache.json` priority 1, and pins `-m` only when the resolved default is not that entry. It also never hands codex a list of suspected weaknesses.
+- `ship` requires re-research against current code in a subagent before planning.
+
+### Fixed
+
+- `stop.py`: a failed `git status` read as a clean tree, dropping the commit block and replacing it with a confident recap — an unreadable tree is now reported.
+- `stop.py`: a partial git failure emitted half a recap and advanced the session stamp past work the user never saw. Any required call failing now drops the whole recap with the stamp untouched, which also makes the spent-budget and timeout paths agree. The git-dir probe runs under the same deadline.
+- `stop.py`: status parses `-z` records, so non-ASCII and spaced paths reach the recap and a rename counts once; with no window the tree line reports what it can judge.
+- Install merges the Codex managed block after the wisdom write. The Codex guidance path may symlink to the wisdom file, so merging during asset copy was overwritten.
+- `qemubox` model aliases and default matched `dockbox`, turning `tests/drift_test.sh` green.
+
+## [v0.3.81] — 20260902
+
+> kronael v0.3.81 — install skill can rsync without prompting
+>
+> The recommended permission set now allows the install skill's rsync into `~/.claude/`, so setup doesn't stop for a permission prompt.
+>
+> • Allows `rsync * ~/.claude/*` in `settings-recommended.json`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Adds `Bash(rsync * ~/.claude/*)` to the recommended permission allowlist so the install skill's rsync step to `~/.claude/` runs without a manual approval.
 
 ## [v0.3.80] — 20260901
 

@@ -104,7 +104,6 @@ PROCESS_CASES = [
 ]
 
 BLOCK_CASES = [
-    'git push',
     'git reset --hard',
     'git add -A',
     'git add --all',

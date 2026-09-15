@@ -3,7 +3,7 @@ name: recall-memories
 description: Search session transcripts FIRST, then diary and memory (+ Codex history). Session JSONLs are mandatory — never answer recall from diary/memory alone. NOT for writing entries (use diary).
 when_to_use: "what did we decide, recall, find context from a prior session"
 user-invocable: true
-arg: <question>
+argument-hint: <question>
 ---
 
 # Recall Memories

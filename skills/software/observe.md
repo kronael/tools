@@ -9,7 +9,6 @@
 
 ## Monitoring
 
-- Heartbeat: ./tmp/<service>.heartbeat
 - Health: /.well-known/live, Metrics: /metrics (Prometheus)
 - Prometheus labels: NEVER unbounded values, ONLY bounded enums. High cardinality -> logs.
 

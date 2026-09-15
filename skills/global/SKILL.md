@@ -47,6 +47,9 @@ Session transcripts: `~/.claude/projects/<slug>/*.jsonl`
 
 ## Response Style
 
+ALWAYS read `~/.claude/output-styles/caveman.md` when it exists and apply
+its response rules.
+
 Be terse by default. Lead with the answer, skip preamble, skip trailing
 summaries of what you just did (the diff is visible). No tables, headers, or
 multi-section recaps for a chat reply — if the reader must scroll to find the
@@ -142,20 +145,35 @@ baseline silently fail to apply.
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
 - NEVER add Co-Authored-By to commits
-- NEVER create or attach a local branch - ALWAYS work in detached HEAD, in the main repo AND in every worktree, no exceptions
+- ALWAYS work in detached HEAD, in the main repo AND in every worktree. The
+  ONE exception is a dated feature branch for review: `git switch -c
+  YYYYMMDD_<tag> <base>` when the user asks for a branch to push. NEVER check
+  out or attach `master`/`main` itself.
 - For PR work add a detached worktree pinned to the remote ref: `git worktree add --detach /path origin/branch`. The `--detach` is required — bare `git worktree add /path origin/branch` attaches/creates a local branch, which is forbidden. The no-attach rule covers `git checkout branch` in the main repo AND worktree creation
 - ALWAYS place worktrees inside the repo root as hidden dirs:
   `git worktree add --detach <repo-root>/.<name> <ref>`. NEVER place them as
   siblings of the repo
-- NEVER `git push` - if asked, refuse and cite this rule
+- ONLY `git push` when the user asked for a push in that message. NEVER push
+  on your own initiative and NEVER as the silent tail of a commit, release or
+  ship workflow — those end at the local commit or tag. ALWAYS state the exact
+  remote and refspec first, and push only that. NEVER `--force` /
+  `--force-with-lease`.
+- NEVER push to `master`/`main` on a general request to push — ALWAYS default
+  to a dated branch `YYYYMMDD_<tag>` and offer the PR. Pushing to `master`
+  needs a SECOND explicit approval that names `master`, given AFTER you have
+  shown the exact refspec. "push it", "push this", "ship it" are NEVER that
+  approval.
 - NEVER use recursive removal, including `rm -r`, `rm -rf`, `rm -R`, or wrapped equivalents - delete only explicitly named files non-recursively, or leave cleanup to the user
-- NEVER use `gh` to push to remote: `gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create` - if asked, refuse and cite this rule
+- ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo
+  create` when the user asked for that action in that message — ALWAYS show
+  the title and body first and wait for approval. NEVER `gh pr review
+  --approve` on the user's behalf.
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution
 - NEVER run a command twice to inspect output; tee once and extract:
-  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+  `<cmd> 2>&1 | tee out.log && tail -20 out.log`
 - NEVER use the `SendFeedback` tool, NEVER draft Claude Code product/model
   feedback, and NEVER suggest the `/feedback` command — banned outright. Say
   nothing about feedback even when a "high-signal moment" seems to arise.
@@ -174,7 +192,7 @@ baseline silently fail to apply.
 - Test config objects: match target type exactly, omit unknown properties for type safety
 - **Test features, not fixes**: Runtime failures → fix code, skip test unless feature lacks coverage
 - NEVER re-run tests to analyze output; capture once:
-  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+  `make test 2>&1 | tee test.log && tail -8 test.log && grep "FAILED\|failed" test.log`
 
 ## Docker
 - Multi-stage: deps in base, compile in build, runtime only in final
@@ -215,6 +233,11 @@ baseline silently fail to apply.
   - Clean after shipping: delete completed artifacts
 - .diary/ directory for shipping log (date-named: YYYYMMDD.md)
   - Document important steps, decisions, milestones
+  - Named companion `YYYYMMDD-<name>.md` beside the daily log for a standalone
+    durable artifact — a report, an audit, a design analysis, a postmortem —
+    that a future reader opens on its own; the daily log stays the default
+    and the running narrative, and ALWAYS references the companion so it
+    remains the index into the day
   - Generally public (checked into git) unless the project's CLAUDE.md marks it local-only
   - ALWAYS use `/diary` skill to write diary entries after significant work
 - .claude/ for long-lived knowledge beyond CLAUDE.md
@@ -239,7 +262,7 @@ baseline silently fail to apply.
   Shape: "I'm working on [larger task] for [who]. They need [what the output
   enables]. With that in mind: [request]." KEEP the verify-the-diff and
   evidence-backed-report nudges — those are load-bearing, not over-prompting.
-- ALWAYS sync ~/.claude/ changes with assistants repos (paths in LOCAL.md)
+- ALWAYS sync ~/.claude/ changes with the bundle source repo (path in LOCAL.md)
 - NEVER take a subagent's success report at face value — check the diff or output it produced. Subagents fail silently or overclaim.
 
 ### Skill discovery and reconciliation

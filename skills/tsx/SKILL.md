@@ -36,6 +36,15 @@ Requires `ts` skill for base TypeScript rules.
 - Server Actions for form submission, `useActionState` for validation
 - ALWAYS forms work without JS (progressive enhancement)
 
+## Styling
+- ALWAYS use theme variables, NEVER hardcoded colours — not HEX, not a Tailwind
+  palette entry, not an arbitrary value: `bg-card text-foreground border-border`,
+  never `bg-[#1C1C1C] text-gray-50 border-gray-800`
+- Theme variables live in `globals.css` as HSL without the wrapper;
+  `tailwind.config.ts` extends from them
+- When a colour looks wrong, ALWAYS fix the theme — NEVER reach for a hardcoded
+  workaround at the call site
+
 ## Accessibility
 - Semantic HTML (`button` not `div onClick`)
 - `aria-label` on icon-only buttons

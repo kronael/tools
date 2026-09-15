@@ -14,11 +14,26 @@ Run `which <tool>` first; skip if present and recent.
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
 | `codex` | `bun install -g @openai/codex` | /codex /oracle |
-| `pi` | `bun install -g @mariozechner/pi-coding-agent` | /pi |
+| `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
 | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
 | `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
+
+`pi` ships a `#!/usr/bin/env node` shebang but its TUI uses the `v` regex flag,
+which needs Node 20+. On an older system node every invocation dies with
+`SyntaxError: Invalid regular expression flags`, `--version` included. bun runs
+it regardless, so when `pi --version` fails, put a wrapper earlier on PATH than
+`~/.bun/bin`:
+
+```bash
+cat > ~/.local/bin/pi <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+exec "$HOME/.bun/bin/bun" "$HOME/.bun/install/global/node_modules/@mariozechner/pi-coding-agent/dist/cli.js" "$@"
+SH
+chmod +x ~/.local/bin/pi
+```
 
 **Security audit** — ask separately (large, optional):
 
@@ -73,7 +88,9 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 `continue`), `merge-trivial` (renamed to `merge`, which now also covers rebase
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
 dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
-(renamed to `red-eval`), `testing` (folded into the `software` router).
+(renamed to `red-eval`), `testing` (folded into the `software` router), and the pre-kronael language
+skills `bash`, `python`, `rust`, `typescript` (superseded by `sh`, `py`, `rs`,
+`ts`/`tsx`, whose descriptions they collide with — a routing race).
 
 NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both bundled —
 `codex` is canonical, `oracle` its alias; the v0.3.26 codex→oracle rename was

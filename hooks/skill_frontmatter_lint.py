@@ -15,6 +15,35 @@ import yaml
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 FIX_FIELDS = {'description', 'when_to_use'}
 
+# Keys Claude Code reads (code.claude.com/docs/en/skills). Anything else is
+# ignored locally but rejected by other Agent Skills consumers, so it is an
+# error here. Free-form provenance belongs under `metadata`.
+KNOWN_KEYS = {
+    'name',
+    'description',
+    'when_to_use',
+    'argument-hint',
+    'arguments',
+    'disable-model-invocation',
+    'user-invocable',
+    'allowed-tools',
+    'disallowed-tools',
+    'model',
+    'effort',
+    'context',
+    'agent',
+    'background',
+    'shell',
+    'paths',
+    'hooks',
+    'metadata',
+    'license',
+    'compatibility',
+}
+# description + when_to_use are concatenated into the always-on listing and
+# truncated past this, which silently drops a router's later trigger keywords.
+LISTING_BUDGET = 1536
+
 
 def skill_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
@@ -41,6 +70,25 @@ def yaml_error(text: str) -> str | None:
     except yaml.YAMLError as exc:
         return str(exc).splitlines()[0]
     return None
+
+
+def conformance(path: Path, meta: str) -> list[str]:
+    data = yaml.safe_load(meta) or {}
+    if not isinstance(data, dict):
+        return ['frontmatter is not a mapping']
+    problems = []
+    unknown = sorted(set(data) - KNOWN_KEYS)
+    if unknown:
+        problems.append(f'unrecognised key(s): {", ".join(unknown)}')
+    name = data.get('name')
+    if name is not None and name != path.parent.name:
+        problems.append(f'name {name!r} does not match directory {path.parent.name!r}')
+    listing = len(str(data.get('description') or '')) + len(str(data.get('when_to_use') or ''))
+    if listing > LISTING_BUDGET:
+        problems.append(
+            f'description + when_to_use is {listing} chars, over the {LISTING_BUDGET} listing budget'
+        )
+    return problems
 
 
 def fix_value(key: str, value: str) -> str:
@@ -72,22 +120,27 @@ def process(path: Path, write: bool) -> int:
         return 2
 
     meta, body = split
+    status = 0
     error = yaml_error(meta)
-    if error is None:
-        return 0
-    if not write:
-        print(f'needs fix: {path} ({error})')
-        return 1
-
-    fixed = fix_frontmatter(meta)
-    error = yaml_error(fixed)
     if error is not None:
-        print(f'{path}: still invalid after fix: {error}', file=sys.stderr)
-        return 2
+        if not write:
+            print(f'needs fix: {path} ({error})')
+            return 1
+        meta = fix_frontmatter(meta)
+        error = yaml_error(meta)
+        if error is not None:
+            print(f'{path}: still invalid after fix: {error}', file=sys.stderr)
+            return 2
+        path.write_text(f'---\n{meta}---\n\n{body}')
+        print(f'fixed: {path}')
+        status = 1
 
-    path.write_text(f'---\n{fixed}---\n\n{body}')
-    print(f'fixed: {path}')
-    return 1
+    # A repaired file still has to conform; fixing the YAML says nothing about
+    # the name, the keys or the listing budget.
+    problems = conformance(path, meta)
+    for problem in problems:
+        print(f'{path}: {problem}', file=sys.stderr)
+    return 2 if problems else status
 
 
 def main() -> int:

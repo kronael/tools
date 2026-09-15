@@ -17,6 +17,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 | `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
 | `money.md` | exact arithmetic for money/token amounts: why never float (incl. the decode step), the integer → fixed-point → wide-integer → arbitrary-precision ladder, deriving the overflow bound, round once at the edge, checked add, the tests that catch it |
+| `refactor-stack.md` | re-shipping an unreviewable branch as a stack: test layer first, dividing criterion, four passes, mutation proof, deletion oracles, diffstat split |
 
 ## Editing rules
 

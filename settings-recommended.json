@@ -12,7 +12,8 @@
       "Bash(git commit*)",
       "Bash(gh pr comment*)",
       "Bash(gh api repos/*/pulls/*/reviews*)",
-      "Bash(gh api repos/*/pulls/*/comments*)"
+      "Bash(gh api repos/*/pulls/*/comments*)",
+      "Bash(rsync * ~/.claude/*)"
     ],
     "deny": [
       "Bash(rm -r*)",
@@ -24,7 +25,6 @@
       "Bash(git pull*)",
       "Bash(ssh *)",
       "Bash(rsync *)",
-      "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
       "Bash(gh pr review --approve*)",
       "Bash(gh release create*)",
@@ -136,6 +136,6 @@
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   },
-  "outputStyle": "80% caveman",
+  "outputStyle": "caveman",
   "cleanupPeriodDays": 3650000
 }

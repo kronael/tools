@@ -64,7 +64,7 @@ agent-browser eval "document.title"
 
 - ALWAYS `agent-browser wait --load networkidle` (or wait --text/--url) BEFORE snapshot on dynamic pages; NEVER snapshot directly after `open` on SPAs — refs will be stale
 - ALWAYS prefer `find role --name`, `find text`, `find label` over numbered `@eN` refs; `@eN` refs are valid only within one snapshot — NEVER reuse across navigations
-- ALWAYS `agent-browser screenshot ./tmp/err.png --full` before reporting an unexpected failure
+- ALWAYS `agent-browser screenshot err.png --full` before reporting an unexpected failure
 
 ## Coordinate clicks (canvas, maps, custom renderers)
 

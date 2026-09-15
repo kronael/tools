@@ -29,16 +29,17 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # run tests across all projects in PROJECTS (hooks udfix)
-make test-<dir>    # tests for one project, e.g. make test-udfix
+make test          # every project in PROJECTS, then tests/drift_test.sh
+make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
+make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
 ```
 
-- **Hooks** (`hooks/`): `make -C hooks test` runs pytest. Only `pretool_nudge.py`
-  is collected — `stop.py`, `local.py`, `prompt_nudge.py`, `reclaude.py` read
-  stdin at import time and break collection until `main()` is guarded behind
-  `__name__ == '__main__'`.
+- **Hooks** (`hooks/`): `make -C hooks test` runs pytest over the explicit
+  `TEST_FILES` list in `hooks/Makefile`, never the directory. A new
+  `test_*.py` does not run until it is added to that list — the suite passes
+  while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
   (installs to `~/.local/bin`). `dockbox` also has `make image`.
 - **Python scripts** (`tg-fetch`, `dc-fetch`): `uv run main.py` (PEP 723
@@ -112,13 +113,56 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Testing bundle changes**: re-run `/kronael:install` (or "say install") and
   use the result in a real project. There's no unit test for skill behavior.
 
+## Conformance — mandatory, and checked
+
+The bundle is worthless if Claude Code, Codex or pi silently fail to load it.
+All three are verifiable; ALWAYS verify rather than assume.
+
+**Skills match what Claude Code actually reads**
+(code.claude.com/docs/en/skills), not what looks reasonable:
+
+- SKILL.md frontmatter uses ONLY recognised keys. An unrecognised key is
+  ignored locally and rejected by other Agent Skills consumers, so it is a
+  defect, not a harmless extra. Free-form provenance — author, version,
+  homepage, upstream tags — goes under `metadata`, whose contents Claude Code
+  ignores. Keep those values flat strings: the Agent Skills spec defines
+  string keys and values, so a nested map may not travel.
+- The DIRECTORY name is the slash command; frontmatter `name` is display only.
+  ALWAYS keep them equal so the two never disagree about what a skill is called.
+- `description` + `when_to_use` are concatenated into the always-on listing and
+  truncated past 1,536 characters, which drops a router's later triggers
+  without any error. ALWAYS leave headroom; NEVER write to the limit.
+- Only `SKILL.md` loads. Sibling files are cold until something reaches them
+  from it — a dispatch row, or a reference in a file a dispatch row already
+  named, as `create/` does. A file no such chain reaches is unreachable.
+
+`make skills-frontmatter` enforces the first three and MUST pass before a
+commit touching `skills/`. The fourth is a review check: a router's dispatch
+table is the only path to its data files, so compare the table against the
+directory whenever either changes.
+
+**Both bridges work, proven by running them**
+
+- Codex: `codex exec --ephemeral "name one rule from the Kronael block in your
+  global guidance, and one skill you can see"`. A correct bridge quotes the
+  block and names a skill from `~/.agents/skills`.
+- pi, two separate claims. That it RUNS: `pi --version`, which exits before
+  loading any guidance, so it proves only the binary starts — it ships a
+  `#!/usr/bin/env node` shebang and needs Node 20+, and `reference.md` carries
+  the bun wrapper for older system nodes. That it is BRIDGED: check
+  `~/.pi/agent/AGENTS.md` resolves to `~/.claude/CLAUDE.md`, or ask it for a
+  rule from the wisdom file from a neutral directory.
+
+NEVER report either bridge installed on the strength of a symlink existing —
+the wiring being right and the tool running are different claims.
+
 ## Release
 
 - Canonical version = git tag + `CHANGELOG.md`; the `release:` commit adds the
   CHANGELOG entry and tags `vX.Y.Z` (patch default). Use the `release` skill.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
-  the same release — it silently drifted (stuck at 0.3.47 across many releases).
-  Keep it synced so the plugin manifest reports the shipped version.
+  the same release. Nothing enforces it, and the drift is invisible: the
+  manifest keeps reporting a version the bundle no longer is.
 
 ## Docs map
 

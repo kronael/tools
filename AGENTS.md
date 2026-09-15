@@ -48,7 +48,7 @@ only the Codex-specific deltas.
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
   block from `codex/AGENTS.md` into global Codex guidance. That block requires
   Codex to load applicable `CLAUDE.md` files in addition to `AGENTS.md` and
-  carries the same terse response policy as the selected `80% caveman` Claude
+  carries the same terse response policy as the selected `caveman` Claude
   output style. The plugin cache still contains only the bridge skill.
 
 ## Codex plugin usage
@@ -122,6 +122,10 @@ for d in skills/*/; do
 done
 ```
 
+**Install order** — ALWAYS write the wisdom file and resolve the global
+Codex guidance path before merging the marked `codex/AGENTS.md` block. The
+guidance path may symlink to wisdom; NEVER overwrite wisdom after that merge.
+
 **Install the wisdom file** — strip the YAML frontmatter from
 `skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
 content, diff and ask first:
@@ -172,5 +176,7 @@ the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
 - ALWAYS/NEVER statements in skill content.
 - No secrets, no local paths, no org-specific references in source.
 - Commit format: `type(scope): Message` (scope optional).
-- NEVER use `git add -A`, `git commit --amend`, or `git push`.
+- NEVER use `git add -A` or `git commit --amend`.
+- ONLY `git push` when the user asked in that message, and NEVER to
+  `master`/`main` without a second approval naming the branch.
 - NEVER delete files in `~/.claude/` that aren't in this source tree.

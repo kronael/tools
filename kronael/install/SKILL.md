@@ -120,13 +120,12 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - Merge the block between `<!-- kronael:start -->` and
-     `<!-- kronael:end -->` from `codex/AGENTS.md` into
-     `~/.codex/AGENTS.md` when running from Codex. Replace only an existing
-     Kronael block; otherwise append it. NEVER overwrite content outside the
-     markers. This makes Codex load Claude guidance in addition to AGENTS
-     guidance and applies the selected terse response policy.
-   - **Prune renamed hooks**: delete `~/.claude/hooks/nudge.py` and `~/.claude/hooks/extnudge.py` if present (renamed to `prompt_nudge.py` / `pretool_nudge.py`). Backup first per step 1.
+   - **Prune renamed files**: delete `~/.claude/hooks/nudge.py`,
+     `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
+     if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
+     `output-styles/caveman.md` instead, and a stale copy keeps loading beside
+     its replacement. A stale output style also leaves `outputStyle` pointing
+     at a name no file answers to. Backup first per step 1.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
@@ -143,7 +142,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
-   - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`80% caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
+   - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions
@@ -152,6 +151,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `rm -rf build/`. NEVER write the glob outside the parens
      (`Bash(rm -rf /)*`) — it matches nothing and silently disables the guard,
      so verify the four entries are present and paren-closed after merging.
+   - **Sandbox / permission posture is loosen-only.** NEVER tighten what the
+     user already chose — ALWAYS leave a looser installed value in place.
+     Concretely: never flip `sandbox.enabled` false → true, never narrow
+     `sandbox.excludedCommands`, never move `permissions.defaultMode` from
+     `bypassPermissions` toward `default`, never drop an installed `allow`
+     entry. Install may only widen (add `allow` entries, relax the sandbox).
+     The recursive-removal deny guard is the one exception — it always applies.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
@@ -168,6 +174,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `~/.claude/CLAUDE.md` (leave it if already resolved). Any other existing
      global Codex guidance is a conflict — show and ask. NEVER rely on project
      fallback names for global guidance.
+   - AFTER installing wisdom and resolving the global guidance path, merge
+     the marked block from `codex/AGENTS.md` into `~/.codex/AGENTS.md`.
+     Replace only the existing Kronael block; otherwise append it. NEVER
+     overwrite content outside the markers. The path may symlink to the
+     wisdom file, so ALWAYS perform this merge after the wisdom write.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if
