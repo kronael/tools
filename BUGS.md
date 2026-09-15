@@ -16,13 +16,14 @@ The cause fix is for the entrypoint to write the link only inside a
 container-private `~/.codex`, or to skip it when the directory is bind-mounted.
 Reproduce: run dockbox, then `readlink -f ~/.codex/AGENTS.md` on the host.
 
-### proposed: split `skills/global/SKILL.md` — 238 lines against a 200 cap
+### proposed: split `skills/global/SKILL.md` — 297 lines against a 200 cap
 
 `skills/wisdom/SKILL.md` sets the cap at 200 with "no exceptions — overflow
 goes to sibling files". The wisdom file is the one file loaded in every
 session, so the cap matters here most. The measured cuts took it from 270 to
 234, stressing the rules models state and break put it back to 248, and the
-refine pass trimmed the duplication with `caveman.md` to reach 238.
+refine pass trimmed the duplication with `caveman.md` to reach 238. The push
+consent rules and the two idiom paragraphs have since carried it to 297.
 
 The fix is the router pattern: keep the always-true rules inline and move a
 themed block to a sibling loaded on demand. That changes what is guaranteed
