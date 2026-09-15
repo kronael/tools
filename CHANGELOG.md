@@ -1,5 +1,29 @@
 # Changelog
 
+## [v0.3.88] — 20260915
+
+> kronael v0.3.88 — the docs say what the code does
+>
+> Three documents claimed things the code does not do; `tw-fetch` gained the README it shipped without.
+>
+> • Stop hook — nudges for a diary in any git repo, with or without a `.diary/` directory
+> • `software` router — its what-lives-where table lists `testing.md`, which the dispatch table already reached
+> • `tw-fetch` — a README covering the cookie login, the three commands, and what a dumped tweet holds
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `tw-fetch/README.md` — the cookie login flow, the `timeline`/`user`/`login`
+  commands, output paths and record fields, and the Chrome requirement.
+
+### Fixed
+
+- `hooks/ARCHITECTURE.md` claimed the stop hook gates its diary check on a
+  `.diary/` directory existing; it nudges in any git repo.
+- `skills/software/CLAUDE.md`'s what-lives-where table had no row for
+  `testing.md`.
+
 ## [v0.3.87] — 20260915
 
 > kronael v0.3.87 — you have to ask before it pushes
