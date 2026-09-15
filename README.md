@@ -9,14 +9,14 @@ Command-line utilities and Claude Code configuration.
 - [qemubox](qemubox/) — disposable QEMU VM, dockbox-style, for untrusted repo inspection
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
 - [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
-- [tw-fetch](tw-fetch/) — Twitter/X thread archiver
+- [tw-fetch](tw-fetch/) — Twitter/X timeline + profile archiver (selenium, cookie login)
 - [tg-fetch](tg-fetch/) — Telegram channel/group archiver (telethon, TOML config)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
 Go tools (`udfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts
-(`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` and `qemubox` have
-their own Makefiles.
+(`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` and
+`qemubox` have their own Makefiles.
 
 External tools used by the Claude Code config:
 
