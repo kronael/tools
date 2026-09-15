@@ -32,6 +32,7 @@ If unsure which repo, ASK — do not guess a slug.
   Include a copy-pasteable repro (curl/command) when there is one. Keep it to
   what a maintainer needs to act; cut everything else.
 - Prefer real evidence (status codes, exact response bodies, versions) over prose.
+- Body opens with a bare `🤖 ` line so a reader can tell Claude filed it, not the account owner.
 
 ## 3. Sign-off gate (MANDATORY)
 
@@ -46,7 +47,7 @@ draft is expected — re-show after edits.
 gh issue create --repo "$REPO" \
   --title "<title>" \
   --body "$(cat <<'EOF'
-<body>
+🤖 <body>
 EOF
 )" \
   --label "<label>"   # optional; omit if unsure
@@ -63,6 +64,7 @@ Return the issue URL that `gh issue create` prints.
 
 ## Rules
 
+- ALWAYS open the body with `🤖 ` — the only thing marking the issue as Claude's, not the account owner's.
 - NEVER post without an explicit approval of the exact content AND repo.
 - NEVER guess the repo slug — ask if not given.
 - Keep it terse: shortest issue that a maintainer can act on wins.

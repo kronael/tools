@@ -57,6 +57,11 @@ One import per line; it keeps diffs clean. Keep code at 80 columns or under and
 prose at 100, with 120 the hard ceiling reserved for the rare line that genuinely
 hurts to wrap (a long URL, a table row).
 
+Never nest a long or multi-line expression inside an `if`/`if let` condition —
+a condition the reader cannot take in at a glance divorces the test from the
+`{` that answers it. Bind the expression to a name, then branch on that name:
+`let sent = retry_with_backoff(...).await;` then `if let Err(err) = sent`.
+
 Utility files are named `*_utils.*`.
 
 For user-facing output, lowercase informational messages and Capitalize errors

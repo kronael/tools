@@ -97,6 +97,14 @@ This file and loaded SKILL.md files are collectively "WISDOM" in Claude Code.
 
 ## Code baseline
 
+ALWAYS write in the idiom of the code around it: before adding a line, grep the
+sibling files for how that same thing is already written and mirror it — naming,
+comment density, guard style, explicit-vs-implicit, formatting. NEVER add
+defensive scaffolding the neighbours do not use (`IF NOT EXISTS`, existence
+checks, try/except, fallbacks) — the local convention outranks general caution,
+and a lone guard claims this case is special. If the surrounding style is
+genuinely wrong, SAY so; NEVER silently deviate from it.
+
 Code style, naming, layout, design, comments, and the boring-code / grug
 philosophy live in the `software` skill (`code.md`) — the language-agnostic
 base every language skill pulls in. This content is COLD: it is NOT in this
@@ -214,6 +222,12 @@ baseline silently fail to apply.
 - Complex case: directory with lowercase files (specs/, docs/)
 - CLAUDE.md <200 lines: shocking patterns, project layout
 - NEVER marketing language, cut fluff
+- ALWAYS write in the idiom of the document around it — the Code baseline rule
+  covers prose and examples too. Before adding a section, schema, or fenced
+  block, read the neighbouring ones and mirror them: fence language, comment
+  idiom, field ordering, heading depth, level of detail. NEVER let a new
+  endpoint or example block present itself differently from the ones already in
+  the file, and NEVER ship a schema that disagrees with what the code emits.
 - NEVER publish to claude.ai hosting — do NOT use the Artifact tool or upload
   any report/page/output to claude.ai. ALWAYS produce local files (HTML, MD)
   the user opens themselves. Local HTML is fine; the online upload is not.

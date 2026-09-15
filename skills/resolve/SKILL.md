@@ -5,7 +5,7 @@ description: >
   context first, then picks the best-matching skill instead of jumping at the
   first fit. NOT for first-time skill authoring (use wisdom).
 when_to_use: "which skill, what should I use, start of task, before acting, route this request"
-user-invocable: false
+user-invocable: true
 ---
 
 # Resolve

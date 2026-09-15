@@ -54,7 +54,8 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 
 ## Testing
 - Unit tests live alongside source as `src/<module>_test.rs`, declared at the
-  BOTTOM of the source file — NOT inline `#[cfg(test)] mod tests { ... }`,
+  TOP of the source file with the imports, where a reader meets it before the
+  code it covers — NOT inline `#[cfg(test)] mod tests { ... }`,
   NOT a `<module>/tests.rs` subdirectory, NOT in `tests/`
 - **`#[path]` is REQUIRED on every module that is not the crate root or a
   `mod.rs`.** A bare `#[cfg(test)] mod foo_test;` inside `src/a/foo.rs` resolves

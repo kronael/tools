@@ -38,6 +38,10 @@ To update an existing PR's body, write the body to `tmp/body.md` and PATCH via
 REST. NEVER use `gh pr edit --body` — it runs a GraphQL `login` query that
 requires `read:org`; the REST endpoint needs only `repo`:
 
+This path actually posts to GitHub as the user, unlike a new-PR draft the user
+still has to submit themselves — ALWAYS end `tmp/body.md` with a bare `🤖`
+line before the PATCH, so a reader can tell Claude wrote the description.
+
 ```
 gh api -X PATCH repos/<owner>/<repo>/pulls/<N> -f body="$(cat tmp/body.md)" --jq '.body | length'
 ```
