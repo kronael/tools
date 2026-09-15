@@ -13,6 +13,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
+| `testing.md` | test naming, diagnosing a failure from captured output, testcontainers, the smoke/e2e boundary, hangs |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 | `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |

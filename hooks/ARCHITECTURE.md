@@ -149,8 +149,9 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse,
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
    with `git diff --stat`. A failed `git status` inside a repo appends its
    stderr instead — an unreadable tree is reported, never read as clean.
-3. If the repo has a `.diary/`, check for today's `YYYYMMDD.md` (UTC).
-   Missing or >1h stale → append a diary nudge.
+3. Check for today's `YYYYMMDD.md` (UTC) under the repo's `.diary/`. Missing
+   or >1h stale → append a diary nudge. The directory need not exist; a repo
+   without one is nudged to start it.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 5. Otherwise, on a real Stop outside Codex, build the recap: `git log
