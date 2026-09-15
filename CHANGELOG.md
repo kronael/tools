@@ -1,5 +1,73 @@
 # Changelog
 
+## [v0.3.87] — 20260915
+
+> kronael v0.3.87 — you have to ask before it pushes
+>
+> Pushing and PR-creating now need you to say so in that message, and comments are gone from code unless a caller reads them.
+>
+> • Push — only on a direct instruction, and `master`/`main` needs a second approval naming the branch
+> • Comments — banned outside doc comments on exported items; touching a file means sweeping the ones already in it
+> • Refine — reads a PR's unresolved threads, fixes what is real, replies and resolves, and every step closes on an observable criterion
+> • New skills — `squash`, `solana`, `create/social`, `refactor-stack`, plus per-language refine lenses
+> • dockbox — `-n` keys the directory basename, so a renamed box is still found by `ls`, `rm` and prune
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Skills: `squash`, `solana` (+ its onchain/layout/deps/review data files), the
+  `create/social` mode with its render script, `software/money.md`,
+  `software/refactor-stack.md`, `ts/node-cluster.md`, `ts/v8-deopt.md`, and
+  `refine/{ts,tsx}.md` — the language lenses `refine` step 3 reads.
+- `show-me` skill ported from humanlayer/skills: smallest useful visual for the
+  current conversation topic.
+- `prompt_nudge` nudges `/resolve` once per session, behind a `.claude/tmp`
+  marker; `/resolve` itself is now a slash command.
+- The stop hook emits a turn recap — commits landed, what is still uncommitted,
+  and any merge/rebase/cherry-pick left in progress.
+- `wisdom`: `<important if>` guidance for project `CLAUDE.md`, the runbook body
+  pattern, skills-as-first-class rules and the `/learn` pairing.
+
+### Changed
+
+- `git push`, `gh pr create/merge` and `gh release create` run only on a direct
+  instruction in that message; `master`/`main` needs a second approval that
+  names the branch, given after the exact refspec is shown.
+- Comments are banned outside a doc comment on an exported item, and touching a
+  file means reading every comment already in it and deleting the banned ones.
+- Code and prose are written in the idiom of what surrounds them — mirror the
+  neighbours rather than adding scaffolding they do not use.
+- Committing finished, verified, user-directed work is part of doing the work —
+  no separate "should I commit?" question.
+- `refine` runs as a runbook: each step closes on an observable criterion, the
+  correctness lenses are seeded from the defaults models confess to, and PR
+  review threads are triaged, fixed, replied to and resolved.
+- `review give`/`take` and `gh-comment` distill each finding to at most two
+  lines before posting; a filed issue and a patched PR body open with a robot
+  marker so a reader knows Claude wrote it.
+- `merge` covers rebasing onto a squash-merged main by tree boundary; `next`
+  parks items via `TodoWrite` instead of a file.
+- Rust unit tests are declared at the top of the source file, with the imports.
+- dockbox and qemubox pin `claude-fable-5-1`, `gpt-6-astra`, and default to
+  `claude-opus-5`.
+
+### Fixed
+
+- `dockbox -n` keys the directory basename instead of replacing the whole
+  container name, which hid a renamed box from `ls`, `rm` and prune.
+- The install step pins `diffSidebarOpen` off in `~/.claude.json`, where the key
+  actually lives — `settings-recommended.json` cannot carry it.
+- The stop hook reports a missing or stale diary instead of appending an empty
+  `## HH:MM` header.
+- The pretool hook routes `SKILL.md`/`CLAUDE.md`/`AGENTS.md` edits to `/wisdom`.
+- The sandbox drift guard extracts each script's own default model and compares
+  them, instead of grepping one hardcoded model literal.
+- `software/money.md`, `ts/node-cluster.md` and `ts/v8-deopt.md` are reachable
+  from their owners' dispatch tables, so they actually load.
+- Published skill content carries no pointers to notes or services a reader
+  cannot reach.
+
 ## [v0.3.86] — 20260913
 
 > kronael v0.3.86 — what you asked for is what ships
