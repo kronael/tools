@@ -37,7 +37,10 @@ CI_WORKFLOWS := \
 	$(W)/test-bhctl.yml \
 	$(W)/lint.yml
 
-.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix $(addprefix test-,$(PROJECTS)) $(addprefix clean-,$(PROJECTS))
+# test-%/clean-% are deliberately absent from .PHONY: make skips implicit-rule
+# search for a phony target, so listing them makes the pattern rules below
+# match and then do nothing.
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
