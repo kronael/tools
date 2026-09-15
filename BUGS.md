@@ -4,6 +4,18 @@ Review queue. Log here, fix when prioritised — not on sight.
 
 ## OPEN
 
+### dockbox repoints the host's `~/.codex/AGENTS.md` at the container home
+
+The dockbox entrypoint symlinks `~/.codex/AGENTS.md` → `$HOME/.claude/CLAUDE.md`
+with the container's `HOME=/home/dockbox`. `~/.codex` is bind-mounted from the
+host, so the symlink is written on the HOST and dangles the moment the container
+exits — the host's Codex loses its global guidance silently, with no error at
+any point. Seen after a dockbox run on 2026-09-15; the install step repaired it.
+
+The cause fix is for the entrypoint to write the link only inside a
+container-private `~/.codex`, or to skip it when the directory is bind-mounted.
+Reproduce: run dockbox, then `readlink -f ~/.codex/AGENTS.md` on the host.
+
 ### proposed: split `skills/global/SKILL.md` — 238 lines against a 200 cap
 
 `skills/wisdom/SKILL.md` sets the cap at 200 with "no exceptions — overflow
