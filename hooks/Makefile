@@ -3,8 +3,8 @@
 
 PYTEST := $(shell command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytest)
 
-# Test-bearing files. Some hook scripts still read stdin at import time, so
-# collect only files known to be pytest-safe.
+# Explicit list, not the directory: a new test_*.py runs only once it is added
+# here, and the suite stays green while silently skipping it.
 TEST_FILES := test_pretool_nudge.py test_prompt_nudge.py test_codex_hook.py test_stop.py test_memory_nudge.py
 
 help:
