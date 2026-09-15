@@ -2,64 +2,47 @@
 
 Review queue. Log here, fix when prioritised — not on sight.
 
-## OPEN
+## Status — 2026-09-15 — standing queue, re-triaged after the v0.3.88 pass
 
-### proposed: split `skills/global/SKILL.md` — 297 lines against a 200 cap
+Every item below is decision-gated: each needs a design call or a maintainer's
+choice, not a patch. None is a correctness defect. Do NOT act without go.
 
-`skills/wisdom/SKILL.md` sets the cap at 200 with "no exceptions — overflow
-goes to sibling files". The wisdom file is the one file loaded in every
-session, so the cap matters here most. The measured cuts took it from 270 to
-234, stressing the rules models state and break put it back to 248, and the
-refine pass trimmed the duplication with `caveman.md` to reach 238. The push
-consent rules and the two idiom paragraphs have since carried it to 297.
+- **WISDOM-FILE-OVER-LINE-CAP** (MED, design) — CONFIRMED. `skills/global/SKILL.md`
+  is 297 lines against the 200-line cap `skills/wisdom/SKILL.md` states with "no
+  exceptions — overflow goes to sibling files". It is the one file loaded in
+  every session, so the cap bites hardest here. Measured cuts took it 270 → 234,
+  stressing the rules models state-but-break put it back to 248, deduplicating
+  against `caveman.md` reached 238, and the push-consent rules plus the two
+  idiom paragraphs carried it to 297. Reproduce: `wc -l skills/global/SKILL.md`.
+  **Fix:** the router pattern — always-true rules stay inline, a themed block
+  moves to a sibling loaded on demand. That changes what is guaranteed present
+  in every session, so it needs sign-off.
 
-The fix is the router pattern: keep the always-true rules inline and move a
-themed block to a sibling loaded on demand. That changes what is guaranteed
-present in every session, so it needs sign-off. Reproduce:
-`wc -l skills/global/SKILL.md`.
+- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
+  all of `~/.claude` and `~/.codex` **rw** into the container, at
+  `dockbox/dockbox:12,18`. The guest needs `~/.claude/skills` and `~/.agents`
+  editable; it does not need read/write on the API tokens sitting beside them.
+  Lower priority — dockbox's README already discloses it is not a boundary for
+  hostile code. **Fix:** keep the skill dirs rw while the credentials go ro,
+  redacted, or unmounted — not a full config copy-in, which is not needed.
 
-### dockbox: guest-editable skills without exposing credentials (TODO)
+- **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
+  `skills/create/social/references/research-social-meme.md:196-217` carries a
+  "Corrections (post-codex)" section narrating what the document itself changed
+  ("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
+  `references/codex-critique.md` is framed as a verbatim audit trail. Both are
+  the prior-version narration the wisdom file bans in permanent content. They
+  are cold provenance files nothing reads by accident. **Fix:** the maintainer's
+  call — keep them as attribution, or move them to `.diary/`. Not a silent
+  rewrite.
 
-dockbox bind-mounts the whole `~/.claude` / `~/.codex` **rw** into the container
-(`dockbox:12,18`). The intent is that the guest can edit **skills**
-(`~/.claude/skills`, `~/.agents`) — but it does NOT need read/write to the
-**sensitive config** (the API tokens in `~/.claude`/`~/.codex`). Scope: keep the
-skill dirs editable while keeping credentials out of the guest's reach (mount
-them ro / redacted / not at all) — not a full config copy-in (that isn't
-needed). Lower priority — dockbox's README already discloses it is not a
-boundary for hostile code.
-
-### create/social references narrate their own edit history
-
-`skills/create/social/references/research-social-meme.md:196-217` carries a
-"Corrections (post-codex)" section describing what the document itself changed
-("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
-`references/codex-critique.md` is framed as a verbatim audit trail of a review
-pass. Both are the pattern the wisdom file bans: prior-version narration inside
-permanent content. They are cold provenance files, not instructions, so nothing
-reads them by accident — the call is whether they stay as attribution material
-or move to `.diary/`. Needs the maintainer's decision, not a silent rewrite.
-
-### Deferred — need sign-off
-
-- **qemubox / dockbox shared-UX de-dup.** The two tools duplicate flag parsing,
-  the tool/model table, `ls`/`rm`/`prune`, and the lifecycle block. A shared
-  sourced file would violate the repo's "tools are independent, no imports"
-  rule (`CLAUDE.md`); `tests/drift_test.sh` is the accepted lightweight guard
-  instead. Revisit only with sign-off.
+- **QEMUBOX-DOCKBOX-UX-DUP** (design — not a correctness bug) — Deferred, needs
+  sign-off. The two tools duplicate flag parsing, the tool/model table,
+  `ls`/`rm`/`prune`, and the lifecycle block. A shared sourced file would
+  violate the repo's "tools are independent, no imports" rule (`CLAUDE.md`);
+  `tests/drift_test.sh` is the accepted lightweight guard instead.
 
 ---
 
-Resolved items are pruned to `.diary/` (20260818–20260821) and `CHANGELOG.md`
-(v0.3.72–v0.3.75): the 2026-08-18 qemubox security audit, the mount-confinement
-redesign (curated staging + config copy-in + per-slug session data), the
-9p/genericcloud boot fixes, the ref-counted-lifecycle audit, the CEO/CTO
-follow-ups, the robustness backlog (`a2d0537..43467d0`, `91f91a8`), and the
-install housekeeping (`ce7c39a`). This pass: `rm` now requires an explicit
-pattern (`'*'` = all) and qemubox persists its SSH port in `$dir/port`
-(`d80c486`); dockbox toolchain bumped (`c04c956`). 2026-09-15: the codex bridge
-writes relative links so a dockbox run no longer dangles the host's
-`~/.codex/AGENTS.md`, `test-%`/`clean-%` left `.PHONY` so the pattern rules
-actually run, and the `TEST_FILES` comment names the real trap. The wisdom
-minimization sweep's verdict — keep every rule, "both models produce it" was
-never the criterion — is recorded in `.diary/20260915.md`.
+Fixed bugs are pruned out of this file — they live in git and `CHANGELOG.md`,
+with the longer write-ups in `.diary/`.
