@@ -34,8 +34,9 @@ Be specific, measure where possible:
 ### 3. EVALUATE (Prioritize)
 
 **Critical**: Blocks functionality (errors, test failures, security holes)
-**Important**: Degrades quality (performance, duplication, missing docs)
-**Minor**: Nice-to-have (naming, style, comments)
+**Important**: Degrades quality (performance, duplication, missing docs,
+comments `code.md` bans left standing)
+**Minor**: Nice-to-have (naming, style)
 **Ignore**: Bikeshedding (subjective preferences)
 
 ### 4. IMPROVE (Fix)
