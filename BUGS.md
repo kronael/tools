@@ -7,6 +7,16 @@ Review queue. Log here, fix when prioritised — not on sight.
 Every item below is decision-gated: each needs a design call or a maintainer's
 choice, not a patch. None is a correctness defect. Do NOT act without go.
 
+- **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED.
+  `hooks/ARCHITECTURE.md:84` lists `push` among the commands
+  `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS`
+  (`hooks/pretool_nudge.py:15-22`) has no push pattern, and
+  `hooks/README.md:41-42` states push is deliberately left unblocked. A
+  reader trusting the doc believes a guard exists that does not. Reproduce:
+  `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push` from the
+  ARCHITECTURE list, or add the pattern — which of the two is the
+  maintainer's call, since the README documents the omission as deliberate.
+
 - **WISDOM-FILE-OVER-LINE-CAP** (MED, design) — CONFIRMED. `skills/global/SKILL.md`
   is 297 lines against the 200-line cap `skills/wisdom/SKILL.md` states with "no
   exceptions — overflow goes to sibling files". It is the one file loaded in
