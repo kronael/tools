@@ -6,7 +6,7 @@ when_to_use: editing .ts files or writing TypeScript
 
 # TypeScript Style
 
-Requires the `software` skill's `code.md` for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, comments, and design
 rules. Below are TypeScript-specific additions and deltas.
 
 Read on demand, in this directory:
@@ -45,7 +45,6 @@ Read on demand, in this directory:
 ## Design
 - NEVER methods just for grouping — use modules
 - ALWAYS inline single-use one-liners; NEVER wrap trivial expressions
-- NEVER JSDoc on self-explanatory functions
 - Library barrel files: `export * from './module'`
 
 ## Logging
@@ -60,9 +59,8 @@ Read on demand, in this directory:
 ## Testing
 - ALWAYS a JSDoc block above every `test(...)` / `it(...)` call: what it
   does, what preconditions it assumes, what it verifies — one sentence per
-  point. (The "NEVER JSDoc self-explanatory functions" rule does NOT apply
-  to test cases — a test's intent and preconditions are never self-evident
-  from its body.)
+  point. (`code.md`'s comment ban does NOT reach test cases — a test's intent
+  and preconditions are never self-evident from its body.)
 - Unit: `*.test.ts` next to code (Bun), E2E: `*.spec.ts` in `playwright/`
 - **CRITICAL**: Configure `bunfig.toml` root to exclude Playwright files from Bun:
   ```toml

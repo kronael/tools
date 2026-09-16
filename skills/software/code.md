@@ -77,11 +77,16 @@ that top-level Python runner instead of requiring shell redirection.
 ## Comments
 
 NEVER write a comment. Intent travels in names, types and structure; a comment
-is not a fallback for code that failed to carry it. The ONE exception is a doc
-comment on a PUBLIC API item — an exported function, type, struct, module — and
-it states only what a caller cannot see from the signature: contract, units,
-ownership, error conditions. A private item gets none. A line inside a body
-gets none.
+is not a fallback for code that failed to carry it. The ONE general exception is
+a doc comment on a PUBLIC API item — an exported function, type, struct, module
+— and it states only what a caller cannot see from the signature: contract,
+units, ownership, error conditions. A private item gets none. A line inside a
+body gets none.
+
+Three narrow exceptions beyond it, each owned by the skill that states it and
+valid only on the construct it names: a test's scenario-to-outcome intro
+(`testing.md`), a `// SAFETY:` invariant on an `unsafe` block (`rs`), and the
+WHY on a deliberate error suppression (`go`). Nothing else inside a body.
 
 ALWAYS sweep the WHOLE file when you touch it, not only the lines you edit:
 read every comment standing there and delete the ones this section bans.
