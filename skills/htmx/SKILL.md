@@ -7,6 +7,9 @@ user-invocable: false
 
 # htmx (server-rendered HTML)
 
+Requires the `software` skill's `code.md` for shared naming, style, comments,
+and design rules.
+
 State lives on the server; DOM is a projection. For React, use `tsx`.
 
 ## Stack

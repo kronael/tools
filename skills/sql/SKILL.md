@@ -6,7 +6,7 @@ when_to_use: editing .sql files or writing SQL queries
 
 # SQL
 
-Requires the `software` skill's `code.md` for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, comments, and design
 rules. Below are SQL-specific additions.
 
 ## Style

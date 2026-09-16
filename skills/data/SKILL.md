@@ -6,6 +6,9 @@ when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data s
 
 # Collector/Data Collection
 
+Requires the `software` skill's `code.md` for shared naming, style, comments,
+and design rules.
+
 ## Testing
 
 - ALWAYS test with real API after 10 lines (mental models are always wrong)

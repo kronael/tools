@@ -6,7 +6,7 @@ when_to_use: editing .rs files or writing Rust code
 
 # Rust
 
-Requires `software/code.md` (naming, style, design) and
+Requires `software/code.md` (naming, style, comments, design) and
 `software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 

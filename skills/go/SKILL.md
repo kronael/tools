@@ -6,7 +6,7 @@ when_to_use: editing .go files or writing Go code
 
 # Go
 
-Requires `software/code.md` (naming, style, design), `software/strict-typing.md`
+Requires `software/code.md` (naming, style, comments, design), `software/strict-typing.md`
 (golangci-lint set), and `software/dynamic-analysis.md` (test-target checkers:
 `-race`, fuzzing, sanitizers). Below are Go-specific additions.
 
