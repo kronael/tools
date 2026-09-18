@@ -21,14 +21,18 @@ Run directly in main context (no subagent).
    already on the branch before the last merge. If both fail, ask the user.
 2. Draft title and body: title carries the business value; body is a reading
    guide for the reviewer alone — where the logic lives, what to scrutinize,
-   what's risky — NOT a commit log, so skip renames, churn, and anything the
-   reviewer doesn't need to judge the change. NEVER sell a change to a
-   wire-visible contract (event name, API field, route) as neutral — verify
-   it against what's documented or already emitted, since absence from
-   `origin/main` isn't proof it's free to change — and flag it for the
-   reviewer instead. ALWAYS flag verified-but-unfixed issues as "known,
-   deferred" — never drop them to look clean. Then cut to essence (see
-   format below).
+   what's risky, and the reasoning behind each non-obvious decision — NOT a
+   commit log or a step-by-step plan, so skip renames, churn, and anything
+   the reviewer doesn't need to judge the change. For every decision a
+   reader wouldn't guess on their own — a split into two round trips, a
+   relaxed consistency level, a rename — say what forced it and what the
+   alternative would have cost, so a reader who never saw the diff could
+   rebuild the same design. NEVER sell a change to a wire-visible contract
+   (event name, API field, route) as neutral — verify it against what's
+   documented or already emitted, since absence from `origin/main` isn't
+   proof it's free to change — and flag it for the reviewer instead. ALWAYS
+   flag verified-but-unfixed issues as "known, deferred" — never drop them
+   to look clean. Then cut to essence (see format below).
 3. Show draft, ask if they want to tweak anything
 4. Show draft. For a NEW PR, STOP — NEVER run `gh pr create` or open the PR.
 
@@ -68,8 +72,10 @@ plans or checklists. Prose follows the `writing` skill's copy rules.
 ALWAYS draft then cut — the first version is a draft, NEVER the deliverable.
 Strip every word that doesn't change meaning: hedges, context the diff
 already shows, adjectives, filler kept only because it "sounds complete."
-Only the trimmed result is real — shortest version that still gives the
-reviewer what they need; NEVER pad to look thorough.
+Cutting removes narration and restatement, NEVER the reasoning behind a
+non-obvious decision — that reasoning is the essence, not the filler around
+it. Only the trimmed result is real — shortest version that still gives the
+reviewer what they need, including why; NEVER pad to look thorough.
 
 ALWAYS output the draft (title + body) in one fenced code block so it is easy
 to copy.
@@ -80,8 +86,9 @@ Example:
 
 Instruments the instant-unstake flow so drop-off and settlement outcomes show up in Mixpanel instead of only server logs.
 
-- `trackUnstakeEvent()` centralizes the event shape — every call site routes through it, so a bad field breaks all events at once.
-- Contract change to confirm: renames `instant_unstake_amount_adjusted` to `instant_unstake_adjustment_prompted` — confirm nothing downstream still keys on the old name.
+- `trackUnstakeEvent()` centralizes the event shape — every call site routes through it, so a bad field breaks all events at once instead of drifting out of sync per call site.
+- Waits for native-unstake settlement at `confirmed` rather than `finalized` — `finalized` adds ~12s per tx here, and Mixpanel's own ingestion delay already exceeds that, so waiting longer buys no accuracy.
+- Contract change to confirm: renames `instant_unstake_amount_adjusted` to `instant_unstake_adjustment_prompted` — the old name read as a completed adjustment, but the event fires before the user confirms, so it was double-counted as settled downstream; confirm nothing still keys on the old name.
 
 Known, deferred: the native-auction path can't attach a cost basis yet (`costsKnown: false`), logged as a follow-up.
 ```
