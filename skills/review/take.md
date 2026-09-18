@@ -42,10 +42,10 @@ either way would mean.
 
 `/review take gh [<N>]` — "take GH review", "apply GH review comments", "answer
 the PR comments" all mean this. Source the worklist from EVERY open thread —
-human and bot (CodeRabbit etc.) alike, never a hand-picked subset.
+human and bot (CodeRabbit etc.) alike, never a hand-picked subset. If `gh`
+is unauthenticated, see `gh-comment` § Setup for `GH_TOKEN`.
 
 ```bash
-gh auth status >/dev/null 2>&1 || echo 'no gh config in $HOME — export GH_TOKEN=<token> or pass it inline'
 gh pr view <N> --json number,headRefOid,title,body            # no args = current branch
 gh pr view <N> --json comments                                # issue-level comments
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
