@@ -7,6 +7,20 @@ Review queue. Log here, fix when prioritised — not on sight.
 Every item below is decision-gated: each needs a design call or a maintainer's
 choice, not a patch. None is a correctness defect. Do NOT act without go.
 
+- **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED. The
+  Kronael block in `codex/AGENTS.md` has never reached global Codex guidance:
+  `grep -c kronael:start ~/.claude/CLAUDE.md` → 0, and every backup under
+  `~/.claude/backup/*/CLAUDE.md` is 0 too. The repo `CLAUDE.md` § Conformance
+  makes quoting that block the test of a working Codex bridge, so the bridge
+  fails its own check while the symlink looks healthy. Cause: install step 5
+  merges the block into `~/.codex/AGENTS.md`, which is a symlink to
+  `~/.claude/CLAUDE.md` — writing there puts Codex-only instructions in the
+  always-loaded Claude wisdom file, and the next install's two-way sync
+  reverse-syncs them into `skills/global/SKILL.md`. **Fix:** needs a design
+  call — give Codex its own file (`AGENTS.override.md`, or a real
+  `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to
+  the symlink target. Do NOT append to the wisdom file.
+
 - **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED.
   `hooks/ARCHITECTURE.md:84` lists `push` among the commands
   `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS`
