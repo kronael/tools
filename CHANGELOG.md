@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.3.90] — 20260918
+
+> kronael v0.3.90 — an unverified negative is not a finding
+>
+> Two rules the wisdom file now carries, both earned by breaking them with that file already loaded.
+>
+> • Negatives — output you cannot read looks like absence; re-check with the access the answer needs
+> • Swallowing — when the mechanism drops errors, replace it rather than bolting counters onto it
+
 ## [v0.3.89] — 20260918
 
 > kronael v0.3.89 — the comment rules stop contradicting each other
