@@ -1,54 +1,15 @@
 # BUGS
 
-Review queue. Log here, fix when prioritised — not on sight.
+## Bundle
 
-## Status — 2026-09-15 — standing queue, re-triaged after the v0.3.88 pass
-
-Every item below is decision-gated: each needs a design call or a maintainer's
-choice, not a patch. None is a correctness defect. Do NOT act without go.
-
-- **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED. The
-  Kronael block in `codex/AGENTS.md` has never reached global Codex guidance:
-  `grep -c kronael:start ~/.claude/CLAUDE.md` → 0, and every backup under
-  `~/.claude/backup/*/CLAUDE.md` is 0 too. The repo `CLAUDE.md` § Conformance
-  makes quoting that block the test of a working Codex bridge, so the bridge
-  fails its own check while the symlink looks healthy. Cause: install step 5
-  merges the block into `~/.codex/AGENTS.md`, which is a symlink to
-  `~/.claude/CLAUDE.md` — writing there puts Codex-only instructions in the
-  always-loaded Claude wisdom file, and the next install's two-way sync
-  reverse-syncs them into `skills/global/SKILL.md`. **Fix:** needs a design
-  call — give Codex its own file (`AGENTS.override.md`, or a real
-  `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to
-  the symlink target. Do NOT append to the wisdom file.
-
-- **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED.
-  `hooks/ARCHITECTURE.md:84` lists `push` among the commands
-  `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS`
-  (`hooks/pretool_nudge.py:15-22`) has no push pattern, and
-  `hooks/README.md:41-42` states push is deliberately left unblocked. A
-  reader trusting the doc believes a guard exists that does not. Reproduce:
-  `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push` from the
-  ARCHITECTURE list, or add the pattern — which of the two is the
-  maintainer's call, since the README documents the omission as deliberate.
-
-- **WISDOM-FILE-OVER-LINE-CAP** (MED, design) — CONFIRMED. `skills/global/SKILL.md`
-  is 297 lines against the 200-line cap `skills/wisdom/SKILL.md` states with "no
-  exceptions — overflow goes to sibling files". It is the one file loaded in
-  every session, so the cap bites hardest here. Measured cuts took it 270 → 234,
-  stressing the rules models state-but-break put it back to 248, deduplicating
-  against `caveman.md` reached 238, and the push-consent rules plus the two
-  idiom paragraphs carried it to 297. Reproduce: `wc -l skills/global/SKILL.md`.
-  **Fix:** the router pattern — always-true rules stay inline, a themed block
-  moves to a sibling loaded on demand. That changes what is guaranteed present
-  in every session, so it needs sign-off.
-
-- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
-  all of `~/.claude` and `~/.codex` **rw** into the container, at
-  `dockbox/dockbox:12,18`. The guest needs `~/.claude/skills` and `~/.agents`
-  editable; it does not need read/write on the API tokens sitting beside them.
-  Lower priority — dockbox's README already discloses it is not a boundary for
-  hostile code. **Fix:** keep the skill dirs rw while the credentials go ro,
-  redacted, or unmounted — not a full config copy-in, which is not needed.
+- **WISDOM-FILE-OVER-LINE-CAP** (MED, design) — CONFIRMED at HEAD 2026-09-18.
+  `skills/global/SKILL.md` is 302 lines against the 200-line cap
+  `skills/wisdom/SKILL.md` states with "no exceptions — overflow goes to
+  sibling files". It is the one file loaded in every session, so the cap bites
+  hardest here. Reproduce: `wc -l skills/global/SKILL.md`. **Fix:** the router
+  pattern — always-true rules stay inline, a themed block moves to a sibling
+  loaded on demand. That changes what is guaranteed present in every session,
+  so it needs sign-off.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
   `skills/create/social/references/research-social-meme.md:196-217` carries a
@@ -60,13 +21,48 @@ choice, not a patch. None is a correctness defect. Do NOT act without go.
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
 
-- **QEMUBOX-DOCKBOX-UX-DUP** (design — not a correctness bug) — Deferred, needs
-  sign-off. The two tools duplicate flag parsing, the tool/model table,
-  `ls`/`rm`/`prune`, and the lifecycle block. A shared sourced file would
-  violate the repo's "tools are independent, no imports" rule (`CLAUDE.md`);
-  `tests/drift_test.sh` is the accepted lightweight guard instead.
+## Codex bridge
 
----
+- **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED at HEAD
+  2026-09-18. The Kronael block in `codex/AGENTS.md` has never reached global
+  Codex guidance: `grep -c kronael:start ~/.claude/CLAUDE.md` → 0, and every
+  backup under `~/.claude/backup/*/CLAUDE.md` is 0 too. The repo `CLAUDE.md`
+  § Conformance makes quoting that block the test of a working Codex bridge,
+  so the bridge fails its own check while the symlink looks healthy. Cause:
+  install step 5 merges the block into `~/.codex/AGENTS.md`, which is a
+  symlink to `~/.claude/CLAUDE.md` — writing there puts Codex-only
+  instructions in the always-loaded Claude wisdom file, and the next install's
+  two-way sync reverse-syncs them into `skills/global/SKILL.md`. **Fix:** needs
+  a design call — give Codex its own file (`AGENTS.override.md`, or a real
+  `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to the
+  symlink target. Do NOT append to the wisdom file.
 
-Fixed bugs are pruned out of this file — they live in git and `CHANGELOG.md`,
-with the longer write-ups in `.diary/`.
+## Hooks
+
+- **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED.
+  `hooks/ARCHITECTURE.md:84` lists `push` among the commands
+  `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS`
+  (`hooks/pretool_nudge.py:15-22`) has no push pattern, and
+  `hooks/README.md:41-42` states push is deliberately left unblocked. A
+  reader trusting the doc believes a guard exists that does not. Reproduce:
+  `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push` from the
+  ARCHITECTURE list, or add the pattern — which of the two is the
+  maintainer's call, since the README documents the omission as deliberate.
+
+## dockbox
+
+- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
+  all of `~/.claude` and `~/.codex` **rw** into the container, at
+  `dockbox/dockbox:12,18`. The guest needs `~/.claude/skills` and `~/.agents`
+  editable; it does not need read/write on the API tokens sitting beside them.
+  Lower priority — dockbox's README already discloses it is not a boundary for
+  hostile code. **Fix:** keep the skill dirs rw while the credentials go ro,
+  redacted, or unmounted — not a full config copy-in, which is not needed.
+
+## Ruled not a defect
+
+- **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
+  duplicate flag parsing, the tool/model table, `ls`/`rm`/`prune`, and the
+  lifecycle block. A shared sourced file would violate the repo's "tools are
+  independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
+  accepted lightweight guard instead.
