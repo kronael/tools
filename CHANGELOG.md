@@ -1,5 +1,62 @@
 # Changelog
 
+## [v0.3.89] — 20260918
+
+> kronael v0.3.89 — the comment rules stop contradicting each other
+>
+> The comment ban and the four skills that mandate comments now agree, and five more skills can reach the policy at all.
+>
+> • Comments — `code.md` names its three exceptions: a test's scenario intro, `// SAFETY:` on `unsafe`, the why on a suppression
+> • Reach — `cli`, `data`, `htmx`, `service` and `trader` route to the code baseline, and every pointer names comments
+> • Python — no docstring on a private function, method or class; the public-API exception is the whole allowance
+> • PR threads — `gh-comment` fetches, replies to and resolves them; `review take` and `refine` point at it instead of restating the calls
+> • `BUGS.md` — open defects and what was ruled not one, grouped by component, with the audit narrative in `.diary/`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `gh-comment` owns the GraphQL `reviewThreads` calls — fetch a thread's id,
+  resolution state and author, reply to it, resolve it. REST carries the body
+  but neither the id nor whether the thread is already closed.
+- `py` bans a docstring on a private function, method or class.
+- `cli`, `data`, `htmx`, `service` and `trader` carry the
+  `Requires software/code.md` pointer; every such pointer now names comments.
+
+### Changed
+
+- `code.md`'s comment ban names the three exceptions owned by `testing.md`,
+  `rs` and `go`, so loading it alone no longer deletes comments the bundle
+  requires. Each owner stays inside what it owns: `ts` defers its test-block
+  content to `testing.md`, `rs` keeps `// SAFETY:` to `unsafe`, and `go`'s
+  placement rule is shown on a suppression rather than a private field.
+- The `improve` agent removes every comment `code.md` bans, not only the ones
+  that restate the obvious, and carries the pointer needed to load that rule.
+- `review take` references `gh-comment` § Setup for the auth fallback instead
+  of repeating the command.
+- `BUGS.md` holds two sections — defects still true of the code, and what was
+  ruled not a defect — grouped by component, with no dated status blocks.
+- `review take` sources its worklist from every open thread, human and bot,
+  and treats `isResolved` or a bot's "Addressed in" banner as a claim to
+  re-verify at HEAD.
+- `pr-draft` keeps the reasoning behind a non-obvious decision when cutting to
+  essence; narration and restatement still go.
+- `improve` ranks a banned comment left standing as Important, matching the
+  baseline that calls it a defect.
+- The wisdom file bans overriding `CARGO_TARGET_DIR`, `TMPDIR` or any other
+  configured build or temp path.
+
+### Fixed
+
+- `make test-<dir>` ran nothing: the pattern targets were listed in `.PHONY`,
+  which stops `%` from matching.
+- dockbox wrote the Codex bridge symlinks absolute, so they dangled on the
+  host once the container's home differed.
+- `hooks/Makefile` names the real constraint — a `test_*.py` missing from
+  `TEST_FILES` never runs and the suite still passes.
+- The skill map listed `testing`, which is on the install prune list; its
+  content lives in the `software` router.
+
 ## [v0.3.88] — 20260915
 
 > kronael v0.3.88 — the docs say what the code does
