@@ -40,23 +40,45 @@ either way would mean.
 
 ## GitHub PR (gh)
 
-`/review take gh [<N>]`. Source the worklist from the PR's comments instead of a
-local list:
+`/review take gh [<N>]` — "take GH review", "apply GH review comments", "answer
+the PR comments" all mean this. Source the worklist from EVERY open thread —
+human and bot (CodeRabbit etc.) alike, never a hand-picked subset.
 
 ```bash
-gh pr view --json number,headRefOid,title,body               # no args = current branch
-gh pr view <N> --json comments                               # issue/general comments
+gh auth status >/dev/null 2>&1 || echo 'no gh config in $HOME — export GH_TOKEN=<token> or pass it inline'
+gh pr view <N> --json number,headRefOid,title,body            # no args = current branch
+gh pr view <N> --json comments                                # issue-level comments
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-gh api repos/$REPO/pulls/<N>/comments --paginate             # inline review comments
+gh api repos/$REPO/pulls/<N>/comments --paginate               # inline review comments (REST — no resolution state)
 ```
 
-Then classify → fix → verify → surface as above. Optionally reply to or resolve
-threads — but only via the `gh-comment` skill (its approval gate + 🤖 markers),
-and only after showing the user; skip if they just wanted the code fixed.
+REST comments carry no thread id or resolution state. Pull those from
+`gh-comment` § Fetch threads (GraphQL `reviewThreads`: `id`, `isResolved`,
+`author`, `body`) — needed to tell a resolved thread from an open one, a bot
+author from a human one, and to reply/resolve later.
 
-- Each reply carries its disposition — fixed / deferred / declined.
-  Bot-authored threads may be resolved in the same turn; human-authored
-  threads get the reply only and stay open for the reviewer.
+Classify (§2 above) with two GH additions:
+
+- Automated-reviewer (bot: `coderabbitai`, or any `login` ending `[bot]`)
+  findings skew false-positive — before calling one (a), check it against the
+  project's `CLAUDE.md` design-invariants section and `BUGS.md`. A documented
+  invariant or by-design entry makes it (c) refuted, not a fix.
+- `isResolved: true` on a thread, or a bot's own "Addressed in ..." banner, is
+  a CLAIM, not evidence — re-verify the finding at HEAD regardless of what
+  GitHub or the bot already claims happened.
+
+Fix → verify as above (§3), then reply to and resolve EVERY thread — this is
+the default for "take GH review"; skip only if the user explicitly asked for
+code-only, no reply. Route it all through `gh-comment` (owns the reply/resolve
+GraphQL, the sign-off gate, and the 🤖 markers) — never call the thread API
+directly from here.
+
+- Every thread gets a reply naming its disposition: fixed (cite the commit),
+  won't-fix (cite the invariant/`BUGS.md` entry it matches), deferred, or
+  refuted (say why).
+- Bot-authored threads resolve in the same turn once replied. Human-authored
+  threads get the reply only and stay open for the reviewer to resolve.
+- Resolve ONLY threads this pass addressed — never touch one it didn't.
 
 ## Rules
 

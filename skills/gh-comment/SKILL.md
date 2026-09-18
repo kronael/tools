@@ -1,7 +1,7 @@
 ---
 name: gh-comment
-description: Post inline review comments to a GitHub PR. Handles pending review conflicts, batch inline comments, and fallback general comments for lines outside the diff.
-when_to_use: posting review findings to a GitHub PR as inline comments
+description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff.
+when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status"
 user-invocable: false
 ---
 
@@ -10,6 +10,7 @@ user-invocable: false
 ## Setup
 
 ```bash
+gh auth status >/dev/null 2>&1 || echo 'no gh config in $HOME — export GH_TOKEN=<token> or pass it inline'
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 HEAD_SHA=$(gh pr view <PR> --json headRefOid --jq .headRefOid)
 DIFF_FILES=$(gh pr diff <PR> --name-only)
@@ -26,7 +27,7 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ## Sign-off questionnaire
 
-ALWAYS present each finding to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
+ALWAYS present each finding — or thread reply — to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
 ## Comment body — distilled
 
@@ -98,6 +99,59 @@ For lines outside the diff:
 gh pr comment <PR> --body "🤖 <finding with file:line reference>"
 ```
 
+## Fetch threads (resolution + author)
+
+REST (`pulls/<PR>/comments`) carries comment bodies but no thread id or
+resolution state. Only GraphQL exposes both — needed to tell a resolved
+thread from an open one, and a bot author from a human one, before replying:
+
+```bash
+gh api graphql -f query='
+  query($owner:String!,$name:String!,$pr:Int!,$after:String){
+    repository(owner:$owner,name:$name){
+      pullRequest(number:$pr){
+        reviewThreads(first:100,after:$after){
+          pageInfo{ hasNextPage endCursor }
+          nodes{
+            id
+            isResolved
+            comments(first:1){ nodes{ id databaseId path line author{login} body } }
+          }
+        }
+      }
+    }
+  }' -f owner="${REPO%/*}" -f name="${REPO#*/}" -F pr=<PR>
+```
+
+Paginate with `after`/`pageInfo.hasNextPage` past 100 threads. Bot-authored:
+`author.login` is `coderabbitai` or any login ending `[bot]`.
+
+## Reply to a thread
+
+REST, keeps the reply inside the existing thread instead of opening a new
+review:
+
+```bash
+gh api repos/$REPO/pulls/<PR>/comments/<comment_databaseId>/replies -f body="🤖 <reply>"
+```
+
+`<comment_databaseId>` is the thread's first comment `databaseId` from the
+fetch above — NOT the GraphQL `id`. Same distillation rules as any other body
+(§ Comment body); a reply also states the disposition (fixed/won't-fix/
+deferred/refuted), citing a commit SHA or the invariant/`BUGS.md` entry it
+matches.
+
+## Resolve a thread
+
+GraphQL mutation, by the thread's GraphQL `id` (not `databaseId`):
+
+```bash
+gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id isResolved}}}' -f id=<thread_id>
+```
+
+ALWAYS reply before resolving — a resolved thread with no reply reads as
+dismissed unread. NEVER resolve a thread this pass did not address.
+
 ## Rules
 
 - ALWAYS prefix comment body with `"🤖 "`
@@ -115,3 +169,5 @@ gh pr comment <PR> --body "🤖 <finding with file:line reference>"
 - NEVER expect to append to a pending review — `POST /pulls/<PR>/reviews/<review_id>/comments`
   returns 404. ALWAYS `DELETE /pulls/<PR>/reviews/<review_id>` and re-POST the whole
   `comments[]`, then report the new review id and comment count
+- ALWAYS reply to a thread before resolving it; NEVER resolve one this pass did not address
+- NEVER confuse a thread's GraphQL `id` (resolve) with a comment's REST `databaseId` (reply) — mixing them 404s

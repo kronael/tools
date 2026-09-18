@@ -1,7 +1,7 @@
 ---
 name: review
 description: Give or take a code review — produce findings (give) or apply them (take); local by default, or a GitHub PR with `gh`. NOT for posting arbitrary PR comments (use gh-comment) or filing issues (use gh-issue).
-when_to_use: "review this, review my changes, review the diff, review the branch, review before commit, code review, find bugs in my changes, give a review, review PR, review the pull request, critique a PR, post review findings on a PR, take a review, apply the review, fix the PR comments, address review comments, apply PR feedback, act on reviewer comments"
+when_to_use: "review this, review my changes, review the diff, review the branch, review before commit, code review, find bugs in my changes, give a review, review PR, review the pull request, critique a PR, post review findings on a PR, take a review, take GH review, apply the review, apply GH review comments, fix the PR comments, address review comments, apply PR feedback, act on reviewer comments, incorporate review comments, answer PR comments, resolve review threads, CodeRabbit comments"
 argument-hint: "[give|take] [gh]"
 user-invocable: true
 ---

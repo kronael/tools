@@ -28,16 +28,16 @@ first; `/release` after.
    baseline, comment policy, testing conventions — are in context, not just
    named. A validation gate a lens names that build/test misses runs now.
    → every matched skill is loaded and its lens read or confirmed absent.
-4. **PR review intake** — find the open PR for this work (`gh pr list`/`view`,
-   auth via `GH_TOKEN`; a detached worktree has no local branch, so match by
-   pushed branch or head SHA). None → skip silently. Fetch UNRESOLVED threads
-   via `gh api graphql` (`repository.pullRequest.reviewThreads`), keeping each
-   thread `id`, path, line, author and body. Triage each FIX or WON'T-FIX
-   against the live WISDOM, the project `CLAUDE.md` design invariants and
-   `BUGS.md` — a documented invariant or by-design entry is WON'T-FIX.
-   Automated-reviewer findings skew false-positive: ALWAYS verify the premise
-   against the code, NEVER take the claim at face value. An out-of-scope
-   core-logic change is flagged, never applied.
+4. **PR review intake** — find the open PR for this work (`gh pr list`/`view`;
+   if `gh auth status` fails, see `gh-comment` § Setup for `GH_TOKEN`; a
+   detached worktree has no local branch, so match by pushed branch or head
+   SHA). None → skip silently. Fetch UNRESOLVED threads via `gh-comment` §
+   Fetch threads (id, path, line, author, body per thread). Triage each FIX or
+   WON'T-FIX against the live WISDOM, the project `CLAUDE.md` design
+   invariants and `BUGS.md` — a documented invariant or by-design entry is
+   WON'T-FIX. Automated-reviewer findings skew false-positive: ALWAYS verify
+   the premise against the code, NEVER take the claim at face value. An
+   out-of-scope core-logic change is flagged, never applied.
    → every unresolved thread carries a verdict and a reason.
 5. **Bucket and lens** — ≤4 non-overlapping buckets, folding in the step 4 FIX
    items. Per bucket, list the skills that apply by extension and domain, then
@@ -69,13 +69,12 @@ first; `/release` after.
 10. **Verify and commit** — final build and test, then `Skill(commit, "refa:
     apply refinements")` when files changed.
     → tests pass in this turn and the tree is clean.
-11. **Resolve PR threads** — for each step 4 FIX thread whose fix landed: reply
-    via `gh api graphql` `addPullRequestReviewThreadReply` citing the commit
-    SHA and what changed, then `resolveReviewThread`. For each WON'T-FIX: reply
-    with the invariant or `BUGS.md` entry it matches, then resolve. ALWAYS show
-    the reply text before posting — the `/gh-comment` gate, NEVER post blind.
-    Resolve ONLY threads addressed this pass. NEVER `git push`; NEVER `gh pr
-    merge`, `gh pr review` or `gh pr create`.
+11. **Resolve PR threads** — for each step 4 FIX thread whose fix landed, reply
+    citing the commit SHA and what changed; for each WON'T-FIX, reply with the
+    invariant or `BUGS.md` entry it matches. Reply and resolve via `gh-comment`
+    § Reply to a thread / § Resolve a thread — its sign-off gate, NEVER post
+    blind. Resolve ONLY threads addressed this pass. NEVER `git push`; NEVER
+    `gh pr merge`, `gh pr review` or `gh pr create`.
     → every triaged thread is replied to and resolved, and no other thread is.
 12. **Clean up** — `git worktree remove --force` each stale Claude-managed
     worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere.
