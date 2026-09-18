@@ -140,6 +140,11 @@ baseline silently fail to apply.
 - ALWAYS debug builds (faster, better errors)
 - ALWAYS make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
+- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other build/temp path, per
+  command or otherwise, and NEVER move a build between target directories. Each
+  switch costs a full rebuild and splits the cache across mounts. If the configured
+  target directory is out of space, SAY so and stop — freeing or resizing it is the
+  maintainer's call, not a reason to build somewhere else
 - NEVER improve beyond what's asked
 - ALWAYS use conventional-commit format: "type(scope): message" —
   fix/feat/docs/test/chore/refactor (scope optional); "merge:"/"release:" for those
