@@ -80,6 +80,12 @@ then correct when challenged.
 
 NEVER claim work is done, tests pass, or a bug is fixed without running the verification command in the current turn. Confidence is not evidence. Agent success reports are not evidence — check the diff.
 
+NEVER read empty output as proof of absence. A glob, listing or grep against a
+path you lack access to returns nothing and looks exactly like a true negative,
+and a shell expands the glob as YOU before `sudo` ever runs. ALWAYS re-run the
+check with the access the answer needs before reporting "there is none", and
+NEVER build a design decision or a subagent brief on an unconfirmed negative.
+
 ## Think with the user before acting
 
 NEVER take tool actions, pushes, force-resets, or other hard-to-reverse
@@ -131,7 +137,7 @@ baseline silently fail to apply.
 
 ## System-change discipline
 - **No duplication — amend the original.** Before adding a mechanism (guard, helper, table, log site, config), grep for an existing one. If it exists, fix/extend the ORIGINAL; NEVER add a parallel second path — two paths drift. If the original is wrong, fix it or call it out; NEVER route around it.
-- **Fail loud, fail to the user.** An error on a user-facing path MUST surface to the user (thrown / returned non-2xx / delivered to the chat), not just logged — a logged-but-invisible failure is still silent. NEVER swallow (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
+- **Fail loud, fail to the user.** An error on a user-facing path MUST surface to the user (thrown / returned non-2xx / delivered to the chat), not just logged — a logged-but-invisible failure is still silent. NEVER swallow (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface. When the MECHANISM swallows — a fire-and-forget submit whose result nobody collects, a detached task, a bare catch — ALWAYS replace the mechanism with one that propagates; NEVER keep it and bolt on counters and collectors to recover what it dropped, which is more code that still reports less.
 - **Retry ONLY transient errors** — remote/network calls and DB busy/locked. Everything else (misconfig, missing data, programming errors) throws immediately: no retry, no fallback, no best-effort continue past a failed precondition.
 - **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is the redesign that makes the bad state impossible-by-construction (gate the precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer the cause fix.
 - **Redesigns need sign-off.** When a fix is a redesign (new contract, changed control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST; the user signs off on the DESIGN/APPROACH BEFORE you build it. Only symptom-level loud-logging ships inline. Once the approach is approved and the work is built and verified, committing it follows the normal default (Development Workflow) — sign-off does not reopen as a second, separate commit-permission question.
