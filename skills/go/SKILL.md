@@ -107,15 +107,15 @@ generated files, test path patterns, project-wide style choices (no-comment poli
 
 - What to comment and how to phrase it: canonical in `software/code.md`
   Comments section. This is the only Go-specific addition — placement.
-- Prefer a comment on its own line ABOVE the code it describes; avoid trailing
-  inline comments. Inline comments crowd the line, get truncated on wrap, and
-  drift as the code changes. Even a short field annotation goes above:
+- ALWAYS put a comment on its own line ABOVE the code it describes; NEVER
+  trail it inline. Inline comments crowd the line, get truncated on wrap, and
+  drift as the code changes:
   ```go
-  // pre-formatted "200 OK"; built once at store time
-  statusText string
+  // body fully read into buffer above
+  _ = resp.Body.Close()
   ```
-  not `statusText string // pre-formatted "200 OK"`. Narrow exceptions: the
-  suppression-reason and handler one-liners noted above.
+  not `_ = resp.Body.Close() // body fully read`. The one exception is the
+  handler one-liner noted above.
 
 ## Testing
 - Test files: `*_test.go` next to code

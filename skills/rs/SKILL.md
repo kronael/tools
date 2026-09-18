@@ -142,7 +142,7 @@ fn main() -> eyre::Result<()> {
   greps when reviewing `unsafe`. NEVER put `// SAFETY:` on SAFE code to justify a
   `.expect()` / `panic!` / fail-fast / `.unwrap()`. That dilutes the convention
   and is wrong. For a deliberate panic, the reason goes in the `.expect("…")`
-  message or a plain `//` comment — `// SAFETY:` means "this unsafe is sound", nothing else.
+  message — `// SAFETY:` means "this unsafe is sound", nothing else.
 
 ## serde_json Value
 - NEVER `serde_json::from_value::<T>(value.clone())` — `&Value` implements `Deserializer`, use

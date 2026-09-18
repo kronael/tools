@@ -57,10 +57,9 @@ Read on demand, in this directory:
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
 ## Testing
-- ALWAYS a JSDoc block above every `test(...)` / `it(...)` call: what it
-  does, what preconditions it assumes, what it verifies — one sentence per
-  point. (`code.md`'s comment ban does NOT reach test cases — a test's intent
-  and preconditions are never self-evident from its body.)
+- ALWAYS a JSDoc block above every `test(...)` / `it(...)` call. Its content
+  is `software/testing.md`'s scenario-to-outcome rule — the test exception
+  `code.md` names.
 - Unit: `*.test.ts` next to code (Bun), E2E: `*.spec.ts` in `playwright/`
 - **CRITICAL**: Configure `bunfig.toml` root to exclude Playwright files from Bun:
   ```toml
