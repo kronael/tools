@@ -137,7 +137,7 @@ Side-channels (escalation, communication) fire at any stage.
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review code-review improve  │
-│ refine visual testing bugs  │
+│ refine visual software bugs │
 └──────────────┬──────────────┘
                │
 ┌─ output ─────▼──────────────┐         ┌─ communication ─────┐
