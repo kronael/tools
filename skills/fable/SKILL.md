@@ -9,7 +9,7 @@ Launch the prompt after /fable as a background agent (run_in_background: true, s
 Report what was launched. Continue immediately without waiting.
 
 - ALWAYS use `subagent_type: "fable"` on the Agent tool (NOT `model: "fable"`). The `fable` agent definition pins `model: fable` AND `effort: xhigh` — effort is INHERITED from the parent session when not pinned, so `model: "fable"` alone gives no guarantee of xhigh if this call is ever made from a lower-effort parent.
-- NEVER make xhigh the default. Reserve xhigh for explicit planning work, security/deep-audit work, or a user request for maximum effort.
+- NEVER make xhigh the default. Reserve xhigh for explicit planning work, security/deep-audit work, autonomous code generation (a comprehensive or multi-file change written unattended), or a user request for maximum effort.
 - NEVER add text prompts like "Think deeply / Effort: high" — effort is set at the API level via the agent definition, not via prompt text.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (CLAUDE.md § Agents and Skills).

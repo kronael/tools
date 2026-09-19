@@ -285,6 +285,12 @@ baseline silently fail to apply.
 - Spawn standalone work in subagents to keep main context fresh
   (examples: implement feature, multi-file changes, research+distill),
   but don't overuse
+- ALWAYS run autonomous code generation on fable — `/fable`, or the Agent tool
+  with `subagent_type: "fable"`. Autonomous here means a sub that writes a
+  comprehensive or multi-file change unattended, with nobody reading each edit
+  as it lands. Cheap models are for READ-ONLY fan-out (Explore, research);
+  an unattended writer's mistakes are paid for in review, not in tokens.
+  NEVER let such a sub fall through to the default subagent model
 - Brief subagents by GOAL, not numbered steps (current models degrade on
   over-prescription): give the goal (what + why), the context it needs, what's
   out of bounds, and what "done" looks like — then let it choose the path.
