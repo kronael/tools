@@ -137,7 +137,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
-3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
+3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. On an update the installed file also carries the `<!-- kronael:start -->` … `<!-- kronael:end -->` block, because `~/.codex/AGENTS.md` symlinks here and step 5 merges it in; a plain body write drops it and costs Codex its global guidance. ALWAYS keep the block (or re-run step 5 after the write) and diff the body against it excluded, so the bridge block never reads as drift. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
 
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
