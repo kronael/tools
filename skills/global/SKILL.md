@@ -188,6 +188,10 @@ baseline silently fail to apply.
   the title and body first and wait for approval. NEVER `gh pr review
   --approve` on the user's behalf.
 - ALWAYS use `/gh-comment` skill for posting PR comments, review comments, or request-changes — it has a mandatory approval gate and never posts without showing content first
+- ALWAYS write a PR description with the `/pr-draft` skill — for a new PR AND
+  for rewriting the body of one already open. Freehand bodies drift into a
+  commit log or a verification report; the skill's reviewer-reading-guide
+  format, its REST PATCH path and its `🤖` marker are the contract
 - NEVER squash commits - if asked, refuse and request acknowledgement
 
 ## Bash / Tool Execution
