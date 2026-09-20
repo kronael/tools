@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.3.91] — 20260920
+
+> kronael v0.3.91 — the go skill stops overflowing its budget
+>
+> The goroutine rules stay, but they stop costing every session.
+>
+> • Go — `concurrency.md` sibling holds goroutine sizing and the single-sink I/O pattern; `SKILL.md` drops 212 → 126 lines with an ALWAYS-read dispatch line
+> • Routing — `when_to_use` gains goroutine keywords, so `/resolve` reaches the concurrency rules at all
+
 ## [v0.3.90] — 20260920
 
 > kronael v0.3.90 — the goroutine rules come home
