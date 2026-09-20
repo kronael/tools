@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.3.90] — 20260920
+
+> kronael v0.3.90 — the goroutine rules come home
+>
+> A section that only ever lived in one machine's `~/.claude` is now in the repo, where the next install cannot overwrite it.
+>
+> • Go — fixed goroutine sets sized at startup: one owner per subsystem, one reader per connection, a worker pool with a configured width; never a goroutine per event, request, write or queued item
+> • Reverse-sync — captured through a three-way merge against the v0.3.65 base, so the repo's stronger comment-placement wording supersedes the older deployed phrasing
+
 ## [v0.3.89] — 20260918
 
 > kronael v0.3.89 — the comment rules stop contradicting each other
