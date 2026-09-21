@@ -28,6 +28,13 @@ extensions, and the house rules from project CLAUDE.md — without them agents
 propose fixes the project forbids. Findings only, no edits, each as
 `file:line — [lens] what / why it matters / fix if non-obvious`.
 
+ALWAYS spawn a FRESH agent — NEVER `subagent_type: "fork"`, and never hand a
+reviewer this conversation, the author's reasoning, or why a choice was made. A
+reviewer that has read the rationale ratifies it. It gets the change goal in one
+neutral sentence, the target (diff, range, or files), and the house rules; it
+re-derives everything else from the code. This holds for every agent in this
+skill, the fable pass in §4 included.
+
 ALWAYS wait for all agents before step 4.
 
 ## 4. Fable deep-dive + reverification
