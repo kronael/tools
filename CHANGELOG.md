@@ -1,5 +1,36 @@
 # Changelog
 
+## [v0.3.92] — 20260921
+
+> kronael v0.3.92 — run one command in a box you already have
+>
+> dockbox and qemubox gained `exec`, which hands your whole command to the box instead of splitting it into dirs and args.
+>
+> • `dockbox exec make test` — the box is keyed off the current dir, and starts if none is up
+> • Paths survive — `dockbox exec ls /` keeps the `/` that a bare tool name loses to the dir split
+> • `qemubox exec make test` — the same, over SSH, in the project's VM
+> • Shells — `bash` / `zsh` / `sh` are login shells in dockbox now, matching qemubox; `sh` is an alias for bash
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `dockbox exec <cmd>` and `qemubox exec <cmd>` run a command in the box,
+  passing every later argument through untouched. They reuse the existing
+  resolve-then-enter path, so the box is keyed off the current directory like
+  every other invocation and provisions when none is running.
+
+### Changed
+
+- `dockbox bash`, `zsh` and `sh` start login shells, so the guest profile
+  applies; `sh` is an alias for bash. `qemubox` already did this.
+
+### Fixed
+
+- dockbox resolved `bash`/`zsh` in two places — the pre-getopts dispatch and
+  the tool case — which drift as soon as one changes. getopts passes a bare
+  `bash` through untouched, so the tool case alone covers it.
+
 ## [v0.3.91] — 20260920
 
 > kronael v0.3.91 — the go skill stops overflowing its budget
