@@ -34,6 +34,18 @@
   ones the code already says. The annotations carry the lesson here, so this is
   not a silent rewrite.
 
+- **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-21.
+  `skills/doc-topology/SKILL.md` routes to `doc-shape` twice — a `NOT for ...
+  (use doc-shape)` clause in its description and a pointer in the body — but
+  `skills/doc-shape/` does not exist in this source tree. It is installed-only
+  (`~/.claude/skills/doc-shape`), so anyone installing from a clone gets a
+  skill that names a sibling they do not have. Reproduce:
+  `grep -c doc-shape skills/doc-topology/SKILL.md` → 2, `ls skills/doc-shape`
+  → no such directory. **Fix:** the maintainer's call, and the install
+  protocol forbids deciding it here — an installed-only skill is captured into
+  source ONLY on an explicit ask, since it may be org-local. Either add
+  `doc-shape` to the bundle, or drop the two references.
+
 ## Codex bridge
 
 - **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED at HEAD
