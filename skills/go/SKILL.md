@@ -1,7 +1,7 @@
 ---
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
-when_to_use: editing .go files or writing Go code
+when_to_use: editing .go files or writing Go code; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, goroutine leak, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup
 ---
 
 # Go
@@ -26,6 +26,10 @@ Requires `software/code.md` (naming, style, comments, design), `software/strict-
 
 - Single goroutine owns all state: direct access, no locks, deterministic order
 - Fails fast on conflicts instead of retrying with mutexes
+
+ALWAYS read `concurrency.md` before writing or reviewing anything that starts
+a goroutine, and before putting a write syscall on a latency-sensitive path.
+It carries the goroutine-sizing rule and the single-sink I/O pattern.
 
 ## Parsing and Types
 
