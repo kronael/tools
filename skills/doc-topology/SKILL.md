@@ -1,6 +1,6 @@
 ---
 name: doc-topology
-description: Structure a project's docs by the question each file answers — README (what/why/how-to-start), ARCHITECTURE (how it's built), notes/ (why this design), compare/ (versus alternatives), facts/ (dated numbers) — plus a "how to read this" index and an anti-marketing discipline. Use when writing or auditing a project/crate/service README, ARCHITECTURE, or design docs; when docs are one mixed wall; or when someone asks for "good docs matching X quality". NOT for a single doc's prose polish (use writing), a design spec (use specs), or syncing docs after shipping (use readme).
+description: Structure a project's docs by the question each file answers — README (what/why/how-to-start), ARCHITECTURE (how it's built), notes/ (why this design), compare/ (versus alternatives), facts/ (dated numbers) — plus a "how to read this" index and an anti-marketing discipline. Use when writing or auditing a project/crate/service README, ARCHITECTURE, or design docs; when docs are one mixed wall; or when someone asks for "good docs matching X quality". NOT for a single doc's prose polish (use writing), the order of sections inside one integration/API-reference doc (use doc-shape), a design spec (use specs), or syncing docs after shipping (use readme).
 when_to_use: "structure project docs, doc topology, README vs ARCHITECTURE split, docs are one wall, good docs like X quality, notes/compare/facts layout, anti-marketing docs, audit doc structure, how-to-read-this index"
 ---
 
@@ -11,6 +11,10 @@ exactly one question**, cross-linked by a "how to read this" index. Mixing the
 questions ("what is it" tangled with "how is it built" tangled with "why not the
 simpler thing") is what makes docs unreadable. Split by question first, write
 second.
+
+This is the *which file* axis. For the order of sections *inside* one file —
+an integration guide or API-reference page an external reader works through
+end to end — see `doc-shape`.
 
 ## One question per file
 
