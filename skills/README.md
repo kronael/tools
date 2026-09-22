@@ -99,7 +99,7 @@ the authoritative entry. The categories:
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
   `create-eval`, `13yo-eval`) — judge a codebase or practice from a fixed
   perspective.
-- **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
+- **Routers** (`create/`, `software/`, `research/`) — one preloaded `SKILL.md`
   dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
@@ -107,7 +107,8 @@ the authoritative entry. The categories:
   and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
-  and observability. Structure
+  and observability. `research/` holds the quantitative-research runbooks:
+  method (evidence), layout (organisation), traps (silent wrong numbers). Structure
   rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
