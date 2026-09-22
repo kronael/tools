@@ -27,6 +27,24 @@ State the split explicitly — end the README with a **"How to read this"** sect
 that says which file answers which question. The topology should be told, not
 just implied.
 
+## Derivable and lookupable content doesn't belong
+
+ARCHITECTURE.md holds what a reader with the repo open could not work out for
+themselves. A directory or file-tree listing is orientation, not architecture —
+cut it, or fold only the genuinely unique fact (a file two unrelated
+subsystems both import) into prose. A named third-party technology (a
+framework, a spec, a vendor product) gets one link to its own docs, not a
+paraphrase of how it works — assume the reader already knows it or will look
+it up, and state only what's true of *this* repo's use of it.
+
+## Generalize instead of enumerating
+
+Write the governing rule, not a list of its current instances — the rule
+survives the day a new instance shows up, the list needs an edit for every one.
+Two tells that a doc has regressed into a list: a section titled after one
+instance ("Adding an API") that turns out to only cover one variant, or two
+near-identical bullets that differ only by a name.
+
 ## notes/ — the "why" layer
 
 Tribal design-rationale rots unless it's written down. Each note:

@@ -28,6 +28,8 @@ only; do not restate the policy.
 - NEVER record feature requests — those go in `TODO.md` or a new spec
 - NEVER duplicate — when an open entry covers the same root cause, append
   context to it instead
+- NEVER footnote a different repo's defect here — fix it, or file it
+  (`/gh-issue`), at the repo that owns it
 
 ## Structure
 

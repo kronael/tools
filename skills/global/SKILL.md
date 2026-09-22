@@ -34,7 +34,11 @@ mtime.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is
-  unverified; never assert then correct when challenged.
+  unverified; never assert then correct when challenged. An absence claim ("no
+  such knob", "X can't do Y") is only as strong as the search behind it — a
+  self-designed grep for guessed synonyms can miss the vendor's own word for it,
+  so verify the vendor's actual vocabulary (or read the source) before asserting
+  the negative.
 
 ## Environment
 
