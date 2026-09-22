@@ -113,6 +113,10 @@ first, to use `gh` for GitHub work, and to append a Co-Authored-By line). These 
   repo (its `CLAUDE.md`, its `.claude/`, or a project memory naming it), and only
   for what the grant names. An in-session ask is not a grant.
 - ALWAYS use `/gh-comment` for PR comments — it has an approval gate.
+- `git status`'s "up to date with origin/main" only means the local
+  remote-tracking ref is current, not the live remote — it will say this even
+  months after the real upstream moved on. ALWAYS `git fetch` (or check the
+  host directly) before trusting it, not only at session start.
 
 ## Shell
 
