@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.3.93] — 20260923
+
+> kronael v0.3.93 — boxes run Opus 5.5
+>
+> dockbox and qemubox now launch Claude on Opus 5.5 by default, and reviewers judge code without the author's reasoning.
+>
+> • dockbox / qemubox — default and `opus` alias pinned to `claude-opus-5-5` at xhigh
+> • Review — every reviewer is a fresh agent, never a fork of the author's session
+> • doc-topology — which-file questions kept apart from section order inside one page
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox and qemubox pin `claude-opus-5-5` for the default tool and the
+  `opus` alias; the `opus` agent description names Opus 5.5.
+- `review` give mode hands each reviewer the change goal in one neutral
+  sentence, the target and the house rules — never a fork carrying the
+  author's reasoning.
+- `doc-topology` separates which file answers a question from section order
+  within one integration or API-reference page.
+
 ## [v0.3.92] — 20260921
 
 > kronael v0.3.92 — run one command in a box you already have
