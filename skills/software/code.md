@@ -81,6 +81,24 @@ dependencies; otherwise plain functions in modules compose better and leak less.
 Model states as explicit enum variants rather than implicit boolean flags, and
 always validate input before it reaches persistence.
 
+A function-typed field in a struct is a jump, not an abstraction. The call site
+names the field; the value is whatever another file assigned, and that value is
+a literal with no name, so no other code can refer to it. An interface method is
+the same seam with a name on each destination: the implementations are types,
+and the language server lists them. Five-second test — from the call site, can
+you name every assignment of this field without a search? If not, it is a jump:
+write an interface with one method, or call the function directly. The test
+double is the usual reason for the field and fails the test the same way; a
+one-method interface with a fake type is as short and stays findable.
+
+A function value is right where the reader sees it created: passed as an
+argument (`sort.Slice`), adapted to the library's own interface
+(`http.HandlerFunc`), or assigned in one wiring site because the caller holds a
+package function and the callee must not import that package. Cost: arizuko,
+2026-09-23 — 82 exported func fields in 14 files, and `Authorize` is a function
+in one package, a method in a second and a func field in a third, so a grep for
+the field answers about the wrong one.
+
 ## System changes
 
 - **No duplication — amend the original.** Before adding a mechanism (guard,
