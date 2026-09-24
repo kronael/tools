@@ -159,3 +159,31 @@ device is `root:kvm 0660` and the user is not in `kvm`, QEMU exits with
 documented software-emulation fallback; `make install` prints its warning and
 `build-base` is skipped. Reproduce: `make -C qemubox install` as a user outside
 the `kvm` group (2026-09-05). Fix: test `[ -r /dev/kvm ] && [ -w /dev/kvm ]`.
+
+### qemubox: no egress filter, so an injected token can leave the guest
+
+`qemubox/README.md:145-150` states the gap plainly — live `~/.claude` /
+`~/.codex` tokens are copied into the guest, outbound is open unless `-H`, and
+"the path for exfiltration is open". `-H` is all-or-nothing: an agent that
+needs `api.anthropic.com` gets the whole internet with it.
+
+An in-guest sandbox cannot close this. The guest copies agent config into its
+own writable home (`qemubox/README.md:108-110`) and the guest user has
+passwordless sudo (`:153`), so anything in the guest can widen its own limits.
+Only a host-side wall holds, and qemubox already sits on one: slirp, with
+`restrict=on` at `qemubox:344`.
+
+Proposal, needs sign-off before code. A fixed-at-boot flag `-p host1,host2`
+alongside `-H`: start a host proxy on `127.0.0.1:$pport` with the allowlist,
+add `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
+`-nic` at `qemubox:362`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+`envs` so the `exec env$remote` line (`qemubox:876-880`) carries them. Claude
+Code honours those variables. `stop_box` kills the pid, `remove_box` removes
+the files. Roughly 40-60 lines of shell plus docs and three parse assertions in
+`test.sh`.
+
+Under `restrict=on` the guest cannot reach slirp's DNS, so the host proxy
+resolves names and there is no UDP/53 side channel. Unmeasured: that slirp
+actually drops guest DNS under `restrict=on` — the documentation says the guest
+is "not able to contact the host", and no one has tested it here, because this
+box has no `/dev/kvm` access (see the KVM entry above).
