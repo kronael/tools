@@ -39,16 +39,6 @@
   `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to the
   symlink target. Do NOT append to the wisdom file.
 
-## dockbox
-
-- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
-  all of `~/.claude` and `~/.codex` **rw** into the container, at
-  `dockbox/dockbox:12,18`. The guest needs `~/.claude/skills` and `~/.agents`
-  editable; it does not need read/write on the API tokens sitting beside them.
-  Lower priority — dockbox's README already discloses it is not a boundary for
-  hostile code. **Fix:** keep the skill dirs rw while the credentials go ro,
-  redacted, or unmounted — not a full config copy-in, which is not needed.
-
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
@@ -56,3 +46,9 @@
   lifecycle block. A shared sourced file would violate the repo's "tools are
   independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
   accepted lightweight guard instead.
+
+- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
+  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
+  Claude Code and Codex both rewrite their token files on login refresh, so a
+  ro or redacted token breaks auth inside the box. The README already says
+  dockbox is not a boundary for hostile code.
