@@ -1,13 +1,49 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion. NOT for ambiguous semantic conflicts (resolve manually).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge"
+description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; sync a detached line with origin/master (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for the file sync between ~/.claude and the bundle repo (use kronael/install).
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, sync, sync with origin, sync the repo, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date"
 user-invocable: true
 ---
 
 # Merge
 
 Resolve all merge conflicts in the working tree. Run directly in main context (no subagent).
+
+## Sync — bring the detached line up to origin
+
+"Sync" names three things in this bundle. This section owns the git one;
+the other two are not git: `kronael/install` two-way syncs FILES between
+`~/.claude/` and the bundle repo, and `sync-tools-skills` vendors skills
+into another project.
+
+1. `git fetch origin`, then size it:
+   `git rev-list --left-right --count HEAD...origin/master` and
+   `git merge-base HEAD origin/master`. ALWAYS fetch first — NEVER merge a
+   stale remote ref. Compare `git ls-remote --tags origin` with local tags: a
+   tag name on a different commit than origin's is a collision — REPORT it,
+   NEVER re-point it silently.
+   Completion criterion: ahead/behind counts, the base, and any tag
+   collisions are written down.
+2. Preview without touching the tree:
+   `git merge-tree --write-tree --name-only HEAD origin/master`. Run § 0 on
+   that list — a large or superseding merge gets a plan and a go-ahead first.
+   Completion criterion: strategy chosen; every ambiguous path is named.
+3. `git -c merge.conflictstyle=zdiff3 merge --no-commit --no-ff origin/master`
+   on the detached HEAD — NEVER attach a branch for it; zdiff3 shows the base
+   inside every hunk. Resolve per §§ 2-6. Then trace deletions against BOTH
+   parents (`git diff --name-status --diff-filter=DR <ours> HEAD` and the
+   same for `origin/master`) so an agreed deletion is not mistaken for lost
+   work and a rename is not mistaken for a deletion.
+   Completion criterion: `git diff --name-only --diff-filter=U` is empty and
+   no tracked file matches `^<<<<<<<`.
+4. Verify green (the repo's `make test` and lint), stage the resolved files
+   by name, commit `merge: origin/master <tag> into <what the local line
+   is>` with a body naming each resolution decision.
+   Completion criterion: `git rev-list --left-right --count
+   HEAD...origin/master` prints `N 0` — ahead only, 0 behind.
+
+NEVER push as part of a sync — it ends at the local merge commit. What
+comes after (refine, release, install) is its own ask.
 
 ## 0. Safety gate — don't fuck it up
 
