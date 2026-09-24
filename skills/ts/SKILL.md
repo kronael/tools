@@ -37,7 +37,7 @@ Read on demand, in this directory:
 
 ## Types
 - NEVER annotate a return type or a const's type that inference already produces — exported or not.
-- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, and a value that must widen (`const mode: Mode = "fast"`).
+- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
 - ALWAYS discriminated unions for state, NEVER boolean flag combos. ALWAYS exhaust with `default: const _:never = x` in switches.

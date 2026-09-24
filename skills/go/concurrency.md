@@ -54,7 +54,7 @@ func (s *Sink) run(pinCore int) {
     if pinCore >= 0 {
         runtime.LockOSThread()
         defer runtime.UnlockOSThread()
-        // affinity is best-effort; the locked thread already isolates the write
+        // affinity is best-effort; the sink stays off the hot path without it
         _ = pinToCore(pinCore)
     }
     for {
@@ -90,7 +90,7 @@ Rules that make it work:
 - **Close in dependency order**: stop producers, drain the sink, then close the
   files. Closing the files first discards what the sink still held.
 - **Pinning**: `runtime.LockOSThread` is the portable half and does most of the
-  work — a blocking write parks the sink's own thread, not a shared one. True CPU affinity needs `golang.org/x/sys/unix.SchedSetaffinity` behind
+  work. True CPU affinity needs `golang.org/x/sys/unix.SchedSetaffinity` behind
   a `//go:build linux` file, with a no-op fallback.
 
 For logging specifically, implement `slog.Handler`: format into a pooled buffer

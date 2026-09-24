@@ -10,7 +10,8 @@ repo CLAUDE.md links to this file.
 - **Router skill** = one `SKILL.md` (the ONLY preloaded file) + sibling cold
   data `.md` files, read on demand. Current routers: `create/` (artifact
   generators), `software/` (engineering baseline + runbooks), `readme/`
-  (documentation: sync, file topology, page shape).
+  (documentation: sync, file topology, page shape), `review/` (give/take a
+  code review — see `review/SKILL.md`).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -38,6 +39,8 @@ repo CLAUDE.md links to this file.
 - `create/` = makes artifacts; `software/` = engineering knowledge.
   Namespaces, not words you conjugate — no new `create-*` dirs.
 - Bare verbs and tech names stay flat top-level.
+- A verb skill may route its own modes under its own name (`readme/`,
+  `review/`).
 - `writing`, `humanize` = shared references cited by prose skills
   (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
 

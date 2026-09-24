@@ -1,7 +1,8 @@
 # Codex adversarial critique — research-social-meme.md
 
-Raw adversarial pass by codex-cli 0.144.4. The SKILL applies these points; the
-research doc's "Where the SKILL departs from this research" section lists them.
+Raw adversarial pass by codex-cli 0.144.4. The SKILL, `social.md`, applies the
+points listed in the research doc's "Where the SKILL departs from this research"
+section.
 
 ## Claims where the source does not support the number
 - NN/g scanning studies do not establish the **0.5–2s image dwell time** — extrapolated.

@@ -195,8 +195,9 @@ and self-aware; otherwise prefer the four modes above.
 
 ## Where the SKILL departs from this research
 
-`codex-critique.md` is an adversarial pass over this doc. The SKILL applies its
-points, and where the two disagree the SKILL wins:
+`codex-critique.md` is an adversarial pass over this doc. The SKILL,
+`social.md`, applies the critique points listed here; where it and this doc
+disagree, the SKILL wins:
 
 - **Evidence gate.** Before any design, pull a concrete artifact from the repo
   (command output, LOC, binary size, real API, benchmark) or stop. This doc has
@@ -207,12 +208,17 @@ points, and where the two disagree the SKILL wins:
 - **Thresholds are defaults, not laws.** ≥40px/≥90px hold only for a fixed
   1080→~500 downscale (40×500/1080 = 18.5px); real X render varies. The 0.5–2s
   dwell, ≤12 code lines, 8–10 hook words, 20–25 total and 64px margins are house
-  defaults — useful floors, not findings.
+  defaults — useful floors, not findings. The SKILL's own limits are ≤ ~10 code
+  lines and ≤ ~20 on-image words excluding code, ≤ ~15 words for a meme.
 - **Hedging splits two ways.** Kill *marketing* hedges ("helps", "designed to");
   keep *technical* qualifiers (version, workload, hardware). Precision is not
   hedging.
-- **Three explainer modes** (CODE / DELTA / TAKE), keyed by the hero element. A
-  numeric delta lives in DELTA, so STAT and BEFORE/AFTER do not overlap.
+- **MEME is the default mode.** The SKILL defaults to MEME — the reverse of
+  § Modes above, which keeps meme templates out of the default. Its EXPLAINER
+  is the experimental fallback.
+- **Two explainer hero elements, not four modes.** CODE-SHOT, and DELTA /
+  BEFORE-AFTER, which holds any numeric delta, so STAT and BEFORE/AFTER do not
+  overlap. HOT-TAKE has no mode of its own.
 - **Transferability test.** If the hook fits any other project, it is slop.
 - **4.5:1** stays an opinionated floor, stricter than WCAG (3:1 for large text).
 

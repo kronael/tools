@@ -52,7 +52,6 @@ Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
 - **dispatch**: "spawn this prompt as a background subagent and continue"
-- **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 - **next**: "park a discovered bug/TODO for later without stopping current work"
 - **ans**: "answer-only read-only mode — explain, never edit files or run shell"
 - **continue**: "resume every interrupted/paused task; if none, confirm the session is clean, suggest /recall-memories, and present where to go next"
@@ -99,8 +98,8 @@ the authoritative entry. The categories:
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
   `create-eval`, `13yo-eval`) — judge a codebase or practice from a fixed
   perspective.
-- **Routers** (`create/`, `software/`, `readme/`) — one preloaded `SKILL.md`
-  dispatching to cold data files read on demand. `create/` holds the
+- **Routers** (`create/`, `software/`, `readme/`, `review/`) — one preloaded
+  `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
   [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative)
@@ -108,8 +107,8 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
   and observability. `readme/` syncs docs after shipping and holds the doc
-  file topology and single-page shape. Structure
-  rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
+  file topology and single-page shape. `review/` gives or takes a code review.
+  Structure rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
   `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
@@ -137,7 +136,7 @@ Side-channels (escalation, communication) fire at any stage.
 └──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
-│ review code-review improve  │
+│ review improve              │
 │ refine visual software bugs │
 └──────────────┬──────────────┘
                │
@@ -159,8 +158,8 @@ They compose: a Rust CLI loads `rs` + `cli`.
 **quality** — `review` covers the whole loop: `review give` produces findings
 (local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
 or a PR's comments); it supersedes the built-in `/code-review` for local work.
-`improve`/`refine` for fixing; `visual` for UI; `testing` for test patterns;
-`bugs` for the record-don't-fix queue.
+`improve`/`refine` for fixing; `visual` for UI; `software` (`testing.md`) for
+test patterns; `bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 

@@ -72,8 +72,8 @@ one toolchain is missing — report that tool skipped and continue.
 ## Removed kronael skills to prune (step 2)
 
 AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present —
-consolidated into the `create/` router or renamed. Orphans keep preloading
-their descriptions, defeating the router:
+consolidated into a router, renamed, or dropped. Orphans keep preloading their
+descriptions, defeating the router:
 
 `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`,
 `create-claude-design`, `create-code-presentation`, `create-design-md`,
@@ -89,7 +89,7 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
 dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
 (renamed to `red-eval`), `testing` (folded into the `software` router),
-`doc-topology`, `doc-shape` (folded into the `readme` router), and the pre-kronael language
+`doc-topology` (folded into the `readme` router), and the pre-kronael language
 skills `bash`, `python`, `rust`, `typescript` (superseded by `sh`, `py`, `rs`,
 `ts`/`tsx`, whose descriptions they collide with — a routing race).
 

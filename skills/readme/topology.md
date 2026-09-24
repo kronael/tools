@@ -22,8 +22,7 @@ end to end — see `shape.md`.
 | crate-local `CLAUDE.md` | Doc *conventions* for this component | which file answers which question, a "keeper sections — don't regress" list, an update checklist |
 
 State the split explicitly — end the README with a **"How to read this"** section
-that says which file answers which question. The topology should be told, not
-just implied.
+that says which file answers which question.
 
 ## notes/ — the "why" layer
 
