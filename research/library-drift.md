@@ -110,7 +110,7 @@ In order of importance:
 
 1. **An eval set is mandatory.** No mutation without measurement. This is Stage 1 in our spec and the prerequisite for everything else.
 2. **The evaluator must be separate from the proposer.** Different prompts at minimum; different models is better. Even if both are the same model, the framing must be "judge against a rubric and an outcome", not "did I improve this?".
-3. **The human reviewer is the gate.** PR review, no auto-merge. Settings-level enforcement of `gh pr merge` deny is the floor.
+3. **The human reviewer is the gate.** PR review, no auto-merge. The settings-recommended.json `gh pr merge*` ask rule is the floor: every merge prompts the human.
 4. **Score every edit against a baseline.** A candidate must beat the current SKILL.md by ≥0.03 to be PR-worthy. Tied or marginal edits stay in the candidate pool until a clearer winner emerges.
 
 ## What we explicitly do NOT do

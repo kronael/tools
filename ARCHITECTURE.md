@@ -39,9 +39,9 @@ bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
 
 Codex does not discover `~/.claude/CLAUDE.md` as global guidance. The bridge
 writes the `codex/AGENTS.md` block into a real `~/.codex/AGENTS.md`, and the
-block tells Codex to read the wisdom file. A symlink would put Codex-only text
-in the wisdom file, which the next sync reverse-syncs into source. An existing
-`AGENTS.override.md` is a conflict.
+block tells Codex to read the wisdom file. The block stays out of the wisdom
+file, because install reverse-syncs installed-side additions to it into source.
+An existing `AGENTS.override.md` is a conflict.
 
 Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
 skills available inside Codex, the install bridge exposes them with

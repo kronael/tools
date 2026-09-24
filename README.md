@@ -72,7 +72,8 @@ Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 
 The bridge does not duplicate `skills/`, `agents/`, or hook scripts into the
 Codex plugin cache. It reads the marketplace snapshot, deploys the Claude
-bundle into `~/.claude/`, symlinks the installed skills into Codex's user skill
+bundle into `~/.claude/`, writes the `codex/AGENTS.md` block into
+`~/.codex/AGENTS.md`, symlinks the installed skills into Codex's user skill
 location, and copies `codex-hooks.json` into `~/.codex/hooks.json`.
 
 To repair or apply only the Codex side of that bridge, ask:

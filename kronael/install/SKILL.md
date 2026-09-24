@@ -158,6 +158,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `bypassPermissions` toward `default`, never drop an installed `allow`
      entry. Install may only widen (add `allow` entries, relax the sandbox).
      The recursive-removal deny guard is the one exception — it always applies.
+   - **Deny moved to ask** — an installed `deny` entry the source now lists
+     under `ask`: remove the `deny` copy (a loosening, which loosen-only
+     allows) and add the `ask` entry. Deny evaluates before ask, so keeping
+     both leaves it hard-denied.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
@@ -171,13 +175,16 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    support), install every bridge:
    - Global guidance: `~/.codex/AGENTS.md` is a REAL file holding the marked
      block from `codex/AGENTS.md`, which tells Codex to read
-     `~/.claude/CLAUDE.md`. Absent → copy `codex/AGENTS.md` there. A symlink to
-     `~/.claude/CLAUDE.md` → replace it with that copy. Existing real file →
-     replace only the Kronael block, else append it; NEVER overwrite content
-     outside the markers. NEVER write the block into `~/.claude/CLAUDE.md` —
-     the next sync would reverse-sync Codex-only text into the wisdom source.
-     An existing `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict,
-     show and ask. NEVER rely on project fallback names for global guidance.
+     `~/.claude/CLAUDE.md`. Absent → copy `codex/AGENTS.md` there. A symlink
+     resolving to `~/.claude/CLAUDE.md` → replace it with that copy; any other
+     symlink → conflict, show and ask. Existing real file → replace only the
+     Kronael block, else append it; NEVER overwrite content outside the
+     markers. NEVER write the block into `~/.claude/CLAUDE.md` — the next sync
+     would reverse-sync Codex-only text into the wisdom source. A block already
+     there → leave it out of the step 0 drift check and remove it after the
+     step 1 backup; NEVER reverse-sync it into source. An existing
+     `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict, show and
+     ask. NEVER rely on project fallback names for global guidance.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if
@@ -225,7 +232,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 - NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
 - NEVER copy Kronael skills into `~/.codex/skills`; Codex uses
   `~/.agents/skills`
-- NEVER duplicate global wisdom into Codex — symlink it, or surface a conflict
+- NEVER copy global wisdom into Codex — `~/.codex/AGENTS.md` holds only the
+  Kronael block, which points Codex at `~/.claude/CLAUDE.md`
 
 ## Update flow
 

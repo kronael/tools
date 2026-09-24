@@ -39,7 +39,8 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file. It also blocks true unsafe shell commands:
 `git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`, and
 recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
-gated by consent in `skills/global`, not by the hook.
+gated by consent in `skills/global` and the settings `ask` rule, not by the
+hook.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.

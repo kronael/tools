@@ -170,23 +170,30 @@ exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
 # dockbox-codex-bridge: expose the installed Claude bundle to Codex for the
 # runtime user's $HOME. Codex scans ~/.agents/skills, linked to the ~/.claude
 # bundle, and loads global guidance from ~/.codex/AGENTS.md, which gets the
-# Kronael block telling it to read ~/.claude/CLAUDE.md. A real file there is
-# left alone; a symlink is removed before the copy, which would otherwise write
-# through it into the wisdom file. Idempotent and a no-op until the bundle is
-# installed into $HOME, so it is safe on every start. The skills link is
-# RELATIVE so it resolves under whichever home reads it.
-COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
+# Kronael block telling it to read ~/.claude/CLAUDE.md. ~/.codex is the host's
+# directory mounted rw, so a real file or any other link there is left alone;
+# only a link to the wisdom file is replaced, removed first so the copy cannot
+# write through it. Idempotent and a no-op until the bundle is installed into
+# $HOME, so it is safe on every start. The skills link is RELATIVE so it
+# resolves under whichever home reads it.
 RUN printf '%s\n' \
   '#!/bin/sh' \
   'set -eu' \
   '[ -d "$HOME/.claude/skills" ] || exit 0' \
   'mkdir -p "$HOME/.agents"' \
   '[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"' \
-  'if [ -f "$HOME/.claude/CLAUDE.md" ] && { [ -L "$HOME/.codex/AGENTS.md" ] || [ ! -e "$HOME/.codex/AGENTS.md" ]; }; then' \
-  '  mkdir -p "$HOME/.codex"' \
-  '  rm -f "$HOME/.codex/AGENTS.md"' \
-  '  cp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"' \
+  '[ -f "$HOME/.claude/CLAUDE.md" ] || exit 0' \
+  'if [ -L "$HOME/.codex/AGENTS.md" ]; then' \
+  '  case "$(readlink "$HOME/.codex/AGENTS.md")" in' \
+  '    */.claude/CLAUDE.md) ;;' \
+  '    *) exit 0 ;;' \
+  '  esac' \
+  'elif [ -e "$HOME/.codex/AGENTS.md" ]; then' \
+  '  exit 0' \
   'fi' \
+  'mkdir -p "$HOME/.codex"' \
+  'rm -f "$HOME/.codex/AGENTS.md"' \
+  'cp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"' \
   > /usr/local/bin/dockbox-codex-bridge && chmod +x /usr/local/bin/dockbox-codex-bridge
 
 # dockbox-init: register the runtime user in /etc/passwd, chown overmounts
@@ -251,6 +258,10 @@ exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-in
 
 # World-readable + writable tooling so any runtime UID can use it
 RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox
+
+# Kronael block for dockbox-codex-bridge, read only at container start. Below
+# the big chmod so editing the block keeps that layer cached.
+COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
 
 # claude + codex CLIs last, in a cache-busted layer, so every `make image`
 # refreshes them to latest without re-running the heavier layers above. The

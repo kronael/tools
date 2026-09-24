@@ -87,17 +87,18 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 ## Codex Bridge
 
 Use these steps when the user asks Codex to use Claude global/project guidance
-or installed skills. Bridge with symlinks instead of copying.
+or installed skills. Bridge skills with symlinks, never copies; global
+guidance is a real file.
 
 ### Global CLAUDE.md
 
 Codex loads global instructions from `~/.codex/AGENTS.override.md`, or from
 `~/.codex/AGENTS.md` when no override exists. It does not discover
 `~/.claude/CLAUDE.md` globally. `~/.codex/AGENTS.md` is therefore a real file
-holding the managed Kronael block, which tells Codex to read it. Apply the
-merge in canonical installer step 5. ALWAYS back up the target first and
-preserve content outside the markers. NEVER report the global bridge complete
-without checking that the managed block is present.
+holding the managed Kronael block, which tells Codex to read
+`~/.claude/CLAUDE.md`. Apply the merge in canonical installer step 5. ALWAYS
+back up the target first and preserve content outside the markers. NEVER report
+the global bridge complete without checking that the managed block is present.
 
 ### Project CLAUDE.md
 

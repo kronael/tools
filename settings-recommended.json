@@ -12,8 +12,7 @@
       "Bash(git commit*)",
       "Bash(gh pr comment*)",
       "Bash(gh api repos/*/pulls/*/reviews*)",
-      "Bash(gh api repos/*/pulls/*/comments*)",
-      "Bash(rsync * ~/.claude/*)"
+      "Bash(gh api repos/*/pulls/*/comments*)"
     ],
     "ask": [
       "Bash(git push*)",
