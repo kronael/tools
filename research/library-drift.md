@@ -117,7 +117,7 @@ In order of importance:
 
 - We do **not** trust LLM-self-assessment of "did this edit improve things?" — it's the documented failure mode.
 - We do **not** allow runtime mutation of `~/.claude/skills/`. Edits land in this repo via PR; the install path syncs.
-- We do **not** allow auto-merge of skill PRs, ever. The settings-recommended.json `gh pr merge*` deny rule enforces this.
+- We do **not** allow auto-merge of skill PRs, ever. The settings-recommended.json `gh pr merge*` ask rule enforces this: every merge prompts the human.
 
 ## Open question: orthogonality threshold
 

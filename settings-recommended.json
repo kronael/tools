@@ -15,20 +15,23 @@
       "Bash(gh api repos/*/pulls/*/comments*)",
       "Bash(rsync * ~/.claude/*)"
     ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git pull*)",
+      "Bash(ssh *)",
+      "Bash(rsync *)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh pr review --approve*)",
+      "Bash(gh release create*)",
+      "Bash(gh repo create*)"
+    ],
     "deny": [
       "Bash(rm -r*)",
       "Bash(rm -R*)",
       "Bash(rm -fr*)",
       "Bash(rm --recursive*)",
       "Bash(chmod 777*)",
-      "Bash(git push*)",
-      "Bash(git pull*)",
-      "Bash(ssh *)",
-      "Bash(rsync *)",
-      "Bash(gh pr merge*)",
-      "Bash(gh pr review --approve*)",
-      "Bash(gh release create*)",
-      "Bash(gh repo create*)",
       "SendFeedback(*)"
     ],
     "defaultMode": "default"

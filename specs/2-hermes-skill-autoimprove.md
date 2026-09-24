@@ -242,7 +242,7 @@ For candidates that beat baseline:
 4. `gh pr create` — but DO NOT auto-merge (settings already block `gh pr merge`).
 5. Human reviews diff, approves or rejects.
 
-No auto-merge, ever. The settings-recommended.json `gh pr merge*` deny rule enforces this at the harness level.
+No auto-merge, ever. The settings-recommended.json `gh pr merge*` ask rule enforces this at the harness level: every merge prompts the human.
 
 ## What we do NOT build
 

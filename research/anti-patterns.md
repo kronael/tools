@@ -30,7 +30,7 @@ This is the exact mechanism [Library Drift](library-drift.md) measured: self-eva
 
 - **The evaluator is separate from the proposer.** Different prompt, ideally different model. The proposer produces candidate diffs; the evaluator scores them against the eval set. Self-assessment is structurally impossible.
 - **The skill store is git.** Customizations are commits. Even if the proposer suggests overwriting a customization, the diff is visible in the PR, and the maintainer can reject.
-- **Human review gate.** Settings-recommended.json blocks `gh pr merge*`. No auto-merge under any condition. See [`specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review`](../specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review).
+- **Human review gate.** Settings-recommended.json puts `gh pr merge*` behind an ask rule, so every merge prompts the human. No auto-merge under any condition. See [`specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review`](../specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review).
 
 ## 2. Hermes issue #18373: no dry-run before auto-archival
 
