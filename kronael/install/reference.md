@@ -88,7 +88,8 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 `continue`), `merge-trivial` (renamed to `merge`, which now also covers rebase
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
 dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
-(renamed to `red-eval`), `testing` (folded into the `software` router), and the pre-kronael language
+(renamed to `red-eval`), `testing` (folded into the `software` router),
+`doc-topology`, `doc-shape` (folded into the `readme` router), and the pre-kronael language
 skills `bash`, `python`, `rust`, `typescript` (superseded by `sh`, `py`, `rs`,
 `ts`/`tsx`, whose descriptions they collide with — a routing race).
 
