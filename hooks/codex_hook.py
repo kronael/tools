@@ -27,8 +27,8 @@ CODEX_SKILL_NAMES_TEXT = (
     'create-eval credits cto-eval data data-reports diagrams diary dispatch '
     'distill explore fable fin fix gh-comment go haiku humanize htmx improve '
     'learn mk merge oracle opus ops pr-draft py readme recall-memories '
-    'red-eval refine release review rs scavenge service sh ship sonnet '
-    'software sql specs trader ts tsx tweet visual wisdom writing'
+    'red-eval refine release resolve review rs scavenge service sh ship '
+    'sonnet software sql specs trader ts tsx tweet visual wisdom writing'
 )
 CODEX_SKILL_NAMES = frozenset(CODEX_SKILL_NAMES_TEXT.split())
 SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z0-9][a-z0-9-]*)')
