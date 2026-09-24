@@ -163,6 +163,9 @@ the wiring being right and the tool running are different claims.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
   the same release. Nothing enforces it, and the drift is invisible: the
   manifest keeps reporting a version the bundle no longer is.
+- ALWAYS bump `plugins/kronael/.codex-plugin/plugin.json` `version` too. Codex
+  caches plugins by version, so a stale version keeps serving the old bridge
+  skill.
 
 ## Docs map
 
