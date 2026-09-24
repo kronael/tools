@@ -39,8 +39,25 @@
 - **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
   `kronael/install/SKILL.md` is 232 lines and
   `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
-  repo's 200-line rule (`CLAUDE.md:106`, `skills/wisdom/SKILL.md:60`).
+  repo's 200-line rule (`CLAUDE.md:107`, `skills/wisdom/SKILL.md:60`).
   **Fix:** move cold detail to `kronael/install/reference.md`.
+
+- **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
+  `@learn`, while `hooks/README.md:21-23` and `skills/learn/SKILL.md:3,34`
+  state that word is deliberately not a route, so `/learn` fires only when
+  invoked or through `memory_nudge.py`. The skill description preloads that
+  claim, so the model is told one thing and the hook does the other.
+  **Fix:** drop the route, or drop the claim from both docs; which is the
+  maintainer's call.
+
+- **SUBAGENT-EFFORT-DOCS-DISAGREE** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-24. `skills/CLAUDE.md` § Subagent effort defaults says opus and
+  fable subagents default to high and sonnet to high, but the agent
+  definitions pin `agents/opus.md` at xhigh and `agents/sonnet.md` at medium,
+  and `skills/opus/SKILL.md:19` quotes "/sonnet (medium)". A reader of the
+  structure rules picks the wrong model tier. **Fix:** make one side match
+  the other; which effort is intended is the maintainer's call.
 
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
   `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
