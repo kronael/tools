@@ -11,16 +11,6 @@
   loaded on demand. That changes what is guaranteed present in every session,
   so it needs sign-off.
 
-- **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
-  `skills/create/social/references/research-social-meme.md:196-217` carries a
-  "Corrections (post-codex)" section narrating what the document itself changed
-  ("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
-  `references/codex-critique.md` is framed as a verbatim audit trail. Both are
-  the prior-version narration the wisdom file bans in permanent content. They
-  are cold provenance files nothing reads by accident. **Fix:** the maintainer's
-  call — keep them as attribution, or move them to `.diary/`. Not a silent
-  rewrite.
-
 - **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-21.
   `skills/doc-topology/SKILL.md` routes to `doc-shape` twice — a `NOT for ...
   (use doc-shape)` clause in its description and a pointer in the body — but

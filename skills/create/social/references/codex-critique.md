@@ -1,7 +1,7 @@
 # Codex adversarial critique — research-social-meme.md
 
-Audit trail. Raw adversarial pass (codex-cli 0.144.4). Kept verbatim; folds
-applied to the SKILL and to the research doc's "Corrections" section.
+Raw adversarial pass by codex-cli 0.144.4. The SKILL applies these points; the
+research doc's "Where the SKILL departs from this research" section lists them.
 
 ## Claims where the source does not support the number
 - NN/g scanning studies do not establish the **0.5–2s image dwell time** — extrapolated.
@@ -32,12 +32,3 @@ applied to the SKILL and to the research doc's "Corrections" section.
 
 ## Biggest risk
 - **It validates presentation, not insight.** An agent can dress a generic claim in anti-slop aesthetics and ship polished AI slop.
-
-## Folds applied
-1. Added a hard **Gate 0 — Evidence** step: no post without a checkable artifact pulled from the repo (command output, LOC, binary size, real API, benchmark). This is the anti-slop lever, not the styling.
-2. Cut all fabricated percentages. Kept only the actionable rule: post native media, link in a reply.
-3. Numeric thresholds reframed as **defaults/floors** with the downscale assumption stated — not laws.
-4. Softened "never hedge" → kill *marketing* hedges, keep *technical* qualifiers (version, workload). Precision ≠ hedging.
-5. Collapsed 4 modes → **3** keyed by hero element (CODE / DELTA / TAKE); numeric delta lives in DELTA.
-6. Added the **transferability test**: if the hook fits any other project, it is slop — rewrite until it names the specific thing.
-7. 4.5:1 kept as an opinionated floor, noted as stricter than WCAG (helps thumbnail legibility).

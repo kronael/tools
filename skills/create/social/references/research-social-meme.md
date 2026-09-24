@@ -193,27 +193,28 @@ and self-aware; otherwise prefer the four modes above.
 - **Optimizing for claps.** swyx's warning: chase the artifact's quality, not the
   vanity metric; a real, useful claim compounds (swyx).
 
-## Corrections (post-codex)
+## Where the SKILL departs from this research
 
-Adversarial critique in `codex-critique.md` corrected this doc; the SKILL
-embodies the corrected version, not the numbers as first stated:
+`codex-critique.md` is an adversarial pass over this doc. The SKILL applies its
+points, and where the two disagree the SKILL wins:
 
-- **Evidence gate added.** The doc had no step forcing a real, checkable fact
-  before design — the single biggest slop hole. The SKILL adds Gate 0: pull a
-  concrete artifact from the repo (command output, LOC, binary size, real API,
-  benchmark) or stop.
-- **Folklore cut.** The "50–90% link-reach loss / ~2× native boost" figures are
-  not stable measurements — removed. Kept only: post native media, link in a reply.
-- **Thresholds are defaults, not laws.** ≥40px/≥90px follow only from a fixed
+- **Evidence gate.** Before any design, pull a concrete artifact from the repo
+  (command output, LOC, binary size, real API, benchmark) or stop. This doc has
+  no such step, and it is the single biggest slop hole. The SKILL calls it Gate 0.
+- **The link-reach figures are folklore.** The 50–90% loss and ~2× boost above
+  are not stable measurements. The SKILL keeps only: post native media, link in
+  a reply.
+- **Thresholds are defaults, not laws.** ≥40px/≥90px hold only for a fixed
   1080→~500 downscale (40×500/1080 = 18.5px); real X render varies. The 0.5–2s
-  dwell, ≤12 code lines, 8–10 hook words, 20–25 total, 64px margins are house
+  dwell, ≤12 code lines, 8–10 hook words, 20–25 total and 64px margins are house
   defaults — useful floors, not findings.
-- **Hedging rule split.** Kill *marketing* hedges ("helps", "designed to");
-  keep *technical* qualifiers (version, workload, hardware). Precision ≠ hedging.
-- **Modes collapsed 4 → 3** (CODE / DELTA / TAKE), keyed by hero element; a
-  numeric delta lives in DELTA, so STAT/BEFORE-AFTER no longer overlap.
-- **Transferability test added.** If the hook fits any other project, it is slop.
-- **4.5:1** kept as an opinionated floor, noted stricter than WCAG (3:1 for large text).
+- **Hedging splits two ways.** Kill *marketing* hedges ("helps", "designed to");
+  keep *technical* qualifiers (version, workload, hardware). Precision is not
+  hedging.
+- **Three explainer modes** (CODE / DELTA / TAKE), keyed by the hero element. A
+  numeric delta lives in DELTA, so STAT and BEFORE/AFTER do not overlap.
+- **Transferability test.** If the hook fits any other project, it is slop.
+- **4.5:1** stays an opinionated floor, stricter than WCAG (3:1 for large text).
 
 ## Sources
 
