@@ -11,7 +11,7 @@ user-invocable: true
 
 - `/commit`: ALWAYS proceed
 - Auto (hook): throttled ~once per 10 min — split accumulated work into coherent commits, don't dump it all in one.
-- Otherwise: commit only when the user asks. `/refine`, `/ship`, `/release` commit by design — invoking them IS the ask.
+- Otherwise: finished, verified, user-directed work is committed by default, split per Splitting below — NEVER ask "should I commit?" as a separate question. Hold off only for a user-owned call: unclear scope, not what was asked, an unapproved redesign. `/refine`, `/ship`, `/release` commit by design.
 
 ## Splitting
 

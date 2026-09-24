@@ -35,6 +35,20 @@ Drive the current goal to completion. Don't stop until it's actually done.
 - Minor style choices (use existing patterns)
 - Uncertainty about best approach (try the obvious one first)
 
+## Scope ledger
+
+At invocation, reread every user message since the goal began and build one
+acceptance ledger. Merge additions, apply the latest correction over
+superseded wording, and preserve explicit pauses/deferments. Refresh it when
+the user interrupts with another requirement.
+
+Completion is semantic, not merely mechanical. A working substitute does not
+close an item unless it matches the requested class of result or the user
+accepted the substitution. Name every substitution explicitly.
+
+NEVER say "everything is done" while an item is deferred or blocked. Say
+"active scope complete" and name what remains.
+
 ## Stopping discipline (the hard part)
 
 Before declaring done, run an **open-items pass**:

@@ -60,10 +60,15 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Model — ALWAYS the newest, at high effort
 
-- ALWAYS run on `~/.codex/config.toml`'s default model — codex pins the
-  newest there and auto-migrates via its model-migration notices.
-- NEVER pass `-m` with an older model — that silently downgrades the second
-  opinion. Omit `-m` to inherit the newest default.
+- ALWAYS inherit the newest model instead of hardcoding one in this file — a
+  literal model name here rots silently the day codex ships the next one.
+- ALWAYS verify what you inherit before trusting it: `~/.codex/models_cache.json`
+  lists models with a `priority`, and 1 is the newest. `~/.codex/config.toml`
+  may set no `model` key at all, leaving the choice to runtime resolution —
+  confirm that resolves to the priority-1 entry.
+- ALWAYS pass `-m <priority-1 model>` for the call when the inherited default is
+  NOT that entry; NEVER pass `-m` with any other value — every other value
+  downgrades the second opinion silently.
 - ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work.
   Do not trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
@@ -94,6 +99,13 @@ codex is sycophantic — confirming questions get confirming answers. Frame as t
 
 - ALWAYS attack your own conclusion: "Find the flaw in X", "Why would this break?", "What did I miss?"
 - NEVER ask "is X correct?" / "does this look right?" — primes a yes.
+- NEVER hand it your own list of suspected weaknesses. An adversarial *frame*
+  ("destroy this claim") is right; an adversarial *checklist* ("check whether
+  the denominator is inflated, whether X only reacts to absurd values, whether
+  Y is theatre") is pre-chewing wearing a hostile mask. You get your own
+  hypotheses back, confirmed, and never learn what you failed to suspect —
+  which is the entire reason to ask. State the claim, name the artifacts, and
+  let it choose the attack.
 
 ### Prompt contents
 

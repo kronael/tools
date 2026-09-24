@@ -6,7 +6,7 @@ when_to_use: editing .sh files or writing shell scripts
 
 # Bash Style
 
-Requires the `software` skill's `code.md` for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, comments, and design
 rules. Below are shell-specific additions.
 
 ## Structure

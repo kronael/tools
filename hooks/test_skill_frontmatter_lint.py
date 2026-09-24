@@ -49,6 +49,17 @@ def test_missing_key_fails(tmp_path: Path) -> None:
     assert 'skill-keys' in rules(findings(make(tmp_path, text)), Severity.ERROR)
 
 
+def test_unknown_key_fails(tmp_path: Path) -> None:
+    text = VALID.replace('when_to_use:', 'arg: <x>\nwhen_to_use:')
+    assert 'skill-keys' in rules(findings(make(tmp_path, text)), Severity.ERROR)
+
+
+def test_name_must_match_directory(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID, name='other')
+    assert 'skill-name' in rules(findings(path), Severity.ERROR)
+    assert process(path, write=False) == 2
+
+
 def test_should_in_body_fails(tmp_path: Path) -> None:
     path = make(tmp_path, VALID + '\n- You SHOULD do X.\n')
     assert 'skill-should' in rules(findings(path), Severity.ERROR)

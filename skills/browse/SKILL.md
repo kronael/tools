@@ -64,7 +64,7 @@ agent-browser eval "document.title"
 
 - ALWAYS `agent-browser wait --load networkidle` (or wait --text/--url) BEFORE snapshot on dynamic pages; NEVER snapshot directly after `open` on SPAs — refs will be stale
 - ALWAYS prefer `find role --name`, `find text`, `find label` over numbered `@eN` refs; `@eN` refs are valid only within one snapshot — NEVER reuse across navigations
-- ALWAYS `agent-browser screenshot ./tmp/err.png --full` before reporting an unexpected failure
+- ALWAYS `agent-browser screenshot err.png --full` before reporting an unexpected failure
 
 ## Coordinate clicks (canvas, maps, custom renderers)
 
@@ -127,4 +127,4 @@ await browser.close()
 - **Memory / leak growth** — `const cdp = await page.context().newCDPSession(page); await cdp.send('Performance.enable'); const m = await cdp.send('Performance.getMetrics')` → read `JSHeapUsedSize`; sample it across repeated navigations to see if it climbs and never drops (a leak) vs plateaus (bounded). `page.goto` between samples.
 - **Real APIs vs fixtures** — a Vite dev server (`pnpm start:dev`, :5173) hits live APIs, so network capture is meaningful; `/test-*` fixture routes issue no network. Pick the route that matches what you're testing.
 
-Always `npx tsc`/build first if testing your own changes — a stale dev/preview build silently serves old code (a common "my fix didn't work" trap). Save artifacts under `./tmp`.
+Always `npx tsc`/build first if testing your own changes — a stale dev/preview build silently serves old code (a common "my fix didn't work" trap).

@@ -1,6 +1,87 @@
 import json
+import os
+import subprocess
+import sys
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
+from pathlib import Path
 
+import pytest
+from stop import build_recap
+from stop import dirty_lines
 from stop import emit
+from stop import git_run
+from stop import safe_recap
+
+HOOK = Path(__file__).with_name('stop.py')
+ENV = {
+    k: v
+    for k, v in os.environ.items()
+    if k not in ('KRONAEL_HOOK_EVENT', 'KRONAEL_IN_CODEX', 'CLAUDE_EVAL')
+}
+ENV.update(
+    GIT_CONFIG_GLOBAL='/dev/null',
+    GIT_AUTHOR_NAME='t',
+    GIT_AUTHOR_EMAIL='t@t',
+    GIT_COMMITTER_NAME='t',
+    GIT_COMMITTER_EMAIL='t@t',
+)
+
+
+@pytest.fixture(autouse=True)
+def state_root(tmp_path, monkeypatch):
+    monkeypatch.setenv('KRONAEL_HOOK_STATE', str(tmp_path / 'state'))
+
+
+def git(repo, *args):
+    subprocess.run(['git', *args], cwd=repo, env=ENV, check=True, capture_output=True)
+
+
+def commit(repo, name, text, subject, age_hours=0):
+    (repo / name).write_text(text)
+    git(repo, 'add', name)
+    when = (datetime.now(tz=UTC) - timedelta(hours=age_hours)).isoformat()
+    env = {**ENV, 'GIT_AUTHOR_DATE': when, 'GIT_COMMITTER_DATE': when}
+    subprocess.run(
+        ['git', 'commit', '-q', '-m', subject], cwd=repo, env=env, check=True, capture_output=True
+    )
+
+
+def stamp_path(repo):
+    return repo / '.git' / 'claude-recap-s1'
+
+
+def backdate_stamp(repo, hours=1):
+    when = datetime.now(tz=UTC) - timedelta(hours=hours)
+    stamp_path(repo).write_text(when.isoformat(timespec='seconds'))
+    return when.strftime('%H:%M')
+
+
+def make_repo(tmp_path):
+    git(tmp_path, 'init', '-q')
+    (tmp_path / '.diary').mkdir()
+    today = datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
+    (tmp_path / today).write_text('# today\n')
+    git(tmp_path, 'add', today)
+    commit(tmp_path, 'a.txt', 'one\n', 'feat: first', age_hours=2)
+    return tmp_path
+
+
+def run_hook(repo, env=None, **payload):
+    payload = {'cwd': str(repo), 'hook_event_name': 'Stop', 'session_id': 's1', **payload}
+    r = subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        cwd=repo,
+        env={**ENV, 'KRONAEL_HOOK_STATE': os.environ['KRONAEL_HOOK_STATE'], **(env or {})},
+        check=False,
+    )
+    assert r.returncode == 0, r.stderr
+    assert r.stderr == ''
+    return json.loads(r.stdout) if r.stdout else None
 
 
 def test_emit_keeps_stop_block(capsys) -> None:
@@ -32,95 +113,257 @@ def test_emit_post_tool_env_is_context(capsys, monkeypatch) -> None:
     assert output['hookSpecificOutput']['hookEventName'] == 'PostToolUse'
 
 
-import io
-import os
-import subprocess
+def test_dirty_tree_still_blocks_and_holds_the_recap(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
 
-import pytest
-import stop
+    out = run_hook(repo)
 
-
-@pytest.fixture(autouse=True)
-def state_root(tmp_path, monkeypatch):
-    root = tmp_path / 'state'
-    monkeypatch.setenv('KRONAEL_HOOK_STATE', str(root))
-    monkeypatch.delenv('KRONAEL_HOOK_EVENT', raising=False)
-    return root
+    assert out['decision'] == 'block'
+    assert out['reason'].startswith('Uncommitted changes detected.\na.txt | 1 +')
+    assert 'Run /commit.' in out['reason']
+    assert 'systemMessage' not in out
+    assert not stamp_path(repo).exists()
 
 
-def test_append_header_creates_missing_file(tmp_path) -> None:
-    diary = tmp_path / '.diary' / '20260829.md'
+def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
+    (repo / '.git' / 'index').write_text('corrupt')
 
-    assert stop.append_header(str(diary), '07:57 2026-08-29') is True
-    assert diary.read_text() == '\n## 07:57 2026-08-29\n\n'
+    out = run_hook(repo)
 
-
-def test_append_header_refuses_second_empty_header(tmp_path) -> None:
-    """An unfilled header is the pending nudge — never stack another on it."""
-    diary = tmp_path / '.diary' / '20260829.md'
-    stop.append_header(str(diary), '07:57 2026-08-29')
-
-    assert stop.append_header(str(diary), '09:12 2026-08-29') is False
-    assert diary.read_text().count('## ') == 1
+    assert out['decision'] == 'block'
+    assert out['reason'].startswith('git status failed')
+    assert 'fatal:' in out['reason']
+    assert 'systemMessage' not in out
+    assert not stamp_path(repo).exists()
 
 
-def test_append_header_appends_once_entry_is_filled(tmp_path) -> None:
-    diary = tmp_path / '.diary' / '20260829.md'
-    stop.append_header(str(diary), '07:57 2026-08-29')
-    with open(diary, 'a') as f:
-        f.write('shipped the thing\n')
+def test_first_stop_recaps_head_and_dirty_tree(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
 
-    assert stop.append_header(str(diary), '09:12 2026-08-29') is True
-    assert diary.read_text().count('## ') == 2
+    out = run_hook(repo, stop_hook_active=True)
 
-
-def git_repo(tmp_path):
-    repo = tmp_path / 'repo'
-    repo.mkdir()
-    subprocess.run(['git', 'init', '-q', str(repo)], check=True)
-    return repo
+    assert 'decision' not in out
+    lines = out['systemMessage'].splitlines()
+    assert lines[0].startswith('head ')
+    assert lines[0].endswith(' feat: first')
+    assert lines[1:] == ['uncommitted: 1 changed (+1 -0)', '  a.txt']
+    assert datetime.fromisoformat(stamp_path(repo).read_text()) <= datetime.now(tz=UTC)
 
 
-def run_stop(monkeypatch, capsys, repo, session_id):
-    payload = {'hook_event': 'Stop', 'cwd': str(repo), 'session_id': session_id}
-    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
-    stop.main()
-    return capsys.readouterr().out
+def test_first_stop_never_calls_an_untracked_tree_clean(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'new.txt').write_text('x\n')
+
+    out = run_hook(repo)
+
+    lines = out['systemMessage'].splitlines()
+    assert lines[0].startswith('head ')
+    assert lines[1:] == ['no tracked changes']
 
 
-def test_diary_nudge_fires_once_per_session(tmp_path, monkeypatch, capsys) -> None:
-    repo = git_repo(tmp_path)
+def test_next_stop_lists_commits_and_new_files_since_last_stop(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    hhmm = backdate_stamp(repo)
+    commit(repo, 'b.txt', 'two\n', 'fix: second')
+    (repo / 'new.txt').write_text('x\n')
 
-    first = run_stop(monkeypatch, capsys, repo, 'sess')
-    second = run_stop(monkeypatch, capsys, repo, 'sess')
+    out = run_hook(repo, stop_hook_active=True)
 
-    assert 'No diary entry for today' in first
-    assert second == ''
+    lines = out['systemMessage'].splitlines()
+    assert lines[0] == f'since {hhmm}Z: 1 commit'
+    assert lines[1].startswith('+ ')
+    assert lines[1].endswith(' fix: second')
+    assert lines[2:] == ['uncommitted: 1 untracked', '  new.txt']
 
 
-def test_diary_nudge_survives_cwd_change(tmp_path, monkeypatch, capsys) -> None:
+def test_old_untracked_files_are_not_this_turns_work(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'old.txt').write_text('x\n')
+    old = datetime.now(tz=UTC).timestamp() - 7200
+    os.utime(repo / 'old.txt', (old, old))
+    hhmm = backdate_stamp(repo)
+
+    out = run_hook(repo)
+
+    assert 'decision' not in out
+    assert out['systemMessage'].splitlines() == [
+        f'since {hhmm}Z: no commits',
+        'nothing uncommitted',
+    ]
+
+
+def test_quoted_paths_reach_the_recap(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    hhmm = backdate_stamp(repo)
+    for name in 'plain.md', 'résumé.md', 'two words.md':
+        (repo / name).write_text('x\n')
+
+    out = run_hook(repo)
+
+    assert out['systemMessage'].splitlines() == [
+        f'since {hhmm}Z: no commits',
+        'uncommitted: 3 untracked',
+        '  plain.md résumé.md two words.md',
+    ]
+
+
+def test_a_rename_counts_once(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    git(repo, 'mv', 'a.txt', 'b.txt')
+
+    text = build_recap(repo, 's1', datetime.now(tz=UTC))
+
+    assert text.splitlines()[1:] == ['uncommitted: 1 changed (+0 -0)', '  b.txt']
+
+
+def test_commit_list_is_capped(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    backdate_stamp(repo)
+    for i in range(8):
+        commit(repo, f'f{i}.txt', 'x\n', f'chore: n{i}')
+
+    text = build_recap(repo, 's1', datetime.now(tz=UTC))
+
+    lines = text.splitlines()
+    assert lines[0].endswith(': 8 commits, newest 6')
+    assert [ln for ln in lines if ln.startswith('+ ')] == lines[1:7]
+    assert lines[1].endswith('chore: n7')
+
+
+def test_stuck_merge_is_reported(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / '.git' / 'MERGE_HEAD').write_text('0' * 40)
+
+    text = build_recap(repo, 's1', datetime.now(tz=UTC))
+
+    assert text.splitlines()[-1] == 'merge in progress'
+
+
+def test_conflicts_and_path_cap(tmp_path) -> None:
+    for name in 'a', 'b', 'c', 'd', 'e':
+        (tmp_path / name).write_text('x\n')
+    status = 'UU a\0 M b\0A  c\0?? d\0?? e\0'
+
+    lines = dirty_lines(str(tmp_path), status, '1\t0\tb\n-\t-\tc\n', 0)
+
+    assert lines == ['uncommitted: 2 changed, 1 conflicted, 2 untracked (+1 -0)', '  a b c d …']
+
+
+def test_no_recap_outside_git(tmp_path) -> None:
+    assert run_hook(tmp_path) is None
+    assert build_recap(tmp_path, 's1', datetime.now(tz=UTC)) == ''
+
+
+def test_recap_never_raises(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+
+    def boom(cwd, *args, timeout):  # noqa: ARG001
+        raise RuntimeError('git exploded')
+
+    try:
+        build_recap(repo, 's1', datetime.now(tz=UTC), run=boom)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError('build_recap must surface the failure to safe_recap')
+    assert safe_recap(repo, 's1', datetime.now(tz=UTC), run=boom) == ''
+    assert not stamp_path(repo).exists()
+
+
+def test_spent_budget_drops_the_recap(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    assert build_recap(repo, 's1', datetime.now(tz=UTC), budget=0) == ''
+    assert not stamp_path(repo).exists()
+
+
+def test_failed_git_call_drops_the_whole_recap(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
+    (repo / '.git' / 'index').write_text('corrupt')
+
+    assert run_hook(repo, stop_hook_active=True) is None
+    assert not stamp_path(repo).exists()
+
+
+def test_spent_budget_and_failed_git_call_agree(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / '.git' / 'MERGE_HEAD').write_text('0' * 40)
+
+    def fails(cwd, *args, timeout):  # noqa: ARG001
+        return subprocess.CompletedProcess(args, 128, '', 'fatal: broken')
+
+    assert build_recap(repo, 's1', datetime.now(tz=UTC), budget=0) == ''
+    assert build_recap(repo, 's1', datetime.now(tz=UTC), run=fails) == ''
+    assert not stamp_path(repo).exists()
+
+
+def test_git_dir_probe_shares_the_budget_and_the_injected_run(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    calls = []
+
+    def record(cwd, *args, timeout):
+        calls.append(args)
+        return git_run(cwd, *args, timeout=timeout)
+
+    assert build_recap(repo, 's1', datetime.now(tz=UTC), run=record, budget=0) == ''
+    assert calls == []
+    assert build_recap(repo, 's1', datetime.now(tz=UTC), run=record)
+    assert calls[0] == ('git', 'rev-parse', '--git-dir')
+
+
+def test_periodic_and_codex_calls_never_recap(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
+    assert run_hook(repo, env={'KRONAEL_IN_CODEX': '1'}) is None
+    assert not stamp_path(repo).exists()
+
+
+def test_missing_diary_warns_without_writing_a_file(tmp_path) -> None:
+    git(tmp_path, 'init', '-q')
+    (tmp_path / '.diary').mkdir()
+    commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
+
+    out = run_hook(tmp_path)
+
+    assert 'Run /diary.' in out['reason']
+    assert list((tmp_path / '.diary').iterdir()) == []
+
+
+def test_stale_diary_warns_without_touching_the_file(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    diary = repo / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
+    stale = (datetime.now(tz=UTC) - timedelta(hours=2)).timestamp()
+    os.utime(diary, (stale, stale))
+    before = diary.read_text()
+
+    out = run_hook(repo)
+
+    assert 'Diary not updated in over an hour' in out['reason']
+    assert diary.read_text() == before
+
+
+def test_diary_nudge_fires_once_per_session(tmp_path) -> None:
+    git(tmp_path, 'init', '-q')
+
+    first = run_hook(tmp_path)
+    second = run_hook(tmp_path)
+
+    assert 'No diary entry for today' in first['reason']
+    assert second is None
+
+
+def test_diary_nudge_survives_cwd_change(tmp_path) -> None:
     """One session visiting two repos still gets one diary nudge."""
-    repo = git_repo(tmp_path)
+    repo = tmp_path / 'repo'
     other = tmp_path / 'other'
-    other.mkdir()
-    subprocess.run(['git', 'init', '-q', str(other)], check=True)
+    for d in repo, other:
+        d.mkdir()
+        git(d, 'init', '-q')
 
-    run_stop(monkeypatch, capsys, repo, 'sess')
+    run_hook(repo)
 
-    assert run_stop(monkeypatch, capsys, other, 'sess') == ''
-    assert not (other / '.diary').exists()
-
-
-def test_diary_nudge_is_honest_when_header_not_written(tmp_path, monkeypatch, capsys) -> None:
-    repo = git_repo(tmp_path)
-    diary = repo / '.diary'
-    diary.mkdir()
-    stamp = diary / (stop.datetime.now(tz=stop.UTC).strftime('%Y%m%d') + '.md')
-    stamp.write_text('\n## 06:00 old\n\n')
-    os.utime(stamp, (0, 0))
-
-    out = run_stop(monkeypatch, capsys, repo, 'sess')
-
-    assert 'Diary not updated in over an hour' in out
-    assert 'Entry header appended' not in out
-    assert stamp.read_text().count('## ') == 1
+    assert run_hook(other) is None

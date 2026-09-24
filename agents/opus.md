@@ -1,6 +1,6 @@
 ---
 name: opus
-model: claude-opus-5
+model: opus
 effort: xhigh
-description: Opus 5 at xhigh effort — complex reasoning, design decisions, and multi-file architecture work.
+description: Opus 5.5 at xhigh effort — complex reasoning, design decisions, and multi-file architecture work.
 ---

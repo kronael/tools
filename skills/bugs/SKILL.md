@@ -1,22 +1,31 @@
 ---
 name: bugs
 description: >
-  The `BUGS.md` open-issues queue — the record-don't-fix policy, entry format,
-  lifecycle, pruning to diary. NOT for resolved-bug history (use /diary), NOT
+  The `BUGS.md` open-issues queue — the record-don't-fix policy, its two
+  sections (open defects, and what was ruled not a defect), entry format,
+  pruning. NOT for resolved-bug history (that lives in git and /diary), NOT
   for feature backlog (use TODO.md/specs).
 when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
 # Bugs
 
-`BUGS.md` at the project root is the **open-issues queue**. Complementary to
-`.diary/` (the resolution log) and `TODO.md` (forward-looking backlog:
-features, refactors).
+`BUGS.md` at the project root holds exactly two things:
 
-(Filename is uppercase `BUGS.md`. Some projects may use lowercase `bugs.md` —
-match whatever the project already has.)
+1. **Defects that are still true of the code.**
+2. **Things that were reported as defects and are not** — so the next audit
+   does not re-report them.
 
-## Bug Triage Protocol
+Nothing else. It is NOT a log of audits, reviews, sessions or sweeps: no
+"Status — <date> — <what I checked>" blocks, no lead paragraphs describing a
+review pass, no counts of what was verified. That narrative belongs in
+`.diary/`. A reader opens `BUGS.md` to learn what is broken, not what someone
+did.
+
+(Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
+project already has.)
+
+## Record, don't fix
 
 - When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
 - NEVER fix bugs immediately just because you found them during a general check
@@ -25,58 +34,78 @@ match whatever the project already has.)
 
 ## When NOT to record
 
-- NEVER record when user is currently driving a fix — just fix
+- NEVER record when the user is currently driving a fix — just fix
 - NEVER record trivial / one-shot issues a code comment covers
 - NEVER record feature requests — those go in `TODO.md` or a new spec
 - NEVER duplicate — when an open entry covers the same root cause, append
   context to it instead
+- NEVER record what you did. An entry describes the defect, not the pass that
+  found it. Provenance is at most one clause inside the entry (`CONFIRMED at
+  HEAD <date>`), never a section.
 
-## Bug ID format
+## Structure
 
-IDs use a short prefix + number, e.g. `D5`, `P2`. All characters must be
-**base58-safe**: no `0` (zero), `O` (capital O), `I` (capital I), or `l`
-(lowercase L). These are excluded from base58 because they are visually
-ambiguous with each other and with digits.
+Group by **subject** — the component or surface the defects live in — not by
+when they were found:
+
+```markdown
+## Code bugs (in source/SQL, not the tests)
+## Coverage gaps (edge cases / untested branches)
+## <component or subsystem>
+```
+
+An existing section that fits takes the entry; only add a section when no
+current one covers the subject. A defect dated in its own entry is enough —
+the file needs no dated scaffolding around it.
 
 ## Entry format
 
-H2 heading per entry. Date in parens; status appended once resolved.
+One **bullet** per bug: bold UPPERCASE-KEBAB id, a `(SEVERITY, type)` tag, an
+em-dash, then the body.
 
 ```markdown
-## <ID> — <one-line title> (<YYYY-MM-DD>[, open | proposed | partial | fixed])
-
-<paragraph: what's broken, observed impact, suspected root cause>
-
-- **Severity:** high | medium | low
-- **Scope:** <subsystem / area>
-- **Affected:** <component(s) or instance(s)>
-- **Source:** <file:line OR log timestamp>
-- **Status:** open | proposed (redesign, needs sign-off) | in-progress | resolved-not-yet-removed
-- **Fix:** <commit SHA if fixed, else blank>
+- **COMPONENT-SHORT-NAME** (SEVERITY, type) — <what's broken>, at `file:line`;
+  <why / failure mode>. **Fix:** <sketch>.
 ```
 
-## Lifecycle
+- **ID** — `COMPONENT-DESCRIPTIVE-NAME`, UPPERCASE-KEBAB, component-prefixed
+  and self-describing (`ME-SNAPSHOT-NO-INDEX-DEDUP-REBUILD`,
+  `GW-OUTBOUND-UNBOUNDED`), not a short opaque code.
+- **SEVERITY** — `CRITICAL | HIGH | MED | LOW` (or `MED-HIGH`).
+- **type** — one word for the class: `latency`, `correctness`, `docs`,
+  `design`, `duplication`, `perf`, `ops`, `config`, `resource/DoS`,
+  `hardening`, `traceability`.
+- **body** — concrete `file:line` cites, the failure/why, and often a
+  **Fix:** sketch. Multi-line prose is fine for a hard one.
+- **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
+  `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
+  changes behaviour says so, with what was measured.
+- A redesign proposal (new contract, changed control flow, cross-cutting)
+  is an entry with `needs sign-off` and the options sketched; the user
+  signs off on the approach BEFORE it is built.
 
-1. **Record** — add an entry when a bug surfaces and a fix isn't authorized.
-2. **Mark in place** — when the fix ships, prepend `✅ FIXED <date>` to the
-   title and fill the **Fix** line with the commit SHA. Keep the entry.
-3. **Prune to diary** — periodically (per release, per refine pass) sweep
-   ✅-marked entries: for each, write a one-line `.diary/YYYYMMDD.md` note
-   citing the bug title + commit SHA (see `/diary`), then delete from
-   `BUGS.md`.
+## Not-a-defect section
 
-Remove an entry only after all three hold: fixed-in-code (or closed
-won't-fix), referenced in the diary, and deployed to affected targets (or
-marked not-deployed). Invoke with `prune` to sweep ✅-marked entries.
+A permanent section — the project may already name it `## Design invariants —
+intentional, do not re-report` — holds one compressed line per ruling:
+what was reported, and why it is correct behaviour. These are NEVER deleted;
+they exist to stop the same finding coming back. A refuted finding (premise
+was false) goes here too, with the evidence that refuted it.
+
+## Pruning
+
+A fixed defect leaves the file. Its history is the commit that fixed it, so
+delete the entry once the fix is committed — do not mark it fixed and keep it.
+Deferred entries stay as-is. Not-a-defect lines stay forever.
+
+Invoke with `prune` to sweep entries whose defect no longer holds. ALWAYS
+re-verify against the current code before deleting — an entry's own status
+line is a claim, not evidence.
 
 ## Aggregation (optional)
 
 If a project accumulates issue reports in multiple scratch files, consolidate
-into root `BUGS.md` periodically (per release, or on request via `aggregate`):
-
-1. Enumerate post-date entries across the scratch files (read-only).
-2. Synthesize into one root section grouped by cross-cutting pattern,
-   debounced against prior aggregations.
-3. Note in each scratch file: "Consolidated to root `BUGS.md` <date>".
-
-Scratch files stay as-is; the owner wipes them after merge.
+into root `BUGS.md` on request (`aggregate`): enumerate the scratch entries
+read-only, fold them into the subject sections above, and note in each scratch
+file "Consolidated to root `BUGS.md` <date>". The owner wipes the scratch
+files after the merge.

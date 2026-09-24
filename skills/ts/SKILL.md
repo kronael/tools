@@ -6,8 +6,16 @@ when_to_use: editing .ts files or writing TypeScript
 
 # TypeScript Style
 
-Requires the `software` skill's `code.md` for shared naming, style, and design
+Requires the `software` skill's `code.md` for shared naming, style, comments, and design
 rules. Below are TypeScript-specific additions and deltas.
+
+Read on demand, in this directory:
+- `node-cluster.md` — running one CPU-bound Node/NestJS service as N workers
+  with `node:cluster`: idle-first dispatch of raw socket handles over IPC,
+  pulled Prometheus metrics, worker count from the pod CPU limit.
+- `v8-deopt.md` — a hot path that measures slower than it should: proving
+  megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
+  profiling, and when to stop.
 
 ## Code Style
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
@@ -41,7 +49,6 @@ rules. Below are TypeScript-specific additions and deltas.
 ## Design
 - NEVER methods just for grouping — use modules
 - ALWAYS inline single-use one-liners; NEVER wrap trivial expressions
-- NEVER JSDoc on self-explanatory functions
 - Library barrel files: `export * from './module'`
 
 ## Performance
@@ -64,11 +71,9 @@ rules. Below are TypeScript-specific additions and deltas.
   fills the kronael-specific gap; NEVER duplicate an eslint rule here.
 
 ## Testing
-- ALWAYS a JSDoc block above every `test(...)` / `it(...)` call: what it
-  does, what preconditions it assumes, what it verifies — one sentence per
-  point. (The "NEVER JSDoc self-explanatory functions" rule does NOT apply
-  to test cases — a test's intent and preconditions are never self-evident
-  from its body.)
+- ALWAYS a JSDoc block above every `test(...)` / `it(...)` call. Its content
+  is `software/testing.md`'s scenario-to-outcome rule — the test exception
+  `code.md` names.
 - Unit: `*.test.ts` next to code (Bun), E2E: `*.spec.ts` in `playwright/`
 - **CRITICAL**: Configure `bunfig.toml` root to exclude Playwright files from Bun:
   ```toml
@@ -76,3 +81,11 @@ rules. Below are TypeScript-specific additions and deltas.
   root = "src"
   ```
 - `make e2e`: Playwright, `make smoke`: against running server, `bun test`: unit only
+
+## Tooling
+- ALWAYS pin the bun runtime with a `.bun-version` file — CI `setup-bun` reads
+  it via `bun-version-file`, mise reads it as an idiomatic version file. NEVER
+  assume bun auto-switches: the runtime ignores the file, it's a convention.
+- An older local bun canNOT parse a lockfileVersion-2 `bun.lock` (written by bun
+  ≥1.4): it silently ignores it and rewrites a v1 lockfile. NEVER commit that
+  downgrade — `git checkout bun.lock` and `bun upgrade` to match CI's pin.

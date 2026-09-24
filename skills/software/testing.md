@@ -3,7 +3,7 @@
 ## Diagnosing Failures
 
 - NEVER re-run tests to analyze output; capture once:
-  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+  `make test 2>&1 | tee test.log && tail -8 test.log && grep "FAILED\|failed" test.log`
 - For complex failures, delegate to a subagent with the log file path.
 
 ## Naming
@@ -15,6 +15,16 @@
   `make smoke`: production data
 - Unit tests live next to the code (`*_test.go`, `test_*.py`); integration
   tests in a dedicated `tests/` directory
+
+## Descriptions
+
+- A test module's doc-comment and a test's intro name BOTH the SCENARIO and
+  the OUTCOME it asserts — condition and concrete result, never one alone.
+  Bad: a bare list of return codes with no scenario (`200`, `413`). Bad: a
+  scenario with no stated outcome (`when processing`). Good: `an existing
+  withdrawer with data -> 200 with the report`, `a report mid-regeneration ->
+  200, still serves the last coherent snapshot`, `a never-generated report ->
+  413 not-ready`.
 
 ## Testcontainers
 

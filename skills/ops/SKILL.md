@@ -47,6 +47,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 - ALWAYS `make` for build/lint/test/clean — explicit targets: `make prepare`, `make image`, `make test`
 - ALWAYS debug builds locally (faster, better errors); NEVER run release builds locally, NEVER mix debug/release artifacts
+- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other build/temp path, per command or otherwise, and NEVER move a build between target directories — each switch costs a full rebuild and splits the cache across mounts. Out of space in the configured target dir? SAY so and stop; freeing or resizing it is the maintainer's call
 
 ## Runbooks (cold — read on demand)
 

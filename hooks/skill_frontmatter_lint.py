@@ -24,6 +24,31 @@ BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 FIX_FIELDS = {'description', 'when_to_use'}
 
 REQUIRED_KEYS = ('name', 'description', 'when_to_use')
+# Keys Claude Code reads (code.claude.com/docs/en/skills). Anything else is
+# ignored locally but rejected by other Agent Skills consumers, so it is an
+# error here. Free-form provenance belongs under `metadata`.
+KNOWN_KEYS = {
+    'name',
+    'description',
+    'when_to_use',
+    'argument-hint',
+    'arguments',
+    'disable-model-invocation',
+    'user-invocable',
+    'allowed-tools',
+    'disallowed-tools',
+    'model',
+    'effort',
+    'context',
+    'agent',
+    'background',
+    'shell',
+    'paths',
+    'hooks',
+    'metadata',
+    'license',
+    'compatibility',
+}
 SHOULD = re.compile(r'\bSHOULD\b')
 DEFAULT_MAX_LINES = 200
 # Workflow/runbook skills carry procedure and legitimately run long (wisdom
@@ -111,15 +136,42 @@ def fix_frontmatter(text: str) -> str:
 def check_keys(path: Path, meta: dict | None) -> list[Finding]:
     if meta is None:
         return []  # unparseable YAML — the frontmatter check owns that failure
+    findings: list[Finding] = []
     missing = [key for key in REQUIRED_KEYS if not str(meta.get(key, '')).strip()]
-    if not missing:
+    if missing:
+        findings.append(
+            Finding(
+                Severity.ERROR,
+                'skill-keys',
+                f'{path}:1: [skill-keys] missing frontmatter key(s): {", ".join(missing)} '
+                '— wisdom: name, description, when_to_use are required',
+            )
+        )
+    unknown = sorted(set(meta) - KNOWN_KEYS)
+    if unknown:
+        findings.append(
+            Finding(
+                Severity.ERROR,
+                'skill-keys',
+                f'{path}:1: [skill-keys] unrecognised frontmatter key(s): {", ".join(unknown)} '
+                '— wisdom: NEVER invent a key; provenance goes under `metadata`',
+            )
+        )
+    return findings
+
+
+def check_name(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []
+    name = meta.get('name')
+    if name is None or name == path.parent.name:
         return []
     return [
         Finding(
             Severity.ERROR,
-            'skill-keys',
-            f'{path}:1: [skill-keys] missing frontmatter key(s): {", ".join(missing)} '
-            '— wisdom: name, description, when_to_use are required',
+            'skill-name',
+            f'{path}:1: [skill-name] name {name!r} does not match directory '
+            f'{path.parent.name!r} — wisdom: the directory name IS the skill name',
         )
     ]
 
@@ -214,6 +266,7 @@ def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Find
     body_line0 = text.count('\n', 0, text.rindex(body)) + 1 if body else 1
     return [
         *check_keys(path, meta),
+        *check_name(path, meta),
         *check_notfor(path, meta),
         *check_budget(path, meta),
         *check_should(path, body, body_line0),
@@ -245,6 +298,8 @@ def process(path: Path, write: bool) -> int:
         print(f'needs fix: {path} ({error})')
         status = 1
 
+    # A repaired file still has to conform; fixing the YAML says nothing about
+    # the name, the keys or the listing budget.
     for finding in check_body(path, text, parse_meta(meta), body):
         print(finding.message, file=sys.stderr)
         if finding.severity is Severity.ERROR:

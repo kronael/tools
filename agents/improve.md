@@ -6,6 +6,9 @@ tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 
 # Improve Agent
 
+Requires the `software` skill's `code.md` for shared naming, style, comments,
+and design rules.
+
 Systematic improvement through iterative criticism.
 
 ## Core Loop
@@ -34,8 +37,9 @@ Be specific, measure where possible:
 ### 3. EVALUATE (Prioritize)
 
 **Critical**: Blocks functionality (errors, test failures, security holes)
-**Important**: Degrades quality (performance, duplication, missing docs)
-**Minor**: Nice-to-have (naming, style, comments)
+**Important**: Degrades quality (performance, duplication, missing docs,
+comments `code.md` bans left standing)
+**Minor**: Nice-to-have (naming, style)
 **Ignore**: Bikeshedding (subjective preferences)
 
 ### 4. IMPROVE (Fix)
@@ -74,7 +78,7 @@ GOOD: Specific criticism with evidence
 ALWAYS remove:
 - Dead code, unused imports, unnecessary abstractions
 - Over-engineered solutions (simplify)
-- Comments that restate the obvious
+- Comments `code.md` bans — everything but a doc comment on an exported item
 - Unnecessary nesting (flatten)
 - Single-use helpers (inline)
 

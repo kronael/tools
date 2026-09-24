@@ -29,11 +29,18 @@ for a in haiku sonnet opus fable gpt mini spark; do
     [ -n "${q// /}" ] || { echo "DRIFT: alias '$a' has no model in qemubox" >&2; fail=1; }
 done
 
-# Shared default model (structured differently in each, so checked by presence).
-for f in "$qb" "$db"; do
-    grep -q 'claude-opus-4-8 --effort xhigh' "$f" || {
-        echo "DRIFT: default 'claude-opus-4-8 --effort xhigh' missing in $f" >&2; fail=1; }
-done
+# Shared default model: qemubox dispatches the default through its "claude"
+# case arm; dockbox assigns it directly when no --model was given. Extracted
+# per file's own structure, then compared like an alias.
+qdef="$(alias_spec "$qb" "claude")"
+dline="$(grep -E '^[[:space:]]*claude_args=\(--model' "$db" | grep -v 'entrypoint=' | head -1)"
+ddef="$(printf '%s' "$dline" | grep -oE 'claude-[a-z0-9.-]+|gpt-[a-z0-9.-]+' | head -1) $(printf '%s' "$dline" | grep -oE 'effort (high|xhigh)' | grep -oE 'high|xhigh' | head -1)"
+[ -n "${qdef// /}" ] || { echo "DRIFT: no default model found in $qb" >&2; fail=1; }
+[ -n "${ddef// /}" ] || { echo "DRIFT: no default model found in $db" >&2; fail=1; }
+if [ -n "${qdef// /}" ] && [ -n "${ddef// /}" ] && [ "$qdef" != "$ddef" ]; then
+    echo "DRIFT: default -> qemubox='$qdef' dockbox='$ddef'" >&2
+    fail=1
+fi
 
 [ "$fail" -eq 0 ] && echo "drift_test.sh: ok"
 exit "$fail"

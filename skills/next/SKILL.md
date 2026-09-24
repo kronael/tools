@@ -1,13 +1,13 @@
 ---
 name: next
-description: /next — park a discovered bug or TODO for later without stopping current work. NOT for filing bugs found during a code audit (use /bugs for that).
-when_to_use: "park this, log this for later, don't fix now, note this and continue, do this next"
+description: /next — park a discovered bug or TODO without stopping, then keep working in the same turn. NOT for bugs found during a deliberate code audit (use /bugs), NOT for backlog that must outlive the session (use /later).
+when_to_use: "park this, log this and keep going, don't fix now, note this and continue, do this next"
 user-invocable: true
 ---
 # /next — park and continue
 
-Record a discovered issue or idea without switching context. Log it and
-immediately resume whatever was in progress.
+Record a discovered issue or idea without switching context. Log it, then keep
+working in the same turn.
 
 ## When to use
 
@@ -20,12 +20,20 @@ immediately resume whatever was in progress.
 If it looks like a bug: append a one-liner to `BUGS.md` at project root.
 Format: `- [ ] <description>` (create the file if missing).
 
-If it looks like a feature or general TODO: append to `TODO.md` at project root.
-Format: `- [ ] <description>` (create the file if missing).
+If it looks like a feature or general TODO: add it via the `TodoWrite` tool
+as a new pending task. NEVER write it to `TODO.md` or any file.
 
-When in doubt: `TODO.md`.
+When in doubt: use `TodoWrite`. When `TodoWrite` is unavailable the item lives
+in this conversation only — ALWAYS state it verbatim in the report line so it
+survives in context, and still NEVER write it to a file.
 
 ## After recording
 
-Say one line: what was logged and where. Then continue immediately — no
-summary, no context switch, no explanation of what was parked.
+Say one line: what was logged and where (`BUGS.md`, the tasks list via
+`TodoWrite`, or this conversation). Then continue immediately — no summary, no
+context switch, no explanation of what was parked.
+
+NEVER end the turn on that line. ALWAYS resume the work that was in flight.
+When nothing is in flight, the parked item IS the work — ALWAYS start it in the
+same turn, oldest parked item first when several are waiting, marking it
+`in_progress` if it is in `TodoWrite`.

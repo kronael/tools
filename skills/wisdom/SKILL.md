@@ -1,10 +1,27 @@
 ---
 name: wisdom
 description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
-when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed"
+when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, does this rule earn its context, cut what the model already knows, trim an always-loaded file"
 ---
 
 # Wisdom Skill
+
+## Treat skills as first-class
+
+Skills are durable, DRY knowledge, explicitly dispatched — NOT auto-triggered
+(see WISDOM), so `/solve` can only route what the frontmatter describes well.
+
+- ALWAYS hold a skill to ONE concern; a sprawling skill matches everything and routes nothing.
+- ALWAYS extend the right existing skill over spawning a near-duplicate — grep the skill list first; two skills on one concern race in `/solve` and drift out of sync.
+
+## Pairing with /learn
+
+`/learn` mines session history — it surfaces reusable patterns (2+ sessions) and
+proposes new/updated skills, but hands the authoring off to wisdom.
+
+- ALWAYS turn a `/learn` proposal into well-formed SKILL.md here (frontmatter + ALWAYS/NEVER body), not a rough draft left in a transcript.
+- ALWAYS fold a surfaced pattern into the correct existing skill when one fits; author a new skill only when none does.
+- NEVER let a single-session story become a skill — record it in .diary/ (learn's 2+ rule); persist genuine patterns via /learn → wisdom.
 
 ## SKILL.md frontmatter
 
@@ -35,6 +52,11 @@ argument-hint: "<question>"   # optional — shown after /name
 
 - **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
 - **Agent-launcher** (visual/readme style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
+- **Runbook** (ship/merge/release style): numbered steps, each closing on a
+  `Completion criterion:` line — an observable pass/fail condition, not "done
+  when it looks right". Close with `## Review Checklist` restating the file's
+  ALWAYS rules as checkable bullets, and, only where one recurring wrong-but-
+  plausible shortcut exists, an `## Anti-Patterns` list naming it.
 
 ## SKILL.md body
 
@@ -67,4 +89,106 @@ argument-hint: "<question>"   # optional — shown after /name
 
 - Project-specific only — skills carry general knowledge.
 - ALWAYS document architecture, state machines, external systems.
+- NEVER repeat what the project's README/ARCHITECTURE/docs already say — ALWAYS
+  cut re-explanation to a one-line pointer and keep only the invariants, gotchas,
+  and syntax an editor must not get wrong. CLAUDE.md holds what those docs don't.
 - Put critical rules at the top or bottom — middle content is least reliably attended to.
+- ALWAYS wrap task-specific sections (testing conventions, API patterns, state
+  management, i18n) in `<important if="condition">…</important>` with one
+  narrow, single-trigger condition per block — Claude Code's own system
+  reminder tells the model project context "may or may not be relevant,"
+  and the tag overrides that framing so the block gets attention when its
+  condition actually matches, instead of being skimmed past by default.
+- NEVER wrap onboarding context relevant to 90%+ of tasks (project identity,
+  directory map, tech stack, the commands table) — leave those bare; gating
+  foundational context behind a narrow `if` starves it of attention on the
+  tasks that need it most.
+- NEVER give one `<important if>` block two unrelated trigger conditions —
+  split "testing + API conventions" into two blocks so a task matching only
+  one doesn't pull in the other's rules.
+- This does NOT apply to this repo's own installed `~/.claude/CLAUDE.md`
+  (the global wisdom file) — that file is always-loaded outside the
+  per-project relevance gate, so the tag has nothing to cut through there.
+
+
+## Minimize — does a rule earn its context?
+
+A rule in an always-loaded file costs every session. It earns that only when
+the model would not already behave that way. Measure it: put the topic to a
+model that cannot see the rule, and compare.
+
+- Reproduced by the clean model → candidate CUT, not a verdict. See below.
+- Contradicted by it → KEEP, highest value. Overriding a strong prior is the
+  one thing guidance can do that training cannot.
+- Produced by neither → KEEP.
+
+**Reproduction measures knowledge, not compliance.** A model will write a rule
+out cleanly and then break it unprompted, so a reproduced rule is only free if
+the model also FOLLOWS it by default. ALWAYS settle a candidate cut with a
+second question to the clean room — ask the model to describe how it actually
+behaves on a task with no instructions, its real defaults including the wrong
+ones — and KEEP anything it confesses to violating. Models report writing
+comments that narrate the change, declaring a task done on a green test run,
+softening a partial result into language that reads complete, trusting a
+subagent's summary unchecked, and cleaning up adjacent code nobody asked about
+— every one of those is a rule they can also recite. A rule a model states and
+breaks belongs in the file, stressed, not cut.
+
+Empirically, almost nothing survives this test. Run across error handling,
+testing and comments, every rule that looked freely reproducible turned out to
+be one the models confess to breaking: logging-and-swallowing when the recovery
+is unclear, degrading gracefully where crashing is correct, inventing a second
+logging path without grepping for the first, over-mocking until the test proves
+nothing, reaching for the assertion when a test they broke is annoying, and
+commenting above almost every block where half just restate the code — "I know
+this and still do it on the first pass". EXPECT the cut list to come out nearly
+empty, and treat a long one as evidence the behaviour question was skipped.
+
+ALWAYS ask the behaviour question per candidate rule, not once for the whole
+sweep. One confession list answers the rules it happens to name and says
+nothing about the rest; treating it as global licence cuts rules no evidence
+ever covered.
+
+When the criterion changes mid-sweep — and it will, because each pass exposes
+how the last one was fooled — ALWAYS re-examine every cut already made under
+the old criterion, including the ones that still look right. Correcting only
+the convenient ones leaves the rest standing on reasoning you have abandoned.
+
+A check that has never failed has not been tested. ALWAYS run a probe you
+expect to FAIL before trusting one that passes — a clean room that cannot leak,
+a linter that cannot flag, and a broken one look identical from a green run.
+
+ALWAYS scope this to normative content — wisdom, style, judgment. A workflow
+runbook encodes a chosen procedure and is not measurable this way.
+
+**NEVER measure with a subagent.** It is handed `~/.claude/CLAUDE.md` and every
+applicable project `CLAUDE.md` before its first token, so "do not read any
+files" removes nothing and it paraphrases the rule back as its own. The tell is
+specificity: a clean model gives the field default, a contaminated one returns
+this repo's exact paths, counts and separators.
+
+ALWAYS use `clean-room.sh <model> <prompt-file>` — a throwaway `HOME` so no
+wisdom file loads, an empty working directory so no project `CLAUDE.md` is
+discoverable. Export `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` first; a
+clean `HOME` puts OAuth and the keychain out of reach. ALWAYS run two models —
+one agreeing is a signal, two is a verdict.
+
+ALWAYS verify the room before trusting a run: ask a probe this repo answers
+unusually (branch naming, worktree placement, line width) and confirm the reply
+gives the field default. Discard the whole run when repo-specific detail comes
+back.
+
+ALWAYS check the model name yourself — `claude` warns on stderr about one it
+does not recognise and then answers from whatever it resolves instead, which
+turns a two-model verdict into one model run twice without failing.
+
+NEVER quote or paraphrase our text in the prompt — ask for the guidance itself,
+never for a critique of ours. This includes the list of sub-topics: a "cover X,
+Y, Z" line built from our own section headings is our table of contents, and a
+model completing it proves only that it can write to a spec. Name the DOMAIN
+alone and let the model decide what belongs in it; a rule it never thought to
+mention is the finding. Before sending, read the prompt back and strike any
+phrase you could locate in the file being measured.
+
+Findings go to `BUGS.md` as a proposal naming which model produced what. NEVER
+cut an always-loaded rule on sight — it changes every future session.

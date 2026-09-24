@@ -13,9 +13,12 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
 | `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
+| `testing.md` | test naming, diagnosing a failure from captured output, testcontainers, the smoke/e2e boundary, hangs |
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 | `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
+| `money.md` | exact arithmetic for money/token amounts: why never float (incl. the decode step), the integer → fixed-point → wide-integer → arbitrary-precision ladder, deriving the overflow bound, round once at the edge, checked add, the tests that catch it |
+| `refactor-stack.md` | re-shipping an unreviewable branch as a stack: test layer first, dividing criterion, four passes, mutation proof, deletion oracles, diffstat split |
 
 ## Editing rules
 

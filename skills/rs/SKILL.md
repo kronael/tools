@@ -6,7 +6,7 @@ when_to_use: editing .rs files or writing Rust code
 
 # Rust
 
-Requires `software/code.md` (naming, style, design) and
+Requires `software/code.md` (naming, style, comments, design) and
 `software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 
@@ -53,9 +53,24 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - DB status/type columns as smallint, `#[repr(i16)]` enum in code
 
 ## Testing
-- Unit tests live alongside source as `src/<module>_test.rs`, imported with
-  `#[cfg(test)] mod <module>_test;` at the bottom of the source file —
-  NOT inline `#[cfg(test)] mod tests { ... }`, NOT in `tests/`
+- Unit tests live alongside source as `src/<module>_test.rs`, declared at the
+  TOP of the source file with the imports, where a reader meets it before the
+  code it covers — NOT inline `#[cfg(test)] mod tests { ... }`,
+  NOT a `<module>/tests.rs` subdirectory, NOT in `tests/`
+- **`#[path]` is REQUIRED on every module that is not the crate root or a
+  `mod.rs`.** A bare `#[cfg(test)] mod foo_test;` inside `src/a/foo.rs` resolves
+  to `src/a/foo/foo_test.rs`, not the sibling — you get a single-file directory
+  per module, or a compile error. Write it as:
+  ```rust
+  #[cfg(test)]
+  #[path = "foo_test.rs"]
+  mod foo_test;
+  ```
+  `#[path]` is relative to the DIRECTORY the declaring file sits in, so this
+  lands on `src/a/foo_test.rs`. The test module stays a CHILD of `foo`, which is
+  what keeps `foo`'s private items (private fns, private struct fields, consts)
+  reachable from the test. A sibling module cannot see them — that is why the
+  file must be wired this way and not declared from the parent.
 - Integration tests (cross-crate, external API surface) go in `tests/`
 - Inside `src/<module>_test.rs` use `crate::` paths, not `super::*`
 - `--test-threads=1` if global state via DashMap/RwLock
@@ -127,7 +142,7 @@ fn main() -> eyre::Result<()> {
   greps when reviewing `unsafe`. NEVER put `// SAFETY:` on SAFE code to justify a
   `.expect()` / `panic!` / fail-fast / `.unwrap()`. That dilutes the convention
   and is wrong. For a deliberate panic, the reason goes in the `.expect("…")`
-  message or a plain `//` comment — `// SAFETY:` means "this unsafe is sound", nothing else.
+  message — `// SAFETY:` means "this unsafe is sound", nothing else.
 
 ## serde_json Value
 - NEVER `serde_json::from_value::<T>(value.clone())` — `&Value` implements `Deserializer`, use

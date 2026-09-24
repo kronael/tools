@@ -104,7 +104,6 @@ PROCESS_CASES = [
 ]
 
 BLOCK_CASES = [
-    'git push',
     'git reset --hard',
     'git add -A',
     'git add --all',
@@ -121,6 +120,7 @@ BLOCK_CASES = [
 ]
 
 NONBLOCK_CASES = [
+    'git push',
     'git commit -m "normal message"',
     'git merge origin/master',
     'git rebase origin/master',

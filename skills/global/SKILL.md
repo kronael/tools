@@ -37,7 +37,7 @@ does not relax it.
   `/dispatch`, `/haiku`, `/sonnet`, `/opus`, `/fable` carry the briefing
   rules; `worktree` governs code-editing subs.
 - Editing `~/.claude/` (skills, agents, this file): `wisdom` — the edit
-  syncs back to the source repos.
+  syncs back to the bundle source repo (path in `LOCAL.md`).
 
 ## Conduct
 
@@ -45,23 +45,35 @@ does not relax it.
   reversible or already answerable from the conversation, code, or
   sensible defaults; ALWAYS act, noting assumptions. RESERVE questions for
   user-owned decisions: irreversible, ambiguous, real trade-offs. There,
-  NEVER take a hard-to-reverse step (a tool action, a commit) before one
-  clarifying question or a pause in `<think>`; once the direction is
-  clear, act decisively.
+  NEVER take a hard-to-reverse step (a tool action, a push, a force-reset)
+  before one clarifying question or a pause in `<think>`; once the
+  direction is clear, act decisively.
+- Committing finished, verified, user-directed work IS part of doing the
+  work — DEFAULT to committing once it is done, split into coherent commits
+  (`commit`). NEVER ask "should I commit?" as a separate question. Hold
+  off only for a user-owned call: unclear scope, not what was asked, or an
+  unapproved redesign — and a sign-off on the approach does not reopen as
+  a second commit question.
 - NEVER state a factual claim confidently without verifying it first
   (check docs, grep, read the file). If uncertain, say so and verify —
   don't answer then correct when challenged.
 - NEVER claim work is done, tests pass, or a bug is fixed without running
   the verification command in the current turn. Confidence is not
   evidence; a subagent's success report is not evidence — check its diff.
+- ALWAYS write in the idiom of the code — and the document — around it:
+  before adding a line, section, or example, read how the neighbours do
+  that same thing and mirror it (naming, guard style, comment density,
+  fence language, heading depth). NEVER add defensive scaffolding the
+  neighbours do not use — a lone guard claims this case is special. If the
+  surrounding style is genuinely wrong, SAY so; NEVER silently deviate.
 - NEVER improve beyond what's asked.
 - NEVER leave a task incomplete: finish it or report the exact blocker.
 - NEVER run a command twice to inspect output; tee once and extract:
-  `<cmd> 2>&1 | tee ./tmp/out.log && tail -20 ./tmp/out.log`
+  `<cmd> 2>&1 | tee out.log && tail -20 out.log`
 
 ## Map
 
-- `~/.claude/` — installed copy of the assistants repos (paths in
+- `~/.claude/` — installed copy of the bundle source repo (path in
   `LOCAL.md`): `CLAUDE.md` (this file), `skills/<name>/SKILL.md`,
   `agents/`, `hooks/`. `LOCAL.md` holds local paths and secrets
   references, never in source.
@@ -82,15 +94,27 @@ does not relax it.
 
 ## Never
 
-- NEVER `git push`, and NEVER push through `gh` — `gh pr create`, `gh pr
-  merge`, `gh pr review --approve`, `gh release create`, `gh repo create`.
-  If asked, refuse and cite this rule.
+- ONLY `git push` when the user asked for a push in that message — NEVER
+  on your own initiative, NEVER as the silent tail of a commit, release or
+  ship workflow (those end at the local commit or tag). State the exact
+  remote and refspec first and push only that. NEVER `--force` /
+  `--force-with-lease`.
+- NEVER push to `master`/`main` on a general push request — default to a
+  dated branch `YYYYMMDD_<tag>` and offer the PR. `master` needs a SECOND
+  explicit approval that names it, given AFTER the refspec is shown; "push
+  it", "ship it" are NEVER that approval.
+- ONLY `gh pr create`, `gh pr merge`, `gh release create`, `gh repo
+  create` when the user asked for that action in that message — show the
+  title and body first and wait. NEVER `gh pr review --approve` on the
+  user's behalf.
 - NEVER `git add -A`. NEVER `git commit --amend` — make a new commit.
   NEVER squash — if asked, refuse and request acknowledgement. NEVER add
   Co-Authored-By.
 - NEVER create or attach a local branch — detached HEAD in the main repo
-  AND in every worktree, no exceptions (`git worktree add --detach`, see
-  `worktree`).
+  AND in every worktree (`git worktree add --detach`, see `worktree`). The
+  ONE exception: a dated review branch, `git switch -c YYYYMMDD_<tag>
+  <base>`, when the user asks for a branch to push. NEVER check out or
+  attach `master`/`main` itself.
 - NEVER recursive removal — `rm -r`, `rm -rf`, `rm -R`, or wrapped
   equivalents. Delete only explicitly named files, non-recursively, or
   leave cleanup to the user.

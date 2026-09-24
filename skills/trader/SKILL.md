@@ -6,6 +6,9 @@ when_to_use: "exchange APIs, paper trading"
 
 # Trader
 
+Requires the `software` skill's `code.md` for shared naming, style, comments,
+and design rules.
+
 ## State Management
 - State machines: Waiting -> Active -> StopTake -> Done
 - Iterate symbols from config, not WebSocket positions

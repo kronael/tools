@@ -1,204 +1,20 @@
 # Changelog
 
-## [v0.3.91] — 20260908
-
-> kronael v0.3.91 — tg-fetch is a rerunnable collector
->
-> Groups are arguments, credentials are environment variables, and there is no config file left to keep in sync.
->
-> • added — both scripts take many groups in one run and resume each one separately
-> • moved — TELEGRAM_API_ID, TELEGRAM_API_HASH and TELEGRAM_PHONE come from the environment
-> • removed — the TOML config and its template
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 ### Added
+
 - `tg-fetch/main.py` and `tg-fetch/users.py` take one or more groups as positional arguments and collect each in turn. `main.py` resumes each group from its own `.jl` file, so a rerun fetches only what arrived since.
 - Both scripts share one session file, `./tmp/session.session`. The login code is asked once per account rather than once per group.
 
-### Changed
-- Credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`. A missing variable stops the run with a message naming what to set and where to get it. This matches `dc-fetch`, which already reads `DISCORD_TOKEN` from the environment.
-- `users.py` imports `build_client`, `start_client` and `resolve_group` from `main.py` instead of repeating them.
-
-### Removed
-- `tg-fetch/config.toml` and `tg-fetch/keys.toml`. With the keys in the environment and the groups on the command line, no config file remains.
-
-## [v0.3.90] — 20260908
-
-> kronael v0.3.90 — config first, keys second
->
-> tg-fetch held its API credentials in the same file as the group setting. The two files are apart now, as the CLI rule says.
->
-> • fixed — main.py and users.py take <config.toml> then <keys.toml>
-> • replaced — config.example.toml becomes config.toml plus keys.toml
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Fixed
-- `tg-fetch/main.py` and `tg-fetch/users.py` read two positional files: the config first, the API keys second, as `skills/cli/SKILL.md` requires. The credentials no longer sit beside the group setting, so a config can be shared while the keys file stays out of git.
-
-### Changed
-- `tg-fetch/config.example.toml` is replaced by `config.toml` (group only) and `keys.toml` (`api_id`, `api_hash`, `phone` or `bot_token`). It was the only `*.example.*` file in the repo.
-
-## [v0.3.89] — 20260908
-
-> kronael v0.3.89 — a numeric group id now resolves
->
-> tg-fetch sent a digits-only group id to Telegram as a string, which resolves nothing. It sends an int now.
->
-> • fixed — tg-fetch resolves a digits-only group id to an int, and strips a leading @ from a username
-> • documented — the supergroup -100 prefix must be given; the scripts add nothing
-> • listed — the tw-fetch row names both read paths
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Fixed
-- `tg-fetch/main.py` and `tg-fetch/users.py` pass the configured group through `resolve_group` before `get_entity`. A digits-only value becomes an int, which is what Telethon needs for a chat id; a username stays a string with a leading `@` removed. Both scripts carry the function, matching the standalone shape the directory is built on.
-
-### Changed
-- `tg-fetch/README.md` and `config.example.toml` state that a supergroup id must already carry its `-100` prefix. The scripts add no prefix, because guessing one resolves the wrong chat.
-- `README.md` names both tw-fetch read paths in the tool inventory.
-
-## [v0.3.88] — 20260908
-
-> kronael v0.3.88 — read an X post without an account
->
-> tw-fetch gains a keyless reader. Name a post, get its JSON; the archive path still needs an account.
->
-> • added — tw-fetch/mirror.py reads posts through the FxTwitter mirror, no key, JSONL out
-> • documented — tw-fetch/README.md states what the mirror cannot do: no timeline, no search
-> • recorded — the diagrams skill carries no sequence, swimlane or state pattern
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Added
 - `tw-fetch/mirror.py` reads X posts through `api.fxtwitter.com`, which serves a post as JSON without a key. It takes post ids or urls (or stdin), writes one JSON object per line, and reports each failure on stderr without stopping the run. `trust_env=True` honours `HTTPS_PROXY`.
 - `tw-fetch/README.md` separates the two read paths and states the mirror's limits: `/<user>/timeline` answers 404, `/<user>/status/latest` answers 200 with "Sorry, that post doesn't exist", and a protected account answers 401. Discovering posts still needs the cookie-authenticated `main.py`.
 
-### Changed
-- `BUGS.md` records that `skills/diagrams` teaches box-and-arrow layout only, with no pattern for sequence, swimlane or state diagrams.
-
-## [v0.3.87] — 20260902
-
-> kronael v0.3.87 — one name in the log too
->
-> The changelog still called the output style by an older name in eleven places. It does not any more.
->
-> • changed — the log names the style caveman throughout, matching the file, the skill and the settings
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Changed
-- `CHANGELOG.md` names the output style `caveman` in all eleven entries that mention it. The three lines describing the rename itself are reworded rather than substituted, since a blind swap would have made them contradict themselves.
-
-## [v0.3.86] — 20260902
-
-> kronael v0.3.86 — one name for the style
->
-> The output style is called caveman in every place that names it, including the file itself.
->
-> • renamed — output-styles/caveman.md, frontmatter name caveman, activated as caveman
-> • followed — the skill, the prompt nudge, NOTICE, AGENTS.md and the install skill agree
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Changed
-- The output style ships as `output-styles/caveman.md` with `name: caveman`, and `settings-recommended.json` activates `caveman`. The caveman skill, `hooks/prompt_nudge.py`, `NOTICE`, `AGENTS.md`, `kronael/install/SKILL.md` and `docs/adhd/research-adhd-skill.md` all use that one name.
-
-## [v0.3.85] — 20260902
-
-> kronael v0.3.85 — the style pointer resolves
->
-> The caveman skill and the prompt nudge both named an output-style file that no install ever creates.
->
-> • fixed — the skill and the nudge now point at the style file the bundle actually ships
-> • effect — a fresh install no longer gets a skill and a per-prompt nudge aimed at a missing file
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Fixed
-- `skills/caveman/SKILL.md` and `hooks/prompt_nudge.py` named a style file the bundle did not install under that path. On a fresh install the skill told the model to read a file that was never written, and the nudge repeated the path on every prompt. Both now name the file the bundle ships.
-
-## [v0.3.84] — 20260902
-
-> kronael v0.3.84 — four orphan hooks withdrawn
->
-> v0.3.83 restored four hook scripts that this repo had deliberately deleted in May. They are gone again.
->
-> • withdrawn — redirect.py, context.py, learn.py, test_hooks.py, lib/toolchain.py; none registered
-> • cause — an install keeps files the source drops, so a leftover reads as new work next sync
-> • install — the prune list names them, so the next sync deletes them instead of restoring
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Fixed
-- `hooks/redirect.py`, `hooks/context.py`, `hooks/learn.py`, `hooks/test_hooks.py`, `hooks/lib/toolchain.py`: removed again. All were deleted from this repo months ago as orphan hooks — none is registered in any settings file — but their copies survived in `~/.claude/hooks/`, because an install never deletes a file the source has dropped. The v0.3.83 sync read "absent from bundle, present in install" as live-ahead work and vendored them back. `lib/toolchain.py` had exactly one caller, `redirect.py`.
-- `kronael/install/SKILL.md`: the prune step names those files and states the failure mode, so an unpruned orphan cannot read as live-ahead work on a later sync.
-
-### Unchanged
-- The August work from v0.3.83 stands: `hooks/lib/state.py`, the single `hook_event()` reader, and the PreCompact, timeout, fail-open and non-dict-payload fixes.
-
-## [v0.3.83] — 20260902
-
-> kronael v0.3.83 — compaction preservation actually preserves
->
-> LOCAL.md and RECLAUDE.md survive compaction again — the hooks were reading a key Claude Code never sends.
->
-> • compaction — LOCAL.md and RECLAUDE.md re-inject again; one reader replaces two copies, two bugs
-> • guards — the recursive-codex block read an env var nothing sets; now it reads a real field
-> • stop hook — a slow or locked git repo no longer kills it and drops both nudges
-> • skills — the gopls edit loop, sweep's fix/verify phases, create's nodes-as-data principle
-> • install — preflight verifies hooks/lib/, the directory every hook imports at startup
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Fixed
-- `hooks/local.py`, `hooks/reclaude.py`: read `data['hook_event']`, but Claude Code sends `hook_event_name` — with a session stamp on disk both produced nothing on PreCompact, so neither LOCAL.md nor RECLAUDE.md ever re-injected. `hook_event()` now lives once in `hooks/lib/state.py`; `memory_nudge.py` and `stop.py` drop their private copies.
-- `hooks/pretool_nudge.py`: the recursive-codex block gated on `KRONAEL_IN_CODEX`, which nothing in the repo sets — the guard was permanently dead while its test passed via monkeypatch. It reads the payload `harness` field that `codex_hook.py` already stamps.
-- `hooks/stop.py`: `subprocess.TimeoutExpired` escaped `git_run`, so a slow or index-locked repo exited the Stop hook with a traceback and lost both nudges.
-- `hooks/local.py`: an unusable state root read as "not first prompt", silently suppressing LOCAL.md for the whole session. It now fails open.
-- `hooks/redirect.py`: crashed on a non-dict `tool_input`.
-- `hooks/test_hooks.py`: invoked `nudge.py`, renamed to `prompt_nudge.py` two versions ago — 12 of 25 checks died on a missing file.
-
-### Added
 - `hooks/lib/` — `state.py` (session stamps, state root, the one event-key reader) and `toolchain.py` (project-type detection), plus `redirect.py`, `learn.py` and `test_hooks.py`, adopted from the live install.
 - `skills/software/lsp.md`, `skills/create/divergence.md`, `skills/demo/cutout.md`, `skills/ship/cli.md`.
 
-### Changed
-- Fifty files that had drifted between the bundle and a live `~/.claude` install are reconciled on content: the bundle keeps its newer eval, tier and language guidance; the install contributes the gopls edit loop, sweep's fix/verify phases, the BUGS.md entry format that matches real practice, and the spec `experiment`/`reference` statuses.
-- `skills/global/SKILL.md` delegates response style to the `caveman` skill instead of restating it — one source, not two.
-- `kronael/install/SKILL.md` preflight verifies `hooks/lib/`; four hooks import it by absolute path at startup, so a partial copy passed the check and then tracebacked on every prompt.
-- `hooks/context.py` removed — a byte-identical copy of local.py's rules, registered nowhere.
-
-## [v0.3.82] — 20260902
-
-> kronael v0.3.82 — the caveman skill ships
->
-> The caveman response style now travels with its skill wrapper, so a fresh install can load the reply budget before drafting.
->
-> • caveman — the skill wrapper joins the bundle; v0.3.81 shipped the style with nothing to load it
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Added
 - `skills/caveman/`: the wrapper that points at `output-styles/caveman.md` and runs its pre-send count. The style shipped in v0.3.81 host-only, so a fresh install got the rules with no skill to load them before drafting.
 
-## [v0.3.81] — 20260902
-
-> kronael v0.3.81 — real-width markdown, lint packs, reply budget
->
-> gloww renders markdown at real terminal width, lint packs cover TypeScript, Rust, and Python, and caveman replies get a line budget.
->
-> • gloww — rejoins hard-wrapped paragraphs so glow wraps them to your terminal width
-> • lints — ast-grep packs for ts/rust/python (fixture-tested) + SKILL.md lint at commit time
-> • hook guard — blocks squash, branch creation, worktree add without --detach, killall
-> • js-perf — new V8 runbook: hidden classes, elements kinds, deopts, Wasm/N-API batching
-> • emacs — optional setup skill for the completion, navigation, git, and AI package stack
-> • caveman — reply budget in rendered lines: fact 1–3, action ≤12, explain ≤20; 2-sentence bullets
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-### Added
 - `gloww` CLI: reads markdown with glow at the terminal's real width — mdformat rejoins each hard-wrapped paragraph, glow wraps it to fit; fences, lists, tables, and frontmatter keep their breaks.
 - Co-located ast-grep lint packs with a fixture harness: ts, rust (`no-unwrap`, `no-from-value-clone`, `no-anon-spawn`), python (`except-var-e`, `no-lambda-default-factory`, `no-property`); go defers to golangci-lint, sql has no grammar.
 - hooks: SKILL.md lint — missing frontmatter keys and SHOULD directives hard-fail; NOT-for, length, and router hygiene warn.
@@ -210,15 +26,493 @@
 - caveman style: ASD-STE100 Simplified Technical English as the language floor — plain words, active voice, one meaning per word.
 
 ### Changed
+
+- Credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`. A missing variable stops the run with a message naming what to set and where to get it. This matches `dc-fetch`, which already reads `DISCORD_TOKEN` from the environment.
+- `users.py` imports `build_client`, `start_client` and `resolve_group` from `main.py` instead of repeating them.
+
+- `tg-fetch/config.example.toml` is replaced by `config.toml` (group only) and `keys.toml` (`api_id`, `api_hash`, `phone` or `bot_token`). It was the only `*.example.*` file in the repo.
+
+- `tg-fetch/README.md` and `config.example.toml` state that a supergroup id must already carry its `-100` prefix. The scripts add no prefix, because guessing one resolves the wrong chat.
+- `README.md` names both tw-fetch read paths in the tool inventory.
+
+- `BUGS.md` records that `skills/diagrams` teaches box-and-arrow layout only, with no pattern for sequence, swimlane or state diagrams.
+
+- `CHANGELOG.md` names the output style `caveman` in all eleven entries that mention it. The three lines describing the rename itself are reworded rather than substituted, since a blind swap would have made them contradict themselves.
+
+- The output style ships as `output-styles/caveman.md` with `name: caveman`, and `settings-recommended.json` activates `caveman`. The caveman skill, `hooks/prompt_nudge.py`, `NOTICE`, `AGENTS.md`, `kronael/install/SKILL.md` and `docs/adhd/research-adhd-skill.md` all use that one name.
+
+- Fifty files that had drifted between the bundle and a live `~/.claude` install are reconciled on content: the bundle keeps its newer eval, tier and language guidance; the install contributes the gopls edit loop, sweep's fix/verify phases, the BUGS.md entry format that matches real practice, and the spec `experiment`/`reference` statuses.
+- `skills/global/SKILL.md` delegates response style to the `caveman` skill instead of restating it — one source, not two.
+- `kronael/install/SKILL.md` preflight verifies `hooks/lib/`; four hooks import it by absolute path at startup, so a partial copy passed the check and then tracebacked on every prompt.
+- `hooks/context.py` removed — a byte-identical copy of local.py's rules, registered nowhere.
+
 - agents: sonnet → Sonnet 5/high, opus → Opus 5.
 - wisdom skill rules name their lint ids; ts skill prefers minimal result and utility types.
 - ts skill sends hot-path tuning to the `js-perf` runbook instead of restating its rules.
 
+### Removed
+
+- `tg-fetch/config.toml` and `tg-fetch/keys.toml`. With the keys in the environment and the groups on the command line, no config file remains.
+
 ### Fixed
+
+- `tg-fetch/main.py` and `tg-fetch/users.py` read two positional files: the config first, the API keys second, as `skills/cli/SKILL.md` requires. The credentials no longer sit beside the group setting, so a config can be shared while the keys file stays out of git.
+
+- `tg-fetch/main.py` and `tg-fetch/users.py` pass the configured group through `resolve_group` before `get_entity`. A digits-only value becomes an int, which is what Telethon needs for a chat id; a username stays a string with a leading `@` removed. Both scripts carry the function, matching the standalone shape the directory is built on.
+
+- `skills/caveman/SKILL.md` and `hooks/prompt_nudge.py` named a style file the bundle did not install under that path. On a fresh install the skill told the model to read a file that was never written, and the nudge repeated the path on every prompt. Both now name the file the bundle ships.
+
+- `hooks/redirect.py`, `hooks/context.py`, `hooks/learn.py`, `hooks/test_hooks.py`, `hooks/lib/toolchain.py`: removed again. All were deleted from this repo months ago as orphan hooks — none is registered in any settings file — but their copies survived in `~/.claude/hooks/`, because an install never deletes a file the source has dropped. The v0.3.83 sync read "absent from bundle, present in install" as live-ahead work and vendored them back. `lib/toolchain.py` had exactly one caller, `redirect.py`.
+- `kronael/install/SKILL.md`: the prune step names those files and states the failure mode, so an unpruned orphan cannot read as live-ahead work on a later sync.
+
+- `hooks/local.py`, `hooks/reclaude.py`: read `data['hook_event']`, but Claude Code sends `hook_event_name` — with a session stamp on disk both produced nothing on PreCompact, so neither LOCAL.md nor RECLAUDE.md ever re-injected. `hook_event()` now lives once in `hooks/lib/state.py`; `memory_nudge.py` and `stop.py` drop their private copies.
+- `hooks/pretool_nudge.py`: the recursive-codex block gated on `KRONAEL_IN_CODEX`, which nothing in the repo sets — the guard was permanently dead while its test passed via monkeypatch. It reads the payload `harness` field that `codex_hook.py` already stamps.
+- `hooks/stop.py`: `subprocess.TimeoutExpired` escaped `git_run`, so a slow or index-locked repo exited the Stop hook with a traceback and lost both nudges.
+- `hooks/local.py`: an unusable state root read as "not first prompt", silently suppressing LOCAL.md for the whole session. It now fails open.
+- `hooks/redirect.py`: crashed on a non-dict `tool_input`.
+- `hooks/test_hooks.py`: invoked `nudge.py`, renamed to `prompt_nudge.py` two versions ago — 12 of 25 checks died on a missing file.
+
 - gloww: an interactive run looked hung — glow's auto style queries the terminal and eats any key typed while it waits, so the pager ignored `q`; an explicit style skips the query.
 - gloww: `-wN` parses as a width flag and the file is found in any argument position.
 - caveman style: the ~17-line cap never bound — it counted source lines, not rendered ones, and capped bullet count but not bullet size. The budget now counts rendered 80-column lines, tiered by question shape (fact 1–3, action ≤12, explanation ≤20, hard ceiling), holds each bullet to two sentences, and ends in a countable pre-send check; the flat rule list folds into a Shape section.
 - lints: rs-no-unwrap exempts tests and comment-justified unwraps; yamlfmt formats the rule packs; check-yaml allows multi-doc yaml.
+
+### Unchanged
+
+- The August work from v0.3.83 stands: `hooks/lib/state.py`, the single `hook_event()` reader, and the PreCompact, timeout, fail-open and non-dict-payload fixes.
+
+## [v0.3.93] — 20260923
+
+> kronael v0.3.93 — boxes run Opus 5.5
+>
+> dockbox and qemubox now launch Claude on Opus 5.5 by default, and reviewers judge code without the author's reasoning.
+>
+> • dockbox / qemubox — default and `opus` alias pinned to `claude-opus-5-5` at xhigh
+> • Review — every reviewer is a fresh agent, never a fork of the author's session
+> • doc-topology — which-file questions kept apart from section order inside one page
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox and qemubox pin `claude-opus-5-5` for the default tool and the
+  `opus` alias; the `opus` agent description names Opus 5.5.
+- `review` give mode hands each reviewer the change goal in one neutral
+  sentence, the target and the house rules — never a fork carrying the
+  author's reasoning.
+- `doc-topology` separates which file answers a question from section order
+  within one integration or API-reference page.
+
+## [v0.3.92] — 20260921
+
+> kronael v0.3.92 — run one command in a box you already have
+>
+> dockbox and qemubox gained `exec`, which hands your whole command to the box instead of splitting it into dirs and args.
+>
+> • `dockbox exec make test` — the box is keyed off the current dir, and starts if none is up
+> • Paths survive — `dockbox exec ls /` keeps the `/` that a bare tool name loses to the dir split
+> • `qemubox exec make test` — the same, over SSH, in the project's VM
+> • Shells — `bash` / `zsh` / `sh` are login shells in dockbox now, matching qemubox; `sh` is an alias for bash
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `dockbox exec <cmd>` and `qemubox exec <cmd>` run a command in the box,
+  passing every later argument through untouched. They reuse the existing
+  resolve-then-enter path, so the box is keyed off the current directory like
+  every other invocation and provisions when none is running.
+
+### Changed
+
+- `dockbox bash`, `zsh` and `sh` start login shells, so the guest profile
+  applies; `sh` is an alias for bash. `qemubox` already did this.
+
+### Fixed
+
+- dockbox resolved `bash`/`zsh` in two places — the pre-getopts dispatch and
+  the tool case — which drift as soon as one changes. getopts passes a bare
+  `bash` through untouched, so the tool case alone covers it.
+
+## [v0.3.91] — 20260920
+
+> kronael v0.3.91 — the go skill stops overflowing its budget
+>
+> The goroutine rules stay, but they stop costing every session.
+>
+> • Go — `concurrency.md` sibling holds goroutine sizing and the single-sink I/O pattern; `SKILL.md` drops 212 → 126 lines with an ALWAYS-read dispatch line
+> • Routing — `when_to_use` gains goroutine keywords, so `/resolve` reaches the concurrency rules at all
+
+## [v0.3.90] — 20260920
+
+> kronael v0.3.90 — the goroutine rules come home
+>
+> A section that only ever lived in one machine's `~/.claude` is now in the repo, where the next install cannot overwrite it.
+>
+> • Go — fixed goroutine sets sized at startup: one owner per subsystem, one reader per connection, a worker pool with a configured width; never a goroutine per event, request, write or queued item
+> • Reverse-sync — captured through a three-way merge against the v0.3.65 base, so the repo's stronger comment-placement wording supersedes the older deployed phrasing
+
+## [v0.3.89] — 20260918
+
+> kronael v0.3.89 — the comment rules stop contradicting each other
+>
+> The comment ban and the four skills that mandate comments now agree, and five more skills can reach the policy at all.
+>
+> • Comments — `code.md` names its three exceptions: a test's scenario intro, `// SAFETY:` on `unsafe`, the why on a suppression
+> • Reach — `cli`, `data`, `htmx`, `service` and `trader` route to the code baseline, and every pointer names comments
+> • Python — no docstring on a private function, method or class; the public-API exception is the whole allowance
+> • PR threads — `gh-comment` fetches, replies to and resolves them; `review take` and `refine` point at it instead of restating the calls
+> • `BUGS.md` — open defects and what was ruled not one, grouped by component, with the audit narrative in `.diary/`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `gh-comment` owns the GraphQL `reviewThreads` calls — fetch a thread's id,
+  resolution state and author, reply to it, resolve it. REST carries the body
+  but neither the id nor whether the thread is already closed.
+- `py` bans a docstring on a private function, method or class.
+- `cli`, `data`, `htmx`, `service` and `trader` carry the
+  `Requires software/code.md` pointer; every such pointer now names comments.
+
+### Changed
+
+- `code.md`'s comment ban names the three exceptions owned by `testing.md`,
+  `rs` and `go`, so loading it alone no longer deletes comments the bundle
+  requires. Each owner stays inside what it owns: `ts` defers its test-block
+  content to `testing.md`, `rs` keeps `// SAFETY:` to `unsafe`, and `go`'s
+  placement rule is shown on a suppression rather than a private field.
+- The `improve` agent removes every comment `code.md` bans, not only the ones
+  that restate the obvious, and carries the pointer needed to load that rule.
+- `review take` references `gh-comment` § Setup for the auth fallback instead
+  of repeating the command.
+- `BUGS.md` holds two sections — defects still true of the code, and what was
+  ruled not a defect — grouped by component, with no dated status blocks.
+- `review take` sources its worklist from every open thread, human and bot,
+  and treats `isResolved` or a bot's "Addressed in" banner as a claim to
+  re-verify at HEAD.
+- `pr-draft` keeps the reasoning behind a non-obvious decision when cutting to
+  essence; narration and restatement still go.
+- `improve` ranks a banned comment left standing as Important, matching the
+  baseline that calls it a defect.
+- The wisdom file bans overriding `CARGO_TARGET_DIR`, `TMPDIR` or any other
+  configured build or temp path.
+
+### Fixed
+
+- `make test-<dir>` ran nothing: the pattern targets were listed in `.PHONY`,
+  which stops `%` from matching.
+- dockbox wrote the Codex bridge symlinks absolute, so they dangled on the
+  host once the container's home differed.
+- `hooks/Makefile` names the real constraint — a `test_*.py` missing from
+  `TEST_FILES` never runs and the suite still passes.
+- The skill map listed `testing`, which is on the install prune list; its
+  content lives in the `software` router.
+
+## [v0.3.88] — 20260915
+
+> kronael v0.3.88 — the docs say what the code does
+>
+> Three documents claimed things the code does not do; `tw-fetch` gained the README it shipped without.
+>
+> • Stop hook — nudges for a diary in any git repo, with or without a `.diary/` directory
+> • `software` router — its what-lives-where table lists `testing.md`, which the dispatch table already reached
+> • `tw-fetch` — a README covering the cookie login, the three commands, and what a dumped tweet holds
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `tw-fetch/README.md` — the cookie login flow, the `timeline`/`user`/`login`
+  commands, output paths and record fields, and the Chrome requirement.
+
+### Fixed
+
+- `hooks/ARCHITECTURE.md` claimed the stop hook gates its diary check on a
+  `.diary/` directory existing; it nudges in any git repo.
+- `skills/software/CLAUDE.md`'s what-lives-where table had no row for
+  `testing.md`.
+
+## [v0.3.87] — 20260915
+
+> kronael v0.3.87 — you have to ask before it pushes
+>
+> Pushing and PR-creating now need you to say so in that message, and comments are gone from code unless a caller reads them.
+>
+> • Push — only on a direct instruction, and `master`/`main` needs a second approval naming the branch
+> • Comments — banned outside doc comments on exported items; touching a file means sweeping the ones already in it
+> • Refine — reads a PR's unresolved threads, fixes what is real, replies and resolves, and every step closes on an observable criterion
+> • New skills — `squash`, `solana`, `create/social`, `refactor-stack`, plus per-language refine lenses
+> • dockbox — `-n` keys the directory basename, so a renamed box is still found by `ls`, `rm` and prune
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Skills: `squash`, `solana` (+ its onchain/layout/deps/review data files), the
+  `create/social` mode with its render script, `software/money.md`,
+  `software/refactor-stack.md`, `ts/node-cluster.md`, `ts/v8-deopt.md`, and
+  `refine/{ts,tsx}.md` — the language lenses `refine` step 3 reads.
+- `show-me` skill ported from humanlayer/skills: smallest useful visual for the
+  current conversation topic.
+- `prompt_nudge` nudges `/resolve` once per session, behind a `.claude/tmp`
+  marker; `/resolve` itself is now a slash command.
+- The stop hook emits a turn recap — commits landed, what is still uncommitted,
+  and any merge/rebase/cherry-pick left in progress.
+- `wisdom`: `<important if>` guidance for project `CLAUDE.md`, the runbook body
+  pattern, skills-as-first-class rules and the `/learn` pairing.
+
+### Changed
+
+- `git push`, `gh pr create/merge` and `gh release create` run only on a direct
+  instruction in that message; `master`/`main` needs a second approval that
+  names the branch, given after the exact refspec is shown.
+- Comments are banned outside a doc comment on an exported item, and touching a
+  file means reading every comment already in it and deleting the banned ones.
+- Code and prose are written in the idiom of what surrounds them — mirror the
+  neighbours rather than adding scaffolding they do not use.
+- Committing finished, verified, user-directed work is part of doing the work —
+  no separate "should I commit?" question.
+- `refine` runs as a runbook: each step closes on an observable criterion, the
+  correctness lenses are seeded from the defaults models confess to, and PR
+  review threads are triaged, fixed, replied to and resolved.
+- `review give`/`take` and `gh-comment` distill each finding to at most two
+  lines before posting; a filed issue and a patched PR body open with a robot
+  marker so a reader knows Claude wrote it.
+- `merge` covers rebasing onto a squash-merged main by tree boundary; `next`
+  parks items via `TodoWrite` instead of a file.
+- Rust unit tests are declared at the top of the source file, with the imports.
+- dockbox and qemubox pin `claude-fable-5-1`, `gpt-6-astra`, and default to
+  `claude-opus-5`.
+
+### Fixed
+
+- `dockbox -n` keys the directory basename instead of replacing the whole
+  container name, which hid a renamed box from `ls`, `rm` and prune.
+- The install step pins `diffSidebarOpen` off in `~/.claude.json`, where the key
+  actually lives — `settings-recommended.json` cannot carry it.
+- The stop hook reports a missing or stale diary instead of appending an empty
+  `## HH:MM` header.
+- The pretool hook routes `SKILL.md`/`CLAUDE.md`/`AGENTS.md` edits to `/wisdom`.
+- The sandbox drift guard extracts each script's own default model and compares
+  them, instead of grepping one hardcoded model literal.
+- `software/money.md`, `ts/node-cluster.md` and `ts/v8-deopt.md` are reachable
+  from their owners' dispatch tables, so they actually load.
+- Published skill content carries no pointers to notes or services a reader
+  cannot reach.
+
+## [v0.3.86] — 20260913
+
+> kronael v0.3.86 — what you asked for is what ships
+>
+> Skills stop quietly swapping a requested result for a convenient one, and stop refusing art work on copyright grounds.
+>
+> • `demo` gains a versus-scoreboard intro — meme, original and placeholder art are distinct deliverables, locked from the brief
+> • Copyright is a sourcing and NOTICE check now, not a blanket reason to refuse a feasible asset
+> • `fin` keeps a scope ledger — rereads every message since the goal, so a deferred item can't be reported as done
+> • `credits` describes copyleft neutrally — read the actual LICENSE; never call a license "contamination"
+> • `speed-demo` routes meme openers to `demo` and moves ~120 lines of failure detail into `lessons.md`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `skills/demo/SKILL.md` documents the versus-scoreboard intro: a Pillow
+  compositor plus ffmpeg concat, four art slots replaceable by filename, and
+  an asset-class lock taken from the brief before composing.
+- Refusing feasible asset work on copyright grounds is replaced by a
+  provenance/NOTICE check. Substituted art keeps the item open until the user
+  accepts it.
+- `skills/fin/SKILL.md` gains **Scope ledger** — completion is semantic, and
+  "everything is done" is barred while any item is deferred or blocked.
+- `skills/credits/SKILL.md` gains **License compatibility** — compatibility
+  depends on the exact licenses and linkage, so surface the narrow uncertainty
+  rather than a blanket prohibition.
+- `skills/speed-demo/SKILL.md` drops ~120 lines of failure narration for a
+  pointer to `lessons.md` and routes recognizable-meme openers to `demo`.
+
+## [v0.3.85] — 20260912
+
+> kronael v0.3.85 — a rule you can recite is not a rule you follow
+>
+> The wisdom sweep is reverted — the rules it cut as already-known are ones the models confess to breaking.
+>
+> • Wisdom rules restored — fail-loud, no-duplication and fix-causes stay in every session
+> • `wisdom` asks the behaviour question per rule now — a long cut list means it was skipped
+> • Run a probe you expect to fail first; a broken check and a passing one look the same when green
+> • `refine` rewritten as a runbook — 9 steps, each closing on an observable pass/fail
+> • Its correctness lenses seed from what models admit they do, not a frozen checklist
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — the minimization criterion was wrong
+
+"The model reproduces this rule unprompted" does not mean the rule is
+redundant. Asked about their own defaults, both models named logging-and-
+swallowing, degrading where crashing is correct, inventing a second logging
+path without grepping for the first, over-mocking, and commenting above
+almost every block — each while able to recite the rule against it.
+
+Cuts made on that criterion are reverted in `skills/global/SKILL.md` and
+`skills/software/code.md`. Two unrelated fixes from the same sweep stay: the
+`./tmp` removal and the false `requires:` claim.
+
+### Changed
+
+- `skills/refine/SKILL.md` follows the runbook pattern — every step closes on
+  an observable criterion (`git status --porcelain` empty, test target exits 0,
+  no file in two buckets, `git worktree list` shows only the main tree).
+- Refine's correctness lenses seed from a **Confessed defaults** section —
+  the error, test and comment habits models report as their own first pass.
+- `skills/wisdom/SKILL.md` gains the method the sweep cost to learn: ask the
+  behaviour question per candidate rule, re-examine every earlier cut when the
+  criterion changes, and run a probe you expect to fail before trusting one
+  that passes. Expect a nearly empty cut list.
+- `CLAUDE.md` test and hooks notes match the repo: PROJECTS is five projects
+  and `make test` also runs `tests/drift_test.sh`; `make gen-ci` is listed.
+  The hooks note explains the real trap — `hooks/Makefile` names its test
+  files explicitly, so a new `test_*.py` is skipped in silence.
+
+### Fixed
+
+- The no-duplication rule is back in the wisdom file. Both models report
+  reaching for the mainstream idiom over a repo-local helper they never
+  grepped for, which is the rule's whole subject.
+
+## [v0.3.84] — 20260912
+
+> kronael v0.3.84 — skills that conform, bridges that are proven
+>
+> Skill frontmatter now matches what Claude Code actually reads, and the check runs in `make skills-frontmatter` instead of living in someone's memory.
+>
+> • Only recognised frontmatter keys — `arg` was silently doing nothing, and four provenance keys travel badly
+> • `name` must equal its directory, and `description` + `when_to_use` must stay inside the 1,536-char listing budget
+> • Both checks enforced by the linter; a repaired file is re-checked rather than passed
+> • pi runs again — its shebang picked a Node too old for its own regex
+> • `CLAUDE.md` mandates conformance and bridge verification, with the command for each
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — frontmatter conformance is now enforced
+
+`make skills-frontmatter` fails on an unrecognised key, a `name` that differs
+from its directory, or a `description` + `when_to_use` over 1,536 characters.
+All three previously failed silently at runtime: an unknown key is ignored, an
+over-budget listing is truncated mid-keyword, and a wrong name simply disagrees
+with the command. Run it before any commit touching `skills/`.
+
+### Added
+
+- `CLAUDE.md` gains a Conformance section: skills must use only the frontmatter keys Claude Code reads, keep `name` equal to the directory, stay inside the listing budget, and be reachable from `SKILL.md` — directly or through a file it already names. Both bridges must be proven by running them, and a symlink existing is explicitly not the same claim as the tool working.
+
+### Changed
+
+- `skills/software` trigger list cut from 1,520 characters to 1,068. It sat 16 short of the listing cap, where any edit would have truncated its later modes out of the always-on listing without an error.
+- `skills/wisdom/clean-room.sh` reduced from 50 lines to 18. Cleanup needed a `find` pipeline only because recursive removal is banned, so the room is left in `/tmp` and the trap that failed good runs is gone; reading the prompt into a variable lets `set -e` catch a missing file without a check.
+- Ported skills keep their provenance under `metadata` as flat strings, since the Agent Skills spec defines string keys and values.
+
+### Fixed
+
+- `recall-memories` declared `arg`, which is not a key — the autocomplete hint is `argument-hint`, so it was declaring nothing.
+- `credits` declared `name: credit` against its own directory, the only such mismatch in the bundle.
+- The linter returned success for a file whose YAML it had only repaired, leaving a wrong name and an unknown key in place, and raised `AttributeError` on frontmatter that was not a mapping.
+- The pi wrapper called bare `bun`, so pi died with `exec: bun: not found` whenever `~/.bun/bin` was off PATH.
+- `skills/software`'s dispatch table had one row listing fourteen sub-topics where every other row names a handful.
+
+## [v0.3.83] — 20260912
+
+> kronael v0.3.83 — guidance measured against a model that cannot see it
+>
+> The wisdom skill can now tell whether a rule earns the context it costs, by asking a model with no access to the file to write that guidance itself.
+>
+> • `wisdom` gains `clean-room.sh` — a throwaway HOME and empty cwd, so the model answers from training, not from your config
+> • Rules two clean models produce unprompted are cut; rules they state and then break are kept and stressed
+> • The four pre-kronael language skills are pruned; `sh`, `py`, `rs`, `ts`/`tsx` supersede them
+> • `tsx` gains the theme-variable rule: never hardcode a colour, fix `globals.css`
+> • The `./tmp` scratch-location rules are gone — the log path is the caller's choice
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — pruned language skills
+
+`bash`, `python`, `rust` and `typescript` never existed in this repo; they came
+from a pre-kronael install and their descriptions collide with `sh`, `py`, `rs`
+and `ts`/`tsx`, which is a routing race. Install now prunes them. Their content
+was checked line by line against the successors first — everything was already
+covered, usually more precisely, except the Tailwind theme-variable rule, which
+moved to `tsx`.
+
+### Added
+
+- `skills/wisdom/` gains the minimize method and `clean-room.sh`. A rule in an always-loaded file earns its place only when the model would not already behave that way, so the harness runs a prompt against a throwaway `HOME` (no wisdom file to load) in an empty working directory (no project `CLAUDE.md` to discover), and the skill requires verifying the room with a probe before any answer is trusted. It refuses an unknown model rather than silently answering from a resolved one, refuses an empty or missing prompt, keeps errors on stderr, and never prints an empty answer as a result.
+- `tsx`: theme variables are mandatory — `bg-card text-foreground border-border`, never `bg-[#1C1C1C]`; a wrong colour is fixed in `globals.css`, never worked around at the call site.
+
+### Changed
+
+- Guidance that two clean models produce unprompted is cut from `skills/global/SKILL.md` and `software/code.md`: the generic git safety mechanics, mock boundaries and test-file locations, subagent briefing and spawn thresholds, the no-duplication and fail-loud paragraphs, the rule of three and state minimisation. Workflow content stays regardless of reproducibility — make targets, the commit format, slash-command triggers, the `.ship/` and `.diary/` layout, the `BUGS.md` protocol, `/resolve` and `/gh-comment`.
+- Rules the models recite and then confess to breaking are kept and stressed with the pull that defeats each: never claim done before running the verification command, never state a claim unverified, never improve beyond what was asked, fix causes rather than the reported instance, and zero comments by default.
+- The `./tmp` scratch-location rules are removed from the wisdom file, `code.md`, `software/observe.md`, `software/testing.md`, `review/take.md`, `browse` and `agent-browser`. Capture-once, the failure screenshot and the heartbeat stand without a prescribed directory.
+
+### Fixed
+
+- The push rule had been rewritten from a prohibition into an unconditional order to push, which contradicted commit-only-when-asked and commanded an action `settings-recommended.json` denies outright. Restored, with the force-push ban.
+- `clean-room.sh` deleted only regular files, so a symlink or fifo in the room left `rmdir` with a non-empty directory and turned a successful run into exit 1 with the room leaked.
+- A heading whose rule had been cut is renamed to what sits under it; the subagent-report rule no longer appears twice in the wisdom file; the `review` skill no longer cites a rule that was removed; `code.md` no longer claims language skills carry a `requires: software` frontmatter hint, which none of them do.
+
+## [v0.3.82] — 20260912
+
+> kronael v0.3.82 — Stop recaps the turn
+>
+> Every Stop with nothing to block on now recaps what landed, what is still uncommitted, and any git operation left mid-flight.
+>
+> • Stop recap — commits landed, what is still uncommitted, and any merge/rebase in progress
+> • Output style renamed to `caveman` — installs prune the old file and repoint `outputStyle`
+> • show-me — ask for the smallest visual: pseudocode, call tree, mermaid, or a diff
+> • Codex bridge — the managed block now survives install instead of being overwritten
+> • dockbox + qemubox agree on claude-opus-5, claude-fable-5-1 and gpt-6-astra
+> • A dated feature branch, its push and `gh pr create` are permitted for review
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Operator note — output style renamed
+
+The response style is `caveman`: `output-styles/caveman.md`, frontmatter
+`name: caveman`, and `"outputStyle": "caveman"` in settings. Install repoints
+`outputStyle` and deletes `~/.claude/output-styles/80-caveman.md`; a hand-edited
+`settings.json` that still names the old style activates nothing, because no
+file answers to that name.
+
+### Added
+
+- `stop.py` emits a turn recap on a real Stop with nothing to block: commits landed since the session's previous Stop, tracked changes with `+added -deleted`, untracked paths touched inside the window, and any merge/rebase/cherry-pick/revert/bisect in progress. Capped at `RECAP_COMMITS` commits and `RECAP_PATHS` paths, bounded by one `RECAP_BUDGET` deadline, never emitted from periodic `PostToolUse` or under Codex.
+- `show-me` skill — the smallest visual for the current topic: pseudocode, call tree, component tree, mermaid, or a diff. Ported from humanlayer/skills (MIT, attributed in `NOTICE`).
+- `software` router gains the refactor-stack runbook: unreviewable-branch triage, tests before refactor, mutation-proven vs tautological tests, the dead-code oracle, and diffstat splitting.
+- `tsx`: prop-narrowing rules. `wisdom`: `<important if>` guidance for project `CLAUDE.md` and the runbook body-pattern. `diary`: named companion entries `YYYYMMDD-<name>.md`.
+
+### Changed
+
+- The `caveman` output style is the single source of the response rules for both Claude and Codex; the wisdom file and the Codex managed block point at it instead of carrying their own copies.
+- Wisdom permits a dated `YYYYMMDD_<tag>` review branch, `git push -u origin` to it, and `gh pr create` after showing title and body. `master`/`main` checkout, force push, `gh pr merge`, `gh pr review --approve`, `gh release create` and `gh repo create` stay forbidden; `settings-recommended.json` no longer denies `gh pr create`.
+- `codex` skill inherits the newest model rather than pinning a literal, confirms it against `models_cache.json` priority 1, and pins `-m` only when the resolved default is not that entry. It also never hands codex a list of suspected weaknesses.
+- `ship` requires re-research against current code in a subagent before planning.
+
+### Fixed
+
+- `stop.py`: a failed `git status` read as a clean tree, dropping the commit block and replacing it with a confident recap — an unreadable tree is now reported.
+- `stop.py`: a partial git failure emitted half a recap and advanced the session stamp past work the user never saw. Any required call failing now drops the whole recap with the stamp untouched, which also makes the spent-budget and timeout paths agree. The git-dir probe runs under the same deadline.
+- `stop.py`: status parses `-z` records, so non-ASCII and spaced paths reach the recap and a rename counts once; with no window the tree line reports what it can judge.
+- Install merges the Codex managed block after the wisdom write. The Codex guidance path may symlink to the wisdom file, so merging during asset copy was overwritten.
+- `qemubox` model aliases and default matched `dockbox`, turning `tests/drift_test.sh` green.
+
+## [v0.3.81] — 20260902
+
+> kronael v0.3.81 — install skill can rsync without prompting
+>
+> The recommended permission set now allows the install skill's rsync into `~/.claude/`, so setup doesn't stop for a permission prompt.
+>
+> • Allows `rsync * ~/.claude/*` in `settings-recommended.json`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Adds `Bash(rsync * ~/.claude/*)` to the recommended permission allowlist so the install skill's rsync step to `~/.claude/` runs without a manual approval.
 
 ## [v0.3.80] — 20260901
 

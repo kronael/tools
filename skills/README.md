@@ -79,15 +79,18 @@ the authoritative entry. The categories:
 
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
-- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`,
-  `browse`, `diagrams`, `astgrep`, `demo`, `markdown-converter`) —
+- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
+  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
   language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
   `media-ingest` (URL → transcript/audio/video via `yt-dlp`) are adapted from
-  [steipete/agent-scripts](https://github.com/steipete/agent-scripts).
+  [steipete/agent-scripts](https://github.com/steipete/agent-scripts). `show-me`
+  (opt-in `/show-me` — pseudocode/call-tree/mermaid/diff/local-HTML for the
+  current conversation topic, distinct from `diagrams`' permanent ASCII docs)
+  is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
-  `release`, `specs`, `merge`, `bugs`, `recall-memories`, `wisdom`,
+  `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
   scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
@@ -119,7 +122,7 @@ Skills cluster into phases. Main spine: orientation → planning → coding → 
 Side-channels (escalation, communication) fire at any stage.
 
 ┌─ orientation ───────────────┐
-│ resolve recall-memories     │
+│ solve recall-memories       │
 │ explore                     │
 └──────────────┬──────────────┘
                │
@@ -134,7 +137,7 @@ Side-channels (escalation, communication) fire at any stage.
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review code-review improve  │
-│ refine visual testing bugs  │
+│ refine visual software bugs │
 └──────────────┬──────────────┘
                │
 ┌─ output ─────▼──────────────┐         ┌─ communication ─────┐
@@ -142,7 +145,7 @@ Side-channels (escalation, communication) fire at any stage.
 │ gh-comment                  ├────────►│ learn tweet         │
 └─────────────────────────────┘         └─────────────────────┘
 
-**orientation** — load context before acting. `resolve` is the universal entry point;
+**orientation** — load context before acting. `solve` is the universal entry point;
 `recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
 **planning** — `specs` for design docs; `ship` for multi-session work tracking.

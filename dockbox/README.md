@@ -52,8 +52,9 @@ dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
 dockbox -T                        # tmpfs backend for ephemeral dirs
 dockbox -e GH_TOKEN               # forward env var into container
-dockbox -n mybox .                # custom container name
+dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
+dockbox exec make test            # run a command in the box
 dockbox ls                        # list dockbox containers
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
@@ -79,7 +80,7 @@ tool, `--model`, `--effort`, args — takes effect, and **env flags**
 (`-e`, `-g`) are forwarded into the session, so a box first started
 without `-g` still gets the token when a later `dockbox -g` re-enters
 it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
-fixed when the container is created. Use `-n <name>` to force a
+fixed when the container is created. Use `-n <name>` to key a
 separate, fully-provisioned container instead.
 
 ## Configuration
@@ -97,7 +98,8 @@ container so the boxed agent can't modify it.
 
 Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
-- `~/.claude.json` -> copied at startup (fallback creates minimal file)
+- `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
+  (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
 - `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
 

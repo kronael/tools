@@ -1,7 +1,7 @@
 ---
 name: review
 description: Give or take a code review — produce findings (give) or apply them (take); local by default, or a GitHub PR with `gh`. NOT for posting arbitrary PR comments (use gh-comment) or filing issues (use gh-issue).
-when_to_use: "review this, review my changes, review the diff, review the branch, review before commit, code review, find bugs in my changes, give a review, review PR, review the pull request, critique a PR, post review findings on a PR, take a review, apply the review, fix the PR comments, address review comments, apply PR feedback, act on reviewer comments"
+when_to_use: "review this, review my changes, review the diff, review the branch, review before commit, code review, find bugs in my changes, give a review, review PR, review the pull request, critique a PR, post review findings on a PR, take a review, take GH review, apply the review, apply GH review comments, fix the PR comments, address review comments, apply PR feedback, act on reviewer comments, incorporate review comments, answer PR comments, resolve review threads, CodeRabbit comments"
 argument-hint: "[give|take] [gh]"
 user-invocable: true
 ---
@@ -16,13 +16,18 @@ Two directions × an optional platform. Read the ONE matched file, then follow i
 |---|---|
 | review local changes — uncommitted diff, a branch, or a range (default) | `give.md` |
 | review a GitHub PR and post findings back to it | `give.md` § GitHub PR |
+| apply a PR's review comments | `take.md` § GitHub PR |
 | apply a local findings list / `BUGS.md` | `take.md` |
-| apply a GitHub PR's review comments | `take.md` § GitHub PR |
 
-Bare `/review` = give, local. `gh` selects the GitHub variant. `give` produces
-findings (read-only); `take` applies them.
+Bare `/review` = give, local. `give` produces findings (read-only); `take`
+applies them.
+
+ALWAYS take the user's own word for it: they said `take`, they mean apply a
+review that already exists, and a review is almost always a PR's comments —
+`gh pr list` and go. "and fix the issues" does not make it `give`; `take` ends
+in fixes too.
 
 ## Rules
 
 - ALWAYS route GitHub posting through the `gh-comment` skill — its approval gate and 🤖 markers.
-- NEVER `gh pr create`, `gh pr merge`, `gh pr review --approve`, or `git push` — refuse and cite CLAUDE.md.
+- NEVER `gh pr merge`, `gh pr review --approve`, or `git push` to a branch the user did not name.

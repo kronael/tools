@@ -67,6 +67,7 @@ qemubox haiku ~/src/repo   # pick a Claude model alias
 qemubox codex ~/src/repo   # run Codex instead
 qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
+qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
 qemubox -N bash            # empty VM, no project mount
 ```
@@ -74,7 +75,8 @@ qemubox -N bash            # empty VM, no project mount
 `qemubox [tool] [dirs] [args]`. The first bare (non-path) argument is the tool:
 `claude` (default, opus @ xhigh), `haiku` / `sonnet` / `opus` / `fable` for
 Claude models, `codex` / `gpt` / `mini` / `spark` for Codex, `bash` / `zsh` for
-a shell, or any binary in the VM. The default VM name is the project dir
+a login shell, or any binary in the VM. `exec <cmd>` passes every later argument
+through untouched, so a command taking a path argument stays intact. The default VM name is the project dir
 basename; `-n name` gives a separate box.
 
 Management:

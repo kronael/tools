@@ -122,19 +122,17 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - Merge the block between `<!-- kronael:start -->` and
-     `<!-- kronael:end -->` from `codex/AGENTS.md` into
-     `~/.codex/AGENTS.md` when running from Codex. Replace only an existing
-     Kronael block; otherwise append it. NEVER overwrite content outside the
-     markers. This makes Codex load Claude guidance in addition to AGENTS
-     guidance and applies the selected terse response policy.
-   - **Prune renamed and removed hooks**: delete `~/.claude/hooks/nudge.py` and
-     `~/.claude/hooks/extnudge.py` (renamed to `prompt_nudge.py` /
-     `pretool_nudge.py`), and `redirect.py`, `context.py`, `learn.py`,
-     `test_hooks.py`, `lib/toolchain.py` (removed as orphan hooks — registered
-     in no settings file). Backup first per step 1. An install keeps files the
-     source has dropped, so an unpruned orphan reads as live-ahead work on the
-     NEXT sync and gets vendored back in; that is what this list prevents.
+   - **Prune renamed and removed files**: delete `~/.claude/hooks/nudge.py`,
+     `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
+     if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
+     `output-styles/caveman.md` instead, and a stale copy keeps loading beside
+     its replacement. A stale output style also leaves `outputStyle` pointing
+     at a name no file answers to. Also delete the orphan hooks `redirect.py`,
+     `context.py`, `learn.py`, `test_hooks.py` and `lib/toolchain.py`
+     (registered in no settings file). Backup first per step 1. An install
+     keeps files the source has dropped, so an unpruned orphan reads as
+     live-ahead work on the NEXT sync and gets vendored back in; that is what
+     this list prevents.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
@@ -160,17 +158,38 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `rm -rf build/`. NEVER write the glob outside the parens
      (`Bash(rm -rf /)*`) — it matches nothing and silently disables the guard,
      so verify the four entries are present and paren-closed after merging.
+   - **Sandbox / permission posture is loosen-only.** NEVER tighten what the
+     user already chose — ALWAYS leave a looser installed value in place.
+     Concretely: never flip `sandbox.enabled` false → true, never narrow
+     `sandbox.excludedCommands`, never move `permissions.defaultMode` from
+     `bypassPermissions` toward `default`, never drop an installed `allow`
+     entry. Install may only widen (add `allow` entries, relax the sandbox).
+     The recursive-removal deny guard is the one exception — it always applies.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
+   - **Diff sidebar off** — `diffSidebarOpen` is global config, not a settings
+     key, so it lives in `~/.claude.json` and CANNOT ship in
+     `settings-recommended.json`. Set it there with
+     `jq '.diffSidebarOpen=false' ~/.claude.json > t && mv t ~/.claude.json`,
+     preserving every other key. It takes effect on the next Claude Code start.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
    support), install every bridge:
    - Global wisdom: if neither `~/.codex/AGENTS.override.md` nor
      `~/.codex/AGENTS.md` exists, symlink `~/.codex/AGENTS.md` →
-     `~/.claude/CLAUDE.md` (leave it if already resolved). Any other existing
-     global Codex guidance is a conflict — show and ask. NEVER rely on project
-     fallback names for global guidance.
+     `../.claude/CLAUDE.md` (leave it if already resolved). ALWAYS write this
+     link RELATIVE: dockbox bind-mounts `~/.codex` into a container whose home
+     is not this one, so an absolute link resolves there and dangles here.
+     A dangling link costs Codex its global guidance with no error — repoint
+     any absolute or broken one. Any other existing global Codex guidance is a
+     conflict — show and ask. NEVER rely on project fallback names for global
+     guidance.
+   - AFTER installing wisdom and resolving the global guidance path, merge
+     the marked block from `codex/AGENTS.md` into `~/.codex/AGENTS.md`.
+     Replace only the existing Kronael block; otherwise append it. NEVER
+     overwrite content outside the markers. The path may symlink to the
+     wisdom file, so ALWAYS perform this merge after the wisdom write.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if

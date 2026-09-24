@@ -39,6 +39,20 @@ Built on (paths under skills/):
     adapted from ochaloup/claude by @ochaloup (no explicit license)
     https://github.com/ochaloup/claude
 
-Sub-licenses are reproduced in skills/humanize/LICENSE.
+  show-me — ported from humanlayer/skills `show-me`
+    © 2026 HumanLayer (MIT)
+    https://github.com/humanlayer/skills
+
+  wisdom/SKILL.md § CLAUDE.md (project), § Body patterns — folded from
+  humanlayer/skills `improve-claude-md` and `build-iterated-agentic-loop`
+    © 2026 HumanLayer (MIT)
+    https://github.com/humanlayer/skills
+
+  tsx/SKILL.md § Props & State — folded from humanlayer/skills
+  `narrow-react-prop-types`
+    © 2026 HumanLayer (MIT)
+    https://github.com/humanlayer/skills
+
+Sub-licenses are reproduced in skills/humanize/LICENSE and skills/show-me/LICENSE.
 For all MIT and Apache-2.0 upstream works, copyright notices are retained
 in the respective data-file frontmatter where present.

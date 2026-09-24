@@ -155,10 +155,12 @@ RUN mkdir -p /etc/zsh && printf '%s\n' \
 # claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
 # honored; falls back to the symlinked default node otherwise. jq strips the
 # host's native-install keys so the container's bun claude doesn't warn about a
-# ~/.local/bin/claude that only exists on the host.
+# ~/.local/bin/claude that only exists on the host, and pins diffSidebarOpen so
+# the diff tab stays closed (it is global config in ~/.claude.json, not a
+# settings.json key, so it cannot be shipped in settings-recommended.json).
 RUN printf '#!/bin/sh\n\
-[ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative)" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
-[ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true}" > "$HOME/.claude.json"\n\
+[ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative) + {diffSidebarOpen:false}" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
+[ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true,\"diffSidebarOpen\":false}" > "$HOME/.claude.json"\n\
 export NVM_DIR="/opt/dev-tools/nvm"\n\
 unset NPM_CONFIG_PREFIX\n\
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"\n\
@@ -169,15 +171,18 @@ exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
 # runtime user's $HOME. Codex scans ~/.agents/skills and loads global guidance
 # from ~/.codex/AGENTS.md; point both at the ~/.claude bundle. Idempotent and a
 # no-op until the bundle is installed into $HOME, so it is safe on every start.
+# The links are RELATIVE: ~/.codex and ~/.agents are bind-mounted from the host,
+# so an absolute link written here resolves to the container's home and dangles
+# on the host — silently costing the host Codex its global guidance.
 RUN printf '%s\n' \
   '#!/bin/sh' \
   'set -eu' \
   '[ -d "$HOME/.claude/skills" ] || exit 0' \
   'mkdir -p "$HOME/.agents"' \
-  '[ -e "$HOME/.agents/skills" ] || ln -s "$HOME/.claude/skills" "$HOME/.agents/skills"' \
+  '[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"' \
   'if [ -f "$HOME/.claude/CLAUDE.md" ] && { [ -L "$HOME/.codex/AGENTS.md" ] || [ ! -e "$HOME/.codex/AGENTS.md" ]; }; then' \
   '  mkdir -p "$HOME/.codex"' \
-  '  ln -sfn "$HOME/.claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"' \
+  '  ln -sfn ../.claude/CLAUDE.md "$HOME/.codex/AGENTS.md"' \
   'fi' \
   > /usr/local/bin/dockbox-codex-bridge && chmod +x /usr/local/bin/dockbox-codex-bridge
 

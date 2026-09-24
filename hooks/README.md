@@ -24,6 +24,11 @@ Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
 
+On the first non-empty prompt of a session it also prepends a `/solve` nudge
+(triage + diary/memory load before acting), tracked by the session-keyed
+stamp `solve-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) so
+continuations stay silent. A prompt that already invokes `/solve` suppresses it.
+
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
 Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
 with its own maintenance.
@@ -34,8 +39,9 @@ Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
 nudge, once per session+file. It also blocks true unsafe shell commands:
-`git push`, `git reset --hard`, broad `git add`, amend/no-verify commits,
-`rm -rf`, and recursive Codex execution inside Codex.
+`git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`, and
+recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
+gated by consent in `skills/global`, not by the hook.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
@@ -79,12 +85,32 @@ instructing the model to preserve the wisdom across the compact.
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
 -uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
 the repo diary has today's entry missing or >1h stale ("consider /diary";
-Codex sees `@diary`). When called from periodic `PostToolUse`, the same checks
+Codex sees `@diary`). The diary nudge fires once per session, keyed by
+`session_id` in `~/.claude/state` (`lib/state.py`), however many repos the
+session visits. When called from periodic `PostToolUse`, the same checks
 emit advisory `hookSpecificOutput.additionalContext` and never block a tool
 call.
 
-The hook may append a blank diary header for missing/stale diary entries. Pure
-script, no LLM call, NEVER pushes.
+A `git status` that fails inside a repo blocks with its stderr — the tree is
+reported as unreadable rather than assumed clean.
+
+The hook reports a missing or stale diary entry and never writes a header —
+run `/diary` deliberately when a session is worth recording. Pure script, no
+LLM call, NEVER pushes.
+
+When a real `Stop` has nothing to block on, the hook instead emits a turn recap
+as `systemMessage` (shown to the user, never blocking):
+commits landed since the previous Stop of this session, what is still
+uncommitted (tracked changes with `+added -deleted`, plus untracked paths
+touched inside the window — older untracked noise is skipped), and any
+merge/rebase/cherry-pick/revert/bisect left in progress. About ten lines, capped
+at `RECAP_COMMITS` commits and `RECAP_PATHS` paths. The first Stop of a session
+has no window and shows the `head` commit instead; with no window the tree
+line reads `no tracked changes`, since untracked age cannot be judged yet. The recap is best effort:
+ALWAYS silent outside a git repository, when a git call fails, or once
+`RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse` or
+under Codex (`KRONAEL_IN_CODEX`). State: `<git-dir>/claude-recap-{session_id}`,
+the ISO time of the last recap.
 
 ### memory_nudge.py (PreCompact + Stop)
 

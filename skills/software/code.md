@@ -1,8 +1,8 @@
 # Code — the engineering baseline
 
 The language-agnostic base every language skill builds on. `go`, `rs`, `py`,
-`ts`, `sh`, and `sql` read this first (they say so in their body and
-carry a `requires: software` hint), then apply their language-specific overlay.
+`ts`, `sh`, and `sql` read this first — they say so in their body — then apply
+their language-specific overlay.
 Nothing here is language-specific; if a rule only holds for one language it
 belongs in that language's skill, not here.
 
@@ -29,15 +29,40 @@ Discard with a bare `_`, never a named `_prefix` binding — `|(_, account)|`, n
 `|(_withdraw, account)|`. The name labels a value you are throwing away; it is
 clutter the reader still has to parse.
 
+Inherit names; never invent one when the surrounding code already has it.
+Before naming a function, parameter, field, type, test helper, or
+commit-message term, check what the code, the schema, the domain, and
+existing callers already call that thing, and reuse it exactly. A new word is
+a claim that no existing name fits, and it has to be earned. Name a parameter
+or local after its own type or the domain concept it holds, not after a role
+you invented — a `&WithdrawerTracker` parameter is `tracker`, not `scope`. Use
+the domain's word, not a synonym you prefer — if the column and the
+surrounding code say `withdrawer`, the accessor is `withdrawers_of`, never
+`owners_of`. An API-visible function — anything `pub`/`pub(crate)`, called
+across modules, or that reads as part of the surface — is named by a verb
+phrase: the verb is the action, the type it returns is the verb's object —
+`filter_resolved_snapshots(...)`, not the value-shaped noun
+`snapshots_with_resolved_withdraw(...)` that reads like the thing returned
+rather than the act. A small local or inline helper may instead take the noun of
+the type it returns, not a structure it builds internally or a nearby map.
+Either way, `is_`/`has_` for predicates, `to_`/`into_` for conversions. If an
+existing name is genuinely wrong,
+change it everywhere — never coin a second name that competes with it. A
+rename is not licence to rewrite prose: the same word can be a variable in
+code and a domain term in a comment, and a blind rename corrupts the comment.
+
 ## Layout and formatting
 
 One import per line; it keeps diffs clean. Keep code at 80 columns or under and
 prose at 100, with 120 the hard ceiling reserved for the rare line that genuinely
 hurts to wrap (a long URL, a table row).
 
-Utility files are named `*_utils.*`. Never write under `/tmp` — use `./tmp` in
-the project root, with `./log` for debug and smoke logs and `./dist` or
-`./target` for build artifacts.
+Never nest a long or multi-line expression inside an `if`/`if let` condition —
+a condition the reader cannot take in at a glance divorces the test from the
+`{` that answers it. Bind the expression to a name, then branch on that name:
+`let sent = retry_with_backoff(...).await;` then `if let Err(err) = sent`.
+
+Utility files are named `*_utils.*`.
 
 A script runs from a fixed working directory with simple relative paths — NEVER
 `basename $0`, `__dirname`, or complex path resolution.
@@ -54,19 +79,30 @@ that top-level Python runner instead of requiring shell redirection.
 
 ## Comments
 
-ZERO comments by default. ALWAYS carry intent through names, types, and
-structure first; a comment is the last resort. When one earns its place, at most
-ONE short line, and only when the WHY is not derivable from the surrounding code
-— rationale, a non-obvious invariant, a cross-module assumption. NEVER restate
-WHAT the code does.
+NEVER write a comment. Intent travels in names, types and structure; a comment
+is not a fallback for code that failed to carry it. The ONE general exception is
+a doc comment on a PUBLIC API item — an exported function, type, struct, module
+— and it states only what a caller cannot see from the signature: contract,
+units, ownership, error conditions. A private item gets none. A line inside a
+body gets none.
 
-Redundancy test — delete the comment if it fails: NEVER write a comment whose
-content is already visible in adjacent code, INCLUDING a log, warn, or error
-message on a neighbouring line. Paraphrasing that message in a comment above it
-is the canonical redundant comment.
+Three narrow exceptions beyond it, each owned by the skill that states it and
+valid only on the construct it names: a test's scenario-to-outcome intro
+(`testing.md`), a `// SAFETY:` invariant on an `unsafe` block (`rs`), and the
+WHY on a deliberate error suppression (`go`). Nothing else inside a body.
 
-- NEVER a multi-line comment block — no `///`, no `/** */`, no stacked `//`. A
-  comment spanning more than one line is a bug; cut it to one line or drop it.
+ALWAYS sweep the WHOLE file when you touch it, not only the lines you edit:
+read every comment standing there and delete the ones this section bans.
+Leaving one standing is a defect, not a no-op.
+
+Redundancy test — delete the comment if it fails: NEVER leave standing a
+comment whose content is already visible in adjacent code, INCLUDING a log,
+warn, or error message on a neighbouring line. Paraphrasing that message in a
+comment above it is the canonical redundant comment.
+
+- NEVER stack `//`, `#`, `///` or `/** */` lines inside a function body — the
+  ban is on the comment, not merely its length. A public-API doc comment MAY
+  span lines when the caller's contract needs the room.
 - NEVER a source line number in a comment (`// see line 200`, `// as in L42`),
   and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
   name instead.
@@ -79,7 +115,10 @@ is the canonical redundant comment.
 Reach for a struct or object only when you need to hold state or inject
 dependencies; otherwise plain functions in modules compose better and leak less.
 Model states as explicit enum variants rather than implicit boolean flags, and
-always validate input before it reaches persistence.
+always validate input before it reaches persistence. Name a variant by what
+happens at the use site — the action or effect — never an interpretive label
+the reader has to decode: `Notify::Send`/`Notify::Skip`, not
+`Notify::Partners`/`Notify::Silent`.
 
 A function-typed field in a struct is a jump, not an abstraction. The call site
 names the field; the value is whatever another file assigned, and that value is

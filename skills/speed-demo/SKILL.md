@@ -76,6 +76,12 @@ the user's creative call, so offer options, don't silently pick:
 3. **Flex + a mascot signature (end).** The headline result as the payoff,
    closed by a SMALL on-brand ASCII mascot beside the wordmark. Keep it tiny and
    tasteful — a big/cheesy mascot undercuts the credible numbers it follows.
+
+If the user asks for pictured or recognizable meme characters, route the
+opener to `demo`'s versus-scoreboard workflow. NEVER downgrade it to terminal
+labels, emoji/emoticons, or generic archetype portraits and call that the
+requested meme.
+
 Worked example: `rsx-book/demo/bench-live.sh` — an expanding-brain `░▒▓█`
 intensity ramp (naive `BTreeMap` → slab+compression, palette worst→best) cold-
 open, the live depth-invariance bench, then the rsx mascot — the neutrino's
@@ -88,127 +94,11 @@ Canonical reference SET (not just one crate): every RSX per-crate demo
 first as the template before writing a new script. Detail in `lessons.md`
 ("RSX demo family").
 
-## Recording gotcha: pin `--cols`/`--rows` at RECORD time, not just render time
-Any redraw animation (bar-fill, cursor-up-then-overwrite race) MUST be
-recorded at the SAME `--cols`/`--rows` `agg` will render at — `asciinema
-rec` otherwise defaults to the ambient shell size, `agg` re-wraps lines
-that don't fit at resample time, and every redraw *appends* instead of
-overwriting, stacking duplicate rows in the final GIF. See `lessons.md`
-("Recording gotcha") for the full symptom + fix.
+## Failure details
 
-## Verify the recording before calling it done
-NEVER judge a GIF from a single extracted frame (`gifsicle file.gif '#N'
--o frame.gif`) — it shows only that frame's dirty rectangle, not the
-accumulated picture, and will hide a real stacking bug. ALWAYS composite
-frames respecting disposal first (PIL `ImageSequence`, or `gifsicle
---unoptimize`) before calling a recording done. See `lessons.md`
-("Verify the recording") for exact commands.
-
-## End on ONE empty bottom line — never a pointer flush at the edge
-The final frame must leave exactly one blank line at the bottom, with the
-pointer (cursor) on the row above it. A cursor sitting flush against the very
-bottom edge gets cropped or looks cramped in an X/Twitter feed. Two fixes,
-both needed: bottom-anchor the last renderable so the pointer is the
-second-to-last row (a `fill_bottom(..., bot=1)` padding, not vertical-center),
-AND keep the REAL terminal cursor hidden at exit (`\x1b[?25l`) — `rich.Live`
-re-shows it on exit and it parks right below the region, re-flushing the
-bottom (the following shell prompt restores a visible cursor anyway). Confirm
-by compositing the last frame and eyeballing it.
-
-## Narrative FLOWS like a terminal — do NOT clear/re-center between claims
-The narrative is typed to stdout and LEFT there — filling the screen top-down
-like a real terminal session. Do NOT `console.clear()` + re-center each claim:
-that "reshow" reads as a slideshow and kills the terminal illusion (the whole
-credibility premise). Let the real terminal cursor trail the typing (show it,
-type char-by-char to stdout). Plain paragraph text — no `Panel`/border/title,
-a small `rich.padding.Padding` indent is plenty. Reserve `rich.panel.Panel`
-(bordered) for STRUCTURED DATA only (a numbers table); prose in a box reads as
-marketing. Typewriter reveal (type against the FULL final line structure so
-nothing jitters) + blinking `█` cursor throughout. ALWAYS type at READING
-pace, not typing-demo pace: ~45 ms/char (~250 wpm) with jittered delays, a
-longer stop (~0.3-0.5s) at sentence-enders `.!?` only (never commas/colons),
-and a real ~0.8s beat at each blank-line paragraph break — the viewer reads
-along instead of chasing the cursor. `glow`/`slides`/`presenterm`/`patat`
-were tried and rejected for cards (no reliable background under a headless
-pty); `rich` sidesteps it. Detail in `lessons.md`.
-
-## Clear ONCE, and open the reveal on a weighty beat
-Narrative-act → data-act: the ONLY screen clear is that transition. After it,
-don't dump numbers cold — open on a short weighty centered callout ("See for
-yourself.") held ~2-3s, THEN the numbers climb in, THEN the CTA, all in ONE
-`rich.Live` region (wrap each in a constant-height `Padding` block so it never
-jumps). One clear keeps terminal continuity; the beat gives the reveal weight.
-
-## Critique the recording before calling it finished
-ALWAYS spawn a critique pass on a first clean cut — one `visual`-type agent
-on the actual composited frames (typography/whitespace/hierarchy/color),
-one `general-purpose` agent on outside best practices (colorblind-safe
-comparisons: never red+green alone, ~8% of men affected, always pair color
-with a shape/text cue). Run in parallel, then apply concrete fixes. See
-`lessons.md` ("Critique the recording") for the specific findings this
-surfaced (top-anchored cards, indistinguishable tied rows, underused bar
-width) as a checklist of what to look for.
-
-## Reframe "lower is better" data as "higher is better" first
-A shorter-bar-wins latency chart reads backwards on a casual skim. Lead
-with the reciprocal (throughput = 1/latency) counting UP — intuitive win —
-then the latency detail, labeled on screen ("derived: 1/latency, not a
-separate bench"). Full rationale in `lessons.md`.
-
-## Match the project's real palette (design system OR reference photo)
-Don't pick arbitrary ANSI names. If there's a design-system palette
-(`tailwind.config.ts`, `DESIGN.md`, a rendered UI), pull exact hex via
-`rich`'s `color_system="truecolor"`; group genuinely-tied comparison rows
-under one hue rather than inventing a color the brand lacks. If the "brand"
-is a reference PHOTO/vibe, sample it programmatically (PIL) — pull the
-dominant AND the most-saturated hue families (saturated = the character
-colors; dominant alone skews dark/muddy), then lift to UI-legible brightness
-on a dark base. Worked example (exact hexes) in `lessons.md`.
-
-## Card openers are claims, not section labels — and lead with the product
-VC-deck guidance, not invented: titles are full sentences — reading only
-the titles should give 80% of the point, phrased conversationally. So the
-opening clause IS the specific insight ("It's fast because it's minimal."),
-NEVER a generic section name ("why it's fast", "the problem"). Name the
-PRODUCT as the subject of the resolution claim ("rsx-cast is as fast as it
-goes"), not the team ("we built it to be…") — the viewer should leave
-remembering the name, not the builders. Copy iterated with the user is
-load-bearing: when polishing later, refine rhythm/pacing subtly — NEVER
-rewrite dictated phrasings wholesale.
-
-## One clear call to action, once, at the end
-End on a single unambiguous action — one repo URL, on-screen. NEVER scatter
-CTAs through cards — one closing action beats five diluted ones (mid-roll
-CTAs only pay off in long-form video, not a ~30-45s demo).
-
-## `agg` themes: `custom` broken, `gruvbox-dark` is LIGHT — pick by bg hex
-`--theme custom` is listed in `--help` but errors "invalid value" at runtime
-(agg 1.9.0) — not fixable by editing the `.cast` header. So pick the closest
-built-in by ACTUAL background hex — and verify it, don't trust the name:
-`gruvbox-dark` renders with gruvbox's LIGHT cream bg (`#fbf1c7`), not a dark
-one. Sampled bgs: `github-dark #171b21` (darkest, cool), `monokai #272822`
-(warm dark — right for warm palettes), `dracula #282a36`, `nord #2e3440`
-(both cool). Match the theme's warmth to the palette's.
-
-## Per-library particularities live IN the project, not here
-Each lib demos differently (a latency count-up vs a throughput race vs a
-vs-alternatives bar chart). Keep per-project specifics — headline, isolated
-numbers, reveal script, honesty caveats — in a `demo/` folder inside THAT
-project: its `demo/CLAUDE.md` is the how-to. E.g. `rsx-book/demo/CLAUDE.md`.
-NOT in this general skill — it stays project-agnostic; read the project's
-`demo/CLAUDE.md` before building.
-
-Git tracks exactly ONE artifact per demo: the optimized `*-opt.gif` (the
-postable). NEVER commit the raw agg `.gif` or the `.cast` recording —
-ALWAYS gitignore both; they stay on disk for iteration and only
-`make clean` removes them.
-
-Write the per-project script directly (a top-to-bottom sequence of card()/
-panel() calls with the actual copy inline) rather than building a generic
-reusable framework of helper functions for "any demo" — each demo's content
-is one-off and hand-tuned (exact wording, exact hold times, exact which-beats-
-get-merged); premature generalization here just adds indirection between you
-and the thing you're actually tuning.
+Read `lessons.md` when implementing or debugging the recording. It contains
+the exact `agg` width, GIF disposal, theme, palette, typewriter-height, RSX
+demo-family, and reciprocal-chart failures behind the rules below.
 
 ## ALWAYS / NEVER
 - ALWAYS re-run the bench and quote the CURRENT number — NEVER a remembered one.
@@ -246,3 +136,13 @@ and the thing you're actually tuning.
   reference photo via PIL) — NEVER invent a color it doesn't define.
 - NEVER trust an agg theme by name (`custom` errors; `gruvbox-dark` is a
   LIGHT bg) — ALWAYS pick by verified background hex, warmth-matched.
+- ALWAYS leave one empty bottom line in the final frame and keep the real
+  terminal cursor hidden at exit.
+- ALWAYS clear only at the narrative→data transition; NEVER recenter every
+  claim like a slideshow.
+- ALWAYS keep per-library copy, caveats, and regeneration steps in that
+  project's `demo/CLAUDE.md`.
+- ALWAYS track only the optimized `*-opt.gif`; NEVER track raw `.cast` or
+  unoptimized GIF intermediates.
+- ALWAYS write the project-specific reveal directly; NEVER build a generic
+  framework around one-off pacing and copy.

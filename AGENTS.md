@@ -122,6 +122,10 @@ for d in skills/*/; do
 done
 ```
 
+**Install order** — ALWAYS write the wisdom file and resolve the global
+Codex guidance path before merging the marked `codex/AGENTS.md` block. The
+guidance path may symlink to wisdom; NEVER overwrite wisdom after that merge.
+
 **Install the wisdom file** — strip the YAML frontmatter from
 `skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
 content, diff and ask first:
@@ -145,6 +149,15 @@ jq -s '.[0].hooks = .[1].hooks | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
+**Diff sidebar off** — `diffSidebarOpen` is global config, not a settings key,
+so `settings-recommended.json` cannot carry it. Pin it in `~/.claude.json`,
+keeping every other key; it applies on the next Claude Code start:
+
+```sh
+jq '.diffSidebarOpen=false' ~/.claude.json > ~/.claude.json.new \
+  && mv ~/.claude.json.new ~/.claude.json
+```
+
 **Codex hooks** — copy `codex-hooks.json` to `~/.codex/hooks.json` after the
 Claude hook scripts are installed. This is part of Codex bridge-only repair,
 not only full installs. In a fresh Codex TUI session, the user must open
@@ -163,5 +176,7 @@ the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
 - ALWAYS/NEVER statements in skill content.
 - No secrets, no local paths, no org-specific references in source.
 - Commit format: `type(scope): Message` (scope optional).
-- NEVER use `git add -A`, `git commit --amend`, or `git push`.
+- NEVER use `git add -A` or `git commit --amend`.
+- ONLY `git push` when the user asked in that message, and NEVER to
+  `master`/`main` without a second approval naming the branch.
 - NEVER delete files in `~/.claude/` that aren't in this source tree.

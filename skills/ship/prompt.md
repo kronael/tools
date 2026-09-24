@@ -13,6 +13,11 @@ Read first: project CLAUDE.md, relevant specs/ files, 2-3 most recent
 .diary/*.md entries, and the code paths [feature] touches. Cite specs
 by path; don't restate what's already documented, extend it.
 
+If a plan or spec for this already exists ([path, if any]), it is
+input, not truth: re-verify each claim against the code as it is now,
+keep what still holds, rewrite what drifted, and name the drift in
+your report.
+
 Produce a PLAN.md matching the shape in `SKILL.md` § PLAN.md shape.
 Every step carries a Gate: the exact build/test/lint command that
 must pass before the next step starts.

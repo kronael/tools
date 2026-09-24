@@ -6,6 +6,9 @@ when_to_use: "writing a CLI tool, argparse/click/clap, adding --help or subcomma
 
 # CLI Style
 
+Requires the `software` skill's `code.md` for shared naming, style, comments,
+and design rules.
+
 ## Arguments
 
 - ALWAYS short flags for common ops: -c, -v, -h (old Unix style)

@@ -6,7 +6,7 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 
 # Python
 
-Requires `software/code.md` (naming, style, design) and
+Requires `software/code.md` (naming, style, comments, design) and
 `software/dynamic-analysis.md` (test-target checkers: `-X dev -W error`,
 hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas.
 
@@ -81,6 +81,9 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - When aliasing a symbol import, use the source module as prefix: `from heapq import merge as heapq_merge`
 
 ## Style
+- NEVER a docstring on a private function, method, or class — `code.md`'s
+  public-API exception is the whole allowance. A module docstring only where
+  the module is an imported public surface
 - Exception variables: NEVER `e` — use `ex`, `exc`, `err`
 - Use `async with asynccontextmanager` for resource cleanup, never bare `try/finally` for pools/connections
 - Python-specific short vars: `ts`, `ms` for time

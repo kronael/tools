@@ -1,12 +1,12 @@
 ---
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
-when_to_use: editing .go files or writing Go code; gopls, gopls mcp, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go
+when_to_use: editing .go files or writing Go code; gopls, gopls mcp, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup
 ---
 
 # Go
 
-Requires `software/code.md` (naming, style, design), `software/strict-typing.md`
+Requires `software/code.md` (naming, style, comments, design), `software/strict-typing.md`
 (golangci-lint set), and `software/dynamic-analysis.md` (test-target checkers:
 `-race`, fuzzing, sanitizers). Below are Go-specific additions.
 
@@ -53,6 +53,10 @@ Requires `software/code.md` (naming, style, design), `software/strict-typing.md`
 
 - Single goroutine owns all state: direct access, no locks, deterministic order
 - Fails fast on conflicts instead of retrying with mutexes
+
+ALWAYS read `concurrency.md` before writing or reviewing anything that starts
+a goroutine, and before putting a write syscall on a latency-sensitive path.
+It carries the goroutine-sizing rule and the single-sink I/O pattern.
 
 ## Parsing and Types
 
@@ -132,15 +136,17 @@ generated files, test path patterns, project-wide style choices (no-comment poli
 
 ## Comments
 
-- Prefer a comment on its own line ABOVE the code it describes; avoid trailing
-  inline comments. Inline comments crowd the line, get truncated on wrap, and
-  drift as the code changes. Even a short field annotation goes above:
+- What to comment and how to phrase it: canonical in `software/code.md`
+  Comments section. This is the only Go-specific addition — placement.
+- ALWAYS put a comment on its own line ABOVE the code it describes; NEVER
+  trail it inline. Inline comments crowd the line, get truncated on wrap, and
+  drift as the code changes:
   ```go
-  // pre-formatted "200 OK"; built once at store time
-  statusText string
+  // body fully read into buffer above
+  _ = resp.Body.Close()
   ```
-  not `statusText string // pre-formatted "200 OK"`. Narrow exceptions: the
-  suppression-reason and handler one-liners noted above.
+  not `_ = resp.Body.Close() // body fully read`. The one exception is the
+  handler one-liner noted above.
 
 ## Testing
 - Test files: `*_test.go` next to code

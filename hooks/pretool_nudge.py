@@ -13,7 +13,6 @@ import sys
 TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit', 'apply_patch'})
 COMMAND_TOOLS = frozenset({'Bash', 'exec_command'})
 UNSAFE_COMMAND_PATTERNS = (
-    (r'(?<!\S)git\s+push\b', 'git push'),
     (r'(?<!\S)git\s+reset\s+--hard\b', 'git reset --hard'),
     (r'(?<!\S)git\s+add\s+(?:-A|--all)\b', 'broad git add'),
     (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--amend\b', 'git commit --amend'),
@@ -54,6 +53,8 @@ def skill_for(path: str) -> str | None:
     if not isinstance(path, str) or not path:
         return None
     lower = os.path.basename(path).lower()
+    if lower == 'skill.md' or lower in ('claude.md', 'agents.md'):
+        return '/wisdom'
     if lower in ('makefile', 'gnumakefile') or lower.endswith(('.mk', '.make')):
         return '/mk'
     if lower == 'dockerfile' or lower.startswith('dockerfile.'):

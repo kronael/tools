@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
+import importlib.util
 import json
+import os
 import re
 import sys
+
+spec = importlib.util.spec_from_file_location(
+    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
+)
+hook_state = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(hook_state)
+session_state = hook_state.session_state
 
 STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
 - Lead with the answer. No preamble, no recap of what the diff already shows.
@@ -24,6 +33,12 @@ COMMIT_RULES = """Commit rules:
 - NEVER add Co-Authored-By, NEVER skip pre-commit hooks
 - Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
+
+SOLVE_NUDGE = (
+    'New task (first prompt this session): run /solve before acting — it '
+    'loads diary + memory context and routes to the right skill. Skip only '
+    'if this prompt is a direct continuation of work already in context.'
+)
 
 AGENT_KEYWORDS = {
     'architecture': '/specs',
@@ -72,6 +87,7 @@ AGENT_KEYWORDS = {
     'wisdom': '/wisdom',
     'writing': '/writing',
     'readme': '@readme',
+    'learn': '@learn',
     'improve': '@improve',
     'visual': '@visual',
     'distill': '@distill',
@@ -134,6 +150,21 @@ def explicit_route(prompt, harness=None):
     return None
 
 
+def first_prompt_of_session(session_id):
+    """True the first time a session submits a prompt, recording a marker so
+    later prompts stay silent. False when the marker exists or cannot be
+    written, so an unwritable state dir never turns the nudge into per-prompt
+    spam."""
+    marker = session_state('solve-nudge', session_id)
+    if marker is None or os.path.exists(marker):
+        return False
+    try:
+        open(marker, 'w').close()
+    except OSError:
+        return False
+    return True
+
+
 def emit(text):
     # additionalContext is the only UserPromptSubmit field the model reads;
     # systemMessage renders in the transcript for the user and never reaches
@@ -167,9 +198,18 @@ def main():
         emit(STYLE_RULES)
         sys.exit(0)
 
+    parts = []
+
+    if (
+        prompt.strip()
+        and first_prompt_of_session(data.get('session_id'))
+        and not re.search(r'/solve\b', prompt)
+    ):
+        parts.append(SOLVE_NUDGE)
+
     # Every turn. The style is in the system prompt and dilutes there; this is
     # the copy that arrives next to the user's message.
-    parts = [STYLE_RULES]
+    parts.append(STYLE_RULES)
 
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
@@ -181,8 +221,7 @@ def main():
     elif matched:
         parts.append(f'info: Invoke {matched}.')
 
-    if parts:
-        emit('\n\n'.join(parts))
+    emit('\n\n'.join(parts))
 
     sys.exit(0)
 
