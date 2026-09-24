@@ -23,15 +23,15 @@ TARGETS = {
 CONTEXT_EVENTS = {'UserPromptSubmit', 'PreToolUse', 'PostToolUse'}
 NUDGE_TARGETS = {'prompt_nudge', 'pretool_nudge', 'post_tool_nudge', 'stop'}
 CODEX_SKILL_NAMES_TEXT = (
-    'bugs ceo-eval cli codex commit create create-eval credit cto-eval '
-    'data data-reports diagrams diary dispatch distill explore eye-13yo '
-    'fable fin fix gh-comment go haiku hacker-eval humanize htmx improve '
+    '13yo-eval browse bugs ceo-eval cli codex commit continue create '
+    'create-eval credits cto-eval data data-reports diagrams diary dispatch '
+    'distill explore fable fin fix gh-comment go haiku humanize htmx improve '
     'learn mk merge oracle opus ops pr-draft py readme recall-memories '
-    'refine release review rs scavenge service sh ship sonnet software '
-    'sql specs testing trader ts tsx tweet visual wisdom writing'
+    'red-eval refine release review rs scavenge service sh ship sonnet '
+    'software sql specs trader ts tsx tweet visual wisdom writing'
 )
 CODEX_SKILL_NAMES = frozenset(CODEX_SKILL_NAMES_TEXT.split())
-SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z][a-z0-9-]*)')
+SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z0-9][a-z0-9-]*)')
 
 
 def _first_str(data: dict[str, Any], names: tuple[str, ...], default: str = '') -> str:
