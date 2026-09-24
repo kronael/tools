@@ -1,85 +1,48 @@
 # Changelog
 
-## [Unreleased]
+## [v0.3.94] — 20260924
+
+> kronael v0.3.94 — two lines, one bundle
+>
+> The local hooks-and-lints line and upstream's Opus 5.5 line are merged, so one install carries both, and "sync" now names that merge.
+>
+> • Sync — the merge skill defines it: fetch, size, preview, merge origin/master into the detached HEAD
+> • Hooks — Stop recaps the turn, blocks on an unreadable tree, nudges the diary once per session
+> • Prompt nudge — the first prompt of a session gets a /solve nudge on the channel the model reads
+> • Wisdom — push only when asked, dated review branches, commit by default, in a 129-line routed file
+> • Tools — tw-fetch reads a post keyless, tg-fetch takes groups as arguments, gloww fits the terminal
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
 
-- `tg-fetch/main.py` and `tg-fetch/users.py` take one or more groups as positional arguments and collect each in turn. `main.py` resumes each group from its own `.jl` file, so a rerun fetches only what arrived since.
-- Both scripts share one session file, `./tmp/session.session`. The login code is asked once per account rather than once per group.
-
-- `tw-fetch/mirror.py` reads X posts through `api.fxtwitter.com`, which serves a post as JSON without a key. It takes post ids or urls (or stdin), writes one JSON object per line, and reports each failure on stderr without stopping the run. `trust_env=True` honours `HTTPS_PROXY`.
-- `tw-fetch/README.md` separates the two read paths and states the mirror's limits: `/<user>/timeline` answers 404, `/<user>/status/latest` answers 200 with "Sorry, that post doesn't exist", and a protected account answers 401. Discovering posts still needs the cookie-authenticated `main.py`.
-
-- `hooks/lib/` — `state.py` (session stamps, state root, the one event-key reader) and `toolchain.py` (project-type detection), plus `redirect.py`, `learn.py` and `test_hooks.py`, adopted from the live install.
-- `skills/software/lsp.md`, `skills/create/divergence.md`, `skills/demo/cutout.md`, `skills/ship/cli.md`.
-
-- `skills/caveman/`: the wrapper that points at `output-styles/caveman.md` and runs its pre-send count. The style shipped in v0.3.81 host-only, so a fresh install got the rules with no skill to load them before drafting.
-
-- `gloww` CLI: reads markdown with glow at the terminal's real width — mdformat rejoins each hard-wrapped paragraph, glow wraps it to fit; fences, lists, tables, and frontmatter keep their breaks.
-- Co-located ast-grep lint packs with a fixture harness: ts, rust (`no-unwrap`, `no-from-value-clone`, `no-anon-spawn`), python (`except-var-e`, `no-lambda-default-factory`, `no-property`); go defers to golangci-lint, sql has no grammar.
-- hooks: SKILL.md lint — missing frontmatter keys and SHOULD directives hard-fail; NOT-for, length, and router hygiene warn.
-- hooks: the pretool guard also blocks squash merges and rebases, branch creation, `worktree add` without `--detach`, `killall`, and Co-Authored-By trailers.
-- software skill: `js-perf.md` runbook for writing JS/TS that V8 can optimise — hidden classes, elements kinds, IC states, tiering and deopts, typed arrays, Wasm/N-API batching, and the GraalVM/Truffle contrast.
-- emacs skill: per-section Emacs setup (completion, navigation, git, AI) for the krons package stack.
-- learn skill extracts co-located ast-grep lint rules from sessions.
-- create skill: collage mode — cut real material, judge it blind in a forced-choice tournament.
-- caveman style: ASD-STE100 Simplified Technical English as the language floor — plain words, active voice, one meaning per word.
+- `merge` skill § Sync: fetch origin, size and preview the merge, merge `origin/master` into the detached HEAD with zdiff3, trace deletions against both parents, verify, commit. Distinct from the install's file sync and from `sync-tools-skills`.
+- `tw-fetch/mirror.py` reads X posts by id or url through `api.fxtwitter.com`, no key; `tw-fetch/README.md` states what the mirror cannot do.
+- `gloww` reads markdown with glow at the terminal's real width.
+- Co-located ast-grep lint packs (ts, rust, python) with a fixture harness and `make lints`; `learn` extracts lint rules from sessions.
+- `caveman` skill wraps the output style; the style budgets rendered lines by question shape and takes ASD-STE100 as the language floor.
+- `emacs` skill, `software/js-perf.md`, `software/lsp.md`, `create` collage mode, `demo/composed.md` and `demo/cutout.md`, `rs/cranelift.md`.
+- SKILL.md lint: a missing key, an unknown key, a name that is not the directory, and SHOULD hard-fail; NOT-for, length, listing budget and router hygiene warn.
+- The pretool guard also blocks squash merges, interactive rebases, branch creation, `worktree add` without `--detach`, `killall` and Co-Authored-By trailers.
 
 ### Changed
 
-- Credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`. A missing variable stops the run with a message naming what to set and where to get it. This matches `dc-fetch`, which already reads `DISCORD_TOKEN` from the environment.
-- `users.py` imports `build_client`, `start_client` and `resolve_group` from `main.py` instead of repeating them.
-
-- `tg-fetch/config.example.toml` is replaced by `config.toml` (group only) and `keys.toml` (`api_id`, `api_hash`, `phone` or `bot_token`). It was the only `*.example.*` file in the repo.
-
-- `tg-fetch/README.md` and `config.example.toml` state that a supergroup id must already carry its `-100` prefix. The scripts add no prefix, because guessing one resolves the wrong chat.
-- `README.md` names both tw-fetch read paths in the tool inventory.
-
-- `BUGS.md` records that `skills/diagrams` teaches box-and-arrow layout only, with no pattern for sequence, swimlane or state diagrams.
-
-- `CHANGELOG.md` names the output style `caveman` in all eleven entries that mention it. The three lines describing the rename itself are reworded rather than substituted, since a blind swap would have made them contradict themselves.
-
-- The output style ships as `output-styles/caveman.md` with `name: caveman`, and `settings-recommended.json` activates `caveman`. The caveman skill, `hooks/prompt_nudge.py`, `NOTICE`, `AGENTS.md`, `kronael/install/SKILL.md` and `docs/adhd/research-adhd-skill.md` all use that one name.
-
-- Fifty files that had drifted between the bundle and a live `~/.claude` install are reconciled on content: the bundle keeps its newer eval, tier and language guidance; the install contributes the gopls edit loop, sweep's fix/verify phases, the BUGS.md entry format that matches real practice, and the spec `experiment`/`reference` statuses.
-- `skills/global/SKILL.md` delegates response style to the `caveman` skill instead of restating it — one source, not two.
-- `kronael/install/SKILL.md` preflight verifies `hooks/lib/`; four hooks import it by absolute path at startup, so a partial copy passed the check and then tracebacked on every prompt.
-- `hooks/context.py` removed — a byte-identical copy of local.py's rules, registered nowhere.
-
-- agents: sonnet → Sonnet 5/high, opus → Opus 5.
-- wisdom skill rules name their lint ids; ts skill prefers minimal result and utility types.
-- ts skill sends hot-path tuning to the `js-perf` runbook instead of restating its rules.
-
-### Removed
-
-- `tg-fetch/config.toml` and `tg-fetch/keys.toml`. With the keys in the environment and the groups on the command line, no config file remains.
+- `skills/global/SKILL.md` (the wisdom file) routes instead of restating — 129 lines: routing, conduct, map, the NEVER list; each rule lives in the skill that owns it. It carries upstream's policy: push only when the user asks in that message, never to `master` without a second approval, dated `YYYYMMDD_<tag>` review branches, commit finished work by default, write in the idiom around it.
+- `resolve` is `solve` and user-invocable; every reference follows.
+- `bugs` skill: two sections (open defects, ruled not a defect), grouped by subject, fixed entries leave the file; it owns the Bug Triage Protocol. `BUGS.md` follows that shape.
+- `tg-fetch`: groups are positional arguments, each resumed from its own `.jl`; credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`; the TOML config and its template are gone.
+- dockbox: `codex` target runs `gpt-5.6-sol` at xhigh beside upstream's `claude-opus-5-5`, `claude-fable-5-1` and `gpt-6-astra` pins; the `opus` agent names Opus 5.5.
+- `refine` (upstream's runbook with PR-thread intake) keeps the cross-boundary lens and the code.md sign-off pointer; `review give` keeps the opus fallback for the fable pass.
 
 ### Fixed
 
-- `tg-fetch/main.py` and `tg-fetch/users.py` read two positional files: the config first, the API keys second, as `skills/cli/SKILL.md` requires. The credentials no longer sit beside the group setting, so a config can be shared while the keys file stays out of git.
-
-- `tg-fetch/main.py` and `tg-fetch/users.py` pass the configured group through `resolve_group` before `get_entity`. A digits-only value becomes an int, which is what Telethon needs for a chat id; a username stays a string with a leading `@` removed. Both scripts carry the function, matching the standalone shape the directory is built on.
-
-- `skills/caveman/SKILL.md` and `hooks/prompt_nudge.py` named a style file the bundle did not install under that path. On a fresh install the skill told the model to read a file that was never written, and the nudge repeated the path on every prompt. Both now name the file the bundle ships.
-
-- `hooks/redirect.py`, `hooks/context.py`, `hooks/learn.py`, `hooks/test_hooks.py`, `hooks/lib/toolchain.py`: removed again. All were deleted from this repo months ago as orphan hooks — none is registered in any settings file — but their copies survived in `~/.claude/hooks/`, because an install never deletes a file the source has dropped. The v0.3.83 sync read "absent from bundle, present in install" as live-ahead work and vendored them back. `lib/toolchain.py` had exactly one caller, `redirect.py`.
-- `kronael/install/SKILL.md`: the prune step names those files and states the failure mode, so an unpruned orphan cannot read as live-ahead work on a later sync.
-
-- `hooks/local.py`, `hooks/reclaude.py`: read `data['hook_event']`, but Claude Code sends `hook_event_name` — with a session stamp on disk both produced nothing on PreCompact, so neither LOCAL.md nor RECLAUDE.md ever re-injected. `hook_event()` now lives once in `hooks/lib/state.py`; `memory_nudge.py` and `stop.py` drop their private copies.
-- `hooks/pretool_nudge.py`: the recursive-codex block gated on `KRONAEL_IN_CODEX`, which nothing in the repo sets — the guard was permanently dead while its test passed via monkeypatch. It reads the payload `harness` field that `codex_hook.py` already stamps.
-- `hooks/stop.py`: `subprocess.TimeoutExpired` escaped `git_run`, so a slow or index-locked repo exited the Stop hook with a traceback and lost both nudges.
-- `hooks/local.py`: an unusable state root read as "not first prompt", silently suppressing LOCAL.md for the whole session. It now fails open.
-- `hooks/redirect.py`: crashed on a non-dict `tool_input`.
-- `hooks/test_hooks.py`: invoked `nudge.py`, renamed to `prompt_nudge.py` two versions ago — 12 of 25 checks died on a missing file.
-
-- gloww: an interactive run looked hung — glow's auto style queries the terminal and eats any key typed while it waits, so the pager ignored `q`; an explicit style skips the query.
-- gloww: `-wN` parses as a width flag and the file is found in any argument position.
-- caveman style: the ~17-line cap never bound — it counted source lines, not rendered ones, and capped bullet count but not bullet size. The budget now counts rendered 80-column lines, tiered by question shape (fact 1–3, action ≤12, explanation ≤20, hard ceiling), holds each bullet to two sentences, and ends in a countable pre-send check; the flat rule list folds into a Shape section.
-- lints: rs-no-unwrap exempts tests and comment-justified unwraps; yamlfmt formats the rule packs; check-yaml allows multi-doc yaml.
-
-### Unchanged
-
-- The August work from v0.3.83 stands: `hooks/lib/state.py`, the single `hook_event()` reader, and the PreCompact, timeout, fail-open and non-dict-payload fixes.
+- `hooks/stop.py`: a failed `git status` blocks with its stderr instead of reading as clean; the diary nudge fires once per session (session-keyed stamp in `~/.claude/state`) and never writes a header; a timed-out git call no longer kills the hook; when nothing blocks, a compact turn recap is shown.
+- `hooks/prompt_nudge.py`: output goes through `hookSpecificOutput.additionalContext`, the only UserPromptSubmit field the model reads; the Codex guard reads the payload `harness`, not a dead env var.
+- `hooks/local.py`, `hooks/reclaude.py`: read the `hook_event_name` Claude Code sends, so LOCAL.md and RECLAUDE.md re-inject on PreCompact again; `hook_event()` lives once in `hooks/lib/state.py`.
+- `git push` is not blocked by the pretool guard (upstream's call); the stale test case moved to the non-blocking set.
+- Four orphan hooks withdrawn again and named in the install prune list, so a resync cannot vendor them back.
+- gloww: an explicit glow style skips the terminal query that ate pager keystrokes; `-wN` parses as a width flag.
+- `software` frontmatter fits the 1,536-char listing cap (1,274), so its last keywords route again.
 
 ## [v0.3.93] — 20260923
 
