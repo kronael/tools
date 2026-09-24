@@ -81,7 +81,7 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 **Flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   push, amend, hard reset, broad add, no-verify commits, `rm -rf`, and
+   amend, hard reset, broad add, no-verify commits, `rm -rf`, and
    recursive Codex execution inside Codex.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.

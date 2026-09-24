@@ -62,18 +62,6 @@
   `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to the
   symlink target. Do NOT append to the wisdom file.
 
-## Hooks
-
-- **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED.
-  `hooks/ARCHITECTURE.md:84` lists `push` among the commands
-  `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS`
-  (`hooks/pretool_nudge.py:15-22`) has no push pattern, and
-  `hooks/README.md:41-42` states push is deliberately left unblocked. A
-  reader trusting the doc believes a guard exists that does not. Reproduce:
-  `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push` from the
-  ARCHITECTURE list, or add the pattern — which of the two is the
-  maintainer's call, since the README documents the omission as deliberate.
-
 ## dockbox
 
 - **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
