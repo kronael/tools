@@ -1,5 +1,51 @@
 # Changelog
 
+## [v0.3.94] — 20260924
+
+> kronael v0.3.94 — push and PRs ask instead of failing
+>
+> Push, PR and release commands now prompt you instead of being denied, and Codex now loads the Kronael guidance block.
+>
+> • Settings — push, PR and release commands ask first; recursive `rm` stays denied
+> • Codex — its global guidance file carries the Kronael block, which points at your wisdom file
+> • `/readme` — one router for docs sync, doc file layout and single-page section order
+> • Hooks — nudges point at skills that exist, and Codex gets them rewritten
+> • TypeScript — annotate types only where inference cannot reach them
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `settings-recommended.json` moves `git push`/`pull`, `ssh`, `rsync`,
+  `gh pr create`/`merge`/`review --approve`, `gh release create` and
+  `gh repo create` from `deny` to `ask`. An ask rule prompts in every mode,
+  bypass included. Recursive `rm`, `chmod 777` and `SendFeedback` stay denied.
+- Codex global guidance: install writes the `codex/AGENTS.md` block into a real
+  `~/.codex/AGENTS.md`, replacing a symlink to the wisdom file; any other
+  symlink is a conflict. dockbox's Codex bridge does the same.
+- `readme` is a router: bare `/readme` syncs docs; `topology.md` (the former
+  `doc-topology` skill) and `shape.md` load on demand. Reinstalls prune
+  `doc-topology`.
+- `ts`: annotate types only for recursion, overloads, widening and
+  `isolatedDeclarations` exports.
+- `plugins/kronael/.codex-plugin/plugin.json` tracks the release version.
+
+### Fixed
+
+- Hook nudges sent prompts to pruned skills (`/testing`, `/eye-13yo`,
+  `/hacker-eval`). The Codex rewrite list named `credit`, missed `browse`,
+  `continue` and `resolve`, and skipped names starting with a digit.
+- Docs match the code: push is not among the hook's blocks, the go sink example
+  keeps comments out of its body, the social research doc states where the
+  SKILL departs from it, and the repo maps, sync table and AGENTS.md settings
+  merge match the installer.
+
+### Operator note
+
+An existing `~/.claude/settings.json` keeps its `deny` entries for push and PR
+commands until you reinstall; install step 4 removes a `deny` entry the source
+moved to `ask`.
+
 ## [v0.3.93] — 20260923
 
 > kronael v0.3.93 — boxes run Opus 5.5
