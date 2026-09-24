@@ -120,6 +120,7 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
+   - `commands/*` → `~/.claude/commands/`
    - **Prune renamed files**: delete `~/.claude/hooks/nudge.py`,
      `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
      if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
