@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.3.94] — 20260924
+
+> kronael v0.3.94 — switch the terse style on for one conversation
+>
+> /caveman turns the caveman output style on or off for the current session, leaving the persistent setting alone.
+>
+> • commands — new `/caveman`, and the installer now deploys `commands/` into `~/.claude/`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/caveman` applies `output-styles/caveman.md` for the rest of the session and
+  `/caveman off` returns to the default style. The rules live in the style file
+  alone; the command points at them.
+- The install step copies `commands/*` into `~/.claude/commands/`.
+
 ## [v0.3.93] — 20260923
 
 > kronael v0.3.93 — boxes run Opus 5.5
