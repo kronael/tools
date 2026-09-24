@@ -91,8 +91,9 @@ form.
 
 Codex compatibility for Claude projects:
 
-- Symlink `~/.codex/AGENTS.md` to `~/.claude/CLAUDE.md` so every Codex session
-  loads the installed global wisdom. Global fallback filenames do not do this.
+- Put the Kronael block in a real `~/.codex/AGENTS.md`; it tells every Codex
+  session to read the installed `~/.claude/CLAUDE.md`. Global fallback
+  filenames do not do this.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` so Codex reads Claude-only project instructions.
   The key must stay top-level instead of landing inside the current TOML table.
@@ -109,7 +110,7 @@ Troubleshooting:
 - Kronael skills missing in Codex after install: run the bridge prompt above,
   then start a new Codex thread and open `/skills`.
 - Global wisdom missing in Codex: run the bridge prompt, verify
-  `~/.codex/AGENTS.md` resolves to `~/.claude/CLAUDE.md`, then start a new
+  `~/.codex/AGENTS.md` holds the `kronael:start` block, then start a new
   thread. `AGENTS.override.md` takes precedence when present.
 - Kronael hooks missing in Codex after install: run the bridge prompt above to
   refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open

@@ -93,20 +93,11 @@ or installed skills. Bridge with symlinks instead of copying.
 
 Codex loads global instructions from `~/.codex/AGENTS.override.md`, or from
 `~/.codex/AGENTS.md` when no override exists. It does not discover
-`~/.claude/CLAUDE.md` globally. If both Codex files are absent, create:
-
-```sh
-ln -s ~/.claude/CLAUDE.md ~/.codex/AGENTS.md
-```
-
-If the symlink already resolves to `~/.claude/CLAUDE.md`, keep it. Treat any
-other existing `AGENTS.md` or `AGENTS.override.md` as a conflict and ask
-whether to replace, merge, or skip. NEVER overwrite it.
-
-After resolving the guidance path, ALWAYS apply the managed-block merge in
-canonical installer step 5, including for an existing symlink. ALWAYS back up
-the target first and preserve content outside the markers. NEVER report the
-global bridge complete without checking that the managed block is present.
+`~/.claude/CLAUDE.md` globally. `~/.codex/AGENTS.md` is therefore a real file
+holding the managed Kronael block, which tells Codex to read it. Apply the
+merge in canonical installer step 5. ALWAYS back up the target first and
+preserve content outside the markers. NEVER report the global bridge complete
+without checking that the managed block is present.
 
 ### Project CLAUDE.md
 

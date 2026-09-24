@@ -83,9 +83,9 @@ After the bridge, installed Kronael skills are invoked in Codex as
 
 Codex compatibility for Claude projects:
 
-- Symlink `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md` so Codex loads the
-  installed global wisdom automatically. A non-empty `AGENTS.override.md`
-  takes precedence and must be handled as a conflict.
+- `~/.codex/AGENTS.md` is a real file holding the `codex/AGENTS.md` block,
+  which tells Codex to read the installed `~/.claude/CLAUDE.md`. A non-empty
+  `AGENTS.override.md` takes precedence and must be handled as a conflict.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` for projects without `AGENTS.md`. The key is
   top-level, not under `[tui]` or any other table.
@@ -122,9 +122,9 @@ for d in skills/*/; do
 done
 ```
 
-**Install order** — ALWAYS write the wisdom file and resolve the global
-Codex guidance path before merging the marked `codex/AGENTS.md` block. The
-guidance path may symlink to wisdom; NEVER overwrite wisdom after that merge.
+**Codex guidance** — merge the marked `codex/AGENTS.md` block into a real
+`~/.codex/AGENTS.md`, replacing a symlink to the wisdom file. NEVER write the
+block into `~/.claude/CLAUDE.md`.
 
 **Install the wisdom file** — strip the YAML frontmatter from
 `skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
@@ -165,7 +165,7 @@ not only full installs. In a fresh Codex TUI session, the user must open
 
 **Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
 the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
-`~/.codex/AGENTS.md` resolves to it,
+`~/.codex/AGENTS.md` holds the Kronael block,
 `~/.agents/skills` bridges to `~/.claude/skills`, and
 `~/.codex/hooks.json` exists. Report counts and the backup path.
 

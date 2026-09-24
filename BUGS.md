@@ -23,22 +23,6 @@
   source ONLY on an explicit ask, since it may be org-local. Either add
   `doc-shape` to the bundle, or drop the two references.
 
-## Codex bridge
-
-- **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED at HEAD
-  2026-09-18. The Kronael block in `codex/AGENTS.md` has never reached global
-  Codex guidance: `grep -c kronael:start ~/.claude/CLAUDE.md` → 0, and every
-  backup under `~/.claude/backup/*/CLAUDE.md` is 0 too. The repo `CLAUDE.md`
-  § Conformance makes quoting that block the test of a working Codex bridge,
-  so the bridge fails its own check while the symlink looks healthy. Cause:
-  install step 5 merges the block into `~/.codex/AGENTS.md`, which is a
-  symlink to `~/.claude/CLAUDE.md` — writing there puts Codex-only
-  instructions in the always-loaded Claude wisdom file, and the next install's
-  two-way sync reverse-syncs them into `skills/global/SKILL.md`. **Fix:** needs
-  a design call — give Codex its own file (`AGENTS.override.md`, or a real
-  `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to the
-  symlink target. Do NOT append to the wisdom file.
-
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools

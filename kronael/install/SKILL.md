@@ -169,20 +169,15 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
    support), install every bridge:
-   - Global wisdom: if neither `~/.codex/AGENTS.override.md` nor
-     `~/.codex/AGENTS.md` exists, symlink `~/.codex/AGENTS.md` →
-     `../.claude/CLAUDE.md` (leave it if already resolved). ALWAYS write this
-     link RELATIVE: dockbox bind-mounts `~/.codex` into a container whose home
-     is not this one, so an absolute link resolves there and dangles here.
-     A dangling link costs Codex its global guidance with no error — repoint
-     any absolute or broken one. Any other existing global Codex guidance is a
-     conflict — show and ask. NEVER rely on project fallback names for global
-     guidance.
-   - AFTER installing wisdom and resolving the global guidance path, merge
-     the marked block from `codex/AGENTS.md` into `~/.codex/AGENTS.md`.
-     Replace only the existing Kronael block; otherwise append it. NEVER
-     overwrite content outside the markers. The path may symlink to the
-     wisdom file, so ALWAYS perform this merge after the wisdom write.
+   - Global guidance: `~/.codex/AGENTS.md` is a REAL file holding the marked
+     block from `codex/AGENTS.md`, which tells Codex to read
+     `~/.claude/CLAUDE.md`. Absent → copy `codex/AGENTS.md` there. A symlink to
+     `~/.claude/CLAUDE.md` → replace it with that copy. Existing real file →
+     replace only the Kronael block, else append it; NEVER overwrite content
+     outside the markers. NEVER write the block into `~/.claude/CLAUDE.md` —
+     the next sync would reverse-sync Codex-only text into the wisdom source.
+     An existing `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict,
+     show and ask. NEVER rely on project fallback names for global guidance.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if

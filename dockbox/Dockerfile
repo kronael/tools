@@ -168,12 +168,14 @@ exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
 
 # dockbox-codex-bridge: expose the installed Claude bundle to Codex for the
-# runtime user's $HOME. Codex scans ~/.agents/skills and loads global guidance
-# from ~/.codex/AGENTS.md; point both at the ~/.claude bundle. Idempotent and a
-# no-op until the bundle is installed into $HOME, so it is safe on every start.
-# The links are RELATIVE: ~/.codex and ~/.agents are bind-mounted from the host,
-# so an absolute link written here resolves to the container's home and dangles
-# on the host — silently costing the host Codex its global guidance.
+# runtime user's $HOME. Codex scans ~/.agents/skills, linked to the ~/.claude
+# bundle, and loads global guidance from ~/.codex/AGENTS.md, which gets the
+# Kronael block telling it to read ~/.claude/CLAUDE.md. A real file there is
+# left alone; a symlink is removed before the copy, which would otherwise write
+# through it into the wisdom file. Idempotent and a no-op until the bundle is
+# installed into $HOME, so it is safe on every start. The skills link is
+# RELATIVE so it resolves under whichever home reads it.
+COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
 RUN printf '%s\n' \
   '#!/bin/sh' \
   'set -eu' \
@@ -182,7 +184,8 @@ RUN printf '%s\n' \
   '[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"' \
   'if [ -f "$HOME/.claude/CLAUDE.md" ] && { [ -L "$HOME/.codex/AGENTS.md" ] || [ ! -e "$HOME/.codex/AGENTS.md" ]; }; then' \
   '  mkdir -p "$HOME/.codex"' \
-  '  ln -sfn ../.claude/CLAUDE.md "$HOME/.codex/AGENTS.md"' \
+  '  rm -f "$HOME/.codex/AGENTS.md"' \
+  '  cp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"' \
   'fi' \
   > /usr/local/bin/dockbox-codex-bridge && chmod +x /usr/local/bin/dockbox-codex-bridge
 
