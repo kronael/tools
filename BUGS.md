@@ -21,19 +21,6 @@
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
 
-- **GO-CONCURRENCY-EXAMPLE-TRAILING-COMMENTS** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-21. `skills/go/concurrency.md:33-63` teaches by an example carrying 7
-  trailing inline comments inside a function body
-  (`s.Dropped.Add(1)                 // count drops; never stall the caller`).
-  `skills/go/SKILL.md` § Comments states "ALWAYS put a comment on its own line
-  ABOVE the code it describes; NEVER trail it inline", and `code.md:84` bans a
-  comment inside a body outright. An example teaches by demonstration, so the
-  file argues against the rule its own skill states. Reproduce:
-  `grep -cE '[^[:space:]]+[[:space:]]+//' skills/go/concurrency.md`. **Fix:**
-  the maintainer's call — move the annotations above their lines, or drop the
-  ones the code already says. The annotations carry the lesson here, so this is
-  not a silent rewrite.
-
 - **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-21.
   `skills/doc-topology/SKILL.md` routes to `doc-shape` twice — a `NOT for ...
   (use doc-shape)` clause in its description and a pointer in the body — but
