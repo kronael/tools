@@ -172,7 +172,8 @@ for increasing capability. `/dispatch` for fire-and-forget at default model. `fi
 ## Working with skills
 
 - Each `SKILL.md` has YAML frontmatter (`name`, `description`,
-  optional `user-invocable: true`)
-- `user-invocable: true` exposes the skill as `/<name>` slash command
-- Auto-activation matches the `description` field — make it specific
+  optional `when_to_use`, `user-invocable`)
+- Every skill is a `/<name>` slash command by default; `user-invocable: false`
+  hides it from the `/` menu
+- Auto-activation matches `description` + `when_to_use` — make them specific
 - See `wisdom/SKILL.md` for the writing rules

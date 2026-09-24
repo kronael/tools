@@ -30,7 +30,7 @@ proposes new/updated skills, but hands the authoring off to wisdom.
 name: short-name          # must match intended slash command slug if user-invocable
 description: <one-line summary>. NOT for <case> (use <other-skill>).
 when_to_use: <trigger phrases — natural requests users would say>
-user-invocable: true      # optional — exposes skill as /name slash command in the UI
+user-invocable: false     # optional — default true; false hides it from the / menu
 ---
 ```
 

@@ -10,7 +10,10 @@ kronael/install/            the only plugin-exposed skill — install procedure
 skills/                     bundle — auto-activating skills (languages, workflow, domain)
 agents/                     bundle — specialized task agents
 hooks/                      bundle — lifecycle hook scripts
+output-styles/              bundle — response output style (caveman)
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
+codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
+codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 RECLAUDE.md                 template for ~/.claude/RECLAUDE.md (reclaude hook input)
 AGENTS.md                   notes for non-Claude agents (Codex)
 COOKBOOK.md                 daily git recipes (detached HEAD with rig)
@@ -103,14 +106,15 @@ install step provides the smart merge. Each layer does one thing.
 
 | Target | Strategy |
 |---|---|
-| `skills/`, `agents/`, `hooks/` | Replace (preserve user-added files not in source) |
+| `skills/`, `agents/`, `hooks/` | Two-way sync: source-advanced files replace the install, a clean installed superset reverse-syncs into source, anything else shows a diff and asks (preserve user-added files not in source) |
 | `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
 | `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
 | `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask) |
 | `~/.claude/settings.local.json` | NEVER touch |
 | `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |
 
-Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
+Backup `~/.claude/` and the `~/.codex/` guidance, config and hook files to
+`~/.claude/backup/<timestamp>/` before overwriting.
 
 ## Runtime flow
 

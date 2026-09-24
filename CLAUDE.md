@@ -15,7 +15,7 @@ The **kronael toolkit** — three things in one repo:
    Makefile or PEP 723 inline-deps script, own README, no imports between
    them. The tool inventory lives in `README.md` — when adding a tool, add
    its row there.
-2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`,
+2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`, `output-styles/`,
    `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
    deployed into a user's `~/.claude/` by an install step.
 3. **A thin Codex installer bridge** (`plugins/kronael/` plus
@@ -41,9 +41,10 @@ make clean         # clean projects + sweep __pycache__
   `test_*.py` does not run until it is added to that list — the suite passes
   while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
-  (installs to `~/.local/bin`). `dockbox` also has `make image`.
-- **Python scripts** (`tg-fetch`, `dc-fetch`): `uv run main.py` (PEP 723
-  inline deps, no separate install).
+  (installs to `~/.local/bin`; `clp` goes to `~/.local/share/clp`, sourced
+  from the shell rc). `dockbox` also has `make image`.
+- **Python scripts** (`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`
+  (PEP 723 inline deps, no separate install).
 - **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.
   `ruff.toml` is the config. Pre-commit reformats on first run — retry the
   commit if it does.

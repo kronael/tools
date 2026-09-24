@@ -75,7 +75,7 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
    `/kronael:install`; that is a Claude Code slash command.
 4. Execute the canonical installer's steps exactly as written there — the
    new-install plan/consent questionnaire, sync protocol, backup, copy assets
-   (incl. the `create-*` prune list), install wisdom, merge the Claude hooks
+   (incl. the removed-skills prune list), install wisdom, merge the Claude hooks
    block, install Codex hook wiring, external tools, CLI tools
    (rig/udfix/clp/dockbox — the marketplace snapshot carries their source
    dirs), verify. Present the questionnaire inline as numbered options. NEVER

@@ -14,9 +14,9 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 
-Go tools (`udfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts
-(`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` and
-`qemubox` have their own Makefiles.
+Makefile tools (`udfix`, `rig`, `bhctl`, `clp`, `dockbox`, `qemubox`):
+`cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
+`dc-fetch`): `uv run main.py`.
 
 External tools used by the Claude Code config:
 
@@ -155,7 +155,9 @@ kronael/install/SKILL.md    plugin-exposed install procedure (source of truth)
 skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
 hooks/                      bundle copied to ~/.claude/hooks/
+output-styles/              bundle copied to ~/.claude/output-styles/
 codex-hooks.json            copied to ~/.codex/hooks.json for Codex hooks
+codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 settings-recommended.json   merged into ~/.claude/settings.json
 RECLAUDE.md                 template for ~/.claude/RECLAUDE.md
 ```
