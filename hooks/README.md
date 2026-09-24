@@ -73,7 +73,7 @@ forwards explicit `decision: block` responses.
 Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
 first prompt of a session and on pre-compaction. Re-injects a short
 `RULES` block on continue/recap keywords, respecting negation.
-State: `$cwd/.claude/tmp/local-{session_id}`.
+State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
 
 ### reclaude.py (PreCompact)
 
@@ -129,7 +129,7 @@ nudge, tied to the moment context would otherwise be lost:
   one/two-turn trivia stays under the count and never nudges. Emits
   `hookSpecificOutput.additionalContext`, like `stop.py`'s PostToolUse path.
 
-State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. The `start`
+State: the session-keyed stamps `memory-nudge-{start,done}-{session_id}` in `~/.claude/state` (`lib/state.py`). The `start`
 file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

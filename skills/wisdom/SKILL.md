@@ -36,7 +36,7 @@ argument-hint: "<question>"   # optional — shown after /name
 ```
 
 - ALWAYS include `name`, `description`, `when_to_use` — lint: skill-keys (hard fail).
-- NEVER invent a key — Claude Code reads `name`, `description`, `when_to_use`, `user-invocable`, `disable-model-invocation`, `argument-hint`, `allowed-tools`, `disallowed-tools`, `model`, `effort`, `shell`, `context`, `agent`, `paths`, `hooks`; any other key (`arg:`) is silently ignored.
+- NEVER invent a key — Claude Code reads `name`, `description`, `when_to_use`, `user-invocable`, `disable-model-invocation`, `argument-hint`, `arguments`, `allowed-tools`, `disallowed-tools`, `model`, `effort`, `shell`, `context`, `agent`, `background`, `paths`, `hooks`, `metadata`, `license`, `compatibility`; any other key (`arg:`) is silently ignored here and rejected by other Agent Skills consumers — lint: skill-keys (hard fail). Provenance goes under `metadata`.
 - ALWAYS keep `description` minimal — short summary + NOT clause only.
 - ALWAYS pack `when_to_use` with retrieval keywords: error messages, symptom words, tool/library names, synonyms.
 - The listing shows `description - when_to_use`, cut at 1,536 chars — lint: skill-budget (warn). A keyword past the cap never routes; ALWAYS put the key use case first.
@@ -82,8 +82,8 @@ argument-hint: "<question>"   # optional — shown after /name
 
 ## Installed copy vs source
 
-- `~/.claude/` is an install of the assistants repos (paths in `LOCAL.md`) —
-  ALWAYS sync a `~/.claude/` change to them; NEVER let install and source drift.
+- `~/.claude/` is an install of the bundle source repo (path in `LOCAL.md`) —
+  ALWAYS sync a `~/.claude/` change back to it; NEVER let install and source drift.
 
 ## CLAUDE.md (project)
 

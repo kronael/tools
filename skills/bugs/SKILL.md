@@ -25,7 +25,7 @@ did.
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
 project already has.)
 
-## Record, don't fix
+## Bug Triage Protocol — record, don't fix
 
 - When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
 - NEVER fix bugs immediately just because you found them during a general check

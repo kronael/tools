@@ -145,7 +145,7 @@ After resolving all conflicts:
 
 Stage resolutions (`git add <resolved files>`), then finish per step 1's operation:
 
-- **merge**: `git commit -m "[merge] Resolve conflicts: <summary>"`.
+- **merge**: `git commit -m "merge: <summary>"` (the repo's `type(scope):` form; a merge has no scope).
 - **rebase**: `GIT_EDITOR=true git rebase --continue` (GIT_EDITOR avoids the
   message editor; a `pick` reuses its original message). This is a **LOOP** — a
   rebase replays many commits, so the next may conflict immediately: re-run

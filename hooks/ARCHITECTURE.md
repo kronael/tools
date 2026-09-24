@@ -126,7 +126,7 @@ Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
 
 **Flow:**
-1. First prompt per session (tracked via `$cwd/.claude/tmp/local-{sid}`)
+1. First prompt per session (tracked via the `local-{sid}` stamp in `~/.claude/state`)
    or `PreCompact` event → inject `~/.claude/LOCAL.md` and `$cwd/LOCAL.md`
    contents.
 2. On continue/recap keywords (respecting negation), append `RULES`.
@@ -203,7 +203,7 @@ PostToolUse idiom). Silent otherwise.
    The count gate is what reaches *short* sessions that never compact and
    never approach 30 min.
 
-State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. Much lower
+State: the `memory-nudge-{start,done}-{session_id}` stamps in `~/.claude/state` (`lib/state.py`). Much lower
 frequency than stop.py's recurring diary/commit nudges — at most once via
 PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
 
