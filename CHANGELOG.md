@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.3.95] — 20260925
+
+> kronael v0.3.95 — PR descriptions that read like a map
+>
+> `/pr-draft` now opens with the shape of the change and keeps each concern to one short paragraph.
+>
+> • Lead sentence — names every part touched and the file to start from
+> • One paragraph per concern — lists folded into the sentence, no header or bullet walls
+> • `Also:` line — every behaviour change gets named, even one-liners
+> • Size budget — a bump stays a few sentences; big PRs cap near 3,000 chars
+> • Titles — follow the repo's convention, ticket prefix kept
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `pr-draft` reads the full diff, opens on a lead naming each layer and its
+  entry file, gives each concern a bold-led paragraph, sweeps minor changes
+  into `Also:`, points at the weakest spot instead of claiming safety, and
+  closes on contract / known-deferred / ⚠️ merge-order lines. Bodies scale to
+  ~400 / 1,500 / 3,000 chars; file tables, effort estimates, diagrams, test
+  plans and session URLs are out. Titles follow the repo's own convention.
+
 ## [v0.3.94] — 20260924
 
 > kronael v0.3.94 — push and PRs ask instead of failing
