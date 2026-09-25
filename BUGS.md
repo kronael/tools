@@ -68,6 +68,29 @@
   rule for the rig push forms; which forms, and whether to gate them at all,
   is the maintainer's call.
 
+- **COMMIT-SUBJECT-CASE-RULE-UNFOLLOWED** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-25. `skills/commit/SKILL.md:42` says "capitalize first word after
+  the colon", but 49 of the last 50 non-release subjects start lowercase
+  (`e482962 chore(commit): drop …`). Every commit either breaks the rule or
+  breaks the history's own idiom. **Fix:** drop the rule or start following
+  it; which case is intended is the maintainer's call; no test — docs.
+
+- **COMMIT-EVALS-BRACKET-FORMAT** (LOW, docs) — CONFIRMED at HEAD 2026-09-25.
+  `evals/commit/0[1-5].json` `must_use_format` expects `[fix] …`-style
+  subjects (`01.json:13`, `03.json:18`), and `research/eval-sets.md:196`
+  shows the same, while `skills/commit/SKILL.md:25` prescribes
+  `type(scope): …`. A run scores a skill-compliant commit as a format
+  failure. **Fix:** rewrite the regexes and rubric lines to the
+  `type(scope):` form; no test — docs.
+
+- **SWEEP-READS-PRUNED-FIXED-ENTRIES** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-25. `/sweep` with no argument reads "the most recent `BUGS.md` ✅
+  FIXED/Resolved entries" (`skills/sweep/SKILL.md:20`), but
+  `skills/bugs/SKILL.md` § Pruning deletes an entry once its fix is
+  committed, so a queue kept by that skill has none to read. **Fix:** take
+  the fixed pattern from the latest fix commit (`git log`) and the diary;
+  no test — docs.
+
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
