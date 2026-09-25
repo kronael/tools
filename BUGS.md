@@ -28,14 +28,34 @@
 - **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-21.
   `skills/doc-topology/SKILL.md` routes to `doc-shape` twice — a `NOT for ...
   (use doc-shape)` clause in its description and a pointer in the body — but
-  `skills/doc-shape/` does not exist in this source tree. It is installed-only
-  (`~/.claude/skills/doc-shape`), so anyone installing from a clone gets a
-  skill that names a sibling they do not have. Reproduce:
+  `skills/doc-shape/` does not exist in this source tree, nor under
+  `~/.claude/skills/`, so every reader gets a skill that names a sibling nothing
+  provides. Reproduce:
   `grep -c doc-shape skills/doc-topology/SKILL.md` → 2, `ls skills/doc-shape`
   → no such directory. **Fix:** the maintainer's call, and the install
   protocol forbids deciding it here — an installed-only skill is captured into
   source ONLY on an explicit ask, since it may be org-local. Either add
   `doc-shape` to the bundle, or drop the two references.
+
+## Install protocol
+
+- **RSYNC-DENY-BLOCKS-INSTALL-SYNC** (MED, config) — CONFIRMED at HEAD
+  2026-09-25. `settings-recommended.json` carries `Bash(rsync * ~/.claude/*)`
+  in `permissions.allow` and `Bash(rsync *)` in `permissions.deny`. Deny wins,
+  so the copy step the install protocol prescribes is refused outright: an
+  `rsync -a skills/ ~/.claude/skills/` in this session came back "has been
+  denied" and the sync had to fall back to `cp -a`. **Fix:** the maintainer's
+  call — narrow the deny to the destinations that matter, or drop the allow
+  entry and write the protocol around `cp`.
+
+- **COMMANDS-INSTALLED-ONLY** (LOW, design) — CONFIRMED at HEAD 2026-09-25.
+  `~/.claude/commands/` holds `improve.md`, `learn.md`, `readme.md`,
+  `refine.md` and `visual.md`; the bundle ships only `commands/caveman.md`, so
+  a fresh install produces five fewer commands than a working machine has.
+  Reproduce: `comm -13 <(ls commands) <(ls ~/.claude/commands)`. **Fix:** the
+  maintainer's call, and the install protocol forbids deciding it here — an
+  installed-only artifact is captured into source ONLY on an explicit ask,
+  since it may be machine-local.
 
 ## Codex bridge
 
