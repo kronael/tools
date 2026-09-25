@@ -9,7 +9,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py       (commit + diary block, else turn recap)
+Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
@@ -140,12 +140,11 @@ unwired.
 
 **Input:** JSON with `cwd`, `session_id`, `stop_hook_active`.
 **Output:** `{"decision": "block", "reason": "..."}` on real Stop,
-advisory `hookSpecificOutput.additionalContext` on PostToolUse,
-`{"ok": true, "systemMessage": "<recap>"}` when nothing blocks, or silent.
+advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 **Flow:**
-1. With `stop_hook_active` set, skip the nudges (prevents recursion) and go
-   straight to the recap.
+1. With `stop_hook_active` set, skip the nudges — this prevents recursion, and
+   with nothing left to say the hook is silent.
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
    with `git diff --stat`. A failed `git status` inside a repo appends its
    stderr instead — an unreadable tree is reported, never read as clean.
@@ -154,19 +153,9 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse,
    without one is nudged to start it.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
-5. Otherwise, on a real Stop, build the recap: `git log
-   --since=<stamp>` (or `head` when the session has no stamp yet), `git status
-   --porcelain -z` (`-z` never quotes, so non-ASCII and spaced paths survive)
-   filtered so untracked paths count only when touched after the stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
-   for merge/rebase/cherry-pick/revert/bisect in progress. Each git call
-   shares one `RECAP_BUDGET` deadline; any failure drops the whole recap and
-   leaves the stamp untouched so the next turn's window still covers this one.
-6. Emit the recap as `systemMessage` and write the stamp.
-
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
-`<git-dir>/claude-commit-nudge` (nudge throttle) and
-`<git-dir>/claude-recap-{session_id}` (ISO time of the last recap).
+`<git-dir>/claude-commit-nudge` (nudge throttle).
 
 ### memory_nudge.py (PreCompact + Stop)
 

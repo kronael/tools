@@ -94,19 +94,6 @@ The hook reports a missing or stale diary entry and never writes a header —
 run `/diary` deliberately when a session is worth recording. Pure script, no
 LLM call, NEVER pushes.
 
-When a real `Stop` has nothing to block on, the hook instead emits a turn recap
-as `systemMessage` (shown to the user, never blocking):
-commits landed since the previous Stop of this session, what is still
-uncommitted (tracked changes with `+added -deleted`, plus untracked paths
-touched inside the window — older untracked noise is skipped), and any
-merge/rebase/cherry-pick/revert/bisect left in progress. About ten lines, capped
-at `RECAP_COMMITS` commits and `RECAP_PATHS` paths. The first Stop of a session
-has no window and shows the `head` commit instead; with no window the tree
-line reads `no tracked changes`, since untracked age cannot be judged yet. The recap is best effort:
-ALWAYS silent outside a git repository, when a git call fails, or once
-`RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse`.
-State: `<git-dir>/claude-recap-{session_id}`, the ISO time of the last recap.
-
 ### memory_nudge.py (PreCompact + Stop)
 
 Reminds the assistant to evaluate the session for memory-worthy content
