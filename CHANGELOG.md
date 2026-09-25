@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.3.97] — 20260925
+
+> kronael v0.3.97 — bugs come with a failing test
+>
+> Every recorded bug now cites a skipped test that fails on today's code, and commits stop getting a Co-Authored-By trailer.
+>
+> • `/bugs` — each defect ships a skipped test that asserts the right behaviour and fails today
+> • `/bugs` — docs, ops, config and design-style entries say `no test`; a fix un-skips its test
+> • Settings — `attribution.commit` is empty, so Claude Code stops asking for the trailer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bugs` pins each entry with a test that asserts the correct behaviour, is
+  run and seen failing, and is skipped with the entry id in its reason;
+  `docs`, `ops`, `config`, `design`, `duplication`, `traceability` and
+  infra-bound `perf` entries state `no test — <type>`. A fix un-skips it.
+- `settings-recommended.json` sets `attribution.commit` to `""` and install
+  applies it on every run, so Claude Code stops requesting a `Co-Authored-By`
+  trailer. `commit` and its evals drop the prose rule the setting replaces;
+  README and ARCHITECTURE name every key install applies without asking.
+
 ## [v0.3.96] — 20260925
 
 > kronael v0.3.96 — one Co-Authored-By rule, where commits are written
