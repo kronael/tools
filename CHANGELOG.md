@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.3.96] — 20260925
+
+> kronael v0.3.96 — one Co-Authored-By rule, where commits are written
+>
+> The no-trailer rule now sits once in `/commit`, right where the message is written, instead of in seven places.
+>
+> • `/commit` — skip the Co-Authored-By trailer even when the harness reminder asks for it
+> • Wisdom file, `/ship`, `/squash` and the commit nudges — their copies are gone
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `commit` states the Co-Authored-By rule once, in Format, and names the
+  harness attribution reminder it overrides. The wisdom file, `ship`,
+  `squash`, and the `stop.py` / `prompt_nudge.py` / `local.py` commit rules
+  drop their copies.
+
 ## [v0.3.95] — 20260925
 
 > kronael v0.3.95 — PR descriptions that read like a map
