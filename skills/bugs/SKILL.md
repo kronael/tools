@@ -39,6 +39,8 @@ only; do not restate the policy.
 - NEVER record what you did. An entry describes the defect, not the pass that
   found it. Provenance is at most one clause inside the entry (`CONFIRMED at
   HEAD <date>`), never a section.
+- NEVER footnote a different repo's defect here — fix it, or file it
+  (`/gh-issue`), at the repo that owns it
 
 ## Structure
 

@@ -1,5 +1,107 @@
 # Changelog
 
+## [v0.3.97] — 20260910
+
+> kronael v0.3.97 — make test actually tests
+>
+> The root test target had been running nothing for every project; it now runs them all, and the two sandboxes agree on their model pins again.
+>
+> • `make test` — runs bhctl, dockbox, hooks, qemubox and udfix instead of silently skipping them
+> • qemubox — fable, gpt and the default model match dockbox again; help text follows
+> • hooks — learn.py and the smoke suite are tracked, and ruff is clean across hooks/
+> • README guidance — open with what it is, why to use it, then a runnable block
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- Root `Makefile`: `$(addprefix test-,$(PROJECTS))` in `.PHONY` registered
+  explicit commandless rules that shadowed the `test-%` pattern rule, so
+  `make test-hooks` ran nothing and `make test` still reported success while
+  executing only the drift script. Dropped from `.PHONY`; the pattern rule is
+  phony-in-effect since the target file never exists.
+- `qemubox` model pins had fallen behind `dockbox`: `fable` on
+  `claude-fable-5`, `gpt` on `gpt-5.5`, and the `claude` alias still on
+  `claude-opus-4-8` while its own `opus` alias had moved to `claude-opus-5`.
+  `tests/drift_test.sh` checked for the retired `claude-opus-4-8` default and
+  now checks `claude-opus-5`.
+- `hooks/`: `FA102` (PEP 604 unions without `from __future__ import
+  annotations`), `DTZ005` (naive `datetime.now()`) and `TRY300` are cleared;
+  ruff and ruff-format pass on `--all-files`.
+
+### Added
+
+- `hooks/learn.py` and `hooks/test_hooks.py` are tracked. The latter drives the
+  installed hooks under `~/.claude` by subprocess, so it is run by hand rather
+  than collected by pytest.
+- `agents/readme.md`: a README opens with what it is in one plain sentence, why
+  to use it, then a runnable block, and closes with a how-to-read-this map.
+  `readme` and `specs` skills point at `doc-topology`; `ts` gains the
+  Bun-as-package-manager and Node-24-floor rules.
+
+## [v0.3.96] — 20260910
+
+> kronael v0.3.96 — local work folded back onto master
+>
+> Two skill improvements that lived only on this machine are now in the repo, on top of master's own updates.
+>
+> • Install — offers ripwire, the optional codebase-map tool, for Claude and Codex
+> • finalize-crate — works for any language, not just Rust, and starts by extracting the library
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Install offers **ripwire** on its own ask: the binary plus its `ripwire-*`
+  skills, with the optional `ripwire wrap <agent>` MCP interface mentioned
+  rather than installed silently.
+
+### Changed
+
+- `finalize-crate` generalizes beyond Rust — "Finalize Library", a step 0 for
+  extracting a library out of a host repo, and release verification for
+  crates.io, npm and PyPI. Master had re-added this skill at its Rust-only
+  vintage; the live copy was ahead, and its body wins while master's frontmatter
+  YAML fix is kept.
+
+## [v0.3.95] — 20260910
+
+> kronael v0.3.95 — a leaner wisdom file
+>
+> The always-loaded rule file drops 40% of its lines by keeping only what a model will not do on its own.
+>
+> • Wisdom — 254 to 159 lines; anything a fresh agent already does unprompted is gone
+> • Push rules — a repo can lift them now, but only with a written grant naming the command
+> • Config — flags plus env vars for simple cases; TOML-as-argv stays for nested shapes
+> • Testing and shell rules — moved into the skills that own them, read on demand
+> • Rule authoring — the `wisdom` skill gains a subtraction test that measures what to keep
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- Global wisdom: 254 to 159 lines. Two fresh subagents wrote their own default
+  guidelines for every topic it covers, without reading it, and marked what they
+  drift on; what they produced unprompted was cut, and the survivors were cut
+  again where the system prompt or the output style already says it. Kept: the
+  owned drifts, unguessable house facts, workflows, and the four git rules that
+  contradict the harness on purpose — now labelled as deliberate overrides.
+- Push rules are repo-overridable defaults: lifted only in writing, in that
+  repo, and only for what the grant names. An in-session ask is not a grant.
+- Config guidance prefers flags plus env vars — a short flag where a human types
+  it, a long name with an env var where the deploy sets it. TOML as first CLI
+  param stays for genuinely nested config.
+
+### Added
+
+- `wisdom` skill: the subtraction test, so the next pass measures what to keep
+  instead of guessing — fresh sub, no access to the file under audit, drifts
+  marked, two groups so agreement is the evidence.
+- `software/testing.md`: mocking policy, unit-vs-integration layout,
+  test-features-not-fixes, test-config-object typing, and that an environment
+  failure is a reported blocker rather than a skip, `xfail` or stub.
+- `sh`: fixed working directory and no `$0`/`__dirname` path resolution.
+
 ## [v0.3.94] — 20260924
 
 > kronael v0.3.94 — switch the terse style on for one conversation

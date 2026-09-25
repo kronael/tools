@@ -37,9 +37,11 @@ CI_WORKFLOWS := \
 	$(W)/test-bhctl.yml \
 	$(W)/lint.yml
 
-# test-%/clean-% are deliberately absent from .PHONY: make skips implicit-rule
-# search for a phony target, so listing them makes the pattern rules below
-# match and then do nothing.
+# NEVER list the `test-%`/`clean-%` expansions here: naming them as .PHONY
+# prerequisites registers explicit commandless rules for those exact targets,
+# and an explicit rule beats a pattern rule, so `make test-hooks` silently ran
+# nothing. The pattern rule is phony-in-effect anyway — the target file never
+# exists.
 .PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix
 
 help:

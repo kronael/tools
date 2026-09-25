@@ -8,6 +8,10 @@ when_to_use: "write a spec, spec this out, write a design doc, design document, 
 
 Design references in `specs/`. Master index: `specs/index.md`.
 
+ALWAYS check scale first: a small repo (one package, no `docs/`) plans in
+`.ship/` alone — NEVER stand up `specs/` beside it. Fold anything worth keeping
+into `.diary/` and drop the file.
+
 ## Frontmatter
 
 Every spec file starts with YAML frontmatter:

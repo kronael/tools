@@ -2,15 +2,6 @@
 
 ## Bundle
 
-- **WISDOM-FILE-OVER-LINE-CAP** (MED, design) — CONFIRMED at HEAD 2026-09-18.
-  `skills/global/SKILL.md` is 302 lines against the 200-line cap
-  `skills/wisdom/SKILL.md` states with "no exceptions — overflow goes to
-  sibling files". It is the one file loaded in every session, so the cap bites
-  hardest here. Reproduce: `wc -l skills/global/SKILL.md`. **Fix:** the router
-  pattern — always-true rules stay inline, a themed block moves to a sibling
-  loaded on demand. That changes what is guaranteed present in every session,
-  so it needs sign-off.
-
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
   `skills/create/social/references/research-social-meme.md:196-217` carries a
   "Corrections (post-codex)" section narrating what the document itself changed
@@ -73,6 +64,24 @@
   `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push` from the
   ARCHITECTURE list, or add the pattern — which of the two is the
   maintainer's call, since the README documents the omission as deliberate.
+
+- **LEARN-HOOK-WIRED-NOWHERE** (LOW, dead code) — CONFIRMED at HEAD 2026-09-25.
+  `hooks/learn.py` is a complete lifecycle hook that no event invokes:
+  `settings-recommended.json` wires `local.py`, `prompt_nudge.py`,
+  `pretool_nudge.py`, `post_tool_nudge.sh`, `stop.py`, `memory_nudge.py` and
+  `reclaude.py`, and none of them is it. Reproduce:
+  `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
+  call — wire it to an event, or drop it.
+
+- **SMOKE-SUITE-TESTS-THE-INSTALL** (LOW, tests) — CONFIRMED at HEAD 2026-09-25.
+  `hooks/test_hooks.py` resolves its subjects under `Path.home()/'.claude'/
+  'hooks'` (`:20`), so it exercises whatever is installed rather than the tree
+  it ships in, and its docstring and cases name `nudge.py`, which no longer
+  exists — the file split into `prompt_nudge.py` and `pretool_nudge.py`. It is
+  also absent from the Makefile's `TEST_FILES`, and pytest collects nothing from
+  it (`pytest -q test_hooks.py` → "no tests ran"), so nothing runs it either
+  way. Reproduce: `ls hooks/nudge.py` → no such file. **Fix:** the maintainer's
+  call — point it at the repo tree and rename the subjects, or drop it.
 
 ## dockbox
 

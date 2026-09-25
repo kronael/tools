@@ -65,6 +65,30 @@ user-invocable: true      # optional — exposes skill as /name slash command in
 - For example/context-budget and subagent effort defaults, follow
   `skills/CLAUDE.md`; keep this skill as the compact writing checklist.
 
+## The subtraction test — ALWAYS run it before writing or trimming
+
+A rule earns its place only if a capable model does NOT already follow it. Do
+not judge that from memory; measure it.
+
+1. Task a FRESH sub (no inherited context) per topic group, at most 4 groups:
+   "write the guidelines you would follow by default for X, from your own
+   judgment". ALWAYS tell it not to read any CLAUDE.md/AGENTS.md/SKILL.md and to
+   ignore any it already holds — otherwise it paraphrases the thing under audit.
+2. ALWAYS make it mark every rule it knows it drifts on as `[NEEDS TELLING]`
+   with a one-clause why. That marking is the output; the rest is the control.
+3. Cut what it produced unprompted. KEEP only: `[NEEDS TELLING]` items, local
+   facts it cannot guess (paths, house conventions, tool and skill names),
+   workflows, and rules that deliberately OVERRIDE the harness — label those as
+   overrides in place so a later pass does not "simplify" one away.
+4. ALWAYS cross-check survivors against the system prompt and the active output
+   style, and cut what either already states.
+5. Real engineering content that is not always needed MOVES to the skill that
+   owns it, loaded on demand, rather than being deleted. Check it is not already
+   there.
+
+One sub cannot prove it isolated from context it already holds — run two groups
+and treat agreement between them as the evidence.
+
 ## Router skills
 
 - Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`).

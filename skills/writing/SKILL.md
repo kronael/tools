@@ -20,3 +20,4 @@ Copy rules for any user-facing string.
 - ALWAYS prefer plain verbs ("keep stake", "grow stake") over Latinate nouns ("retention", "expansion").
 - NEVER use jargon when a 13yo could read the plain version. ALWAYS test: would a smart non-expert understand this in one read?
 - ALWAYS finish longer prose with a de-slop pass: the `humanize` skill strips AI-isms and restores voice.
+- NEVER title a section with a vague directive ("Change something", "Notes") — ALWAYS name the concrete action or content under it.
