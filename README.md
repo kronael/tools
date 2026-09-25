@@ -141,8 +141,9 @@ Troubleshooting:
 - **Settings** (`settings-recommended.json`) — hook wiring, permissions,
   sandbox, env, and session retention, merged into `~/.claude/settings.json`.
   The recursive-removal deny guard (`rm -r*`, `rm -R*`, `rm -fr*`,
-  `rm --recursive*`) and `cleanupPeriodDays` are applied on every install
-  without asking, even when other permission entries are declined.
+  `rm --recursive*`), `cleanupPeriodDays`, `outputStyle` and
+  `attribution.commit` are applied on every install without asking, even when
+  other permission entries are declined.
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
 
 ### Layout

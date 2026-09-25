@@ -109,7 +109,7 @@ install step provides the smart merge. Each layer does one thing.
 | `skills/`, `agents/`, `hooks/` | Two-way sync: source-advanced files replace the install, a clean installed superset reverse-syncs into source, anything else shows a diff and asks (preserve user-added files not in source) |
 | `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
 | `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
-| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask) |
+| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the keys `README.md` § Settings names skip the ask) |
 | `~/.claude/settings.local.json` | NEVER touch |
 | `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |
 
