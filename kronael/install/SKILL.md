@@ -143,6 +143,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
    - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
+   - **`attribution.commit`** — ALWAYS apply the recommended empty string,
+     never ask. Unset, Claude Code tells the model to end every commit with a
+     `Co-Authored-By` trailer, and that reminder outvotes the `commit` skill's
+     rule. NEVER write `attribution: false` — versions before v2.1.281 reject
+     it and skip the whole settings file.
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions

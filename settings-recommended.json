@@ -135,6 +135,9 @@
   "skipDangerousModePermissionPrompt": true,
   "promptSuggestionEnabled": false,
   "spinnerTipsEnabled": false,
+  "attribution": {
+    "commit": ""
+  },
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   },

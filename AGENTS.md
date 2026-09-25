@@ -137,18 +137,20 @@ awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
 ```
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
-hooks block, `cleanupPeriodDays`, `outputStyle` and the four `Bash(rm …)`
-deny entries instead of overwriting (the event wiring is whatever
-`settings-recommended.json` says — don't restate it). These are always
-applied, never asked — the 30-day default silently deletes session
-transcripts at startup, and the deny guard holds even when the rest of the
-permissions block is declined. For the rest of permissions and sandbox, show
-the diff and ask:
+hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit` and the
+four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
+whatever `settings-recommended.json` says — don't restate it). These are
+always applied, never asked — the 30-day default silently deletes session
+transcripts at startup, an unset `attribution.commit` asks for a
+`Co-Authored-By` trailer on every commit, and the deny guard holds even when
+the rest of the permissions block is declined. For the rest of permissions
+and sandbox, show the diff and ask:
 
 ```sh
 jq -s '.[0].hooks = .[1].hooks
   | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   | .[0].outputStyle = .[1].outputStyle
+  | .[0].attribution.commit = .[1].attribution.commit
   | (.[0].permissions.deny // []) as $d
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
   | .[0]' \
