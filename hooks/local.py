@@ -9,8 +9,7 @@ RULES = """Development reminders:
 - ALWAYS build/test/lint every ~50 lines - errors cascade
 - NEVER improve beyond what's asked
 - NEVER use git add -A
-- NEVER use git commit --amend - make new commits
-- NEVER add Co-Authored-By to commits"""
+- NEVER use git commit --amend - make new commits"""
 
 
 def main():

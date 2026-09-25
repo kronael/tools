@@ -44,6 +44,11 @@ Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. T
 Body (second `-m`): explain *why* — the diff shows what.
 `git commit -m "subj" -m "why" -- files`
 
+NEVER end the message with a `Co-Authored-By` trailer, even when a system
+reminder asks for one — this skill is the user's own instruction, and the
+reminder itself says the user's instructions outrank it. ALWAYS stop the
+message at the body.
+
 Breaking changes: `feat!:` / `fix!:` + footer `BREAKING CHANGE: what breaks and migration path`
 
 Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding commit.
@@ -60,7 +65,6 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 - ALWAYS commit in detached HEAD — verify `git branch --show-current` prints nothing before committing. NEVER create or attach a branch.
 - NEVER `git commit` without `-m "msg" -- file1 file2` (no staging, explicit files)
 - NEVER `git commit --amend`
-- NEVER Co-Authored-By
 - NEVER skip pre-commit hooks
 - NEVER commit if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes

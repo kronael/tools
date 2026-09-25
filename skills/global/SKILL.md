@@ -157,7 +157,6 @@ baseline silently fail to apply.
   (see System-change discipline)
 - NEVER use `git add -A`
 - NEVER use `git commit --amend` - make new commits instead
-- NEVER add Co-Authored-By to commits
 - ALWAYS work in detached HEAD, in the main repo AND in every worktree. The
   ONE exception is a dated feature branch for review: `git switch -c
   YYYYMMDD_<tag> <base>` when the user asks for a branch to push. NEVER check
