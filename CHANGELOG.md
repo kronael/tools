@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.3.98] — 20260925
+
+> kronael v0.3.98 — one line again, and a push is a question now
+>
+> Two development lines that ran side by side for a fortnight are merged, and pushing is gated on asking rather than refused outright.
+>
+> • global — the wisdom file keeps its subtracted shape and takes the gated push policy
+> • settings — `git push`, `git pull` and the `gh` write commands move from deny to ask
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `skills/global/SKILL.md` keeps the subtracted shape — only what a capable
+  agent does not do unprompted — and is 180 lines, under the 200-line cap the
+  `wisdom` skill states.
+- Git policy: `git push` runs only when the user asked for it in that message,
+  with the exact remote and refspec stated first. `master`/`main` needs a second
+  approval naming it; the default is a dated `YYYYMMDD_<tag>` branch and a PR,
+  which is also the one exception to detached HEAD.
+- `settings-recommended.json` moves `git push`, `git pull`, `gh pr create`,
+  `gh pr merge`, `gh release create` and `gh repo create` from `deny` to `ask`,
+  so the gate prompts instead of refusing. `gh pr review --approve` stays denied.
+- Releases cut on the second line are renumbered v0.3.95–v0.3.97; the numbers
+  they used name unrelated releases here.
+
+### Added
+
+- `skills/global/SKILL.md`: never override `CARGO_TARGET_DIR`, `TMPDIR` or any
+  other configured build or temp path, and brief a subagent by goal rather than
+  by numbered steps.
+
 ## [v0.3.97] — 20260910
 
 > kronael v0.3.97 — make test actually tests
