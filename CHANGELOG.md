@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.3.99] — 20260925
+
+> kronael v0.3.99 — Codex gets the turn recap, and the installer can copy again
+>
+> The Stop recap now runs in Codex sessions too, and the rsync the install protocol prescribes is no longer refused by the toolkit's own deny rule.
+>
+> • hooks — the turn recap is no longer withheld under Codex
+> • settings — `rsync` moves from deny to ask, so the narrow `~/.claude` allow can take effect
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- `stop.py` withheld the recap whenever `KRONAEL_IN_CODEX` was set, so a Codex
+  session got the commit and diary nudges but never the turn summary. The bridge
+  already routed `stop`'s `systemMessage` through the nudge rewrite, so the
+  exclusion was the only thing in the way.
+- `codex_hook.py` returned the raw hook stdout for a Stop carrying a
+  `systemMessage`, skipping both the `ok` strip and the `/skill` → `@skill`
+  rewrite every other nudge gets.
+- `settings-recommended.json` denied `Bash(rsync *)` while allowing
+  `Bash(rsync * ~/.claude/*)`. Deny wins, so the install protocol's own copy step
+  was refused and had to fall back to `cp`. The blanket rule is now `ask`, the
+  narrow allow stands, and a dry-run to `~/.claude` runs without a prompt.
+
 ## [v0.3.98] — 20260925
 
 > kronael v0.3.98 — one line again, and a push is a question now
