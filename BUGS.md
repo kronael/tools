@@ -39,15 +39,6 @@
 
 ## Install protocol
 
-- **RSYNC-DENY-BLOCKS-INSTALL-SYNC** (MED, config) — CONFIRMED at HEAD
-  2026-09-25. `settings-recommended.json` carries `Bash(rsync * ~/.claude/*)`
-  in `permissions.allow` and `Bash(rsync *)` in `permissions.deny`. Deny wins,
-  so the copy step the install protocol prescribes is refused outright: an
-  `rsync -a skills/ ~/.claude/skills/` in this session came back "has been
-  denied" and the sync had to fall back to `cp -a`. **Fix:** the maintainer's
-  call — narrow the deny to the destinations that matter, or drop the allow
-  entry and write the protocol around `cp`.
-
 - **COMMANDS-INSTALLED-ONLY** (LOW, design) — CONFIRMED at HEAD 2026-09-25.
   `~/.claude/commands/` holds `improve.md`, `learn.md`, `readme.md`,
   `refine.md` and `visual.md`; the bundle ships only `commands/caveman.md`, so
