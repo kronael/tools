@@ -309,11 +309,17 @@ def test_git_dir_probe_shares_the_budget_and_the_injected_run(tmp_path) -> None:
     assert calls[0] == ('git', 'rev-parse', '--git-dir')
 
 
-def test_periodic_and_codex_calls_never_recap(tmp_path) -> None:
+def test_periodic_calls_never_recap(tmp_path) -> None:
     repo = make_repo(tmp_path)
     assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
-    assert run_hook(repo, env={'KRONAEL_IN_CODEX': '1'}) is None
     assert not stamp_path(repo).exists()
+
+
+def test_codex_stop_recaps_like_claude(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    out = run_hook(repo, env={'KRONAEL_IN_CODEX': '1'})
+    assert out['systemMessage'].splitlines()[0].startswith('head ')
+    assert stamp_path(repo).exists()
 
 
 def test_missing_diary_warns_without_writing_a_file(tmp_path) -> None:

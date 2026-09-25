@@ -154,7 +154,7 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse,
    without one is nudged to start it.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
-5. Otherwise, on a real Stop outside Codex, build the recap: `git log
+5. Otherwise, on a real Stop, build the recap: `git log
    --since=<stamp>` (or `head` when the session has no stamp yet), `git status
    --porcelain -z` (`-z` never quotes, so non-ASCII and spaced paths survive)
    filtered so untracked paths count only when touched after the stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes

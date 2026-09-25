@@ -104,9 +104,8 @@ at `RECAP_COMMITS` commits and `RECAP_PATHS` paths. The first Stop of a session
 has no window and shows the `head` commit instead; with no window the tree
 line reads `no tracked changes`, since untracked age cannot be judged yet. The recap is best effort:
 ALWAYS silent outside a git repository, when a git call fails, or once
-`RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse` or
-under Codex (`KRONAEL_IN_CODEX`). State: `<git-dir>/claude-recap-{session_id}`,
-the ISO time of the last recap.
+`RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse`.
+State: `<git-dir>/claude-recap-{session_id}`, the ISO time of the last recap.
 
 ### memory_nudge.py (PreCompact + Stop)
 

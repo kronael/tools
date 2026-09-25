@@ -160,7 +160,7 @@ def translate_output(stdout: str, event: str, target: str = '') -> str:
     if not isinstance(system_message, str) or not system_message:
         return json.dumps(output)
     if event not in CONTEXT_EVENTS:
-        return stdout
+        return json.dumps(output)
 
     hook_output = output.get('hookSpecificOutput')
     if not isinstance(hook_output, dict):

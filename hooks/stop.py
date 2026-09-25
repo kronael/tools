@@ -286,7 +286,7 @@ def safe_recap(cwd, session_id, now, run=git_run):
 
 
 def recap_wanted(data):
-    return hook_event(data) != 'PostToolUse' and not os.environ.get('KRONAEL_IN_CODEX')
+    return hook_event(data) != 'PostToolUse'
 
 
 def main():
