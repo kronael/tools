@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.4.0] — 20260925
+
+> kronael v0.4.0 — one recap, not two
+>
+> Claude Code already generates a recap of its own, so the Stop hook stops writing a second one and goes back to the commit and diary nudges.
+>
+> • hooks — the Stop turn recap is removed; the built-in recap is left at its default
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Removed
+
+- `stop.py`'s turn recap, and with it the per-session stamp, the
+  `RECAP_BUDGET` deadline, the `RECAP_COMMITS`/`RECAP_PATHS` caps and the
+  landed/dirty/stuck builders. Claude Code generates its own recap from the
+  conversation — the away summary, keyed `awaySummaryEnabled` and shown as
+  *recap* in `/config`, with `/recap` as the on-demand form — so a second one
+  meant two summaries at every stop, and the git one spoke even on a quiet turn
+  (`since 07:48Z: no commits`). The hook is back to the commit and diary nudges.
+  `awaySummaryEnabled` is deliberately left unset, at Claude Code's default.
+
 ## [v0.3.99] — 20260925
 
 > kronael v0.3.99 — Codex gets the turn recap, and the installer can copy again
