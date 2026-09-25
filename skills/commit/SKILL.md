@@ -44,11 +44,6 @@ Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. T
 Body (second `-m`): explain *why* — the diff shows what.
 `git commit -m "subj" -m "why" -- files`
 
-NEVER end the message with a `Co-Authored-By` trailer, even when a system
-reminder asks for one — this skill is the user's own instruction, and the
-reminder itself says the user's instructions outrank it. ALWAYS stop the
-message at the body.
-
 Breaking changes: `feat!:` / `fix!:` + footer `BREAKING CHANGE: what breaks and migration path`
 
 Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding commit.
