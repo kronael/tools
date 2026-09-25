@@ -74,9 +74,34 @@ em-dash, then the body.
   `hardening`, `traceability`.
 - **body** — concrete `file:line` cites, the failure/why, and often a
   **Fix:** sketch. Multi-line prose is fine for a hard one.
+- **test** — cites the failing test that proves it: `Measured: <file>::<test-name>`. Omit only
+  for a carve-out type (see below).
 - **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
   `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
   changes behaviour says so, with what was measured.
+
+## Pin it with a failing test
+
+Prose plus a `file:line` cite is a claim; a test the reader can run is evidence. Every entry gets
+one, in the project's own test idiom — grep for an existing ignored/skipped test and match it; never
+invent a second convention.
+
+- ALWAYS write the test to assert the CORRECT behavior, not the buggy output, so it fails against
+  today's code. Shape: a doc comment states the mechanism, the test drives the real code path
+  (faking only external systems), and the skip reason restates why it currently fails.
+- ALWAYS run it and watch it fail before the entry counts as recorded — a test that passes today
+  proves nothing, recorded or not.
+- ALWAYS mark it a known failure so the suite stays green: Rust `#[ignore = "..."]`, pytest
+  `xfail`/`skip(reason=...)`, Go `t.Skip("...")`, or whatever this project already uses.
+- ALWAYS put the entry id in the skip/ignore reason next to the mechanism
+  (`"<ENTRY-ID>: <mechanism>"`) — either side greps straight to the other.
+- NEVER let writing this test become writing the fix. The test asserts correct behavior and stays
+  red; producing it is recording, exactly the CLAUDE.md Bug Triage Protocol's "record, don't fix"
+  — the assertion, never the code that makes it pass.
+
+**Carve-out — no test required:** `docs`, `ops`, `config` entries, and a `perf`/`latency` finding
+that needs production-scale data or infra a test suite can't construct. State the carve-out inline
+in the body: `no test — <type>`.
 
 ## Not-a-defect section
 
@@ -90,7 +115,9 @@ was false) goes here too, with the evidence that refuted it.
 
 A fixed defect leaves the file. Its history is the commit that fixed it, so
 delete the entry once the fix is committed — do not mark it fixed and keep it.
-Deferred entries stay as-is. Not-a-defect lines stay forever.
+The fix un-ignores/un-skips the cited test as part of landing; a still-red or
+still-ignored test means the fix isn't done, whatever the commit message
+claims. Deferred entries stay as-is. Not-a-defect lines stay forever.
 
 Invoke with `prune` to sweep entries whose defect no longer holds. ALWAYS
 re-verify against the current code before deleting — an entry's own status
