@@ -2,20 +2,22 @@
 
 ## [v0.3.98] — 20260926
 
-> kronael v0.3.98 — two lines, one bundle
+> kronael v0.3.98 — two lines, one bundle, Bun for new TypeScript
 >
-> The local hooks-and-lints line and upstream's Opus 5.5 line are merged, so one install carries both, and "sync" now names that merge.
+> The local hooks-and-lints line and upstream through v0.3.97 are one bundle again, and a new TypeScript project starts on Bun with Biome.
 >
+> • TypeScript — a new project runs on Bun with Biome and tsc; an existing one keeps its tooling
 > • Sync — the merge skill defines it: fetch, size, preview, merge origin/master into the detached HEAD
 > • Hooks — Stop recaps the turn, blocks on an unreadable tree, nudges the diary once per session
 > • Prompt nudge — the first prompt of a session gets a /solve nudge on the channel the model reads
-> • Wisdom — push only when asked, dated review branches, commit by default, in a 129-line routed file
+> • Wisdom — push only when asked, dated review branches, commit by default, in a 128-line routed file
 > • Tools — tw-fetch reads a post keyless, tg-fetch takes groups as arguments, gloww fits the terminal
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
 
+- `ts` skill § Tooling: a new TypeScript project runs on Bun (runtime, package manager, test runner) with Biome (lint, format) and `tsc --noEmit`; `prepare`/`check`/`right`/`test` map to `bun install`/`biome check`/`tsc --noEmit`/`bun test`; an existing project keeps its tooling until asked. `software/strict-typing.md` carries the `biome.json` floor (verified against Biome 2.5.14) and a Biome column in the escape-hatch table; `tsx` scaffolds with `create-next-app --biome`; `astgrep`, `refine/ts.md` and the `software` router follow.
 - `merge` skill § Sync: fetch origin, size and preview the merge, merge `origin/master` into the detached HEAD with zdiff3, trace deletions against both parents, verify, commit. Distinct from the install's file sync and from `sync-tools-skills`.
 - `tw-fetch/mirror.py` reads X posts by id or url through `api.fxtwitter.com`, no key; `tw-fetch/README.md` states what the mirror cannot do.
 - `gloww` reads markdown with glow at the terminal's real width.
@@ -27,7 +29,8 @@
 
 ### Changed
 
-- `skills/global/SKILL.md` (the wisdom file) routes instead of restating — 129 lines: routing, conduct, map, the NEVER list; each rule lives in the skill that owns it. It carries upstream's policy: push only when the user asks in that message, never to `master` without a second approval, dated `YYYYMMDD_<tag>` review branches, commit finished work by default, write in the idiom around it.
+- Carries upstream v0.3.94–v0.3.97: push, PR and release commands ask instead of being denied, `readme` router with `shape.md`, `pr-draft` shape, the `attribution.commit` setting, `bugs` entries pinned by a failing test. The local v0.3.94 became this release after the tag collision.
+- `skills/global/SKILL.md` (the wisdom file) routes instead of restating — 128 lines: routing, conduct, map, the NEVER list; each rule lives in the skill that owns it. It carries upstream's policy: push only when the user asks in that message, never to `master` without a second approval, dated `YYYYMMDD_<tag>` review branches, commit finished work by default, write in the idiom around it.
 - `resolve` is `solve` and user-invocable; every reference follows.
 - `bugs` skill: two sections (open defects, ruled not a defect), grouped by subject, fixed entries leave the file; it owns the Bug Triage Protocol. `BUGS.md` follows that shape.
 - `tg-fetch`: groups are positional arguments, each resumed from its own `.jl`; credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`; the TOML config and its template are gone.
@@ -43,6 +46,7 @@
 - Four orphan hooks withdrawn again and named in the install prune list, so a resync cannot vendor them back.
 - gloww: an explicit glow style skips the terminal query that ate pager keystrokes; `-wN` parses as a width flag.
 - `software` frontmatter fits the 1,536-char listing cap (1,274), so its last keywords route again.
+
 ## [v0.3.97] — 20260925
 
 > kronael v0.3.97 — bugs come with a failing test
