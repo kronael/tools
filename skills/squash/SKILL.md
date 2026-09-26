@@ -108,7 +108,7 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 - ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
 - NEVER rewrite a commit that exists on `origin/*` — the `BASE = merge-base origin/main HEAD` floor enforces this.
-- NEVER `git push`, NEVER `git commit --amend`, NEVER `git add -A`, NEVER add `Co-Authored-By`.
+- NEVER `git push`, NEVER `git commit --amend`, NEVER `git add -A`.
 - ALWAYS stay in detached HEAD; NEVER create or attach a branch (the cherry-pick worktree uses `--detach`).
 - NEVER skip pre-commit hooks. Hooks do NOT fire in a worktree — run fmt/clippy/lint by hand there before committing.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.

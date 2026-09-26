@@ -37,7 +37,8 @@ Read on demand, in this directory:
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
 ## Types
-- ALWAYS annotate exported function return types; ALWAYS use inference for obvious local functions and callbacks.
+- NEVER annotate a return type or a const's type that inference already produces — exported or not.
+- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
 - ALWAYS use discriminated unions for mutually exclusive state; NEVER force a union onto independent results — ALWAYS use a named result object with one field per result

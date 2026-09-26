@@ -34,7 +34,7 @@ def codex_skill_names() -> frozenset[str]:
         return frozenset()
 
 
-SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z][a-z0-9-]*)')
+SKILL_REF_RE = re.compile(r'(?<![\w@])/(?P<name>[a-z0-9][a-z0-9-]*)')
 
 
 def _first_str(data: dict[str, Any], names: tuple[str, ...], default: str = '') -> str:

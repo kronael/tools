@@ -2,39 +2,21 @@
 
 ## Bundle
 
-- **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
-  `skills/create/social/references/research-social-meme.md:196-217` carries a
-  "Corrections (post-codex)" section narrating what the document itself changed
-  ("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
-  `references/codex-critique.md` is framed as a verbatim audit trail. Both are
-  the prior-version narration the wisdom file bans in permanent content. They
-  are cold provenance files nothing reads by accident. **Fix:** the maintainer's
-  call — keep them as attribution, or move them to `.diary/`. Not a silent
-  rewrite.
+- **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
+  `kronael/install/SKILL.md` is 232 lines and
+  `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
+  repo's 200-line rule (`CLAUDE.md:107`, `skills/wisdom/SKILL.md:60`).
+  **Fix:** move cold detail to `kronael/install/reference.md`.
 
-- **GO-CONCURRENCY-EXAMPLE-TRAILING-COMMENTS** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-21. `skills/go/concurrency.md:33-63` teaches by an example carrying 7
-  trailing inline comments inside a function body
-  (`s.Dropped.Add(1)                 // count drops; never stall the caller`).
-  `skills/go/SKILL.md` § Comments states "ALWAYS put a comment on its own line
-  ABOVE the code it describes; NEVER trail it inline", and `code.md:84` bans a
-  comment inside a body outright. An example teaches by demonstration, so the
-  file argues against the rule its own skill states. Reproduce:
-  `grep -cE '[^[:space:]]+[[:space:]]+//' skills/go/concurrency.md`. **Fix:**
-  the maintainer's call — move the annotations above their lines, or drop the
-  ones the code already says. The annotations carry the lesson here, so this is
-  not a silent rewrite.
 
-- **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-24.
-  `skills/readme/topology.md:27` points at `doc-shape`, but `skills/doc-shape/`
-  does not exist in this source tree. It is installed-only
-  (`~/.claude/skills/doc-shape`), so anyone installing from a clone gets a
-  data file that names a sibling they do not have. Reproduce: `grep -c
-  doc-shape skills/readme/topology.md` → 1, `ls skills/doc-shape` → no such
-  directory. **Fix:** the maintainer's call, and the install protocol forbids
-  deciding it here — an installed-only skill is captured into source ONLY on
-  an explicit ask, since it may be org-local. Either add `doc-shape` to the
-  bundle, or drop the reference.
+- **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
+  `@learn`, while `hooks/README.md:21-23` and `skills/learn/SKILL.md:3,34`
+  state that word is deliberately not a route, so `/learn` fires only when
+  invoked or through `memory_nudge.py`. The skill description preloads that
+  claim, so the model is told one thing and the hook does the other.
+  **Fix:** drop the route, or drop the claim from both docs; which is the
+  maintainer's call.
 
 - **DIAGRAMS-NO-SEQUENCE-SWIMLANE-STATE** (LOW, design) — open (record only).
   `skills/diagrams/SKILL.md` (52 lines) teaches only box-and-arrow component
@@ -67,16 +49,48 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-## Hooks
+- **SUBAGENT-EFFORT-DOCS-DISAGREE** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-24. `skills/CLAUDE.md` § Subagent effort defaults says opus and
+  fable subagents default to high and sonnet to high, but the agent
+  definitions pin `agents/opus.md` at xhigh and `agents/sonnet.md` at medium,
+  and `skills/opus/SKILL.md:19` quotes "/sonnet (medium)". A reader of the
+  structure rules picks the wrong model tier. **Fix:** make one side match
+  the other; which effort is intended is the maintainer's call.
 
-- **HOOKS-ARCH-CLAIMS-PUSH-BLOCK** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
-  `hooks/ARCHITECTURE.md:95` lists `push` among the commands
-  `pretool_nudge.py` blocks. It does not: `UNSAFE_COMMAND_PATTERNS` has no push
-  pattern, and `hooks/README.md:43` states push is deliberately left
-  unblocked. A reader trusting the doc believes a guard exists that does not.
-  Reproduce: `grep -c push hooks/pretool_nudge.py` → 0. **Fix:** drop `push`
-  from the ARCHITECTURE list, or add the pattern — which of the two is the
-  maintainer's call, since the README documents the omission as deliberate.
+
+- **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
+  `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
+  command string, so it never matches `rig push`, `rig p` or the `rip`
+  symlink, though each runs `git push origin …` (`rig/rig:146`, dispatch at
+  `rig/rig:226`). An unlisted command still gets the default prompt, but an
+  allow rule that admits them pushes with no ask gate left. **Fix:** an ask
+  rule for the rig push forms; which forms, and whether to gate them at all,
+  is the maintainer's call.
+
+- **COMMIT-SUBJECT-CASE-RULE-UNFOLLOWED** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-25. `skills/commit/SKILL.md:42` says "capitalize first word after
+  the colon", but 49 of the last 50 non-release subjects start lowercase
+  (`e482962 chore(commit): drop …`). Every commit either breaks the rule or
+  breaks the history's own idiom. **Fix:** drop the rule or start following
+  it; which case is intended is the maintainer's call; no test — docs.
+
+- **COMMIT-EVALS-BRACKET-FORMAT** (LOW, docs) — CONFIRMED at HEAD 2026-09-25.
+  `evals/commit/0[1-5].json` `must_use_format` expects `[fix] …`-style
+  subjects (`01.json:13`, `03.json:18`), and `research/eval-sets.md:196`
+  shows the same, while `skills/commit/SKILL.md:25` prescribes
+  `type(scope): …`. A run scores a skill-compliant commit as a format
+  failure. **Fix:** rewrite the regexes and rubric lines to the
+  `type(scope):` form; no test — docs.
+
+- **SWEEP-READS-PRUNED-FIXED-ENTRIES** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-25. `/sweep` with no argument reads "the most recent `BUGS.md` ✅
+  FIXED/Resolved entries" (`skills/sweep/SKILL.md:20`), but
+  `skills/bugs/SKILL.md` § Pruning deletes an entry once its fix is
+  committed, so a queue kept by that skill has none to read. **Fix:** take
+  the fixed pattern from the latest fix commit (`git log`) and the diary;
+  no test — docs.
+
+## Hooks
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `AGENT_KEYWORDS` word in
@@ -89,15 +103,6 @@
   `/specs`. Reproduce: `echo '{"prompt":"spec this and ship it"}' | python3
   hooks/prompt_nudge.py`. **Fix:** a precedence rule (workflow verbs before
   nouns, or all matches listed) — a routing redesign.
-
-- **PROMPT-NUDGE-DEAD-ROUTES** (MED, correctness) — CONFIRMED at HEAD
-  2026-09-24. `AGENT_KEYWORDS` maps `test`/`testing` → `/testing`,
-  `ux`/`novice`/`usability`/`walkthrough` → `/eye-13yo`, `security`/`pentest`
-  → `/hacker-eval`. None of the three is a skill or agent (`software/testing.md`,
-  `13yo-eval`, `red-eval` are the nearest). The nudge tells the model to invoke
-  a command the Skill tool rejects, and the real skill stays unreached.
-  Reproduce: `grep -oE "'/[a-z0-9-]+'" hooks/prompt_nudge.py | tr -d "'" |
-  while read t; do [ -d skills/${t#/} ] || echo $t; done`.
 
 - **HOOKS-SYSTEMMESSAGE-NEVER-REACHES-MODEL** (MED, correctness) — CONFIRMED.
   `local.py`, `reclaude.py` and `memory_nudge.py` emit `systemMessage`, the
@@ -128,31 +133,6 @@
   files. Harmless in bytes; the question is whether stamps should self-prune
   on write past N days.
 
-## Codex bridge
-
-- **CODEX-KRONAEL-BLOCK-NEVER-INSTALLED** (MED, design) — CONFIRMED at HEAD
-  2026-09-18. The Kronael block in `codex/AGENTS.md` has never reached global
-  Codex guidance: `grep -c kronael:start ~/.claude/CLAUDE.md` → 0, and every
-  backup under `~/.claude/backup/*/CLAUDE.md` is 0 too. The repo `CLAUDE.md`
-  § Conformance makes quoting that block the test of a working Codex bridge,
-  so the bridge fails its own check while the symlink looks healthy. Cause:
-  install step 5 merges the block into `~/.codex/AGENTS.md`, which is a
-  symlink to `~/.claude/CLAUDE.md` — writing there puts Codex-only
-  instructions in the always-loaded Claude wisdom file, and the next install's
-  two-way sync reverse-syncs them into `skills/global/SKILL.md`. **Fix:** needs
-  a design call — give Codex its own file (`AGENTS.override.md`, or a real
-  `~/.codex/AGENTS.md` that reads the wisdom file) rather than appending to the
-  symlink target. Do NOT append to the wisdom file.
-
-## dockbox
-
-- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — CONFIRMED. dockbox bind-mounts
-  all of `~/.claude` and `~/.codex` **rw** into the container, at
-  `dockbox/dockbox:12,18`. The guest needs `~/.claude/skills` and `~/.agents`
-  editable; it does not need read/write on the API tokens sitting beside them.
-  Lower priority — dockbox's README already discloses it is not a boundary for
-  hostile code. **Fix:** keep the skill dirs rw while the credentials go ro,
-  redacted, or unmounted — not a full config copy-in, which is not needed.
 
 ## qemubox
 
@@ -195,3 +175,9 @@
   lifecycle block. A shared sourced file would violate the repo's "tools are
   independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
   accepted lightweight guard instead.
+
+- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
+  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
+  Claude Code and Codex both rewrite their token files on login refresh, so a
+  ro or redacted token breaks auth inside the box. The README already says
+  dockbox is not a boundary for hostile code.

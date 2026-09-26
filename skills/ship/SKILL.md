@@ -102,8 +102,7 @@ asks for `ship` the tool; otherwise the subagent workflow above is the default.
   the main tree or any worktree. Isolated work uses
   `git worktree add --detach <path> <ref>`.
 - **Path-scoped commits**, conventional-commit format `type(scope): message`
-  — never `git add -A`/`-A`-equivalents, never `--amend`, never push, never a
-  `Co-Authored-By` trailer.
+  — never `git add -A`/`-A`-equivalents, never `--amend`, never push.
 - **Green-gate every step** — use the project's real commands (e.g.
   `make check && make test && make lint`), not "looks right."
 - **Subagent budget**: 1-2 subs typical, never more than 4 concurrent.

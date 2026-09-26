@@ -51,7 +51,7 @@ argument-hint: "<question>"   # optional — shown after /name
 ## Body patterns
 
 - **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
-- **Agent-launcher** (visual/readme style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
+- **Agent-launcher** (visual style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
 - **Runbook** (ship/merge/release style): numbered steps, each closing on a
   `Completion criterion:` line — an observable pass/fail condition, not "done
   when it looks right". Close with `## Review Checklist` restating the file's
@@ -72,7 +72,7 @@ argument-hint: "<question>"   # optional — shown after /name
 
 ## Router skills
 
-- Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`).
+- Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`, `readme/`, `review/`).
 - ALWAYS make a router instead of N sibling skills when they share an audience and are rarely invoked — N preloaded descriptions collapse to 1.
 - Router body = explicit dispatch table mapping trigger keywords → data file; NEVER prose links alone.
 - Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/solve` routes on them.

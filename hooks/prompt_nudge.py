@@ -30,7 +30,7 @@ COMMIT_RULES = """Commit rules:
 - Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
 - ALWAYS commit in detached HEAD - NEVER on or creating a branch
 - NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash
-- NEVER add Co-Authored-By, NEVER skip pre-commit hooks
+- NEVER skip pre-commit hooks
 - Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
 
@@ -64,26 +64,26 @@ AGENT_KEYWORDS = {
     'inline': '/gh-comment',
     'merge': '/merge',
     'microcopy': '/writing',
-    'novice': '/eye-13yo',
-    'pentest': '/hacker-eval',
+    'novice': '/13yo-eval',
+    'pentest': '/red-eval',
     'recall': '/recall-memories',
     'refine': '/refine',
     'release': '/release',
     'roi': '/ceo-eval',
     'scavenge': '/scavenge',
-    'security': '/hacker-eval',
+    'security': '/red-eval',
     'ship': '/ship',
     'sonnet': '/sonnet',
     'spec': '/specs',
     'specs': '/specs',
-    'test': '/testing',
-    'testing': '/testing',
+    'test': '/software',
+    'testing': '/software',
     'thread': '/tweet',
     'tooltip': '/writing',
     'tweet': '/tweet',
-    'ux': '/eye-13yo',
-    'usability': '/eye-13yo',
-    'walkthrough': '/eye-13yo',
+    'ux': '/13yo-eval',
+    'usability': '/13yo-eval',
+    'walkthrough': '/13yo-eval',
     'wisdom': '/wisdom',
     'writing': '/writing',
     'readme': '@readme',

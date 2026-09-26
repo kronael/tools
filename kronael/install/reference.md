@@ -72,8 +72,8 @@ one toolchain is missing — report that tool skipped and continue.
 ## Removed kronael skills to prune (step 2)
 
 AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present —
-consolidated into the `create/` router or renamed. Orphans keep preloading
-their descriptions, defeating the router:
+consolidated into a router, renamed, or dropped. Orphans keep preloading their
+descriptions, defeating the router:
 
 `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`,
 `create-claude-design`, `create-code-presentation`, `create-design-md`,

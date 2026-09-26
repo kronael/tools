@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.3.94] — 20260924
+## [v0.3.98] — 20260926
 
-> kronael v0.3.94 — two lines, one bundle
+> kronael v0.3.98 — two lines, one bundle
 >
 > The local hooks-and-lints line and upstream's Opus 5.5 line are merged, so one install carries both, and "sync" now names that merge.
 >
@@ -43,6 +43,111 @@
 - Four orphan hooks withdrawn again and named in the install prune list, so a resync cannot vendor them back.
 - gloww: an explicit glow style skips the terminal query that ate pager keystrokes; `-wN` parses as a width flag.
 - `software` frontmatter fits the 1,536-char listing cap (1,274), so its last keywords route again.
+## [v0.3.97] — 20260925
+
+> kronael v0.3.97 — bugs come with a failing test
+>
+> Every recorded bug now cites a skipped test that fails on today's code, and commits stop getting a Co-Authored-By trailer.
+>
+> • `/bugs` — each defect ships a skipped test that asserts the right behaviour and fails today
+> • `/bugs` — docs, ops, config and design-style entries say `no test`; a fix un-skips its test
+> • Settings — `attribution.commit` is empty, so Claude Code stops asking for the trailer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bugs` pins each entry with a test that asserts the correct behaviour, is
+  run and seen failing, and is skipped with the entry id in its reason;
+  `docs`, `ops`, `config`, `design`, `duplication`, `traceability` and
+  infra-bound `perf` entries state `no test — <type>`. A fix un-skips it.
+- `settings-recommended.json` sets `attribution.commit` to `""` and install
+  applies it on every run, so Claude Code stops requesting a `Co-Authored-By`
+  trailer. `commit` and its evals drop the prose rule the setting replaces;
+  README and ARCHITECTURE name every key install applies without asking.
+
+## [v0.3.96] — 20260925
+
+> kronael v0.3.96 — one Co-Authored-By rule, where commits are written
+>
+> The no-trailer rule now sits once in `/commit`, right where the message is written, instead of in seven places.
+>
+> • `/commit` — skip the Co-Authored-By trailer even when the harness reminder asks for it
+> • Wisdom file, `/ship`, `/squash` and the commit nudges — their copies are gone
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `commit` states the Co-Authored-By rule once, in Format, and names the
+  harness attribution reminder it overrides. The wisdom file, `ship`,
+  `squash`, and the `stop.py` / `prompt_nudge.py` / `local.py` commit rules
+  drop their copies.
+
+## [v0.3.95] — 20260925
+
+> kronael v0.3.95 — PR descriptions that read like a map
+>
+> `/pr-draft` now opens with the shape of the change and keeps each concern to one short paragraph.
+>
+> • Lead sentence — names every part touched and the file to start from
+> • One paragraph per concern — lists folded into the sentence, no header or bullet walls
+> • `Also:` line — every behaviour change gets named, even one-liners
+> • Size budget — a bump stays a few sentences; big PRs cap near 3,000 chars
+> • Titles — follow the repo's convention, ticket prefix kept
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `pr-draft` reads the full diff, opens on a lead naming each layer and its
+  entry file, gives each concern a bold-led paragraph, sweeps minor changes
+  into `Also:`, points at the weakest spot instead of claiming safety, and
+  closes on contract / known-deferred / ⚠️ merge-order lines. Bodies scale to
+  ~400 / 1,500 / 3,000 chars; file tables, effort estimates, diagrams, test
+  plans and session URLs are out. Titles follow the repo's own convention.
+
+## [v0.3.94] — 20260924
+
+> kronael v0.3.94 — push and PRs ask instead of failing
+>
+> Push, PR and release commands now prompt you instead of being denied, and Codex now loads the Kronael guidance block.
+>
+> • Settings — push, PR and release commands ask first; recursive `rm` stays denied
+> • Codex — its global guidance file carries the Kronael block, which points at your wisdom file
+> • `/readme` — one router for docs sync, doc file layout and single-page section order
+> • Hooks — nudges point at skills that exist, and Codex gets them rewritten
+> • TypeScript — annotate types only where inference cannot reach them
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- `settings-recommended.json` moves `git push`/`pull`, `ssh`, `rsync`,
+  `gh pr create`/`merge`/`review --approve`, `gh release create` and
+  `gh repo create` from `deny` to `ask`. An ask rule prompts in every mode,
+  bypass included. Recursive `rm`, `chmod 777` and `SendFeedback` stay denied.
+- Codex global guidance: install writes the `codex/AGENTS.md` block into a real
+  `~/.codex/AGENTS.md`, replacing a symlink to the wisdom file; any other
+  symlink is a conflict. dockbox's Codex bridge does the same.
+- `readme` is a router: bare `/readme` syncs docs; `topology.md` (the former
+  `doc-topology` skill) and `shape.md` load on demand. Reinstalls prune
+  `doc-topology`.
+- `ts`: annotate types only for recursion, overloads, widening and
+  `isolatedDeclarations` exports.
+- `plugins/kronael/.codex-plugin/plugin.json` tracks the release version.
+
+### Fixed
+
+- Hook nudges sent prompts to pruned skills (`/testing`, `/eye-13yo`,
+  `/hacker-eval`). The Codex rewrite list named `credit`, missed `browse`,
+  `continue` and `resolve`, and skipped names starting with a digit.
+- Docs match the code: push is not among the hook's blocks, the go sink example
+  keeps comments out of its body, the social research doc states where the
+  SKILL departs from it, and the repo maps, sync table and AGENTS.md settings
+  merge match the installer.
+
+### Operator note
+
+An existing `~/.claude/settings.json` keeps its `deny` entries for push and PR
+commands until you reinstall; install step 4 removes a `deny` entry the source
+moved to `ask`.
 
 ## [v0.3.93] — 20260923
 

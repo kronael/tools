@@ -6,6 +6,10 @@ questions ("what is it" tangled with "how is it built" tangled with "why not the
 simpler thing") is what makes docs unreadable. ALWAYS split by question first,
 write second.
 
+This is the *which file* axis. For the order of sections *inside* one file —
+an integration guide or API-reference page an external reader works through
+end to end — see `shape.md`.
+
 ## One question per file
 
 | File | The one question | Holds |
@@ -18,8 +22,7 @@ write second.
 | crate-local `CLAUDE.md` | Doc *conventions* for this component | which file answers which question, a "keeper sections — don't regress" list, an update checklist |
 
 ALWAYS state the split explicitly — end the README with a **"How to read this"**
-section naming which file answers which question. The topology is told, never
-just implied.
+section naming which file answers which question.
 
 ## notes/ — the "why" layer
 

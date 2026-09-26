@@ -62,7 +62,6 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 - ALWAYS commit in detached HEAD — verify `git branch --show-current` prints nothing before committing. NEVER create or attach a branch.
 - NEVER `git commit` without `-m "msg" -- file1 file2` (no staging, explicit files)
 - NEVER `git commit --amend`
-- NEVER Co-Authored-By
 - NEVER skip pre-commit hooks
 - NEVER commit if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes

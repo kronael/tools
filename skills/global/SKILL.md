@@ -108,8 +108,7 @@ does not relax it.
   title and body first and wait. NEVER `gh pr review --approve` on the
   user's behalf.
 - NEVER `git add -A`. NEVER `git commit --amend` — make a new commit.
-  NEVER squash — if asked, refuse and request acknowledgement. NEVER add
-  Co-Authored-By.
+  NEVER squash — if asked, refuse and request acknowledgement.
 - NEVER create or attach a local branch — detached HEAD in the main repo
   AND in every worktree (`git worktree add --detach`, see `worktree`). The
   ONE exception: a dated review branch, `git switch -c YYYYMMDD_<tag>

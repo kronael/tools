@@ -15,9 +15,9 @@ Command-line utilities and Claude Code configuration.
 - [clp](clp/) — claude project picker (experimental; sourceable bash function)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 
-Go tools (`udfix`, `rig`): `cd <tool> && make install`. PEP 723 scripts
-(`tg-fetch`, `dc-fetch`): `uv run main.py`. `dockbox` and `qemubox` have
-their own Makefiles.
+Makefile tools (`udfix`, `rig`, `bhctl`, `clp`, `dockbox`, `qemubox`):
+`cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`):
+`uv run main.py`.
 
 External tools used by the Claude Code config:
 
@@ -73,7 +73,8 @@ Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 
 The bridge does not duplicate `skills/`, `agents/`, or hook scripts into the
 Codex plugin cache. It reads the marketplace snapshot, deploys the Claude
-bundle into `~/.claude/`, symlinks the installed skills into Codex's user skill
+bundle into `~/.claude/`, writes the `codex/AGENTS.md` block into
+`~/.codex/AGENTS.md`, symlinks the installed skills into Codex's user skill
 location, and copies `codex-hooks.json` into `~/.codex/hooks.json`.
 
 To repair or apply only the Codex side of that bridge, ask:
@@ -92,8 +93,9 @@ form.
 
 Codex compatibility for Claude projects:
 
-- Symlink `~/.codex/AGENTS.md` to `~/.claude/CLAUDE.md` so every Codex session
-  loads the installed global wisdom. Global fallback filenames do not do this.
+- Put the Kronael block in a real `~/.codex/AGENTS.md`; it tells every Codex
+  session to read the installed `~/.claude/CLAUDE.md`. Global fallback
+  filenames do not do this.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` so Codex reads Claude-only project instructions.
   The key must stay top-level instead of landing inside the current TOML table.
@@ -110,7 +112,7 @@ Troubleshooting:
 - Kronael skills missing in Codex after install: run the bridge prompt above,
   then start a new Codex thread and open `/skills`.
 - Global wisdom missing in Codex: run the bridge prompt, verify
-  `~/.codex/AGENTS.md` resolves to `~/.claude/CLAUDE.md`, then start a new
+  `~/.codex/AGENTS.md` holds the `kronael:start` block, then start a new
   thread. `AGENTS.override.md` takes precedence when present.
 - Kronael hooks missing in Codex after install: run the bridge prompt above to
   refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open
@@ -140,8 +142,9 @@ Troubleshooting:
 - **Settings** (`settings-recommended.json`) — hook wiring, permissions,
   sandbox, env, and session retention, merged into `~/.claude/settings.json`.
   The recursive-removal deny guard (`rm -r*`, `rm -R*`, `rm -fr*`,
-  `rm --recursive*`) and `cleanupPeriodDays` are applied on every install
-  without asking, even when other permission entries are declined.
+  `rm --recursive*`), `cleanupPeriodDays`, `outputStyle` and
+  `attribution.commit` are applied on every install without asking, even when
+  other permission entries are declined.
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
 
 ### Layout
@@ -154,7 +157,9 @@ kronael/install/SKILL.md    plugin-exposed install procedure (source of truth)
 skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
 hooks/                      bundle copied to ~/.claude/hooks/
+output-styles/              bundle copied to ~/.claude/output-styles/
 codex-hooks.json            copied to ~/.codex/hooks.json for Codex hooks
+codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 settings-recommended.json   merged into ~/.claude/settings.json
 RECLAUDE.md                 template for ~/.claude/RECLAUDE.md
 ```
