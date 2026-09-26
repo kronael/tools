@@ -1,7 +1,7 @@
 ---
 name: ts
-description: TypeScript/Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files or writing TypeScript
+description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
+when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
 ---
 
 # TypeScript Style
@@ -19,7 +19,7 @@ Read on demand, in this directory:
 
 ## Code Style
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
-- Adhere to `gst` lint rules; match existing style when changing code
+- ALWAYS follow the project's lint config (`biome.json` in a new project); match existing style when changing code
 - Single-letter vars only in trivial one-line callbacks (`arr.find(v => v.id === x)`)
 - ALWAYS name reusable or domain-significant object types; NEVER name a one-use alias that only hides `Pick` or `Omit` — ALWAYS inline that utility projection
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
@@ -68,8 +68,9 @@ Read on demand, in this directory:
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
   `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
-- Native linters own the rest — eslint (`no-explicit-any`), tsc. ast-grep only
-  fills the kronael-specific gap; NEVER duplicate an eslint rule here.
+- Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
+  existing project already runs, plus tsc. ast-grep only fills the
+  kronael-specific gap; NEVER duplicate a Biome or eslint rule here.
 
 ## Testing
 - ALWAYS a JSDoc block above every `test(...)` / `it(...)` call. Its content
@@ -84,6 +85,15 @@ Read on demand, in this directory:
 - `make e2e`: Playwright, `make smoke`: against running server, `bun test`: unit only
 
 ## Tooling
+- New project: ALWAYS Bun as runtime, package manager and test runner, Biome
+  as linter and formatter, `tsc --noEmit` for types — `bun init`, then
+  `bun add -d @biomejs/biome && bunx biome init`. NEVER scaffold on
+  npm/pnpm/yarn, eslint, prettier, jest or vitest.
+- An existing project keeps its tooling until the owner asks for a migration —
+  NEVER switch it as a side effect of another change.
+- Targets (`mk` skill names): `prepare` = `bun install`, `check` =
+  `bunx biome check .`, `right` = `bunx tsc --noEmit`, `test` = `bun test`.
+  The strict `biome.json` and `tsconfig.json`: `software/strict-typing.md`.
 - ALWAYS pin the bun runtime with a `.bun-version` file — CI `setup-bun` reads
   it via `bun-version-file`, mise reads it as an idiomatic version file. NEVER
   assume bun auto-switches: the runtime ignores the file, it's a convention.

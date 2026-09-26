@@ -95,9 +95,10 @@ select = [
 ## TypeScript
 
 `strict: true` bans only *implicit* `any`. Writing `any`, `as any`, `!`, `as`,
-`@ts-ignore`, `{}` — all legal under bare `strict`. Closing those needs
-**typescript-eslint** with **type-aware** linting (`projectService: true`); a
-`tsconfig` alone cannot.
+`@ts-ignore`, `{}` — all legal under bare `strict`. Closing those needs a
+linter on top — **Biome** in a new project (the `ts` skill's tooling rule),
+**typescript-eslint** with **type-aware** linting (`projectService: true`) in
+a project that already runs eslint; a `tsconfig` alone cannot.
 
 ### tsconfig.json
 
@@ -123,7 +124,41 @@ select = [
 }
 ```
 
-### eslint flat config — `eslint.config.js`
+`bun init` writes `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`
+and `verbatimModuleSyntax` but leaves `noUnusedLocals`, `noUnusedParameters`
+and `noPropertyAccessFromIndexSignature` at `false` — ALWAYS turn those on.
+
+### biome.json — a new project
+
+```jsonc
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "linter": {
+    "rules": {
+      "preset": "recommended",             // already errors on noExplicitAny, noTsIgnore,
+                                           // noNonNullAssertion (`foo!`), noBannedTypes (`{}`, `Function`)
+      "style": { "useImportType": "error" },
+      "nursery": {
+        "noUnsafeTypeAssertion": "error",  // bans every `x as T` except `as const`
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error",
+        "useExhaustiveSwitchCases": "error"
+      }
+    }
+  }
+}
+```
+
+- Biome has no type-aware `no-unsafe-*` set: an `any` value from an untyped
+  boundary (`JSON.parse`, a `.d.ts`-less import) flows unflagged. ALWAYS take
+  the boundary value as `unknown` and narrow it; the tsconfig flags above and
+  `tsc --noEmit` are the rest of the floor.
+- `nursery` rules sit outside `recommended` and move between minor versions —
+  pin `@biomejs/biome` and re-run `biome check` after a bump.
+- `biome check` fails on lint and format drift alike; `biome ci` is the
+  read-only form for CI.
+
+### eslint flat config — `eslint.config.js`, a project already on eslint
 
 ```js
 import tseslint from 'typescript-eslint';
@@ -161,17 +196,17 @@ export default tseslint.config(
 
 ### TypeScript escape hatch → rule that blocks it
 
-| The move | Blocked by |
-|---|---|
-| `: any` / `as any` | `no-explicit-any` |
-| launder `any` from an untyped boundary | `no-unsafe-assignment` / `-call` / `-member-access` / `-return` / `-argument` |
-| implicit `any` param | tsconfig `noImplicitAny` (in `strict`) |
-| `x as T` reinterpret | `consistent-type-assertions: never`; no-op ones `no-unnecessary-type-assertion` |
-| `foo!` non-null | `no-non-null-assertion` |
-| `{}` / `Function` / `Object` as a type | `no-empty-object-type` / `no-unsafe-function-type` / `no-wrapper-object-types` |
-| `@ts-ignore` / `@ts-nocheck` | `ban-ts-comment` (require `@ts-expect-error` + description) |
-| unchecked `arr[i]` | tsconfig `noUncheckedIndexedAccess` |
-| `?:` treated as always-present | tsconfig `exactOptionalPropertyTypes` |
+| The move | Biome | typescript-eslint |
+|---|---|---|
+| `: any` / `as any` | `noExplicitAny` | `no-explicit-any` |
+| launder `any` from an untyped boundary | none — narrow from `unknown` at the boundary | `no-unsafe-assignment` / `-call` / `-member-access` / `-return` / `-argument` |
+| implicit `any` param | tsconfig `noImplicitAny` (in `strict`) | same |
+| `x as T` reinterpret | `noUnsafeTypeAssertion` (nursery) | `consistent-type-assertions: never`; no-op ones `no-unnecessary-type-assertion` |
+| `foo!` non-null | `noNonNullAssertion` | `no-non-null-assertion` |
+| `{}` / `Function` / `Object` as a type | `noBannedTypes` | `no-empty-object-type` / `no-unsafe-function-type` / `no-wrapper-object-types` |
+| `@ts-ignore` / `@ts-nocheck` | `noTsIgnore` | `ban-ts-comment` (require `@ts-expect-error` + description) |
+| unchecked `arr[i]` | tsconfig `noUncheckedIndexedAccess` | same |
+| `?:` treated as always-present | tsconfig `exactOptionalPropertyTypes` | same |
 
 ---
 

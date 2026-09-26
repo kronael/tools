@@ -6,7 +6,9 @@ when_to_use: editing .tsx files or writing React components with JSX
 
 # Frontend (React / Next.js)
 
-Requires `ts` skill for base TypeScript rules.
+Requires `ts` skill for base TypeScript rules. Its Tooling section governs
+here too: a new project runs on Bun with Biome, an existing one keeps its
+tooling — scaffold with `bunx create-next-app@latest --biome`, never `npx`.
 
 ## Components
 - ALWAYS default to server components (no directive)
