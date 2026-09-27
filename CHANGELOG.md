@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.4.2] — 20260927
+
+> kronael v0.4.2 — two lines become one
+>
+> The upstream and local development lines are reconciled into a single master, and the three sync sides are named.
+>
+> • merge — upstream's line (its v0.3.98) merged with the local ripwire/codex/wisdom work; the Stop recap stays gone (Claude Code ships its own)
+> • install — the sync docs now name source, live (~/.claude), and upstream (origin) explicitly
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Reconciled `upstream/master` (its `v0.3.98`) with the local release line: kept the local subtracted wisdom shape and the removed Stop recap, took upstream's readme/specs router restructure, unioned the bug queue and skill rules.
+- `install` / `CLAUDE.md` / `ARCHITECTURE.md`: name the three sync sides — source (this repo), live (`~/.claude`), upstream (`origin`) — so a live sync is never confused with an upstream push.
+
 ## [v0.4.1] — 20260927
 
 > kronael v0.4.1 — codex knows when it's logged out
