@@ -11,6 +11,10 @@
 - **unit**: fast, no external deps (<5s)
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
+- `make test`: unit (<5s); `make test-all`: unit + integration (what CI runs);
+  `make smoke`: production data
+- Unit tests live next to the code (`*_test.go`, `test_*.py`); integration
+  tests in a dedicated `tests/` directory
 
 ## Scope and layout
 
@@ -55,7 +59,8 @@
 
 ## Pitfalls
 
-- Remove real API/database tests from unit test suites.
+- ALWAYS prefer integration/e2e over mocks; unit tests mock external systems
+  only. Remove real API/database tests from unit test suites.
 - Use shared fixture modules (`conftest.py`, `common/mod.rs`) for common setup.
 - Return `Result<()>` or the language equivalent for clean error propagation.
 - A test that fails from import/typo/fixture errors proves nothing - confirm
@@ -64,3 +69,7 @@
   on production contracts.
 - ALWAYS relax type checks for test paths when strict test typing is
   impractical; NEVER weaken production types.
+- Test config objects match the target type exactly — omit unknown properties
+  for type safety.
+- Test features, not fixes: a runtime failure → fix the code; add a test only
+  when the feature lacks coverage.

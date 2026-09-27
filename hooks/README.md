@@ -14,18 +14,20 @@ hook scripts.
 
 ### prompt_nudge.py (UserPromptSubmit)
 
-Exact-matches prompt keywords and emits an informational system message telling
-Claude to invoke the matching command or agent. Routes are `AGENT_KEYWORDS` in
+Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
+telling Claude to invoke the matching command or agent. That field is the one
+UserPromptSubmit output the model reads; `systemMessage` renders in the
+transcript for the user and never reaches the model. Routes are `AGENT_KEYWORDS` in
 the source. Codex second-opinion routing is explicit only (`ask codex`,
 `oracle`, `second opinion`) and suppressed inside Codex so it never nudges
 Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
 
-On the first non-empty prompt of a session it also prepends a `/resolve` nudge
-(triage + diary/memory load before acting), tracked via
-`$cwd/.claude/tmp/resolve-nudge-{session_id}` so continuations stay silent. A
-prompt that already invokes `/resolve` suppresses it.
+On the first non-empty prompt of a session it also prepends a `/solve` nudge
+(triage + diary/memory load before acting), tracked by the session-keyed
+stamp `solve-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) so
+continuations stay silent. A prompt that already invokes `/solve` suppresses it.
 
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
 Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
@@ -39,7 +41,8 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file. It also blocks true unsafe shell commands:
 `git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`, and
 recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
-gated by consent in `skills/global`, not by the hook.
+gated by consent in `skills/global` and the settings `ask` rule, not by the
+hook.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
@@ -71,7 +74,7 @@ forwards explicit `decision: block` responses.
 Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
 first prompt of a session and on pre-compaction. Re-injects a short
 `RULES` block on continue/recap keywords, respecting negation.
-State: `$cwd/.claude/tmp/local-{session_id}`.
+State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
 
 ### reclaude.py (PreCompact)
 
@@ -83,7 +86,9 @@ instructing the model to preserve the wisdom across the compact.
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
 -uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
 the repo diary has today's entry missing or >1h stale ("consider /diary";
-Codex sees `@diary`). When called from periodic `PostToolUse`, the same checks
+Codex sees `@diary`). The diary nudge fires once per session, keyed by
+`session_id` in `~/.claude/state` (`lib/state.py`), however many repos the
+session visits. When called from periodic `PostToolUse`, the same checks
 emit advisory `hookSpecificOutput.additionalContext` and never block a tool
 call.
 
@@ -111,7 +116,7 @@ nudge, tied to the moment context would otherwise be lost:
   one/two-turn trivia stays under the count and never nudges. Emits
   `hookSpecificOutput.additionalContext`, like `stop.py`'s PostToolUse path.
 
-State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. The `start`
+State: the session-keyed stamps `memory-nudge-{start,done}-{session_id}` in `~/.claude/state` (`lib/state.py`). The `start`
 file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
 
 See ARCHITECTURE.md for per-hook data flow.

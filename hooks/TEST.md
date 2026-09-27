@@ -3,6 +3,13 @@
 Manual smoke tests. Pipe a JSON payload into each hook and verify the
 output / exit code.
 
+Run the automated suite first — it covers JSON parse errors, routing and
+the nudge stamps on every hook:
+
+```bash
+uv run --with pytest --with pyyaml python -m pytest hooks -q
+```
+
 ## 1. JSON Error Handling (should NOT crash)
 
 ```bash

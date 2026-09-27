@@ -179,23 +179,17 @@ tokio::spawn(fetch_and_process(client));
 ## Non-Workspace Repos
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members
 
+## Lints
+- ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
+  `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
+  duplicate a clippy lint here.
+- `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
+  carrying a `//` justification comment on the line directly above — NEVER
+  `// SAFETY:` (reserved for `unsafe`); a plain reason comment is the sanctioned
+  form.
+
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)
-- Faster debug **builds/tests** (not `check` — it does no codegen): cranelift
-  backend, nightly-only. Two ways:
-  - **Opt-in (project stays stable):** per-invocation
-    `cargo +nightly build -Zcodegen-backend --config
-    'profile.dev.codegen-backend="cranelift"'`. NEVER put that block in
-    `.cargo/config.toml` — stable cargo then hard-errors on EVERY build.
-  - **Default (project commits to nightly):** pin nightly in
-    `rust-toolchain.toml` (`components = ["rustc-codegen-cranelift-preview",
-    ...]` auto-installs it), then put `[unstable] codegen-backend = true` +
-    `[profile.dev] codegen-backend = "cranelift"` in `.cargo/config.toml`.
-    `cargo build` = cranelift, `cargo build --release` = LLVM (release profile
-    untouched). Pin a DATED nightly so a `rustup update` can't drift clippy/
-    cranelift and break CI.
-- **C+asm crates don't link under cranelift** (`aws-lc-rs`/`aws-lc-sys` +
-  their `rustls` dependents = undefined native symbols, any linker). Pin just
-  those to LLVM, cranelift does the rest:
-  `--config 'profile.dev.package.aws-lc-rs.codegen-backend="llvm"'` (repeat for
-  `aws-lc-sys`, `rustls`). ~7× faster rebuilds on codegen-heavy crates.
+- Debug builds/tests too slow? The nightly cranelift backend (opt-in per
+  invocation, or pinned for the project) and the crates that must stay on
+  LLVM are in `cranelift.md`.

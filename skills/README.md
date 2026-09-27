@@ -52,7 +52,6 @@ Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
 - **dispatch**: "spawn this prompt as a background subagent and continue"
-- **task**: "park a discovered bug or TODO in TODO.md/BUGS.md and continue current work"
 - **next**: "park a discovered bug/TODO for later without stopping current work"
 - **ans**: "answer-only read-only mode — explain, never edit files or run shell"
 - **continue**: "resume every interrupted/paused task; if none, confirm the session is clean, suggest /recall-memories, and present where to go next"
@@ -80,7 +79,8 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
-  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`) —
+  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`,
+  `emacs`, `research-analysis`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
   language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
@@ -89,30 +89,35 @@ the authoritative entry. The categories:
   (opt-in `/show-me` — pseudocode/call-tree/mermaid/diff/local-HTML for the
   current conversation topic, distinct from `diagrams`' permanent ASCII docs)
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
-- **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
+- **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
-  scaffolding, second opinions, codifying public best practice.
+  `scavenge`, `sync-tools-skills`, `codex`, `pi`) — triage, multi-pass
+  refinement, git flow, memory, scaffolding, second opinions, codifying
+  public best practice, vendoring this bundle's skills into another project.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model.
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
-  `create-eval`, `13yo-eval`) — judge a codebase or practice from a fixed
-  perspective.
-- **Routers** (`create/`, `software/`) — one preloaded `SKILL.md`
-  dispatching to cold data files read on demand. `create/` holds the
+  `create-eval`, `13yo-eval`, `assess`) — judge a codebase or practice from a
+  fixed perspective.
+- **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`) — one
+  preloaded
+  `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
   [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/tree/main/skills/creative)
   and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
-  and observability. Structure
-  rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`, `credits`) —
+  and observability; `specs/` the design record; `readme/` syncs docs after
+  shipping and holds the doc file topology and single-page shape; `review/`
+  gives or takes a code review. Structure rules: [`CLAUDE.md`](CLAUDE.md) in
+  this directory.
+- **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
   `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
-  context, loaded as context, not a judgment lens.
+  context, loaded as context, not a judgment lens; `caveman` is the pointer
+  to the response style loaded before any reply.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -122,7 +127,7 @@ Skills cluster into phases. Main spine: orientation → planning → coding → 
 Side-channels (escalation, communication) fire at any stage.
 
 ┌─ orientation ───────────────┐
-│ resolve recall-memories     │
+│ solve recall-memories       │
 │ explore                     │
 └──────────────┬──────────────┘
                │
@@ -136,7 +141,7 @@ Side-channels (escalation, communication) fire at any stage.
 └──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
-│ review code-review improve  │
+│ review improve              │
 │ refine visual software bugs │
 └──────────────┬──────────────┘
                │
@@ -145,7 +150,7 @@ Side-channels (escalation, communication) fire at any stage.
 │ gh-comment                  ├────────►│ learn tweet         │
 └─────────────────────────────┘         └─────────────────────┘
 
-**orientation** — load context before acting. `resolve` is the universal entry point;
+**orientation** — load context before acting. `solve` is the universal entry point;
 `recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
 **planning** — `specs` for design docs; `ship` for multi-session work tracking.
@@ -158,8 +163,8 @@ They compose: a Rust CLI loads `rs` + `cli`.
 **quality** — `review` covers the whole loop: `review give` produces findings
 (local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
 or a PR's comments); it supersedes the built-in `/code-review` for local work.
-`improve`/`refine` for fixing; `visual` for UI; `testing` for test patterns;
-`bugs` for the record-don't-fix queue.
+`improve`/`refine` for fixing; `visual` for UI; `software` (`testing.md`) for
+test patterns; `bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 
@@ -172,7 +177,8 @@ for increasing capability. `/dispatch` for fire-and-forget at default model. `fi
 ## Working with skills
 
 - Each `SKILL.md` has YAML frontmatter (`name`, `description`,
-  optional `user-invocable: true`)
-- `user-invocable: true` exposes the skill as `/<name>` slash command
-- Auto-activation matches the `description` field — make it specific
+  optional `when_to_use`, `user-invocable`)
+- Every skill is a `/<name>` slash command by default; `user-invocable: false`
+  hides it from the `/` menu
+- Auto-activation matches `description` + `when_to_use` — make them specific
 - See `wisdom/SKILL.md` for the writing rules

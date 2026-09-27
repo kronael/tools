@@ -76,7 +76,7 @@ Therefore:
   `-U` is **destructive with no undo**.
 - ALWAYS scope a real rewrite with `inside`/`has`/`kind` in a `scan` YAML rule
   rather than a broad `run -r` one-liner.
-- ALWAYS run the formatter after (`gofmt`/`rustfmt`/`prettier`/`ruff format`).
+- ALWAYS run the formatter after (`gofmt`/`rustfmt`/`biome format`/`ruff format`).
   ast-grep substitutes nodes; it does **not** reformat or fix indentation.
 - ast-grep has no types — review every hunk a rewrite produces.
 

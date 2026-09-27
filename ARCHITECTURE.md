@@ -10,7 +10,10 @@ kronael/install/            the only plugin-exposed skill — install procedure
 skills/                     bundle — auto-activating skills (languages, workflow, domain)
 agents/                     bundle — specialized task agents
 hooks/                      bundle — lifecycle hook scripts
+output-styles/              bundle — response output style (caveman)
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
+codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
+codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 RECLAUDE.md                 template for ~/.claude/RECLAUDE.md (reclaude hook input)
 AGENTS.md                   notes for non-Claude agents (Codex)
 COOKBOOK.md                 daily git recipes (detached HEAD with rig)
@@ -38,8 +41,10 @@ identical.
 bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
 
 Codex does not discover `~/.claude/CLAUDE.md` as global guidance. The bridge
-exposes it with `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md`; an existing
-`AGENTS.override.md` or unrelated `AGENTS.md` is a merge conflict.
+writes the `codex/AGENTS.md` block into a real `~/.codex/AGENTS.md`, and the
+block tells Codex to read the wisdom file. The block stays out of the wisdom
+file, because install reverse-syncs installed-side additions to it into source.
+An existing `AGENTS.override.md` is a conflict.
 
 Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
 skills available inside Codex, the install bridge exposes them with
@@ -61,8 +66,8 @@ them:
 
 - `~/.codex/config.toml`: add `CLAUDE.md` to
   top-level `project_doc_fallback_filenames` for Claude-only projects.
-- Global installed wisdom: expose it with
-  `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md`.
+- Global installed wisdom: the Kronael block in `~/.codex/AGENTS.md` tells
+  Codex to read `~/.claude/CLAUDE.md`.
 - Projects that already have `AGENTS.md`: keep a short `AGENTS.md` pointer to
   `CLAUDE.md`, because Codex loads at most one instruction file per directory.
 - Project `.claude/skills`: expose them to Codex with
@@ -101,14 +106,15 @@ install step provides the smart merge. Each layer does one thing.
 
 | Target | Strategy |
 |---|---|
-| `skills/`, `agents/`, `hooks/` | Replace (preserve user-added files not in source) |
+| `skills/`, `agents/`, `hooks/` | Two-way sync: source-advanced files replace the install, a clean installed superset reverse-syncs into source, anything else shows a diff and asks (preserve user-added files not in source) |
 | `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
-| `~/.codex/AGENTS.md` | Symlink to `~/.claude/CLAUDE.md` (conflict, ask) |
-| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask) |
+| `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
+| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the keys `README.md` § Settings names skip the ask) |
 | `~/.claude/settings.local.json` | NEVER touch |
 | `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |
 
-Backup `~/.claude/` to `~/.claude/backup/<timestamp>/` before overwriting.
+Backup `~/.claude/` and the `~/.codex/` guidance, config and hook files to
+`~/.claude/backup/<timestamp>/` before overwriting.
 
 ## Runtime flow
 

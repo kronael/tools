@@ -30,6 +30,8 @@ git check-ignore -q ".diary/$(date +%Y%m%d).md" && echo ignored || echo tracked
   An ignored diary is never committed, so keep one canonical copy in the main
   tree instead of scattering ephemeral entries across worktrees.
 - **Not a git repo** → fall back to `<cwd>/.diary/`.
+- `.diary/` is generally public — checked into git — unless the project's
+  `CLAUDE.md` marks it local-only.
 
 ## Format
 

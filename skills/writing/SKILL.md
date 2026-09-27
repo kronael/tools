@@ -21,3 +21,5 @@ Copy rules for any user-facing string.
 - NEVER use jargon when a 13yo could read the plain version. ALWAYS test: would a smart non-expert understand this in one read?
 - ALWAYS finish longer prose with a de-slop pass: the `humanize` skill strips AI-isms and restores voice.
 - NEVER title a section with a vague directive ("Change something", "Notes") — ALWAYS name the concrete action or content under it.
+- NEVER marketing language — ALWAYS cut fluff.
+- NEVER reference an earlier version, prior design, or counterfactual in a comment, doc, skill, or agent definition — no "used to be", "previously", "renamed from", "as before", "instead of X", "no longer", "matching the old <name>", or backwards-compat framing. Same bar for temporary-inside-permanent: NEVER narrate a transient artifact (a one-off backfill script) into a permanent one (a migration, a long-lived module) — that belongs in the transient file itself, if anywhere. ALWAYS state only what is true now and its genuine quirks; history lives in `.diary/`.

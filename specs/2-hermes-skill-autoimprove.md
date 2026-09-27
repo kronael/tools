@@ -239,10 +239,10 @@ For candidates that beat baseline:
 1. Open a branch `refine/skill-<name>-<timestamp>`.
 2. Apply `patch.diff` to the real `skills/<name>/SKILL.md`.
 3. Commit with `[skill] refine <name>: <rationale headline>` and PR body = `rationale.md` + score delta table.
-4. `gh pr create` — but DO NOT auto-merge (settings already block `gh pr merge`).
+4. `gh pr create` — but DO NOT auto-merge (settings ask before every `gh pr merge`).
 5. Human reviews diff, approves or rejects.
 
-No auto-merge, ever. The settings-recommended.json `gh pr merge*` deny rule enforces this at the harness level.
+No auto-merge, ever. The settings-recommended.json `gh pr merge*` ask rule enforces this at the harness level: every merge prompts the human.
 
 ## What we do NOT build
 

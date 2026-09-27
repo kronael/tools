@@ -32,35 +32,37 @@ The shape:
 ```go
 // One goroutine owns every blocking write. Callers encode and hand over bytes.
 type Sink struct {
-    queue  chan record
-    stop   chan struct{}   // NEVER close(queue): a send on a closed channel
-    done   chan struct{}   // panics no matter how carefully the sender checks
-    closed atomic.Bool
+    queue   chan record
+    stop    chan struct{}
+    done    chan struct{}
+    closed  atomic.Bool
     Dropped atomic.Uint64
 }
 
-func (s *Sink) Send(r record) {          // hot path: never blocks
+// Send never blocks: a full or closed sink counts the record in Dropped.
+func (s *Sink) Send(r record) {
     if s.closed.Load() { s.Dropped.Add(1); return }
     select {
     case s.queue <- r:
     default:
-        s.Dropped.Add(1)                 // count drops; never stall the caller
+        s.Dropped.Add(1)
     }
 }
 
 func (s *Sink) run(pinCore int) {
     defer close(s.done)
     if pinCore >= 0 {
-        runtime.LockOSThread()           // a blocking write parks THIS thread
+        runtime.LockOSThread()
         defer runtime.UnlockOSThread()
-        _ = pinToCore(pinCore)           // unix.SchedSetaffinity, Linux only
+        // affinity is best-effort; the sink stays off the hot path without it
+        _ = pinToCore(pinCore)
     }
     for {
         select {
         case r := <-s.queue:
             s.write(r)
         case <-s.stop:
-            for {                        // drain: don't lose the tail
+            for {
                 select {
                 case r := <-s.queue: s.write(r)
                 default: return
@@ -82,6 +84,9 @@ Rules that make it work:
   under pressure with a counter; records whose loss breaks an audit (orders,
   transactions, the final report) block for queue room instead. Report the drop
   count and fail the run if it is non-zero.
+- **Stop on a separate channel; NEVER `close(queue)`.** A send on a closed
+  channel panics however carefully the sender checks `closed` first. The stop
+  case drains the queue before returning, so the tail is written.
 - **Close in dependency order**: stop producers, drain the sink, then close the
   files. Closing the files first discards what the sink still held.
 - **Pinning**: `runtime.LockOSThread` is the portable half and does most of the

@@ -126,7 +126,7 @@ Usage: dockbox [options] [tool] [dirs...] [tool-args...]
 Tools (first positional arg — no leading dash):
     (default)       Claude Code, opus @ xhigh effort — the workhorse
     claude          Claude Code, opus (same as default)
-    codex           OpenAI Codex (config default model; no sandbox/approvals)
+    codex           Codex -m gpt-5.6-sol @ xhigh (no sandbox/approvals)
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
     sonnet          Claude Code --model claude-sonnet-5    (fast workhorse)
     opus            Claude Code --model claude-opus-5-5      (default; xhigh)
@@ -251,6 +251,7 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
                 sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5 --effort high "${claude_args[@]}") ;;
                 opus)   entrypoint=claude; claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5-1 "${claude_args[@]}") ;;
+                codex)  entrypoint=codex; claude_args=(-m gpt-5.6-sol -c model_reasoning_effort=xhigh "${claude_args[@]}") ;;
                 gpt)    entrypoint=codex; claude_args=(-m gpt-6-astra "${claude_args[@]}") ;;
                 mini)   entrypoint=codex; claude_args=(-m gpt-5.4-mini "${claude_args[@]}") ;;
                 spark)  entrypoint=codex; claude_args=(-m gpt-5.3-codex-spark "${claude_args[@]}") ;;

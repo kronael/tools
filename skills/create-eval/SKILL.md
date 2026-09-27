@@ -56,3 +56,9 @@ see `cto-eval` (code/operations), `ceo-eval` (demo/business), and
 - ALWAYS give the generated skill valid frontmatter (name, description
   with a NOT-for line pointing back at cto/ceo/red evals, when_to_use,
   user-invocable).
+- ALWAYS keep the generated `SKILL.md` under 200 lines — the method, the
+  one helper every check needs, and a dispatch table — and push the
+  checks and the deploy gates into sibling files it names (`checks.md`,
+  `gates.md`). Measured 2026-09-19: arizuko's grew to 678 lines in one
+  file, so every session paid for all of it and nobody kept the setup
+  half current.

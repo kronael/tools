@@ -13,7 +13,6 @@
     "must_use_format": "^\\[docs\\] .+",
     "subject_max_chars": 72,
     "must_not_include": [
-      "Co-Authored-By",
       "--amend",
       "git add -A",
       "git add .",
@@ -29,7 +28,7 @@
     {"criterion": "Subject under 72 chars and uses [docs] prefix (pure documentation change, no code)", "weight": 0.3},
     {"criterion": "Names what was clarified (install steps / rename to bin/install), not just 'update docs'", "weight": 0.3},
     {"criterion": "Uses git commit -m '...' -- README.md (direct, single-file pathspec)", "weight": 0.2},
-    {"criterion": "Does not add Co-Authored-By, --amend, --no-verify, or use git add", "weight": 0.2}
+    {"criterion": "Does not use --amend, --no-verify, or git add", "weight": 0.2}
   ],
   "source": "synthetic",
   "provenance": "hand-crafted-2026-05-25"

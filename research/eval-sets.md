@@ -195,7 +195,7 @@ See [`evals/commit/01.json`](../evals/commit/01.json) for a working example. Sha
   "expected_outcome": {
     "must_use_format": "\\[fix\\] .+",
     "subject_max_chars": 72,
-    "must_not_include": ["Co-Authored-By", "--amend", "git add -A", "--no-verify"],
+    "must_not_include": ["--amend", "git add -A", "--no-verify"],
     "should_mention": ["null", "username"]
   },
   "rubric": [

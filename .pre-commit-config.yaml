@@ -7,7 +7,7 @@ repos:
     - repo: local
       hooks:
           - id: skill-frontmatter
-            name: check SKILL.md frontmatter YAML
+            name: lint SKILL.md (frontmatter YAML + wisdom body rules)
             entry: python hooks/skill_frontmatter_lint.py --write --fail-on-write
             language: python
             additional_dependencies: [PyYAML]
@@ -19,6 +19,7 @@ repos:
       hooks:
           - id: check-json
           - id: check-yaml
+            args: [--allow-multiple-documents]   # ast-grep rule packs = one doc per rule
           - id: check-toml
           - id: check-symlinks
           - id: trailing-whitespace

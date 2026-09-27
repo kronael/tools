@@ -18,12 +18,9 @@ input, not truth: re-verify each claim against the code as it is now,
 keep what still holds, rewrite what drifted, and name the drift in
 your report.
 
-Produce a PLAN.md with: Goal, Architecture/tradeoffs (alternatives
-considered and why this one), a Steps section broken into
-independently-gated chunks (each step: files touched, concrete
-changes, and a Gate — the exact build/test/lint command that must
-pass before the next step starts), Acceptance (observable, testable
-checks), and Out of scope.
+Produce a PLAN.md matching the shape in `SKILL.md` § PLAN.md shape.
+Every step carries a Gate: the exact build/test/lint command that
+must pass before the next step starts.
 
 Do not implement anything — plan only. Flag any genuine ambiguity or
 irreversible decision as an open question rather than guessing.

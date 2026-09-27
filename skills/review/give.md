@@ -39,7 +39,8 @@ ALWAYS wait for all agents before step 4.
 
 ## 4. Fable deep-dive + reverification
 
-A single `Agent(model="fable")` doing both jobs at once:
+A single `Agent(model="fable")` doing both jobs at once (fable unavailable →
+`model="opus"`; NEVER skip this pass):
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
    regression risks, and broken invariants. NEVER seed it with the sonnet

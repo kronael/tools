@@ -195,7 +195,7 @@ For a skill-eval loop, the equivalent risk profile is:
 |---|---|
 | Unbounded memory | Eval set is fixed-size; queue file rotates by date |
 | Observability | Every proposal writes `rationale.md` + `provenance.json` + `cost.txt` |
-| Approval gate | Mandatory PR review before merge — `gh pr merge*` is hard-denied at the harness level |
+| Approval gate | Mandatory PR review before merge — `gh pr merge*` is an ask rule at the harness level, so every merge prompts the human |
 | Stop conditions | Per-run `--max-cost` and `--max-iterations` flags |
 | Cost ceiling | Per-skill-refine run capped at $0.50 default; CI fails if exceeded |
 
@@ -270,7 +270,7 @@ evals/<skill>/*.json   ──┐
 Why this works:
 
 - **Eval set is the external invariant** the proposer can't game.
-- **PR review** is the human gate; `gh pr merge*` is hard-denied at the harness level (no auto-merge can land).
+- **PR review** is the human gate; `gh pr merge*` is an ask rule at the harness level, so every merge prompts the human (no auto-merge can land).
 - **Offline** = no per-turn cost, no recursion, no incomplete snapshots, no live-runtime risk.
 - **One source of truth** = edits land in the repo; the install path syncs to `~/.claude/`.
 

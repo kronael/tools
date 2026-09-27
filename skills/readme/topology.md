@@ -1,20 +1,14 @@
----
-name: doc-topology
-description: Structure a project's docs by the question each file answers — README (what/why/how-to-start), ARCHITECTURE (how it's built), notes/ (why this design), compare/ (versus alternatives), facts/ (dated numbers) — plus a "how to read this" index and an anti-marketing discipline. Use when writing or auditing a project/crate/service README, ARCHITECTURE, or design docs; when docs are one mixed wall; or when someone asks for "good docs matching X quality". NOT for a single doc's prose polish (use writing), the order of sections inside one integration/API-reference doc (use doc-shape), a design spec (use specs), or syncing docs after shipping (use readme).
-when_to_use: "structure project docs, doc topology, README vs ARCHITECTURE split, docs are one wall, good docs like X quality, notes/compare/facts layout, anti-marketing docs, audit doc structure, how-to-read-this index, is this README good, test the README, fresh-reader test"
----
-
 # Documentation topology
 
 Great docs aren't one long file — they're a small set of files, **each answering
 exactly one question**, cross-linked by a "how to read this" index. Mixing the
 questions ("what is it" tangled with "how is it built" tangled with "why not the
-simpler thing") is what makes docs unreadable. Split by question first, write
-second.
+simpler thing") is what makes docs unreadable. ALWAYS split by question first,
+write second.
 
 This is the *which file* axis. For the order of sections *inside* one file —
 an integration guide or API-reference page an external reader works through
-end to end — see `doc-shape`.
+end to end — see `shape.md`.
 
 ## One question per file
 
@@ -27,34 +21,15 @@ end to end — see `doc-shape`.
 | `facts/*.md` | Dated, sourced numeric claims | YAML frontmatter `date:`/`sources:`/`status:` so numbers can't silently rot |
 | crate-local `CLAUDE.md` | Doc *conventions* for this component | which file answers which question, a "keeper sections — don't regress" list, an update checklist |
 
-State the split explicitly — end the README with a **"How to read this"** section
-that says which file answers which question. The topology should be told, not
-just implied.
-
-## Derivable and lookupable content doesn't belong
-
-ARCHITECTURE.md holds what a reader with the repo open could not work out for
-themselves. A directory or file-tree listing is orientation, not architecture —
-cut it, or fold only the genuinely unique fact (a file two unrelated
-subsystems both import) into prose. A named third-party technology (a
-framework, a spec, a vendor product) gets one link to its own docs, not a
-paraphrase of how it works — assume the reader already knows it or will look
-it up, and state only what's true of *this* repo's use of it.
-
-## Generalize instead of enumerating
-
-Write the governing rule, not a list of its current instances — the rule
-survives the day a new instance shows up, the list needs an edit for every one.
-Two tells that a doc has regressed into a list: a section titled after one
-instance ("Adding an API") that turns out to only cover one variant, or two
-near-identical bullets that differ only by a name.
+ALWAYS state the split explicitly — end the README with a **"How to read this"**
+section naming which file answers which question.
 
 ## notes/ — the "why" layer
 
 Tribal design-rationale rots unless it's written down. Each note:
 
 1. **Restate the domain term in plain English before using it** ("An order book
-   is the live list of resting bids and asks…"). Never assume the reader knows.
+   is the live list of resting bids and asks…"). NEVER assume the reader knows.
 2. **Problem** — what the naive/simpler approach costs, *quantified* ("allocates
    a node per level, O(log n) per update").
 3. **Fix** — the actual mechanism, prose + one code/ASCII sketch.
@@ -66,10 +41,10 @@ Tribal design-rationale rots unless it's written down. Each note:
 
 Doc rot lives in stale numbers. Chain them: **the benchmark is authoritative →
 a dated `facts/*.md` records the number with its source/date → README and
-ARCHITECTURE *quote* from facts and cite the bench name + repro command.** Never
+ARCHITECTURE *quote* from facts and cite the bench name + repro command.** NEVER
 inline a raw number that has no bench behind it. Every perf claim gets a caveat:
 loopback ≠ production, single-core ≠ cross-process, closed-loop ≠ real workload —
-and cite the honest cross-process number next to the flattering microbench.
+and ALWAYS cite the honest cross-process number next to the flattering microbench.
 
 ## Anti-marketing discipline
 
@@ -82,30 +57,6 @@ High-quality docs read *earned*, not sold:
 - Assumptions and trust model are stated as flat non-negotiable bullets, not
   buried in prose.
 - No badges, no adjectives ("blazing", "powerful"), no roadmap-as-feature.
-
-## Test a README, don't just read it critically
-
-A README is good only if a reader with zero context — no prior session,
-nothing but the file — can answer from it alone what the project is and what
-it's for. Reading it critically can't tell you that; it only surfaces
-wording problems, not missing facts. Test it directly instead:
-
-1. Read only the README and **write down** what you now believe: what the
-   project is, what problem it solves, how it's built, how to run it, how to
-   change it, what it does not do. An unrecorded mental model can't be
-   checked against anything later.
-2. Do the orientation pass you'd do anyway: list the tree, read the entry
-   points and the build file, run the build and the tests, follow one
-   request or code path end to end.
-3. **Diff the recorded account against what you found.** Every divergence is
-   a defect, and its kind says what to fix: something the README asserted
-   that isn't true (stale fact), something it implied that misled (wording
-   or emphasis), or something you needed and had to discover yourself
-   (omission).
-
-Step 2 is what makes step 3 work — you can't notice an omission by reading
-alone, only by needing a fact and not finding it. This turns "the docs feel
-vague" into a specific list of claims that failed.
 
 ## The failure mode this prevents
 

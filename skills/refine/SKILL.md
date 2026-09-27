@@ -45,7 +45,9 @@ first; `/release` after.
    WISDOM ones by splitting the live WISDOM into thematic chunks, one chunk per
    lens. ALWAYS derive from the live text, NEVER a frozen checklist. ALWAYS
    seed the correctness lenses from **Confessed defaults**. Tag each lens
-   `simplify` or `correctness`.
+   `simplify` (reuse, dead code, minimisation, cross-boundary leaks and
+   coupling between packages) or `correctness` (bugs, logic errors, edge
+   cases).
    → every bucket carries 1-3 tagged lenses and no file appears in two buckets.
 6. **Review** — parallel read-only `Task(agent="improve", model=<by tag>)`.
    Prompt: "Lenses: <each with the exact excerpt it checks>. Read: <absolute
@@ -54,8 +56,8 @@ first; `/release` after.
    → every bucket has returned.
 7. **Triage** — DROP a finding that adds an abstraction, targets unused code
    (grep first), conflicts with the Intent, or cannot be verified against the
-   codebase. A survivor needing a redesign goes to `BUGS.md` as `proposed`;
-   NEVER apply one without sign-off.
+   codebase. A survivor needing a redesign goes to `BUGS.md` as `proposed`
+   (`software/code.md` § System changes); NEVER apply one without sign-off.
    → every surviving finding is a single inline edit.
 8. **Apply** — serial `Task(agent="improve")` per bucket. Prompt: "Skills:
    <list>. Findings: <aggregated>. Apply only if simpler. Reject abstractions

@@ -12,7 +12,7 @@ tool inventory:
 
 1. **CLI tools** — one independent dir each. Adding a tool: own dir, own
    Makefile (or PEP 723 inline-deps script), entry in `README.md`.
-2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`,
+2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`, `output-styles/`,
    `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
    distributed via
    `.claude-plugin/` + `kronael/install/`.
@@ -46,10 +46,11 @@ only the Codex-specific deltas.
 - Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
   those installed skills to Codex through `~/.agents/skills`, and writes
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
-  block from `codex/AGENTS.md` into global Codex guidance. That block requires
-  Codex to load applicable `CLAUDE.md` files in addition to `AGENTS.md` and
-  carries the same terse response policy as the selected `caveman` Claude
-  output style. The plugin cache still contains only the bridge skill.
+  block from `codex/AGENTS.md` into global Codex guidance. That block tells
+  Codex to read `~/.claude/CLAUDE.md` and applicable project `CLAUDE.md` files
+  in addition to `AGENTS.md`, and to take its response style from the
+  installed `caveman` output style. The plugin cache still contains only the
+  bridge skill.
 
 ## Codex plugin usage
 
@@ -83,9 +84,9 @@ After the bridge, installed Kronael skills are invoked in Codex as
 
 Codex compatibility for Claude projects:
 
-- Symlink `~/.codex/AGENTS.md -> ~/.claude/CLAUDE.md` so Codex loads the
-  installed global wisdom automatically. A non-empty `AGENTS.override.md`
-  takes precedence and must be handled as a conflict.
+- `~/.codex/AGENTS.md` is a real file holding the `codex/AGENTS.md` block,
+  which tells Codex to read the installed `~/.claude/CLAUDE.md`. A non-empty
+  `AGENTS.override.md` takes precedence and must be handled as a conflict.
 - Add `CLAUDE.md` to `project_doc_fallback_filenames` in
   `~/.codex/config.toml` for projects without `AGENTS.md`. The key is
   top-level, not under `[tui]` or any other table.
@@ -122,9 +123,9 @@ for d in skills/*/; do
 done
 ```
 
-**Install order** — ALWAYS write the wisdom file and resolve the global
-Codex guidance path before merging the marked `codex/AGENTS.md` block. The
-guidance path may symlink to wisdom; NEVER overwrite wisdom after that merge.
+**Codex guidance** — merge the marked `codex/AGENTS.md` block into a real
+`~/.codex/AGENTS.md`, replacing a symlink to the wisdom file. NEVER write the
+block into `~/.claude/CLAUDE.md`.
 
 **Install the wisdom file** — strip the YAML frontmatter from
 `skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
@@ -136,14 +137,23 @@ awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
 ```
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
-hooks block and `cleanupPeriodDays` instead of overwriting (the event
-wiring is whatever `settings-recommended.json` says — don't restate it).
-`cleanupPeriodDays` is always applied, never asked — the 30-day default
-silently deletes session transcripts at startup. For permissions and
-sandbox, show the diff and ask:
+hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit` and the
+four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
+whatever `settings-recommended.json` says — don't restate it). These are
+always applied, never asked — the 30-day default silently deletes session
+transcripts at startup, an unset `attribution.commit` asks for a
+`Co-Authored-By` trailer on every commit, and the deny guard holds even when
+the rest of the permissions block is declined. For the rest of permissions
+and sandbox, show the diff and ask:
 
 ```sh
-jq -s '.[0].hooks = .[1].hooks | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays | .[0]' \
+jq -s '.[0].hooks = .[1].hooks
+  | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
+  | .[0].outputStyle = .[1].outputStyle
+  | .[0].attribution.commit = .[1].attribution.commit
+  | (.[0].permissions.deny // []) as $d
+  | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
+  | .[0]' \
    ~/.claude/settings.json settings-recommended.json \
    > ~/.claude/settings.json.new \
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
@@ -165,7 +175,7 @@ not only full installs. In a fresh Codex TUI session, the user must open
 
 **Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
 the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
-`~/.codex/AGENTS.md` resolves to it,
+`~/.codex/AGENTS.md` holds the Kronael block,
 `~/.agents/skills` bridges to `~/.claude/skills`, and
 `~/.codex/hooks.json` exists. Report counts and the backup path.
 

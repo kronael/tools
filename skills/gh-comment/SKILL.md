@@ -39,7 +39,7 @@ that got you there.
 2. **Distill** to one line naming the defect plus one optional line giving the
    fix, then **de-slop** it: load the `humanize` skill and apply it. Cut em
    dashes, hedges, passive voice, "it is worth noting", significance padding
-   and rule-of-three phrasing. Speak in the `80-caveman` register: maximum
+   and rule-of-three phrasing. Speak in the `caveman` register: maximum
    signal per token, no preamble, no recap.
 
 Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two

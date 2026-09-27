@@ -75,3 +75,4 @@ Pattern references: `.ship/20-CTO-CEO-REVIEW-2/CEO-REPORT.md` and
 - Demoing only from a warm, seeded database — first customers start empty.
 - Potential issues with no repro.
 - Grade above 70 when the demo cannot perform its core action.
+- Grade below 30 without naming the next three fixes.

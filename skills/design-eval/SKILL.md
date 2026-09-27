@@ -43,6 +43,14 @@ Okabe-Ito) and NN/g's heuristics.
   a spacing nit.
 - **NEVER give a "looks nice / clean" verdict.** Every claim maps to a rubric
   dimension + concrete evidence (a pixel, a token name, a contrast number).
+- **ALWAYS ground every design recommendation — UX, visual, typography, layout,
+  colour, microcopy — in a real published source and name it, source + URL,
+  next to the claim.** NEVER invent a guideline, a statistic, a study, a "users
+  prefer X", or an authority — a fabricated design authority is worse than an
+  admitted opinion: it cannot be checked and it ends the argument. When no
+  source turns up, ALWAYS label the recommendation as your own opinion,
+  explicitly and apart from the sourced ones. A dead or unread link is not a
+  citation — ALWAYS open the page before citing it.
 - **NEVER blur the lenses.** design-eval owns visual + interaction *craft*;
   13yo-eval owns novice *comprehension*; cto-eval owns *code/production*. If a
   finding is really "a novice can't tell what this is", route it to 13yo-eval.

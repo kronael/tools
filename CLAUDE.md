@@ -2,9 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> Development conventions (response style, boring-code philosophy, commit/test
-> rules) live in the global wisdom file installed at `~/.claude/CLAUDE.md`
-> (sourced from `skills/global/SKILL.md`). This file is **repo-specific only**.
+> Skill routing, the map of where things live, and the safety NEVER list live
+> in the global wisdom file installed at `~/.claude/CLAUDE.md` (sourced from
+> `skills/global/SKILL.md`); each rule lives in the skill that owns it
+> (`commit`, `software`, `ops`, …). This file is **repo-specific only**.
 > Keep it under 200 lines.
 
 ## What this repo is
@@ -15,7 +16,7 @@ The **kronael toolkit** — three things in one repo:
    Makefile or PEP 723 inline-deps script, own README, no imports between
    them. The tool inventory lives in `README.md` — when adding a tool, add
    its row there.
-2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`,
+2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`, `output-styles/`,
    `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
    deployed into a user's `~/.claude/` by an install step.
 3. **A thin Codex installer bridge** (`plugins/kronael/` plus
@@ -41,9 +42,10 @@ make clean         # clean projects + sweep __pycache__
   `test_*.py` does not run until it is added to that list — the suite passes
   while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
-  (installs to `~/.local/bin`). `dockbox` also has `make image`.
-- **Python scripts** (`tg-fetch`, `dc-fetch`): `uv run main.py` (PEP 723
-  inline deps, no separate install).
+  (installs to `~/.local/bin`; `clp` goes to `~/.local/share/clp`, sourced
+  from the shell rc). `dockbox` also has `make image`.
+- **Python scripts** (`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`
+  (PEP 723 inline deps, no separate install).
 - **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.
   `ruff.toml` is the config. Pre-commit reformats on first run — retry the
   commit if it does.
@@ -87,7 +89,7 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Skills** (`skills/<name>/SKILL.md`) auto-activate by file context
   (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
   `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
-  explicit dispatch (`/resolve`) is the intended path. Index: `skills/README.md`.
+  explicit dispatch (`/solve`) is the intended path. Index: `skills/README.md`.
 - **Agents** (`agents/*.md`) — task workers, mostly invoked via
   slash-command wrappers.
 - **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is
@@ -163,6 +165,9 @@ the wiring being right and the tool running are different claims.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
   the same release. Nothing enforces it, and the drift is invisible: the
   manifest keeps reporting a version the bundle no longer is.
+- ALWAYS bump `plugins/kronael/.codex-plugin/plugin.json` `version` too. Codex
+  caches plugins by version, so a stale version keeps serving the old bridge
+  skill.
 
 ## Docs map
 
