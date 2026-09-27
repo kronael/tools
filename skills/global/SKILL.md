@@ -163,7 +163,10 @@ append a Co-Authored-By line). These win.
   its genuine quirks; history lives in git and `.diary/`.
 - Comments earn their place only by saying what the code cannot: why a choice was
   made, or what is surprising. NEVER restate the code or a name.
-- NEVER marketing language.
+- NEVER marketing language in docs, comments, specs or commit messages. A repo
+  description, tagline or other public-facing pitch is the owner's copy: set it
+  verbatim as given and NEVER re-litigate the wording, in review or in an eval
+  report.
 - NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
   local files (HTML, MD) the user opens themselves.
 
