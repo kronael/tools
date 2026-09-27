@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.1] — 20260927
+
+> kronael v0.4.1 — codex knows when it's logged out
+>
+> A revoked codex token now reads as unavailable, and you get the one command that fixes it.
+>
+> • codex — a revoked token counts as unavailable despite `login status`; hands you `! codex login`, never retries
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codex`: a revoked refresh token now reads as unavailable — `codex login status` exits 0 and prints "Logged in" without exercising the credential, so `token_revoked`/401 in the real call is the signal; hand the user the interactive `! codex login`, never retry.
+
 ## [v0.4.0] — 20260925
 
 > kronael v0.4.0 — one recap, not two
