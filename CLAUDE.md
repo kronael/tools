@@ -72,8 +72,12 @@ Why the install step exists at all:
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
+- **Three sides**: **source** (this repo tree), **live** (`~/.claude/` on a
+  host — the running bundle), **upstream** (the `origin` remote). Install
+  reconciles source ↔ live; `git push` reaches upstream. NEVER conflate them —
+  live can be ahead of, behind, or forked from upstream.
 - **Install is a two-way sync, not a one-way copy** — source-advanced files
-  update the install; a clean live-ahead superset (source-owned file, additions
+  update live; a clean live-ahead superset (source-owned file, additions
   only) is reverse-synced INTO the repo, never overwritten. Overwriting a
   live-ahead file downgrades local work.
 - **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org

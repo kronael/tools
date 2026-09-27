@@ -32,9 +32,22 @@ If missing, you're in the wrong directory — stop and ask.
 
 ## Sync protocol
 
+### The three sides
+
+Name them explicitly — install reconciles the first two, `git push` reaches the third:
+
+- **source** — this repo's working tree, where you edit.
+- **live** — `~/.claude/` on THIS host: the installed, running bundle.
+- **upstream** — the `origin` remote on GitHub (`kronael/tools`).
+
+Install is a two-way **source ↔ live** sync (below). **upstream** is reached
+ONLY by an explicit `git push` under the wisdom file's Git gate; NEVER conflate a
+`live` sync with an `upstream` push, and NEVER assume `live` matches `upstream` —
+a host's `~/.claude/` can be ahead of, behind, or forked from `origin`.
+
 Install is ALWAYS a two-way sync, never a one-way deploy. It reconciles
-source ↔ installed in BOTH directions: source-advanced files update the
-install; installed-AHEAD files (local refinements the repo lacks) are surfaced
+source ↔ live in BOTH directions: source-advanced files update live;
+live-AHEAD files (local refinements the repo lacks) are surfaced
 and reverse-synced INTO the repo, NEVER silently overwritten — overwriting a
 live-ahead file downgrades the user's own work. A plain copy is only the
 degenerate case where nothing has drifted.
