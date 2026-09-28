@@ -89,7 +89,7 @@ the authoritative entry. The categories:
   (opt-in `/show-me` — pseudocode/call-tree/mermaid/diff/local-HTML for the
   current conversation topic, distinct from `diagrams`' permanent ASCII docs)
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
-- **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `settle`, `ship`,
+- **Workflow** (e.g. `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `codex`, `pi`) — multi-pass refinement, git flow, memory,
   scaffolding, second opinions, codifying public best practice.
@@ -138,7 +138,7 @@ Side-channels (escalation, communication) fire at any stage.
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review code-review improve  │
-│ refine settle visual        │
+│ refine visual               │
 │ software bugs               │
 └──────────────┬──────────────┘
                │
@@ -160,9 +160,10 @@ They compose: a Rust CLI loads `rs` + `cli`.
 **quality** — `review` covers the whole loop: `review give` produces findings
 (local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
 or a PR's comments); it supersedes the built-in `/code-review` for local work.
-`improve`/`refine` for fixing; `settle` for checking that what the change
-asserts survives the command that proves it; `visual` for UI; `testing` for
-test patterns; `bugs` for the record-don't-fix queue.
+`improve` for a targeted fix; `refine` for the finalizing pass — read-only
+subagents per context of the change, and every claim it makes re-derived
+against the tree; `visual` for UI; `testing` for test patterns; `bugs` for the
+record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 
