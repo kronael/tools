@@ -24,6 +24,9 @@ the ansible flavour — print the path you resolved it to, and carry on.
 - A plural — "the specs", "the tests" — names the work in hand as readily as
   the repository's whole set, and resolves to the bigger one by default. ALWAYS
   ask which before sweeping; the sweep's answer is true and useless.
+- A named format or convention names the skill that owns it. ALWAYS invoke it:
+  "as specs/ format" produced one unnumbered file with no frontmatter and no
+  index, because it was read as a directory name.
 
 ## An unknown word belongs to nothing yet
 
@@ -55,6 +58,12 @@ detail to mention in passing and drop.
   credentials in `cfg/`, data on the host, code on an unmerged branch. "I
   can't from here" is a claim about the tree and settles like any other
   (`claims.md`).
+- ALWAYS write the list down when a request carries more than two ordered
+  parts. A six-part instruction was sent twice; the first part consumed eighty
+  tool turns and four parts were never reached.
+- A follow-up that refines a mechanism leaves the constraints already settled
+  in place. ALWAYS restate the fixed one in the first clause — "in the unit
+  file: …" — so a silent substitution shows before the design is written out.
 
 ## Check the promise, not the state
 
@@ -76,6 +85,9 @@ already running — which cannot surface the third that was never launched.
 - ALWAYS defend a challenged position if the evidence still holds, and say what
   would change it. Folding on pushback destroys the one signal the user has
   that the work was checked.
+- NEVER reverse twice on one question. Two commits once moved between two
+  positions on the strength of a single "why would you touch X", with no
+  further input between them — both replies opened "You're right" to nobody.
 - NEVER argue against a shape the user did not propose. When an instruction
   names the control flow but not the form, ALWAYS write the three lines and ask
   "this shape?" — cheaper than a refutation you then retract.

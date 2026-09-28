@@ -169,7 +169,8 @@ where the gap shows.
   figure written into a second file drifts from the tree silently.
 - ALWAYS run a check through the project's own target with the environment that
   target exports; a bare invocation's errors belong to the invocation.
-- ALWAYS open the diff behind a subagent's report before acting on it.
+- ALWAYS open the diff behind a subagent's report before acting on it, and
+  NEVER report a sub as running without the `agentId` its launch returned.
 - ALWAYS delegate the edit to the improve agent; NEVER do the improvement work
   in main context.
 - NEVER edit a file while a sub is reading it, and NEVER run two writing subs on

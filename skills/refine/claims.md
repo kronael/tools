@@ -23,6 +23,10 @@ document or a subagent brief on an unproven negative.
   you are trusting — and fetch by explicit HTTPS URL where the origin is SSH.
 - **A thing is missing where you looked, not where it is kept.** Config in
   `cfg/`, data on the deployment host, a running service behind `sudo`.
+- **`2>/dev/null` destroys the falsifier.** Every probe in these sessions that
+  carried a status code (`curl -w '%{http_code}'`) recovered from its miss;
+  every probe that silenced stderr reported absence instead. ALWAYS let a
+  probe print why it failed.
 
 ## The label is not the output
 
@@ -115,9 +119,27 @@ attribute lookup rather than an import.
   none exists, the check is a restatement and the claim is still open.
 - NEVER let a rule be both the definition of correctness and the evidence for
   it; settle it with a query of a different kind.
+- A coverage claim — "X is now behind the gate" — needs an enumeration, never a
+  syntax check: `nginx -t` validates the vhost you just wrote and cannot see
+  the second listener publishing the same service on another port.
 
-## Report — "the sub fixed it", "all findings applied"
+## Report — "the sub fixed it", "the agent is running", "verified online"
 
 Settled by the diff: `git show --stat`, then the hunks. A report is upstream
 like any document — its counts and its `file:line` citations settle the same
 way as a spec's.
+
+- **A launch is not a report.** Reading a skill's instruction to spawn is not a
+  spawn; an agent that ran returns a result carrying an `agentId`, and the
+  absence of that block is the falsifier. One session announced a background
+  agent four times, declined to redirect it "mid-run", and wrote its pending
+  work into a spec's frontmatter — no dispatch call was ever made.
+- **Specificity is not retrieval.** A repo path, a versioned docs URL, a dated
+  writeup and a five-digit issue number read as proof of fetching and cost
+  nothing to produce. ALWAYS confirm the fetch happened before repeating what
+  it returned; the tell is one of your own private artifacts named inside a
+  source claimed to be public.
+- **A generated manifest is still a claim.** An install manifest of sha256
+  hashes flagged 41 files as hand-edited; re-hashing the bytes showed 44
+  pristine and zero edits. ALWAYS re-derive from the artifact, never from the
+  index that describes it.
