@@ -145,8 +145,10 @@ def nudges(cwd, now):
         if not os.path.isabs(common_dir):
             common_dir = os.path.join(cwd, common_dir)
         dated = '.diary/' + now.strftime('%Y%m%d') + '.md'
-        ignored = git_run(cwd, 'git', 'check-ignore', '-q', dated).returncode == 0
-        base = os.path.dirname(common_dir) if ignored else cwd
+        top = git_run(cwd, 'git', 'rev-parse', '--show-toplevel')
+        worktree = top.stdout.strip() if top.returncode == 0 else cwd
+        ignored = git_run(worktree, 'git', 'check-ignore', '-q', dated).returncode == 0
+        base = os.path.dirname(common_dir) if ignored else worktree
         diary_dir = os.path.join(base, '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
         hhmm = now.strftime('%H:%M %Y-%m-%d')
