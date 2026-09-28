@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Code refinement orchestrator. NOT for a targeted fix (use improve) or a second opinion (use oracle).
+description: Code refinement orchestrator. NOT for a targeted fix (use improve), a second opinion (use oracle) or settling what a PR asserts (use settle).
 when_to_use: "refine this, polish this, refine the changes, final pass before shipping, tighten this before commit, clean up the diff, finalize a finished feature"
 user-invocable: true
 ---
@@ -11,7 +11,8 @@ Runs in main context so the whole conversation stays visible.
 
 `/refine` = make the code review-ready (quality refinement + resolve all open PR review threads +
 update docs). `/release` = the final pre-release gate (stronger — version bumps etc.). Use `/refine`
-first; `/release` after.
+first; `/release` after. `/settle` is the other axis — it checks that what the change asserts is
+true, and it runs on a documents-only PR where the language lenses below are empty.
 
 ## Workflow
 
