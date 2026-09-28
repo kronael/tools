@@ -24,6 +24,19 @@ document or a subagent brief on an unproven negative.
 - **A thing is missing where you looked, not where it is kept.** Config in
   `cfg/`, data on the deployment host, a running service behind `sudo`.
 
+## The label is not the output
+
+A conclusion printed beside a command cannot be evidence for it. `git diff
+--stat … ; echo "(empty = no overlap)"` prints that label under a diffstat
+showing 29 changed files, and nothing in the pipeline can object — the text was
+written before the command ran.
+
+- NEVER echo a verdict, a header or an "(empty = none)" gloss around a command.
+  ALWAYS read the output and state the verdict yourself, afterwards.
+- `cmd | grep -c X || echo "absent or missing"` resolves neither case: `grep -c`
+  prints `0` and exits 1 on empty input, so the fallback fires whichever is
+  true. ALWAYS split a two-case question into two commands.
+
 ## Count — "ten references", "109 of 144 files", "two broken links"
 
 Settled by reading the matches, then re-deriving with a differently shaped
@@ -32,13 +45,18 @@ the first matched text, by AST where the first grepped.
 
 - **Grep counts mentions; imports need an AST walk.** "109 of 144 test files
   import the module" did not reproduce even at the commit that wrote it — 113
-  merely mention the word, 106 import it. The easy query is the one that gets written down.
+  merely mention the word, 106 import it. The easy query is the one that gets
+  written down.
 - `grep -rl | wc -l` counts files, `grep -rn | wc -l` counts lines — say which
   one the claim means, and a bare identifier matches its own prefixes.
+- **A sample is not a population.** A 21TB disk estimate came from extending
+  the single busiest symbol to all 773; the files that disprove it were already
+  on the disk being reasoned about. ALWAYS measure the distribution you have
+  before projecting one member of it.
 - **An acceptance grep narrower than its claim passes while the tree is
   wrong.** A criterion naming ten sites where twenty exist would have let an
-  extraction pass with the live deploy still building from the old path. ALWAYS check a
-  criterion's coverage with a second query before trusting its exit code.
+  extraction pass with the live deploy still building from the old path.
+  ALWAYS check a criterion's coverage with a second query before its exit code.
 
 ## Superlative — "the one place", "the only X", "four listeners"
 
@@ -73,6 +91,9 @@ and a `README.md` at the same time.
 
 - A document that dates its counts is still wrong when the number was never
   right; ALWAYS re-measure before deciding a figure is merely old.
+- A figure read off a share is not this machine's: `df` on a virtio-9p mount
+  reports the host volume, and `lsblk` shows no device behind it. ALWAYS check
+  that the thing measured is the thing you can act on.
 
 ## Green run — "tests pass", "the type checker is clean"
 
@@ -80,6 +101,20 @@ Settled through the project's own target with the environment that target
 exports. The same tool invoked bare reported two errors the project does not
 have, in a file the change never touched — a missing `PYTHONPATH` the Makefile
 sets. A disagreement between the two is the invocation's fault first.
+
+## A check that cannot fail
+
+The most dangerous verification is the one that passes by construction. A
+backtest's "1168 fills = 584 round trips, almost exactly the 595 the study
+predicted" agrees on trade count and says nothing about the edge — both sides
+ran the same seven hand-picked symbols. A spec whose boundary is an import
+allowlist, validated against that allowlist, cannot see a crossing that is an
+attribute lookup rather than an import.
+
+- ALWAYS name what outcome would have failed the check before running it. If
+  none exists, the check is a restatement and the claim is still open.
+- NEVER let a rule be both the definition of correctness and the evidence for
+  it; settle it with a query of a different kind.
 
 ## Report — "the sub fixed it", "all findings applied"
 

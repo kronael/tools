@@ -43,8 +43,10 @@ one reference that matters.
 **The document set.** Specs, `README.md`, `ARCHITECTURE.md`, `CLAUDE.md`,
 indices. Settled by measuring the tree now. Every number in it has an owner and
 the rest cite it; a spec's own acceptance command is itself a claim to check for
-coverage. A spec describing a subsystem the tree does not have is the loudest
-finding a document context can return.
+coverage. A document's opening sentence is its least-checked claim — a
+verification pass aims commands at the details someone disputed, and the
+sentence a reader builds their model from was never disputed. A spec describing
+a subsystem the tree does not have is the loudest finding this context returns.
 
 **Data and schema.** Migrations, db modules, listeners, the runner that applies
 them. Settled by enumerating what the runner reads, not what the directory

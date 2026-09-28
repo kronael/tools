@@ -23,9 +23,10 @@ extension and still carries every claim the reviewer will trust.
 
 1. **Settle the ask** — resolve every noun in the request against the tree
    before acting on it: the branch, the directory, the product name, the
-   document, the host. ALWAYS read `intent.md` first. When the maintainer's
-   numbers disagree with what you measure, he is naming a different object —
-   ALWAYS check the referent before correcting him. Every separate instruction
+   document, the host. ALWAYS read `intent.md` first. When the user's numbers
+   disagree with what you measure, the user is naming a different object —
+   ALWAYS check the referent before correcting the number. Every separate
+   instruction
    in the message goes on a list and gets a verdict by step 11, including the
    ones you will not carry out.
    → each noun resolves to one path, ref or record, and no instruction is
@@ -126,7 +127,7 @@ extension and still carries every claim the reviewer will trust.
     → the verdict carries all four, and `git worktree list` shows only the main
     tree.
 
-Pass every agent `Intent:` (the maintainer's original words), `Primary:` (files
+Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
 
 ## Confessed defaults — hunt these first
@@ -159,6 +160,11 @@ where the gap shows.
   second number from the shape that produced the first.
 - NEVER read an empty result as a finding until that same query has produced a
   non-empty one where one belongs.
+- NEVER print a verdict or an "(empty = none)" gloss beside a command — a label
+  written before the command runs cannot disagree with it. ALWAYS read the
+  output, then say what it showed.
+- ALWAYS name what outcome would fail a check before running it; a check that
+  cannot fail leaves the claim open.
 - ALWAYS let one document own a measurement and have the rest cite it; the same
   figure written into a second file drifts from the tree silently.
 - ALWAYS run a check through the project's own target with the environment that
