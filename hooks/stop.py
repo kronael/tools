@@ -137,13 +137,17 @@ def nudges(cwd, now):
             write_stamp(stamp, now.isoformat())
 
     # Diary freshness (missing today or stale > 1h) — only inside a git repo.
-    # --git-common-dir resolves to the main repo's .git even from a worktree.
+    # A tracked diary is committed on its branch, so it lives in the current
+    # worktree; an ignored one keeps a single copy in the main tree.
     common = git_run(cwd, 'git', 'rev-parse', '--git-common-dir')
     if common.returncode == 0:
         common_dir = common.stdout.strip()
         if not os.path.isabs(common_dir):
             common_dir = os.path.join(cwd, common_dir)
-        diary_dir = os.path.join(os.path.dirname(common_dir), '.diary')
+        dated = '.diary/' + now.strftime('%Y%m%d') + '.md'
+        ignored = git_run(cwd, 'git', 'check-ignore', '-q', dated).returncode == 0
+        base = os.path.dirname(common_dir) if ignored else cwd
+        diary_dir = os.path.join(base, '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
         hhmm = now.strftime('%H:%M %Y-%m-%d')
         if not os.path.exists(diary_file):
