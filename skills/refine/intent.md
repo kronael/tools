@@ -89,3 +89,6 @@ means the first one never landed in anything durable.
 
 - ALWAYS treat a repeat as a defect in where the answer was written, not as
   emphasis — re-answering in the reply reproduces the failure.
+- A multi-part instruction re-sent verbatim after a partial report is the
+  exception: it says the report read as a stop. ALWAYS carry a numbered
+  instruction through to its last part before handing the turn back.
