@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.4.6] — 20260929
+
+> kronael v0.4.6 — dockbox ls sees every box
+>
+> `dockbox ls` now reports a real tmpfs number for boxes whose worktrees were deleted, and the wisdom file points at `/solve`.
+>
+> • dockbox ls — skips build dirs the host deleted, so those boxes show their RAM instead of `?`
+> • Wisdom — routes through `/solve`, the new name of `/resolve`
+> • /fin — sends resumes to `/continue`, the new name of `con`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox ls` passes `df` only the overmount paths that still exist in the
+  box; a host-deleted worktree detaches its mounts, and `df` exiting on the
+  missing path made the whole row `?`. `dockbox/test.sh` runs the real probe
+  against a fake box, under dash when installed (the box's `/bin/sh`).
+- `skills/global/SKILL.md` names `/solve` (renamed from `/resolve`, which
+  install prunes); `fin` names `continue` (renamed from `con`).
+- `BUGS.md` drops the `doc-shape` entry; `doc-topology` is folded into
+  `readme`.
+
 ## [v0.4.5] — 20260929
 
 > kronael v0.4.5 — saying release now means a full refine first
