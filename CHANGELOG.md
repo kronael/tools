@@ -1,5 +1,31 @@
 # Changelog
 
+## [v0.4.3] — 20260929
+
+> kronael v0.4.3 — see which dockbox holds your RAM
+>
+> `dockbox ls` now shows how much tmpfs and disk each box holds, so you know which one to remove.
+>
+> • dockbox ls — TMPFS column: RAM-backed files in each running box, every mount counted once
+> • dockbox ls — DISK column: the box's writable layer, volumes not included
+> • hooks — the test suite passes on a fresh checkout, with no bundle installed
+> • commands — /improve, /learn, /readme, /refine and /visual ship with the bundle
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox ls` adds TMPFS (`/tmp`, `/tmp/cargo-target`, `/dev/shm`, `$HOME`
+  and the build-dir overmounts of a running box, each mount once; `-` when
+  stopped, `?` when the probe fails) and DISK (writable layer, volumes
+  excluded). `dockbox/test.sh` runs `ls` against a stub docker.
+- hooks: `local`, `memory_nudge`, `prompt_nudge` and `reclaude` import
+  `lib.state` from their own directory, the codex rewrite tests build their own
+  skills dir, and CI installs PyYAML, so `Test — hooks` runs without an install.
+- `commands/` ships the `improve`, `learn`, `readme`, `refine` and `visual`
+  wrappers.
+- Docs: the dockbox README explains the `ls` columns and what `-T` covers; the
+  hooks docs say the diary nudge repeats on every Stop. `BUGS.md` logs the stale
+  installed hook docs and the dockbox `--help` drift.
+
 ## [v0.4.2] — 20260927
 
 > kronael v0.4.2 — two lines become one
