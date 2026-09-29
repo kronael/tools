@@ -134,8 +134,8 @@ true_  "ls USE busy with a session"      'grep -Eq "^dockbox-busy .* busy +120M"
 false_ "ls strips the DISK virtual size" 'grep -q virtual <<< "$ls_out"'
 
 ## prune ---------------------------------------------------------------------
-boxes dockbox-idle-old running 18000           idle 0B \
-      dockbox-idle-new running 3600            idle 0B \
+boxes dockbox-idle-old running 14410           idle 0B \
+      dockbox-idle-new running 14399           idle 0B \
       dockbox-busy     running 18000           busy 0B \
       dockbox-bad      running 18000           fail 0B \
       dockbox-gone     exited  $((2161 * 3600)) -   0B \
