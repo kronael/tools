@@ -77,9 +77,12 @@ rm_matches() {
 }
 
 # Total the tmpfs rows of `df -k --output=fstype,used,target` on stdin, each
-# mount once (df repeats a mount given two paths on it), printed as M or G.
+# mount once by target (df resamples it per path on it), printed as M or G.
 tmpfs_used() {
-    awk 'NR > 1 && $1 == "tmpfs" && !seen[$0]++ { kb += $2 }
+    awk '$1 == "tmpfs" {
+            target = $0; sub(/^[^ ]+ +[^ ]+ +/, "", target)
+            if (!seen[target]++) kb += $2
+        }
         END {
             if (kb >= 1048576) printf "%.1fG\n", kb / 1048576
             else printf "%dM\n", kb / 1024
@@ -97,14 +100,15 @@ case "${1:-}" in
             docker container ls -a -s --filter "name=^dockbox-" \
                 --format "{{.Names}}\t{{.State}}\t{{.Status}}\t{{.RunningFor}}\t{{.Size}}" \
                 | while IFS=$'\t' read -r n state status created size; do
-                ram="-"
+                tmpfs="-"
                 [[ "$state" == running ]] && {
-                    ram=$(docker exec "$n" sh -c \
-                        'IFS=:; df -k --output=fstype,used,target /tmp /tmp/cargo-target $DOCKBOX_EPH_PATHS' \
-                        | tmpfs_used) || ram="?"
+                    tmpfs=$(docker exec "$n" sh -c \
+                        'set -f; IFS=:; df -k --output=fstype,used,target \
+                        /tmp /tmp/cargo-target /dev/shm $DOCKBOX_EPH_PATHS' \
+                        | tmpfs_used) || tmpfs="?"
                 }
                 printf '%s\t%s\t%s\t%s\t%s\n' \
-                    "$n" "$status" "$created" "$ram" "${size%% (*}"
+                    "$n" "$status" "$created" "$tmpfs" "${size%% (*}"
             done
         } | column -t -s $'\t'
         exit 0 ;;

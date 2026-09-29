@@ -50,12 +50,12 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # tmpfs backend for ephemeral dirs
+dockbox -T                        # disable tmpfs; anonymous Docker volumes (disk) instead
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
-dockbox ls                        # list containers with tmpfs (RAM) and disk use
+dockbox ls                        # list containers, tmpfs use, disk (writable layer, no volumes)
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```
