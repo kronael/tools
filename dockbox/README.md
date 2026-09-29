@@ -68,7 +68,7 @@ TMPFS totals the tmpfs mounts of a running box (`/tmp`, `/tmp/cargo-target`,
 `/dev/shm`, `$HOME` and the build-dir overmounts), each mount once; DISK is
 the container's writable layer, volumes excluded. USE and TMPFS show `-` for
 a stopped box and `?` when the probe fails. `dockbox prune` removes idle boxes
-at least 10 minutes old and never a busy one.
+at least 4 hours old and never a busy one.
 
 ### Re-entry into a running box
 

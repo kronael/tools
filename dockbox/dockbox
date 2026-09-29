@@ -165,7 +165,7 @@ case "${1:-}" in
         [[ "$hours" =~ ^[0-9]+$ ]] || { echo "dockbox prune: hours must be a whole number, got '$hours'" >&2; exit 2; }
         now=$(date +%s)
         cutoff=$((now - 10#$hours * 3600))
-        grace=$((now - 600))
+        grace=$((now - 4 * 3600))
         rows=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}\t{{.State}}\t{{.CreatedAt}}")
         rc=0
@@ -211,7 +211,7 @@ Tools (first positional arg — no leading dash):
 Boxes:
     ls              List boxes: USE busy/idle (idle: safe to rm), TMPFS (RAM), DISK
     rm <name>...    Force-remove boxes and their volumes; globs ok, -a = all
-    prune [hours]   Remove idle boxes 10+ min old, exited ones over [hours] old (2160)
+    prune [hours]   Remove idle boxes 4+ h old, exited ones over [hours] old (2160)
 
 Options:
     -n name    Key the container on this name, not the primary dir basename
