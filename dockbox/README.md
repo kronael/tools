@@ -50,17 +50,22 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # disable tmpfs; anonymous Docker volumes (disk) instead
+dockbox -T                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
 dockbox ls                        # list containers, tmpfs use, disk (writable layer, no volumes)
-dockbox rm [pattern]              # remove containers
+dockbox rm <pattern|-a>           # remove containers by name or glob (-a = all)
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```
 
 Default command: claude. Use `-x` to override.
+
+`dockbox ls` TMPFS totals the tmpfs mounts of a running box (`/tmp`,
+`/tmp/cargo-target`, `/dev/shm`, `$HOME` and the build-dir overmounts), each
+mount once; DISK is the container's writable layer, volumes excluded. TMPFS
+shows `-` for a stopped box and `?` when the probe fails.
 
 ### Re-entry into a running box
 
@@ -142,12 +147,13 @@ container as a full peer that should continuously improve shared config.
 ## Ephemeral builds
 
 Build artifacts are an attack surface, not state to persist. Two layers
-work together so builds never touch your host workdir:
+keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`. Builds
-   produce artifacts in the workdir as usual; tool caches and toolchains
-   live in the image, not your project.
+   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
+   caches and toolchains live in the image, not your project. dockbox
+   also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
+   Cargo never writes `target/` to the workdir.
 
 2. **Overmount by default** (Node, Bun, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
@@ -159,8 +165,12 @@ work together so builds never touch your host workdir:
    Names overmounted by default:
 
    ```
-   node_modules  .next  dist  build  .turbo  .cache
+   node_modules  .next  .turbo  .cache
    ```
+
+   `dist` and `build` are not overmounted, so they land in the host
+   workdir: build tools `rm -rf` them, which fails with EBUSY on a
+   mountpoint.
 
    Monorepo workspaces are handled automatically — every match under
    the workdir gets its own mount.
@@ -195,13 +205,12 @@ is a liability; the source tree is the truth.
 
 **Opt out** (`dockbox -P` / `--no-ephemeral`):
 
-- You've committed `dist/` or `build/` and need the container to see it.
 - You want to share a single `node_modules/` across runs (and accept the
   cache-poisoning risk).
 - You're debugging a build issue and need the artifacts to survive.
 
-The Rust/Python auto-redirects still apply with `-P` — they're baked into
-the image's env, not the overmount layer.
+The Rust/Python auto-redirects still apply with `-P` — they're set in the
+container env, not the overmount layer.
 
 ### Surprise on first run
 
