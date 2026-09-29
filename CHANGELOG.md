@@ -1,5 +1,29 @@
 # Changelog
 
+## [v0.4.5] — 20260929
+
+> kronael v0.4.5 — saying release now means a full refine first
+>
+> A bare `release` runs the most thorough refine over every unreleased change before it bumps anything, and Sonnet moves to 5.5.
+>
+> • /release — refines every change since the last tag first: all lenses, fable on correctness, a codex second opinion
+> • /release — a late change reruns the refine, so nothing ships unreviewed
+> • Models — Sonnet is claude-sonnet-5-5 in the sonnet agent, dockbox, qemubox and the Emacs setup
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `release` step 1.5 runs `/refine` over `git diff <last>..HEAD` (the whole
+  tree on a first release) at full depth whatever the diff size — every lens,
+  extra passes past refine's 3-lens cap, `correctness` on `fable`, and a
+  `codex` second opinion fed through refine's triage and apply. Any later
+  change other than the refine's own commits and the release commit reruns
+  it. Step 2 also bumps version strings in `README.md`/`CLAUDE.md`; `refine`
+  names the `/release` exceptions to its scale-to-the-diff and model rules.
+- Sonnet pins move to `claude-sonnet-5-5` (`agents/sonnet.md`, `dockbox`,
+  `qemubox`); the Emacs gptel snippet registers it so gptel does not fall back
+  to a model it knows.
+- `dockbox/test.sh` pins prune's 4-hour idle grace on both sides.
+
 ## [v0.4.4] — 20260929
 
 > kronael v0.4.4 — dockbox prune cleans up idle boxes
