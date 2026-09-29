@@ -170,33 +170,50 @@
   `hookSpecificOutput.additionalContext` as in `prompt_nudge.emit`; PreCompact
   needs its own measurement first.
 
-## dockbox
-
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:134` suppresses the commit/diary block when `CLAUDE_EVAL` is
-  set. Nothing sets it: one hit in the whole repo, the consumer itself — not in
-  `Makefile`, `.github/`, `evals/`, or any `settings*.json` env block. Effect
-  is the opposite of the intent: eval runs get the block messages injected into
-  their transcripts. **Fix:** one line either way — set it in the eval runner,
-  or delete the clause — but which one is a scope call.
+  set. Nothing sets it: its only other hit is `hooks/test_stop.py:16`, which
+  strips it from the test env — not `Makefile`, `.github/`, `evals/`, or any
+  `settings*.json` env block. Effect is the opposite of the intent: eval runs
+  get the block messages injected into their transcripts. **Fix:** one line
+  either way — set it in the eval runner, or delete the clause — but which
+  one is a scope call; no test — config.
 
-- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, resource) — needs sign-off.
-  `hooks/lib/state.py:30` writes four stamps per session (`local-`,
-  `solve-nudge-`, `memory-nudge-start-`, `memory-nudge-done-`)
-  and nothing ever expires a session id; `~/.claude/state` holds dozens of
-  files. Harmless in bytes; the question is whether stamps should self-prune
-  on write past N days.
+- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off.
+  `hooks/lib/state.py:30` names four stamps per session — `local-`
+  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:152`),
+  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:110-118`)
+  — and no hook deletes one or expires a session id, so `~/.claude/state`
+  gains up to four files per session. Harmless in bytes; the question is
+  whether stamps should self-prune on write past N days; no test — design.
 
-- **DOCKBOX-HELP-CONTRADICTS-ITSELF** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-29. `dockbox --help` says `-T` disables tmpfs (`dockbox/dockbox:174`),
-  but `-T` switches only the build-dir overmounts to volumes (`:515-518`);
-  `$HOME`, `/tmp` and `/tmp/cargo-target` stay tmpfs (`:479-485`), as the
-  help's own "overmount type only" says (`:193`), so `ls` still shows TMPFS
-  use for a `-T` box. Its Examples call the default "sonnet @ medium"
-  (`:204-205`) against "opus @ xhigh" under Tools (`:154`); which is true is
-  unverified. **Fix:** reword the `-T` line and the two examples; no test —
-  docs.
+- **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
+  2026-09-29. `hooks/stop.py:50-58` defines its own `hook_event`: the same
+  three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
+  override (`:51-53`, set by `post_tool_nudge.sh:20`). `stop.py` imports
+  nothing from `lib.state`, so a spelling added to one reader misses the
+  other. **Fix:** import `hook_event` from `lib.state` and keep the override
+  in `stop.py`, or fold the override into the shared reader; no test —
+  duplication.
 
+## dockbox
+
+- **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
+  serializes creating, entering and removing a box, so two invocations for
+  the same project can remove each other's box. (a) A leaving session drops
+  its marker and lists the marker dir (`dockbox/dockbox:417-418`), then
+  force-removes the box on an empty listing (`:419-420`). A second invocation
+  that passed the running check (`:430`) and writes its marker (`:401`)
+  between that listing and the removal has its box removed under it; one
+  that writes it just after the removal exits with no message, since `:401`
+  discards the error. (b) Two launchers for a project with no box both pass
+  the same check (`:430`), and the second's pre-run `docker rm -f -v`
+  (`:592`) removes the box the first just started (`:597`), with any session
+  already in it. `prune` probes an idle box and removes it in two steps
+  (`:177-181`), so a session entering between them is removed the same way.
+  **Fix:** a per-box host lock (e.g. `flock`) held across marker
+  registration, the empty-listing-to-removal step, and creation — a new
+  lifecycle contract; no test — design.
 
 ## qemubox
 
