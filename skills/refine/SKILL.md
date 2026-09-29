@@ -110,7 +110,8 @@ where the gap shows.
 ## Review Checklist
 
 - ALWAYS scale to the diff: tens of lines or one logical change → 1-2 lenses or
-  an inline review; NEVER fan out agents over a ~40-line diff.
+  an inline review; NEVER fan out agents over a ~40-line diff — except under
+  `/release`, which runs the full pass whatever the size (release step 1.5).
 - ALWAYS set `model=` by tag: `simplify` → sonnet, `correctness` → opus. NEVER
   hunt bugs on sonnet; NEVER spend opus on candidate-finding.
 - ALWAYS delegate the edit to the improve agent; NEVER do the improvement work

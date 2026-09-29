@@ -1,7 +1,7 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "prepare a release, cut a release, tag a release"
+when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release"
 user-invocable: true
 ---
 
@@ -12,8 +12,8 @@ user-invocable: true
 0. **Read local CLAUDE.md** — `Read` the project's `CLAUDE.md` (at CWD).
    Look for a `## Release` section. Any directive there **overrides** the
    defaults in this skill. Common overrides to watch for:
-   - `No tagged releases` → skip step 7 entirely (no `git tag`)
-   - Custom checklist → run those steps instead of (or in addition to) step 5
+   - `No tagged releases` → skip step 6 entirely (no `git tag`)
+   - Custom checklist → run those steps instead of (or in addition to) step 4
    - Pinned version file or changelog path → use that instead of discovering
    Apply found overrides before proceeding. If the section is absent, use
    skill defaults throughout.
@@ -21,6 +21,12 @@ user-invocable: true
 1. **Detect scope** — `git tag --list` + `git log` since last tag.
    - No prior tags → first release. Default `v0.1.0` (matches pyproject's
      usual default); skip the bump step if pyproject already says it.
+1.5. **Refine** — ALWAYS run `/refine` over every change since the last tag
+   (`git diff <last>..HEAD`) before bumping anything. A bare "release" implies
+   it — NEVER ask whether to refine. Run it at full depth whatever the diff
+   size: every applicable lens, correctness lenses on the strongest model, an
+   `oracle` second opinion. A change landed after the refine reruns it —
+   NEVER tag code the refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).
    Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
@@ -101,12 +107,9 @@ user-invocable: true
    Sizing guide: most entries land in the 15–30 line range after
    distill. 80+ line bodies are the smell. Look at the prior 3-5
    entries in this repo for what the project considers a typical wave.
-4. **Docs alignment** — only spawn refine if README/CLAUDE.md carry
-   version-dependent stats (test counts, line counts, version strings).
-   Skip when nothing version-shaped is documented.
-5. **Verify** — `make test`, `make smoke` if defined. For monorepos
+4. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
-5.5. **Critique gate when unclear.** If verification passes but the release is
+4.5. **Critique gate when unclear.** If verification passes but the release is
    still not obviously good enough from context, run the relevant critique lens
    before committing:
    - demo/readiness uncertainty → `ceo-eval`
@@ -118,8 +121,8 @@ user-invocable: true
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.
-6. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
-7. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
+5. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
+6. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
    versions track in their own pyprojects). **Collision-safe, ALWAYS:**
    - Pick a version NOT already tagged. If `git rev-parse -q --verify vX.Y.Z`
      succeeds, that version is taken — bump to the next free patch (prevents a
@@ -137,6 +140,8 @@ user-invocable: true
   tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag
+- ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
+  release a change the refine did not see
 - NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
