@@ -26,6 +26,18 @@ false_ "rm exact no substring"             'rm_matches dockbox-repo-facade repo'
 true_  "rm glob star"                      'rm_matches dockbox-repo-1 "repo-*"'
 false_ "rm glob non-match"                 'rm_matches dockbox-other "repo-*"'
 
+## tmpfs_used (ls TMPFS column) --------------------------------------------
+df_out='Type    Used Mounted on
+tmpfs     84 /tmp
+ext4  900000 /tmp/cargo-target
+tmpfs 109604 /home/dockbox
+tmpfs 109604 /home/dockbox'
+true_ "tmpfs sums each mount once, skips non-tmpfs" \
+    '[ "$(tmpfs_used <<< "$df_out")" = 107M ]'
+true_ "tmpfs prints G from 1G up" \
+    '[ "$(printf "h\ntmpfs 3145728 /tmp\n" | tmpfs_used)" = 3.0G ]'
+true_ "tmpfs empty is 0M" '[ "$(printf "h\n" | tmpfs_used)" = 0M ]'
+
 ## -n traversal guard ------------------------------------------------------
 exits 2 'apply_flag n ..'  "-n .. rejected"
 exits 2 'apply_flag n ""'  "-n empty rejected"

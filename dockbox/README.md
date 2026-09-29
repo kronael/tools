@@ -55,7 +55,7 @@ dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
-dockbox ls                        # list dockbox containers
+dockbox ls                        # list containers with tmpfs (RAM) and disk use
 dockbox rm [pattern]              # remove containers
 dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
 ```

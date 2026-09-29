@@ -76,14 +76,37 @@ rm_matches() {
     esac
 }
 
+# Total the tmpfs rows of `df -k --output=fstype,used,target` on stdin, each
+# mount once (df repeats a mount given two paths on it), printed as M or G.
+tmpfs_used() {
+    awk 'NR > 1 && $1 == "tmpfs" && !seen[$0]++ { kb += $2 }
+        END {
+            if (kb >= 1048576) printf "%.1fG\n", kb / 1048576
+            else printf "%dM\n", kb / 1024
+        }'
+}
+
 # Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
 # so tests can exercise them directly.
 [ -n "${DOCKBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
     ls)
-        docker container ls -a --filter "name=^dockbox-" \
-            --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
+        {
+            printf 'NAMES\tSTATUS\tCREATED\tTMPFS\tDISK\n'
+            docker container ls -a -s --filter "name=^dockbox-" \
+                --format "{{.Names}}\t{{.State}}\t{{.Status}}\t{{.RunningFor}}\t{{.Size}}" \
+                | while IFS=$'\t' read -r n state status created size; do
+                ram="-"
+                [[ "$state" == running ]] && {
+                    ram=$(docker exec "$n" sh -c \
+                        'IFS=:; df -k --output=fstype,used,target /tmp /tmp/cargo-target $DOCKBOX_EPH_PATHS' \
+                        | tmpfs_used) || ram="?"
+                }
+                printf '%s\t%s\t%s\t%s\t%s\n' \
+                    "$n" "$status" "$created" "$ram" "${size%% (*}"
+            done
+        } | column -t -s $'\t'
         exit 0 ;;
     rm)
         pattern="${2:-}"
