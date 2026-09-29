@@ -26,11 +26,13 @@ first runs through `codex_hook.py`.
 ### lib/ (shared modules, not hooks)
 
 `state.py` — per-session throttle stamp paths, the state root, and
-`hook_event(data)`, the one reader of the event key across all three spellings.
+`hook_event(data)`, which reads the event key across all three spellings.
 
 `local.py`, `memory_nudge.py`, `prompt_nudge.py` and `reclaude.py` import it as
 `lib.state`, resolved from the hook script's own directory (`sys.path[0]`), so
-an install that omits the directory tracebacks on every prompt.
+an install that omits the directory tracebacks on every prompt. `stop.py`
+imports nothing from it: it carries its own `hook_event`, which checks
+`KRONAEL_HOOK_EVENT` before the three payload keys.
 
 ### codex_hook.py (Codex adapter)
 
