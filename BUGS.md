@@ -186,6 +186,20 @@
 
 ## dockbox
 
+- **DOCKBOX-IO-URING-AND-CAPS** (MED, design) — needs sign-off. Docker's
+  default seccomp profile denies `io_uring_setup` (EPERM in the dockbox image,
+  Docker 29.6.2; the host kernel allows it, `io_uring_disabled=0`), so Agave's
+  `solana-test-validator` cannot start in a box. `--cap-add` alone does not
+  reach the session: dockbox runs it as the host UID (`docker exec -u`), which
+  clears effective caps — `SYS_NICE` raised priority for root only, `CapEff`
+  was 0 for UID 1000. **Fix:** (1) `--security-opt seccomp=<profile>`: Docker's
+  default profile plus `io_uring_setup`/`io_uring_enter`/`io_uring_register`,
+  installed next to the script; (2) `--cap-add SYS_NICE,IPC_LOCK,SYS_PTRACE`,
+  with sessions started through `setpriv --ambient-caps` so the caps reach the
+  user's processes; (3) on by default, no new flag. `seccomp=unconfined` does
+  (1) in one line but also lifts the user-namespace and other syscall blocks;
+  no test — design.
+
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
