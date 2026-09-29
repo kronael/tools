@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-import importlib.util
 import json
 import os
 import re
 import sys
 
-spec = importlib.util.spec_from_file_location(
-    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
-)
-hook_state = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(hook_state)
-hook_event = hook_state.hook_event
+from lib.state import hook_event
 
 
 def main():

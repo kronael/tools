@@ -24,19 +24,13 @@ survive compaction in this codebase).
 """
 
 import contextlib
-import importlib.util
 import json
 import os
 import sys
 import time
 
-spec = importlib.util.spec_from_file_location(
-    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
-)
-hook_state = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(hook_state)
-session_state = hook_state.session_state
-hook_event = hook_state.hook_event
+from lib.state import hook_event
+from lib.state import session_state
 
 SESSION_THRESHOLD = 1800  # 30 min wall-clock — one path to the Stop fallback.
 STOP_COUNT_THRESHOLD = 3  # ...or this many Stops, whichever comes first, so a
