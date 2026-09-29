@@ -21,12 +21,16 @@ user-invocable: true
 1. **Detect scope** — `git tag --list` + `git log` since last tag.
    - No prior tags → first release. Default `v0.1.0` (matches pyproject's
      usual default); skip the bump step if pyproject already says it.
-1.5. **Refine** — ALWAYS run `/refine` over every change since the last tag
-   (`git diff <last>..HEAD`) before bumping anything. A bare "release" implies
+1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
+   tree on a first release) before bumping anything. A bare "release" implies
    it — NEVER ask whether to refine. Run it at full depth whatever the diff
-   size: every applicable lens, correctness lenses on the strongest model, an
-   `oracle` second opinion. A change landed after the refine reruns it —
-   NEVER tag code the refine did not see.
+   size: every applicable lens, a bucket needing more than refine's 3 taking
+   further review passes of up to 3 each — NEVER drop a lens; `correctness`
+   lenses on `fable`; and a `codex` second opinion over the same range (the
+   `codex` skill directly, not `oracle`), its findings fed through refine's
+   triage and apply steps — NEVER applied in main context. Any change landing
+   after the refine, other than the refine's own commits and the release
+   commit, reruns it — NEVER tag code the refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).
    Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
@@ -35,6 +39,7 @@ user-invocable: true
    - JS/TS: `package.json` `"version": "..."`
    - CLAUDE.md may pin which file is canonical when multiple exist;
      otherwise discover the deepest one and bump there.
+   - ALWAYS bump the project version wherever `README.md`/`CLAUDE.md` state it.
 3. **Changelog** — `CHANGELOG.md` at repo root.
    - File exists with `[Unreleased]` → move to `[vX.Y.Z] — YYYYMMDD`.
    - File missing → create with one section `[vX.Y.Z] — YYYYMMDD`.
@@ -141,7 +146,8 @@ user-invocable: true
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag
 - ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
-  release a change the refine did not see
+  release a change the refine did not see, other than the refine's own commits
+  and the release commit
 - NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
