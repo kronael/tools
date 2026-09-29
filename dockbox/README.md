@@ -162,8 +162,8 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
-   mount inside the container. Owned by the runtime user, gone when
-   the container exits.
+   mount inside the container. Owned by the runtime user, removed with
+   the box.
 
    Names overmounted by default:
 
@@ -219,8 +219,8 @@ container env, not the overmount layer.
 
 If you already have a populated `node_modules/` on the host, the container
 will see an empty one and re-install on the first command. This is the
-sandbox working correctly. Subsequent commands in the same container reuse
-the mount; exiting the container discards it.
+sandbox working correctly. Later sessions in the same box reuse the mount;
+the box, mounts included, is removed when its last session exits.
 
 ## Authentication
 

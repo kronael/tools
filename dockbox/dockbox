@@ -230,8 +230,8 @@ Options:
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
-    the container, owned by the container user, gone when the container
-    exits. Recursive (monorepo workspaces included).
+    the container, owned by the container user, removed with the box.
+    Recursive (monorepo workspaces included).
 
     Container starts as root; dockbox-init registers the host invoker in
     /etc/passwd, chowns \$HOME (/home/dockbox tmpfs) plus every overmount to
@@ -365,7 +365,7 @@ done
 _session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-# Default tool: opus at high effort — the workhorse. Explicit model
+# Default tool: opus at xhigh effort — the workhorse. Explicit model
 # aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
 if [[ "$entrypoint" == "claude" ]] && \
    ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
