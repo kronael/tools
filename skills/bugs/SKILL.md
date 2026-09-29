@@ -1,10 +1,10 @@
 ---
 name: bugs
 description: >
-  The `BUGS.md` review queue — two sections only (open defects, and what was
-  ruled not a defect), entry format, pruning. NOT for the record-don't-fix
-  policy (that's CLAUDE.md Bug Triage Protocol), NOT for resolved-bug history
-  (that lives in git), NOT for feature backlog (use TODO.md/specs).
+  The `BUGS.md` open-issues queue — the record-don't-fix policy, its two
+  sections (open defects, and what was ruled not a defect), entry format,
+  pruning. NOT for resolved-bug history (that lives in git and /diary), NOT
+  for feature backlog (use TODO.md/specs).
 when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
@@ -25,9 +25,12 @@ did.
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
 project already has.)
 
-**Policy is in CLAUDE.md "Bug Triage Protocol"** — record during audits, never
-fix on discovery, let the user prioritise. This skill is the file mechanics
-only; do not restate the policy.
+## Bug Triage Protocol — record, don't fix
+
+- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
+- NEVER fix bugs immediately just because you found them during a general check
+- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
+- `BUGS.md` is the review queue — log it, move on, let the user prioritise
 
 ## When NOT to record
 
@@ -39,6 +42,8 @@ only; do not restate the policy.
 - NEVER record what you did. An entry describes the defect, not the pass that
   found it. Provenance is at most one clause inside the entry (`CONFIRMED at
   HEAD <date>`), never a section.
+- NEVER footnote a different repo's defect here — fix it, or file it
+  (`/gh-issue`), at the repo that owns it
 
 ## Structure
 
@@ -79,6 +84,9 @@ em-dash, then the body.
 - **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
   `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
   changes behaviour says so, with what was measured.
+- A redesign proposal (new contract, changed control flow, cross-cutting)
+  is an entry with `needs sign-off` and the options sketched; the user
+  signs off on the approach BEFORE it is built.
 
 ## Pin it with a failing test
 
@@ -126,3 +134,11 @@ claims. Deferred entries stay as-is. Not-a-defect lines stay forever.
 Invoke with `prune` to sweep entries whose defect no longer holds. ALWAYS
 re-verify against the current code before deleting — an entry's own status
 line is a claim, not evidence.
+
+## Aggregation (optional)
+
+If a project accumulates issue reports in multiple scratch files, consolidate
+into root `BUGS.md` on request (`aggregate`): enumerate the scratch entries
+read-only, fold them into the subject sections above, and note in each scratch
+file "Consolidated to root `BUGS.md` <date>". The owner wipes the scratch
+files after the merge.

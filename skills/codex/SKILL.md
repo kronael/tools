@@ -31,7 +31,12 @@ prior session it cold-starts cleanly (fresh id, exit 0, no error), so
 `resume --last` is the ONE universal invocation — no first-call special case.
 
 ```bash
-# Auth check first
+# Auth check first — catches "never logged in" only. `codex login status`
+# reads the stored credential without exercising it, so it prints "Logged in
+# using ChatGPT" and exits 0 on a session whose refresh token has been revoked.
+# The revocation surfaces only on a real call, as a wall of
+# `Failed to refresh token: ... refresh_token_invalidated` and
+# `auth error code: token_revoked`, with no model output.
 if ! codex login status >/dev/null 2>&1 \
    && [ -z "${CODEX_API_KEY:-}${OPENAI_API_KEY:-}" ]; then
   echo "codex unavailable — no auth configured"
@@ -84,6 +89,11 @@ codex login status   # "Logged in using ChatGPT" / "Logged in using API key"
 **Path B — env var.** dockbox forwards `OPENAI_API_KEY` and `CODEX_API_KEY` from the host env.
 
 If unavailable, ALWAYS tell the user "codex isn't configured". NEVER crash the turn.
+
+ALWAYS treat `token_revoked` or `401 Unauthorized` in the output as codex being
+unavailable, whatever `login status` claimed, and ALWAYS hand the user
+`! codex login` to run themselves — it is interactive and cannot be driven from
+a tool call. NEVER retry the call: a revoked refresh token does not recover.
 
 ## Rules
 

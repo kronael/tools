@@ -1,7 +1,7 @@
 ---
 name: ship
 description: Drive a spec-sized feature from plan to shipped — fable plans, sonnet implements step-by-step, refine polishes. NOT for one-off or <30min fixes (use improve), and NOT for tracking without driving execution (use TODO.md).
-when_to_use: "ship this feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
+when_to_use: "ship this, ship it, let's ship, then ship, ship the feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
 user-invocable: true
 ---
 
@@ -60,6 +60,42 @@ against an explicit override.
    architecture → `specs/`, release notes → `CHANGELOG.md`) then
    prune `.ship/NN-NAME/` per the folder-layout note above.
 
+## Close-out distillation (step 5)
+
+`.ship/` is scratch, not an archive — unless the project's CLAUDE.md overrides
+that (see Folder layout). For each thing in `.ship/NN-NAME/`, ask "where does
+this belong long-term?":
+
+| Kind of content | Permanent home |
+|---|---|
+| Decisions, discoveries, bug post-mortems | `.diary/YYYYMMDD.md` (today's entry) |
+| Architectural decisions, design choices | `specs/N/<topic>.md` (move + add `status: shipped`) |
+| Release-notes-worthy changes | `CHANGELOG.md` |
+| Recurring rules / preferences / patterns | project `CLAUDE.md` or `MEMORY.md` |
+| Bench numbers worth tracking | `bench-baseline.json` + a short note in CHANGELOG |
+| Critique / review findings | resolved → fold into diary; deferred → `TODO.md` |
+| Forced-rank punch lists for "next sprint" | `TODO.md` + maybe seed the next `.ship/` plan |
+
+Then prune. **NEVER recursively remove the directory** (WISDOM bans `rm -r`
+and wrapped equivalents such as `git rm -rf`): `git rm` the files by name, or
+leave the cleanup to the user.
+
+- NEVER keep a `REPORT.md` "for reference" — commit history + the diary IS the
+  reference.
+- NEVER keep progress notes after the work ships. The progress is `git log` now.
+- NEVER archive into `.ship/archive/` — that is the same hoarding, renamed.
+- Exception: a genuinely long-lived reference document (a spec, a runbook) moves
+  to `specs/` or `docs/` before the rest is pruned.
+
+**When NOT to prune:** the work is paused mid-flight (keep until it ships or is
+cancelled), or a critique/audit doc is the input to the NEXT plan (keep until
+that one starts, then fold it in and prune the source).
+
+Alternative execution path: the `ship` CLI (`uv tool install
+git+https://github.com/kronael/ship`) runs the plan autonomously instead of
+step-by-step subagents. Its planner brief is `cli.md`. Use it when the user
+asks for `ship` the tool; otherwise the subagent workflow above is the default.
+
 ## Guardrails (apply throughout, not just at close-out)
 
 - **Detached HEAD only** — never create or attach a local branch, in
@@ -83,6 +119,9 @@ against an explicit override.
 
 ## Architecture / tradeoffs
 <key decisions, alternatives considered, why this one>
+
+## IO Surfaces
+<external APIs, files, ports, processes touched>
 
 ## Steps
 ### Step 1 — <title>

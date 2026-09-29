@@ -9,7 +9,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py       (commit + diary block, else turn recap)
+Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
@@ -22,6 +22,14 @@ Codex event/matcher wiring is owned by `../codex-hooks.json`; every Codex hook
 first runs through `codex_hook.py`.
 
 ## Components
+
+### lib/ (shared modules, not hooks)
+
+`state.py` — per-session throttle stamp paths, the state root, and
+`hook_event(data)`, the one reader of the event key across all three spellings.
+
+Every hook imports these by absolute path from `~/.claude/hooks/lib/` at import
+time, so an install that omits the directory tracebacks on every prompt.
 
 ### codex_hook.py (Codex adapter)
 
@@ -47,13 +55,15 @@ and Claude to use different lifecycle wiring.
 ### prompt_nudge.py (UserPromptSubmit)
 
 **Input:** JSON with `prompt` field.
-**Output:** `{"ok": true, "systemMessage": "..."}` or silent exit.
+**Output:** `{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit",
+"additionalContext": "..."}}` or silent exit. `additionalContext` reaches the
+model; `systemMessage` reaches only the user.
 
 **Flow:**
 1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
-2. On the first non-empty prompt of a session, append `RESOLVE_NUDGE` (run
-   `/resolve` to triage before acting), unless the prompt already invokes
-   `/resolve`. Continuations stay silent.
+2. On the first non-empty prompt of a session, prepend `SOLVE_NUDGE` (run
+   `/solve` to triage before acting), unless the prompt already invokes
+   `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
 4. Match explicit Codex second-opinion phrases in Claude only: `ask codex`,
@@ -65,8 +75,9 @@ and Claude to use different lifecycle wiring.
 7. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the
    first exact route as `info`.
 
-**State:** `$cwd/.claude/tmp/resolve-nudge-{session_id}` marks that a session's
-first prompt has been seen. An unwritable state dir falls back to silence,
+**State:** the session-keyed stamp `solve-nudge-{session_id}` in
+`~/.claude/state` (`lib/state.py`) marks that a session's first prompt has
+been seen. An unwritable state dir falls back to silence,
 never a per-prompt nudge.
 
 **Routes:** `AGENT_KEYWORDS` dict in the source.
@@ -108,13 +119,14 @@ Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
-**Input:** JSON with `prompt`, `hook_event`, `session_id`, `cwd`.
+**Input:** JSON with `prompt`, `session_id`, `cwd`, and hook event identity
+(`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
 **Output:** `{"ok": true, "systemMessage": "<content>"}` or silent.
 Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
 
 **Flow:**
-1. First prompt per session (tracked via `$cwd/.claude/tmp/local-{sid}`)
+1. First prompt per session (tracked via the `local-{sid}` stamp in `~/.claude/state`)
    or `PreCompact` event → inject `~/.claude/LOCAL.md` and `$cwd/LOCAL.md`
    contents.
 2. On continue/recap keywords (respecting negation), append `RULES`.
@@ -122,7 +134,8 @@ suppressed there to avoid invalid Codex hook JSON.
 
 ### reclaude.py (PreCompact)
 
-**Input:** JSON with `hook_event`.
+**Input:** JSON with hook event identity
+(`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
 **Output:** `{"ok": true, "systemMessage": "<RECLAUDE.md>"}` or silent.
 Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
@@ -140,38 +153,30 @@ unwired.
 
 **Input:** JSON with `cwd`, `session_id`, `stop_hook_active`.
 **Output:** `{"decision": "block", "reason": "..."}` on real Stop,
-advisory `hookSpecificOutput.additionalContext` on PostToolUse,
-`{"ok": true, "systemMessage": "<recap>"}` when nothing blocks, or silent.
+advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 **Flow:**
-1. With `stop_hook_active` set, skip the nudges (prevents recursion) and go
-   straight to the recap.
+1. With `stop_hook_active` set, skip the nudges — this prevents recursion, and
+   with nothing left to say the hook is silent.
 2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
    with `git diff --stat`. A failed `git status` inside a repo appends its
    stderr instead — an unreadable tree is reported, never read as clean.
 3. Check for today's `YYYYMMDD.md` (UTC) under the repo's `.diary/`. Missing
-   or >1h stale → append a diary nudge. The directory need not exist; a repo
-   without one is nudged to start it.
+   or >1h stale → append a diary nudge, once per session: the stamp
+   `diary-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) never
+   expires. The directory need not exist; a repo without one is nudged to
+   start it.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
-5. Otherwise, on a real Stop outside Codex, build the recap: `git log
-   --since=<stamp>` (or `head` when the session has no stamp yet), `git status
-   --porcelain -z` (`-z` never quotes, so non-ASCII and spaced paths survive)
-   filtered so untracked paths count only when touched after the stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
-   for merge/rebase/cherry-pick/revert/bisect in progress. Each git call
-   shares one `RECAP_BUDGET` deadline; any failure drops the whole recap and
-   leaves the stamp untouched so the next turn's window still covers this one.
-6. Emit the recap as `systemMessage` and write the stamp.
-
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
-`<git-dir>/claude-commit-nudge` (nudge throttle) and
-`<git-dir>/claude-recap-{session_id}` (ISO time of the last recap).
+`<git-dir>/claude-commit-nudge` (nudge throttle).
 
 ### memory_nudge.py (PreCompact + Stop)
 
 **Input:** JSON with `cwd`, `session_id`, `stop_hook_active`, and hook event
-identity (`hook_event`/`hook_event_name`/`hookEventName`).
+identity (`hook_event`/`hook_event_name`/`hookEventName`, read via
+`lib/state.py`).
 **Output:** `PreCompact` → `{"ok": true, "systemMessage": "..."}` (local.py /
 reclaude.py idiom). `Stop` → `hookSpecificOutput.additionalContext` (stop.py
 PostToolUse idiom). Silent otherwise.
@@ -187,7 +192,7 @@ PostToolUse idiom). Silent otherwise.
    The count gate is what reaches *short* sessions that never compact and
    never approach 30 min.
 
-State: `$cwd/.claude/tmp/memory-nudge-{start,done}-{session_id}`. Much lower
+State: the `memory-nudge-{start,done}-{session_id}` stamps in `~/.claude/state` (`lib/state.py`). Much lower
 frequency than stop.py's recurring diary/commit nudges — at most once via
 PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
 
@@ -205,7 +210,7 @@ stdin:
 }
 
 stdout (prompt_nudge.py match):
-{"ok": true, "systemMessage": "Invoke @improve."}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke @improve."}}
 ```
 
 ### Stop

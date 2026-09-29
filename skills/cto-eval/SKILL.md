@@ -29,6 +29,11 @@ Rules:
 - If the evidence is unclear because the system may break under hostile input,
   corrupted state, replay, concurrency, or exploit-like conditions, invoke
   `red-eval` as a separate deeper pass instead of stretching CTO scope.
+- Findings are claims, not facts — the caller re-verifies load-bearing ones
+  before acting on them (`Skill(sweep)` § verify a finding before
+  you fix it). A "DISPUTED" or "CONFIRMED" verdict in this skill's own report
+  is the sub's self-check; it does not exempt the caller from re-deriving a
+  claim whose direction matters (e.g. which side of a ratio is baseline).
 - When paired with a CEO eval, keep the two reports separate and run a synthesis
   pass after: both lenses flagged it → top priority; one lens only → that
   domain's work; they disagree → escalate to the owner.

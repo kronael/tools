@@ -14,16 +14,29 @@ Fires on:
   one/two-turn sessions stay under the count and never nudge. Not recurring
   like stop.py's diary/commit nudges.
 
+Once-per-session state lives in ~/.claude/state, keyed by session_id alone
+(see lib/state.py) — a cwd-keyed guard reset every time the session changed
+directory, so the "once" became once per directory.
+
 No LLM call. Never blocks. Emits additionalContext (Stop) or systemMessage
 (PreCompact, matching the local.py/reclaude.py idiom already proven to
 survive compaction in this codebase).
 """
 
 import contextlib
+import importlib.util
 import json
 import os
 import sys
 import time
+
+spec = importlib.util.spec_from_file_location(
+    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
+)
+hook_state = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(hook_state)
+session_state = hook_state.session_state
+hook_event = hook_state.hook_event
 
 SESSION_THRESHOLD = 1800  # 30 min wall-clock — one path to the Stop fallback.
 STOP_COUNT_THRESHOLD = 3  # ...or this many Stops, whichever comes first, so a
@@ -41,23 +54,6 @@ NUDGE_TEXT = (
     'session-memory evaluation and skill/pattern extraction. Skip if '
     'nothing qualifies; do not force it.'
 )
-
-
-def hook_event(data):
-    for key in 'hook_event', 'hook_event_name', 'hookEventName':
-        value = data.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ''
-
-
-def state_path(cwd, session_id, name):
-    state_dir = os.path.join(cwd, '.claude', 'tmp')
-    try:
-        os.makedirs(state_dir, exist_ok=True)
-    except OSError:
-        return None
-    return os.path.join(state_dir, f'{name}-{session_id}')
 
 
 def emit_precompact():
@@ -111,22 +107,21 @@ def main():
         sys.exit(0)
 
     event = hook_event(data)
-    cwd = data.get('cwd') or '.'
     session_id = data.get('session_id') or 'default'
 
     if event == 'PreCompact':
         emit_precompact()
         # Suppress the later Stop fallback — this session already got a
         # memory nudge at the natural (compaction) moment.
-        touch_done(state_path(cwd, session_id, 'memory-nudge-done'))
+        touch_done(session_state('memory-nudge-done', session_id))
         sys.exit(0)
 
     if event == 'Stop':
-        done_file = state_path(cwd, session_id, 'memory-nudge-done')
+        done_file = session_state('memory-nudge-done', session_id)
         if done_file and os.path.exists(done_file):
             sys.exit(0)
 
-        start_file = state_path(cwd, session_id, 'memory-nudge-start')
+        start_file = session_state('memory-nudge-start', session_id)
         if start_file is None:
             sys.exit(0)
 

@@ -13,6 +13,13 @@ def run(monkeypatch, capsys, data):
     return json.loads(out) if out else None
 
 
+@pytest.fixture(autouse=True)
+def state_root(tmp_path, monkeypatch):
+    root = tmp_path / 'state'
+    monkeypatch.setenv('KRONAEL_HOOK_STATE', str(root))
+    return root
+
+
 def base(tmp_path, event, **extra):
     return {
         'hook_event': event,
@@ -22,12 +29,11 @@ def base(tmp_path, event, **extra):
     }
 
 
-def test_precompact_emits_and_marks_done(tmp_path, monkeypatch, capsys):
+def test_precompact_emits_and_marks_done(tmp_path, monkeypatch, capsys, state_root):
     out = run(monkeypatch, capsys, base(tmp_path, 'PreCompact'))
 
     assert out == {'ok': True, 'systemMessage': memory_nudge.NUDGE_TEXT}
-    done = tmp_path / '.claude' / 'tmp' / 'memory-nudge-done-sess'
-    assert done.exists()
+    assert (state_root / 'memory-nudge-done-sess').exists()
 
 
 def test_precompact_suppresses_later_stop(tmp_path, monkeypatch, capsys):
@@ -37,12 +43,11 @@ def test_precompact_suppresses_later_stop(tmp_path, monkeypatch, capsys):
     assert out is None
 
 
-def test_first_stop_is_silent_and_records(tmp_path, monkeypatch, capsys):
+def test_first_stop_is_silent_and_records(tmp_path, monkeypatch, capsys, state_root):
     out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
 
     assert out is None
-    start = tmp_path / '.claude' / 'tmp' / 'memory-nudge-start-sess'
-    started, count = memory_nudge.read_start(str(start))
+    started, count = memory_nudge.read_start(str(state_root / 'memory-nudge-start-sess'))
     assert started is not None
     assert count == 1
 
@@ -66,10 +71,10 @@ def test_fires_once_then_silent(tmp_path, monkeypatch, capsys):
     assert out is None
 
 
-def test_wall_clock_path_fires_before_count(tmp_path, monkeypatch, capsys):
+def test_wall_clock_path_fires_before_count(tmp_path, monkeypatch, capsys, state_root):
     # Seed a start well past the wall-clock threshold with a low count; the
     # next Stop should fire via elapsed time, not the count gate.
-    start = tmp_path / '.claude' / 'tmp' / 'memory-nudge-start-sess'
+    start = state_root / 'memory-nudge-start-sess'
     start.parent.mkdir(parents=True)
     memory_nudge.write_start(
         str(start), 100.0, 1
@@ -81,5 +86,16 @@ def test_wall_clock_path_fires_before_count(tmp_path, monkeypatch, capsys):
 
 def test_stop_hook_active_bails(tmp_path, monkeypatch, capsys):
     out = run(monkeypatch, capsys, base(tmp_path, 'Stop', stop_hook_active=True))
+
+    assert out is None
+
+
+def test_cwd_change_does_not_reset_once_per_session(tmp_path, monkeypatch, capsys):
+    """The guard is session-keyed: cd'ing between repos must not re-nudge."""
+    for _ in range(memory_nudge.STOP_COUNT_THRESHOLD):
+        run(monkeypatch, capsys, base(tmp_path, 'Stop'))
+    elsewhere = tmp_path / 'other-repo'
+    elsewhere.mkdir()
+    out = run(monkeypatch, capsys, base(elsewhere, 'Stop'))
 
     assert out is None

@@ -19,6 +19,9 @@ def test_normalize_keeps_claude_shape() -> None:
     assert payload['session_id'] == 's1'
     assert payload['prompt'] == 'commit this'
     assert payload['tool_name'] == 'Read'
+    # The adapter is the only process that knows this is Codex, so it is the
+    # only one that says so — in band, per message, never inherited.
+    assert payload['harness'] == 'codex'
     assert payload['tool_input'] == {'file_path': 'x.py'}
     assert payload['hook_event'] == 'UserPromptSubmit'
 

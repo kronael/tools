@@ -81,12 +81,15 @@ A pure-plugin design would register skills/agents/hooks via
 `plugin.json` and skip the copy step. The hybrid design exists for
 two practical reasons that pure-plugin doesn't provide:
 
-**1. Two-way sync, not one-way push.** The bundle in `~/.claude/`
+**1. Two-way sync, not one-way push.** Three sides: **source** (this
+repo), **live** (`~/.claude/` on a host — the running bundle), and
+**upstream** (the `origin` remote). The bundle in `~/.claude/` (live)
 is the user's working copy. They customize skills, fix bugs in
 hooks, add personal patterns. When they want to contribute back, they
-diff their `~/.claude/` against the source repo and PR the changes.
-A pure-plugin install is read-only — every edit is overwritten on
-update.
+diff their live `~/.claude/` against source and PR the changes to
+upstream. A pure-plugin install is read-only — every edit is overwritten on
+update. Install reconciles source ↔ live; `git push` reaches upstream, and
+live never assumes it matches upstream.
 
 **2. LLM-coordinated merges, not blind overrides.** The install step
 is an LLM following a procedure (`kronael/install/SKILL.md`),

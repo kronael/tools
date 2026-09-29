@@ -11,6 +11,7 @@ user-invocable: true
 
 - `/commit`: ALWAYS proceed
 - Auto (hook): throttled ~once per 10 min — split accumulated work into coherent commits, don't dump it all in one.
+- Otherwise: finished, verified, user-directed work is committed by default, split per Splitting below — NEVER ask "should I commit?" as a separate question. Hold off only for a user-owned call: unclear scope, not what was asked, an unapproved redesign. `/refine`, `/ship`, `/release` commit by design.
 
 ## Splitting
 
@@ -37,6 +38,7 @@ Format shapes:
 - `build: Change what`
 - `ci: Change what`
 - `revert: <subject>`
+- `merge: <subject>`
 - `release: vX.Y.Z`
 
 Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. Test: "If applied, this commit will: _____"

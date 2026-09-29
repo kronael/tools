@@ -37,10 +37,12 @@ CI_WORKFLOWS := \
 	$(W)/test-bhctl.yml \
 	$(W)/lint.yml
 
-# test-%/clean-% are deliberately absent from .PHONY: make skips implicit-rule
-# search for a phony target, so listing them makes the pattern rules below
-# match and then do nothing.
-.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix
+# NEVER list the `test-%`/`clean-%` expansions here: naming them as .PHONY
+# prerequisites registers explicit commandless rules for those exact targets,
+# and an explicit rule beats a pattern rule, so `make test-hooks` silently ran
+# nothing. The pattern rule is phony-in-effect anyway — the target file never
+# exists.
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix lints
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
@@ -49,8 +51,9 @@ help:
 	@echo "make clean-<dir> - clean one project"
 	@echo "make workflows   - regenerate PROJECTS from */Makefile"
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
-	@echo "make skills-frontmatter     - lint SKILL.md YAML for Codex"
+	@echo "make skills-frontmatter     - lint SKILL.md (frontmatter YAML + wisdom body rules)"
 	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
+	@echo "make lints       - prove co-located ast-grep lint rules against fixtures"
 
 test: $(addprefix test-,$(PROJECTS))
 	bash tests/drift_test.sh
@@ -80,3 +83,6 @@ skills-frontmatter:
 
 skills-frontmatter-fix:
 	python3 hooks/skill_frontmatter_lint.py --write skills
+
+lints:
+	python3 lints/check.py

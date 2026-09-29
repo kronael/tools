@@ -3,20 +3,25 @@
 # dependencies = ["telethon"]
 # ///
 
+"""Archive Telegram group messages to JSONL. Rerun to collect what is new.
+
+usage: uv run main.py <group> [group ...]
+
+Credentials come from the environment:
+  TELEGRAM_API_ID, TELEGRAM_API_HASH   https://my.telegram.org/apps
+  TELEGRAM_PHONE                       user auth, asks for the code once
+  TELEGRAM_BOT_TOKEN                   bot auth instead, cannot read history
+"""
+
 import asyncio
 import contextlib
 import json
+import os
 import sys
-import tomllib
 from pathlib import Path
 
 from telethon import TelegramClient
 from telethon.tl.types import Message
-
-
-def load_cfg(path: str) -> dict:
-    with open(path, 'rb') as f:
-        return tomllib.load(f)
 
 
 def out_path(group: str) -> Path:
@@ -36,6 +41,43 @@ def last_id(p: Path) -> int:
     return last
 
 
+def resolve_group(group: str) -> str | int:
+    """Telethon takes an int for a chat id and a string for a username.
+
+    A supergroup id must already carry its -100 prefix; nothing is added here.
+    """
+    text = group.strip()
+    if text.lstrip('-').isdigit():
+        return int(text)
+    return text.removeprefix('@')
+
+
+def build_client() -> TelegramClient:
+    """Read the credentials from the environment, or say what is missing."""
+    api_id = os.environ.get('TELEGRAM_API_ID', '')
+    api_hash = os.environ.get('TELEGRAM_API_HASH', '')
+    if not api_id or not api_hash:
+        print(
+            'set TELEGRAM_API_ID and TELEGRAM_API_HASH from https://my.telegram.org/apps',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    Path('./tmp').mkdir(exist_ok=True)
+    return TelegramClient('./tmp/session', int(api_id), api_hash)
+
+
+async def start_client(client: TelegramClient) -> None:
+    token = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+    phone = os.environ.get('TELEGRAM_PHONE', '')
+    if token:
+        await client.start(bot_token=token)
+        return
+    if not phone:
+        print('set TELEGRAM_PHONE, or TELEGRAM_BOT_TOKEN for a bot', file=sys.stderr)
+        sys.exit(1)
+    await client.start(phone=lambda: phone)
+
+
 def msg_to_dict(m: Message) -> dict:
     return {
         'id': m.id,
@@ -48,44 +90,49 @@ def msg_to_dict(m: Message) -> dict:
     }
 
 
-async def run(cfg: dict) -> None:
-    group = cfg['group']
+async def collect_group(client: TelegramClient, group: str) -> int:
+    """Append every message newer than the last one already on disk."""
     p = out_path(group)
     resume_id = last_id(p)
 
-    session = f'./tmp/session_{group}'
-    client = TelegramClient(session, int(cfg['api_id']), cfg['api_hash'])
+    entity = await client.get_entity(resolve_group(group))
+    total = (await client.get_messages(entity, limit=1)).total
+    print(f'{group}: total={total}, resuming after id={resume_id}')
 
-    if 'bot_token' in cfg:
-        await client.start(bot_token=cfg['bot_token'])
-    else:
-        await client.start(phone=lambda: cfg['phone'])
+    fetched = 0
+    with open(p, 'a') as f:  # noqa: ASYNC230
+        async for m in client.iter_messages(entity, reverse=True, min_id=resume_id):
+            if not isinstance(m, Message):
+                continue
+            f.write(json.dumps(msg_to_dict(m)) + '\n')
+            fetched += 1
+            if fetched % 200 == 0:
+                done = resume_id + fetched
+                pct = round(100 * done / total) if total else '?'
+                print(f'{group}: fetched {fetched} ({pct}%)')
 
+    print(f'{group}: {fetched} new -> {p}')
+    return fetched
+
+
+async def run(groups: list[str]) -> None:
+    client = build_client()
+    await start_client(client)
+
+    total = 0
     async with client:
-        entity = await client.get_entity(group)
-        total = (await client.get_messages(entity, limit=1)).total
-        print(f'group total={total}, resuming after id={resume_id}')
+        for group in groups:
+            total += await collect_group(client, group)
 
-        fetched = 0
-        with open(p, 'a') as f:  # noqa: ASYNC230
-            async for m in client.iter_messages(entity, reverse=True, min_id=resume_id):
-                if not isinstance(m, Message):
-                    continue
-                f.write(json.dumps(msg_to_dict(m)) + '\n')
-                fetched += 1
-                if fetched % 200 == 0:
-                    done = resume_id + fetched
-                    pct = round(100 * done / total) if total else '?'
-                    print(f'fetched {fetched} ({pct}%)')
-
-    print(f'done — {fetched} new messages -> {p}')
+    print(f'done — {total} new messages across {len(groups)} groups')
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print('usage: uv run main.py <config.toml>', file=sys.stderr)
+    groups = sys.argv[1:]
+    if not groups:
+        print('usage: uv run main.py <group> [group ...]', file=sys.stderr)
         sys.exit(1)
-    asyncio.run(run(load_cfg(sys.argv[1])))
+    asyncio.run(run(groups))
 
 
 if __name__ == '__main__':

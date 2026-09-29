@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import io
+import json
+
 import pytest
 from pretool_nudge import extract_path
+from pretool_nudge import main
 from pretool_nudge import process
 from pretool_nudge import skill_for
 
@@ -39,10 +43,6 @@ SKILL_CASES = [
     ('app.service', '/ops'),
     ('cron.timer', '/ops'),
     ('proxy.socket', '/ops'),
-    ('/repo/skills/review/SKILL.md', '/wisdom'),
-    ('SKILL.md', '/wisdom'),
-    ('/repo/CLAUDE.md', '/wisdom'),
-    ('/home/user/.claude/AGENTS.md', '/wisdom'),
     ('foo.xyz', None),
     ('foo', None),
     ('README', None),
@@ -109,7 +109,25 @@ BLOCK_CASES = [
     'git add --all',
     'git commit --amend',
     'git commit -m fix --no-verify',
+    'git commit -m "fix\n\nCo-Authored-By: A <a@b.c>"',
+    'git merge --squash feature',
+    'git rebase -i HEAD~3',
+    'git checkout -b feature',
+    'git switch -c feature',
+    'git worktree add /repo/.wt origin/master',
+    'killall node',
     'rm -rf tmp/build',
+]
+
+NONBLOCK_CASES = [
+    'git push',
+    'git commit -m "normal message"',
+    'git merge origin/master',
+    'git rebase origin/master',
+    'git checkout master',
+    'git checkout -- file.py',
+    'git worktree add --detach /repo/.wt origin/master',
+    'git status',
 ]
 
 
@@ -145,9 +163,45 @@ def test_process_blocks_unsafe_commands(command: str) -> None:
     assert 'unsafe command blocked' in result['reason']
 
 
-def test_process_blocks_recursive_codex_inside_codex(monkeypatch) -> None:
-    monkeypatch.setenv('KRONAEL_IN_CODEX', '1')
-    result = process({'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}})
+@pytest.mark.parametrize('command', NONBLOCK_CASES)
+def test_process_allows_safe_commands(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+def test_process_blocks_recursive_codex_inside_codex() -> None:
+    result = process(
+        {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
+    )
     assert result is not None
     assert result['decision'] == 'block'
     assert 'recursive codex' in result['reason']
+
+
+@pytest.mark.parametrize('command', ['rm -r build', 'rm -R build', 'rm --recursive build', 'sudo rm -r /srv/x', 'echo done && rm -r tmp'])
+def test_process_blocks_recursive_removal_without_force(command: str) -> None:
+    """Recursive removal deletes a tree with or without -f, so -r alone blocks."""
+    result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
+    assert result is not None, command
+    assert result['decision'] == 'block'
+
+
+@pytest.mark.parametrize('command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version'])
+def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> None:
+    """A block is a ban, not a nudge: the dedup cache must never swallow it.
+
+    A Bash call carries no file path, so every one shares a single dedup key.
+    Routing blocks through that cache disarmed the ban after the first hit.
+    """
+    monkeypatch.setenv('HOME', str(tmp_path))
+    payload = json.dumps({
+        'tool_name': 'Bash', 'session_id': 'same-session',
+        'tool_input': {'command': 'rm -r build'},
+    })
+    for attempt in range(3):
+        monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+        main()
+        assert '"block"' in capsys.readouterr().out, f'attempt {attempt + 1} not blocked'

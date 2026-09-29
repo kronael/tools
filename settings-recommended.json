@@ -17,11 +17,9 @@
     "ask": [
       "Bash(git push*)",
       "Bash(git pull*)",
-      "Bash(ssh *)",
       "Bash(rsync *)",
       "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
-      "Bash(gh pr review --approve*)",
       "Bash(gh release create*)",
       "Bash(gh repo create*)"
     ],
@@ -31,6 +29,8 @@
       "Bash(rm -fr*)",
       "Bash(rm --recursive*)",
       "Bash(chmod 777*)",
+      "Bash(ssh *)",
+      "Bash(gh pr review --approve*)",
       "SendFeedback(*)"
     ],
     "defaultMode": "default"

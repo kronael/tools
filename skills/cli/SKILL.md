@@ -18,6 +18,7 @@ and design rules.
 ## Config Precedence
 
 CLI flags > env vars > config files > defaults. Fail fast on invalid config.
+TOML config file is the first positional param, the API-keys file the second.
 
 ## Exit Codes
 

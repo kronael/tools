@@ -3,6 +3,13 @@
 Manual smoke tests. Pipe a JSON payload into each hook and verify the
 output / exit code.
 
+Run the automated suite first — it covers JSON parse errors, routing and
+the nudge stamps on every hook:
+
+```bash
+uv run --with pytest --with pyyaml python -m pytest hooks -q
+```
+
 ## 1. JSON Error Handling (should NOT crash)
 
 ```bash
@@ -98,11 +105,6 @@ git -C /tmp/stoptest init
 echo '{"cwd": "/tmp/stoptest"}' | python3 ~/.claude/hooks/stop.py
 rm -rf /tmp/stoptest
 
-# Clean repo with a fresh diary → turn recap in systemMessage (twice: first
-# Stop shows `head`, the next shows `since HH:MMZ`)
-echo '{"cwd": "'$PWD'", "session_id": "smoke", "stop_hook_active": true}' | python3 ~/.claude/hooks/stop.py | jq -r .systemMessage
-echo '{"cwd": "'$PWD'", "session_id": "smoke", "stop_hook_active": true}' | python3 ~/.claude/hooks/stop.py | jq -r .systemMessage
-rm "$(git rev-parse --git-dir)/claude-recap-smoke"
 ```
 
 ## Debugging a Failed Test

@@ -2,9 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> Development conventions (response style, boring-code philosophy, commit/test
-> rules) live in the global wisdom file installed at `~/.claude/CLAUDE.md`
-> (sourced from `skills/global/SKILL.md`). This file is **repo-specific only**.
+> Skill routing, the map of where things live, and the safety NEVER list live
+> in the global wisdom file installed at `~/.claude/CLAUDE.md` (sourced from
+> `skills/global/SKILL.md`); each rule lives in the skill that owns it
+> (`commit`, `software`, `ops`, …). This file is **repo-specific only**.
 > Keep it under 200 lines.
 
 ## What this repo is
@@ -71,8 +72,12 @@ Why the install step exists at all:
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
+- **Three sides**: **source** (this repo tree), **live** (`~/.claude/` on a
+  host — the running bundle), **upstream** (the `origin` remote). Install
+  reconciles source ↔ live; `git push` reaches upstream. NEVER conflate them —
+  live can be ahead of, behind, or forked from upstream.
 - **Install is a two-way sync, not a one-way copy** — source-advanced files
-  update the install; a clean live-ahead superset (source-owned file, additions
+  update live; a clean live-ahead superset (source-owned file, additions
   only) is reverse-synced INTO the repo, never overwritten. Overwriting a
   live-ahead file downgrades local work.
 - **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org
@@ -88,7 +93,7 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Skills** (`skills/<name>/SKILL.md`) auto-activate by file context
   (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
   `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
-  explicit dispatch (`/resolve`) is the intended path. Index: `skills/README.md`.
+  explicit dispatch (`/solve`) is the intended path. Index: `skills/README.md`.
 - **Agents** (`agents/*.md`) — task workers, mostly invoked via
   slash-command wrappers.
 - **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is

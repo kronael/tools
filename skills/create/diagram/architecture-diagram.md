@@ -38,6 +38,10 @@ Based on [Cocoon AI's architecture-diagram-generator](https://github.com/Cocoon-
 
 ## Workflow
 
+Nodes for this medium: components as nodes, connections as edges — model the
+component list + connection list as data first, then render to SVG; see
+`../SKILL.md` § Principle.
+
 1. User describes their system architecture (components, connections, technologies)
 2. Generate the HTML file following the design system below
 3. Save with `write_file` to a `.html` file (e.g. `~/architecture-diagram.html`)

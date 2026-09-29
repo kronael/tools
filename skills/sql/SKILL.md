@@ -51,3 +51,7 @@ rules. Below are SQL-specific additions.
 - Wrap in `DO $migration$ BEGIN ... END; $migration$;` with version check
 - Stored procedure params: `_param` suffix, locals: `_var` suffix
 - Dynamic SQL: `format()` with `%I` (identifiers), `%s` (values)
+
+## Lints
+- No ast-grep pack: ast-grep has no SQL grammar. Enforce the style above with
+  sqlfluff or native tooling.

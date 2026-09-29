@@ -1,5 +1,124 @@
 # Changelog
 
+## [v0.4.2] — 20260927
+
+> kronael v0.4.2 — two lines become one
+>
+> The upstream and local development lines are reconciled into a single master, and the three sync sides are named.
+>
+> • merge — upstream's line (its v0.3.98) merged with the local ripwire/codex/wisdom work; the Stop recap stays gone (Claude Code ships its own)
+> • install — the sync docs now name source, live (~/.claude), and upstream (origin) explicitly
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Reconciled `upstream/master` (its `v0.3.98`) with the local release line: kept the local subtracted wisdom shape and the removed Stop recap, took upstream's readme/specs router restructure, unioned the bug queue and skill rules.
+- `install` / `CLAUDE.md` / `ARCHITECTURE.md`: name the three sync sides — source (this repo), live (`~/.claude`), upstream (`origin`) — so a live sync is never confused with an upstream push.
+
+## [v0.4.1] — 20260927
+
+> kronael v0.4.1 — codex knows when it's logged out
+>
+> A revoked codex token now reads as unavailable, and you get the one command that fixes it.
+>
+> • codex — a revoked token counts as unavailable despite `login status`; hands you `! codex login`, never retries
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codex`: a revoked refresh token now reads as unavailable — `codex login status` exits 0 and prints "Logged in" without exercising the credential, so `token_revoked`/401 in the real call is the signal; hand the user the interactive `! codex login`, never retry.
+
+## [v0.4.0] — 20260925
+
+> kronael v0.4.0 — one recap, not two
+>
+> Claude Code already generates a recap of its own, so the Stop hook stops writing a second one and goes back to the commit and diary nudges.
+>
+> • hooks — the Stop turn recap is removed; the built-in recap is left at its default
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Removed
+
+- `stop.py`'s turn recap, and with it the per-session stamp, the
+  `RECAP_BUDGET` deadline, the `RECAP_COMMITS`/`RECAP_PATHS` caps and the
+  landed/dirty/stuck builders. Claude Code generates its own recap from the
+  conversation — the away summary, keyed `awaySummaryEnabled` and shown as
+  *recap* in `/config`, with `/recap` as the on-demand form — so a second one
+  meant two summaries at every stop, and the git one spoke even on a quiet turn
+  (`since 07:48Z: no commits`). The hook is back to the commit and diary nudges.
+  `awaySummaryEnabled` is deliberately left unset, at Claude Code's default.
+
+## [v0.3.99] — 20260925
+
+> kronael v0.3.99 — Codex gets the turn recap, and the installer can copy again
+>
+> The Stop recap now runs in Codex sessions too, and the rsync the install protocol prescribes is no longer refused by the toolkit's own deny rule.
+>
+> • hooks — the turn recap is no longer withheld under Codex
+> • settings — `rsync` moves from deny to ask, so the narrow `~/.claude` allow can take effect
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- `stop.py` withheld the recap whenever `KRONAEL_IN_CODEX` was set, so a Codex
+  session got the commit and diary nudges but never the turn summary. The bridge
+  already routed `stop`'s `systemMessage` through the nudge rewrite, so the
+  exclusion was the only thing in the way.
+- `codex_hook.py` returned the raw hook stdout for a Stop carrying a
+  `systemMessage`, skipping both the `ok` strip and the `/skill` → `@skill`
+  rewrite every other nudge gets.
+- `settings-recommended.json` denied `Bash(rsync *)` while allowing
+  `Bash(rsync * ~/.claude/*)`. Deny wins, so the install protocol's own copy step
+  was refused and had to fall back to `cp`. The blanket rule is now `ask`, the
+  narrow allow stands, and a dry-run to `~/.claude` runs without a prompt.
+
+## [v0.3.98] — 20260926
+
+> kronael v0.3.98 — two lines, one bundle, Bun for new TypeScript
+>
+> The local hooks-and-lints line and upstream through v0.3.97 are one bundle again, and a new TypeScript project starts on Bun with Biome.
+>
+> • TypeScript — a new project runs on Bun with Biome and tsc; an existing one keeps its tooling
+> • Sync — the merge skill defines it: fetch, size, preview, merge origin/master into the detached HEAD
+> • Hooks — Stop recaps the turn, blocks on an unreadable tree, nudges the diary once per session
+> • Prompt nudge — the first prompt of a session gets a /solve nudge on the channel the model reads
+> • Wisdom — push only when asked, dated review branches, commit by default, in a 128-line routed file
+> • Tools — tw-fetch reads a post keyless, tg-fetch takes groups as arguments, gloww fits the terminal
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `ts` skill § Tooling: a new TypeScript project runs on Bun (runtime, package manager, test runner) with Biome (lint, format) and `tsc --noEmit`; `prepare`/`check`/`right`/`test` map to `bun install`/`biome check`/`tsc --noEmit`/`bun test`; an existing project keeps its tooling until asked. `software/strict-typing.md` carries the `biome.json` floor (verified against Biome 2.5.14) and a Biome column in the escape-hatch table; `tsx` scaffolds with `create-next-app --biome`; `astgrep`, `refine/ts.md` and the `software` router follow.
+- `merge` skill § Sync: fetch origin, size and preview the merge, merge `origin/master` into the detached HEAD with zdiff3, trace deletions against both parents, verify, commit. Distinct from the install's file sync and from `sync-tools-skills`.
+- `tw-fetch/mirror.py` reads X posts by id or url through `api.fxtwitter.com`, no key; `tw-fetch/README.md` states what the mirror cannot do.
+- `gloww` reads markdown with glow at the terminal's real width.
+- Co-located ast-grep lint packs (ts, rust, python) with a fixture harness and `make lints`; `learn` extracts lint rules from sessions.
+- `caveman` skill wraps the output style; the style budgets rendered lines by question shape and takes ASD-STE100 as the language floor.
+- `emacs` skill, `software/js-perf.md`, `software/lsp.md`, `create` collage mode, `demo/composed.md` and `demo/cutout.md`, `rs/cranelift.md`.
+- SKILL.md lint: a missing key, an unknown key, a name that is not the directory, and SHOULD hard-fail; NOT-for, length, listing budget and router hygiene warn.
+- The pretool guard also blocks squash merges, interactive rebases, branch creation, `worktree add` without `--detach`, `killall` and Co-Authored-By trailers.
+
+### Changed
+
+- Carries upstream v0.3.94–v0.3.97: push, PR and release commands ask instead of being denied, `readme` router with `shape.md`, `pr-draft` shape, the `attribution.commit` setting, `bugs` entries pinned by a failing test. The local v0.3.94 became this release after the tag collision.
+- `skills/global/SKILL.md` (the wisdom file) routes instead of restating — 128 lines: routing, conduct, map, the NEVER list; each rule lives in the skill that owns it. It carries upstream's policy: push only when the user asks in that message, never to `master` without a second approval, dated `YYYYMMDD_<tag>` review branches, commit finished work by default, write in the idiom around it.
+- `resolve` is `solve` and user-invocable; every reference follows.
+- `bugs` skill: two sections (open defects, ruled not a defect), grouped by subject, fixed entries leave the file; it owns the Bug Triage Protocol. `BUGS.md` follows that shape.
+- `tg-fetch`: groups are positional arguments, each resumed from its own `.jl`; credentials come from `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_PHONE` or `TELEGRAM_BOT_TOKEN`; the TOML config and its template are gone.
+- dockbox: `codex` target runs `gpt-5.6-sol` at xhigh beside upstream's `claude-opus-5-5`, `claude-fable-5-1` and `gpt-6-astra` pins; the `opus` agent names Opus 5.5.
+- `refine` (upstream's runbook with PR-thread intake) keeps the cross-boundary lens and the code.md sign-off pointer; `review give` keeps the opus fallback for the fable pass.
+
+### Fixed
+
+- `hooks/stop.py`: a failed `git status` blocks with its stderr instead of reading as clean; the diary nudge fires once per session (session-keyed stamp in `~/.claude/state`) and never writes a header; a timed-out git call no longer kills the hook; when nothing blocks, a compact turn recap is shown.
+- `hooks/prompt_nudge.py`: output goes through `hookSpecificOutput.additionalContext`, the only UserPromptSubmit field the model reads; the Codex guard reads the payload `harness`, not a dead env var.
+- `hooks/local.py`, `hooks/reclaude.py`: read the `hook_event_name` Claude Code sends, so LOCAL.md and RECLAUDE.md re-inject on PreCompact again; `hook_event()` lives once in `hooks/lib/state.py`.
+- `git push` is not blocked by the pretool guard (upstream's call); the stale test case moved to the non-blocking set.
+- Four orphan hooks withdrawn again and named in the install prune list, so a resync cannot vendor them back.
+- gloww: an explicit glow style skips the terminal query that ate pager keystrokes; `-wN` parses as a width flag.
+- `software` frontmatter fits the 1,536-char listing cap (1,274), so its last keywords route again.
+
 ## [v0.3.97] — 20260925
 
 > kronael v0.3.97 — bugs come with a failing test
@@ -808,7 +927,7 @@ file answers to that name.
 - New skills `finalize-crate`, `go-gl` (native OpenGL desktop apps in Go), `speed-demo` (benchmark-reveal GIFs), and `port-to-go` (faithful into-Go transcode with differential traces).
 - install: an installed-release marker in `~/.claude/kronael-install-manifest.json` (version, git commit/describe, timestamp) with a per-file sha baseline; preflight reports the installed→source delta and which releases a reinstall will apply.
 - Global wisdom: a mobile-terminal reply cap (~17 lines, bottom-line last), a System-change discipline section (no-duplication, fail-loud, retry-only-transient, fix-causes, redesign sign-off), and a no-recursive-`rm` rule.
-- Codex: global guidance now loads every applicable `CLAUDE.md` alongside `AGENTS.md` and applies the `80% caveman` response policy without replacing user rules.
+- Codex: global guidance now loads every applicable `CLAUDE.md` alongside `AGENTS.md` and applies the `caveman` response policy without replacing user rules.
 
 ### Changed
 - Eval family: `hacker-eval` → `red-eval`, `eye-13yo` → `13yo-eval`; added LLM-behavior / anti-fabrication guards and best-practice grounding.
@@ -860,17 +979,17 @@ file answers to that name.
 
 > kronael v0.3.62 — eval panel + sharper caveman
 >
-> Adds /eval-all to run every review lens and log the verdict, sharpens the 80% caveman style with ADHD-friendly patterns, and trims two skills that duplicated existing ones.
+> Adds /eval-all to run every review lens and log the verdict, sharpens the caveman style with ADHD-friendly patterns, and trims two skills that duplicated existing ones.
 >
 > • /eval-all — runs ceo/cto/security/ux lenses as subagents, logs memos + a diary pointer for later context
-> • 80% caveman gains multi-turn patterns: restate progress, cap-5 + do-now/later, minute estimates, first/last-line check
+> • caveman gains multi-turn patterns: restate progress, cap-5 + do-now/later, minute estimates, first/last-line check
 > • drops assess (dup of ceo/cto-eval) and sweep-fix-verify (its discipline already in the wisdom + worktree)
 > • commit format is now type(scope): everywhere; reverse-sync flags local skills before adding to source
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 - `eval-all`: new skill — runs every applicable eval lens (`ceo-eval`, `cto-eval`, `hacker-eval`, `hiring-eval`, `eye-13yo`) as independent subagents, then persists each memo to `.ship/`, a consolidated roll-up, a `/diary` pointer, and real defects to `BUGS.md` — so a later session has the eval context.
-- `80% caveman` output style: folded in multi-turn / low-cognitive-load patterns — restate progress ("step 3 of 5"), cap lists at ~5 with a do-now/later split, minute-level effort estimates, one-thread-at-a-time, first/last-line pre-send check, action-first. Adapted from `i-have-adhd` by Ayoub Ghriss (MIT), attributed in `NOTICE`.
+- `caveman` output style: folded in multi-turn / low-cognitive-load patterns — restate progress ("step 3 of 5"), cap lists at ~5 with a do-now/later split, minute-level effort estimates, one-thread-at-a-time, first/last-line pre-send check, action-first. Adapted from `i-have-adhd` by Ayoub Ghriss (MIT), attributed in `NOTICE`.
 - Dropped `assess` (redundant with `ceo-eval`/`cto-eval`/`hiring-eval`) and `sweep-fix-verify` (discipline already in the wisdom, `commit`, `worktree`, `refine`) — both were installed-only and org-tinged. `worktree` + `later` stay.
 - Commit convention finalized as `type(scope):` across the bundle (AGENTS.md + COOKBOOK.md were the last `[section]` holdouts).
 - Install sync protocol: installed-only skills are not auto-captured into source; org/local ones are flagged and added only on explicit opt-in.
@@ -903,7 +1022,7 @@ file answers to that name.
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- Response style: the global wisdom and the `80% caveman` output style now cap a normal reply to ~17 lines (ideal 12, max 20) and close on the single most important point — on a mobile terminal the last line is what stays visible.
+- Response style: the global wisdom and the `caveman` output style now cap a normal reply to ~17 lines (ideal 12, max 20) and close on the single most important point — on a mobile terminal the last line is what stays visible.
 - `merge`: detects the in-flight operation (merge / rebase / cherry-pick / revert) from `.git` state and drives it to completion — `--continue` in a loop, `--skip` for an obsolete replayed commit, `--abort` to bail. Documents that in a rebase the conflict sides are reversed (`HEAD` is the base, `>>>>>>>` is the replayed commit).
 - Wisdom: new **System-change discipline** section — amend the original (no parallel second path), fail loud to the user (never swallow errors), retry only transient errors, fix causes not symptoms, and record redesigns in `BUGS.md` as `proposed` for sign-off before shipping.
 - `refine`: review lenses are now derived from the live wisdom (1-3 per sub), tagged `simplify` / `correctness` with model-by-tag routing; redesign findings route to `BUGS.md`. `bugs`: adds the `proposed` status to the entry format.
@@ -1525,7 +1644,7 @@ file answers to that name.
 > • `codex_hook.py` adapts Codex payloads before calling installed Claude hooks
 > • `PreCompact` no longer returns invalid context JSON in Codex
 > • dockbox: first positional arg selects tool (codex, haiku, sonnet, opus, fable, any binary)
-> • `output-styles/80-caveman.md` added; activated in settings-recommended.json
+> • `output-styles/caveman.md` added; activated in settings-recommended.json
 > • `/codex` skill renamed to `/oracle`
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
@@ -1544,7 +1663,7 @@ file answers to that name.
 - dockbox: first positional arg is now the tool entrypoint; model aliases
   (haiku/sonnet/opus/fable) map to `claude --model <id>`; `-d` flag added as
   explicit tool selector; `-x` kept hidden for compat.
-- Added `output-styles/80-caveman.md` (stripped-not-broken output style);
+- Added `output-styles/caveman.md` (stripped-not-broken output style);
   `settings-recommended.json` activates it via `outputStyle`.
 - Renamed `skills/codex` → `skills/oracle`; `codex` added to install prune list.
 

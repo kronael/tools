@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Check SKILL.md frontmatter with PyYAML; fix common loose scalars."""
+"""Lint SKILL.md: frontmatter YAML (autofix) plus wisdom-skill body rules.
+
+Body rules are sourced verbatim from the `wisdom` skill (the skill-authoring
+spec). Each rule names itself and points back at wisdom so a failure teaches.
+Errors block (exit 2); warnings only print (length and disambiguation are
+fuzzy — a false hard-fail trains `--no-verify`).
+"""
 
 from __future__ import annotations
 
@@ -8,6 +14,8 @@ import csv
 import json
 import re
 import sys
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 import yaml
@@ -15,6 +23,7 @@ import yaml
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 FIX_FIELDS = {'description', 'when_to_use'}
 
+REQUIRED_KEYS = ('name', 'description', 'when_to_use')
 # Keys Claude Code reads (code.claude.com/docs/en/skills). Anything else is
 # ignored locally but rejected by other Agent Skills consumers, so it is an
 # error here. Free-form provenance belongs under `metadata`.
@@ -40,9 +49,28 @@ KNOWN_KEYS = {
     'license',
     'compatibility',
 }
-# description + when_to_use are concatenated into the always-on listing and
-# truncated past this, which silently drops a router's later trigger keywords.
-LISTING_BUDGET = 1536
+SHOULD = re.compile(r'\bSHOULD\b')
+DEFAULT_MAX_LINES = 200
+# Workflow/runbook skills carry procedure and legitimately run long (wisdom
+# tiered length). Keyed on the skill's directory name.
+LONG_MAX_LINES = 500
+LONG_SKILLS = frozenset({'install', 'ship'})
+# Claude Code lists each skill as "<description> - <when_to_use>" and cuts that
+# text at this many characters (its skillListingMaxDescChars default); a
+# keyword past the cap never reaches the model.
+LISTING_CAP = 1536
+
+
+class Severity(Enum):
+    ERROR = 'error'
+    WARN = 'warn'
+
+
+@dataclass(frozen=True)
+class Finding:
+    severity: Severity
+    rule: str
+    message: str
 
 
 def skill_files(paths: list[Path]) -> list[Path]:
@@ -72,23 +100,12 @@ def yaml_error(text: str) -> str | None:
     return None
 
 
-def conformance(path: Path, meta: str) -> list[str]:
-    data = yaml.safe_load(meta) or {}
-    if not isinstance(data, dict):
-        return ['frontmatter is not a mapping']
-    problems = []
-    unknown = sorted(set(data) - KNOWN_KEYS)
-    if unknown:
-        problems.append(f'unrecognised key(s): {", ".join(unknown)}')
-    name = data.get('name')
-    if name is not None and name != path.parent.name:
-        problems.append(f'name {name!r} does not match directory {path.parent.name!r}')
-    listing = len(str(data.get('description') or '')) + len(str(data.get('when_to_use') or ''))
-    if listing > LISTING_BUDGET:
-        problems.append(
-            f'description + when_to_use is {listing} chars, over the {LISTING_BUDGET} listing budget'
-        )
-    return problems
+def parse_meta(text: str) -> dict | None:
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def fix_value(key: str, value: str) -> str:
@@ -113,8 +130,154 @@ def fix_frontmatter(text: str) -> str:
     return '\n'.join(lines).rstrip() + '\n'
 
 
+# --- body checks (wisdom rules) -------------------------------------------
+
+
+def check_keys(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []  # unparseable YAML — the frontmatter check owns that failure
+    findings: list[Finding] = []
+    missing = [key for key in REQUIRED_KEYS if not str(meta.get(key, '')).strip()]
+    if missing:
+        findings.append(
+            Finding(
+                Severity.ERROR,
+                'skill-keys',
+                f'{path}:1: [skill-keys] missing frontmatter key(s): {", ".join(missing)} '
+                '— wisdom: name, description, when_to_use are required',
+            )
+        )
+    unknown = sorted(set(meta) - KNOWN_KEYS)
+    if unknown:
+        findings.append(
+            Finding(
+                Severity.ERROR,
+                'skill-keys',
+                f'{path}:1: [skill-keys] unrecognised frontmatter key(s): {", ".join(unknown)} '
+                '— wisdom: NEVER invent a key; provenance goes under `metadata`',
+            )
+        )
+    return findings
+
+
+def check_name(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []
+    name = meta.get('name')
+    if name is None or name == path.parent.name:
+        return []
+    return [
+        Finding(
+            Severity.ERROR,
+            'skill-name',
+            f'{path}:1: [skill-name] name {name!r} does not match directory '
+            f'{path.parent.name!r} — wisdom: the directory name IS the skill name',
+        )
+    ]
+
+
+def check_notfor(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []
+    if 'NOT for' in str(meta.get('description', '')):
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-notfor',
+            f'{path}:1: [skill-notfor] description has no "NOT for <case> (use <skill>)" '
+            'clause — wisdom: ALWAYS add it to disambiguate neighbors (warn)',
+        )
+    ]
+
+
+def listing_text(meta: dict) -> str:
+    description = str(meta.get('description', '') or '')
+    when = meta.get('when_to_use', '') or ''
+    if isinstance(when, list):
+        when = ', '.join(str(item) for item in when)
+    return f'{description} - {when}' if when else description
+
+
+def check_budget(path: Path, meta: dict | None) -> list[Finding]:
+    if meta is None:
+        return []
+    length = len(listing_text(meta))
+    if length <= LISTING_CAP:
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-budget',
+            f'{path}:1: [skill-budget] description + when_to_use is {length} chars '
+            f'(> {LISTING_CAP}) — wisdom: the listing cuts the rest, keywords past the cap '
+            'never route (warn)',
+        )
+    ]
+
+
+def check_should(path: Path, body: str, body_line0: int) -> list[Finding]:
+    findings: list[Finding] = []
+    for offset, line in enumerate(body.splitlines()):
+        if SHOULD.search(line):
+            findings.append(
+                Finding(
+                    Severity.ERROR,
+                    'skill-should',
+                    f'{path}:{body_line0 + offset}: [skill-should] body uses the directive '
+                    'SHOULD — wisdom: NEVER use SHOULD (too soft); ALWAYS/NEVER only',
+                )
+            )
+    return findings
+
+
+def check_length(path: Path, body: str) -> list[Finding]:
+    lines = len(body.splitlines())
+    cap = LONG_MAX_LINES if path.parent.name in LONG_SKILLS else DEFAULT_MAX_LINES
+    if lines <= cap:
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-length',
+            f'{path}: [skill-length] body is {lines} lines (> {cap}) '
+            '— wisdom: ALWAYS keep under 200 lines; push overflow to sibling files (warn)',
+        )
+    ]
+
+
+def check_router(path: Path) -> list[Finding]:
+    for ancestor in path.parent.parents:
+        if (ancestor / 'SKILL.md').is_file():
+            return [
+                Finding(
+                    Severity.WARN,
+                    'skill-router',
+                    f'{path}: [skill-router] nested under {ancestor / "SKILL.md"} — wisdom: '
+                    'NEVER name a data file SKILL.md (it preloads); rename it (warn)',
+                )
+            ]
+        if (ancestor / '.git').exists():
+            break
+    return []
+
+
+def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Finding]:
+    body_line0 = text.count('\n', 0, text.rindex(body)) + 1 if body else 1
+    return [
+        *check_keys(path, meta),
+        *check_name(path, meta),
+        *check_notfor(path, meta),
+        *check_budget(path, meta),
+        *check_should(path, body, body_line0),
+        *check_length(path, body),
+        *check_router(path),
+    ]
+
+
 def process(path: Path, write: bool) -> int:
-    split = frontmatter(path.read_text())
+    text = path.read_text()
+    split = frontmatter(text)
     if split is None:
         print(f'{path}: missing frontmatter', file=sys.stderr)
         return 2
@@ -122,25 +285,26 @@ def process(path: Path, write: bool) -> int:
     meta, body = split
     status = 0
     error = yaml_error(meta)
-    if error is not None:
-        if not write:
-            print(f'needs fix: {path} ({error})')
-            return 1
-        meta = fix_frontmatter(meta)
-        error = yaml_error(meta)
-        if error is not None:
+    if error is not None and write:
+        fixed = fix_frontmatter(meta)
+        if yaml_error(fixed) is not None:
             print(f'{path}: still invalid after fix: {error}', file=sys.stderr)
             return 2
-        path.write_text(f'---\n{meta}---\n\n{body}')
+        text = f'---\n{fixed}---\n\n{body}'
+        path.write_text(text)
         print(f'fixed: {path}')
+        meta, status = fixed, 1
+    elif error is not None:
+        print(f'needs fix: {path} ({error})')
         status = 1
 
     # A repaired file still has to conform; fixing the YAML says nothing about
     # the name, the keys or the listing budget.
-    problems = conformance(path, meta)
-    for problem in problems:
-        print(f'{path}: {problem}', file=sys.stderr)
-    return 2 if problems else status
+    for finding in check_body(path, text, parse_meta(meta), body):
+        print(finding.message, file=sys.stderr)
+        if finding.severity is Severity.ERROR:
+            status = max(status, 2)
+    return status
 
 
 def main() -> int:

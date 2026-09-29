@@ -1,6 +1,7 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox) and optional ripwire. First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+when_to_use: "install kronael, install kronael tools, install (in this repo), /kronael:install"
 ---
 
 # Install Kronael toolkit
@@ -22,6 +23,7 @@ ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
 - `agents/` — bundle of agents
 - `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py, memory_nudge.py)
+- `hooks/lib/` — shared module (state.py); the hooks import it at runtime, so a copy without it tracebacks on every prompt
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
@@ -30,9 +32,22 @@ If missing, you're in the wrong directory — stop and ask.
 
 ## Sync protocol
 
+### The three sides
+
+Name them explicitly — install reconciles the first two, `git push` reaches the third:
+
+- **source** — this repo's working tree, where you edit.
+- **live** — `~/.claude/` on THIS host: the installed, running bundle.
+- **upstream** — the `origin` remote on GitHub (`kronael/tools`).
+
+Install is a two-way **source ↔ live** sync (below). **upstream** is reached
+ONLY by an explicit `git push` under the wisdom file's Git gate; NEVER conflate a
+`live` sync with an `upstream` push, and NEVER assume `live` matches `upstream` —
+a host's `~/.claude/` can be ahead of, behind, or forked from `origin`.
+
 Install is ALWAYS a two-way sync, never a one-way deploy. It reconciles
-source ↔ installed in BOTH directions: source-advanced files update the
-install; installed-AHEAD files (local refinements the repo lacks) are surfaced
+source ↔ live in BOTH directions: source-advanced files update live;
+live-AHEAD files (local refinements the repo lacks) are surfaced
 and reverse-synced INTO the repo, NEVER silently overwritten — overwriting a
 live-ahead file downgrades the user's own work. A plain copy is only the
 degenerate case where nothing has drifted.
@@ -93,6 +108,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **CLI tools** — rig, udfix, clp (step 7).
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
   - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
+  - **ripwire** — optional codebase-map tool for agents; installs a binary and
+    its own `ripwire-*` skills (step 6 separate ask).
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
 - **Update**: skip the first-time questionnaire, but ALWAYS still run steps 6–7
   — NEVER silently skip tools or dockbox on a re-run (a stale binary or an
@@ -120,12 +137,18 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - **Prune renamed files**: delete `~/.claude/hooks/nudge.py`,
+   - `commands/*` → `~/.claude/commands/`
+   - **Prune renamed and removed files**: delete `~/.claude/hooks/nudge.py`,
      `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
      if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
      `output-styles/caveman.md` instead, and a stale copy keeps loading beside
      its replacement. A stale output style also leaves `outputStyle` pointing
-     at a name no file answers to. Backup first per step 1.
+     at a name no file answers to. Also delete the orphan hooks `redirect.py`,
+     `context.py`, `learn.py`, `test_hooks.py` and `lib/toolchain.py`
+     (registered in no settings file). Backup first per step 1. An install
+     keeps files the source has dropped, so an unpruned orphan reads as
+     live-ahead work on the NEXT sync and gets vendored back in; that is what
+     this list prevents.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
@@ -204,7 +227,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 6. **External tools** — detect with `which <tool>`; skip if present and recent.
    Install the missing ones from `reference.md` § "External tool commands":
    the **Core** batch (ask once), then the **Security-audit** and **Video**
-   batches (each ask separately — large/heavy, rarely needed).
+   batches (each ask separately — large/heavy, rarely needed). Finally offer
+   **ripwire** (reference.md § "ripwire") on its own ask — SHOW the exact
+   install one-liner and let the user run it (curl-pipe, so never auto-run it
+   silently); mention the optional MCP interface via `ripwire wrap <agent>`
+   (Claude and Codex both — it also auto-activates its `ripwire-*` skills for
+   whichever agents it detects, `~/.claude/skills` and `~/.agents/skills`) and
+   that its hooks stay off by default.
 
 7. **CLI tools** — (re)install the repo's standalone CLI tools per `reference.md`
    § "CLI tools": rig/udfix/clp always (idempotent Makefiles refresh a stale

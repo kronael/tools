@@ -15,6 +15,8 @@ rules. Below are shell-specific additions.
 - ALWAYS iterate `find` output with `while IFS= read -r -d ''` < <(find ... -print0) or `mapfile -t arr < <(cmd)`; NEVER `for f in $(find ...)` or `for f in $(ls)`
 - `do`/`then`/`else` on own line, NEVER after `;` or `&&`
 - Functions for repeated logic, plain sequence otherwise
+- ALWAYS a fixed working directory and simple relative paths; NEVER `basename
+  $0`, `__dirname` or other gymnastics to resolve the script's own location
 
 ## Variables
 - `"${VAR:-default}"` for optional, `"${VAR:?msg}"` for required
@@ -47,4 +49,4 @@ SEED="/preferred/path"
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
-- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per WISDOM.
+- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per the `ops` skill.

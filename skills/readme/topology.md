@@ -3,8 +3,8 @@
 Great docs aren't one long file — they're a small set of files, **each answering
 exactly one question**, cross-linked by a "how to read this" index. Mixing the
 questions ("what is it" tangled with "how is it built" tangled with "why not the
-simpler thing") is what makes docs unreadable. Split by question first, write
-second.
+simpler thing") is what makes docs unreadable. ALWAYS split by question first,
+write second.
 
 This is the *which file* axis. For the order of sections *inside* one file —
 an integration guide or API-reference page an external reader works through
@@ -21,15 +21,15 @@ end to end — see `shape.md`.
 | `facts/*.md` | Dated, sourced numeric claims | YAML frontmatter `date:`/`sources:`/`status:` so numbers can't silently rot |
 | crate-local `CLAUDE.md` | Doc *conventions* for this component | which file answers which question, a "keeper sections — don't regress" list, an update checklist |
 
-State the split explicitly — end the README with a **"How to read this"** section
-that says which file answers which question.
+ALWAYS state the split explicitly — end the README with a **"How to read this"**
+section naming which file answers which question.
 
 ## notes/ — the "why" layer
 
 Tribal design-rationale rots unless it's written down. Each note:
 
 1. **Restate the domain term in plain English before using it** ("An order book
-   is the live list of resting bids and asks…"). Never assume the reader knows.
+   is the live list of resting bids and asks…"). NEVER assume the reader knows.
 2. **Problem** — what the naive/simpler approach costs, *quantified* ("allocates
    a node per level, O(log n) per update").
 3. **Fix** — the actual mechanism, prose + one code/ASCII sketch.
@@ -41,10 +41,10 @@ Tribal design-rationale rots unless it's written down. Each note:
 
 Doc rot lives in stale numbers. Chain them: **the benchmark is authoritative →
 a dated `facts/*.md` records the number with its source/date → README and
-ARCHITECTURE *quote* from facts and cite the bench name + repro command.** Never
+ARCHITECTURE *quote* from facts and cite the bench name + repro command.** NEVER
 inline a raw number that has no bench behind it. Every perf claim gets a caveat:
 loopback ≠ production, single-core ≠ cross-process, closed-loop ≠ real workload —
-and cite the honest cross-process number next to the flattering microbench.
+and ALWAYS cite the honest cross-process number next to the flattering microbench.
 
 ## Anti-marketing discipline
 

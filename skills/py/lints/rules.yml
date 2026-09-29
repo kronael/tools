@@ -1,0 +1,32 @@
+---
+id: py-except-var-e
+language: python
+severity: warning
+rule:
+    kind: identifier
+    regex: ^e$
+    inside:
+        kind: as_pattern_target
+message: NEVER name an as-alias e (except/with) — use ex, exc, or err. See skill:py.
+note: 'source: skills/py/SKILL.md — Style'
+---
+id: py-no-lambda-default-factory
+language: python
+severity: warning
+rule:
+    kind: lambda
+    inside:
+        kind: keyword_argument
+        has:
+            field: name
+            regex: ^default_factory$
+message: 'NEVER default_factory=lambda: [] — use default_factory=list or the parametrized type. See skill:py.'
+note: 'source: skills/py/SKILL.md — Type Annotations'
+---
+id: py-no-property
+language: python
+severity: warning
+rule:
+    pattern: '@property'
+message: NEVER @property / @setter / __getattr__ (except mocks or adapting external APIs) — use a plain method. See skill:py.
+note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
