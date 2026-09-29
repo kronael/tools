@@ -64,7 +64,8 @@ false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use
 ## commands against a stub docker on PATH ----------------------------------
 # The stub serves the boxes in $STUB/boxes (name, state, age in seconds, use,
 # size) through each --format template, answers `top` from the fixtures above,
-# runs the session-marker snippets against $STUB/run and logs every call.
+# runs the session-marker snippets against $STUB/run and the ls probe against
+# the fake box in $STUB/box, and logs every call.
 export STUB="$tmp"
 log="$tmp/log"
 cat > "$tmp/docker" <<'STUB'
@@ -98,17 +99,10 @@ case "$1" in
             */run/dockbox/sess*)
                 script="${*: -1}"
                 exec sh -c "${script//"/run/dockbox"/$STUB/run}" ;;
-            *)
+            *"df -k"*)
                 [ "$(use_of "$2")" = fail ] && { echo "Error: exec failed" >&2; exit 1; }
-                cat <<'EOF'
-Type    Used Mounted on
-tmpfs     84 /tmp
-tmpfs  20480 /tmp/cargo-target
-tmpfs      0 /dev/shm
-tmpfs 102400 /home/dockbox
-tmpfs 102500 /home/dockbox
-EOF
-                ;;
+                script="${*: -1}"
+                PATH="$STUB/box/bin:$PATH" exec sh -c "${script//" /"/" $STUB/box/"}" ;;
         esac ;;
     ps) echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
@@ -116,6 +110,32 @@ esac
 exit 0
 STUB
 chmod +x "$tmp/docker"
+# The fake box's df reports each path whose dir holds a .df (`fstype used`) and
+# fails on any other, with df's own error for a missing one.
+mkdir -p "$tmp/box/bin" "$tmp/box/tmp/cargo-target" "$tmp/box/dev/shm" \
+    "$tmp/box/home/dockbox" "$tmp/box/w/node_modules" "$tmp/box/w/broken"
+echo "tmpfs 84"     > "$tmp/box/tmp/.df"
+echo "tmpfs 20480"  > "$tmp/box/tmp/cargo-target/.df"
+echo "tmpfs 0"      > "$tmp/box/dev/shm/.df"
+echo "tmpfs 102400" > "$tmp/box/home/dockbox/.df"
+echo "tmpfs 30720"  > "$tmp/box/w/node_modules/.df"
+cat > "$tmp/box/bin/df" <<'DF'
+#!/bin/sh
+shift 2
+echo "Type Used Mounted on"
+rc=0
+for p; do
+    if [ -f "$p/.df" ]; then
+        echo "$(cat "$p/.df") $p"
+    elif [ -e "$p" ]; then
+        echo "df: $p: Input/output error" >&2; rc=1
+    else
+        echo "df: $p: No such file or directory" >&2; rc=1
+    fi
+done
+exit "$rc"
+DF
+chmod +x "$tmp/box/bin/df"
 boxes() { printf '%s\t%s\t%s\t%s\t%s\n' "$@" > "$tmp/boxes"; }
 dockbox() { : > "$log"; PATH="$tmp:$PATH" bash "$here/dockbox" "$@"; }
 
@@ -124,7 +144,7 @@ boxes dockbox-up   running 7200   idle "12.3MB (virtual 1.2GB)" \
       dockbox-busy running 7200   busy "5MB (virtual 1.2GB)" \
       dockbox-old  exited  432000 -    "0B (virtual 1.2GB)" \
       dockbox-bad  running 60     fail "1kB (virtual 1.2GB)"
-ls_out=$(dockbox ls 2>/dev/null)
+ls_out=$(DOCKBOX_EPH_PATHS="$tmp/box/home/dockbox" dockbox ls 2>/dev/null)
 true_  "ls header carries USE"           'grep -Eq "^NAMES +STATUS +CREATED +USE +TMPFS +DISK$" <<< "$ls_out"'
 true_  "ls totals a running box's tmpfs" 'grep -Eq "^dockbox-up .* 120M +12.3MB$" <<< "$ls_out"'
 true_  "ls shows - for an exited box"    'grep -Eq "^dockbox-old .* - +- +0B$" <<< "$ls_out"'
@@ -132,6 +152,15 @@ true_  "ls shows ? when the probes fail" 'grep -Eq "^dockbox-bad .* [?] +[?] +1k
 true_  "ls USE idle with only keepers"   'grep -Eq "^dockbox-up .* idle +120M" <<< "$ls_out"'
 true_  "ls USE busy with a session"      'grep -Eq "^dockbox-busy .* busy +120M" <<< "$ls_out"'
 false_ "ls strips the DISK virtual size" 'grep -q virtual <<< "$ls_out"'
+boxes dockbox-up running 60 idle 0B
+ls_out=$(DOCKBOX_EPH_PATHS="$tmp/box/home/dockbox:$tmp/box/w/gone:$tmp/box/w/node_modules" \
+    dockbox ls 2>"$tmp/err")
+true_  "ls totals the mounts left past a vanished path" 'grep -Eq "^dockbox-up .* 150M +0B$" <<< "$ls_out"'
+true_  "ls prints nothing for a vanished path"          '[ ! -s "$tmp/err" ]'
+ls_out=$(DOCKBOX_EPH_PATHS="$tmp/box/home/dockbox:$tmp/box/w/broken" \
+    dockbox ls 2>"$tmp/err")
+true_  "ls shows ? when df fails on a path that exists" 'grep -Eq "^dockbox-up .* [?] +0B$" <<< "$ls_out"'
+true_  "ls passes that df error through"                'grep -q "w/broken: Input/output error" "$tmp/err"'
 
 ## prune ---------------------------------------------------------------------
 boxes dockbox-idle-old running 14410           idle 0B \

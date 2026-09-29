@@ -118,8 +118,11 @@ case "${1:-}" in
                 [[ "$state" == running ]] && {
                     use=$(docker top "$n" | box_use) || use="?"
                     tmpfs=$(docker exec "$n" sh -c \
-                        'set -f; IFS=:; df -k --output=fstype,used,target \
-                        /tmp /tmp/cargo-target /dev/shm $DOCKBOX_EPH_PATHS' \
+                        'set -f; IFS=:; set -- /tmp /tmp/cargo-target /dev/shm
+                        for p in $DOCKBOX_EPH_PATHS; do
+                            [ -e "$p" ] && set -- "$@" "$p"
+                        done
+                        df -k --output=fstype,used,target "$@"' \
                         | tmpfs_used) || tmpfs="?"
                 }
                 printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
