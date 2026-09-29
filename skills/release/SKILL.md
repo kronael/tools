@@ -21,7 +21,8 @@ user-invocable: true
 1. **Detect scope** — `git tag --list` + `git log` since last tag.
    - No prior tags → first release. Default `v0.1.0` (matches pyproject's
      usual default); skip the bump step if pyproject already says it.
-2. **Version bump** — patch default. Discover the version file:
+2. **Version bump** — patch default; components never carry (see Rules).
+   Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
      in a monorepo gets bumped independently)
    - Rust: `Cargo.toml` `version = "..."`
@@ -139,7 +140,10 @@ user-invocable: true
 - NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
-- Default to patch bump unless user says otherwise
+- ALWAYS bump the patch unless the user asks for minor or major. MAJOR, MINOR
+  and PATCH are independent integers that never carry: `0.3.99` → `0.3.100`,
+  `1.9.0` → `1.10.0`. NEVER roll a `99` or a `9` into the next component —
+  `0.3.99` → `0.4.0` is a minor bump nobody asked for
 - No changes since last tag → "nothing to release", stop
 - If the release evidence is ambiguous, do not guess. Run the smallest critique
   lens that can resolve the ambiguity before the release commit.
