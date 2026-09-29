@@ -91,6 +91,15 @@
   the fixed pattern from the latest fix commit (`git log`) and the diary;
   no test — docs.
 
+- **INSTALL-LEAVES-STALE-HOOK-DOCS** (LOW, install) — CONFIRMED live
+  2026-09-29. Install copies only `hooks/*.py`, `*.sh` and `lib/`
+  (`kronael/install/SKILL.md:121`), and its prune step names only
+  `nudge.py`, `extnudge.py` and `80-caveman.md`. So `README.md`,
+  `ARCHITECTURE.md`, `TEST.md` and `Makefile` in `~/.claude/hooks/`, left by
+  an earlier install, stay out of date forever (`diff -q hooks/README.md
+  ~/.claude/hooks/README.md`). **Fix:** add them to the prune step; no test —
+  install procedure.
+
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
