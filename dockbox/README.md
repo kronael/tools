@@ -55,17 +55,20 @@ dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
-dockbox ls                        # list containers, tmpfs use, disk (writable layer, no volumes)
-dockbox rm <pattern|-a>           # remove containers by name or glob (-a = all)
-dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
+dockbox ls                        # list boxes: busy/idle, tmpfs use, disk (writable layer)
+dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = all)
+dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
 Default command: claude. Use `-x` to override.
 
-`dockbox ls` TMPFS totals the tmpfs mounts of a running box (`/tmp`,
-`/tmp/cargo-target`, `/dev/shm`, `$HOME` and the build-dir overmounts), each
-mount once; DISK is the container's writable layer, volumes excluded. TMPFS
-shows `-` for a stopped box and `?` when the probe fails.
+`dockbox ls` USE is `busy` while any session or command runs in the box and
+`idle` when only its sleeper is left — a box no session holds, safe to remove.
+TMPFS totals the tmpfs mounts of a running box (`/tmp`, `/tmp/cargo-target`,
+`/dev/shm`, `$HOME` and the build-dir overmounts), each mount once; DISK is
+the container's writable layer, volumes excluded. USE and TMPFS show `-` for
+a stopped box and `?` when the probe fails. `dockbox prune` removes idle boxes
+at least 10 minutes old and never a busy one.
 
 ### Re-entry into a running box
 
