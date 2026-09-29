@@ -65,12 +65,14 @@ false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use
 # The stub serves the boxes in $STUB/boxes (name, state, age in seconds, use,
 # size) through each --format template, answers `top` from the fixtures above,
 # runs the session-marker snippets against $STUB/run and the ls probe against
-# the fake box in $STUB/box, and logs every call.
+# the fake box in $STUB/box — under dash when installed, the box's /bin/sh —
+# and logs every call.
 export STUB="$tmp"
 log="$tmp/log"
 cat > "$tmp/docker" <<'STUB'
 #!/bin/bash
 echo "$*" >> "$STUB/log"
+box_sh=$(command -v dash || command -v sh)
 use_of() { awk -F'\t' -v n="$1" '$1 == n { print $4 }' "$STUB/boxes"; }
 case "$1" in
     container)
@@ -98,11 +100,11 @@ case "$1" in
                 exit "${STUB_RC:-0}" ;;
             */run/dockbox/sess*)
                 script="${*: -1}"
-                exec sh -c "${script//"/run/dockbox"/$STUB/run}" ;;
+                exec "$box_sh" -c "${script//"/run/dockbox"/$STUB/run}" ;;
             *"df -k"*)
                 [ "$(use_of "$2")" = fail ] && { echo "Error: exec failed" >&2; exit 1; }
                 script="${*: -1}"
-                PATH="$STUB/box/bin:$PATH" exec sh -c "${script//" /"/" $STUB/box/"}" ;;
+                PATH="$STUB/box/bin:$PATH" exec "$box_sh" -c "${script//" /"/" $STUB/box/"}" ;;
         esac ;;
     ps) echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
