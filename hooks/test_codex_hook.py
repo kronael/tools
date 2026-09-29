@@ -70,13 +70,13 @@ def test_translate_output_rewrites_prompt_nudge_refs_for_codex(
 ) -> None:
     install_skills(monkeypatch, tmp_path, 'refine')
     output = translate_output(
-        json.dumps({'ok': True, 'systemMessage': 'Invoke /refine.'}),
+        json.dumps({'ok': True, 'systemMessage': 'Invoke /refine, not /nope.'}),
         'UserPromptSubmit',
         'prompt_nudge',
     )
     parsed = json.loads(output)
-    assert parsed['systemMessage'] == 'Invoke @refine.'
-    assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine.'
+    assert parsed['systemMessage'] == 'Invoke @refine, not /nope.'
+    assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine, not /nope.'
 
 
 def test_translate_output_never_rewrites_codex_ref_recursively() -> None:

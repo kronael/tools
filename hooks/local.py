@@ -33,8 +33,6 @@ def main():
     session_id = data.get('session_id') or 'default'
     cwd = data.get('cwd') or '.'
 
-    # Session-keyed, not cwd-keyed: cd'ing to another repo mid-session used to
-    # reset this and re-inject LOCAL.md as if the session had just started.
     state_file = session_state('local', session_id)
 
     parts = []

@@ -15,8 +15,8 @@ Fires on:
   like stop.py's diary/commit nudges.
 
 Once-per-session state lives in ~/.claude/state, keyed by session_id alone
-(see lib/state.py) — a cwd-keyed guard reset every time the session changed
-directory, so the "once" became once per directory.
+(see lib/state.py), so the Stop nudge stays once per session even when the
+session changes directory.
 
 No LLM call. Never blocks. Emits additionalContext (Stop) or systemMessage
 (PreCompact, matching the local.py/reclaude.py idiom already proven to
