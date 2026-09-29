@@ -51,7 +51,7 @@ Three layers: autocomplete (codeium), chat (gptel), agentic (Claude Code / aider
 (use-package gptel :ensure t
   :bind ("C-c a g" . gptel)
   :config
-  (setq gptel-model 'claude-sonnet-4-6
+  (setq gptel-model 'claude-sonnet-5-5
         gptel-backend (gptel-make-anthropic "Anthropic"
                         :stream t
                         :key (lambda ()

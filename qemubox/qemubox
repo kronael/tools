@@ -52,7 +52,7 @@ Tools (first positional arg -- no leading dash):
     claude          Claude Code, opus (same as default)
     codex           OpenAI Codex
     haiku           Claude Code --model claude-haiku-4-5-20251001
-    sonnet          Claude Code --model claude-sonnet-5 --effort high
+    sonnet          Claude Code --model claude-sonnet-5-5 --effort high
     opus            Claude Code --model claude-opus-5-5 --effort xhigh
     fable           Claude Code --model claude-fable-5-1
     gpt             Codex -m gpt-6-astra
@@ -668,7 +668,7 @@ tool_cmd() {
         claude) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
         codex) cmd=(codex) ;;
         haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
-        sonnet) cmd=(claude --model claude-sonnet-5 --effort high) ;;
+        sonnet) cmd=(claude --model claude-sonnet-5-5 --effort high) ;;
         opus) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
         fable) cmd=(claude --model claude-fable-5-1) ;;
         gpt) cmd=(codex -m gpt-6-astra) ;;
