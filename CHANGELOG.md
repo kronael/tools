@@ -1,5 +1,34 @@
 # Changelog
 
+## [v0.4.4] — 20260929
+
+> kronael v0.4.4 — dockbox prune cleans up idle boxes
+>
+> `dockbox prune` now removes boxes nobody uses anymore, and a session that fails no longer leaves its box running.
+>
+> • dockbox ls — USE column shows busy or idle, so you see which boxes are safe to remove
+> • dockbox prune — removes idle boxes 4+ hours old and never touches a busy one
+> • dockbox — a session that errors out or loses its terminal still removes its box
+> • dockbox rm — takes several names and deletes the box's volumes too
+> • release — version parts never carry: after 0.3.99 comes 0.3.100
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox` sessions tear down from an EXIT trap (HUP and TERM too), so a
+  non-zero exit or a closed terminal leaves no stale marker; the teardown keeps
+  the box when the marker dir cannot be listed.
+- `dockbox ls` adds USE (`busy`/`idle` from `docker top`, `-` stopped, `?`
+  probe failed). `dockbox prune [hours]` also removes idle boxes created 4+
+  hours ago, parses Docker's `CreatedAt` under GNU date, and exits non-zero
+  when a removal fails.
+- `dockbox rm` takes several names or globs, matches `dockbox-`-prefixed names
+  literally, rejects unknown options, and exits non-zero on no match or
+  failure. Every teardown passes `-v`, so `-T` volumes go with the box.
+- `release`: MAJOR, MINOR and PATCH never carry — `0.3.99` → `0.3.100`.
+- Docs: dockbox `--help` and README match the code (`-T`, default model,
+  overmount lifetime); `hooks/ARCHITECTURE.md` names `stop.py`'s own event
+  reader; `BUGS.md` logs the dockbox lifecycle races and that duplicate reader.
+
 ## [v0.4.3] — 20260929
 
 > kronael v0.4.3 — see which dockbox holds your RAM
