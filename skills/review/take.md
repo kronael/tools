@@ -67,18 +67,23 @@ Classify (§2 above) with two GH additions:
   a CLAIM, not evidence — re-verify the finding at HEAD regardless of what
   GitHub or the bot already claims happened.
 
-Fix → verify as above (§3), then reply to and resolve EVERY thread — this is
+Fix → verify as above (§3), then resolve or answer EVERY thread — this is
 the default for "take GH review"; skip only if the user explicitly asked for
 code-only, no reply. Route it all through `gh-comment` (owns the reply/resolve
-GraphQL, the sign-off gate, and the 🤖 markers) — never call the thread API
-directly from here.
+GraphQL, the re-review request, the sign-off gate, and the 🤖 markers) — never
+call the thread API directly from here.
 
-- Every thread gets a reply naming its disposition: fixed (cite the commit),
-  won't-fix (cite the invariant/`BUGS.md` entry it matches), deferred, or
-  refuted (say why).
-- Bot-authored threads resolve in the same turn once replied. Human-authored
-  threads get the reply only and stay open for the reviewer to resolve.
+- A fixed thread gets NO reply and resolves after the push, human- or
+  bot-authored — the re-review request announces the fix.
+- Every other thread gets a reply naming its disposition: won't-fix (cite the
+  invariant/`BUGS.md` entry it matches), deferred, or refuted (say why). A
+  bot-authored one resolves in the same turn once replied; a human-authored
+  one stays open for the reviewer to resolve.
 - Resolve ONLY threads this pass addressed — never touch one it didn't.
+- After the push, ONE general PR comment @-mentions the reviewer, names the
+  round's most important fix in ~4 words — the `distill` skill writes that
+  phrase from the fix list — and asks for a re-review (`gh-comment`
+  § Re-review request).
 
 ## Rules
 

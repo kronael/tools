@@ -3,19 +3,24 @@
 # dependencies = ["telethon"]
 # ///
 
+"""Snapshot Telegram group participants to JSONL. Rerun to refresh.
+
+usage: uv run users.py <group> [group ...]
+
+Credentials come from the environment, the same ones main.py reads:
+  TELEGRAM_API_ID, TELEGRAM_API_HASH, and TELEGRAM_PHONE or TELEGRAM_BOT_TOKEN
+"""
+
 import asyncio
 import json
 import sys
-import tomllib
 from pathlib import Path
 
+from main import build_client
+from main import resolve_group
+from main import start_client
 from telethon import TelegramClient
 from telethon.tl.types import User
-
-
-def load_cfg(path: str) -> dict:
-    with open(path, 'rb') as f:
-        return tomllib.load(f)
 
 
 def out_path(group: str) -> Path:
@@ -36,38 +41,43 @@ def user_to_dict(u: User) -> dict:
     }
 
 
-async def run(cfg: dict) -> None:
-    group = cfg['group']
+async def collect_group(client: TelegramClient, group: str) -> int:
+    """Overwrite the group's snapshot. Membership is a state, not a log."""
     p = out_path(group)
+    entity = await client.get_entity(resolve_group(group))
 
-    session = f'./tmp/session_{group}'
-    client = TelegramClient(session, int(cfg['api_id']), cfg['api_hash'])
+    n = 0
+    with open(p, 'w') as f:  # noqa: ASYNC230
+        async for u in client.iter_participants(entity):
+            if not isinstance(u, User):
+                continue
+            f.write(json.dumps(user_to_dict(u)) + '\n')
+            n += 1
+            if n % 500 == 0:
+                print(f'{group}: fetched {n}')
 
-    if 'bot_token' in cfg:
-        await client.start(bot_token=cfg['bot_token'])
-    else:
-        await client.start(phone=lambda: cfg['phone'])
+    print(f'{group}: {n} users -> {p}')
+    return n
 
+
+async def run(groups: list[str]) -> None:
+    client = build_client()
+    await start_client(client)
+
+    total = 0
     async with client:
-        entity = await client.get_entity(group)
-        n = 0
-        with open(p, 'w') as f:  # noqa: ASYNC230
-            async for u in client.iter_participants(entity):
-                if not isinstance(u, User):
-                    continue
-                f.write(json.dumps(user_to_dict(u)) + '\n')
-                n += 1
-                if n % 500 == 0:
-                    print(f'fetched {n}')
+        for group in groups:
+            total += await collect_group(client, group)
 
-    print(f'done — {n} users -> {p}')
+    print(f'done — {total} users across {len(groups)} groups')
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print('usage: uv run users.py <config.toml>', file=sys.stderr)
+    groups = sys.argv[1:]
+    if not groups:
+        print('usage: uv run users.py <group> [group ...]', file=sys.stderr)
         sys.exit(1)
-    asyncio.run(run(load_cfg(sys.argv[1])))
+    asyncio.run(run(groups))
 
 
 if __name__ == '__main__':

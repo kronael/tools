@@ -4,6 +4,16 @@ import os
 import re
 import sys
 
+from lib.state import session_state
+
+STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
+- Lead with the answer. No preamble, no recap of what the diff already shows.
+- ~17 lines, hard max 20. No tables or headers in a normal reply.
+- Plain words, active voice, one instruction per sentence (ASD-STE100).
+- Last line carries the next action, or the bottom line.
+- Before sending: read ONLY your first and last line. If those two do not
+  say what to DO and what HAPPENED, the middle is padding."""
+
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
 - Organized in directories: use lowercase (specs/multi-tenancy.md, todos/general.md, plans/migration.md)
@@ -14,12 +24,12 @@ COMMIT_RULES = """Commit rules:
 - Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
 - ALWAYS commit in detached HEAD - NEVER on or creating a branch
 - NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash
-- NEVER add Co-Authored-By, NEVER skip pre-commit hooks
+- NEVER skip pre-commit hooks
 - Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
 
-RESOLVE_NUDGE = (
-    'New task (first prompt this session): run /resolve before acting — it '
+SOLVE_NUDGE = (
+    'New task (first prompt this session): run /solve before acting — it '
     'loads diary + memory context and routes to the right skill. Skip only '
     'if this prompt is a direct continuation of work already in context.'
 )
@@ -48,26 +58,26 @@ AGENT_KEYWORDS = {
     'inline': '/gh-comment',
     'merge': '/merge',
     'microcopy': '/writing',
-    'novice': '/eye-13yo',
-    'pentest': '/hacker-eval',
+    'novice': '/13yo-eval',
+    'pentest': '/red-eval',
     'recall': '/recall-memories',
     'refine': '/refine',
     'release': '/release',
     'roi': '/ceo-eval',
     'scavenge': '/scavenge',
-    'security': '/hacker-eval',
+    'security': '/red-eval',
     'ship': '/ship',
     'sonnet': '/sonnet',
     'spec': '/specs',
     'specs': '/specs',
-    'test': '/testing',
-    'testing': '/testing',
+    'test': '/software',
+    'testing': '/software',
     'thread': '/tweet',
     'tooltip': '/writing',
     'tweet': '/tweet',
-    'ux': '/eye-13yo',
-    'usability': '/eye-13yo',
-    'walkthrough': '/eye-13yo',
+    'ux': '/13yo-eval',
+    'usability': '/13yo-eval',
+    'walkthrough': '/13yo-eval',
     'wisdom': '/wisdom',
     'writing': '/writing',
     'readme': '@readme',
@@ -114,13 +124,11 @@ META_PATTERNS = [
 ]
 
 
-def in_codex():
-    return os.environ.get('KRONAEL_IN_CODEX') == '1'
-
-
-def explicit_route(prompt):
+# Claude Code spellings only. codex_hook.py rewrites `/name` to Codex's
+# `@name`, and a spelling written here instead never reaches that rewriter.
+def explicit_route(prompt, harness=None):
     lower = prompt.lower()
-    if not in_codex():
+    if harness != 'codex':
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
                 return '/codex'
@@ -136,21 +144,35 @@ def explicit_route(prompt):
     return None
 
 
-def first_prompt_of_session(cwd, session_id):
+def first_prompt_of_session(session_id):
     """True the first time a session submits a prompt, recording a marker so
     later prompts stay silent. False when the marker exists or cannot be
     written, so an unwritable state dir never turns the nudge into per-prompt
     spam."""
-    state_dir = os.path.join(cwd, '.claude', 'tmp')
-    state_file = os.path.join(state_dir, f'resolve-nudge-{session_id}')
-    if os.path.exists(state_file):
+    marker = session_state('solve-nudge', session_id)
+    if marker is None or os.path.exists(marker):
         return False
     try:
-        os.makedirs(state_dir, exist_ok=True)
-        open(state_file, 'w').close()
+        open(marker, 'w').close()
     except OSError:
         return False
     return True
+
+
+def emit(text):
+    # additionalContext is the only UserPromptSubmit field the model reads;
+    # systemMessage renders in the transcript for the user and never reaches
+    # the model.
+    print(
+        json.dumps(
+            {
+                'hookSpecificOutput': {
+                    'hookEventName': 'UserPromptSubmit',
+                    'additionalContext': text,
+                },
+            }
+        )
+    )
 
 
 def main():
@@ -167,31 +189,33 @@ def main():
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        emit(STYLE_RULES)
         sys.exit(0)
 
     parts = []
 
-    session_id = data.get('session_id') or 'default'
-    cwd = data.get('cwd') or '.'
     if (
         prompt.strip()
-        and first_prompt_of_session(cwd, session_id)
-        and not re.search(r'/resolve\b', prompt)
+        and first_prompt_of_session(data.get('session_id'))
+        and not re.search(r'/solve\b', prompt)
     ):
-        parts.append(RESOLVE_NUDGE)
+        parts.append(SOLVE_NUDGE)
+
+    # Every turn. The style is in the system prompt and dilutes there; this is
+    # the copy that arrives next to the user's message.
+    parts.append(STYLE_RULES)
 
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
-    matched = explicit_route(prompt)
+    matched = explicit_route(prompt, data.get('harness'))
 
     if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
         parts.append(COMMIT_RULES)
     elif matched:
-        parts.append(f'info: {matched} matches this request.')
+        parts.append(f'info: Invoke {matched}.')
 
-    if parts:
-        print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
+    emit('\n\n'.join(parts))
 
     sys.exit(0)
 

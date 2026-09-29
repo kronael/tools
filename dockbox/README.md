@@ -50,16 +50,25 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # tmpfs backend for ephemeral dirs
+dockbox -T                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
-dockbox ls                        # list dockbox containers
-dockbox rm [pattern]              # remove containers
-dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
+dockbox exec make test            # run a command in the box
+dockbox ls                        # list boxes: busy/idle, tmpfs use, disk (writable layer)
+dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = all)
+dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
 Default command: claude. Use `-x` to override.
+
+`dockbox ls` USE is `busy` while any session or command runs in the box and
+`idle` when only its sleeper is left — a box no session holds, safe to remove.
+TMPFS totals the tmpfs mounts of a running box (`/tmp`, `/tmp/cargo-target`,
+`/dev/shm`, `$HOME` and the build-dir overmounts), each mount once; DISK is
+the container's writable layer, volumes excluded. USE and TMPFS show `-` for
+a stopped box and `?` when the probe fails. `dockbox prune` removes idle boxes
+at least 4 hours old and never a busy one.
 
 ### Re-entry into a running box
 
@@ -141,25 +150,30 @@ container as a full peer that should continuously improve shared config.
 ## Ephemeral builds
 
 Build artifacts are an attack surface, not state to persist. Two layers
-work together so builds never touch your host workdir:
+keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`. Builds
-   produce artifacts in the workdir as usual; tool caches and toolchains
-   live in the image, not your project.
+   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
+   caches and toolchains live in the image, not your project. dockbox
+   also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
+   Cargo never writes `target/` to the workdir.
 
 2. **Overmount by default** (Node, Bun, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
-   mount inside the container. Owned by the runtime user, gone when
-   the container exits.
+   mount inside the container. Owned by the runtime user, removed with
+   the box.
 
    Names overmounted by default:
 
    ```
-   node_modules  .next  dist  build  .turbo  .cache
+   node_modules  .next  .turbo  .cache
    ```
+
+   `dist` and `build` are not overmounted, so they land in the host
+   workdir: build tools `rm -rf` them, which fails with EBUSY on a
+   mountpoint.
 
    Monorepo workspaces are handled automatically — every match under
    the workdir gets its own mount.
@@ -194,20 +208,19 @@ is a liability; the source tree is the truth.
 
 **Opt out** (`dockbox -P` / `--no-ephemeral`):
 
-- You've committed `dist/` or `build/` and need the container to see it.
 - You want to share a single `node_modules/` across runs (and accept the
   cache-poisoning risk).
 - You're debugging a build issue and need the artifacts to survive.
 
-The Rust/Python auto-redirects still apply with `-P` — they're baked into
-the image's env, not the overmount layer.
+The Rust/Python auto-redirects still apply with `-P` — they're set in the
+container env, not the overmount layer.
 
 ### Surprise on first run
 
 If you already have a populated `node_modules/` on the host, the container
 will see an empty one and re-install on the first command. This is the
-sandbox working correctly. Subsequent commands in the same container reuse
-the mount; exiting the container discards it.
+sandbox working correctly. Later sessions in the same box reuse the mount;
+the box, mounts included, is removed when its last session exits.
 
 ## Authentication
 

@@ -9,6 +9,8 @@ user-invocable: true
 
 Turns a prose script from [`video.md`](../video.md) into an mp4. This file is engine-agnostic: the bridge, house style, caption pipeline, and a flavor index. Pick a flavor, then read only its file.
 
+Nodes for this medium: scenes → shots → layers; see `../SKILL.md` § Principle.
+
 ## Pick a flavor (load on demand)
 
 | flavor | file | pick when |

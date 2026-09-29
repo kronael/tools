@@ -21,6 +21,10 @@ tool, then adjust. Claude typically makes 3-5 changes blind before rendering.
 6. **Adjust** ONE thing
 7. **Repeat** from step 2
 
+Any design recommendation — UX, visual, typography, layout, colour — follows
+the `design-eval` skill's sourcing rule: a named published source + URL, or
+labeled as your own opinion.
+
 ## Critical SVG Gotchas
 
 NEVER use `<text>` elements - unreliable across contexts, especially favicons.
@@ -28,6 +32,11 @@ Convert text to paths or skip text entirely.
 
 NEVER use gradients without unique IDs - breaks when multiple SVGs on page.
 Prefer solid colors.
+
+NEVER use SVG for `og:image`/`twitter:image` - X/Twitter's card crawler does
+not render SVG and drops the image silently (no error, just no card). Ship a
+rasterized PNG/JPG (e.g. 1200x630), ideally generated from the same source
+SVG at build time so it cannot drift from it.
 
 Stroke widths for 100x100 viewBox:
 - Thin details: `stroke-width="2"`

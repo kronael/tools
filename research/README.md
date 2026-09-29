@@ -56,7 +56,7 @@ Spec v1 lives in git history; do not resurrect.
 **Why this works**:
 
 - **Eval set is the external invariant** the agent can't game. [Library Drift](library-drift.md) measured the exact regression that happens without it; we cannot ship without one.
-- **PR review** is the human gate. The settings-recommended.json `gh pr merge*` deny rule enforces "no auto-merge" at the harness level.
+- **PR review** is the human gate. The settings-recommended.json `gh pr merge*` ask rule enforces "no auto-merge" at the harness level: every merge prompts the human.
 - **Offline = no per-turn cost, no recursion, no incomplete snapshots**. The loop runs when the user invokes `make refine-skill SKILL=<name>`, not on every Stop.
 - **One source of truth**: edits land in this repo; the install path syncs them to `~/.claude/`. No drift.
 

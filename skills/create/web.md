@@ -75,6 +75,9 @@ If the user asks for implementation in an existing repo, generate code in the re
 
 Act as an expert designer working with the user as the manager.
 
+Nodes for this medium: the component tree — sections/components as nodes,
+tokens/props as node data; see `SKILL.md` § Principle.
+
 HTML is the default tool, but the medium changes by assignment:
 
 - UX designer for flows and product surfaces

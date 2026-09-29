@@ -64,6 +64,9 @@ a condition the reader cannot take in at a glance divorces the test from the
 
 Utility files are named `*_utils.*`.
 
+A script runs from a fixed working directory with simple relative paths — NEVER
+`basename $0`, `__dirname`, or complex path resolution.
+
 For user-facing output, lowercase informational messages and Capitalize errors
 (`"checking..."` vs `"Failed: ..."`), and follow the Unix log format:
 `Sep 18 10:34:26 INFO subsystem: message`.
@@ -104,6 +107,8 @@ comment above it is the canonical redundant comment.
   and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
   name instead.
 - NEVER a ticket number or issue ID in a comment.
+- NEVER a comment about past state, a prior design, or backwards compat — the
+  `writing` skill's no-history rule covers comments too; history lives in `.diary/`.
 
 ## Design
 
@@ -114,6 +119,48 @@ always validate input before it reaches persistence. Name a variant by what
 happens at the use site — the action or effect — never an interpretive label
 the reader has to decode: `Notify::Send`/`Notify::Skip`, not
 `Notify::Partners`/`Notify::Silent`.
+
+A function-typed field in a struct is a jump, not an abstraction. The call site
+names the field; the value is whatever another file assigned, and that value is
+a literal with no name, so no other code can refer to it. An interface method is
+the same seam with a name on each destination: the implementations are types,
+and the language server lists them. Five-second test — from the call site, can
+you name every assignment of this field without a search? If not, it is a jump:
+write an interface with one method, or call the function directly. The test
+double is the usual reason for the field and fails the test the same way; a
+one-method interface with a fake type is as short and stays findable.
+
+A function value is right where the reader sees it created: passed as an
+argument (`sort.Slice`), adapted to the library's own interface
+(`http.HandlerFunc`), or assigned in one wiring site because the caller holds a
+package function and the callee must not import that package. Cost: arizuko,
+2026-09-23 — 82 exported func fields in 14 files, and `Authorize` is a function
+in one package, a method in a second and a func field in a third, so a grep for
+the field answers about the wrong one.
+
+## System changes
+
+- **No duplication — amend the original.** Before adding a mechanism (guard,
+  helper, table, log site, config), grep for an existing one. If it exists,
+  fix/extend the ORIGINAL; NEVER add a parallel second path — two paths drift.
+  If the original is wrong, fix it or call it out; NEVER route around it.
+- **Fail loud, fail to the user.** An error on a user-facing path MUST surface
+  to the user (thrown / returned non-2xx / delivered to the chat), not just
+  logged — a logged-but-invisible failure is still silent. NEVER swallow
+  (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
+- **Retry ONLY transient errors** — remote/network calls and DB busy/locked.
+  Everything else (misconfig, missing data, programming errors) throws
+  immediately: no retry, no fallback, no best-effort continue past a failed
+  precondition.
+- **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is
+  the redesign that makes the bad state impossible-by-construction (gate the
+  precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer
+  the cause fix.
+- **Redesigns need sign-off.** When a fix is a redesign (new contract, changed
+  control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST
+  (`bugs` skill); the user signs off BEFORE you ship. Only symptom-level
+  loud-logging ships inline.
+- ALWAYS build/test/lint every ~50 lines — errors cascade.
 
 ## Boring code
 

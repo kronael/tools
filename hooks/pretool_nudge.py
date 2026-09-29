@@ -17,8 +17,17 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)git\s+add\s+(?:-A|--all)\b', 'broad git add'),
     (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--amend\b', 'git commit --amend'),
     (r'(?<!\S)git\s+commit\b[^\n;|&]*\s--no-verify\b', 'git commit --no-verify'),
+    (r'(?<!\S)git\s+commit\b[\s\S]*(?i:co-authored-by)', 'Co-Authored-By trailer'),
+    (r'(?<!\S)git\s+merge\b[^\n;|&]*\s--squash\b', 'git merge --squash'),
+    (r'(?<!\S)git\s+rebase\b[^\n;|&]*\s(?:-i|--interactive)\b', 'git rebase -i'),
+    (r'(?<!\S)git\s+(?:checkout|switch)\b[^\n;|&]*\s-[bBcC]\b', 'git branch creation'),
+    (r'(?<!\S)git\s+worktree\s+add\b(?![^\n;|&]*--detach)', 'git worktree add without --detach'),
+    (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
     (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
+    # Any recursive removal, not only -rf: -r, -R and --recursive delete
+    # trees just as thoroughly, and the deny rules ban all three.
+    (r'(?<!\S)rm\s+(?:-[a-zA-Z]*[rR]|--recursive)', 'recursive rm'),
 )
 
 EXT_SKILLS = {
@@ -101,11 +110,11 @@ def extract_command(data: object) -> str:
     return ''
 
 
-def unsafe_command_reason(command: str) -> str | None:
+def unsafe_command_reason(command: str, harness: str | None = None) -> str | None:
     for pattern, reason in UNSAFE_COMMAND_PATTERNS:
         if re.search(pattern, command):
             return reason
-    if os.environ.get('KRONAEL_IN_CODEX') == '1' and re.search(r'(?<!\S)codex\b', command):
+    if harness == 'codex' and re.search(r'(?<!\S)codex\b', command):
         return 'recursive codex execution'
     return None
 
@@ -114,7 +123,7 @@ def process(data: object) -> dict | None:
     """Pure: parsed hook JSON → hookSpecificOutput dict, or None for silent."""
     if isinstance(data, dict) and data.get('tool_name') in COMMAND_TOOLS:
         command = extract_command(data)
-        reason = unsafe_command_reason(command)
+        reason = unsafe_command_reason(command, data.get('harness'))
         if reason:
             return {
                 'decision': 'block',
@@ -158,6 +167,14 @@ def main() -> None:
         return
     result = process(data)
     if not result:
+        return
+
+    # A block is a ban and must fire on EVERY unsafe command. The dedup cache
+    # below keys on (skill, path); a Bash call carries neither, so all of them
+    # share one key and the second unsafe command in a session goes through.
+    if result.get('decision') == 'block':
+        with contextlib.suppress(OSError, ValueError):
+            print(json.dumps(result))
         return
 
     path = extract_path(data)

@@ -230,6 +230,38 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 > The options come from the selected item without forcing the user to guess.
 
 
+### 9b. The Totalising Summary ("that is the whole X")
+
+**Problem:** "That is the whole point." "That is the whole interface." "That is
+the whole problem." "That's the entire trick." The construction announces that
+a thing has been fully explained and hands the reader a verdict instead of
+letting the preceding sentence carry it. LLMs reach for it constantly, because
+it *sounds* like a confident writer landing a point while adding no information
+— strip it and nothing is lost. It also almost always overclaims: an interface
+has flags, a problem has causes, and "the whole" of either is rarely what was
+just described.
+
+Not banned outright. It earns its place when the totality is the surprising
+claim and the reader would otherwise assume there is more — a genuinely
+one-function API, a config file with exactly one key. Once per document at most,
+and only where "and there is genuinely nothing else" is the news.
+
+**Before:**
+> Mark the function you need fast. That is the whole interface.
+
+**After:**
+> Mark the function you need fast. Nothing else to configure.
+
+**Before:**
+> None of that looks wrong when you read it. That is the whole problem.
+
+**After:**
+> None of that looks wrong when you read it, which is why it survives review.
+
+Same family, same treatment: "that's it", "and that's all there is to it",
+"it really is that simple", "end of story".
+
+
 ### 10. Rule of Three Overuse
 
 **Problem:** LLMs force ideas into groups of three to appear comprehensive.

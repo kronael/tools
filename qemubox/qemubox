@@ -45,19 +45,21 @@ usage() {
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
        qemubox ls | status <name> | rm <pattern|-a> | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
+       qemubox [options] exec <cmd> [args...]
 
 Tools (first positional arg -- no leading dash):
     (default)       Claude Code, opus @ xhigh effort
     claude          Claude Code, opus (same as default)
     codex           OpenAI Codex
     haiku           Claude Code --model claude-haiku-4-5-20251001
-    sonnet          Claude Code --model claude-sonnet-5 --effort high
-    opus            Claude Code --model claude-opus-5 --effort xhigh
+    sonnet          Claude Code --model claude-sonnet-5-5 --effort high
+    opus            Claude Code --model claude-opus-5-5 --effort xhigh
     fable           Claude Code --model claude-fable-5-1
     gpt             Codex -m gpt-6-astra
     mini            Codex -m gpt-5.4-mini
     spark           Codex -m gpt-5.3-codex-spark
-    bash|zsh|sh     Interactive shell (sh is an alias)
+    bash|zsh|sh     Interactive login shell (sh is an alias for bash)
+    exec <cmd>      Run <cmd> in the box, every later arg passed through
     <any cmd>       Any binary installed in the VM
 
 Options:
@@ -663,11 +665,11 @@ apply_flag() {
 
 tool_cmd() {
     case "$1" in
-        claude) cmd=(claude --model claude-opus-5 --effort xhigh) ;;
+        claude) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
         codex) cmd=(codex) ;;
         haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
-        sonnet) cmd=(claude --model claude-sonnet-5 --effort high) ;;
-        opus) cmd=(claude --model claude-opus-5 --effort xhigh) ;;
+        sonnet) cmd=(claude --model claude-sonnet-5-5 --effort high) ;;
+        opus) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
         fable) cmd=(claude --model claude-fable-5-1) ;;
         gpt) cmd=(codex -m gpt-6-astra) ;;
         mini) cmd=(codex -m gpt-5.4-mini) ;;
@@ -827,7 +829,12 @@ if [ -z "$entrypoint_explicit" ] && [ "$#" -gt 0 ]; then
     esac
 fi
 
-tool_cmd "$entrypoint"
+if [ "$entrypoint" = exec ]; then
+    [ "$#" -gt 0 ] || { echo "qemubox exec: a command is required" >&2; exit 2; }
+    cmd=("$@"); set --
+else
+    tool_cmd "$entrypoint"
+fi
 
 for arg in "$@"; do
     case "$arg" in

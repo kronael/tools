@@ -9,7 +9,10 @@ repo CLAUDE.md links to this file.
   (`commit`, `refine`, `humanize`) and bare tech names (`rs`, `go`, `ops`).
 - **Router skill** = one `SKILL.md` (the ONLY preloaded file) + sibling cold
   data `.md` files, read on demand. Current routers: `create/` (artifact
-  generators), `software/` (engineering baseline + runbooks), `research/` (research baseline).
+  generators), `software/` (engineering baseline + runbooks), `specs/` (spec
+  workflow), `readme/` (documentation: sync, file topology, page shape),
+  `review/` (give/take a code review — see `review/SKILL.md`), `research/`
+  (research baseline).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -17,26 +20,62 @@ repo CLAUDE.md links to this file.
   Bodies load only on invocation. `when_to_use` is NOT free — trim it too.
   ALWAYS make a router when several rarely-invoked skills share an audience —
   N preloaded entries collapse to 1.
+- The listing has a SECOND cap the per-entry one hides: the whole listing gets
+  1% of the context window at 4 chars/token — 8,000 chars at a 200k window.
+  Over budget, every entry falls back to `- <name>` and descriptions are
+  bought back in descending recency-weighted-use order, so a skill nobody
+  invoked loses its description first and its keywords stop routing. Deleting
+  an entry frees its name AND its claim on that pool; trimming a `when_to_use`
+  under the 1,536 cap only frees the pool.
 
 ## Router anatomy
 
 - `SKILL.md` — dispatch table: trigger keywords → data file. NEVER prose
   links alone. `description` = one-line summary + `NOT for…` clause — no
   keyword dump, no workflow text. `when_to_use` = trimmed keyword list,
-  at least one anchor per folded mode, no synonyms — `/resolve` scans both
+  at least one anchor per folded mode, no synonyms — `/solve` scans both
   fields.
 - Light content lives flat: `<mode>.md`.
 - Heavy content nests: `<mode>/<slug>.md` + `<mode>/<slug>/` keeping the
   ported tree intact (`references/`, `scripts/`, `templates/`).
-- NEVER name a data file `SKILL.md` — that is exactly what makes it preload.
+- NEVER name a data file `SKILL.md` — that is exactly what makes it preload
+  (warned by lint: skill-router in `hooks/skill_frontmatter_lint.py`).
 - Data-file frontmatter is inert provenance (author, license, tags) — keep
   it for attribution (NOTICE points at it), never trust it for routing.
 
+## Router invariants
+
+Hold these on every edit — each one is what keeps a router cheaper than the
+skills it replaces.
+
+- ALWAYS exactly one `SKILL.md` per router, at the router root. It is the only
+  file that preloads and the only file that is invocable.
+- A body file is NEVER separately invocable — `software/code.md` has no
+  `/code`. ALWAYS reach it through its router; NEVER document or promise a
+  slash command for one.
+- ALWAYS make every dispatch row resolve to a file that exists, at a path
+  relative to the router directory. NEVER point a row outside that directory —
+  name the owning skill in prose instead.
+- ALWAYS leave every `.md` under the router reachable: named by a row, or
+  indexed by a file a row names. `CLAUDE.md` is the sole exemption — it is
+  edit notes, not content.
+- ALWAYS write the left cell so a reader picks the file WITHOUT opening any:
+  name the concrete decisions, artifacts and file names inside it. NEVER a
+  bare topic word — a row a reader cannot match against makes them read two
+  files, which is the cost the router exists to remove.
+- ALWAYS tell the body to read exactly ONE matched file. NEVER let a router
+  invite a bulk read of its subtree.
+
 ## Naming law
 
-- `create/` = makes artifacts; `software/` = engineering knowledge.
+- `create/` = makes artifacts; `software/` = engineering knowledge;
+  `specs/` = the design record; `readme/` = the docs a project ships.
   Namespaces, not words you conjugate — no new `create-*` dirs.
+- A router is named for its drawer, NEVER for one of its modes — the mode
+  keeps its own name as the body file (`specs/useless.md`).
 - Bare verbs and tech names stay flat top-level.
+- A verb skill may route its own modes under its own name (`readme/`,
+  `review/`).
 - `writing`, `humanize` = shared references cited by prose skills
   (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
 
@@ -54,6 +93,13 @@ repo CLAUDE.md links to this file.
   multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
+
+## Earning a rule's place
+
+- ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
+  rules: a fresh sub writes its defaults for the topic, and whatever it produces
+  unprompted does not go in. Only drifts, unguessable local facts, workflows and
+  deliberate harness overrides survive.
 
 ## Prompt examples and context
 

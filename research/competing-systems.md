@@ -67,7 +67,7 @@ For v3, Reflexion's pattern shows up indirectly: the `.diary/` entries the user 
 
 LangGraph treats human approval as a first-class graph node. The agent runs a workflow; at predefined points it pauses for human input. **The defense is the human, not any internal check**.
 
-This is the model v3 inherits at the merge step: the PR is our `interrupt` node, the human reviewer is the approver. Settings-level `gh pr merge*` deny is the harness enforcing the interrupt — we can't accidentally code around it.
+This is the model v3 inherits at the merge step: the PR is our `interrupt` node, the human reviewer is the approver. The settings-level `gh pr merge*` ask rule is the harness enforcing the interrupt — we can't accidentally code around it.
 
 ### mem0 and Letta/MemGPT
 

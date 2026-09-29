@@ -1,7 +1,7 @@
 ---
 name: ts
-description: TypeScript/Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files or writing TypeScript
+description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
+when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
 ---
 
 # TypeScript Style
@@ -16,13 +16,37 @@ Read on demand, in this directory:
 - `v8-deopt.md` — a hot path that measures slower than it should: proving
   megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
   profiling, and when to stop.
+## Runtime and packages
+- ALWAYS the newest Bun as package manager, in every JS/TS project: `bun
+  install`, `bun.lock` committed, `bunx` for one-offs. NEVER a second
+  lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) beside it
+- **CRITICAL**: `bun run` shells node-shebang bins (`vite`, `tsc`, `eslint`,
+  `playwright`) out to the system `node`. ALWAYS set `bunfig.toml`:
+  ```toml
+  [run]
+  bun = true
+  ```
+  else the project silently depends on whatever `node` is on PATH. Ad hoc:
+  `bun --bun run x`, `bunx --bun x`
+- Bun RUNS the Node toolchain, it does not replace it — Vite, tsc, eslint and
+  Playwright stay Node-ecosystem tools. `bun build` only when Bun's bundler is
+  the actual target
+- Frontends and script projects are Bun-only: Vite + `bun test` + Playwright,
+  `engines.bun`, CI on `oven-sh/setup-bun`. NEVER `.nvmrc`, `engines.node` or
+  a Node CI step there
+- Backends that deploy on Node: floor at Node 24 (current LTS) wherever it is
+  declared — `engines.node: ">=24"`, `.nvmrc` = `24`, CI `node-version: 24`,
+  images `node:24-slim` / `node:24-alpine` — same major at every site
+- NEVER leave an older major in place because it still builds — bump it with
+  the change that touches the file
 
 ## Code Style
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas
-- Adhere to `gst` lint rules; match existing style when changing code
+- ALWAYS follow the project's lint config (`biome.json` in a new project); match existing style when changing code
 - Single-letter vars only in trivial one-line callbacks (`arr.find(v => v.id === x)`)
-- ALWAYS name types — NEVER inline/anonymous object types (tests exempt)
+- ALWAYS name reusable or domain-significant object types; NEVER name a one-use alias that only hides `Pick` or `Omit` — ALWAYS inline that utility projection
 - Minimize type proliferation: reuse existing types, consolidate similar shapes
+- NEVER repeat a module or domain name in a type when import context makes it unambiguous — ALWAYS use the shortest precise name
 - Single-line guards: omit braces, body indented on next line:
   ```
   if (x)
@@ -36,16 +60,24 @@ Read on demand, in this directory:
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
 ## Types
-- ALWAYS annotate exported function return types; ALWAYS use inference for obvious local functions and callbacks.
+- NEVER annotate a return type or a const's type that inference already produces — exported or not.
+- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
-- ALWAYS discriminated unions for state, NEVER boolean flag combos. ALWAYS exhaust with `default: const _:never = x` in switches.
+- ALWAYS use discriminated unions for mutually exclusive state; NEVER force a union onto independent results — ALWAYS use a named result object with one field per result
+- For fixed-shape result objects, ALWAYS use required `T | undefined` fields; NEVER use optional fields unless key presence carries meaning
+- ALWAYS use `value != null` for an intentionally nullish guard; NEVER expand it into separate null and undefined checks
+- ALWAYS exhaust discriminated-union switches with `default: const _:never = x`
 - NEVER `any` — use `unknown` and narrow. ALWAYS `import type { T }` for type-only imports.
 
 ## Design
 - NEVER methods just for grouping — use modules
 - ALWAYS inline single-use one-liners; NEVER wrap trivial expressions
 - Library barrel files: `export * from './module'`
+
+## Performance
+- NEVER reason about speed from TS types — V8 erases them and specialises on runtime shapes alone
+- ALWAYS read the `software` skill's `js-perf.md` before tuning a hot path: shape discipline, elements kinds, deopts, typed arrays, Wasm/N-API batching
 
 ## Logging
 - NestJS: built-in Logger (wraps Pino)
@@ -55,6 +87,13 @@ Read on demand, in this directory:
 - ALWAYS validate external I/O with class-validator when practical
 - NEVER trust external APIs/user input with `as Type`
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
+
+## Lints
+- Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
+  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
+- Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
+  existing project already runs, plus tsc. ast-grep only fills the
+  kronael-specific gap; NEVER duplicate a Biome or eslint rule here.
 
 ## Testing
 - ALWAYS a JSDoc block above every `test(...)` / `it(...)` call. Its content
@@ -69,6 +108,15 @@ Read on demand, in this directory:
 - `make e2e`: Playwright, `make smoke`: against running server, `bun test`: unit only
 
 ## Tooling
+- New project: ALWAYS Bun as runtime, package manager and test runner, Biome
+  as linter and formatter, `tsc --noEmit` for types — `bun init`, then
+  `bun add -d @biomejs/biome && bunx biome init`. NEVER scaffold on
+  npm/pnpm/yarn, eslint, prettier, jest or vitest.
+- An existing project keeps its tooling until the owner asks for a migration —
+  NEVER switch it as a side effect of another change.
+- Targets (`mk` skill names): `prepare` = `bun install`, `check` =
+  `bunx biome check .`, `right` = `bunx tsc --noEmit`, `test` = `bun test`.
+  The strict `biome.json` and `tsconfig.json`: `software/strict-typing.md`.
 - ALWAYS pin the bun runtime with a `.bun-version` file — CI `setup-bun` reads
   it via `bun-version-file`, mise reads it as an idiomatic version file. NEVER
   assume bun auto-switches: the runtime ignores the file, it's a convention.

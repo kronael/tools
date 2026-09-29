@@ -1,7 +1,7 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "prepare a release, cut a release, tag a release"
+when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release"
 user-invocable: true
 ---
 
@@ -12,8 +12,8 @@ user-invocable: true
 0. **Read local CLAUDE.md** — `Read` the project's `CLAUDE.md` (at CWD).
    Look for a `## Release` section. Any directive there **overrides** the
    defaults in this skill. Common overrides to watch for:
-   - `No tagged releases` → skip step 7 entirely (no `git tag`)
-   - Custom checklist → run those steps instead of (or in addition to) step 5
+   - `No tagged releases` → skip step 6 entirely (no `git tag`)
+   - Custom checklist → run those steps instead of (or in addition to) step 4
    - Pinned version file or changelog path → use that instead of discovering
    Apply found overrides before proceeding. If the section is absent, use
    skill defaults throughout.
@@ -21,13 +21,25 @@ user-invocable: true
 1. **Detect scope** — `git tag --list` + `git log` since last tag.
    - No prior tags → first release. Default `v0.1.0` (matches pyproject's
      usual default); skip the bump step if pyproject already says it.
-2. **Version bump** — patch default. Discover the version file:
+1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
+   tree on a first release) before bumping anything. A bare "release" implies
+   it — NEVER ask whether to refine. Run it at full depth whatever the diff
+   size: every applicable lens, a bucket needing more than refine's 3 taking
+   further review passes of up to 3 each — NEVER drop a lens; `correctness`
+   lenses on `fable`; and a `codex` second opinion over the same range (the
+   `codex` skill directly, not `oracle`), its findings fed through refine's
+   triage and apply steps — NEVER applied in main context. Any change landing
+   after the refine, other than the refine's own commits and the release
+   commit, reruns it — NEVER tag code the refine did not see.
+2. **Version bump** — patch default; components never carry (see Rules).
+   Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
      in a monorepo gets bumped independently)
    - Rust: `Cargo.toml` `version = "..."`
    - JS/TS: `package.json` `"version": "..."`
    - CLAUDE.md may pin which file is canonical when multiple exist;
      otherwise discover the deepest one and bump there.
+   - ALWAYS bump the project version wherever `README.md`/`CLAUDE.md` state it.
 3. **Changelog** — `CHANGELOG.md` at repo root.
    - File exists with `[Unreleased]` → move to `[vX.Y.Z] — YYYYMMDD`.
    - File missing → create with one section `[vX.Y.Z] — YYYYMMDD`.
@@ -100,12 +112,9 @@ user-invocable: true
    Sizing guide: most entries land in the 15–30 line range after
    distill. 80+ line bodies are the smell. Look at the prior 3-5
    entries in this repo for what the project considers a typical wave.
-4. **Docs alignment** — only spawn refine if README/CLAUDE.md carry
-   version-dependent stats (test counts, line counts, version strings).
-   Skip when nothing version-shaped is documented.
-5. **Verify** — `make test`, `make smoke` if defined. For monorepos
+4. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
-5.5. **Critique gate when unclear.** If verification passes but the release is
+4.5. **Critique gate when unclear.** If verification passes but the release is
    still not obviously good enough from context, run the relevant critique lens
    before committing:
    - demo/readiness uncertainty → `ceo-eval`
@@ -117,8 +126,8 @@ user-invocable: true
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.
-6. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
-7. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
+5. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
+6. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
    versions track in their own pyprojects). **Collision-safe, ALWAYS:**
    - Pick a version NOT already tagged. If `git rev-parse -q --verify vX.Y.Z`
      succeeds, that version is taken — bump to the next free patch (prevents a
@@ -136,10 +145,16 @@ user-invocable: true
   tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag
+- ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
+  release a change the refine did not see, other than the refine's own commits
+  and the release commit
 - NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
-- Default to patch bump unless user says otherwise
+- ALWAYS bump the patch unless the user asks for minor or major. MAJOR, MINOR
+  and PATCH are independent integers that never carry: `0.3.99` → `0.3.100`,
+  `1.9.0` → `1.10.0`. NEVER roll a `99` or a `9` into the next component —
+  `0.3.99` → `0.4.0` is a minor bump nobody asked for
 - No changes since last tag → "nothing to release", stop
 - If the release evidence is ambiguous, do not guess. Run the smallest critique
   lens that can resolve the ambiguity before the release commit.

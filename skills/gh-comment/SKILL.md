@@ -27,7 +27,7 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ## Sign-off questionnaire
 
-ALWAYS present each finding — or thread reply — to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
+ALWAYS present each finding, thread reply, or re-review request to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
 ## Comment body — distilled
 
@@ -39,7 +39,7 @@ that got you there.
 2. **Distill** to one line naming the defect plus one optional line giving the
    fix, then **de-slop** it: load the `humanize` skill and apply it. Cut em
    dashes, hedges, passive voice, "it is worth noting", significance padding
-   and rule-of-three phrasing. Speak in the `80-caveman` register: maximum
+   and rule-of-three phrasing. Speak in the `caveman` register: maximum
    signal per token, no preamble, no recap.
 
 Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two
@@ -137,9 +137,10 @@ gh api repos/$REPO/pulls/<PR>/comments/<comment_databaseId>/replies -f body="�
 
 `<comment_databaseId>` is the thread's first comment `databaseId` from the
 fetch above — NOT the GraphQL `id`. Same distillation rules as any other body
-(§ Comment body); a reply also states the disposition (fixed/won't-fix/
-deferred/refuted), citing a commit SHA or the invariant/`BUGS.md` entry it
-matches.
+(§ Comment body); a reply states the disposition — won't-fix (cite the
+invariant/`BUGS.md` entry it matches), deferred, or refuted (say why). A
+fixed thread gets NO reply: the re-review request (§ Re-review request)
+announces the fix.
 
 ## Resolve a thread
 
@@ -149,8 +150,23 @@ GraphQL mutation, by the thread's GraphQL `id` (not `databaseId`):
 gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id isResolved}}}' -f id=<thread_id>
 ```
 
-ALWAYS reply before resolving — a resolved thread with no reply reads as
-dismissed unread. NEVER resolve a thread this pass did not address.
+ALWAYS resolve a fixed thread after the push, with no reply — the re-review
+request announces the fix. ALWAYS reply before resolving any other thread — a
+resolved thread with no reply and no fix reads as dismissed unread. NEVER
+resolve a thread this pass did not address.
+
+## Re-review request
+
+After the push, ONE general comment @-mentions the reviewer, names in about
+four words the most important thing the round fixed, and asks for a
+re-review — it is the only announcement a fixed thread gets. NEVER compose
+the phrase here: hand the `distill` skill the list of fixes, take back its
+~4-word phrase, and put that in the comment. Same sign-off gate as every
+other body.
+
+```bash
+gh pr comment <PR> --body "🤖 @<reviewer> CI is green now. Please re-review."
+```
 
 ## Rules
 
@@ -169,5 +185,12 @@ dismissed unread. NEVER resolve a thread this pass did not address.
 - NEVER expect to append to a pending review — `POST /pulls/<PR>/reviews/<review_id>/comments`
   returns 404. ALWAYS `DELETE /pulls/<PR>/reviews/<review_id>` and re-POST the whole
   `comments[]`, then report the new review id and comment count
-- ALWAYS reply to a thread before resolving it; NEVER resolve one this pass did not address
+- ALWAYS resolve a fixed thread after the push with NO reply — the re-review
+  request announces it; NEVER resolve one this pass did not address
+- ALWAYS reply to a won't-fix, deferred or refuted thread before resolving it —
+  it has no commit to point at
+- ALWAYS post ONE re-review request after the push — a general comment
+  @-mentioning the reviewer, the round's most important fix in ~4 words from
+  the `distill` skill; NEVER compose that phrase yourself, NEVER a per-thread
+  "fixed" reply
 - NEVER confuse a thread's GraphQL `id` (resolve) with a comment's REST `databaseId` (reply) — mixing them 404s

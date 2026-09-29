@@ -1,6 +1,7 @@
 ---
 name: install
-description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox). First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+description: Install (or update) the Kronael toolkit into ~/.claude/ and bridge it into Codex. Two-way syncs skills, agents, hook scripts (reverse-syncing live-ahead refinements into the repo, never downgrading them); merges Claude hook wiring; installs Codex hook wiring; installs the wisdom skill body as ~/.claude/CLAUDE.md; offers the standalone CLI tools (rig, udfix, clp, dockbox) and optional ripwire. First-time installs get an explained questionnaire. USE when the user says "install kronael", "install kronael tools", "install" (in this repo), or runs /kronael:install.
+when_to_use: "install kronael, install kronael tools, install (in this repo), /kronael:install"
 ---
 
 # Install Kronael toolkit
@@ -22,6 +23,7 @@ ALWAYS verify these exist at the source root before proceeding:
 - `skills/` — bundle of skills
 - `agents/` — bundle of agents
 - `hooks/` — hook scripts (codex_hook.py, prompt_nudge.py, pretool_nudge.py, local.py, reclaude.py, stop.py, memory_nudge.py)
+- `hooks/lib/` — shared module (state.py); the hooks import it at runtime, so a copy without it tracebacks on every prompt
 - `codex-hooks.json` — Codex lifecycle hook wiring that calls `hooks/codex_hook.py`
 - `settings-recommended.json` — recommended permissions, sandbox, env, hook wiring
 - `RECLAUDE.md` — re-injection template for the `reclaude` hook
@@ -30,9 +32,22 @@ If missing, you're in the wrong directory — stop and ask.
 
 ## Sync protocol
 
+### The three sides
+
+Name them explicitly — install reconciles the first two, `git push` reaches the third:
+
+- **source** — this repo's working tree, where you edit.
+- **live** — `~/.claude/` on THIS host: the installed, running bundle.
+- **upstream** — the `origin` remote on GitHub (`kronael/tools`).
+
+Install is a two-way **source ↔ live** sync (below). **upstream** is reached
+ONLY by an explicit `git push` under the wisdom file's Git gate; NEVER conflate a
+`live` sync with an `upstream` push, and NEVER assume `live` matches `upstream` —
+a host's `~/.claude/` can be ahead of, behind, or forked from `origin`.
+
 Install is ALWAYS a two-way sync, never a one-way deploy. It reconciles
-source ↔ installed in BOTH directions: source-advanced files update the
-install; installed-AHEAD files (local refinements the repo lacks) are surfaced
+source ↔ live in BOTH directions: source-advanced files update live;
+live-AHEAD files (local refinements the repo lacks) are surfaced
 and reverse-synced INTO the repo, NEVER silently overwritten — overwriting a
 live-ahead file downgrades the user's own work. A plain copy is only the
 degenerate case where nothing has drifted.
@@ -93,6 +108,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **CLI tools** — rig, udfix, clp (step 7).
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
   - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
+  - **ripwire** — optional codebase-map tool for agents; installs a binary and
+    its own `ripwire-*` skills (step 6 separate ask).
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
 - **Update**: skip the first-time questionnaire, but ALWAYS still run steps 6–7
   — NEVER silently skip tools or dockbox on a re-run (a stale binary or an
@@ -120,12 +137,18 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `agents/*` → `~/.claude/agents/`
    - `hooks/*.py`, `hooks/*.sh`, `hooks/lib/` → `~/.claude/hooks/`
    - `output-styles/*` → `~/.claude/output-styles/`
-   - **Prune renamed files**: delete `~/.claude/hooks/nudge.py`,
+   - `commands/*` → `~/.claude/commands/`
+   - **Prune renamed and removed files**: delete `~/.claude/hooks/nudge.py`,
      `~/.claude/hooks/extnudge.py` and `~/.claude/output-styles/80-caveman.md`
      if present — the bundle ships `prompt_nudge.py`, `pretool_nudge.py` and
      `output-styles/caveman.md` instead, and a stale copy keeps loading beside
      its replacement. A stale output style also leaves `outputStyle` pointing
-     at a name no file answers to. Backup first per step 1.
+     at a name no file answers to. Also delete the orphan hooks `redirect.py`,
+     `context.py`, `learn.py`, `test_hooks.py` and `lib/toolchain.py`
+     (registered in no settings file). Backup first per step 1. An install
+     keeps files the source has dropped, so an unpruned orphan reads as
+     live-ahead work on the NEXT sync and gets vendored back in; that is what
+     this list prevents.
    - **Prune removed kronael skills**: AFTER backup (step 1), delete the dirs
      listed in `reference.md` § "Removed kronael skills to prune" from
      `~/.claude/skills/` if present (consolidated or renamed — orphans keep
@@ -137,12 +160,16 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - `RECLAUDE.md` → `~/.claude/RECLAUDE.md`
    - NEVER delete user-added files not in source.
 
-3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. On an update the installed file also carries the `<!-- kronael:start -->` … `<!-- kronael:end -->` block, because `~/.codex/AGENTS.md` symlinks here and step 5 merges it in; a plain body write drops it and costs Codex its global guidance. ALWAYS keep the block (or re-run step 5 after the write) and diff the body against it excluded, so the bridge block never reads as drift. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
+3. **Install wisdom**. The `global` skill body (file: `skills/global/SKILL.md`, minus YAML frontmatter) becomes `~/.claude/CLAUDE.md`. Single destination — NEVER also write to `~/.claude/skills/global/`. If `~/.claude/CLAUDE.md` already has content, show diff and ask before overwriting. Extract any local paths / repo names / secrets references into `~/.claude/LOCAL.md` (auto-injected by `local.py`).
 
 4. **Merge settings**. Read `settings-recommended.json` and merge into `~/.claude/settings.json`:
    - **Hooks block** (UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact) — replace existing matching events with the recommended wiring (paths use `~/.claude/hooks/*.py`).
    - **`cleanupPeriodDays`** — ALWAYS apply the recommended value, never ask. The 30-day default silently deletes session transcripts at startup; the toolkit keeps all history. If the user's value is lower, raise it to the recommended one; never lower it.
    - **`outputStyle`** — set live `~/.claude/settings.json` `outputStyle` to the recommended value (`caveman`). Without this key the style file in `output-styles/` is defined but never activated (the style silently does nothing).
+   - **`attribution.commit`** — ALWAYS apply the recommended empty string,
+     never ask. Unset, Claude Code tells the model to end every commit with a
+     `Co-Authored-By` trailer. NEVER write `attribution: false` — versions
+     before v2.1.281 reject it and skip the whole settings file.
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions
@@ -158,6 +185,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `bypassPermissions` toward `default`, never drop an installed `allow`
      entry. Install may only widen (add `allow` entries, relax the sandbox).
      The recursive-removal deny guard is the one exception — it always applies.
+   - **Deny moved to ask** — an installed `deny` entry the source now lists
+     under `ask`: remove the `deny` copy (a loosening, which loosen-only
+     allows) and add the `ask` entry. Deny evaluates before ask, so keeping
+     both leaves it hard-denied.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
@@ -169,20 +200,18 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
    support), install every bridge:
-   - Global wisdom: if neither `~/.codex/AGENTS.override.md` nor
-     `~/.codex/AGENTS.md` exists, symlink `~/.codex/AGENTS.md` →
-     `../.claude/CLAUDE.md` (leave it if already resolved). ALWAYS write this
-     link RELATIVE: dockbox bind-mounts `~/.codex` into a container whose home
-     is not this one, so an absolute link resolves there and dangles here.
-     A dangling link costs Codex its global guidance with no error — repoint
-     any absolute or broken one. Any other existing global Codex guidance is a
-     conflict — show and ask. NEVER rely on project fallback names for global
-     guidance.
-   - AFTER installing wisdom and resolving the global guidance path, merge
-     the marked block from `codex/AGENTS.md` into `~/.codex/AGENTS.md`.
-     Replace only the existing Kronael block; otherwise append it. NEVER
-     overwrite content outside the markers. The path may symlink to the
-     wisdom file, so ALWAYS perform this merge after the wisdom write.
+   - Global guidance: `~/.codex/AGENTS.md` is a REAL file holding the marked
+     block from `codex/AGENTS.md`, which tells Codex to read
+     `~/.claude/CLAUDE.md`. Absent → copy `codex/AGENTS.md` there. A symlink
+     resolving to `~/.claude/CLAUDE.md` → replace it with that copy; any other
+     symlink → conflict, show and ask. Existing real file → replace only the
+     Kronael block, else append it; NEVER overwrite content outside the
+     markers. NEVER write the block into `~/.claude/CLAUDE.md` — the next sync
+     would reverse-sync Codex-only text into the wisdom source. A block already
+     there → leave it out of the step 0 drift check and remove it after the
+     step 1 backup; NEVER reverse-sync it into source. An existing
+     `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict, show and
+     ask. NEVER rely on project fallback names for global guidance.
    - `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
      contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
    - Symlink `~/.agents/skills` → `~/.claude/skills` (per-skill symlinks only if
@@ -198,7 +227,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 6. **External tools** — detect with `which <tool>`; skip if present and recent.
    Install the missing ones from `reference.md` § "External tool commands":
    the **Core** batch (ask once), then the **Security-audit** and **Video**
-   batches (each ask separately — large/heavy, rarely needed).
+   batches (each ask separately — large/heavy, rarely needed). Finally offer
+   **ripwire** (reference.md § "ripwire") on its own ask — SHOW the exact
+   install one-liner and let the user run it (curl-pipe, so never auto-run it
+   silently); mention the optional MCP interface via `ripwire wrap <agent>`
+   (Claude and Codex both — it also auto-activates its `ripwire-*` skills for
+   whichever agents it detects, `~/.claude/skills` and `~/.agents/skills`) and
+   that its hooks stay off by default.
 
 7. **CLI tools** — (re)install the repo's standalone CLI tools per `reference.md`
    § "CLI tools": rig/udfix/clp always (idempotent Makefiles refresh a stale
@@ -230,7 +265,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
 - NEVER sync `skipDangerousModePermissionPrompt` from user back into the template
 - NEVER copy Kronael skills into `~/.codex/skills`; Codex uses
   `~/.agents/skills`
-- NEVER duplicate global wisdom into Codex — symlink it, or surface a conflict
+- NEVER copy global wisdom into Codex — `~/.codex/AGENTS.md` holds only the
+  Kronael block, which points Codex at `~/.claude/CLAUDE.md`
 
 ## Update flow
 

@@ -56,8 +56,10 @@ extension and still carries every claim the reviewer will trust.
    plus every skill those require), `Skill(<matched>)` each so its cold rules
    are in context, and read the `<skill>.md` lens in this directory — list the
    directory, NEVER assume which exist. ALWAYS seed the correctness lenses from
-   **Confessed defaults**. `contexts.md` carries the recurring contexts and what
-   each one's sub must be handed.
+   **Confessed defaults**. Tag each lens `simplify` (reuse, dead code,
+   minimisation, cross-boundary leaks and coupling between packages) or
+   `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
+   recurring contexts and what each one's sub must be handed.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
 
@@ -74,8 +76,8 @@ extension and still carries every claim the reviewer will trust.
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Set `model=` by the context's heaviest tag: `simplify` → sonnet,
-   `correctness` → opus. The subs report findings with commands and outputs and
-   NEVER edit. ALWAYS leave a context's files alone in main context until its
+   `correctness` → opus (fable under `/release`). The subs report findings with
+   commands and outputs and NEVER edit. ALWAYS leave a context's files alone in main context until its
    sub returns.
    → every context has returned findings, each with the command that produced
    it.
@@ -91,8 +93,8 @@ extension and still carries every claim the reviewer will trust.
 
 8. **Triage and apply** — DROP a finding that adds an abstraction, targets
    unused code (grep first), conflicts with the ask, or survived step 7 only as
-   an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`;
-   NEVER build one without sign-off. Apply the rest with serial
+   an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
+   (`software/code.md` § System changes); NEVER build one without sign-off. Apply the rest with serial
    `Task(agent="improve")`, one context at a time, briefed from `brief.md`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
@@ -155,7 +157,8 @@ where the gap shows.
 ## Review Checklist
 
 - ALWAYS scale to the change: tens of lines or three assertions → inline, 1-2
-  lenses; NEVER fan out agents over a ~40-line diff.
+  lenses; NEVER fan out agents over a ~40-line diff — except under `/release`,
+  which runs the full pass whatever the size (release step 1.5).
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
 - NEVER read an empty result as a finding until that same query has produced a

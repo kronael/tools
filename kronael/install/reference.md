@@ -52,6 +52,38 @@ chmod +x ~/.local/bin/pi
 |------|---------|--------|
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
+## ripwire — deterministic codebase maps for agents (step 6)
+
+Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
+agent a ranked, deterministic call-graph map of a repo — relevant symbols,
+callers, change-risk, tests to run — instead of blind grepping. Offline C++
+binary: no API key, no embeddings, no daemon, no network calls. Install the
+prebuilt binary (the installer verifies a mandatory sha256 and prompts for
+consent):
+
+```sh
+RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+```
+
+- Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
+  skills into `~/.claude/skills` — namespaced, so they never collide with
+  kronael skills, and the kronael install never deletes them (they coexist).
+  It also detects `~/.codex`/`~/.agents` and activates for Codex.
+- Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
+  armed they log only a local hashed routing meter, never prompt/command/path
+  text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
+- `RIPWIRE_NO_ACTIVATE=1` installs the binary only, touching no agent config.
+- MCP (optional second interface — CLI + skills already work without it). Use
+  ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
+  and never edits any config — you run it:
+  - Claude Code: `ripwire wrap claude` → `claude mcp add ripwire -- ripwire --mcp`
+    (append `--scope user` for all projects; writes `mcpServers` into
+    `~/.claude.json`, NOT `settings.json`). NEVER put `mcpServers` in
+    `settings-recommended.json`.
+  - Codex: `ripwire wrap codex` → a `[mcp_servers.ripwire]` stanza for
+    `~/.codex/config.toml` (CLI-first; MCP restricted to audit/health verbs).
+  - `ripwire wrap --all` detects every installed agent and emits each config.
+
 ## CLI tools (step 7)
 
 Install the repo's standalone CLI tools so their `~/.local/bin` binaries track
@@ -72,8 +104,8 @@ one toolchain is missing — report that tool skipped and continue.
 ## Removed kronael skills to prune (step 2)
 
 AFTER backup (step 1), delete these dirs from `~/.claude/skills/` if present —
-consolidated into the `create/` router or renamed. Orphans keep preloading
-their descriptions, defeating the router:
+consolidated into a router, renamed, or dropped. Orphans keep preloading their
+descriptions, defeating the router:
 
 `create-architecture-diagram`, `create-ascii-art`, `create-ascii-video`,
 `create-claude-design`, `create-code-presentation`, `create-design-md`,
@@ -89,10 +121,13 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
 dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
 (renamed to `red-eval`), `testing` (folded into the `software` router), `settle`
-(folded into `refine`, whose subagents now fork by context rather than by file
-extension), and the pre-kronael language
-skills `bash`, `python`, `rust`, `typescript` (superseded by `sh`, `py`, `rs`,
-`ts`/`tsx`, whose descriptions they collide with — a routing race).
+(folded into `refine`, whose subagents fork by context rather than by file
+extension), `useless` (folded into the `specs` router — `specs/useless.md`),
+`onepager`, `doc-topology` (folded into the `readme` router —
+`readme/onepager.md`, `readme/topology.md`), `resolve` (renamed to `solve`),
+and the pre-kronael language skills `bash`, `python`, `rust`, `typescript`
+(superseded by `sh`, `py`, `rs`, `ts`/`tsx`, whose descriptions they collide
+with — a routing race).
 
 NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both bundled —
 `codex` is canonical, `oracle` its alias; the v0.3.26 codex→oracle rename was

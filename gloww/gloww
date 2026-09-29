@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# gloww - read markdown with glow, at the terminal's real width.
+#
+# glow wraps each source line on its own, so a file hard-wrapped at 76
+# columns keeps those breaks at any width. mdformat --wrap no rejoins each
+# paragraph into one line first, and glow then wraps it to fit.
+set -euo pipefail
+
+usage() {
+    cat <<'USAGE'
+usage: gloww [-w WIDTH] [FILE] [GLOW ARGS...]
+
+Renders FILE (or stdin) with glow, reflowing paragraphs to the terminal
+width. FILE may appear in any position. Unrecognised arguments pass
+through to glow.
+
+  -w WIDTH, -wWIDTH, --width WIDTH, --width=WIDTH
+             wrap at WIDTH columns (default: the terminal width)
+  GLOWW_WIDTH  same, as an environment variable
+USAGE
+}
+
+width=${GLOWW_WIDTH:-}
+file=
+passthrough=()
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        -w | --width)
+            if [ $# -lt 2 ]; then
+                echo "gloww: $1 needs a width" >&2
+                exit 1
+            fi
+            width=$2
+            shift 2
+            ;;
+        -w* | --width=*)
+            width=${1#--width=}
+            width=${width#-w}
+            shift
+            ;;
+        -p | --pager)
+            # gloww pages on a terminal already; glow rejects a repeated flag.
+            shift
+            ;;
+        *)
+            if [ -z "$file" ] && [ -f "$1" ]; then
+                file=$1
+            else
+                passthrough+=("$1")
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ ${#passthrough[@]} -gt 0 ] && [ -z "$file" ]; then
+    for arg in "${passthrough[@]}"; do
+        if [ "${arg#-}" = "$arg" ]; then
+            echo "gloww: no such file: $arg" >&2
+            exit 1
+        fi
+    done
+fi
+
+if [ -z "$width" ]; then
+    width=$(tput cols 2>/dev/null || echo 80)
+fi
+
+if ! command -v glow >/dev/null; then
+    echo "gloww: glow is not installed - go install github.com/charmbracelet/glow@latest" >&2
+    exit 1
+fi
+
+if command -v mdformat >/dev/null; then
+    reflow=(mdformat)
+elif command -v uvx >/dev/null; then
+    reflow=(uvx --with mdformat-frontmatter mdformat)
+else
+    echo "gloww: needs mdformat or uv - pip install mdformat mdformat-frontmatter" >&2
+    exit 1
+fi
+
+[ -n "$file" ] || file=/dev/stdin
+
+pager=()
+if [ -t 1 ]; then
+    pager=(-p)
+    # glow's auto style queries the terminal (OSC 11 + CSI 6n) and eats any
+    # keystroke typed while it waits, so the pager then ignores q. An explicit
+    # style skips the query; dark is glow's own fallback when no answer comes.
+    export GLOW_STYLE=${GLOW_STYLE:-dark}
+fi
+
+"${reflow[@]}" --wrap no - < "$file" | glow -w "$width" "${pager[@]}" ${passthrough[@]+"${passthrough[@]}"} -

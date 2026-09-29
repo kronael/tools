@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
+import contextlib
 import json
 import os
 import re
 import sys
+
+from lib.state import hook_event
+from lib.state import session_state
 
 RULES = """Development reminders:
 - ALWAYS use make for build/lint/test/clean
 - ALWAYS build/test/lint every ~50 lines - errors cascade
 - NEVER improve beyond what's asked
 - NEVER use git add -A
-- NEVER use git commit --amend - make new commits
-- NEVER add Co-Authored-By to commits"""
+- NEVER use git commit --amend - make new commits"""
 
 
 def main():
@@ -26,15 +29,14 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
-    event = data.get('hook_event') or ''
+    event = hook_event(data)
     session_id = data.get('session_id') or 'default'
     cwd = data.get('cwd') or '.'
 
-    state_dir = os.path.join(cwd, '.claude', 'tmp')
-    state_file = os.path.join(state_dir, f'local-{session_id}')
+    state_file = session_state('local', session_id)
 
     parts = []
-    first_prompt = not os.path.isfile(state_file)
+    first_prompt = state_file is None or not os.path.isfile(state_file)
     is_compaction = event == 'PreCompact'
 
     if first_prompt or is_compaction:
@@ -51,12 +53,9 @@ def main():
                 except OSError:
                     pass
 
-        if first_prompt:
-            try:
-                os.makedirs(state_dir, exist_ok=True)
+        if first_prompt and state_file is not None:
+            with contextlib.suppress(OSError):
                 open(state_file, 'w').close()
-            except OSError:
-                pass
 
     prompt_lower = prompt.lower()
     if not re.search(r'\b(don\'?t|not|never)\s+\w*\s*(continue|recap)', prompt_lower) and re.search(

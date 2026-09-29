@@ -40,3 +40,13 @@ git diff <fork-base> <sub-tip> -- <sub-owned-files> | git apply --3way
 - NEVER act on a sub's "done / green / committed" claim — ALWAYS read its diff
   (`git diff --name-only <fork-base> <sub-tip>`) and confirm the claimed change
   is actually there.
+
+## Creating a worktree by hand
+
+- ALWAYS `git worktree add --detach <repo-root>/.<name> <ref>` — a hidden dir
+  inside the repo root; NEVER place a worktree as a sibling of the repo.
+- `--detach` is required: bare `git worktree add /path origin/branch` attaches
+  or creates a local branch, which is forbidden — detached HEAD in the main
+  repo AND in every worktree, no exceptions.
+- PR work pins to the remote ref: `git worktree add --detach
+  <repo-root>/.<name> origin/<branch>`.

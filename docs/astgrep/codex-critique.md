@@ -3,7 +3,7 @@
   STDIN
   @@ -0,1 +0,1 @@
   1  │-const f = () => console.log(a)
-    1│+const f = () => 
+    1│+const f = () =>
   ```
 
 - [research-astgrep.md](/home/onvos/app/tools/docs/astgrep/research-astgrep.md:282): same rewrite also breaks larger expressions. Test: `printf 'x = console.log(a) + 1\n' | ast-grep run --stdin -l ts -p 'console.log($$$)' -r ''` Output:

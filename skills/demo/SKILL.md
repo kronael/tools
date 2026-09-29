@@ -6,6 +6,9 @@ when_to_use: "record a demo, make demo, demo gif, demo mp4, demo video, asciinem
 
 # Terminal demo recordings
 
+Part of the `create` creative-skill family — this skill owns terminal recordings
+and animated narrative shorts (see `cutout.md`).
+
 Standard recipe: `asciinema` records a driven terminal session to a
 `.cast` file, `agg` renders that to a `.gif` committed under the repo
 and embedded in `README.md`. For social (Twitter/X), also transcode the
@@ -16,7 +19,7 @@ platforms accept.
 
 The strongest demos show *how* each result is produced: echo a shell
 prompt and the command being typed, then run it, with a one-line `#`
-comment before each step saying why. A viewer should be able to reproduce
+comment before each step saying why. A viewer must be able to reproduce
 the whole thing from the recording alone. Pattern (bash driver):
 
 ```bash
@@ -79,6 +82,13 @@ Reference implementation: `rig/Makefile`.
   request to that endpoint and its result. Filtering with `jq`, `grep`, or a
   small named helper is fine when the raw response is too large, but do not
   replace real endpoints with invented demo objects.
+
+## Composed and narrative demos
+
+A demo that is more than one raw cast — title/closing cards, an animated
+narrative short, a themed world, pacing and transitions, the agg/glibc and
+sandbox gotchas — is in `composed.md`. ALWAYS read it before composing; the
+Monty Python cutout rig is in `cutout.md`.
 
 ## Versus-scoreboard intro
 

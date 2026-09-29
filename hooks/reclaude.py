@@ -4,6 +4,8 @@ import os
 import re
 import sys
 
+from lib.state import hook_event
+
 
 def main():
     try:
@@ -23,7 +25,7 @@ def main():
     except OSError:
         sys.exit(0)
 
-    hook_event = data.get('hook_event', '')
+    event = hook_event(data)
     prompt = data.get('prompt') or ''
     if not isinstance(prompt, str):
         prompt = ''
@@ -32,12 +34,12 @@ def main():
     if re.search(r'\b(don\'?t|not|never)\s+\w*\s*(continue|recap)', prompt_lower):
         sys.exit(0)
 
-    should_inject = hook_event == 'PreCompact' or re.search(
+    should_inject = event == 'PreCompact' or re.search(
         r'\b(continue|recap|where\s+were\s+we|what\'?s\s+next)\b', prompt_lower
     )
 
     if should_inject:
-        if hook_event == 'PreCompact':
+        if event == 'PreCompact':
             rules = (
                 rules.rstrip()
                 + '\n\nThese instructions and the full wisdom context from CLAUDE.md should survive compaction.\n'

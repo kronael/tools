@@ -18,7 +18,6 @@
     "must_use_format": "^\\[feat\\] .+",
     "subject_max_chars": 72,
     "must_not_include": [
-      "Co-Authored-By",
       "--amend",
       "git add -A",
       "git add .",

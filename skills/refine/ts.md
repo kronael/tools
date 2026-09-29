@@ -6,9 +6,9 @@ Each lens carries the tag the refine skill's `model=` rule reads.
 
 ## A green test run is not a typecheck `correctness`
 
-- Jest configured with `babel-jest` type-checks nothing — it strips types
-  without reading them, so type errors survive a fully green test run. Any
-  esbuild/swc-based transform behaves the same way.
+- `bun test`, Jest configured with `babel-jest`, and any esbuild/swc-based
+  transform type-check nothing — they strip types without reading them, so
+  type errors survive a fully green test run.
 - ALWAYS run the project's typecheck as its OWN command (`tsc --noEmit`, or the
   `typecheck` script) at Validate and again at Verify. NEVER accept a passing
   `test` as evidence that types hold.

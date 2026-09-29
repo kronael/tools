@@ -1,7 +1,7 @@
 ---
 name: create
 description: Router for creative artifact generation — CVs, web pages, videos, generative art, diagrams. NOT for code (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
-when_to_use: "CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, meme, X image, timeline image, code-shot explainer"
+when_to_use: "meme, promo loop, cutout collage, animate real photos, CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, X image, timeline image, code-shot explainer"
 user-invocable: true
 ---
 
@@ -23,6 +23,7 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 | "look like Stripe/Linear/Vercel/Notion/..." — 54 real design systems | `web/popular-web-designs.md` |
 | video script: shorts, reels, TikTok, X video, voiceover (45-75s) | `video.md` |
 | render a script to MP4 — Remotion, Motion Canvas, Bevy, swarm, shaders | `video/render.md` |
+| meme, promo loop, any film with a subject in it — cut real material, judge it blind | `video/collage.md` |
 | math/algorithm animation, 3Blue1Brown style, Manim CE | `video/manim.md` |
 | logo, emblem, badge, brand mark, favicon, candidate sheet | `art/logo.md` |
 | static ASCII art: figlet banners, cowsay, boxes, image-to-ascii | `art.md` |
@@ -32,6 +33,27 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 | social image for the X feed: meme PNG, looping GIF, code-shot explainer | `social.md` |
 | hand-drawn-style diagram JSON for excalidraw.com | `diagram/excalidraw.md` |
 | dark-themed SVG architecture/cloud/infra diagram as HTML | `diagram/architecture-diagram.md` |
+| explore a creative space: 4 independent versions per stage, select, iterate | `divergence.md` |
+
+## Principle
+
+Every artifact is a graph of nodes defined as DATA first, then instantiated by
+a renderer that walks it: a node is `{parent, transform/props}`, children
+inherit the parent's transform, motion is a keyframe track sampled per
+property — NEVER per-frame `if` branches. Compose the graph (and its tracks)
+as consts BEFORE writing the renderer. Canonical worked example:
+`demo/cutout.md` § Rig it (parts hierarchy + motion paths + renderer).
+
+## Quality gate
+
+The maker NEVER certifies its own creative work — that is how amateur output
+ships. Judge every artifact against a WRITTEN rubric via an INDEPENDENT critic (a
+fresh agent, ideally a small panel) that did NOT make it, tasked adversarially:
+"where does this read amateur?". Rubric = a few criteria — concept · composition
+/ silhouette · craft (material unity) · motion/timing · "reads pro, not amateur"
+— each scored with a one-line descriptor. Ship ONLY when it clears the bar;
+iterate maker↔critic until it does. Ground the bar in real references first, not
+vibes.
 
 ## Rules
 
@@ -42,6 +64,14 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
   stays in `art/p5js.md`).
 - Manim via the script-to-video pipeline → `video/render.md` flavor table;
   Manim as the primary deliverable → `video/manim.md`.
+- Reviewing drafts: publish every version under your OWN draft dir in the web
+  root (CLAUDE.md § Publishing) and drop a SIMPLE auto-generated index OF THAT DIR
+  (plain file listing, NEVER a bespoke gallery). NEVER auto-index a shared /
+  multi-tenant root — it exposes other people's projects.
+
+Sibling creative skills (own their domain, not folded here): `demo` (terminal
+recordings + animated narrative shorts — its `cutout.md` holds the Monty Python
+cutout look), `visual` (headful UI/CSS render refinement).
 
 Related, NOT in this router: `humanize` (strip AI-isms from prose),
 `diagrams` (Unicode box diagrams inside docs), `create-eval` (scaffold a

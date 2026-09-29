@@ -157,6 +157,9 @@ Map the user's prompt to aesthetic choices. "Relaxing generative background" dem
 
 ### Step 2: Technical Design
 
+- **Nodes** — this medium's graph is the display list/scene graph: layers
+  (`createGraphics` buffers) as parent nodes, particles/shapes/classes as
+  children; see `../SKILL.md` § Principle
 - **Mode** — which of the 7 modes from the table above
 - **Canvas size** — landscape 1920x1080, portrait 1080x1920, square 1080x1080, or responsive `windowWidth/windowHeight`
 - **Renderer** — `P2D` (default) or `WEBGL` (for 3D, shaders, advanced blend modes)

@@ -24,6 +24,10 @@ Rules:
 - NEVER read source, specs, or ARCHITECTURE for the demo/business lens — judge
   the running product through the UI. If understanding "what is this?" needs
   the source, that gap IS a finding ("the product doesn't explain itself").
+- Findings are claims, not facts — the caller re-verifies load-bearing ones
+  before acting on them (`Skill(sweep)` § verify a finding before
+  you fix it). A hostile persona finds sharper defects but is not thereby
+  more correct.
 - When paired with a CTO eval, keep the two reports separate and run a synthesis
   pass after: both lenses flagged it → top priority; one lens only → that
   domain's work; they disagree → escalate to the owner.
