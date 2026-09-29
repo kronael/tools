@@ -27,18 +27,6 @@
   **Fix:** drop the route, or drop the claim from both docs; which is the
   maintainer's call.
 
-- **DOC-SHAPE-NOT-IN-BUNDLE** (LOW, design) — CONFIRMED at HEAD 2026-09-21.
-  `skills/doc-topology/SKILL.md` routes to `doc-shape` twice — a `NOT for ...
-  (use doc-shape)` clause in its description and a pointer in the body — but
-  `skills/doc-shape/` does not exist in this source tree, nor under
-  `~/.claude/skills/`, so every reader gets a skill that names a sibling nothing
-  provides. Reproduce:
-  `grep -c doc-shape skills/doc-topology/SKILL.md` → 2, `ls skills/doc-shape`
-  → no such directory. **Fix:** the maintainer's call, and the install
-  protocol forbids deciding it here — an installed-only skill is captured into
-  source ONLY on an explicit ask, since it may be org-local. Either add
-  `doc-shape` to the bundle, or drop the two references.
-
 - **DIAGRAMS-NO-SEQUENCE-SWIMLANE-STATE** (LOW, design) — open (record only).
   `skills/diagrams/SKILL.md` (52 lines) teaches only box-and-arrow component
   layout. It carries no pattern for the three other shapes that come up
