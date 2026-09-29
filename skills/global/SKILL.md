@@ -44,12 +44,12 @@ mtime.
 
 - `sudo` is available — use `sudo docker ...` for docker you run via Bash; in
   committed scripts parameterize privilege instead (see the `sh` skill).
-- Run `/resolve` to pick the skill for a task — it also reconciles work already
+- Run `/solve` to pick the skill for a task — it also reconciles work already
   produced under the wrong one.
 - Code style, naming, layout, design and comments live in the `software` skill
   (`code.md`), the base every language skill pulls in. That content is COLD —
   invisible until loaded, and skipping the load hides the rules rather than
-  relaxing them. ALWAYS load it (`/resolve`, or a language skill) BEFORE writing
+  relaxing them. ALWAYS load it (`/solve`, or a language skill) BEFORE writing
   or reviewing code.
 - ALWAYS sync `~/.claude/` changes into the tools repo (paths in LOCAL.md).
 - This file and loaded SKILL.md files are collectively "WISDOM".
