@@ -59,15 +59,6 @@
 
 ## Install protocol
 
-- **COMMANDS-INSTALLED-ONLY** (LOW, design) — CONFIRMED at HEAD 2026-09-25.
-  `~/.claude/commands/` holds `improve.md`, `learn.md`, `readme.md`,
-  `refine.md` and `visual.md`; the bundle ships only `commands/caveman.md`, so
-  a fresh install produces five fewer commands than a working machine has.
-  Reproduce: `comm -13 <(ls commands) <(ls ~/.claude/commands)`. **Fix:** the
-  maintainer's call, and the install protocol forbids deciding it here — an
-  installed-only artifact is captured into source ONLY on an explicit ask,
-  since it may be machine-local.
-
 - **INSTALL-LEAVES-STALE-HOOK-DOCS** (LOW, ops) — CONFIRMED at HEAD
   2026-09-29. Install copies only `hooks/*.py`, `*.sh` and `lib/`
   (`kronael/install/SKILL.md:138`), and its prune step names only renamed
@@ -182,7 +173,7 @@
 ## dockbox
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
-  `hooks/stop.py:321` suppresses the commit/diary block when `CLAUDE_EVAL` is
+  `hooks/stop.py:134` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: one hit in the whole repo, the consumer itself — not in
   `Makefile`, `.github/`, `evals/`, or any `settings*.json` env block. Effect
   is the opposite of the intent: eval runs get the block messages injected into
@@ -190,11 +181,21 @@
   or delete the clause — but which one is a scope call.
 
 - **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, resource) — needs sign-off.
-  `hooks/lib/state.py:30` writes five stamps per session (`local-`,
-  `diary-nudge-`, `solve-nudge-`, `memory-nudge-start-`, `memory-nudge-done-`)
+  `hooks/lib/state.py:30` writes four stamps per session (`local-`,
+  `solve-nudge-`, `memory-nudge-start-`, `memory-nudge-done-`)
   and nothing ever expires a session id; `~/.claude/state` holds dozens of
   files. Harmless in bytes; the question is whether stamps should self-prune
   on write past N days.
+
+- **DOCKBOX-HELP-CONTRADICTS-ITSELF** (LOW, docs) — CONFIRMED at HEAD
+  2026-09-29. `dockbox --help` says `-T` disables tmpfs (`dockbox/dockbox:174`),
+  but `-T` switches only the build-dir overmounts to volumes (`:515-518`);
+  `$HOME`, `/tmp` and `/tmp/cargo-target` stay tmpfs (`:479-485`), as the
+  help's own "overmount type only" says (`:193`), so `ls` still shows TMPFS
+  use for a `-T` box. Its Examples call the default "sonnet @ medium"
+  (`:204-205`) against "opus @ xhigh" under Tools (`:154`); which is true is
+  unverified. **Fix:** reword the `-T` line and the two examples; no test —
+  docs.
 
 
 ## qemubox
