@@ -86,11 +86,10 @@ instructing the model to preserve the wisdom across the compact.
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
 -uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
 the repo diary has today's entry missing or >1h stale ("consider /diary";
-Codex sees `@diary`). The diary nudge fires once per session, keyed by
-`session_id` in `~/.claude/state` (`lib/state.py`), however many repos the
-session visits. When called from periodic `PostToolUse`, the same checks
-emit advisory `hookSpecificOutput.additionalContext` and never block a tool
-call.
+Codex sees `@diary`). The diary nudge has no throttle: it repeats on every
+Stop until today's entry exists and is under an hour old. When called from
+periodic `PostToolUse`, the same checks emit advisory
+`hookSpecificOutput.additionalContext` and never block a tool call.
 
 A `git status` that fails inside a repo blocks with its stderr — the tree is
 reported as unreadable rather than assumed clean.

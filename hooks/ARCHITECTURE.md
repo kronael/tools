@@ -163,9 +163,8 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    with `git diff --stat`. A failed `git status` inside a repo appends its
    stderr instead — an unreadable tree is reported, never read as clean.
 3. Check for today's `YYYYMMDD.md` (UTC) under the repo's `.diary/`. Missing
-   or >1h stale → append a diary nudge, once per session: the stamp
-   `diary-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) never
-   expires. The directory need not exist; a repo without one is nudged to
+   or >1h stale → append a diary nudge on every Stop; no stamp throttles
+   it. The directory need not exist; a repo without one is nudged to
    start it.
 4. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.

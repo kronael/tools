@@ -3,8 +3,9 @@
 Manual smoke tests. Pipe a JSON payload into each hook and verify the
 output / exit code.
 
-Run the automated suite first — it covers JSON parse errors, routing and
-the nudge stamps on every hook:
+Run the automated suite first — it covers routing, the unsafe-command
+blocks, the nudge stamps and the stop checks. Malformed JSON, `local.py` and
+`reclaude.py` are reached only by the smoke tests below:
 
 ```bash
 uv run --with pytest --with pyyaml python -m pytest hooks -q
