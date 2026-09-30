@@ -11,13 +11,6 @@
   are cold provenance files nothing reads by accident. **Fix:** the maintainer's
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
-- **WISDOM-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-30.
-  `skills/global/SKILL.md` has a 201-line body against the 200-line cap
-  (`skills/wisdom/SKILL.md`), after the git-workflow rules pulled from the
-  live install (6470d63). It is the one file loaded in every session.
-  Reproduce: `awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`.
-  **Fix:** the maintainer's call which rule moves to its owning skill; no
-  test — docs.
 
 - **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
   `kronael/install/SKILL.md` is 232 lines and
@@ -204,26 +197,6 @@
   -q -f …)" ]]`). No test — the shell suites carry no skip idiom to pin a
   known failure with; the fix adds the stub case.
 
-- **DOCKBOX-PROJECT-ENV-REACHES-ROOT** (MED, security) — needs sign-off. A
-  project `.dockboxrc` may pass `-e` (`dockbox/dockbox:~297`, only
-  `-A/-D/-K/-S/-n/-d/-x` are refused there), and those variables reach root:
-  `docker run` puts them in the container env, where dockbox-init runs as root
-  at start, and each session enters as root before `setpriv` drops it. An
-  untrusted repo setting `-e LD_PRELOAD=<repo file>` runs code as root in the
-  box — the escalation `-S` is refused from a project rc to prevent. **Fix:**
-  forward user `-e` variables only after the drop (`setpriv … -- env VAR=… cmd`)
-  and keep them out of `docker run`, or refuse `-e` in the project rc; the
-  maintainer's call; no test — design.
-
-- **DOCKBOX-FOREIGN-UID-REENTRY** (LOW, design) — needs sign-off. `setpriv
-  --init-groups` needs the entering UID in the box's `/etc/passwd`, which
-  dockbox-init fills only with the creator's (`dockbox/dockbox:~432`). A second
-  host user whose project dir has the same basename re-enters the running box
-  (`dockbox-<basename>`) and gets `setpriv: uid N not found`, rc 1; the old
-  `docker exec -u uid:gid` let them in, into the creator's mounted `~/.claude`.
-  **Fix:** a clear "box belongs to another user — use -n" message, or record
-  the refusal as intended; no test — design.
-
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
@@ -282,6 +255,12 @@
   lifecycle block. A shared sourced file would violate the repo's "tools are
   independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
   accepted lightweight guard instead.
+
+- **DOCKBOX-PROJECT-ENV-REACHES-ROOT** (MED, security) — not a defect. A
+  project `.dockboxrc` `-e` variable reaches root in the box (dockbox-init runs
+  as root with the container env, and sessions enter as root before `setpriv`),
+  so `-e LD_PRELOAD=<repo file>` runs code as root there. dockbox is a decently
+  isolated env, not a jail: root inside the box is within its design.
 
 - **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
   `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
