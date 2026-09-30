@@ -204,6 +204,26 @@
   -q -f …)" ]]`). No test — the shell suites carry no skip idiom to pin a
   known failure with; the fix adds the stub case.
 
+- **DOCKBOX-PROJECT-ENV-REACHES-ROOT** (MED, security) — needs sign-off. A
+  project `.dockboxrc` may pass `-e` (`dockbox/dockbox:~297`, only
+  `-A/-D/-K/-S/-n/-d/-x` are refused there), and those variables reach root:
+  `docker run` puts them in the container env, where dockbox-init runs as root
+  at start, and each session enters as root before `setpriv` drops it. An
+  untrusted repo setting `-e LD_PRELOAD=<repo file>` runs code as root in the
+  box — the escalation `-S` is refused from a project rc to prevent. **Fix:**
+  forward user `-e` variables only after the drop (`setpriv … -- env VAR=… cmd`)
+  and keep them out of `docker run`, or refuse `-e` in the project rc; the
+  maintainer's call; no test — design.
+
+- **DOCKBOX-FOREIGN-UID-REENTRY** (LOW, design) — needs sign-off. `setpriv
+  --init-groups` needs the entering UID in the box's `/etc/passwd`, which
+  dockbox-init fills only with the creator's (`dockbox/dockbox:~432`). A second
+  host user whose project dir has the same basename re-enters the running box
+  (`dockbox-<basename>`) and gets `setpriv: uid N not found`, rc 1; the old
+  `docker exec -u uid:gid` let them in, into the creator's mounted `~/.claude`.
+  **Fix:** a clear "box belongs to another user — use -n" message, or record
+  the refusal as intended; no test — design.
+
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
