@@ -9,7 +9,7 @@ user-invocable: true
 
 The SANCTIONED exception to WISDOM's "NEVER squash commits" — like `/refine` and
 `/ship` committing by design. It applies ONLY to a **local, UNPUSHED** tip being
-prepared for PR review, on explicit user invocation. Nothing already on `origin/*`
+prepared for PR review, on explicit user invocation. Nothing already on the remote
 is ever rewritten. Method is a NON-INTERACTIVE rewrite via `reset --soft` — simpler
 and safer than `git rebase -i` (which needs a scripted `GIT_SEQUENCE_EDITOR`, per-commit
 message editors, and mid-rebase conflict handling): one reset, then re-commit in groups.
@@ -20,14 +20,15 @@ gone, each commit conventional-committed. NOT fewer commits for their own sake.
 ## 1. Bind the range — unpushed only
 
 ```bash
-BASE=$(git merge-base origin/main HEAD)   # fork point from published main
+git fetch --no-prune <url> main
+BASE=$(git merge-base FETCH_HEAD HEAD)    # fork point from published main
 OLD=$(git rev-parse HEAD)                 # old tip — the recovery anchor, record FIRST
 ```
 
 - `BASE` is the floor: ONLY commits in `BASE..HEAD` may be rewritten. NEVER touch
   anything at or below `BASE` — it is published. Confirm with `git log --oneline "$BASE"..HEAD`.
-- If the branch tracks a different upstream, use `git merge-base @{upstream} HEAD`.
-- If `BASE..HEAD` is empty, or every commit is already on `origin/*`, STOP — nothing to squash.
+- If the PR targets another base head, fetch that head into `FETCH_HEAD` instead.
+- If `BASE..HEAD` is empty, or every commit is already on the remote, STOP — nothing to squash.
 - Print `OLD` to the user so the pre-squash state is recoverable by SHA (also in `git reflog`).
 
 ## 2. Plan the mapping
@@ -80,11 +81,11 @@ Then re-commit group by group, in a sensible order (foundational change first):
 When the working-tree collapse is awkward (e.g. reordering across many files), rebuild by replay:
 
 ```bash
-git worktree add --detach "$(git rev-parse --show-toplevel)/.squash" origin/main
+git worktree add --detach "$(git rev-parse --show-toplevel)/.squash" "$BASE"
 ```
 
 Cherry-pick only the keep-commits (`git cherry-pick <sha>…`), dropping churn commits, squashing a
-run with `git cherry-pick -n <sha> <sha> && git commit`. Detached, inside the repo as a hidden dir.
+run with `git cherry-pick -n <sha> <sha> && git commit`.
 The step-6 gate applies identically; remove the worktree after: `git worktree remove --force .squash`.
 
 ## 6. Verify — the byte-identical gate (NON-NEGOTIABLE)
@@ -107,8 +108,6 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 
 - ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
-- NEVER rewrite a commit that exists on `origin/*` — the `BASE = merge-base origin/main HEAD` floor enforces this.
-- NEVER `git push`, NEVER `git commit --amend`, NEVER `git add -A`.
-- ALWAYS stay in detached HEAD; NEVER create or attach a branch (the cherry-pick worktree uses `--detach`).
+- NEVER rewrite a commit that exists on the remote — the `BASE` floor enforces this.
 - NEVER skip pre-commit hooks. Hooks do NOT fire in a worktree — run fmt/clippy/lint by hand there before committing.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.

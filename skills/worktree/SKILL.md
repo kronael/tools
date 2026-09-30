@@ -43,10 +43,4 @@ git diff <fork-base> <sub-tip> -- <sub-owned-files> | git apply --3way
 
 ## Creating a worktree by hand
 
-- ALWAYS `git worktree add --detach <repo-root>/.<name> <ref>` — a hidden dir
-  inside the repo root; NEVER place a worktree as a sibling of the repo.
-- `--detach` is required: bare `git worktree add /path origin/branch` attaches
-  or creates a local branch, which is forbidden — detached HEAD in the main
-  repo AND in every worktree, no exceptions.
-- PR work pins to the remote ref: `git worktree add --detach
-  <repo-root>/.<name> origin/<branch>`.
+WISDOM § Git owns the command (`git worktree add --detach …`) and its placement.

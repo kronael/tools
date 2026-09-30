@@ -74,9 +74,9 @@ first; `/release` after.
 11. **Resolve PR threads** — for each step 4 FIX thread whose fix landed, reply
     citing the commit SHA and what changed; for each WON'T-FIX, reply with the
     invariant or `BUGS.md` entry it matches. Reply and resolve via `gh-comment`
-    § Reply to a thread / § Resolve a thread — its sign-off gate, NEVER post
-    blind. Resolve ONLY threads addressed this pass. NEVER `git push`; NEVER
-    `gh pr merge`, `gh pr review` or `gh pr create`.
+    § Reply to a thread / § Resolve a thread — its distill and review-on-wisdom
+    phases and its sign-off gate, NEVER post blind. Resolve ONLY threads
+    addressed this pass. NEVER `gh pr merge`, `gh pr review` or `gh pr create`.
     → every triaged thread is replied to and resolved, and no other thread is.
 12. **Clean up** — `git worktree remove --force` each stale Claude-managed
     worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere.

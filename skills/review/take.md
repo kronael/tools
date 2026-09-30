@@ -46,7 +46,7 @@ human and bot (CodeRabbit etc.) alike, never a hand-picked subset. If `gh`
 is unauthenticated, see `gh-comment` § Setup for `GH_TOKEN`.
 
 ```bash
-gh pr view <N> --json number,headRefOid,title,body            # no args = current branch
+gh pr view <N> --json number,headRefOid,title,body            # <N>: the PR whose headRefOid is HEAD's SHA (gh pr list --json number,headRefOid)
 gh pr view <N> --json comments                                # issue-level comments
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api repos/$REPO/pulls/<N>/comments --paginate               # inline review comments (REST — no resolution state)
@@ -70,8 +70,9 @@ Classify (§2 above) with two GH additions:
 Fix → verify as above (§3), then resolve or answer EVERY thread — this is
 the default for "take GH review"; skip only if the user explicitly asked for
 code-only, no reply. Route it all through `gh-comment` (owns the reply/resolve
-GraphQL, the re-review request, the sign-off gate, and the 🤖 markers) — never
-call the thread API directly from here.
+GraphQL, the re-review request, the distill and review-on-wisdom phases, the
+sign-off gate and the `🤖` prefix) — never call the thread API directly from
+here.
 
 - A fixed thread gets NO reply and resolves after the push, human- or
   bot-authored — the re-review request announces the fix.
@@ -92,4 +93,4 @@ call the thread API directly from here.
   refuted/already-fixed findings, NEVER edit around them
 - NEVER unilaterally act on a design/product decision — surface it and wait
 - NEVER post to a PR directly — route through `gh-comment` after showing the user
-- NEVER `git push`, `gh pr create`, `gh pr merge`, or `gh pr review --approve`
+- NEVER `gh pr create`, `gh pr merge`, or `gh pr review --approve`

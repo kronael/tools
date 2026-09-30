@@ -112,6 +112,10 @@ user-invocable: true
    Sizing guide: most entries land in the 15–30 line range after
    distill. 80+ line bodies are the smell. Look at the prior 3-5
    entries in this repo for what the project considers a typical wave.
+
+   Then REVIEW-ON-WISDOM (WISDOM § Git) over both passes, with the Banned
+   list and Pass B's preserve rules as the shape checklist; a body for
+   `gh release create` (only on the user's ask) is this same text.
 4. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
 4.5. **Critique gate when unclear.** If verification passes but the release is
@@ -148,7 +152,6 @@ user-invocable: true
 - ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
   release a change the refine did not see, other than the refine's own commits
   and the release commit
-- NEVER push (`git push`)
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
 - NEVER drop security fixes, breaking changes, schema migrations, env renames during distill
 - ALWAYS bump the patch unless the user asks for minor or major. MAJOR, MINOR

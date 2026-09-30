@@ -109,8 +109,7 @@ After verifying each sub's output:
 1. `git diff --name-only` — take the FULL list, no tail.
 2. Stage an explicit file list — never `git add -A` or `git add -a`.
 3. One commit per concern. Format: `[section] message`.
-4. Never amend, never squash, never push.
-5. Watch for parallel hazard: if another session is editing the shared
+4. Watch for parallel hazard: if another session is editing the shared
    tree (user mid-edit, another sub in flight), scope your `git add` to
    YOUR files only. Verify `git diff --cached` before committing.
 

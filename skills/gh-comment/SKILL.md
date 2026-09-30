@@ -31,9 +31,9 @@ ALWAYS present each finding, thread reply, or re-review request to the user befo
 
 ## Comment body — distilled
 
-Every body goes through two passes before it is posted. Drafting straight into
-the final text does not work: the first version always carries the reasoning
-that got you there.
+Every body goes through three passes before it is posted. Drafting straight
+into the final text does not work: the first version always carries the
+reasoning that got you there.
 
 1. **Draft** the finding with its evidence, wherever you are keeping notes.
 2. **Distill** to one line naming the defect plus one optional line giving the
@@ -41,6 +41,8 @@ that got you there.
    dashes, hedges, passive voice, "it is worth noting", significance padding
    and rule-of-three phrasing. Speak in the `caveman` register: maximum
    signal per token, no preamble, no recap.
+3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape
+   checklist, before the sign-off questionnaire.
 
 Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two
 findings or the evidence belongs in the report.
