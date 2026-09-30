@@ -275,6 +275,9 @@ RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
   && bun install -g @openai/codex \
   && chmod -R a+rwX /opt/dev-tools/bun
 
+RUN apt-get update && apt-get install -y --no-install-recommends docker-cli \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
 FROM dockbox AS vm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -292,7 +295,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -f /var/lib/dbus/machine-id \
     && ln -s /etc/machine-id /var/lib/dbus/machine-id
 
-RUN for key in TZ DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
+RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     CLAUDE_CODE_DISABLE_AUTOUPDATE NPM_CONFIG_PREFIX NVM_DIR BUN_INSTALL \
     CARGO_HOME RUSTUP_HOME GOROOT GOPATH SDKMAN_DIR PLAYWRIGHT_BROWSERS_PATH \
     PUPPETEER_CACHE_DIR UV_TOOL_BIN_DIR UV_TOOL_DIR DOTNET_ROOT PATH; do \
@@ -308,7 +311,7 @@ RUN mkdir -p /etc/systemd/network /etc/systemd/system/ssh.service.d \
     && printf '%s\n' '[Unit]' 'Requires=qemubox-init.service' \
        'After=qemubox-init.service' > /etc/systemd/system/ssh.service.d/qemubox.conf \
     && printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
-       'PermitRootLogin no' > /etc/ssh/sshd_config.d/qemubox.conf \
+       'PermitRootLogin no' 'StreamLocalBindUnlink yes' > /etc/ssh/sshd_config.d/qemubox.conf \
     && printf '%s\n' '[Unit]' 'After=local-fs.target' 'Before=ssh.service' \
        '[Service]' 'Type=oneshot' 'ExecStart=/usr/local/bin/qemubox-init' \
        'StandardOutput=journal+console' 'StandardError=journal+console' \
@@ -331,10 +334,13 @@ RUN printf '%s\n' \
     '    read -r user_gid' \
     '    IFS= read -r home_dir' \
     '    read -r groups' \
+    '    IFS= read -r zone' \
     '} < /run/qemubox/config/identity' \
     '[[ "$username" =~ ^[A-Za-z0-9_-]+$ && "$user_uid" =~ ^[0-9]+$ &&' \
     '    "$user_gid" =~ ^[0-9]+$ && "$home_dir" = /* && "$home_dir" != *:* ]]' \
     '[[ "$user_uid" != 0 ]]' \
+    '[[ "$zone" != /* && "$zone" != *..* && -f "/usr/share/zoneinfo/$zone" ]]' \
+    'ln -sf "/usr/share/zoneinfo/$zone" /etc/localtime' \
     '' \
     'passwd_entry="$username:x:$user_uid:$user_gid::$home_dir:/bin/bash"' \
     'if entry=$(getent passwd "$user_uid")' \
@@ -356,9 +362,22 @@ RUN printf '%s\n' \
     do \
     '    gid=${group%%:*}' \
     '    gname=${group#*:}' \
-    '    [[ "$gid" =~ ^[0-9]+$ && "$gname" =~ ^[A-Za-z0-9_-]+$ ]]' \
+    '    [[ "$gid" =~ ^[0-9]+$ ]]' \
+    '    [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"' \
+    '    if entry=$(getent group "$gid")' \
+    '    then' \
+    '        gname=${entry%%:*}' \
+    '        members=${entry##*:}' \
+    '    else' \
+    '        members=""' \
+    '        getent group "$gname" >/dev/null && gname="hostgrp$gid"' \
+    '    fi' \
+    '    case ",$members," in' \
+    '        *",$username,"*) ;;' \
+    '        *) members="${members:+$members,}$username" ;;' \
+    '    esac' \
     '    sed -i "/^$gname:/d" /etc/group' \
-    '    sed -i "1i$gname:x:$gid:$username" /etc/group' \
+    '    printf "%s:x:%s:%s\\n" "$gname" "$gid" "$members" >> /etc/group' \
     done \
     'getent group "$user_gid" >/dev/null' \
     'echo "$username ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/qemubox' \

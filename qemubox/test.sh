@@ -29,6 +29,21 @@ false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 # exits with code $1 when run in a subshell? (guards use exit, so run isolated)
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
+regression() {
+    (set -e; "$2") > "$fixture/regression.log" 2>&1
+    if [ "$?" = 0 ]; then ok; else cat "$fixture/regression.log"; bad "$1"; fi
+}
+
+
+regression_setup() {
+    ROOT="$fixture/refine-$BASHPID"
+    mkdir -p "$ROOT/base"
+    echo fixture > "$ROOT/base/current"
+    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    dirs=(); no_copy=1
+    qemu-img() { touch "$dir/disk.qcow2"; }
+}
+
 ## box_name -----------------------------------------------------------------
 eq "box_name plain" "$(box_name repo)" "repo"
 eq "box_name slash->dash" "$(box_name a/b)" "a-b"
@@ -160,6 +175,8 @@ unset QEMUBOX_DOCKER
 source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"
 source "$here/test-cli.sh"
+
+source "$here/test-image.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

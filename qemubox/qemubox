@@ -189,10 +189,15 @@ ensure_box() {
         printf '%s\n' "$GUEST_USER" "$(id -u)" "$(id -g)" "$GUEST_HOME"
         for gid in $(id -G)
         do
-            gname=$(getent group "$gid" | cut -d: -f1)
+            gname=$(getent group "$gid" | cut -d: -f1) || gname=""
+            [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"
             printf '%s:%s ' "$gid" "$gname"
         done
         printf '\n'
+        zone=$(readlink -f /etc/localtime)
+        zone=${zone#*/zoneinfo/}
+        [ -f "/usr/share/zoneinfo/$zone" ] || zone=$(cat /etc/timezone)
+        printf '%s\n' "$zone"
     } > "$dir/config/identity"
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
@@ -322,7 +327,7 @@ ssh_box() {
         "${gpg[@]}" \
         "${docker[@]}" \
         -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
-        -o BatchMode=yes -o LogLevel=ERROR \
+        -o BatchMode=yes -o LogLevel=ERROR -o ExitOnForwardFailure=yes \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
         "$GUEST_USER@127.0.0.1" "$@"
