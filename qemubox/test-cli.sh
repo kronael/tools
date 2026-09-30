@@ -2,10 +2,13 @@
     set -e
     export QEMUBOX_HOME="$fixture/cli-state" STUB="$fixture/cli"
     mkdir -p "$STUB/bin" "$STUB/sess" "$QEMUBOX_HOME/cli" "$QEMUBOX_HOME/base"
-    touch "$STUB/sess/keeper" "$QEMUBOX_HOME/cli/ready"
+    touch "$STUB/sess/$$" "$QEMUBOX_HOME/cli/ready"
     echo base > "$QEMUBOX_HOME/base/fixture.qcow2"
     echo fixture > "$QEMUBOX_HOME/cli/image-id"
-    echo $$ > "$QEMUBOX_HOME/cli/pid"
+    bash -c 'exec -a "$1" sleep 120' -- "file=$QEMUBOX_HOME/cli/disk.qcow2," &
+    vm_pid=$!
+    trap 'kill "$vm_pid"; wait "$vm_pid" 2>/dev/null || true' EXIT
+    echo "$vm_pid" > "$QEMUBOX_HOME/cli/pid"
     for binary in qemu-system-x86_64 qemu-img; do
         printf '#!/bin/sh\nexit 99\n' > "$STUB/bin/$binary"
         chmod +x "$STUB/bin/$binary"
@@ -40,14 +43,14 @@ STUB
     bash "$here/qemubox" -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
     grep -q 'codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh' "$STUB/command"
     ! grep -q -- ' -t ' "$STUB/ssh.log"
-    [ "$(ls "$STUB/sess")" = keeper ]
+    [ "$(ls "$STUB/sess")" = $$ ]
     export STUB_RC=17
     if bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1; then
         exit 1
     else
         [ "$?" = 17 ]
     fi
-    [ "$(ls "$STUB/sess")" = keeper ]
+    [ "$(ls "$STUB/sess")" = $$ ]
     unset STUB_RC
     for signal in HUP TERM; do
         rm -f "$STUB/command"
@@ -64,7 +67,7 @@ STUB
             code=$?
             [ "$signal:$code" = HUP:129 ] || [ "$signal:$code" = TERM:143 ]
         fi
-        [ "$(ls "$STUB/sess")" = keeper ]
+        [ "$(ls "$STUB/sess")" = $$ ]
     done
     rm "$HOME/.qemuboxrc"
 ) > "$fixture/cli.log" 2>&1

@@ -83,3 +83,43 @@ forward_assert() {
 }
 regression "failed reverse forwards must fail the session" forward_assert
 
+build_dep_test() {
+    regression_setup
+    command() {
+        if [ "${2:-}" = "$missing" ]; then return 1; fi
+        builtin command "$@"
+    }
+    fake_docker() { touch "$fixture/unexpected-build"; return 43; }
+    QEMUBOX_DOCKER=fake_docker
+    for missing in fake_docker bsdtar mke2fs; do
+        if build_base 2> "$fixture/deps-error"; then exit 1; fi
+        [ ! -f "$fixture/unexpected-build" ]
+        grep -q "Missing:.*$missing" "$fixture/deps-error"
+    done
+}
+regression "missing build dependencies fail before Docker build or export" build_dep_test
+
+mke2fs_test() {
+    regression_setup
+    fake_docker() { touch "$fixture/unexpected-mke-build"; return 43; }
+    mke2fs() { echo 'tar input unsupported' >&2; return 1; }
+    QEMUBOX_DOCKER=fake_docker
+    if build_base 2> "$fixture/mke-error"; then exit 1; fi
+    [ ! -f "$fixture/unexpected-mke-build" ]
+    grep -q 'Missing: mke2fs with -d tarball support' "$fixture/mke-error"
+}
+regression "mke2fs tar input is probed before building" mke2fs_test
+
+temp_test() {
+    regression_setup
+    mktemp() { echo "$*" > "$fixture/mktemp-args"; command mktemp "$@"; }
+    fake_docker() { return 43; }
+    QEMUBOX_DOCKER=fake_docker
+    set +e
+    (set -e; build_base)
+    rc=$?
+    set -e
+    [ "$rc" = 43 ]
+    [ "$(cat "$fixture/mktemp-args")" = -d ]
+}
+regression "build temporary directory follows mktemp default" temp_test

@@ -31,9 +31,11 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     session_markers() {
         case "$1" in busy) echo 123;; failed) return 1;; esac
     }
+    stop_box() { echo "$1" >> "$fixture/stopped-idle"; }
     remove_box() { echo "$1" >> "$fixture/pruned"; }
     if prune_boxes 2; then exit 1; fi
-    [ "$(sort "$fixture/pruned")" = $'old\nstopped' ]
+    [ "$(cat "$fixture/pruned")" = stopped ]
+    [ "$(cat "$fixture/stopped-idle")" = old ]
 ) > "$fixture/prune.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/prune.log"; bad "prune age, grace, busy and failed count"; }
 
@@ -43,6 +45,7 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     mkdir -p "$ROOT/vm"
     echo $$ > "$ROOT/vm/pid"
     echo disk > "$ROOT/vm/disk.qcow2"
+    running() { return 0; }
     session_markers() { echo 123; }
     output=$(list_boxes)
     [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'DISK$'\t'PATH* ]]

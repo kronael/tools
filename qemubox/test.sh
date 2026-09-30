@@ -176,7 +176,9 @@ source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"
 source "$here/test-cli.sh"
 
+source "$here/test-refine.sh"
 source "$here/test-image.sh"
+source "$here/test-boot.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
