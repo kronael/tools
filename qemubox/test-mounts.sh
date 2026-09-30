@@ -97,8 +97,9 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
     grep -Fx -- "-t tmpfs -o rw,exec,mode=1777,uid=1234,gid=5678 tmpfs $PROJ/space dir/node_modules" "$fixture/mounts"
     printf '%s\0' disk "$PROJ/node_modules" > "$eph"
     bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    grep -Fx -- "--bind /var/lib/qemubox/builds/0 $PROJ/node_modules" "$fixture/mounts"
-    grep -Fx -- "1234:5678 /var/lib/qemubox/builds/0" "$fixture/chown"
+    key=$(realpath -e "$PROJ/node_modules" | sha256sum); key=${key%% *}
+    grep -Fx -- "--bind /var/lib/qemubox/builds/$key $PROJ/node_modules" "$fixture/mounts"
+    grep -Fx -- "1234:5678 /var/lib/qemubox/builds/$key" "$fixture/chown"
     mount() { echo "mount denied" >&2; return 32; }
     export -f mount
     for mode in tmpfs disk; do

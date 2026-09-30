@@ -37,3 +37,32 @@ PY
 }
 regression "boot walks away from an occupied saved port" port_test
 
+cache_test() {
+    mkdir -p "$fixture/cache/a/node_modules" "$fixture/cache/b/node_modules"
+    ln -s "$fixture/cache/a" "$fixture/cache/alias"
+    ssh_stream_box() { cat > "$fixture/cache-script"; }
+    setup_guest_builds vm
+    mount() { printf '%s\n' "$*" >> "$fixture/cache-mounts"; }
+    mkdir() { :; }; chown() { :; }
+    export -f mount mkdir chown
+    export fixture
+    printf '%s\0' disk "$fixture/cache/a/node_modules" "$fixture/cache/b/node_modules" > "$fixture/cache-paths"
+    bash "$fixture/cache-script" 1000 1000 "$fixture/cache-paths"
+    first=$(head -1 "$fixture/cache-mounts" | cut -d' ' -f2)
+    second=$(tail -1 "$fixture/cache-mounts" | cut -d' ' -f2)
+    printf '%s\0' disk "$fixture/cache/b/node_modules" "$fixture/cache/alias/node_modules" > "$fixture/cache-paths"
+    bash "$fixture/cache-script" 1000 1000 "$fixture/cache-paths"
+    [ "$(tail -1 "$fixture/cache-mounts" | cut -d' ' -f2)" = "$first" ]
+    [ "$(tail -2 "$fixture/cache-mounts" | head -1 | cut -d' ' -f2)" = "$second" ]
+    [ "$first" != "$second" ]
+}
+regression "disk caches follow canonical paths across discovery order changes" cache_test
+
+explicit_mount_test() {
+    regression_setup
+    gcloud_creds=""; untrusted=1
+    extra_dirs=("$fixture/missing-volume"); extra_modes=(ro)
+    if assemble_mounts 2> "$fixture/volume-error"; then exit 1; fi
+    grep -q missing-volume "$fixture/volume-error"
+}
+regression "missing explicit volume fails even in a conditional caller" explicit_mount_test

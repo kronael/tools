@@ -33,6 +33,15 @@ markers_test() {
 }
 regression "dead session markers are removed under lock" markers_test
 
+resume_test() {
+    primary="$fixture/repo_with.dot+space name"
+    slug="${primary//[^A-Za-z0-9]/-}"
+    mkdir -p "$HOME/.claude/projects/$slug"
+    touch "$HOME/.claude/projects/$slug/session.jsonl"
+    tool_cmd claude; resume_session
+    [ "${cmd[1]}" = --resume ]
+}
+regression "resume handles every nonalphanumeric path character" resume_test
 
 base_test() {
     regression_setup
@@ -73,8 +82,28 @@ half_box_test() {
 }
 regression "ls accepts an unfinished box without du errors" half_box_test
 
+missing_mount_test() {
+    regression_setup
+    gcloud_creds=1; untrusted=1; extra_dirs=()
+    if assemble_mounts 2> "$fixture/mount-error"; then exit 1; fi
+    grep -q 'Missing mount source:' "$fixture/mount-error"
+}
+regression "explicit missing gcloud mount fails loudly" missing_mount_test
 
+plugins_test() {
+    mkdir -p "$HOME/.claude/plugins"
+    run_assemble
+    [ "$(mount_mode "$HOME/.claude/plugins")" = ro ]
+}
+regression "plugins have a readonly 9p export" plugins_test
 
+rc_test() {
+    reset_mounts; dirs=("$PROJ"); no_copy=""
+    ssh_plain_box() { echo "$2" >> "$fixture/rc-commands"; }
+    mount_host_paths vm
+    grep -F -- "$PROJ/.qemuboxrc" "$fixture/rc-commands" | grep -q 'remount,bind,ro'
+}
+regression "project rc is masked by a readonly bind" rc_test
 
 status_test() {
     regression_setup
