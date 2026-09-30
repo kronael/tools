@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Stop hook: nudge commit and diary when either is due."""
+"""Stop hook: nudge commit and diary when either is due.
+
+Silent in a ship child that judges rather than builds: SHIP_ROLE set to
+anything but a worker. Workers keep the nudges; the commit nudge is what
+makes them commit.
+"""
 
 import json
 import os
@@ -131,6 +136,11 @@ def nudges(cwd, now):
     return parts
 
 
+def is_ship_judge():
+    role = os.environ.get('SHIP_ROLE', '')
+    return bool(role) and not role.startswith('worker')
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -138,6 +148,8 @@ def main():
         sys.exit(0)
 
     if not isinstance(data, dict) or os.environ.get('CLAUDE_EVAL'):
+        sys.exit(0)
+    if is_ship_judge():
         sys.exit(0)
 
     cwd = data.get('cwd', '.')

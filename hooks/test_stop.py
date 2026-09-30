@@ -13,7 +13,7 @@ HOOK = Path(__file__).with_name('stop.py')
 ENV = {
     k: v
     for k, v in os.environ.items()
-    if k not in ('KRONAEL_HOOK_EVENT', 'KRONAEL_IN_CODEX', 'CLAUDE_EVAL')
+    if k not in ('KRONAEL_HOOK_EVENT', 'KRONAEL_IN_CODEX', 'CLAUDE_EVAL', 'SHIP_ROLE')
 }
 ENV.update(
     GIT_CONFIG_GLOBAL='/dev/null',
@@ -116,6 +116,25 @@ def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path) -> None:
     assert out['reason'].startswith('git status failed')
     assert 'fatal:' in out['reason']
     assert 'systemMessage' not in out
+
+
+def test_ship_judging_role_is_silent(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
+    diary = repo / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
+    stale = (datetime.now(tz=UTC) - timedelta(hours=2)).timestamp()
+    os.utime(diary, (stale, stale))
+
+    assert run_hook(repo, env={'SHIP_ROLE': 'planner'}) is None
+
+
+def test_ship_worker_keeps_nudges(tmp_path) -> None:
+    repo = make_repo(tmp_path)
+    (repo / 'a.txt').write_text('one\ntwo\n')
+
+    out = run_hook(repo, env={'SHIP_ROLE': 'worker-w0'})
+
+    assert 'Run /commit.' in out['reason']
 
 
 def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path) -> None:
