@@ -111,7 +111,11 @@ case "$1" in
                 script="${*: -1}"
                 PATH="$STUB/box/bin:$PATH" exec "$box_sh" -c "${script//" /"/" $STUB/box/"}" ;;
         esac ;;
-    inspect) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
+    inspect)
+        case "$*" in
+            *CapAdd*) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
+            *) echo "DOCKBOX_UID=${STUB_OWNER:-$(id -u)}" ;;
+        esac ;;
     ps) [ -n "${STUB_FRESH:-}" ] || echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
 esac
@@ -240,6 +244,9 @@ HOME="$tmp/home" STUB_CAPS= dockbox -n sess exec true >/dev/null 2>&1; rc=$?
 old="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups -- true"
 true_  "a box created without the caps still enters" \
     '[ "$rc" = 0 ] && grep -qx "exec -it -u 0:0 -e TERM dockbox-sess $old" "$log"'
+HOME="$tmp/home" STUB_OWNER=4321 dockbox -n sess exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_  "another user's box refuses entry and names -n" \
+    '[ "$rc" = 1 ] && grep -q "use -n" "$tmp/err" && ! grep -q "^exec -it" "$log"'
 mkdir -p "$share"
 cp "$here/seccomp.json" "$share/"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n fresh exec true >/dev/null 2>&1; rc=$?

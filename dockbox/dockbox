@@ -415,7 +415,13 @@ CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 # $@ = extra docker-exec flags (-w).
 enter_session() {
     trap '' TSTP
-    local rc=0 have c caps="" cap_opts=()
+    local rc=0 owner have c caps="" cap_opts=()
+    owner=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER_NAME" \
+        | sed -n 's/^DOCKBOX_UID=//p')
+    [[ -z "$owner" || "$owner" == "$(id -u)" ]] || {
+        echo "dockbox: $CONTAINER_NAME belongs to UID $owner -- use -n <name> for a box of your own" >&2
+        exit 1
+    }
     have=$(docker inspect -f '{{join .HostConfig.CapAdd ","}}' "$CONTAINER_NAME")
     for c in "${CAPS[@]}"; do
         [[ ",$have," == *",CAP_${c^^},"* ]] && caps+="${caps:+,}+$c"
