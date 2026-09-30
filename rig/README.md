@@ -46,7 +46,8 @@ maintain, no tracking to configure, no stale branches to clean up.
 
 | Command | Symlink | Action |
 |---------|---------|--------|
-| `rig checkout` / `rig co` | `rco` | Fetch + checkout origin/branch (detached) |
+| `rig checkout` / `rig co` | `rco` | Fetch + detached checkout of a ref, tag, hash or origin branch pattern |
+| `rig gco` | `gco` | Detached checkout without fetch; `gco [ref] -- paths` restores files |
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
@@ -56,7 +57,8 @@ maintain, no tracking to configure, no stale branches to clean up.
 
 ## Git aliases
 
-These are plain git shortcuts installed as symlinks — no rig logic, just shorter names:
+These git shortcuts are symlinks and work in every shell with the install directory on PATH.
+Arguments pass through to git; `gib` takes branch name patterns and only lists branches.
 
 | Symlink | Equivalent |
 |---------|-----------|
@@ -68,6 +70,11 @@ These are plain git shortcuts installed as symlinks — no rig logic, just short
 | `gpc` | `git cherry-pick --continue` |
 | `gpa` | `git cherry-pick --abort` |
 | `gw` | `git worktree` |
+| `gif` / `gifs` | `git diff` / `git diff --staged` |
+| `gss` / `gsp` / `gsl` | `git stash` / `git stash pop` / `git stash list --stat` |
+| `grec` / `grea` / `gres` | `git rebase --continue` / `git rebase --abort` / `git rebase --skip` |
+| `gib` | `git branch --all --list --` |
+| `gitsu` | `git status` |
 
 ## Dependencies
 
@@ -85,7 +92,7 @@ Installs `rig` + all symlinks to `~/.local/bin/`.
 
 ## Usage
 
-### Checkout (rco)
+### Checkout (rco / gco)
 
 ```bash
 rco apm           # Fetch + checkout best match for "apm"
@@ -93,7 +100,19 @@ rco -z apm        # Offline: checkout without fetching
 rco -n apm        # Dry-run: show which branch matches
 rco ?             # Force interactive fzf selection
 rco               # Open fzf, type to filter, Enter to checkout
+rco HEAD~2        # Fetch + detach at a commit
+rco v1.0          # Fetch + detach at a tag
+gco abc1234       # Detach at a hash without fetching
+gco local-name    # Detach at an existing local branch
+gco -- file       # Restore a file from the index
+gco HEAD~2 -- file # Restore a file from a commit without moving HEAD
 ```
+
+Both commands always detach when checking out a commit or branch.
+They refuse `-b`, `-B`, `-c`, `-C`, `--track`, `-t`, and `--orphan`.
+They never create local branches or set an upstream.
+Branch patterns select `origin/<branch>` through fzf; remote-tracking refs stay intact.
+`rco` fetches first; `gco` uses only refs already available locally.
 
 ### Push (rip)
 
@@ -133,8 +152,9 @@ rim ?             # Interactive branch selection
 
 Single busybox-style script. Symlinks (`rco`, `rip`, `rir`, `rim`)
 dispatch via `basename $0`. Checkout, rebase, and merge share a
-`cmd_branch_op` helper; push has its own handler. All commands
-fetch by default; `-z` suppresses fetch.
+`cmd_branch_op` helper; push has its own handler. Checkout (`rco`), rebase,
+and merge fetch by default; `-z` suppresses fetch. `gco` never fetches.
+`rig install` owns the symlink list; `make install` delegates to it.
 
 Branch detection (`get_current_branch`):
 1. `git symbolic-ref --short HEAD` (attached HEAD)
@@ -145,5 +165,10 @@ Branch detection (`get_current_branch`):
 Branch selection pipeline:
 1. Recent branches from reflog (last 50)
 2. All branches sorted by commit date
-3. Dedupe, strip `origin/` prefix, strip `~N`/`^N` suffixes
+3. Normalize names, keep existing origin branches, and dedupe
 4. Pipe to fzf for fuzzy matching
+
+## Tests
+
+`make test` checks syntax and runs `test.sh` against a temporary local origin.
+No network or TTY is required. Set `RIG=/absolute/path/to/rig` to test another copy.
