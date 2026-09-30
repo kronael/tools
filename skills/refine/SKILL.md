@@ -76,8 +76,10 @@ first; `/release` after.
     matches, via `gh-comment` § Reply to a thread / § Resolve a thread — its
     distill and review-on-wisdom phases and its sign-off gate, NEVER post
     blind. Refine never pushes, so a FIX thread gets no reply here: list each
-    with its thread id and fix SHA, plus the push refspec, for the resolve and
-    re-review request `gh-comment` runs once the user's push has landed.
+    with its thread id and fix SHA. ALWAYS show the PR's own head refspec,
+    `git push origin <fix-sha>:refs/heads/<headRefName>` (`gh-comment` § Setup);
+    NEVER push without the user's ask. Resolve and request re-review through
+    `gh-comment` once that push has landed.
     NEVER `gh pr merge`, `gh pr review` or `gh pr create`.
     → every unfixed triaged thread is replied to, every fixed one is listed,
     and no other thread is touched.

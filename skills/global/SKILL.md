@@ -131,7 +131,8 @@ Claude Code" footer). These win.
   `git push origin <sha>:refs/heads/YYYYMMDD_<tag>`. NEVER `--force` or
   `--force-with-lease`.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a
-  dated `YYYYMMDD_<tag>` head and offer the PR. `<default head>` needs a SECOND
+  dated `YYYYMMDD_<tag>` head and offer the PR; ALWAYS send an open PR's fix
+  to that PR's own head by SHA. `<default head>` needs a SECOND
   explicit approval naming it, given AFTER you have shown the refspec. "push
   it", "ship it" are NEVER that approval.
 - ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`

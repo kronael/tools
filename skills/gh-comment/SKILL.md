@@ -13,9 +13,10 @@ user-invocable: false
 gh auth status >/dev/null 2>&1 || echo 'no gh config in $HOME — export GH_TOKEN=<token> or pass it inline'
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 # <PR>, when not given: the open PR whose head is an ancestor of HEAD (detached HEAD names no branch)
-gh pr list --json number,headRefOid --jq '.[] | "\(.number) \(.headRefOid)"' |
+gh pr list --limit 200 --json number,headRefOid --jq '.[] | "\(.number) \(.headRefOid)"' |
   while read -r n oid; do git merge-base --is-ancestor "$oid" HEAD 2>/dev/null && echo "$n"; done
 HEAD_SHA=$(gh pr view <PR> --json headRefOid --jq .headRefOid)
+headRefName=$(gh pr view <PR> --json headRefName --jq .headRefName)
 DIFF_FILES=$(gh pr diff <PR> --name-only)
 ```
 
@@ -163,8 +164,9 @@ with no reply and no fix reads as dismissed unread. A bot-authored one resolves
 once replied; a human-authored one stays open for its reviewer. ALWAYS resolve
 a fixed thread with no reply, human or bot, and only once the push carrying
 the fix has landed (`git merge-base --is-ancestor <fix-sha> <headRefOid>`).
-The push is the user's own ask (WISDOM § Git): after the fixes, STOP with the
-refspec shown. NEVER resolve a thread this pass did not address.
+ALWAYS show `git push origin <fix-sha>:refs/heads/<headRefName>` (the PR's head);
+NEVER push without the user's ask (WISDOM § Git). ALWAYS refresh `headRefOid`
+after the push before checking ancestry; NEVER resolve a thread this pass did not address.
 
 ## Re-review request
 
