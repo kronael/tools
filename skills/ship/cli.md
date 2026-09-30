@@ -16,19 +16,40 @@ If `ship` is not available:
 uv tool install git+https://github.com/kronael/ship
 ```
 
+`ship -h` must list `--model` and `--timeout-scale`; the launch block
+below sets both through their env vars.
+
 `ship` runs `claude -p` for every role, so the shell that launches it
 must have a login of its own: `claude auth status` must print
 `"loggedIn": true`.
 
 - A Claude Code session does not pass its own login to the commands it
-  runs. A session started with `CLAUDE_CODE_OAUTH_TOKEN` in its
+  runs: a session started with `CLAUDE_CODE_OAUTH_TOKEN` in its
   environment shows `"loggedIn": false` in its Bash tool, and every ship
-  role then fails with "Not logged in". The user fixes it once, in a
-  terminal outside the session: `claude auth login` writes
-  `~/.claude/.credentials.json`, which every child `claude` reads.
-- NEVER copy the session's token out of its process to work around this.
+  role then fails with "Not logged in". Two ways out; the first is the
+  default:
+  1. The maintainer runs `claude auth login` once, in a terminal outside
+     the session. It writes `~/.claude/.credentials.json`, which every
+     child `claude` reads.
+  2. With the maintainer's explicit OK, given in this session, ship runs
+     through a wrapper that lends it the session's token. The wrapper
+     reads `CLAUDE_CODE_OAUTH_TOKEN` from `/proc/$CLAUDE_PID/environ`
+     and never prints it. Keep it in the scratchpad, never in a repo:
+
+     ```bash
+     #!/bin/bash
+     set -eu
+     token=$(tr '\0' '\n' < "/proc/$CLAUDE_PID/environ" \
+       | sed -n 's/^CLAUDE_CODE_OAUTH_TOKEN=//p')
+     [ -n "$token" ] || { echo "no CLAUDE_CODE_OAUTH_TOKEN in the session" >&2; exit 1; }
+     export CLAUDE_CODE_OAUTH_TOKEN="$token"
+     exec "$@"
+     ```
+
+     Launch as `<wrapper> ship ...`. NEVER echo, log, or commit the
+     token, and NEVER use the wrapper without that OK.
 - `ship -k <spec>` runs only the spec validator: use it to prove the
-  login and the spec before a full run.
+  login, the model settings, and the spec before a full run.
 
 ## Instructions
 
@@ -141,14 +162,27 @@ Run ship from the worktree it should change:
 
 ```bash
 cd <worktree>
-ANTHROPIC_DEFAULT_SONNET_MODEL=claude-fable-5-1 \
+MODEL=fable TIMEOUT_SCALE=3 \
 DATA_DIR=<repo>/.ship/NN-NAME/run-<spec> \
   ship -n 1 [-x] <repo>/.ship/NN-NAME/specs/<spec>.md
 ```
 
-- **Model**: ship names the `sonnet` alias for every role: planner,
-  validator, worker and judge. The env var maps that alias to fable, the
-  model WISDOM requires for unattended code writers.
+- **Model**: ship runs every role (validator, planner, worker, judge,
+  replanner, verifier) on `sonnet` unless `MODEL` says otherwise.
+  `MODEL=fable` is the model WISDOM requires for unattended code
+  writers.
+- **Role timeouts**: ship's fixed role timeouts are sized for sonnet
+  (validator and planner 180 s, judge 45 s, replanner 300 s, verifier
+  600 s). `TIMEOUT_SCALE` multiplies all of them; the per-task timeout
+  is `-t`. Fable's validator takes about 215 s on a 200-line spec, so 3
+  (540 s) leaves headroom; 1 fails every validation with "claude CLI
+  timeout after 180s".
+- **`-k` is not read-only here**: the validator child runs with
+  `bypassPermissions` in the worktree and inherits `~/.claude/CLAUDE.md`,
+  so it can write a diary entry and commit it, and a session whose last
+  message is about that commit rather than the `<decision>` tags counts
+  as "rejected without gaps" and is retried. Run `-k` on a worktree you
+  can reset, and check `git log` afterwards.
 - **Workers**: ship defaults to 4 parallel workers on one tree. Keep
   `-n 1` unless the spec's deliverables touch disjoint files.
 - **State**: ship keeps its PLAN.md, tasks.json, work.json and log/ in

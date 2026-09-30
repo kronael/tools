@@ -98,8 +98,8 @@ otherwise the subagent workflow above is the default. On this path, `cli.md`
 replaces steps 1–3: the planner writes spec files to `.ship/NN-NAME/specs/`,
 not a PLAN.md; ship writes its own PLAN.md into its DATA_DIR. Run `cli.md`'s
 preflight before the first launch: ship needs a `claude` login of its own,
-and its defaults (the `sonnet` model, 4 workers, state in `./.ship`) need the
-overrides `cli.md` gives.
+and its defaults (the `sonnet` model with sonnet-sized role timeouts, 4
+workers, state in `./.ship`) need the overrides `cli.md` gives.
 
 ## Guardrails (apply throughout, not just at close-out)
 
