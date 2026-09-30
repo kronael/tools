@@ -375,7 +375,7 @@ while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
         *) apply_flag "$opt" "${OPTARG:-}" ;;
     esac
 done
-_session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
+_session_dir="$HOME/.claude/projects/${_primary_dir//[^A-Za-z0-9]/-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
 # Default tool: opus at xhigh effort — the workhorse. Explicit model

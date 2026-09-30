@@ -262,6 +262,16 @@ true_  "its first session drops through setpriv in the workdir" \
     'grep -q "^exec -it -u 0:0 -e TERM .* -w $tmp/home dockbox-fresh $sess$" "$log"'
 cd "$here" || exit 1
 
+## resume slug ---------------------------------------------------------------
+mkdir -p "$tmp/repo_with.dot+space name"
+primary="$tmp/repo_with.dot+space name"
+slug="${primary//[^A-Za-z0-9]/-}"
+mkdir -p "$tmp/home/.claude/projects/$slug"
+touch "$tmp/home/.claude/projects/$slug/session.jsonl"
+HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
+true_ "resume maps every nonalphanumeric path character" \
+    'grep -q "claude --resume" "$log"'
+
 ## -n traversal guard ------------------------------------------------------
 exits 2 'apply_flag n ..'  "-n .. rejected"
 exits 2 'apply_flag n ""'  "-n empty rejected"
