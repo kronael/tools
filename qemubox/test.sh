@@ -53,6 +53,7 @@ exits 2 'copy_arg rel' "copy_arg rejects relative path"
 exits 2 'apply_flag n ..'       "-n .. rejected"
 exits 2 'apply_flag n .'        "-n . rejected"
 exits 2 'apply_flag n base'     "-n base rejected"
+exits 2 'apply_flag n .locks'   "-n .locks rejected"
 exits 2 'apply_flag n ""'       "-n empty rejected"
 exits 2 'apply_flag n a/b'      "-n with slash rejected"
 true_   "apply_flag n valid" 'apply_flag n goodname'
@@ -119,6 +120,8 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     setup_guest_builds() { :; }
     setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
     setup_guest_auth() { :; }
+    setup_guest_limits() { :; }
+    sync_guest_clock() { :; }
     start_box identitybox
     [ -f "$ROOT/identitybox/ready" ]
     ! flock -n "$ROOT/.locks/identitybox" true
@@ -155,6 +158,8 @@ false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export
 unset QEMUBOX_DOCKER
 
 source "$here/test-lifecycle.sh"
+source "$here/test-parity.sh"
+source "$here/test-cli.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

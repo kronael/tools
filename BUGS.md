@@ -216,14 +216,6 @@
 
 ## qemubox
 
-- **QEMUBOX-KVM-CHECK-EXISTENCE-NOT-ACCESS** (MED, ops) — CONFIRMED 2026-09-05.
-  `qemubox:343` passes `-enable-kvm` when `/dev/kvm` exists. On a host where the
-  device is `root:kvm 0660` and the user is not in `kvm`, QEMU exits with
-  "Could not access KVM kernel module: Permission denied" instead of the
-  documented software-emulation fallback; `make install` prints its warning and
-  `build-base` is skipped. Reproduce: `make -C qemubox install` as a user
-  outside the `kvm` group. **Fix:** test `[ -r /dev/kvm ] && [ -w /dev/kvm ]`.
-
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:145-150` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are copied into the guest, outbound is open unless `-H`,

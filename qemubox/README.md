@@ -55,7 +55,7 @@ sudo pacman -S qemu-base cloud-image-utils openssh curl tar
 sudo dnf install qemu cloud-utils-cloud-localds openssh-clients curl tar
 ```
 
-KVM acceleration needs `/dev/kvm`. Without it qemubox falls back to slow
+KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
 software emulation.
 
 ## Usage
@@ -190,6 +190,23 @@ in-guest agent can't authenticate without credentials, so that mode is for
 shelling in and building/testing, not for running the agent.
 
 ## Configuration
+
+`~/.qemuboxrc` supplies default flags, one per line, with blank lines and
+`#` comments ignored. Command-line flags override these defaults.
+The project `.qemuboxrc` applies its safe flags after command-line parsing,
+as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`.
+Files contain whitespace-separated tokens, never shell code.
+
+Git worktrees also mount their common git directory at its host path.
+Claude opens its session selector when the project has JSONL history;
+the project slug maps both `/` and `.` to `-`.
+Codex defaults to `gpt-5.6-sol` with `xhigh` effort.
+SSH allocates a terminal only when both stdin and stdout are terminals.
+
+Guest setup disables guest NTP and syncs the clock from the host before
+the first session of each boot.
+PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
+New mount parent directories belong to the user; existing parents keep their owner.
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept for reuse; `rm` deletes a box's overlay, seed, key, known-hosts,
