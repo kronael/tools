@@ -82,23 +82,38 @@ basename; `-n name` gives a separate box.
 Management:
 
 ```sh
-qemubox ls               # list VMs (name, status, SSH port, path)
+qemubox ls               # list NAME STATUS USE RAM DISK PATH
 qemubox status repo      # readiness of one VM (process/ssh/boot) without a shell
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
 qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
-qemubox prune [hours]    # remove stopped VMs older than N hours (default 2160)
+qemubox prune [hours]    # remove old stopped VMs and running idle VMs past 4h
 qemubox build-base       # (re)bake the prebuilt base image
 ```
 
 ## Lifecycle
 
-A box starts on first use and auto-shuts-down when the **last** session exits
-(ref-counted, like dockbox). Re-entering a running box from a second terminal
+A box starts on first use and powers off when the **last** session exits
+(counted by session markers). The disk stays on the host; the next launch
+boots that disk and keeps files in the guest home. `qemubox rm` deletes it.
+A missing recorded base image refuses launch with a `qemubox rm` hint.
+Re-entering a running box from a second terminal
 joins the live VM; it stays up until every session has exited, so concurrent
 sessions don't tear it down under each other. The tool/model applies to the
 new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
 ignored on re-entry — use `-n <name>` for a separately-mounted box.
+
+The per-VM lock covers setup, session markers, shutdown and removal.
+A new session waits for full guest readiness before it runs.
+`QEMUBOX_READY_TIMEOUT` sets the wait limit in seconds (default 180);
+a timeout prints the serial log tail. HUP and TERM remove the session marker.
+A failed marker listing keeps the VM up and reports an error.
+
+`ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
+space allocated on the host (both sizes in KiB). `rm` accepts several names
+or globs, with or without the `qemubox-` prefix, and fails if removal fails.
+`prune [hours]` removes stopped VMs after that many hours (default 2160).
+Running VMs need four hours since readiness and no sessions before pruning.
 
 ## Build directories
 
@@ -154,7 +169,7 @@ What qemubox gives you:
   it can only touch the project dir(s) you mount and its own disposable disk.
   Your `~/.ssh`, cloud creds, and other repos are never mounted.
 - **Disposability.** The disk is a throwaway qcow2 overlay; builds, installs,
-  and any mess vanish when the VM shuts down. No host pollution.
+  and guest files vanish when `qemubox rm` removes the VM.
 
 What it does **not** give you — do **not** run genuinely hostile code here:
 

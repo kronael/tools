@@ -112,8 +112,20 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     QEMU=fake_qemu
     fake_qemu() { printf '%s\n' "$@" > "$fixture/qemu.args"; }
     missing_deps() { :; }
-    ssh_plain_box() { [ "$2" = 'test -f /run/qemubox/ready' ]; }
+    ssh_plain_box() { :; }
+    assemble_mounts() { :; }
+    setup_guest_tmp() { :; }
+    mount_host_paths() { :; }
+    setup_guest_builds() { :; }
+    setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
+    setup_guest_auth() { :; }
     start_box identitybox
+    [ -f "$ROOT/identitybox/ready" ]
+    ! flock -n "$ROOT/.locks/identitybox" true
+    unlock_box
+    echo retained > "$ROOT/identitybox/disk.qcow2"
+    ensure_box identitybox
+    [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
@@ -141,6 +153,8 @@ exits 42 'build_base' "export failure stays visible"
 eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
 false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
 unset QEMUBOX_DOCKER
+
+source "$here/test-lifecycle.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

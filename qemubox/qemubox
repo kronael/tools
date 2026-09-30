@@ -25,6 +25,9 @@ gcloud_creds=""
 gpg_forward=""
 untrusted=""
 booted=""
+locked=""
+sid=""
+session_pid=""
 args=()
 dirs=()
 extra_dirs=()
@@ -189,15 +192,114 @@ ensure_box() {
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
     [ -f "$dir/disk.qcow2" ] || {
-        note "creating disposable qcow2 overlay for qemubox-$name"
+        note "creating persistent qcow2 overlay for qemubox-$name"
         qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" "$DISK" >/dev/null
         printf '%s\n' "$image_id" > "$dir/image-id"
     }
 }
 
 running() {
+    local dir pid state
     dir="$(box_dir "$1")"
-    [ -s "$dir/pid" ] && kill -0 "$(cat "$dir/pid")" 2>/dev/null
+    [ -s "$dir/pid" ] || return 1
+    pid=$(cat "$dir/pid")
+    state=$(ps -o stat= -p "$pid") || return 1
+    [[ "$state" != Z* ]]
+}
+
+ready_error() {
+    echo "VM qemubox-$1 not ready; serial log: $(box_dir "$1")/serial.log" >&2
+    tail -40 "$(box_dir "$1")/serial.log" >&2 || true
+}
+
+lock_box() {
+    mkdir -p "$ROOT/.locks"
+    exec 9>"$ROOT/.locks/$(box_name "$1")"
+    flock -w "${QEMUBOX_READY_TIMEOUT:-180}" 9 || {
+        ready_error "$1"
+        return 1
+    }
+    locked=1
+}
+
+unlock_box() {
+    flock -u 9
+    exec 9>&-
+    locked=""
+}
+
+wait_ready() {
+    local name="$1" gate="$2" deadline
+    deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
+    while [ "$SECONDS" -lt "$deadline" ]
+    do
+        if ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1
+        then
+            [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ] || {
+                sleep 1
+                continue
+            }
+            return 0
+        fi
+        sleep 1
+    done
+    ready_error "$name"
+    return 1
+}
+
+session_markers() {
+    ssh_plain_box "$1" 'sudo ls -1 /run/qemubox/sess'
+}
+
+leave_session() {
+    local rc=$? left
+    trap - EXIT HUP TERM INT
+    if [ -n "$session_pid" ]
+    then
+        kill "$session_pid" 2>/dev/null || true
+        wait "$session_pid" 2>/dev/null || true
+    fi
+    if [ -z "$locked" ] && ! lock_box "$name"
+    then
+        exit 1
+    fi
+    if running "$name"
+    then
+        if [ -n "$sid" ]
+        then
+            if ! ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid"
+            then
+                note "cannot remove session marker; keeping qemubox-$name running"
+                rc=1
+            elif left=$(session_markers "$name")
+            then
+                if [ -z "$left" ]
+                then
+                    note "last session exited; powering off qemubox-$name, keeping disk"
+                    stop_box "$name" || rc=1
+                fi
+            else
+                note "cannot count sessions; keeping qemubox-$name running"
+                rc=1
+            fi
+        elif [ -n "$booted" ]
+        then
+            stop_box "$name" || rc=1
+        fi
+    fi
+    unlock_box
+    exit "$rc"
+}
+
+enter_session() {
+    trap leave_session EXIT
+    trap 'exit 129' HUP
+    trap 'exit 143' TERM
+    trap 'exit 130' INT
+    start_box "$name"
+    sid=$$
+    ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid"
+    unlock_box
 }
 
 ssh_box() {
@@ -210,10 +312,12 @@ ssh_box() {
     [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "$GUEST_HOME/.gnupg/S.gpg-agent:$gpg_sock")
     docker=()
     [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
-    ssh -i "$dir/key" -p "$(port_for "$name")" \
+    exec ssh -i "$dir/key" -p "$(port_for "$name")" \
         "${agent[@]}" \
         "${gpg[@]}" \
         "${docker[@]}" \
+        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
+        -o BatchMode=yes -o LogLevel=ERROR \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
         "$GUEST_USER@127.0.0.1" "$@"
@@ -224,6 +328,8 @@ ssh_plain_box() {
     dir="$(box_dir "$name")"
     shift
     ssh -i "$dir/key" -p "$(port_for "$name")" \
+        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
+        -o BatchMode=yes -o LogLevel=ERROR \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
         "$GUEST_USER@127.0.0.1" "$@"
@@ -346,18 +452,22 @@ start_box() {
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
     port="$(port_for "$name")"
-    # Serialize concurrent same-name launches so two invocations don't both
-    # ssh-keygen / qemu-img / boot a second qemu on one disk and port. Held only
-    # through boot; released before the long-lived interactive session.
-    exec 9>"$dir/.lock"
-    flock 9
-    ensure_box "$name"
-    running "$name" && {
-        note "reusing running VM qemubox-$name on 127.0.0.1:$port"
+    lock_box "$name"
+    if running "$name"
+    then
+        image_id=$(cat "$dir/image-id")
+        [ -s "$ROOT/base/$image_id.qcow2" ] || {
+            echo "Missing base $image_id; run qemubox rm $name" >&2
+            return 1
+        }
+        note "waiting for running VM qemubox-$name"
+        wait_ready "$name" session
         booted=""
-        flock -u 9
         return
-    }
+    fi
+    assemble_mounts
+    ensure_box "$name"
+    rm -f "$dir/ready" "$dir/known_hosts"
     # Fresh boot: from the name-hash port, walk up to the first free one and
     # persist it to $dir/port, so re-entry and ssh reuse the same port and a
     # name-hash collision with another box reallocates instead of failing.
@@ -393,21 +503,19 @@ start_box() {
         "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
         -serial "file:$dir/serial.log" \
-        -display none -daemonize -pidfile "$dir/pid"
-    note "waiting for SSH on 127.0.0.1:$port"
-    note "why: qemubox-init must finish user/key setup before commands can run"
-    for i in $(seq 1 90); do
-        ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1 && { booted=1; flock -u 9; return; }
-        [ $((i % 10)) -eq 0 ] && note "still waiting for SSH; serial log: $dir/serial.log"
-        sleep 2
-    done
-    # SSH never came up: kill the daemonized qemu so a boot that never reached
-    # SSH isn't orphaned holding RAM/CPU and the rw 9p mounts.
-    pid="$(cat "$dir/pid" 2>/dev/null || true)"
-    [ -n "$pid" ] && kill "$pid" 2>/dev/null || true
-    rm -f "$dir/pid"
-    echo "SSH not ready; see $dir/serial.log" >&2
-    exit 1
+        -display none -daemonize -pidfile "$dir/pid" 9>&-
+    booted=1
+    note "waiting for guest setup on 127.0.0.1:$port"
+    wait_ready "$name" boot
+    ssh_plain_box "$name" 'sudo rm -f /run/qemubox/ready'
+    setup_guest_tmp "$name"
+    mount_host_paths "$name"
+    setup_guest_builds "$name"
+    setup_guest_runtime "$name"
+    setup_guest_auth "$name"
+    ssh_plain_box "$name" 'sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/ready'
+    touch "$dir/ready"
+
 }
 
 detect_gpg() {
@@ -491,30 +599,32 @@ stop_box() {
     running "$name" || return 0
     dir="$(box_dir "$name")"
     pid="$(cat "$dir/pid")"
-    ssh_box "$name" sudo poweroff >/dev/null 2>&1 || true
+    ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 || note "poweroff SSH closed; waiting for qemu"
     # Wait for a clean guest shutdown (systemd can take ~90s), then escalate
     # SIGTERM -> SIGKILL so a wedged VM is terminated, never left as an orphaned
     # qemu whose disk remove_box is about to unlink.
-    for _ in $(seq 1 90); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    kill -0 "$pid" 2>/dev/null && kill "$pid" 2>/dev/null || true
-    for _ in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
-    for _ in $(seq 1 5); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    if kill -0 "$pid" 2>/dev/null; then
+    for _ in $(seq 1 90); do running "$name" || break; sleep 1; done
+    running "$name" && kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 10); do running "$name" || break; sleep 1; done
+    running "$name" && kill -9 "$pid" 2>/dev/null || true
+    for _ in $(seq 1 5); do running "$name" || break; sleep 1; done
+    if running "$name"; then
         echo "VM still running as PID $pid" >&2
         return 1
     fi
-    rm -f "$dir/pid"
+    rm -f "$dir/pid" "$dir/ready"
+    touch "$dir/stopped"
 }
 
 remove_box() {
+    local name dir rel
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     # Never delete a box's disk/keys while its VM is still alive -- stop_box now
     # escalates to SIGKILL, so a failure here means it genuinely could not die.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" \
-        "$dir/config/ephemeral" "$dir/image-id"
+        "$dir/config/ephemeral" "$dir/image-id" "$dir/ready" "$dir/stopped"
     if [ -d "$dir/config" ]
     then
         rmdir "$dir/config"
@@ -527,8 +637,11 @@ remove_box() {
     then
         rmdir "$dir/history"
     fi
-    rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
-    rmdir "$dir" 2>/dev/null || true
+    if [ -d "$dir/hostcfg" ]
+    then
+        rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" || return 1
+    fi
+    rmdir "$dir" || return 1
     echo "removed qemubox-$name"
 }
 
@@ -595,20 +708,108 @@ build_base() (
 )
 
 list_boxes() {
+    local dir name state use ram disk markers found=""
     mkdir -p "$ROOT"
-    found=""
-    for dir in "$ROOT"/*; do
+    for dir in "$ROOT"/*
+    do
         [ -d "$dir" ] || continue
         [ "${dir##*/}" = base ] && continue
-        [ -n "$found" ] || printf "NAME\tSTATUS\tSSH\tPATH\n"
+        [ -n "$found" ] || printf "NAME\tSTATUS\tUSE\tRAM\tDISK\tPATH\n"
         found=1
         name="${dir##*/}"
-        state=stopped
-        running "$name" && state=running
-        printf "qemubox-%s\t%s\t127.0.0.1:%s\t%s\n" \
-            "$name" "$state" "$(port_for "$name")" "$dir"
+        state=stopped; use=idle; ram=0
+        if running "$name"
+        then
+            state=running
+            ram=$(ps -o rss= -p "$(cat "$dir/pid")") || ram="?"
+            if markers=$(session_markers "$name")
+            then
+                [ -z "$markers" ] || use=busy
+            else
+                use="?"
+            fi
+        fi
+        disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
+        printf "qemubox-%s\t%s\t%s\t%sKiB\t%sKiB\t%s\n" \
+            "$name" "$state" "$use" "${ram// /}" "$disk" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
+}
+
+remove_boxes() {
+    local pat dir name matched rc=0 targets=() target
+    [ "$#" -gt 0 ] || {
+        echo "qemubox rm: a name or glob is required (-a for all)" >&2
+        return 2
+    }
+    for pat in "$@"
+    do
+        case "$pat" in
+            -a|--all) pat='*' ;;
+            -*) echo "qemubox rm: unknown option '$pat'" >&2; return 2 ;;
+        esac
+        matched=""
+        for dir in "$ROOT"/*
+        do
+            [ -d "$dir" ] || continue
+            name=${dir##*/}
+            [ "$name" = base ] && continue
+            rm_matches "$name" "$pat" || continue
+            matched=1
+            for target in "${targets[@]}"
+            do
+                [ "$target" != "$name" ] || continue 2
+            done
+            targets+=("$name")
+        done
+        [ -n "$matched" ] || { echo "qemubox rm: no match for '$pat'" >&2; rc=1; }
+    done
+    for name in "${targets[@]}"
+    do
+        lock_box "$name" || { rc=1; continue; }
+        remove_box "$name" || rc=1
+        unlock_box
+    done
+    return "$rc"
+}
+
+prune_boxes() {
+    local hours="${1:-2160}" now cutoff grace dir name ts markers rc=0
+    [[ "$hours" =~ ^[0-9]+$ ]] || {
+        echo "qemubox prune: hours must be a whole number, got '$hours'" >&2
+        return 2
+    }
+    now=$(date +%s)
+    cutoff=$((now - 10#$hours * 3600))
+    grace=$((now - 4 * 3600))
+    for dir in "$ROOT"/*
+    do
+        [ -d "$dir" ] || continue
+        name=${dir##*/}
+        [ "$name" = base ] && continue
+        lock_box "$name" || { rc=1; continue; }
+        if running "$name"
+        then
+            ts=$(stat -c %Y "$dir/ready") || { unlock_box; continue; }
+            if [ "$ts" -le "$grace" ]
+            then
+                if markers=$(session_markers "$name")
+                then
+                    [ -n "$markers" ] || remove_box "$name" || rc=1
+                else
+                    note "cannot count sessions; keeping qemubox-$name running"
+                    rc=1
+                fi
+            fi
+        else
+            ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || {
+                unlock_box; continue;
+            }
+            [ "$ts" -ge "$cutoff" ] || remove_box "$name" || rc=1
+        fi
+        unlock_box
+    done
+    return "$rc"
 }
 
 # Report a box's readiness from the pidfile / serial log / SSH port only -- no
@@ -718,7 +919,7 @@ tool_cmd() {
 # Decide whether box $1 matches the user's rm pattern $2. Empty pattern -> all;
 # a pattern containing * or ? is a glob, otherwise an exact name match.
 rm_matches() {
-    _n="$1"; _pat="$2"
+    _n="$1"; _pat="${2#qemubox-}"
     [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
     case "$_pat" in
         *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
@@ -788,41 +989,8 @@ case "${1:-}" in
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
-    rm|destroy)
-        pat="${2:-}"
-        [ -z "$pat" ] && { echo "qemubox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
-        case "$pat" in -a|--all) pat='*' ;; esac
-        found=""
-        for dir in "$ROOT"/*; do
-            [ -d "$dir" ] || continue
-            name="${dir##*/}"
-            [ "$name" = base ] && continue
-            rm_matches "$name" "$pat" || continue
-            found=1
-            remove_box "$name" || true
-        done
-        if [ -z "$found" ]; then
-            if [ -n "$pat" ]; then
-                echo "no match for '$pat'"
-            else
-                echo "no qemubox VMs"
-            fi
-        fi
-        exit 0 ;;
-    prune)
-        hours="${2:-2160}"
-        cutoff=$(date -d "-$hours hours" +%s 2>/dev/null) || cutoff=$(date -v-"$hours"H +%s)
-        for dir in "$ROOT"/*; do
-            [ -d "$dir" ] || continue
-            name="${dir##*/}"
-            [ "$name" = base ] && continue
-            running "$name" && continue
-            # A dir vanishing between the glob and here (concurrent rm/prune)
-            # must skip, not trip set -e and abort the whole prune.
-            ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir" 2>/dev/null) || continue
-            [ "$ts" -lt "$cutoff" ] && remove_box "$name" || true
-        done
-        exit 0 ;;
+    rm|destroy) shift; remove_boxes "$@"; exit $? ;;
+    prune) prune_boxes "${2:-2160}"; exit $? ;;
     build-base)
         force=""
         case "${2:-}" in
@@ -876,28 +1044,8 @@ name="$(box_name "${name_override:-${primary##*/}}")"
 
 [ -n "$untrusted" ] && apply_untrusted
 
-assemble_mounts
-
 [ -n "$gpg_forward" ] && detect_gpg
-start_box "$name"
-# Drop this session's ref-count marker BEFORE provisioning, so a sibling session
-# exiting mid-setup cannot see left=0 and tear the VM down under us.
-sid="$$"
-ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
-# A running box's 9p device set is fixed at boot, so re-provisioning it with a
-# different mount set fails hard; skip it on re-entry (matches dockbox), where
-# mount/-v/dir changes don't apply. The tool/model still applies to the session.
-# $booted is set from inside start_box's flock (1 = we just booted; "" = reused),
-# so this is race-free against a concurrent first launch of the same box.
-if [ -n "$booted" ]; then
-    setup_guest_tmp "$name"
-    mount_host_paths "$name"
-    setup_guest_builds "$name"
-    setup_guest_runtime "$name"
-    setup_guest_auth "$name"
-else
-    note "re-entering running qemubox-$name; mount/-v/dir changes are ignored (use -n <name> for a separate box)"
-fi
+enter_session
 
 for warning in "${warnings[@]}"; do
     note "$warning"
@@ -915,24 +1063,16 @@ for arg in "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     remote="$remote $q"
 done
 
-# Ref-counted session lifecycle (mirrors dockbox): the marker was dropped right
-# after start_box; run the session, then remove the marker and count what's left.
-# When the last session exits, tear the disposable VM down so none is left idle;
-# concurrent sessions each hold a marker and keep it up until all have exited.
 rc=0
-if [ -n "$workdir" ]; then
-    note "running in qemubox-$name:$workdir"
-    ssh_box "$name" -t "cd $(quote "$workdir") && exec env$remote" || rc=$?
+if [ -n "$workdir" ]
+then
+    remote="cd $(quote "$workdir") && exec env$remote"
 else
-    note "running in qemubox-$name home"
-    ssh_box "$name" -t "exec env$remote" || rc=$?
+    remote="exec env$remote"
 fi
-# Only tear down when the remaining-session count SUCCEEDS and is zero. An ssh
-# hiccup while counting leaves $left empty -> keep the VM up (a sibling may still
-# hold it); prune reaps a genuinely idle box later. Never teardown on error.
-left="$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid; ls /run/qemubox/sess 2>/dev/null | wc -l" 2>/dev/null)" || left=""
-if [ -n "$left" ] && [ "$left" -eq 0 ]; then
-    note "last session exited -- shutting down qemubox-$name"
-    remove_box "$name" >/dev/null || true
-fi
+note "running in qemubox-$name${workdir:+:$workdir}"
+ssh_box "$name" -t "$remote" <&0 9>&- &
+session_pid=$!
+wait "$session_pid" || rc=$?
+session_pid=""
 exit "$rc"
