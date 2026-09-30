@@ -13,10 +13,15 @@ ready. Reflog keeps everything for 90 days — no work is ever lost.
 Mental model: **you commit to a SHA, not a branch**. The branch is
 just a label that lives upstream.
 
-For PR work in a worktree, `git worktree add /path origin/branch`
-points at the remote ref — detached HEAD, no local branch created or
-attached. That's the correct pattern; the no-attach rule targets
-`git checkout branch` in the main repo.
+For PR work in a worktree,
+`git worktree add --detach <repo-root>/.<name> origin/<branch>` —
+detached HEAD in the main tree and in every worktree, the worktree a
+hidden dir inside the repo root (WISDOM § Git, installed as
+`~/.claude/CLAUDE.md`).
+
+The `rig` recipes below are the human's hand tool. An agent follows
+WISDOM § Git: no force-push, no squash, and a push only when asked, by
+SHA.
 
 ## Start work on a feature
 
