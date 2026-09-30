@@ -188,8 +188,11 @@ DATA_DIR=<repo>/.ship/NN-NAME/run-<spec> \
 - **State**: ship keeps its PLAN.md, tasks.json, work.json and log/ in
   DATA_DIR, which defaults to `./.ship`, the folder that holds the
   plans. Give each spec a DATA_DIR of its own.
-- **Restart**: `-f` deletes DATA_DIR recursively. NEVER pass `-f`
-  without a DATA_DIR of its own. To resume, re-run the same command.
+- **Restart**: ship deletes DATA_DIR recursively on `-f`, on a start
+  that finds no work in it, and when the spec changed since the last
+  run. NEVER launch ship without a DATA_DIR only ship uses: the default
+  `./.ship` in a repo root takes the plan folders with it. To resume,
+  re-run the same command.
 - **PROGRESS.md**: ship writes it in the cwd, i.e. the worktree root.
   Read it there, never commit it, and delete that one file when done.
 - Use `run_in_background=true` and read PROGRESS.md periodically; a
