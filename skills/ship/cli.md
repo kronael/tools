@@ -192,7 +192,11 @@ DATA_DIR=<repo>/.ship/NN-NAME/run-<spec> \
   that finds no work in it, and when the spec changed since the last
   run. NEVER launch ship without a DATA_DIR only ship uses: the default
   `./.ship` in a repo root takes the plan folders with it. To resume,
-  re-run the same command.
+  re-run the same command. A run that ended with failed tasks (a
+  session or usage limit, a claude CLI failure, a timeout) resumes the
+  same way: ship re-queues the failed tasks, prints each, and keeps the
+  completed ones. `ship: done (n/m tasks)` means every task completed,
+  and only then is `-f` the way to run the spec again.
 - **PROGRESS.md**: ship writes it in the cwd, i.e. the worktree root.
   Read it there, never commit it, and delete that one file when done.
 - Use `run_in_background=true` and read PROGRESS.md periodically; a
