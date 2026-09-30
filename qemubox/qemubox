@@ -33,10 +33,7 @@ mount_srcs=()
 mount_dests=()
 mount_modes=()
 
-# Single-file host configs copied into a per-box staging dir and 9p-mounted
-# read-only at /mnt/qemubox-home. Only these leave the host -- never all of
-# $HOME -- so the guest cannot read ~/.ssh, cloud creds, or other projects.
-host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnupg/pubring.gpg)
+host_cfg_files=(.claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg)
 
 usage() {
     cat <<EOF
@@ -395,6 +392,9 @@ mount_host_paths() {
 
 setup_guest_runtime() {
     name="$1"
+    settings='--settings '\''{"sandbox":{"enabled":false}}'\'''
+    wrapper_edit="s/--dangerously-skip-permissions \"/--dangerously-skip-permissions $settings \"/"
+    ssh_plain_box "$name" "sudo sed -i $(quote "$wrapper_edit") /usr/local/bin/claude"
     ssh_stream_box "$name" 'set -e
 mkdir -p ~/.docker/run ~/.gnupg
 chmod 700 ~/.gnupg
@@ -403,18 +403,26 @@ sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/codex'
-    note "copying agent config into qemubox-$name (writable guest copy; host stays read-only)"
-    ssh_stream_box "$name" 'set -euo pipefail
-for d in .claude .codex .agents; do
-  s="/mnt/qemubox-cfg/$d"; [ -d "$s" ] || continue
-  sudo mkdir -p ~/"$d"; sudo chown "$(id -u):$(id -g)" ~/"$d"
-  ( cd "$s" && tar -cpf - --exclude=./projects --exclude=./todos --exclude=./sessions --exclude="./*.sqlite*" --exclude=./log --exclude=./cache --exclude=./.cache --exclude=./.tmp --exclude=./history.jsonl --exclude=./statsig --exclude=./file-history --exclude=./shell_snapshots --exclude=./shell-snapshots . ) | tar -C ~/"$d" -xpf -
-done'
-    ssh_stream_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
-[ -e /mnt/qemubox-home/.gitconfig ] && ln -sf /mnt/qemubox-home/.gitconfig ~/.gitconfig || true
-[ -e /mnt/qemubox-home/.dockbox_history ] && ln -sf /mnt/qemubox-home/.dockbox_history ~/.bash_history || true
-[ -e /mnt/qemubox-home/.gnupg/pubring.kbx ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.kbx ~/.gnupg/pubring.kbx || true
-[ -e /mnt/qemubox-home/.gnupg/pubring.gpg ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.gpg ~/.gnupg/pubring.gpg || true'
+    ssh_stream_box "$name" 'set -e
+if [ -f /mnt/qemubox-home/.claude.json ]
+then
+    ln -sf /mnt/qemubox-home/.claude.json /tmp/host-claude.json
+fi
+for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+do
+    if [ -f "/mnt/qemubox-home/$rel" ]
+    then
+        ln -sf "/mnt/qemubox-home/$rel" "$HOME/$rel"
+    fi
+done
+if [ -f /mnt/qemubox-history/history ]
+then
+    for rel in .bash_history .zsh_history
+    do
+        touch "$HOME/$rel"
+        sudo mount --bind /mnt/qemubox-history/history "$HOME/$rel"
+    done
+fi'
 }
 
 stop_box() {
@@ -452,6 +460,11 @@ remove_box() {
     rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
+    rm -f "$dir/history/history"
+    if [ -d "$dir/history" ]
+    then
+        rmdir "$dir/history"
+    fi
     rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
     rmdir "$dir" 2>/dev/null || true
     echo "removed qemubox-$name"
@@ -673,27 +686,22 @@ apply_untrusted() {
 # Build the 9p mount list (mount_* arrays) for the resolved flag set. Reads the
 # globals set during argument parsing; called once from the main flow.
 assemble_mounts() {
-    # Untrusted mode injects no host config or credentials: skip the single-file
-    # staging mount, the agent-config mounts, and the per-slug memory mount below.
-    # Only the project dir(s) cross in.
     if [ -z "$untrusted" ]; then
         host_cfg="$(box_dir "$name")/hostcfg"
         stage_host_cfg "$host_cfg"
         add_mount "$host_cfg" "/mnt/qemubox-home" ro
-        # Agent config: mounted read-only at a staging path, then copied into the
-        # guest's own writable home (setup_guest_runtime). Guest writes to config never
-        # reach the host, and the guest sees config at the normal paths so tools find it.
         for d in .claude .codex .agents; do
-            add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
+            add_mount "$HOME/$d" "$HOME/$d" rw
         done
-    fi
-    # Session data for THIS project persists to the host (transcripts + auto-memory),
-    # scoped to the active project's slug so the guest never sees or writes any other
-    # project's history. Everything else stays inside the disposable VM.
-    if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ] && [ -z "$untrusted" ]; then
-        slug="${primary//\//-}"
-        mkdir -p "$HOME/.claude/projects/$slug"
-        add_mount "$HOME/.claude/projects/$slug" "$GUEST_HOME/.claude/projects/$slug" rw
+        history_dir="$(box_dir "$name")/history"
+        mkdir -p "$history_dir"
+        chmod 700 "$history_dir"
+        [ -f "$HOME/.dockbox_history" ] || touch "$HOME/.dockbox_history"
+        if [ ! "$HOME/.dockbox_history" -ef "$history_dir/history" ]
+        then
+            ln -fL "$HOME/.dockbox_history" "$history_dir/history"
+        fi
+        add_mount "$history_dir" /mnt/qemubox-history rw
     fi
     [ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "$GUEST_HOME/.config/gcloud" ro
     if [ -z "${no_copy:-}" ]; then

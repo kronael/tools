@@ -6,8 +6,8 @@ A throwaway QEMU VM where a coding agent works on your project behind a full
 hardware-virt boundary, driven by one command that feels exactly like running
 the agent bare. Because the VM *is* the perimeter, the agent runs at full tilt —
 no permission prompts, no babysitting — while your `~/.ssh`, your other repos,
-and the rest of your machine stay untouchable. Your project edits and the
-agent's memory for that project persist to the host; everything else evaporates
+and the rest of your machine stay untouchable. Your project edits, agent config,
+session history and shell history persist to the host; everything else evaporates
 when the box shuts down (which it does on its own). You get the safety for free
 and stop thinking about it.
 
@@ -108,18 +108,19 @@ qemubox mounts two things and nothing else from your home:
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
    read-write one. `-N` runs an empty VM with no project mount.
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings,
-   credentials, skills, plugins) are mounted read-only, then **copied** into the
-   guest's own writable home, so guest edits to config never reach the host.
+   credentials, skills, plugins, all project histories) are mounted read-write
+   at their host paths. Guest edits reach the host, and absolute skill links
+   resolve because the guest has the host username, UID, GID and home path.
 
 The rest of `$HOME` is never mounted: no `~/.ssh`, no cloud credentials, no
-other projects. Only a few single files (`~/.claude.json`, `~/.gitconfig`,
-`~/.dockbox_history`, gpg **public** keyrings) are staged into a per-box
-read-only dir and linked in.
-
-One thing persists past the throwaway VM: the **active project's**
-`~/.claude/projects/<slug>` (transcripts + auto-memory) is mounted read-write so
-recall survives. Only that one slug is mounted — the guest can't see or write
-any other project's history.
+other projects. `~/.gitconfig` and gpg **public** keyrings are staged read-only.
+The shared Dockerfile's Claude wrapper reads the staged, read-only
+`/tmp/host-claude.json` and writes a private writable `~/.claude.json`.
+It passes `--settings '{"sandbox":{"enabled":false}}'` in the VM so the
+shared `~/.claude/settings.json` needs no edit or overlay.
+`~/.dockbox_history` backs both shell history files through a writable share.
+That share uses a hard link; `QEMUBOX_HOME` and the history file must be on
+the same filesystem. A failed link stops launch.
 
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't
 reach or log into each other. `-A` forwards your SSH agent, `-D` the Docker
@@ -144,9 +145,9 @@ What qemubox gives you:
 
 What it does **not** give you — do **not** run genuinely hostile code here:
 
-- **Your real agent credentials are injected.** Like dockbox, qemubox copies
-  your live `~/.claude` / `~/.codex` (tokens included) in so the agent can work.
-  Hostile guest code can read and exfiltrate those tokens.
+- **Your real agent credentials are shared read-write.** Like dockbox, qemubox
+  shares your live `~/.claude` / `~/.codex` (tokens included).
+  Guest code can read, change and exfiltrate those tokens and config files.
 - **Outbound network is on by default.** Pass `-H` (egress kill-switch) to
   disable it, or `-U` for a credential-free, network-off inspection mode.
   Without either, the path for exfiltration is open.

@@ -101,14 +101,34 @@ LIB="$fixture/lib"; mkdir -p "$LIB"
 
 run_assemble
 eq "default: project rw"         "$(mount_mode "$PROJ")" "rw"
-eq "default: .claude cfg ro"     "$(mount_mode /mnt/qemubox-cfg/.claude)" "ro"
-eq "default: per-slug memory rw" "$(mount_mode "$slug_dest")" "rw"
+for d in .claude .codex .agents; do
+    eq "default: $d rw at host path" "$(mount_mode "$HOME/$d")" "rw"
+done
+eq "default: no per-slug mount" "$(mount_mode "$slug_dest")" ""
+eq "default: single-file config ro" "$(mount_mode /mnt/qemubox-home)" "ro"
+eq "default: shell history rw" "$(mount_mode /mnt/qemubox-history)" "rw"
+true_ "history shares host inode" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
+echo history-test >> "$ROOT/testbox/history/history"
+eq "history writes reach host" "$(cat "$HOME/.dockbox_history")" "history-test"
+mount_args=$(qemu_mount_args)
+for i in "${!mount_tags[@]}"; do
+    ro=""; [ "${mount_modes[$i]}" = ro ] && ro=",readonly=on"
+    true_ "qemu export ${mount_dests[$i]}" 'grep -Fxq "local,path=${mount_srcs[$i]},mount_tag=${mount_tags[$i]},security_model=none$ro" <<< "$mount_args"'
+done
+
+printf '{"fixture":true}\n' > "$HOME/.claude.json"
+stage_host_cfg "$ROOT/testbox/hostcfg"
+true_ "claude.json staged intact" 'cmp "$HOME/.claude.json" "$ROOT/testbox/hostcfg/.claude.json"'
+false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.dockbox_history" ]'
+run_assemble
+true_ "history staging supports re-entry" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
 
 run_assemble 'untrusted=1'
 eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"
-eq   "untrusted: no .claude cfg mount" "$(mount_mode /mnt/qemubox-cfg/.claude)" ""
+eq   "untrusted: no .claude cfg mount" "$(mount_mode "$HOME/.claude")" ""
 eq   "untrusted: no qemubox-home"      "$(mount_mode /mnt/qemubox-home)" ""
 eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
+eq   "untrusted: no history"          "$(mount_mode /mnt/qemubox-history)" ""
 
 run_assemble 'no_copy=1'
 eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
