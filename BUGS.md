@@ -11,6 +11,14 @@
   are cold provenance files nothing reads by accident. **Fix:** the maintainer's
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
+- **WISDOM-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-30.
+  `skills/global/SKILL.md` has a 201-line body against the 200-line cap
+  (`skills/wisdom/SKILL.md`), after the git-workflow rules pulled from the
+  live install (6470d63). It is the one file loaded in every session.
+  Reproduce: `awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`.
+  **Fix:** the maintainer's call which rule moves to its owning skill; no
+  test — docs.
+
 - **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
   `kronael/install/SKILL.md` is 232 lines and
   `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
@@ -185,6 +193,16 @@
   duplication.
 
 ## dockbox
+
+- **DOCKBOX-STARTUP-EXIT-UNDETECTED** (LOW, correctness) — CONFIRMED at HEAD
+  2026-09-30. The startup wait tests `docker ps -q -f "name=^…$" … ||`
+  (`dockbox/dockbox:655`), but `docker ps -q` exits 0 when nothing matches
+  (verified on Docker 29.6.2), so "Container exited during startup" and its
+  `docker logs` tail never print: a box that dies in dockbox-init waits the
+  full 10 s, then the session fails on a bare `docker exec` error. **Fix:**
+  test the command's output, as the re-entry gate does (`[[ -n "$(docker ps
+  -q -f …)" ]]`). No test — the shell suites carry no skip idiom to pin a
+  known failure with; the fix adds the stub case.
 
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
