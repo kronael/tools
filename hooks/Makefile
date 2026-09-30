@@ -5,7 +5,7 @@ PYTEST := $(shell command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytes
 
 # Explicit list, not the directory: a new test_*.py runs only once it is added
 # here, and the suite stays green while silently skipping it.
-TEST_FILES := test_pretool_nudge.py test_prompt_nudge.py test_codex_hook.py test_stop.py test_memory_nudge.py test_skill_frontmatter_lint.py
+TEST_FILES := test_pretool_nudge.py test_prompt_nudge.py test_codex_hook.py test_stop.py test_memory_nudge.py test_skill_frontmatter_lint.py test_spec_lint.py
 
 help:
 	@echo "make test     - run bundled pytest cases ($(TEST_FILES))"
