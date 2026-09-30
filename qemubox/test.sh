@@ -96,7 +96,7 @@ run_assemble() { # $1 extra setup expr
     eval "${1:-:}"
     assemble_mounts
 }
-slug_dest="/home/$USER/.claude/projects/${PROJ//\//-}"
+slug_dest="$GUEST_HOME/.claude/projects/${PROJ//\//-}"
 LIB="$fixture/lib"; mkdir -p "$LIB"
 
 run_assemble
@@ -122,6 +122,58 @@ sout="$(status_box sbx)"
 true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
+
+eq "default RAM" "$MEM" "16384"
+eq "default CPUs" "$CPUS" "4"
+eq "default disk" "$DISK" "40G"
+eq "guest user matches host" "$GUEST_USER" "$(id -un)"
+eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -d: -f6)"
+
+(
+    set -e
+    mkdir -p "$ROOT/base"
+    printf '%s\n' fixture > "$ROOT/base/current"
+    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    qemu-img() { printf '%s\n' "$@" > "$fixture/qemu-img.args"; touch "$dir/disk.qcow2"; }
+    ensure_box identitybox
+    head -4 "$ROOT/identitybox/config/identity" > "$fixture/actual-identity"
+    printf '%s\n' "$(id -un)" "$(id -u)" "$(id -g)" "$GUEST_HOME" > "$fixture/want-identity"
+    cmp "$fixture/actual-identity" "$fixture/want-identity"
+    cmp "$ROOT/identitybox/key.pub" "$ROOT/identitybox/config/authorized_keys"
+    [ "$(cat "$ROOT/identitybox/image-id")" = fixture ]
+    [ "$(tail -1 "$fixture/qemu-img.args")" = 40G ]
+    QEMU=fake_qemu
+    fake_qemu() { printf '%s\n' "$@" > "$fixture/qemu.args"; }
+    missing_deps() { :; }
+    ssh_plain_box() { [ "$2" = 'test -f /run/qemubox/ready' ]; }
+    start_box identitybox
+    grep -Fx -- '-kernel' "$fixture/qemu.args"
+    grep -Fx -- '-initrd' "$fixture/qemu.args"
+    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
+    grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
+    ! grep -q 'seed.iso' "$fixture/qemu.args"
+) >"$fixture/boot-test.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
+rm -f "$ROOT/base/fixture.vmlinuz"
+exits 1 'ensure_box identitybox' "missing recorded base refuses VM"
+
+fake_docker() {
+    case "$1" in
+        build) return 0 ;;
+        image) printf 'sha256:%064d\n' 0 ;;
+        create) echo fixture-container ;;
+        export)
+            echo "$3" > "$fixture/export-path"
+            echo partial > "$3"
+            return 42 ;;
+        rm) echo "$2" > "$fixture/removed-container" ;;
+    esac
+}
+QEMUBOX_DOCKER=fake_docker
+exits 42 'build_base' "export failure stays visible"
+eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
+false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
+unset QEMUBOX_DOCKER
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
