@@ -93,8 +93,13 @@ that one starts, then fold it in and prune the source).
 
 Alternative execution path: the `ship` CLI (`uv tool install
 git+https://github.com/kronael/ship`) runs the plan autonomously instead of
-step-by-step subagents. Its planner brief is `cli.md`. Use it when the user
-asks for `ship` the tool; otherwise the subagent workflow above is the default.
+step-by-step subagents. Use it when the user asks for `ship` the tool;
+otherwise the subagent workflow above is the default. On this path, `cli.md`
+replaces steps 1–3: the planner writes spec files to `.ship/NN-NAME/specs/`,
+not a PLAN.md; ship writes its own PLAN.md into its DATA_DIR. Run `cli.md`'s
+preflight before the first launch: ship needs a `claude` login of its own,
+and its defaults (the `sonnet` model, 4 workers, state in `./.ship`) need the
+overrides `cli.md` gives.
 
 ## Guardrails (apply throughout, not just at close-out)
 

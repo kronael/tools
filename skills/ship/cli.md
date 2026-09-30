@@ -8,13 +8,27 @@ comprehensive deliverables, write structured spec files, then
 hand off to `ship` for execution. You NEVER write implementation
 code yourself.
 
-## Install
+## Install and preflight
 
 If `ship` is not available:
 
 ```bash
 uv tool install git+https://github.com/kronael/ship
 ```
+
+`ship` runs `claude -p` for every role, so the shell that launches it
+must have a login of its own: `claude auth status` must print
+`"loggedIn": true`.
+
+- A Claude Code session does not pass its own login to the commands it
+  runs. A session started with `CLAUDE_CODE_OAUTH_TOKEN` in its
+  environment shows `"loggedIn": false` in its Bash tool, and every ship
+  role then fails with "Not logged in". The user fixes it once, in a
+  terminal outside the session: `claude auth login` writes
+  `~/.claude/.credentials.json`, which every child `claude` reads.
+- NEVER copy the session's token out of its process to work around this.
+- `ship -k <spec>` runs only the spec validator: use it to prove the
+  login and the spec before a full run.
 
 ## Instructions
 
@@ -23,7 +37,7 @@ uv tool install git+https://github.com/kronael/ship
 Parse the user's input:
 - Goal text (natural language or file/dir path)
 - `-x` flag (pass to ship for codex refiner)
-- `-w N` (pass to ship for worker count)
+- `-n N` (pass to ship as the worker count; the default here is 1)
 
 ### Step 2: Explore Context
 
@@ -84,8 +98,11 @@ Use AskUserQuestion with options:
 
 ### Step 5: Write Spec Files
 
-Create `specs/` directory if needed. One file per component:
-`specs/<component-name>.md`
+One file per component, in the plan folder the ship skill sets:
+`.ship/NN-NAME/specs/<component-name>.md`. A project's own `specs/`
+holds long-lived design docs, not work orders. Name every path in a
+spec absolutely: a worker's cwd is the worktree ship runs in, not the
+folder the spec lives in.
 
 **Spec format**:
 
@@ -120,34 +137,43 @@ Create `specs/` directory if needed. One file per component:
 
 ### Step 6: Launch Ship
 
+Run ship from the worktree it should change:
+
 ```bash
-# all specs
-ship specs/ [-x] [-w N]
-
-# specific specs only
-ship specs/new-component.md [-x] [-w N]
-
-# fresh restart
-ship -f specs/
-
-# see all flags
-ship -h
+cd <worktree>
+ANTHROPIC_DEFAULT_SONNET_MODEL=claude-fable-5-1 \
+DATA_DIR=<repo>/.ship/NN-NAME/run-<spec> \
+  ship -n 1 [-x] <repo>/.ship/NN-NAME/specs/<spec>.md
 ```
 
-Use `run_in_background=false` for <10 deliverables.
-Use `run_in_background=true` for larger, check
-`PROGRESS.md` periodically.
+- **Model**: ship names the `sonnet` alias for every role: planner,
+  validator, worker and judge. The env var maps that alias to fable, the
+  model WISDOM requires for unattended code writers.
+- **Workers**: ship defaults to 4 parallel workers on one tree. Keep
+  `-n 1` unless the spec's deliverables touch disjoint files.
+- **State**: ship keeps its PLAN.md, tasks.json, work.json and log/ in
+  DATA_DIR, which defaults to `./.ship`, the folder that holds the
+  plans. Give each spec a DATA_DIR of its own.
+- **Restart**: `-f` deletes DATA_DIR recursively. NEVER pass `-f`
+  without a DATA_DIR of its own. To resume, re-run the same command.
+- **PROGRESS.md**: ship writes it in the cwd, i.e. the worktree root.
+  Read it there, never commit it, and delete that one file when done.
+- Use `run_in_background=true` and read PROGRESS.md periodically; a
+  spec with more than a few deliverables outlasts a foreground call.
 
 ### Step 7: Verify Results
 
 After ship completes:
-1. Read `PROGRESS.md` for task status
-2. Run verification steps from spec files
-3. Check `LOG.md` or `ship --log` for details
+1. Read `PROGRESS.md` for task status; `ship -l` dumps the transcript.
+2. Run every spec's gates and verification yourself. A worker's or the
+   judge's "done" is a claim, not evidence.
+3. ship does not tell its workers whether to commit. Check `git status`
+   and `git log`, read the diff, and commit what is left per the
+   project's rules.
 
 If issues found:
 - Small fixes: fix directly
-- Larger gaps: re-run `ship specs/` to continue
+- Larger gaps: re-run the same `ship` command to continue
 
 ### Step 8: Summary
 
