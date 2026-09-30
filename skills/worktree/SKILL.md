@@ -9,8 +9,8 @@ when_to_use: spawn a code-editing subagent, parallel subagents, run subs in para
 Two writers on one tree interleave: mid-flight commits, one sub reverting
 another's edits, reviewers reading half-edited files.
 
-- NEVER spawn a code/file-EDITING subagent without `isolation: "worktree"` —
-  ALWAYS pass it so the sub writes its own checkout.
+- NEVER use `isolation: "worktree"` — it creates a local branch; ALWAYS create
+  a detached worktree by hand and brief the sub with its absolute path.
 - NEVER run more than one code-editing subagent on the shared main tree at
   once — ALWAYS run them sequentially, or give each its own worktree.
 - NEVER worktree-isolate a READ-ONLY sub (review / verify / research) — ALWAYS
@@ -24,7 +24,7 @@ another's edits, reviewers reading half-edited files.
 
 - NEVER `git cherry-pick` a worktree sub's commits — on linked worktrees it
   silently empties the commit and slips HEAD.
-- ALWAYS record the fork point when the worktree is created and apply the sub's
+- ALWAYS record the fork SHA when the worktree is created and apply the sub's
   diff against it, scoped to the sub's own files so out-of-scope edits don't
   leak in:
 
@@ -43,4 +43,13 @@ git diff <fork-base> <sub-tip> -- <sub-owned-files> | git apply --3way
 
 ## Creating a worktree by hand
 
-WISDOM § Git owns the command (`git worktree add --detach …`) and its placement.
+ALWAYS resolve the base to a commit SHA, then create the sub's checkout:
+
+```bash
+git worktree add --detach <repo-root>/.<name> <sha>
+```
+
+ALWAYS give the sub that path, the fork SHA and its owned files; require all
+edits there and verify `git -C <path> branch --show-current` prints nothing.
+ALWAYS reconcile and verify the diff before removing that specific worktree;
+NEVER remove another task's worktree.
