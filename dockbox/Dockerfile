@@ -1,4 +1,4 @@
-FROM debian:forky
+FROM debian:forky AS dockbox
 
 ARG TZ=UTC
 ENV TZ="$TZ"
@@ -274,3 +274,107 @@ RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
   && bun install -g --trust @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   && bun install -g @openai/codex \
   && chmod -R a+rwX /opt/dev-tools/bun
+
+FROM dockbox AS vm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    linux-image-amd64 initramfs-tools systemd-sysv udev dbus kmod \
+    openssh-server systemd-timesyncd systemd-resolved e2fsprogs \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_* \
+    && rm -f /usr/sbin/policy-rc.d /etc/apt/apt.conf.d/docker-* \
+       /etc/dpkg/dpkg.cfg.d/docker-* /etc/ssh/ssh_host_* \
+    && printf '%s\n' virtio_pci virtio_blk ext4 >> /etc/initramfs-tools/modules \
+    && update-initramfs -u -k all \
+    && systemctl disable docker.service containerd.service docker.socket \
+    && systemctl enable systemd-networkd systemd-resolved systemd-timesyncd ssh \
+    && systemctl mask ssh.socket \
+    && truncate -s 0 /etc/machine-id \
+    && rm -f /var/lib/dbus/machine-id \
+    && ln -s /etc/machine-id /var/lib/dbus/machine-id
+
+RUN for key in TZ DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
+    CLAUDE_CODE_DISABLE_AUTOUPDATE NPM_CONFIG_PREFIX NVM_DIR BUN_INSTALL \
+    CARGO_HOME RUSTUP_HOME GOROOT GOPATH SDKMAN_DIR PLAYWRIGHT_BROWSERS_PATH \
+    PUPPETEER_CACHE_DIR UV_TOOL_BIN_DIR UV_TOOL_DIR DOTNET_ROOT PATH; do \
+      value="$(printenv "$key")"; \
+      printf '%s="%s"\n' "$key" "$value" >> /etc/environment; \
+      printf 'export %s="%s"\n' "$key" "$value" >> /etc/profile.d/dev-tools.sh; \
+    done \
+    && echo '. /etc/profile.d/dev-tools.sh' >> /etc/zsh/zshenv
+
+RUN mkdir -p /etc/systemd/network /etc/systemd/system/ssh.service.d \
+    && printf '%s\n' '[Match]' 'Name=en* eth*' '[Network]' 'DHCP=yes' \
+       > /etc/systemd/network/20-qemubox.network \
+    && printf '%s\n' '[Unit]' 'Requires=qemubox-init.service' \
+       'After=qemubox-init.service' > /etc/systemd/system/ssh.service.d/qemubox.conf \
+    && printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
+       'PermitRootLogin no' > /etc/ssh/sshd_config.d/qemubox.conf \
+    && printf '%s\n' '[Unit]' 'After=local-fs.target' 'Before=ssh.service' \
+       '[Service]' 'Type=oneshot' 'ExecStart=/usr/local/bin/qemubox-init' \
+       'StandardOutput=journal+console' 'StandardError=journal+console' \
+       'RemainAfterExit=yes' '[Install]' 'WantedBy=multi-user.target' \
+       > /etc/systemd/system/qemubox-init.service \
+    && systemctl enable qemubox-init.service
+
+RUN printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'set -Eeuo pipefail' \
+    'trap '"'"'echo "qemubox-init: failed at line $LINENO" >&2'"'"' ERR' \
+    '' \
+    'printf '"'"'127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s\n'"'"' "$(cat /proc/sys/kernel/hostname)" > /etc/hosts' \
+    'mkdir -p /run/qemubox/config' \
+    'modprobe -a 9p 9pnet_virtio' \
+    'mount -t 9p -o trans=virtio,version=9p2000.L,ro qbxcfg /run/qemubox/config' \
+    '{' \
+    '    read -r username' \
+    '    read -r user_uid' \
+    '    read -r user_gid' \
+    '    IFS= read -r home_dir' \
+    '    read -r groups' \
+    '} < /run/qemubox/config/identity' \
+    '[[ "$username" =~ ^[A-Za-z0-9_-]+$ && "$user_uid" =~ ^[0-9]+$ &&' \
+    '    "$user_gid" =~ ^[0-9]+$ && "$home_dir" = /* && "$home_dir" != *:* ]]' \
+    '[[ "$user_uid" != 0 ]]' \
+    '' \
+    'passwd_entry="$username:x:$user_uid:$user_gid::$home_dir:/bin/bash"' \
+    'if entry=$(getent passwd "$user_uid")' \
+    then \
+    '    [[ "$entry" = "$passwd_entry" ]]' \
+    else \
+    '    if getent passwd "$username" >/dev/null' \
+    '    then' \
+    '        echo "qemubox-init: conflicting user $username" >&2' \
+    '        exit 1' \
+    '    fi' \
+    '    echo "$passwd_entry" >> /etc/passwd' \
+    fi \
+    'if ! getent shadow "$username" >/dev/null' \
+    then \
+    '    echo "$username:!:19000:0:99999:7:::" >> /etc/shadow' \
+    fi \
+    'for group in $groups' \
+    do \
+    '    gid=${group%%:*}' \
+    '    gname=${group#*:}' \
+    '    [[ "$gid" =~ ^[0-9]+$ && "$gname" =~ ^[A-Za-z0-9_-]+$ ]]' \
+    '    sed -i "/^$gname:/d" /etc/group' \
+    '    sed -i "1i$gname:x:$gid:$username" /etc/group' \
+    done \
+    'getent group "$user_gid" >/dev/null' \
+    'echo "$username ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/qemubox' \
+    'chmod 0440 /etc/sudoers.d/qemubox' \
+    'visudo -cf /etc/sudoers.d/qemubox' \
+    'mkdir -p "$home_dir/.ssh"' \
+    'chown "$user_uid:$user_gid" "$home_dir" "$home_dir/.ssh"' \
+    'chmod 700 "$home_dir/.ssh"' \
+    'install -m 600 -o "$user_uid" -g "$user_gid" \' \
+    '    /run/qemubox/config/authorized_keys "$home_dir/.ssh/authorized_keys"' \
+    'rm -f /etc/ssh/ssh_host_*' \
+    'ssh-keygen -A' \
+    'ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf' \
+    'resize2fs /dev/vda' \
+    'touch /run/qemubox/ready' \
+    'echo '"'"'qemubox: ready'"'"'' \
+    > /usr/local/bin/qemubox-init && chmod 755 /usr/local/bin/qemubox-init
+ENTRYPOINT ["/sbin/init"]
+WORKDIR /

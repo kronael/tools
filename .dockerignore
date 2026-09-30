@@ -1,0 +1,7 @@
+**
+!udfix/
+!udfix/**
+!codex/
+!codex/AGENTS.md
+!dockbox/
+!dockbox/Dockerfile

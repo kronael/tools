@@ -19,7 +19,7 @@ test:
 	bash test.sh
 
 image:
-	$(SUDO) docker build --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
+	$(SUDO) docker build --target dockbox --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
 
 install: image seccomp
 	install -m 755 dockbox $(PREFIX)/
