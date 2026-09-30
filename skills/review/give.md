@@ -6,7 +6,7 @@ minimality → triage → report. Supersedes the built-in `/code-review` locally
 ## 1. Scope
 
 Default = the local uncommitted diff (`git diff` + `git diff --staged`).
-Override only when the user names files, a base (`FETCH_HEAD...HEAD`), or a range.
+Override only when the user names files, a base (`origin/<default head>...HEAD`), or a range.
 Empty diff → say so and stop.
 
 ## 2. Bucket + lenses
@@ -85,12 +85,12 @@ caller passes `model="sonnet"` (cheap high-recall flagging; the subsequent
 
 ## GitHub PR (gh)
 
-Same engine over `gh pr diff <N>` — `/review give gh [<N>]`. No args → the PR
-whose `headRefOid` is HEAD's SHA (`gh pr list --json number,headRefOid`); a
+Same engine over `gh pr diff <N>` — `/review give gh [<N>]`. No args → the
+open PR whose `headRefOid` is an ancestor of HEAD (`gh-comment` § Setup); a
 detached HEAD gives `gh` no current branch to resolve.
 
 ```bash
-gh pr view --json number,headRefOid,baseRefName,title,body
+gh pr view <N> --json number,headRefOid,baseRefName,title,body
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api repos/$REPO/pulls/<N>/comments --paginate   # inline comments
 ```

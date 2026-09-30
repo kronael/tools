@@ -12,9 +12,15 @@ user-invocable: false
 ```bash
 gh auth status >/dev/null 2>&1 || echo 'no gh config in $HOME — export GH_TOKEN=<token> or pass it inline'
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+# <PR>, when not given: the open PR whose head is an ancestor of HEAD (detached HEAD names no branch)
+gh pr list --json number,headRefOid --jq '.[] | "\(.number) \(.headRefOid)"' |
+  while read -r n oid; do git merge-base --is-ancestor "$oid" HEAD 2>/dev/null && echo "$n"; done
 HEAD_SHA=$(gh pr view <PR> --json headRefOid --jq .headRefOid)
 DIFF_FILES=$(gh pr diff <PR> --name-only)
 ```
+
+ALWAYS `git fetch origin` before the lookup so each PR head is local; more
+than one match (stacked PRs) → ask which.
 
 ## Clear pending review
 
@@ -152,22 +158,24 @@ GraphQL mutation, by the thread's GraphQL `id` (not `databaseId`):
 gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id isResolved}}}' -f id=<thread_id>
 ```
 
-ALWAYS resolve a fixed thread after the push, with no reply — the re-review
-request announces the fix. ALWAYS reply before resolving any other thread — a
-resolved thread with no reply and no fix reads as dismissed unread. NEVER
-resolve a thread this pass did not address.
+ALWAYS reply before resolving a thread that was not fixed — a resolved thread
+with no reply and no fix reads as dismissed unread. A bot-authored one resolves
+once replied; a human-authored one stays open for its reviewer. ALWAYS resolve
+a fixed thread with no reply, human or bot, and only once the push carrying
+the fix has landed (`git merge-base --is-ancestor <fix-sha> <headRefOid>`).
+The push is the user's own ask (WISDOM § Git): after the fixes, STOP with the
+refspec shown. NEVER resolve a thread this pass did not address.
 
 ## Re-review request
 
-After the push, ONE general comment @-mentions the reviewer, names in about
-four words the most important thing the round fixed, and asks for a
-re-review — it is the only announcement a fixed thread gets. NEVER compose
-the phrase here: hand the `distill` skill the list of fixes, take back its
-~4-word phrase, and put that in the comment. Same sign-off gate as every
+Once the push has landed, ONE general comment @-mentions the reviewer, names
+the round's most important fix, and asks for a re-review — the only
+announcement a fixed thread gets. The phrase is verb + object in at most four
+words, the fix a reviewer would check first. Same sign-off gate as every
 other body.
 
 ```bash
-gh pr comment <PR> --body "🤖 @<reviewer> CI is green now. Please re-review."
+gh pr comment <PR> --body "🤖 @<reviewer> <verb + object>. Please re-review."
 ```
 
 ## Rules
@@ -187,12 +195,11 @@ gh pr comment <PR> --body "🤖 @<reviewer> CI is green now. Please re-review."
 - NEVER expect to append to a pending review — `POST /pulls/<PR>/reviews/<review_id>/comments`
   returns 404. ALWAYS `DELETE /pulls/<PR>/reviews/<review_id>` and re-POST the whole
   `comments[]`, then report the new review id and comment count
-- ALWAYS resolve a fixed thread after the push with NO reply — the re-review
-  request announces it; NEVER resolve one this pass did not address
+- ALWAYS resolve a fixed thread with NO reply, only once the user's push has
+  landed; NEVER resolve one this pass did not address
 - ALWAYS reply to a won't-fix, deferred or refuted thread before resolving it —
   it has no commit to point at
-- ALWAYS post ONE re-review request after the push — a general comment
-  @-mentioning the reviewer, the round's most important fix in ~4 words from
-  the `distill` skill; NEVER compose that phrase yourself, NEVER a per-thread
-  "fixed" reply
+- ALWAYS post ONE re-review request once the push has landed — a general
+  comment @-mentioning the reviewer, the round's most important fix as verb +
+  object in ≤4 words; NEVER a per-thread "fixed" reply
 - NEVER confuse a thread's GraphQL `id` (resolve) with a comment's REST `databaseId` (reply) — mixing them 404s
