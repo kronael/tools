@@ -1,6 +1,6 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; sync a detached line with the remote's master (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for the file sync between ~/.claude and the bundle repo (use kronael/install).
+description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; sync a detached line with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for the file sync between ~/.claude and the bundle repo (use kronael/install).
 when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, sync, sync with origin, sync the repo, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date"
 user-invocable: true
 ---
@@ -16,31 +16,35 @@ the other two are not git: `kronael/install` two-way syncs FILES between
 `~/.claude/` and the bundle repo, and `sync-tools-skills` vendors skills
 into another project.
 
-1. `git fetch --no-prune <url> master` (or `main`, whichever is the remote's
-   default head), then size it:
-   `git rev-list --left-right --count HEAD...FETCH_HEAD` and
-   `git merge-base HEAD FETCH_HEAD`. ALWAYS fetch first — NEVER merge a
-   stale `FETCH_HEAD`. Compare `git ls-remote --tags <url>` with local tags: a
-   tag name on a different commit than the remote's is a collision — REPORT
-   it, NEVER re-point it silently.
+1. `git fetch origin`, then size it against `origin/<default head>` (WISDOM
+   § Git names the head):
+   `git rev-list --left-right --count HEAD...origin/<default head>` and
+   `git merge-base HEAD origin/<default head>`. ALWAYS fetch first — NEVER
+   merge a stale tracking ref. Compare `git ls-remote --tags origin` with
+   local tags: a tag name on a different commit than origin's is a
+   collision — REPORT it, NEVER re-point it silently.
    Completion criterion: ahead/behind counts, the base, and any tag
    collisions are written down.
 2. Preview without touching the tree:
-   `git merge-tree --write-tree --name-only HEAD FETCH_HEAD`. Run § 0 on
-   that list — a large or superseding merge gets a plan and a go-ahead first.
+   `git merge-tree --write-tree --name-only HEAD origin/<default head>`.
+   Run § 0 on that list — a large or superseding merge gets a plan and a
+   go-ahead first.
    Completion criterion: strategy chosen; every ambiguous path is named.
-3. `git -c merge.conflictstyle=zdiff3 merge --no-commit --no-ff FETCH_HEAD` —
-   zdiff3 shows the base inside every hunk. Resolve per §§ 2-6. Then trace
-   deletions against BOTH parents (`git diff --name-status --diff-filter=DR
-   <ours> HEAD` and the same for `FETCH_HEAD`) so an agreed deletion is not
-   mistaken for lost work and a rename is not mistaken for a deletion.
+3. `git -c merge.conflictstyle=zdiff3 merge --no-commit --no-ff origin/<default head>`
+   — zdiff3 shows the base inside every hunk. Resolve per §§ 2-6. Then trace
+   deletions against BOTH parents
+   (`git diff --name-status --diff-filter=DR <ours> HEAD` and the same for
+   `origin/<default head>`) so an agreed deletion is not mistaken for lost
+   work and a rename is not mistaken for a deletion.
    Completion criterion: `git diff --name-only --diff-filter=U` is empty and
    no tracked file matches `^<<<<<<<`.
 4. Verify green (the repo's `make test` and lint), stage the resolved files
-   by name, commit `merge: master <tag> into <what the local line is>` with
-   a body naming each resolution decision.
-   Completion criterion: `git rev-list --left-right --count
-   HEAD...FETCH_HEAD` prints `N 0` — ahead only, 0 behind.
+   by name, commit
+   `merge: origin/<default head> <tag> into <what the local line is>` with a
+   body naming each resolution decision.
+   Completion criterion:
+   `git rev-list --left-right --count HEAD...origin/<default head>` prints
+   `N 0` — ahead only, 0 behind.
 
 A sync ends at the local merge commit. What comes after (refine, release,
 install) is its own ask.
@@ -65,14 +69,16 @@ Before resolving ANYTHING, size the merge and decide whether to ask first.
 
 ## 0b. Rebasing onto a squash-merged main
 
-When your line was squash-merged to main and local has diverged, `git rebase
-FETCH_HEAD` replays EVERY commit and conflicts on work main already holds.
+When your line was squash-merged to the default head and local has diverged,
+`git rebase origin/<default head>` replays EVERY commit and conflicts on work
+the head already holds.
 
-- ALWAYS rebase only the post-merge commits: fetch main into `FETCH_HEAD`, find
-  the boundary (the local commit whose tree matches `FETCH_HEAD`), then
-  `git rebase --onto FETCH_HEAD <boundary> HEAD`. Usually zero conflicts.
+- ALWAYS rebase only the post-merge commits: find the boundary (the local
+  commit whose tree matches `origin/<default head>`), then
+  `git rebase --onto origin/<default head> <boundary> HEAD`. Usually zero
+  conflicts.
 - Find the boundary by tree, not by eyeballing:
-  `t=$(git rev-parse FETCH_HEAD^{tree}); for c in $(git rev-list --first-parent
+  `t=$(git rev-parse 'origin/<default head>^{tree}'); for c in $(git rev-list --first-parent
   HEAD); do [ "$(git rev-parse $c^{tree})" = "$t" ] && echo "$c" && break; done`
 - ALWAYS prove nothing was lost: `git diff --quiet <old-tip> HEAD` (exit 0 =
   identical tree). The old tip stays in reflog — NEVER trust the replay blind.
@@ -90,7 +96,7 @@ Detect the operation FIRST; it decides the finish command AND which side is "our
 
 `git status` also names it ("You are currently rebasing"). **In a rebase/cherry-pick the sides are REVERSED vs a merge**: `HEAD` is the target you're replaying onto, and the `>>>>>>>` label is the commit being applied — so "keep HEAD" means keep the base, NOT your feature work. Read the `>>>>>>>` commit subject to know what's being applied.
 
-`git log --oneline -5`; note the merge base / rebased-onto commit. For a merge, identify HEAD (usually the feature branch) vs Incoming (often main's simplifications). If unclear, state what you see and ask which side takes priority.
+`git log --oneline -5`; note the merge base / rebased-onto commit. For a merge, identify HEAD (usually the feature branch) vs Incoming (often the default head's simplifications). If unclear, state what you see and ask which side takes priority.
 
 ## 2. Find all conflicts
 

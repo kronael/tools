@@ -13,14 +13,16 @@ Run directly in main context (no subagent).
 
 1. Find true merge base and read the whole change:
    ```
-   git fetch --no-prune <url> main
-   BASE=$(git merge-base HEAD FETCH_HEAD)
+   git fetch origin
+   BASE=$(git merge-base HEAD origin/<default head>)
    git log $BASE..HEAD --oneline
    git diff $BASE..HEAD --stat
    git diff $BASE..HEAD
    ```
-   The base is the merge-base with main, NOT `FETCH_HEAD` itself — that misses commits
-   already on the line before the last merge. If it fails, ask the user.
+   `<default head>` per WISDOM § Git; for an existing PR, its `baseRefName`.
+   The base is the merge-base, NOT `origin/<default head>` itself — that
+   misses commits already on the line before the last merge. If it fails, ask
+   the user.
    ALWAYS read the full diff, NEVER draft from the stat and the commit log —
    the one-line changes a stat hides (a pinned key, a changed default, a
    dropped field) are the ones a review bot names and the author's body misses.
@@ -34,7 +36,7 @@ Run directly in main context (no subagent).
    alternative would have cost, so a reader who never saw the diff could
    rebuild the same design. NEVER sell a change to a wire-visible contract
    (event name, API field, route) as neutral — verify it against what's
-   documented or already emitted, since absence from main isn't
+   documented or already emitted, since absence from the default head isn't
    proof it's free to change — and flag it for the reviewer instead. ALWAYS
    flag verified-but-unfixed issues as "known, deferred" — never drop them
    to look clean.
@@ -66,7 +68,7 @@ NEVER hard-wrap Markdown uploaded to GitHub just for source width — ALWAYS kee
 ## Format
 
 **Title**: ALWAYS follow the repo's own convention — read recent titles
-(`git log --oneline -20 FETCH_HEAD`); keep a ticket prefix (`[ABC-123]`)
+(`git log --oneline -20 origin/<default head>`); keep a ticket prefix (`[ABC-123]`)
 when the branch or commits carry one; default `type(scope): outcome` with
 `fix` `feat` `refactor` `docs` `chore`. ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.

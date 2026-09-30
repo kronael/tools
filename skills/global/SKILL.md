@@ -112,30 +112,28 @@ Claude Code" footer). These win.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
 - NEVER `git add -A`, NEVER `--amend`, NEVER squash.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
-  --show-current` prints nothing). NEVER create a local branch — no `switch -c`,
-  `checkout -b` or `git branch <name>`, with no exception — and NEVER check out
-  or attach `master`/`main`.
-- NEVER create, restore or refresh a remote-tracking ref (`refs/remotes/origin/*`,
-  `origin/main`) — the user deletes them deliberately; `git fetch origin`,
-  `git pull`, `push -u`/`--set-upstream`, `--track` and a refspec into
-  `refs/remotes/` all create one. ALWAYS read the remote through `FETCH_HEAD`:
-  `git fetch --no-prune <url> main`, then `FETCH_HEAD` (or its SHA) as the
-  merge, rebase, diff or worktree base; `git ls-remote <url>` to look without
-  fetching. Nothing local tracks the remote, so ALWAYS re-fetch before claiming
-  a line is current or behind.
-- Worktrees: `git worktree add --detach <repo-root>/.<name> <sha>` — bare
-  `git worktree add` attaches a branch, and worktrees live inside the repo root
-  as hidden dirs, never as siblings.
+  --show-current` prints nothing). NEVER create a local branch, no exception:
+  no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
+  `master`/`main` — a bare `switch`/`checkout <name>` creates the branch from
+  `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
+- ALWAYS read the remote through its tracking refs: `git fetch origin`, then
+  `origin/<default head>` as the merge, rebase, diff or worktree base, where
+  `<default head>` is what `git ls-remote --symref origin HEAD` names. NEVER
+  hard-code `main` or trust a local `origin/HEAD` — fetch leaves a stale one
+  alone. `git status`'s "up to date" reflects only the local tracking ref —
+  ALWAYS `git fetch origin` before trusting it or calling a line behind.
+- Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
+  dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
 - ONLY `git push` when the user asked for a push in that message. NEVER on your
   own initiative and NEVER as the silent tail of a commit, sync, release or ship
   workflow — those end at the local commit or tag. ALWAYS state the exact remote
   and refspec first and push only that, by SHA:
-  `git push <url> <sha>:refs/heads/YYYYMMDD_<tag>`. NEVER
-  `--force`/`--force-with-lease`.
-- NEVER push to `master`/`main` on a general request — default to a dated
-  `YYYYMMDD_<tag>` head and offer the PR. `master` needs a SECOND explicit
-  approval naming it, given AFTER you have shown the refspec. "push it",
-  "ship it" are NEVER that approval.
+  `git push origin <sha>:refs/heads/YYYYMMDD_<tag>`. NEVER `--force` or
+  `--force-with-lease`.
+- NEVER push to `<default head>` on a general request — ALWAYS default to a
+  dated `YYYYMMDD_<tag>` head and offer the PR. `<default head>` needs a SECOND
+  explicit approval naming it, given AFTER you have shown the refspec. "push
+  it", "ship it" are NEVER that approval.
 - ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`
   when the user asked for that action in that message — show the title and body
   first and wait. NEVER `gh pr review --approve` on the user's behalf.

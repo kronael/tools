@@ -9,7 +9,7 @@ user-invocable: true
 
 The SANCTIONED exception to WISDOM's "NEVER squash commits" — like `/refine` and
 `/ship` committing by design. It applies ONLY to a **local, UNPUSHED** tip being
-prepared for PR review, on explicit user invocation. Nothing already on the remote
+prepared for PR review, on explicit user invocation. Nothing already on `origin/*`
 is ever rewritten. Method is a NON-INTERACTIVE rewrite via `reset --soft` — simpler
 and safer than `git rebase -i` (which needs a scripted `GIT_SEQUENCE_EDITOR`, per-commit
 message editors, and mid-rebase conflict handling): one reset, then re-commit in groups.
@@ -20,15 +20,21 @@ gone, each commit conventional-committed. NOT fewer commits for their own sake.
 ## 1. Bind the range — unpushed only
 
 ```bash
-git fetch --no-prune <url> main
-BASE=$(git merge-base FETCH_HEAD HEAD)    # fork point from published main
+git fetch origin                          # refresh every origin/* head first
 OLD=$(git rev-parse HEAD)                 # old tip — the recovery anchor, record FIRST
+BASE=$(for c in $(git rev-list --first-parent HEAD); do   # newest pushed first-parent commit
+  [ -n "$(git branch -r --contains "$c")" ] && echo "$c" && break; done)
+git log --oneline "$BASE"..HEAD --not --remotes=origin    # the rewrite set
 ```
 
-- `BASE` is the floor: ONLY commits in `BASE..HEAD` may be rewritten. NEVER touch
-  anything at or below `BASE` — it is published. Confirm with `git log --oneline "$BASE"..HEAD`.
-- If the PR targets another base head, fetch that head into `FETCH_HEAD` instead.
-- If `BASE..HEAD` is empty, or every commit is already on the remote, STOP — nothing to squash.
+- `BASE` is the floor: the newest first-parent commit that ANY `origin/*` head
+  holds — `origin/<default head>` (WISDOM § Git) and every pushed `YYYYMMDD_<tag>`
+  head alike. ONLY commits in `BASE..HEAD` may be rewritten; NEVER touch anything
+  at or below `BASE` — it is published.
+- STOP — nothing safe to squash — when `BASE` is empty (no pushed commit anchors
+  the floor: ask), when `BASE..HEAD` is empty, or when
+  `git rev-list --count "$BASE"..HEAD` differs from the same count with
+  `--not --remotes=origin` (a merged-in remote head sits inside the range).
 - Print `OLD` to the user so the pre-squash state is recoverable by SHA (also in `git reflog`).
 
 ## 2. Plan the mapping
@@ -108,6 +114,6 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 
 - ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
-- NEVER rewrite a commit that exists on the remote — the `BASE` floor enforces this.
+- NEVER rewrite a commit that any `origin/*` head holds — fetch first; the `BASE` floor and its STOP checks enforce this.
 - NEVER skip pre-commit hooks. Hooks do NOT fire in a worktree — run fmt/clippy/lint by hand there before committing.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.
