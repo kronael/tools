@@ -100,6 +100,19 @@ sessions don't tear it down under each other. The tool/model applies to the
 new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
 ignored on re-entry — use `-n <name>` for a separately-mounted box.
 
+## Build directories
+
+`node_modules`, `.next`, `.turbo` and `.cache` directories found under each
+project become empty tmpfs mounts owned by the guest user. Discovery stops at
+depth 4 and prunes each match, so nested dependency trees get one mount.
+Only directories present at launch are overmounted.
+
+`-P` / `--no-ephemeral` keeps project build directories on the host.
+`-T` mounts directories backed by the guest disk over those paths.
+Both modes keep `/tmp` and `/tmp/cargo-target` on tmpfs, with
+`CARGO_TARGET_DIR=/tmp/cargo-target` in each session. Guest disk build data
+and tmpfs data disappear when the VM is removed. A failed mount stops launch.
+
 ## What crosses into the VM
 
 qemubox mounts two things and nothing else from your home:

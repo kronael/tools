@@ -81,60 +81,7 @@ true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 59999 ]'
 mkdir -p "$QEMUBOX_HOME/pbx"; echo 54321 > "$QEMUBOX_HOME/pbx/port"
 eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
-## mount matrix -------------------------------------------------------------
-reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }
-mount_mode() { # echo the mode for dest $1, or empty if absent
-    local i
-    for i in "${!mount_dests[@]}"; do
-        [ "${mount_dests[$i]}" = "$1" ] && { printf '%s' "${mount_modes[$i]}"; return; }
-    done
-}
-run_assemble() { # $1 extra setup expr
-    reset_mounts
-    name=testbox; primary="$PROJ"; dirs=("$PROJ")
-    no_copy=""; gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()
-    eval "${1:-:}"
-    assemble_mounts
-}
-slug_dest="$GUEST_HOME/.claude/projects/${PROJ//\//-}"
-LIB="$fixture/lib"; mkdir -p "$LIB"
-
-run_assemble
-eq "default: project rw"         "$(mount_mode "$PROJ")" "rw"
-for d in .claude .codex .agents; do
-    eq "default: $d rw at host path" "$(mount_mode "$HOME/$d")" "rw"
-done
-eq "default: no per-slug mount" "$(mount_mode "$slug_dest")" ""
-eq "default: single-file config ro" "$(mount_mode /mnt/qemubox-home)" "ro"
-eq "default: shell history rw" "$(mount_mode /mnt/qemubox-history)" "rw"
-true_ "history shares host inode" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
-echo history-test >> "$ROOT/testbox/history/history"
-eq "history writes reach host" "$(cat "$HOME/.dockbox_history")" "history-test"
-mount_args=$(qemu_mount_args)
-for i in "${!mount_tags[@]}"; do
-    ro=""; [ "${mount_modes[$i]}" = ro ] && ro=",readonly=on"
-    true_ "qemu export ${mount_dests[$i]}" 'grep -Fxq "local,path=${mount_srcs[$i]},mount_tag=${mount_tags[$i]},security_model=none$ro" <<< "$mount_args"'
-done
-
-printf '{"fixture":true}\n' > "$HOME/.claude.json"
-stage_host_cfg "$ROOT/testbox/hostcfg"
-true_ "claude.json staged intact" 'cmp "$HOME/.claude.json" "$ROOT/testbox/hostcfg/.claude.json"'
-false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.dockbox_history" ]'
-run_assemble
-true_ "history staging supports re-entry" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
-
-run_assemble 'untrusted=1'
-eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"
-eq   "untrusted: no .claude cfg mount" "$(mount_mode "$HOME/.claude")" ""
-eq   "untrusted: no qemubox-home"      "$(mount_mode /mnt/qemubox-home)" ""
-eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
-eq   "untrusted: no history"          "$(mount_mode /mnt/qemubox-history)" ""
-
-run_assemble 'no_copy=1'
-eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
-
-run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
-eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
+source "$here/test-mounts.sh"
 
 ## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
