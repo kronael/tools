@@ -2,23 +2,10 @@
 
 Real isolation with zero ceremony — **security that gets out of your way.**
 
-A throwaway QEMU VM where a coding agent works on your project behind a full
-hardware-virt boundary, driven by one command that feels exactly like running
-the agent bare. Because the VM *is* the perimeter, the agent runs at full tilt —
-no permission prompts, no babysitting — while your `~/.ssh`, your other repos,
-and the rest of your machine stay untouchable. Your project edits, agent config,
-session history and shell history persist to the host; everything else evaporates
-when the box shuts down (which it does on its own). You get the safety for free
-and stop thinking about it.
-
-## ELI13
-
-Picture a second computer that lives inside your computer, built fresh every
-time you start it. You hand it just the one folder to work on and your coding
-agent's settings — nothing else, not your SSH keys, not your other projects.
-Inside, the agent (Claude Code or Codex) installs packages, runs builds, edits
-files — whatever it needs. Close it and that whole inner computer is thrown
-away; your real machine's files were never touched.
+A QEMU VM runs a coding agent with its own kernel. Project files and agent
+config are shared with the host. The last session powers the VM off; its disk
+and guest home survive the next launch. `qemubox rm` deletes the disk.
+Build tmpfs mounts last for one boot. Files written to host shares remain.
 
 **qemubox vs dockbox** — same idea, different wall between guest and host:
 
@@ -37,12 +24,9 @@ cd qemubox
 make install
 ```
 
-`make install` copies the script to `~/.local/bin`, then runs `qemubox
-build-base` once to bake the guest's apt packages into a reusable base image
-(`provisioned.qcow2`) so every later box boots in seconds instead of spending
-1-2 min on first-boot `apt-get`. The prebuild needs `/dev/kvm` and network; if
-either is missing it is skipped with a warning and the binary still installs —
-the first box then provisions lazily. Rebuild with `qemubox build-base --force`.
+`make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
+into a qcow2 base named by its Docker image ID, then installs the script.
+`qemubox build-base --force` refreshes the agent CLI build layer.
 
 System packages:
 
@@ -209,8 +193,8 @@ PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
 New mount parent directories belong to the user; existing parents keep their owner.
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
-image is kept for reuse; `rm` deletes a box's overlay, seed, key, known-hosts,
-pid, and serial log. `QEMUBOX_BASE_URL` picks a different base image.
+image is kept for reuse; `rm` deletes a box's overlay, key, config, known-hosts,
+pid, and serial log. `QEMUBOX_SOURCE` selects the tools source repository.
 
 ```sh
 QEMUBOX_MEM=8192 QEMUBOX_CPUS=4 qemubox -n big .   # bigger VM
