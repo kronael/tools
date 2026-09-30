@@ -69,7 +69,7 @@ this belong long-term?":
 | Kind of content | Permanent home |
 |---|---|
 | Decisions, discoveries, bug post-mortems | `.diary/YYYYMMDD.md` (today's entry) |
-| Architectural decisions, design choices | `specs/N/<topic>.md` (move + add `status: shipped`) |
+| Architectural decisions, design choices | `specs/<NN>-<topic>.md` (move + add `status: shipped`; `specs` owns the naming) |
 | Release-notes-worthy changes | `CHANGELOG.md` |
 | Recurring rules / preferences / patterns | project `CLAUDE.md` or `MEMORY.md` |
 | Bench numbers worth tracking | `bench-baseline.json` + a short note in CHANGELOG |

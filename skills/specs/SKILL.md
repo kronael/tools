@@ -7,8 +7,9 @@ user-invocable: true
 
 # Specs — spec workflow router
 
-Only this file preloads. ALWAYS read exactly ONE matched file below.
-Paths are relative to this directory.
+Only this file preloads. ALWAYS read the ONE matched file below — plus
+`format.md` whenever the work creates or edits a spec file, since that is
+where its shape is defined. Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
