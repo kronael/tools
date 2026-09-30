@@ -135,6 +135,7 @@
   "skipDangerousModePermissionPrompt": true,
   "promptSuggestionEnabled": false,
   "spinnerTipsEnabled": false,
+  "bashEditDiffEnabled": false,
   "attribution": {
     "commit": ""
   },

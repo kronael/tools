@@ -170,6 +170,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      never ask. Unset, Claude Code tells the model to end every commit with a
      `Co-Authored-By` trailer. NEVER write `attribution: false` — versions
      before v2.1.281 reject it and skip the whole settings file.
+   - **`bashEditDiffEnabled`** — ALWAYS apply the recommended `false`, never
+     ask. Unset, Claude Code in `auto` or `bypassPermissions` mode diffs the
+     working tree around every Bash command (a temp snapshot per command) and
+     prints the changed files under the command output.
+     `CLAUDE_CODE_BASH_EDIT_DIFF` in the environment overrides the key.
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions
@@ -192,11 +197,14 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    - **Permissions, sandbox, env** — show diff, ask which restrictions to apply.
      The deny guard above is exempt from this ask.
    - NEVER overwrite `~/.claude/settings.local.json`.
-   - **Diff sidebar off** — `diffSidebarOpen` is global config, not a settings
-     key, so it lives in `~/.claude.json` and CANNOT ship in
-     `settings-recommended.json`. Set it there with
-     `jq '.diffSidebarOpen=false' ~/.claude.json > t && mv t ~/.claude.json`,
-     preserving every other key. It takes effect on the next Claude Code start.
+   - **Diff panel and IDE diff viewer off** — `diffSidebarOpen` and `diffTool`
+     are global config, not settings keys, so they live in `~/.claude.json`
+     and CANNOT ship in `settings-recommended.json`. Set both there with
+     `jq '.diffSidebarOpen=false | .diffTool="terminal"' ~/.claude.json > t && mv t ~/.claude.json`,
+     preserving every other key. `diffSidebarOpen` keeps the `/diff` panel
+     closed; `diffTool` keeps Edit and Write diffs in the terminal instead of
+     a connected IDE's diff viewer. Both take effect on the next Claude Code
+     start.
 
 5. **Install Codex bridge**. When running from Codex (or the user asks for Codex
    support), install every bridge:
