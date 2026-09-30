@@ -73,8 +73,8 @@ rim main              # fetch + merge origin/main
 rip feature           # push merged result
 ```
 
-No local main needed. You never created `main` as a local branch in
-the first place.
+`rco main` selects `origin/main` even when a local `main` exists.
+Use `gco refs/heads/main` to detach at that local branch explicitly.
 
 ## Recover work after "I lost my commit"
 
@@ -164,8 +164,9 @@ explicit, always.
 
 ## Bash shortcuts
 
-`rig install` creates the symlinks: `rco`, `rip`, `rir`, `rim`. Add
-the install dir to PATH. That's the whole setup.
+`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, `riq`, and the
+git aliases (`gif`, `gib`, and others); `rig aliases` lists them all.
+Add the install directory to PATH.
 
 ```bash
 rco -h                     # per-command help

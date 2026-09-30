@@ -24,7 +24,7 @@ branches - you work directly on detached HEAD from origin:
 rco feature         # fetch + checkout origin/feature (detached)
 # ... make changes, commit ...
 rip feature         # push HEAD to origin/feature
-rco main            # fetch + checkout origin/main (detached)
+rco main            # fetch + detach at origin/main, even with a local main
 rim feature         # fetch + merge origin/feature into current
 rip main            # push result to origin/main
 ```
@@ -53,12 +53,14 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
 | `rig fixup` / `rig sq` | `riq` | Auto-squash fixup commits |
 
-**Shared flags**: `-z` offline (no fetch), `-n` dry-run, `?` force fzf
+**Selection flags**: `-n` dry-run, `?` force fzf.
+`rco`, `rir`, and `rim` also accept `-z` offline (no fetch); `gco` never fetches.
 
 ## Git aliases
 
 These git shortcuts are symlinks and work in every shell with the install directory on PATH.
-Arguments pass through to git; `gib` takes branch name patterns and only lists branches.
+Arguments pass through to git; `gib` takes listing options and branch name patterns.
+It lists local and remote branches by default; `gib -r` lists only remote branches.
 
 | Symlink | Equivalent |
 |---------|-----------|
@@ -73,7 +75,7 @@ Arguments pass through to git; `gib` takes branch name patterns and only lists b
 | `gif` / `gifs` | `git diff` / `git diff --staged` |
 | `gss` / `gsp` / `gsl` | `git stash` / `git stash pop` / `git stash list --stat` |
 | `grec` / `grea` / `gres` | `git rebase --continue` / `git rebase --abort` / `git rebase --skip` |
-| `gib` | `git branch --all --list --` |
+| `gib` | `git branch --all [arguments...] --list` |
 | `gitsu` | `git status` |
 
 ## Dependencies
@@ -103,16 +105,24 @@ rco               # Open fzf, type to filter, Enter to checkout
 rco HEAD~2        # Fetch + detach at a commit
 rco v1.0          # Fetch + detach at a tag
 gco abc1234       # Detach at a hash without fetching
-gco local-name    # Detach at an existing local branch
+gco local-name    # Detach at a local branch if origin has no matching name
+gco refs/heads/main # Detach at the local main explicitly
+gco -             # Return to the previous checkout, detached
 gco -- file       # Restore a file from the index
 gco HEAD~2 -- file # Restore a file from a commit without moving HEAD
+gco --ours -- file # Restore our side of a conflicted file
 ```
 
 Both commands always detach when checking out a commit or branch.
 They refuse `-b`, `-B`, `-c`, `-C`, `--track`, `-t`, and `--orphan`.
 They never create local branches or set an upstream.
 Branch patterns select `origin/<branch>` through fzf; remote-tracking refs stay intact.
-`rco` fetches first; `gco` uses only refs already available locally.
+An unqualified name shared by local and origin branches selects origin.
+`HEAD` means the current commit; `origin/HEAD` is excluded from branch selection.
+`rco` fetches origin branches into `refs/remotes/origin/*`, ignoring configured
+fetch mappings; tags follow normally. `gco` uses only refs available locally.
+Restore options `--ours`, `--theirs`, `-p`/`--patch`, `-m`/`--merge`, and
+`--conflict=<style>` require `gco [ref] [restore-options] -- paths`.
 
 ### Push (rip)
 
@@ -150,8 +160,9 @@ rim ?             # Interactive branch selection
 
 ## How It Works
 
-Single busybox-style script. Symlinks (`rco`, `rip`, `rir`, `rim`)
-dispatch via `basename $0`. Checkout, rebase, and merge share a
+Single busybox-style script. `rig aliases` lists every installed symlink,
+including `rco`, `gco`, `rip`, `rir`, `rim`, `riq`, and the git aliases above.
+They dispatch via `basename $0`. Checkout, rebase, and merge share a
 `cmd_branch_op` helper; push has its own handler. Checkout (`rco`), rebase,
 and merge fetch by default; `-z` suppresses fetch. `gco` never fetches.
 `rig install` owns the symlink list; `make install` delegates to it.

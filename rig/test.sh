@@ -22,7 +22,8 @@ set -e
 mkdir "$tmp/bin"
 cp "$rig" "$tmp/bin/rig"
 chmod +x "$tmp/bin/rig"
-for alias in rco gif gifs gss gsp gsl grec grea gres gco gib gitsu; do
+mapfile -t aliases < <(bash "$rig" aliases)
+for alias in "${aliases[@]}"; do
     ln -s rig "$tmp/bin/$alias"
 done
 cat > "$tmp/bin/fzf" <<'STUB'
@@ -99,7 +100,9 @@ for cmd in rco gco; do
         "$cmd" feature-one "$flag" >"$tmp/out" 2>&1
         rc=$?
         true_ "$cmd refuses $flag before git runs" \
-            '[[ $rc == 1 && ! -s "$RIG_LOG" ]] && grep -q "^error:" "$tmp/out" && detached "$topic"'
+            '[[ $rc == 1 && ! -s "$RIG_LOG" ]] && grep -q "^error:" "$tmp/out" &&
+             ! "$cmd" --ours "$flag" -- file >"$tmp/out" 2>&1 &&
+             [[ ! -s "$RIG_LOG" ]] && detached "$topic"'
     done
 done
 
@@ -126,6 +129,7 @@ while IFS='|' read -r alias expected; do
     RIG_STUB=1 "$alias" 'two words' '*' >"$tmp/out" 2>&1
     rc=$?
     printf -v tail '%q ' 'two words' '*'
+    [[ $alias == gib ]] && tail+='--list '
     true_ "$alias symlink forwards exact git arguments" \
         '[[ $rc == 0 && $(cat "$RIG_LOG") == "$expected $tail" ]]'
     RIG_STUB=1 RIG_RC=7 "$alias" >"$tmp/out" 2>&1
@@ -140,7 +144,7 @@ gsl|stash list --stat
 grec|rebase --continue
 grea|rebase --abort
 gres|rebase --skip
-gib|branch --all --list --
+gib|branch --all
 gitsu|status
 EOF
 
@@ -148,10 +152,13 @@ mkdir "$tmp/install"
 cp "$rig" "$tmp/install/rig"
 chmod +x "$tmp/install/rig"
 "$tmp/install/rig" install >"$tmp/out" 2>&1
-for alias in gif gifs gss gsp gsl grec grea gres gco gib gitsu; do
+for alias in "${aliases[@]}"; do
     true_ "$alias is installed as a rig symlink" \
         '[[ $(readlink "$tmp/install/$alias") == rig ]]'
 done
+
+mv "$tmp/offline" "$tmp/origin"
+source "$here/test-checkout.sh"
 
 echo "rig/test.sh: $pass passed, $fail failed"
 [[ "$fail" -eq 0 ]]

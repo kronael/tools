@@ -14,7 +14,7 @@ recent(){
 
 all(){
     git for-each-ref --sort=-committerdate \
-        --format='%(refname:short)' refs/heads refs/remotes
+        --format='%(refname:short)' refs/heads refs/remotes | grep -v '/HEAD$'
 }
 
 branches(){ { recent; all; } | strip_origin | dedupe; }
@@ -42,6 +42,7 @@ get_current_branch(){
 }
 
 is_commit_not_branch(){
+    [[ "$1" == HEAD ]] && return 0
     local branch=$(clean_branch "$1")
     git rev-parse --verify --end-of-options "$1^{commit}" &>/dev/null \
         && ! git show-ref --verify --quiet "refs/heads/$1" \
@@ -50,12 +51,13 @@ is_commit_not_branch(){
 }
 
 pick_branch(){
-    local branch args=(--height=40%)
+    local args=(--height=40%)
     [[ "$1" != "?" ]] && args+=(--select-1 --exit-0 --query="$1")
-    branches | while IFS= read -r branch; do
-        branch=$(clean_branch "$branch")
-        git show-ref --verify --quiet "refs/remotes/origin/$branch" && echo "$branch"
-    done | dedupe | fzf "${args[@]}"
+    awk 'FILENAME == ARGV[1] {origin[$0]=1; next}
+         {sub(/^refs\/(heads\/|remotes\/|tags\/)/, ""); sub(/^origin\//, ""); sub(/[~^].*/, "")}
+         $0 != "HEAD" && ($0 in origin) && !seen[$0]++' \
+        <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin) \
+        <(branches) | fzf "${args[@]}"
 }
 
 # ── Subcommands ─────────────────────────────────────────────────────
@@ -67,34 +69,52 @@ cmd_branch_op(){
     local op=$1; shift
 
     # Parse flags
-    local fetch=1 restore= dryrun= args=()
+    local fetch=1 restore= dryrun= args=() restore_args=()
     [[ "$op" == gco ]] && { op=checkout; fetch=; restore=1; }
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -z|--offline) fetch=; shift ;;
             -n) dryrun=1; shift ;;
-            -h|--help) printf "$BRANCH_HELP\n" "$op"; exit 0 ;;
+            -h|--help)
+                if [[ $restore ]]; then
+                    printf 'Usage: gco [-n] [ref|pattern|-]\n       gco [ref] [restore-options] -- paths\n'
+                    printf 'Flags: -n dry-run, ? force fzf; no fetch\n'
+                    printf 'Restore options: --ours, --theirs, -p/--patch, -m/--merge, --conflict=<style>\n'
+                else
+                    printf "$BRANCH_HELP\n" "$op"
+                fi
+                exit 0 ;;
             --)
                 [[ $restore && ! $dryrun && ${#args[@]} -le 1 && $# -gt 1 ]] || {
                     echo "error: file restore requires gco [ref] -- paths"; exit 1
                 }
-                shift; git checkout "${args[@]}" -- "$@"; return ;;
+                shift; git checkout "${restore_args[@]}" "${args[@]}" -- "$@"; return ;;
+            --ours|--theirs|-p|--patch|-m|--merge|--conflict=*)
+                restore_args+=("$1"); shift ;;
             -b*|-B*|-c*|-C*|-t*|--track*|--orphan*)
                 echo "error: local branch creation and tracking are disabled: $1"; exit 1 ;;
+            -) args+=("@{-1}"); shift ;;
             -*) echo "error: unknown flag: $1"; exit 1 ;;
             *) args+=("$1"); shift ;;
         esac
     done
+    [[ ${#restore_args[@]} -eq 0 ]] || {
+        echo "error: restore options require gco [ref] -- paths"; exit 1
+    }
     [[ ${#args[@]} -le 1 ]] || { echo "error: expected one ref or pattern"; exit 1; }
 
     # Fetch before selection so fzf shows current branches
-    if [[ $fetch ]]; then git fetch || return; fi
+    if [[ $fetch ]]; then
+        git fetch --refmap= origin '+refs/heads/*:refs/remotes/origin/*' || return
+    fi
 
     # Select branch
     local pattern="${args[0]:-}" branch target
     if [[ "$op" == checkout && -n "$pattern" ]] && {
         is_commit_not_branch "$pattern" ||
-        git show-ref --verify --quiet "refs/heads/${pattern#refs/heads/}"
+        { git show-ref --verify --quiet "refs/heads/${pattern#refs/heads/}" &&
+          { [[ "$pattern" == refs/heads/* ]] ||
+            ! git show-ref --verify --quiet "refs/remotes/origin/$pattern"; }; }
     }; then
         target="$pattern"
     else
@@ -243,8 +263,8 @@ Aliases (installed as symlinks):
   gss / gsp / gsl     git stash / stash pop / stash list --stat
   grec / grea / gres  git rebase --continue / --abort / --skip
   gco [ref|pattern]   Detached checkout without fetch
-  gco [ref] -- paths  Restore files with git checkout
-  gib [patterns...]  List local and remote branches (never create)
+  gco [ref] [restore-options] -- paths  Restore files with git checkout
+  gib [options...] [patterns...]  List branches (--all by default; never create)
   gitsu              git status
 
 Flags: -z offline, -n dry-run, ? force fzf
@@ -271,7 +291,7 @@ dispatch(){
         grec) shift; git rebase --continue "$@" ;;
         grea) shift; git rebase --abort "$@" ;;
         gres) shift; git rebase --skip "$@" ;;
-        gib)  shift; git branch --all --list -- "$@" ;;
+        gib)  shift; git branch --all "$@" --list ;;
         gitsu) shift; git status "$@" ;;
         gig)  shift; git log --graph --oneline --simplify-by-decoration --all --decorate "$@" ;;
         gitg) shift; git log --graph --oneline --all --decorate "$@" ;;
