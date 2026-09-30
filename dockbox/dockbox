@@ -234,11 +234,12 @@ Options:
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
 Kernel:
-    io_uring works: boxes run Docker's default seccomp profile plus the
-    io_uring syscalls, which make install puts at
+    io_uring works: boxes run moby's default seccomp profile plus the
+    io_uring syscalls, which make seccomp puts at
         $SECCOMP
-    Sessions hold ${CAPS[*]^^} as ambient caps, so nice,
-    realtime priorities, mlock and ptrace attach work as your user.
+    Sessions in a box created with ${CAPS[*]^^} hold them as
+    ambient caps, so nice, realtime priorities, mlock and ptrace attach
+    work as your user.
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside

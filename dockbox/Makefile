@@ -24,13 +24,13 @@ image:
 install: image seccomp
 	install -m 755 dockbox $(PREFIX)/
 
-seccomp: $(SHARE)/seccomp.json
+seccomp: $(SHARE)/seccomp.json $(SHARE)/seccomp.LICENSE
 
-$(SHARE)/seccomp.json: seccomp.json
+$(SHARE)/%: %
 	mkdir -p $(SHARE)
-	install -m 644 seccomp.json $@
+	install -m 644 $< $@
 
 clean:
-	rm -f $(PREFIX)/dockbox $(SHARE)/seccomp.json
+	rm -f $(PREFIX)/dockbox $(SHARE)/seccomp.json $(SHARE)/seccomp.LICENSE
 	-rmdir $(SHARE) 2>/dev/null
 	-$(SUDO) docker rmi $(IMAGE) 2>/dev/null

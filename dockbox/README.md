@@ -100,15 +100,17 @@ separate, fully-provisioned container instead.
 
 Docker's default seccomp profile denies io_uring, which Agave's
 `solana-test-validator` needs. dockbox starts every box with
-`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: Docker's
-default profile with `io_uring_setup`, `io_uring_enter` and
-`io_uring_register` added to its allow list. The rest of the default stays
-in force.
+`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: the default
+profile from moby/profiles with `io_uring_setup`, `io_uring_enter` and
+`io_uring_register` added to its allow list. It is newer than the profile
+Docker 29.6.2 builds in (moby/profiles v0.2.3) and also denies a few legacy
+socket families (AX25, IPX, AppleTalk and others).
 
 `seccomp.json` is `seccomp/default.json` from
 [moby/profiles](https://github.com/moby/profiles) at commit `a21872828a8e`,
-unchanged except for those three names after `io_submit`. To refresh it,
-fetch that file again and re-add them.
+unchanged except for those three names after `io_submit`. It is Apache-2.0;
+the license ships as `seccomp.LICENSE` and installs beside the profile. To
+refresh it, fetch that file again and re-add them.
 
 Boxes also get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
 to the container does not reach a session started with `docker exec -u`, so
@@ -116,7 +118,8 @@ each session enters as root and `setpriv` drops it to your UID/GID with the
 three held as ambient capabilities and the supplementary groups dockbox-init
 registered. `nice`/`renice` to a negative value, realtime scheduling (`chrt`),
 `mlock` past the memlock limit and ptrace attach to any process in the box
-work as your user.
+work as your user. A box started by an older dockbox holds none of the three,
+and its sessions enter without them.
 Realtime priority and locked memory draw on the host's CPU and RAM.
 
 ## Configuration
