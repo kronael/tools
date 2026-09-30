@@ -15,7 +15,7 @@ It's fast and convenient, and it keeps builds and mess out of your host workdir
 — but because your live credentials are inside and the box shares your kernel,
 it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
 working in a container. If you want a stronger host-filesystem wall — a full VM
-with a throwaway disk — use [qemubox](../qemubox/) instead.
+with a persistent disk — use [qemubox](../qemubox/) instead.
 
 ## Build
 
