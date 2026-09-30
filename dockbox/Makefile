@@ -1,16 +1,18 @@
 .DEFAULT_GOAL := help
-.PHONY: help image install test clean
+.PHONY: help image install seccomp test clean
 
 IMAGE := dockbox
 TZ := $(shell date +%Z 2>/dev/null || echo UTC)
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 PREFIX := $(HOME)/.local/bin
+SHARE := $(HOME)/.local/share/dockbox
 
 help:
 	@echo "make image    - build docker image"
-	@echo "make install  - build image + install dockbox to ~/.local/bin"
+	@echo "make install  - build image + install dockbox and its seccomp profile"
+	@echo "make seccomp  - install only the seccomp profile (no image build)"
 	@echo "make test     - syntax check + unit tests (no docker)"
-	@echo "make clean    - remove installed binary and docker image"
+	@echo "make clean    - remove installed binary, profile and docker image"
 
 test:
 	bash -n dockbox
@@ -19,9 +21,16 @@ test:
 image:
 	$(SUDO) docker build --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
 
-install: image
+install: image seccomp
 	install -m 755 dockbox $(PREFIX)/
 
+seccomp: $(SHARE)/seccomp.json
+
+$(SHARE)/seccomp.json: seccomp.json
+	mkdir -p $(SHARE)
+	install -m 644 seccomp.json $@
+
 clean:
-	rm -f $(PREFIX)/dockbox
+	rm -f $(PREFIX)/dockbox $(SHARE)/seccomp.json
+	-rmdir $(SHARE) 2>/dev/null
 	-$(SUDO) docker rmi $(IMAGE) 2>/dev/null

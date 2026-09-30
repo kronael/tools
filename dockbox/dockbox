@@ -2,6 +2,8 @@
 set -euo pipefail
 
 IMAGE="dockbox"
+SECCOMP="$HOME/.local/share/dockbox/seccomp.json"
+CAPS=(sys_nice ipc_lock sys_ptrace)
 
 EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
 # dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
@@ -231,6 +233,13 @@ Options:
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
+Kernel:
+    io_uring works: boxes run Docker's default seccomp profile plus the
+    io_uring syscalls, which make install puts at
+        $SECCOMP
+    Sessions hold ${CAPS[*]^^} as ambient caps, so nice,
+    realtime priorities, mlock and ptrace attach work as your user.
+
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
     the container, owned by the container user, removed with the box.
@@ -396,11 +405,21 @@ CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 # Every session is a `docker exec` into a detached, long-lived container whose
 # PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
 # container is removed only after the LAST session exits — a session quitting
-# never tears the container out from under other live execs. Run as the host
-# user: exec defaults to --user 0:0 and skips dockbox-init's gosu-drop, so
-# without -u the session would be root. $@ = extra docker-exec flags (e.g. -w).
+# never tears the container out from under other live execs. exec skips
+# dockbox-init's gosu-drop, so the session enters as root and setpriv drops it
+# to the host user: `docker exec -u` would leave it no capabilities, setpriv
+# keeps CAPS ambient, and --init-groups reads the groups dockbox-init
+# registered, the set `-u uid:gid` gives. It asks only for the CAPS the box was
+# created with, so a box started without them still enters, without them.
+# $@ = extra docker-exec flags (-w).
 enter_session() {
     trap '' TSTP
+    local rc=0 have c caps="" cap_opts=()
+    have=$(docker inspect -f '{{join .HostConfig.CapAdd ","}}' "$CONTAINER_NAME")
+    for c in "${CAPS[@]}"; do
+        [[ ",$have," == *",CAP_${c^^},"* ]] && caps+="${caps:+,}+$c"
+    done
+    [[ -n "$caps" ]] && cap_opts=(--inh-caps="$caps" --ambient-caps="$caps")
     docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$$" 2>/dev/null
     trap leave_session EXIT
     trap 'exit 129' HUP
@@ -408,8 +427,9 @@ enter_session() {
     # Forward run-time env (-e / -g token) into this exec too: unlike mounts and
     # network, env CAN be set per-exec, so a box first started without -g still
     # gets the token when a later invocation passes it.
-    local rc=0
-    docker exec -it -u "$(id -u):$(id -g)" -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" "${cmd[@]}" || rc=$?
+    docker exec -it -u 0:0 -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" \
+        setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups \
+        "${cap_opts[@]}" -- "${cmd[@]}" || rc=$?
     exit "$rc"
 }
 
@@ -433,6 +453,11 @@ leave_session() {
 if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
     enter_session
 fi
+
+[[ -f "$SECCOMP" ]] || {
+    echo "dockbox: no seccomp profile at $SECCOMP -- run 'make seccomp' in the dockbox source dir" >&2
+    exit 1
+}
 
 mounts=()
 workdir=""
@@ -532,6 +557,11 @@ extra_env+=(-e "DOCKBOX_GID=$(id -g)")
 extra_env+=(-e "DOCKBOX_USER=$(id -un)")
 [[ -n "$grant_sudo" ]] && extra_env+=(-e DOCKBOX_SUDO=1)
 
+cap_args=()
+for c in "${CAPS[@]}"; do
+    cap_args+=(--cap-add "$c")
+done
+
 # Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
@@ -597,10 +627,14 @@ docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
 # Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
 # lifetime is independent of any session. dockbox-init runs the per-user setup,
 # touches /run/dockbox/ready, then holds the container open with sleep infinity.
+# The seccomp profile is Docker's default plus io_uring, which the default
+# denies and Agave's solana-test-validator needs.
 docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
+    --security-opt "seccomp=$SECCOMP" \
+    "${cap_args[@]}" \
     "${network_arg[@]}" \
     "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \

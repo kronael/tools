@@ -2,8 +2,8 @@
 # Tests for dockbox without a docker daemon. Sources the script with
 # DOCKBOX_LIB=1 so the CLI never runs and no container is created; asserts the
 # rm matcher, the tmpfs_used total, the box_use classifier, the -n name guard
-# shared with qemubox and the -K flag, then runs ls, prune, rm and a session
-# against a stub docker on PATH.
+# shared with qemubox, the -K flag and the seccomp profile, then runs ls,
+# prune, rm, a box start and sessions against a stub docker on PATH.
 set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -61,12 +61,17 @@ true_  "use idle when only the keepers run"   '[ "$(box_use < "$tmp/top-idle")" 
 true_  "use busy with any other process"      '[ "$(box_use < "$tmp/top-busy")" = busy ]'
 false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use'
 
+## seccomp profile -----------------------------------------------------------
+true_ "the profile allows the three io_uring syscalls" \
+    '[ "$(grep -Ec "^[[:space:]]+\"io_uring_(setup|enter|register)\",$" "$here/seccomp.json")" = 3 ]'
+
 ## commands against a stub docker on PATH ----------------------------------
 # The stub serves the boxes in $STUB/boxes (name, state, age in seconds, use,
 # size) through each --format template, answers `top` from the fixtures above,
 # runs the session-marker snippets against $STUB/run and the ls probe against
 # the fake box in $STUB/box — under dash when installed, the box's /bin/sh —
-# and logs every call.
+# and logs every call. It reports the box running unless STUB_FRESH is set,
+# when a launch starts a new one.
 export STUB="$tmp"
 log="$tmp/log"
 cat > "$tmp/docker" <<'STUB'
@@ -106,7 +111,8 @@ case "$1" in
                 script="${*: -1}"
                 PATH="$STUB/box/bin:$PATH" exec "$box_sh" -c "${script//" /"/" $STUB/box/"}" ;;
         esac ;;
-    ps) echo c0ffee ;;
+    inspect) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
+    ps) [ -n "${STUB_FRESH:-}" ] || echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
 esac
 exit 0
@@ -214,6 +220,39 @@ false_ "a session leaves the box to a live sibling" 'grep -q "^rm " "$log"'
 rm -f "$tmp/run/sess/4242"
 HOME="$tmp/home" STUB_WIPE=1 dockbox -n sess exec true >/dev/null 2>&1
 false_ "a session keeps the box when markers can't be listed" 'grep -q "^rm " "$log"'
+cd "$here" || exit 1
+
+## box start and session wrapper -------------------------------------------
+share="$tmp/home/.local/share/dockbox"
+sess="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups"
+sess="$sess --inh-caps=+sys_nice,+ipc_lock,+sys_ptrace"
+sess="$sess --ambient-caps=+sys_nice,+ipc_lock,+sys_ptrace -- true"
+cd "$tmp/home" || exit 1
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_  "a new box without the profile fails"            '[ "$rc" = 1 ]'
+true_  "the missing-profile error names the fix"        'grep -q "make seccomp" "$tmp/err"'
+false_ "a missing profile stops before any box change"  'grep -Eq "^(rm|run) " "$log"'
+HOME="$tmp/home" dockbox -n sess exec true >/dev/null 2>&1; rc=$?
+true_  "re-entry needs no profile"                      '[ "$rc" = 0 ]'
+true_  "a re-entered session drops through setpriv" \
+    'grep -qx "exec -it -u 0:0 -e TERM dockbox-sess $sess" "$log"'
+HOME="$tmp/home" STUB_CAPS= dockbox -n sess exec true >/dev/null 2>&1; rc=$?
+old="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups -- true"
+true_  "a box created without the caps still enters" \
+    '[ "$rc" = 0 ] && grep -qx "exec -it -u 0:0 -e TERM dockbox-sess $old" "$log"'
+mkdir -p "$share"
+cp "$here/seccomp.json" "$share/"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n fresh exec true >/dev/null 2>&1; rc=$?
+run=$(grep "^run " "$log")
+settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' <<< "$run")
+[ -n "$settings" ] && rm -f -- "$settings"
+true_  "a new box starts"                               '[ "$rc" = 0 ]'
+true_  "a new box runs the io_uring seccomp profile" \
+    'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'
+true_  "a new box adds the session caps" \
+    'grep -q -- " --cap-add sys_nice --cap-add ipc_lock --cap-add sys_ptrace " <<< "$run"'
+true_  "its first session drops through setpriv in the workdir" \
+    'grep -q "^exec -it -u 0:0 -e TERM .* -w $tmp/home dockbox-fresh $sess$" "$log"'
 cd "$here" || exit 1
 
 ## -n traversal guard ------------------------------------------------------

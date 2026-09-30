@@ -37,9 +37,14 @@ a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
 ## Install
 
 ```bash
-make install            # installs dockbox to ~/.local/bin
-make clean              # remove binary and docker image
+make install            # image, dockbox and its seccomp profile
+make seccomp            # the seccomp profile only, no image build
+make clean              # remove binary, profile and docker image
 ```
+
+dockbox goes to `~/.local/bin`, the profile to
+`~/.local/share/dockbox/seccomp.json`. A new box does not start without the
+profile; dockbox names `make seccomp` when it is missing.
 
 ## Usage
 
@@ -90,6 +95,29 @@ without `-g` still gets the token when a later `dockbox -g` re-enters
 it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
 fixed when the container is created. Use `-n <name>` to key a
 separate, fully-provisioned container instead.
+
+## io_uring and capabilities
+
+Docker's default seccomp profile denies io_uring, which Agave's
+`solana-test-validator` needs. dockbox starts every box with
+`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: Docker's
+default profile with `io_uring_setup`, `io_uring_enter` and
+`io_uring_register` added to its allow list. The rest of the default stays
+in force.
+
+`seccomp.json` is `seccomp/default.json` from
+[moby/profiles](https://github.com/moby/profiles) at commit `a21872828a8e`,
+unchanged except for those three names after `io_submit`. To refresh it,
+fetch that file again and re-add them.
+
+Boxes also get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
+to the container does not reach a session started with `docker exec -u`, so
+each session enters as root and `setpriv` drops it to your UID/GID with the
+three held as ambient capabilities and the supplementary groups dockbox-init
+registered. `nice`/`renice` to a negative value, realtime scheduling (`chrt`),
+`mlock` past the memlock limit and ptrace attach to any process in the box
+work as your user.
+Realtime priority and locked memory draw on the host's CPU and RAM.
 
 ## Configuration
 
