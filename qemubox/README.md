@@ -196,6 +196,4 @@ State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept for reuse; `rm` deletes a box's overlay, key, config, known-hosts,
 pid, and serial log. `QEMUBOX_SOURCE` selects the tools source repository.
 
-```sh
-QEMUBOX_MEM=8192 QEMUBOX_CPUS=4 qemubox -n big .   # bigger VM
-```
+For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
