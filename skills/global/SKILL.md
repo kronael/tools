@@ -57,7 +57,7 @@ mtime.
   invisible until loaded, and skipping the load hides the rules rather than
   relaxing them. ALWAYS load it (`/solve`, or a language skill) BEFORE writing
   or reviewing code.
-- ALWAYS sync `~/.claude/` changes into the tools repo (paths in LOCAL.md).
+- ALWAYS sync `~/.claude/` changes into the tools repo (`kronael/sync`; LOCAL.md).
 - This file and loaded SKILL.md files are collectively "WISDOM".
 
 # Development Principles

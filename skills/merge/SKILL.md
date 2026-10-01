@@ -1,7 +1,7 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; sync a detached line with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for the file sync between ~/.claude and the bundle repo (use kronael/install).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, sync, sync with origin, sync the repo, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date"
+description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; merge origin — bring a detached line up to date with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for syncing ~/.claude with the bundle repo (use kronael/sync).
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date"
 user-invocable: true
 ---
 
@@ -9,12 +9,11 @@ user-invocable: true
 
 Resolve all merge conflicts in the working tree. Run directly in main context (no subagent).
 
-## Sync — bring the detached line up to origin
+## Merge origin — bring the detached line up to origin
 
-"Sync" names three things in this bundle. This section owns the git one;
-the other two are not git: `kronael/install` two-way syncs FILES between
-`~/.claude/` and the bundle repo, and `sync-tools-skills` vendors skills
-into another project.
+This section is "merge origin", a git operation. "Sync" in this bundle means
+only `kronael/sync`: files between `~/.claude/` and the bundle repo, no git
+history. Vendoring skills into another project is `sync-tools-skills`.
 
 1. `git fetch origin`, then size it against `origin/<default head>` (WISDOM
    § Git names the head):
@@ -46,8 +45,8 @@ into another project.
    `git rev-list --left-right --count HEAD...origin/<default head>` prints
    `N 0` — ahead only, 0 behind.
 
-A sync ends at the local merge commit. What comes after (refine, release,
-install) is its own ask.
+A merge origin ends at the local merge commit. What comes after (refine,
+release, sync) is its own ask.
 
 ## 0. Safety gate — don't fuck it up
 

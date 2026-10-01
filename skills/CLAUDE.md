@@ -120,7 +120,7 @@ skills it replaces.
 2. Update the router dispatch table row.
 3. Add the mode's trigger keywords to router `when_to_use` if missing
    (keep trimmed — it preloads).
-4. If a dir is removed/renamed, add it to the prune list in
-   `../kronael/install/reference.md` (§ "Removed kronael skills to prune") so
-   reinstalls delete orphans.
+4. If a dir is removed or renamed, add its old name to `RETIRED` in
+   `../kronael/sync/reference.md` § Classify, so a sync moves the installed
+   copy aside without asking the owner about it.
 5. Per-router edit notes: `create/CLAUDE.md`, `software/CLAUDE.md`.

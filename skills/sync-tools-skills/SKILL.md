@@ -1,10 +1,10 @@
 ---
 name: sync-tools-skills
-description: Refresh a project's vendored agent skills from an upstream tools repo, then deliver them. NOT for authoring a new skill (use wisdom) or general code (use the language skill).
-when_to_use: sync tools skills, vendor skills from kronael/tools, refresh agent skill bundle, update create-* skills, take skills from tools, deliver new agent skills, bump migration version for skills
+description: Vendor agent skills from an upstream tools repo into another project, then deliver them to its live agents. NOT for syncing ~/.claude with the tools repo (use kronael/sync), authoring a new skill (use wisdom), or general code (use the language skill).
+when_to_use: vendor skills from kronael/tools, refresh a project's vendored agent skills, refresh agent skill bundle, update create-* skills, take skills from tools, deliver new agent skills, bump migration version for skills
 ---
 
-# Sync vendored agent skills from an upstream tools repo
+# Vendor agent skills from an upstream tools repo
 
 A project that ships an in-container agent (e.g. arizuko's `ant/skills/`) vendors
 SOME skills from a shared tools repo. Refresh + deliver them in five steps.

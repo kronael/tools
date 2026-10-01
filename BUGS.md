@@ -35,11 +35,11 @@
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
 
-- **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-01.
-  `kronael/install/SKILL.md` has a 284-line body and
-  `plugins/kronael/skills/kronael-install/SKILL.md` a 235-line one, against
-  the repo's 200-line rule (`CLAUDE.md:112`, `skills/wisdom/SKILL.md:65`).
-  **Fix:** move cold detail to `kronael/install/reference.md`.
+- **SYNC-BRIDGE-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-01.
+  `plugins/kronael/skills/kronael-sync/SKILL.md` has a 239-line body against the
+  repo's 200-line rule (`CLAUDE.md:115`, `skills/wisdom/SKILL.md:65`); the
+  canonical `kronael/sync/SKILL.md` is at 199. **Fix:** cut the bridge to its
+  Codex-only deltas, or move detail to `kronael/sync/reference.md`.
 - **WISDOM-OVER-LINE-CAP** (LOW, docs) — proposed, needs sign-off. 2026-10-01:
   `skills/global/SKILL.md` has a 224-line body against the 200-line cap
   (`awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`); it loads in
@@ -117,17 +117,6 @@
   on any `WebDriverException` (`:115`); `suppress(Exception)` at `:63` hides a
   rejected cookie. **Fix:** catch `NoSuchElementException` for an absent tab
   only, and let other driver errors surface.
-
-## Install protocol
-
-- **INSTALL-LEAVES-STALE-HOOK-DOCS** (LOW, ops) — CONFIRMED at HEAD
-  2026-09-29. Install copies only `hooks/*.py`, `*.sh` and `lib/`
-  (`kronael/install/SKILL.md:138`), and its prune step names only renamed
-  and orphan scripts (`:141-151`). So `README.md`, `ARCHITECTURE.md`,
-  `TEST.md` and `Makefile` in `~/.claude/hooks/`, left by an earlier install,
-  stay out of date forever (`diff -q hooks/README.md
-  ~/.claude/hooks/README.md`). **Fix:** add them to the prune step; no test —
-  ops.
 
 ## Codex bridge
 
