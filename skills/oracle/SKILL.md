@@ -38,12 +38,17 @@ Rules:
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.
+- When fable cannot run (a usage limit), ALWAYS take the same route on
+  `subagent_type: "opus"` — NEVER skip the opinion.
 
 ## Codex Route
 
 Load the `codex` skill and follow its runbook. Use it for creative critique and
 explicit Codex requests. Keep the prompt adversarial and high-level; do not
 paste your full reasoning chain.
+
+When codex cannot run (revoked auth, missing CLI), ALWAYS take the Fable Route
+instead, on opus when fable cannot run either — NEVER drop the second opinion.
 
 ## Output
 
