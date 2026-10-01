@@ -154,7 +154,7 @@ Side-channels (escalation, communication) fire at any stage.
 **orientation** — load context before acting. `solve` is the universal entry point;
 `recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
-**planning** — `specs` for design docs; `ship` for multi-session work tracking.
+**planning** — `specs` for design docs; `ship` to drive a change end to end, mostly unattended.
 Skip for one-off tasks.
 
 **coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
