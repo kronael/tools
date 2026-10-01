@@ -1,5 +1,44 @@
 # Changelog
 
+## [v0.4.7] — 20261001
+
+> kronael v0.4.7 — qemubox becomes a daily sandbox
+>
+> qemubox now boots the same image as dockbox and keeps each VM's disk, so you can reuse a VM every day.
+>
+> • qemubox — boots the dockbox image as your own user and stops idle VMs after 4 h, keeping the disk
+> • qemubox — shares ~/.claude and ~/.codex, puts build dirs on tmpfs, reads dockbox-style rc files
+> • dockbox — boxes allow io_uring, and sessions get nice, mlock and ptrace
+> • Git skills and rig — every checkout detaches, so no local branch appears; gco joins rco
+> • Install — turns off the Bash edit diff and the IDE diff viewer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox build-base` exports the Dockerfile's new `vm` stage into a qcow2
+  base named by image id; VMs boot it directly as the host user (same name,
+  uid, gid, home): 16 GiB RAM, 4 vCPUs, 40G sparse disk.
+- qemubox disks persist: the last session powers the VM off. One lock covers
+  setup, session markers, stop and remove; a dead session does not keep a VM
+  busy. `ls` shows RAM/DISK/USE; `prune` stops VMs idle past 4 h, removes
+  stopped ones past `[hours]` and deletes unused bases; `rm` takes patterns.
+- qemubox matches dockbox: rc files, worktree mount, tool table, tmpfs build
+  dirs (`-P`/`-T`), PAM limits, the host time zone, a `docker` CLI for `-D`.
+  The guest cannot edit the project rc or the plugins.
+- qemubox security: a disk made by a trusted launch refuses `-U`, because it
+  holds `~/.claude.json`. Missing `-G`/`-v` sources fail loud. `-D`/`-K`
+  forwards bind again after a relaunch.
+- `dockbox` boxes run Docker's default seccomp profile plus io_uring (the moby
+  profile ships with its Apache-2.0 notice); sessions enter through setpriv
+  with SYS_NICE, IPC_LOCK and SYS_PTRACE ambient. Another user's box is refused
+  with a pointer to `-n`. Both tools resume sessions for project paths with
+  any non-alphanumeric character.
+- Git rules: detached HEAD only, never a local branch; reads go through
+  `git fetch origin` and `origin/<default head>`; pushes go by SHA. Review
+  fixes push to the open PR's head; fixed threads resolve silently.
+- `rig`: `gco` is `rco` without the fetch, plus `--` file restore, and new
+  diff/stash/rebase aliases; `rco` takes refs and hashes.
+- Install pins `bashEditDiffEnabled: false` and the `diffTool` `terminal`.
+
 ## [v0.4.6] — 20260929
 
 > kronael v0.4.6 — dockbox ls sees every box
