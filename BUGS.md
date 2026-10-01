@@ -133,6 +133,19 @@
   files. Harmless in bytes; the question is whether stamps should self-prune
   on write past N days.
 
+- **SPEC-LINT-SKILLS-SPECS-FALSE-ROOT** (MED, correctness) — CONFIRMED at HEAD
+  2026-10-01. `spec_lint.py`'s `nearest_root()` (`hooks/spec_lint.py:43-47`)
+  matches any directory literally named `specs`, with no corpus guard — unlike
+  `discovered()`, which requires an `index.md` or a `<NN>-topic.md` file
+  before treating a `specs`-named dir as a corpus (`test_test_suite_named_specs_is_not_discovered`
+  covers that path). pre-commit passes changed FILE paths, not the `specs`
+  directory argument, so a commit touching `skills/specs/SKILL.md` or
+  `skills/specs/format.md` — the specs *skill*'s own folder, not a project's
+  spec corpus — gets linted against spec-naming/spec-status/spec-index-row and
+  hard-fails. Reproduce: `pre-commit run spec-lint --all-files` in `tools/`
+  errors on `skills/specs/SKILL.md`, `skills/specs/format.md`,
+  `skills/specs/spec-first.md` and `skills/specs/useless.md`. **Fix:** give
+  `nearest_root()` the same corpus guard `discovered()` already has.
 
 ## qemubox
 
