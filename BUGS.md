@@ -35,21 +35,23 @@
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
 
-- **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
-  `kronael/install/SKILL.md` is 232 lines and
-  `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
-  repo's 200-line rule (`CLAUDE.md:107`, `skills/wisdom/SKILL.md:60`).
+- **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-01.
+  `kronael/install/SKILL.md` has a 284-line body and
+  `plugins/kronael/skills/kronael-install/SKILL.md` a 235-line one, against
+  the repo's 200-line rule (`CLAUDE.md:112`, `skills/wisdom/SKILL.md:65`).
   **Fix:** move cold detail to `kronael/install/reference.md`.
 - **WISDOM-OVER-LINE-CAP** (LOW, docs) — proposed, needs sign-off. 2026-10-01:
-  `skills/global/SKILL.md` has a 223-line body against the 200-line cap
+  `skills/global/SKILL.md` has a 224-line body against the 200-line cap
   (`awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`); it loads in
-  every session. § Git's two-phase GitHub-text rule stays: `pr-draft`,
-  `gh-comment`, `gh-issue` and `release` cite it. **Proposal** (~23 lines):
-  move the doc-topology bullets (`UPPERCASE at root`, `specs/`/`.ship/`) to
-  `readme`; the worktree bullet to `worktree`; the tracking-refs bullet to
-  `merge` § Sync; merge the two negative-claim bullets in § Response style;
-  cut the `/pr-draft` bullet to its pointer; fold the § Agents fable and
-  sonnet bullets into one.
+  every session. v0.4.8 was at 200: the local rules this release ships
+  (`/pr-draft`, the negative-claim and swallowing extensions, the fable and
+  sonnet bullets) added the overflow. § Git's two-phase GitHub-text rule stays:
+  `pr-draft`, `gh-comment`, `gh-issue` and `release` cite it. **Proposal** (~24
+  lines): move the doc-topology bullets (`UPPERCASE at root`, `specs/`/`.ship/`)
+  to `readme`; the worktree bullet to `worktree`; the tracking-refs bullet to
+  `merge` § Sync; merge the two negative-claim bullets in § Response style; cut
+  the `/pr-draft` bullet to its pointer; fold the § Agents fable and sonnet
+  bullets into one.
 
 
 - **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
@@ -79,6 +81,62 @@
   files. **Fix:** split the pattern catalogs into on-demand siblings — a
   restructuring of imported content, not a one-line fix.
 
+- **RESEARCH-SKILLS-DUPLICATE** (MED, docs) — CONFIRMED 2026-10-01.
+  `skills/research/` (local) and `skills/research-analysis/` (upstream) share
+  triggers (backtest, walk-forward, holdout, overfitting, baseline, null
+  result, lineage), repeat "did not earn its place" verbatim
+  (`research/method.md:82`, `research-analysis/SKILL.md:78`), and contradict
+  on report order (`research/layout.md:63-67` verdict first;
+  `research-analysis/SKILL.md:20` lineage at the top, `:104` table first).
+  **Fix:** fold one into the other; the owner picks the report order.
+
+- **DIARY-SUBMODULE-LOCATION** (LOW, correctness) — CONFIRMED 2026-10-01. In a
+  submodule or a `--separate-git-dir` repo, `hooks/stop.py` takes
+  `dirname(git-common-dir)` as the main tree (`:115`, `:124`), so an ignored
+  diary is looked for under `.git/modules/…` and every Stop blocks; the diary
+  skill's `git worktree list | head -1` (`skills/diary/SKILL.md:29`) returns
+  the git dir there too. Predates this release. **Fix:** resolve the main
+  worktree from `git worktree list --porcelain`'s first `worktree` line only
+  when it is not inside a git dir, in both the hook and the skill — a contract
+  change, so proposed.
+
+- **REFINE-IMPROVE-NO-MODEL** (LOW, docs) — CONFIRMED 2026-10-01. Refine step 8
+  dispatches `Task(agent="improve")` with no model
+  (`skills/refine/SKILL.md:106`), and `agents/improve.md` pins none, so the
+  writer runs on the parent's model and effort. **Fix:** the owner picks the
+  model for refine's writing subs.
+
+- **GLOBAL-COMMIT-TYPES-DISAGREE** (LOW, docs) — CONFIRMED 2026-10-01.
+  `skills/global/SKILL.md:120-121` § Git lists
+  fix/feat/docs/test/chore/refactor; the `commit` skill uses `refa`/`splx`
+  (`skills/commit/SKILL.md:31-32`) and refine `refa`
+  (`skills/refine/SKILL.md:124`). **Fix:** one list, owned by `commit`.
+
+- **DOCKBOXRC-NO-EPHEMERAL-IGNORED** (LOW, correctness) — CONFIRMED 2026-10-01.
+  `--no-ephemeral` in a project `.dockboxrc` becomes `--` in the claude
+  arguments with a misleading "ignoring -n" warning (`dockbox/dockbox` rc
+  parsing `:330-390`). **Fix:** honour it, or list it among the ignored flags.
+
+- **DOCKBOX-HELP-RC-FLAGS** (LOW, docs) — CONFIRMED 2026-10-01. dockbox help
+  (`dockbox/dockbox:311`) says a project `.dockboxrc` ignores `-A/-D/-S`; the
+  code (`:387`) also ignores `K`, `n`, `d`, `x`. **Fix:** make the help list
+  match.
+
+- **QEMUBOX-E2FSPROGS-VERSION** (LOW, docs) — CONFIRMED 2026-10-01.
+  `qemubox/README.md:40` says e2fsprogs ≥1.47; Debian 12's 1.47.0 has no
+  `mke2fs -d` tarball support (`strings /usr/sbin/mke2fs | grep -ci archive`
+  → 0), so the build probe (`qemubox/qemubox:780-782`) fails after the
+  README's apt install. **Fix:** state the version that adds tarball support
+  once confirmed (unverified: 1.47.1).
+
+- **TWFETCH-SWALLOWS-DRIVER-ERRORS** (LOW, correctness) — CONFIRMED 2026-10-01.
+  `tw-fetch/main.py:184-185` catches `WebDriverException` (a superclass of
+  `NoSuchElementException`) around the Following-tab click and passes, so a
+  failed click silently archives the default tab; `parse_tweet` drops a tweet
+  on any `WebDriverException` (`:115`); `suppress(Exception)` at `:63` hides a
+  rejected cookie. **Fix:** catch `NoSuchElementException` for an absent tab
+  only, and let other driver errors surface.
+
 ## Install protocol
 
 - **INSTALL-LEAVES-STALE-HOOK-DOCS** (LOW, ops) — CONFIRMED at HEAD
@@ -105,6 +163,18 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
+- **RIG-SQ-NEVER-FINDS-FIXUPS** (MED, correctness) — proposed, needs sign-off.
+  2026-10-01. `rig sq`/`rig fixup` always prints "no fixup commits" and exits 0
+  (since 60a3041, 2026-04-17): `rig/rig:189` matches `^fixup` against "<hash>
+  <subject>"; the sequence-editor regex is a bash syntax error (unquoted `;`);
+  `git rebase -i "$oldest^"` puts the fixup first in the todo; and a failed
+  rebase still returns 0. A fix exists (subject-only match, regex in a
+  variable, base `$oldest~2`, rebase status returned, three tests that fail
+  without it). **Hazard:** fixed, the scan covers all history — here it would
+  rebase 1017 commits and flatten 28 merges to fold 13 `fixup:` commits
+  already on `origin/master`. **Fix:** ship the repair with the scan limited
+  to unpushed commits (`git log HEAD --not --remotes`) and a refusal when the
+  rebase range reaches a pushed commit — the owner decides the scope.
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
   `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
   command string, so it never matches `rig push`, `rig p` or the `rip`
@@ -184,7 +254,7 @@
   needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
-  `hooks/stop.py:134` suppresses the commit/diary block when `CLAUDE_EVAL` is
+  `hooks/stop.py:149` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its only other hit is `hooks/test_stop.py:16`, which
   strips it from the test env — not `Makefile`, `.github/`, `evals/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
@@ -201,25 +271,15 @@
   whether stamps should self-prune on write past N days; no test — design.
 
 - **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:50-58` defines its own `hook_event`: the same
+  2026-09-29. `hooks/stop.py:55-63` defines its own `hook_event`: the same
   three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:51-53`, set by `post_tool_nudge.sh:20`). `stop.py` imports
+  override (`:56-58`, set by `post_tool_nudge.sh:20`). `stop.py` imports
   nothing from `lib.state`, so a spelling added to one reader misses the
   other. **Fix:** import `hook_event` from `lib.state` and keep the override
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
 ## dockbox
-
-- **DOCKBOX-STARTUP-EXIT-UNDETECTED** (LOW, correctness) — CONFIRMED at HEAD
-  2026-09-30. The startup wait tests `docker ps -q -f "name=^…$" … ||`
-  (`dockbox/dockbox:700`), but `docker ps -q` exits 0 when nothing matches
-  (verified on Docker 29.6.2), so "Container exited during startup" and its
-  `docker logs` tail never print: a box that dies in dockbox-init waits the
-  full 10 s, then the session fails on a bare `docker exec` error. **Fix:**
-  test the command's output, as the re-entry gate does (`[[ -n "$(docker ps
-  -q -f …)" ]]`). No test — the shell suites carry no skip idiom to pin a
-  known failure with; the fix adds the stub case.
 
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
