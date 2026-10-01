@@ -15,7 +15,7 @@ It's fast and convenient, and it keeps builds and mess out of your host workdir
 — but because your live credentials are inside and the box shares your kernel,
 it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
 working in a container. If you want a stronger host-filesystem wall — a full VM
-with a throwaway disk — use [qemubox](../qemubox/) instead.
+with a persistent disk — use [qemubox](../qemubox/) instead.
 
 ## Build
 
@@ -32,14 +32,21 @@ can share it.
 Tools (cargo, nvm, bun, rustup, sdkman, go, uv, nushell, etc.) live in
 `/opt/dev-tools/` inside the image, world-readable. Each runtime user gets
 a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
-`~/.gitconfig`, etc.) nested in.
+`~/.gitconfig`, etc.) nested in. Mounts are fixed when a box is created, so a
+running box picks up a newer dockbox's mounts (including the private sessions
+registry) only after `dockbox rm <name>` and a new launch.
 
 ## Install
 
 ```bash
-make install            # installs dockbox to ~/.local/bin
-make clean              # remove binary and docker image
+make install            # image, dockbox and its seccomp profile
+make seccomp            # the seccomp profile only, no image build
+make clean              # remove binary, profile and docker image
 ```
+
+dockbox goes to `~/.local/bin`, the profile to
+`~/.local/share/dockbox/seccomp.json`. A new box does not start without the
+profile; dockbox names `make seccomp` when it is missing.
 
 ## Usage
 
@@ -91,6 +98,32 @@ it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
 fixed when the container is created. Use `-n <name>` to key a
 separate, fully-provisioned container instead.
 
+## io_uring and capabilities
+
+Docker's default seccomp profile denies io_uring, which Agave's
+`solana-test-validator` needs. dockbox starts every box with
+`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: the default
+profile from moby/profiles with `io_uring_setup`, `io_uring_enter` and
+`io_uring_register` added to its allow list. It is newer than the profile
+Docker 29.6.2 builds in (moby/profiles v0.2.3) and also denies a few legacy
+socket families (AX25, IPX, AppleTalk and others).
+
+`seccomp.json` is `seccomp/default.json` from
+[moby/profiles](https://github.com/moby/profiles) at commit `a21872828a8e`,
+unchanged except for those three names after `io_submit`. It is Apache-2.0;
+the license ships as `seccomp.LICENSE` and installs beside the profile. To
+refresh it, fetch that file again and re-add them.
+
+Boxes also get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
+to the container does not reach a session started with `docker exec -u`, so
+each session enters as root and `setpriv` drops it to your UID/GID with the
+three held as ambient capabilities and the supplementary groups dockbox-init
+registered. `nice`/`renice` to a negative value, realtime scheduling (`chrt`),
+`mlock` past the memlock limit and ptrace attach to any process in the box
+work as your user. A box started by an older dockbox holds none of the three,
+and its sessions enter without them.
+Realtime priority and locked memory draw on the host's CPU and RAM.
+
 ## Configuration
 
 Extra docker args via `.dockboxrc` files (bash-style, `#` comments):
@@ -102,10 +135,49 @@ Both are optional. Global applies first, project appends. The
 project `.dockboxrc` is overmounted with `/dev/null` inside the
 container so the boxed agent can't modify it.
 
+## Roaming between networks
+
+A bridge box does not resolve names through the host's resolver: Docker
+copies nameservers into the box once, when the container is created. When
+the host's `/etc/resolv.conf` is a loopback stub (systemd-resolved's
+`127.0.0.53`), unreachable from the box, Docker substitutes the uplink
+servers behind it — the DHCP servers of the network the laptop is on at that
+moment, which usually answer only from that network. Move to another Wi-Fi
+and every lookup in the box times out while the host, whose resolver
+switched with the link, is fine. Docker never rewrites a running
+container's `resolv.conf` (moby `daemon/libnetwork/sandbox_dns_unix.go`: written
+at sandbox setup and endpoint join only).
+
+dockbox therefore gives a new bridge box the resolver listening on the
+bridge gateway when there is one (`--dns 172.17.0.1`); that resolver follows
+the host across network changes. Expose systemd-resolved there:
+
+```sh
+# /etc/systemd/resolved.conf.d/docker.conf
+[Resolve]
+DNSStubListenerExtra=172.17.0.1
+```
+
+then `systemctl restart systemd-resolved`. resolved binds the extra address
+with `IP_FREEBIND`, so it works before `docker0` exists at boot. A box keeps
+the servers copied at its creation until it is recreated (`dockbox rm
+<name>`). Without a gateway resolver, when the host uses a loopback stub
+resolver, dockbox prints a one-line note at creation and the box keeps
+Docker's copy. The gateway detection reads the host's sockets with `ss`, so
+it assumes a rootful local Docker daemon. `-H` (host network) uses
+the host's resolver and sockets directly and has neither problem; it also
+has no NAT, so a box's connections survive a brief Wi-Fi drop exactly as the
+host's do.
+
 ## Mounts
 
 Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
+- `~/.claude/sessions` -> private tmpfs per box. Claude Code registers every
+  live session there and lists them with `ListAgents`; the inbox sockets
+  live in each box's own `/tmp`, so a private registry means boxes and the
+  host neither see nor message each other's sessions, and two boxes' low
+  container PIDs cannot overwrite each other's records.
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -233,6 +305,13 @@ mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
 passed by the `claude` wrapper in the image. This is intentional — the use
 case is a trusted agent doing real work, not untrusted code execution. If you
 need security isolation, this is not the tool.
+
+Boxes are kept apart from each other and from the host's Claude sessions
+(private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the
+bundle's settings refuse inbound cross-session messages everywhere. `-D`
+undoes that: it hands the box the host's Docker socket, so its agent can
+`docker exec` into every other dockbox. Pass it only to a box you trust with
+all the others.
 
 ## Cookbook
 

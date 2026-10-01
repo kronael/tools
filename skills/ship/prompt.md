@@ -1,59 +1,81 @@
-# Ship — agent briefs
+# Agent briefs and work record
 
-Templates for the two subagent calls in `SKILL.md`. Fill the
-bracketed parts from the actual task; don't paste this file verbatim.
+`dispatch` owns briefing style, and `fable`, `sonnet` and `opus` own model
+launch settings. Fill the brackets with real paths and the owner's words.
+Do not send this file as a worker's task list.
 
-## Planning brief (fable, step 1)
+## Planner brief
 
+Plan [change] in [worktree]. The owner's request is [verbatim words].
+Their accepted brief is [scope, acceptance, hammer cases, limits,
+destination and authorizations]. Research the current code and relevant
+prior decisions. Existing spec/plan [paths] is input to verify.
+
+Write or update [absolute work-record path] using the fields below. Map
+every acceptance item to a deliverable and an observable check. Keep steps
+small enough for a worker to finish with its gate. Respect completed commits
+after verifying their code, and research the remaining work. Return the plan
+path, supporting code references and material decisions the owner must
+settle. Planning only. Implementation and public actions are out of scope.
+
+The planner gets the owner brief and source paths, never the orchestrator's
+conclusions.
+
+## Worker brief
+
+Deliver Step [N] of [absolute work-record path] in [assigned worktree] from
+[fork SHA]. The owner's intent is [verbatim words]. The accepted boundaries
+are [scope, exclusions, hammer cases, limits and destination].
+
+Read the plan for context, applicable CLAUDE.md and the matched domain
+skills. Own [paths]. [Other paths] are read-only context. Deliver this
+step's behavior and acceptance checks. Later steps are outside your task.
+Gate: [exact command]. Return changed paths, gate output, remaining issues,
+and any logical commits under the `commit` skill. Public actions belong to
+the main agent and their approval gates.
+
+## Plan fields
+
+`specs` owns the project's spec format. Cite a durable spec rather than
+copying it.
+
+```markdown
+# NN — Change name
+
+## Owner brief
+Request: <owner's words>
+Scope / exclusions: <accepted change and what stays outside>
+Acceptance: <IDs with observable behavior and required checks>
+Hammer: <risk cases, thresholds, owning skills, depth and rounds>
+Limits: <owner ceilings or stated defaults, used repair and review counts>
+Destination: <local commits, or explicitly requested further actions>
+Authorization: <owner requests, separate final approvals still needed>
+Decisions: <question, options, ruling, source, unresolved dependencies>
+
+## Starting state
+Worktree / baseline HEAD / owned paths: <identity>
+Baseline: <relevant commands and results, unrelated failures recorded>
+
+## Design
+<current-code references, chosen approach, material tradeoffs>
+Spec: <path when one exists>
+
+## Steps
+### Step N — Deliverable
+Depends on: <steps>
+Owns: <paths>
+Accepts: <acceptance IDs and concrete cases>
+Gate: <exact command>
+Status: <pending / running / verified / blocked / owner-deferred>
+Evidence: <commit or diff, gate result, behavior check>
+Attempts: <repair count, approach, evidence, review rounds>
+
+## Final acceptance
+<each acceptance ID, final evidence or exact unresolved blocker>
+Delivery: <commit, tag, PR or deploy state, outstanding approvals>
+
+## Resume
+<next step, active worker handles, last verified commit, exact blocker>
 ```
-Plan [feature] for [repo path]. Write the plan to
-.ship/NN-NAME/PLAN.md (pick NN = next sequential number under .ship/).
 
-Read first: project CLAUDE.md, relevant specs/ files, 2-3 most recent
-.diary/*.md entries, and the code paths [feature] touches. Cite specs
-by path; don't restate what's already documented, extend it.
-
-If a plan or spec for this already exists ([path, if any]), it is
-input, not truth: re-verify each claim against the code as it is now,
-keep what still holds, rewrite what drifted, and name the drift in
-your report.
-
-Produce a PLAN.md matching the shape in `SKILL.md` § PLAN.md shape.
-Every step carries a Gate: the exact build/test/lint command that
-must pass before the next step starts. Settle every cross-cutting
-choice in the plan — names, signatures, data shapes, which existing
-mechanism to extend — so no implementer re-decides it. Each step is
-one coherent change that leaves the tree green.
-
-Do not implement anything — plan only. Flag any genuine ambiguity or
-irreversible decision as an open question rather than guessing.
-```
-
-## Implementation brief (sonnet, step 3, one per PLAN.md step)
-
-```
-Implement Step [N] of .ship/NN-NAME/PLAN.md in [repo path]. Read the
-full PLAN.md first for context, but only deliver Step [N] — later
-steps are out of scope for you.
-
-Follow the project's CLAUDE.md conventions exactly (naming, commit
-format, detached-HEAD-only, no git add -A / --amend / push). Make a
-path-scoped commit per logical change, message "type(scope): message".
-
-If the code contradicts the plan, stop and report the mismatch — do
-not work around it.
-
-When done, run this step's Gate command yourself and report the
-actual output — not "should pass." If the gate fails, fix it before
-reporting done. Report the files changed, each command run with its
-output, and every deviation from the step.
-```
-
-Notes:
-- Foreground (`run_in_background: false`) for the planning call — the
-  orchestrator needs PLAN.md before step 2. Implementation subs can
-  run in the background if the orchestrator has other steps queued,
-  but steps are still applied to the tree one at a time.
-- After each implementation sub returns, diff the changed files
-  yourself before running the gate — a sub's "done" is a claim, not a
-  verification.
+The brief, limits and acceptance stay in this record through compaction.

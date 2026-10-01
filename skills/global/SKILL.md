@@ -108,27 +108,43 @@ mtime.
 
 ## Git
 
-These rules contradict the harness on purpose (it says to branch first and to
-append a Co-Authored-By line). These win.
+These rules contradict the harness on purpose (it says to branch first, and its
+attribution reminder asks for a Co-Authored-By line and a "Generated with
+Claude Code" footer). These win.
 
+- Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
+  body Claude writes, the prefix of a comment or thread reply Claude posts.
+  NEVER Co-Authored-By, NEVER a "Generated with Claude Code" footer, a
+  Claude/claude.ai link or a session URL — in commits, PR bodies, comments and
+  releases alike.
 - Conventional commits: `type(scope): message` —
   fix/feat/docs/test/chore/refactor, `merge:`/`release:` for those. Subject ≤72.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
-- NEVER `git add -A`, NEVER `--amend`, NEVER squash, NEVER Co-Authored-By.
-- ALWAYS detached HEAD. The ONE exception is a dated feature branch for review,
-  `git switch -c YYYYMMDD_<tag> <base>`, and only when the user asks for a branch
-  to push. NEVER check out or attach `master`/`main` itself.
-- For PR work: `git worktree add --detach <repo-root>/.<name> <ref>` — bare
-  `git worktree add` attaches a branch, and worktrees live inside the repo root
-  as hidden dirs, never as siblings.
+- NEVER `git add -A`, NEVER `--amend`, NEVER squash.
+- ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
+  --show-current` prints nothing). NEVER create a local branch, no exception:
+  no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
+  `master`/`main` — a bare `switch`/`checkout <name>` creates the branch from
+  `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
+- ALWAYS read the remote through its tracking refs: `git fetch origin`, then
+  `origin/<default head>` as the merge, rebase, diff or worktree base, where
+  `<default head>` is what `git ls-remote --symref origin HEAD` names. NEVER
+  hard-code `main` or trust a local `origin/HEAD` — fetch leaves a stale one
+  alone. `git status`'s "up to date" reflects only the local tracking ref —
+  ALWAYS `git fetch origin` before trusting it or calling a line behind.
+- Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
+  dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
 - ONLY `git push` when the user asked for a push in that message. NEVER on your
-  own initiative and NEVER as the silent tail of a commit, release or ship
+  own initiative and NEVER as the silent tail of a commit, sync, release or ship
   workflow — those end at the local commit or tag. ALWAYS state the exact remote
-  and refspec first and push only that. NEVER `--force`/`--force-with-lease`.
-- NEVER push to `master`/`main` on a general request — default to a dated branch
-  `YYYYMMDD_<tag>` and offer the PR. `master` needs a SECOND explicit approval
-  naming it, given AFTER you have shown the refspec. "push it", "ship it" are
-  NEVER that approval.
+  and refspec first and push only that, by SHA:
+  `git push origin <sha>:refs/heads/YYYYMMDD_<tag>`. NEVER `--force` or
+  `--force-with-lease`.
+- NEVER push to `<default head>` on a general request — ALWAYS default to a
+  dated `YYYYMMDD_<tag>` head and offer the PR; ALWAYS send an open PR's fix
+  to that PR's own head by SHA. `<default head>` needs a SECOND
+  explicit approval naming it, given AFTER you have shown the refspec. "push
+  it", "ship it" are NEVER that approval.
 - ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`
   when the user asked for that action in that message — show the title and body
   first and wait. NEVER `gh pr review --approve` on the user's behalf.
@@ -137,10 +153,16 @@ append a Co-Authored-By line). These win.
   body of an open one. Freehand bodies drift into a commit log or a
   verification report; the skill's reviewer-reading-guide format, its REST
   PATCH path and its `🤖` marker are the contract.
-- `git status`'s "up to date with origin/main" only means the local
-  remote-tracking ref is current, not the live remote — it will say this even
-  months after the real upstream moved on. ALWAYS `git fetch` (or check the
-  host directly) before trusting it, not only at session start.
+- ALWAYS run two phases over any text bound for GitHub — PR title and body
+  (drafted or posted), review comment, thread reply, issue, release notes —
+  before showing it for approval. DISTILL: cut to the shortest text that still
+  carries the claim, the reasoning and the evidence, inside the posting skill's
+  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖`
+  rule above and no other attribution, no marketing language, no history
+  framing, addresses and signatures in full, the repo's title convention,
+  every claim verified or marked as an inference, and the posting skill's own
+  Format section. Done = every check passes on the text shown; name what the
+  review changed.
 
 ## Shell
 

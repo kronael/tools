@@ -110,10 +110,11 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
   and observability; `specs/` the design record; `readme/` syncs docs after
-  shipping and holds the doc file topology and single-page shape; `review/`
-  gives or takes a code review; `research/` holds the quantitative-research
-  runbooks: method (evidence), layout (organisation), traps (silent wrong
-  numbers). Structure rules: [`CLAUDE.md`](CLAUDE.md) in this directory.
+  shipping and holds the doc file topology, single-page shape and the HTML
+  pages (onepager, doc page); `review/` gives or takes a code review;
+  `research/` holds the quantitative-research runbooks: method (evidence),
+  layout (organisation), traps (silent wrong numbers). Structure rules:
+  [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
   `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
@@ -154,7 +155,7 @@ Side-channels (escalation, communication) fire at any stage.
 **orientation** — load context before acting. `solve` is the universal entry point;
 `recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
-**planning** — `specs` for design docs; `ship` for multi-session work tracking.
+**planning** — `specs` for design docs; `ship` to drive a change end to end, mostly unattended.
 Skip for one-off tasks.
 
 **coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;

@@ -137,20 +137,26 @@ awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
 ```
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
-hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit` and the
+hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit`,
+`bashEditDiffEnabled`, `crossSessionInbound`, `isolatePeerMachines` and the
 four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
 whatever `settings-recommended.json` says — don't restate it). These are
 always applied, never asked — the 30-day default silently deletes session
 transcripts at startup, an unset `attribution.commit` asks for a
-`Co-Authored-By` trailer on every commit, and the deny guard holds even when
-the rest of the permissions block is declined. For the rest of permissions
-and sandbox, show the diff and ask:
+`Co-Authored-By` trailer on every commit, an unset `bashEditDiffEnabled`
+diffs the working tree around every Bash command in `auto` and
+`bypassPermissions` modes, an unset `crossSessionInbound` lets Claude Code decide per message
+by permission class, and the deny guard holds even when the rest of the permissions block is
+declined. For the rest of permissions and sandbox, show the diff and ask:
 
 ```sh
 jq -s '.[0].hooks = .[1].hooks
   | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   | .[0].outputStyle = .[1].outputStyle
   | .[0].attribution.commit = .[1].attribution.commit
+  | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].crossSessionInbound = .[1].crossSessionInbound
+  | .[0].isolatePeerMachines = .[1].isolatePeerMachines
   | (.[0].permissions.deny // []) as $d
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
   | .[0]' \
@@ -159,12 +165,13 @@ jq -s '.[0].hooks = .[1].hooks
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
-**Diff sidebar off** — `diffSidebarOpen` is global config, not a settings key,
-so `settings-recommended.json` cannot carry it. Pin it in `~/.claude.json`,
-keeping every other key; it applies on the next Claude Code start:
+**Diff panel and IDE diff viewer off** — `diffSidebarOpen` and `diffTool` are
+global config, not settings keys, so `settings-recommended.json` cannot carry
+them. Pin both in `~/.claude.json`, keeping every other key; they apply on the
+next Claude Code start:
 
 ```sh
-jq '.diffSidebarOpen=false' ~/.claude.json > ~/.claude.json.new \
+jq '.diffSidebarOpen=false | .diffTool="terminal"' ~/.claude.json > ~/.claude.json.new \
   && mv ~/.claude.json.new ~/.claude.json
 ```
 

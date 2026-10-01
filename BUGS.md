@@ -2,6 +2,29 @@
 
 ## Bundle
 
+- **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
+  needs sign-off. Step 4 of `skills/refine/SKILL.md:32-42` skips unless an
+  open PR whose head is an ancestor of HEAD exists, and step 11
+  (`:75-86`) already posts each reply through `gh-comment`'s sign-off gate.
+  The gap: while such a PR is open, step 11's completion line
+  needs every unfixed triaged thread replied to, so refine cannot complete
+  for a local-only delivery unless the owner approves or declines the
+  replies. **Proposal:** let a reply the owner declined, or a delivery the
+  owner kept local, close step 11 as an outstanding thread action listed in
+  the report. Keep approval gates in `gh-comment`. No new review mode,
+  skill, saved plan or hook. No test — design.
+
+- **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
+  needs sign-off. Step 12 of `skills/refine/SKILL.md:87-89` runs
+  `git worktree remove --force` on each stale entry under
+  `.claude/worktrees/`. A single `--force` removes an unlocked entry even
+  when it holds another task's unreconciled work, which
+  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 12
+  apply the existing orphan test in `skills/commit/SKILL.md:68-74` —
+  remove only an entry superseded by HEAD whose lock pid is dead, and
+  surface unique work to the user. Rule text only, no enforcement
+  machinery. No test — design.
+
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
   `skills/create/social/references/research-social-meme.md:196-217` carries a
   "Corrections (post-codex)" section narrating what the document itself changed
@@ -11,6 +34,7 @@
   are cold provenance files nothing reads by accident. **Fix:** the maintainer's
   call — keep them as attribution, or move them to `.diary/`. Not a silent
   rewrite.
+
 - **INSTALL-SKILLS-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-09-24.
   `kronael/install/SKILL.md` is 232 lines and
   `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
@@ -189,48 +213,84 @@
 
 ## dockbox
 
+- **DOCKBOX-STARTUP-EXIT-UNDETECTED** (LOW, correctness) — CONFIRMED at HEAD
+  2026-09-30. The startup wait tests `docker ps -q -f "name=^…$" … ||`
+  (`dockbox/dockbox:700`), but `docker ps -q` exits 0 when nothing matches
+  (verified on Docker 29.6.2), so "Container exited during startup" and its
+  `docker logs` tail never print: a box that dies in dockbox-init waits the
+  full 10 s, then the session fails on a bare `docker exec` error. **Fix:**
+  test the command's output, as the re-entry gate does (`[[ -n "$(docker ps
+  -q -f …)" ]]`). No test — the shell suites carry no skip idiom to pin a
+  known failure with; the fix adds the stub case.
+
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
-  its marker and lists the marker dir (`dockbox/dockbox:417-418`), then
-  force-removes the box on an empty listing (`:419-420`). A second invocation
-  that passed the running check (`:430`) and writes its marker (`:401`)
+  its marker and lists the marker dir (`dockbox/dockbox:468-469`), then
+  force-removes the box on an empty listing (`:470-471`). A second invocation
+  that passed the running check (`:481`) and writes its marker (`:451`)
   between that listing and the removal has its box removed under it; one
-  that writes it just after the removal exits with no message, since `:401`
+  that writes it just after the removal exits with no message, since `:451`
   discards the error. (b) Two launchers for a project with no box both pass
-  the same check (`:430`), and the second's pre-run `docker rm -f -v`
-  (`:592`) removes the box the first just started (`:597`), with any session
+  the same check (`:481`), and the second's pre-run `docker rm -f -v`
+  (`:669`) removes the box the first just started (`:676`), with any session
   already in it. `prune` probes an idle box and removes it in two steps
-  (`:177-181`), so a session entering between them is removed the same way.
+  (`:198-201`), so a session entering between them is removed the same way.
   **Fix:** a per-box host lock (e.g. `flock`) held across marker
   registration, the empty-listing-to-removal step, and creation — a new
   lifecycle contract; no test — design.
 
+- **BOXES-SHARE-CLAUDE-RUNTIME-STATE** (MED, design) — needs sign-off.
+  Both boxes bind the whole `~/.claude` rw (`dockbox/dockbox:14`,
+  `qemubox/qemubox` `assemble_mounts`), which holds persistent state the
+  contract wants shared (`projects/`, `memory`, `skills`, `settings.json`,
+  `.credentials.json`) and per-process runtime state it does not: besides
+  `sessions/` (a private tmpfs per box) the installed Claude Code
+  2.1.286 keeps `tasks/`, `session-env/`, `bridge-spawn/`, `ccr/`,
+  `server.lock`, `server-sessions.json` and `ide/*.lock` there (names from
+  the binary's config-dir list). Through those, one box's agent can read
+  another box's or the host's background-task outputs and IDE lock files
+  (port and auth token of a host IDE server, reachable from a `-H` box),
+  and the host's `claude agents` daemon state mixes with box state.
+  **Proposal:** split the bind — persistent dirs stay shared, runtime dirs
+  become per-box tmpfs like `sessions/` — in both tools. Tradeoffs: the
+  host's agent view stops listing box background sessions (it already
+  cannot attach to them: their sockets are box-private), `tasks/` output of
+  a box's subagents dies with the box, and the list is version-bound, so it
+  needs re-checking on Claude Code upgrades. A contract change; not shipped.
+
+- **DOCKBOX-NAT-FLOWS-ON-CARRIER-BLIP** (LOW, design) — open (unverified).
+  The journal shows the Wi-Fi link dropping and re-acquiring the same DHCP
+  lease within 2-5 s several times a day (`journalctl -u systemd-networkd`,
+  "wlan0: Lost carrier" then "DHCPv4 address 192.168.0.153/24"). networkd
+  removes the address on carrier loss; the kernel's MASQUERADE target then
+  flushes every conntrack entry NATed to it (`nf_nat_masquerade.c`,
+  `masq_inet_event`). A host socket survives the blip (TCP retransmits once
+  the address is back); a bridge box's flow survives only if its next packet
+  is outbound, so a fresh NAT entry with the same port is created. If the
+  server speaks first — a streaming API response — the packet finds no entry
+  and no local socket, the host answers RST and the box's connection dies.
+  Reproducing needs a Wi-Fi toggle, which this audit did not do. `-H` has
+  no NAT and none of this. **Fix:** none in dockbox short of host network;
+  document, or test and close.
+
 ## qemubox
 
-- **QEMUBOX-KVM-CHECK-EXISTENCE-NOT-ACCESS** (MED, ops) — CONFIRMED 2026-09-05.
-  `qemubox:343` passes `-enable-kvm` when `/dev/kvm` exists. On a host where the
-  device is `root:kvm 0660` and the user is not in `kvm`, QEMU exits with
-  "Could not access KVM kernel module: Permission denied" instead of the
-  documented software-emulation fallback; `make install` prints its warning and
-  `build-base` is skipped. Reproduce: `make -C qemubox install` as a user
-  outside the `kvm` group. **Fix:** test `[ -r /dev/kvm ] && [ -w /dev/kvm ]`.
-
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:145-150` states the gap plainly — live `~/.claude` /
-  `~/.codex` tokens are copied into the guest, outbound is open unless `-H`,
+  `qemubox/README.md:166-171` states the gap plainly — live `~/.claude` /
+  `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
-  sandbox cannot close this: the guest copies agent config into its own
-  writable home (`qemubox/README.md:108-110`) and the guest user has
-  passwordless sudo (`:153`), so anything in the guest can widen its own
+  sandbox cannot close this: the guest mounts agent config read-write at
+  the host paths (`qemubox/README.md:127-131`) and the guest user has
+  passwordless sudo (`:174`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:344`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:592`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:362`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so the `exec env$remote` line (`qemubox:876-880`) carries them.
+  `-nic` at `qemubox:613`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so the `exec env$remote` line (`qemubox:1283-1285`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -240,6 +300,20 @@
   has tested it here, because this box has no `/dev/kvm` access (see the KVM
   entry above).
 
+- **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
+  `qemubox -n x -N exec sudo poweroff` ends with ssh's
+  "kex_exchange_identification: Connection reset by peer" and
+  `qemubox:322` "cannot remove session marker; keeping qemubox-x running",
+  while `qemubox status x` already reports `process=stopped`. `running` at
+  `:316` still sees the QEMU process during shutdown; the marker ssh then
+  fails. **Fix:** re-check `running` before printing the note; say the VM is
+  shutting down instead.
+- **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
+  First boot prints systemctl's two "Removed '/etc/systemd/system/...
+  systemd-timesyncd.service'" lines into the user's terminal from
+  `sync_guest_clock` (`qemubox:524`). **Fix:** `systemctl disable --now
+  --quiet`.
+
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
@@ -248,8 +322,21 @@
   independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
   accepted lightweight guard instead.
 
+- **DOCKBOX-PROJECT-ENV-REACHES-ROOT** (MED, security) — not a defect. A
+  project `.dockboxrc` `-e` variable reaches root in the box (dockbox-init runs
+  as root with the container env, and sessions enter as root before `setpriv`),
+  so `-e LD_PRELOAD=<repo file>` runs code as root there. dockbox is a decently
+  isolated env, not a jail: root inside the box is within its design.
+
+- **BOXES-DOCKER-SOCKET-CROSSES-BOXES** (MED, isolation) — not a defect. `-D`
+  binds `/var/run/docker.sock` into a dockbox and forwards it into a qemubox
+  over SSH; either agent can then `docker exec` into every dockbox on the
+  host. That is the flag's purpose (building images, running containers)
+  and the project `.dockboxrc`/`.qemuboxrc` cannot set it, so it is an
+  explicit per-box grant. Both READMEs say it crosses the box wall.
+
 - **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
-  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
+  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:14,20`).
   Claude Code and Codex both rewrite their token files on login refresh, so a
   ro or redacted token breaks auth inside the box. The README already says
   dockbox is not a boundary for hostile code.

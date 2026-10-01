@@ -18,7 +18,7 @@ ALWAYS reach for /sonnet without being asked when the task is:
 
 ## Plan, then execute
 
-For work too big for one pass — a feature across packages, a refactor, a change at many call sites — the parent (the main thread) plans, a sonnet sub executes each step, and the parent reviews each step before the next. A step reviewed this way is not the unattended code generation that global § Agents sends to `/fable`. Spec-sized or multi-session work goes to `ship`, which runs steps 2-4 for its build steps.
+For work too big for one pass — a feature across packages, a refactor, a change at many call sites — the parent (the main thread) plans, a sonnet sub executes each step, and the parent reviews each step before the next. A step reviewed this way is not the unattended code generation that global § Agents sends to `/fable`. Spec-sized, mostly unattended work goes to `ship` instead.
 
 NEVER delegate a step that takes less time to do than to brief (under ~10 min) — ALWAYS do it in the parent.
 

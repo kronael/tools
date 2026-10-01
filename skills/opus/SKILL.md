@@ -1,6 +1,6 @@
 ---
 name: opus
-description: "/opus — xhigh-effort subagent for design decisions, deep analysis, and plans that need a clean context. NOT for the steps of a written plan or investigation (use /sonnet), or mechanical work (use /haiku)."
+description: "/opus — xhigh-effort subagent for design decisions, deep analysis, and plans that need a clean context. NOT for a plan step whose design is settled, or investigation (use /sonnet), or mechanical work (use /haiku)."
 when_to_use: "do this in an opus sub, spawn an opus sub, use opus, opus sub, design decision, architecture review, deep analysis, cross-cutting analysis, complex reasoning, write the plan in a sub, plan step needs judgment, step failed twice, protocol design"
 user-invocable: true
 ---
@@ -11,7 +11,7 @@ Report what was launched. Continue immediately without waiting.
 ALWAYS reach for /opus without being asked when the task is:
 - A design or architecture decision, or a deep cross-cutting analysis, that needs a clean context.
 - The plan for bigger work when the main thread is not Opus — the plan then runs through `sonnet` § Plan, then execute.
-- A plan step that needs judgment the plan cannot settle, or that failed twice on sonnet.
+- A plan step that leaves implementation judgment to the worker (a `ship` step by default), or that failed twice on sonnet.
 
 - ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
 - NEVER reach for `/opus` on a task `/sonnet` (high) can do — the xhigh cost is the same on every call, whatever the task size.

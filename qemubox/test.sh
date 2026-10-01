@@ -29,6 +29,21 @@ false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 # exits with code $1 when run in a subshell? (guards use exit, so run isolated)
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
+regression() {
+    (set -e; "$2") > "$fixture/regression.log" 2>&1
+    if [ "$?" = 0 ]; then ok; else cat "$fixture/regression.log"; bad "$1"; fi
+}
+
+
+regression_setup() {
+    ROOT="$fixture/refine-$BASHPID"
+    mkdir -p "$ROOT/base"
+    echo fixture > "$ROOT/base/current"
+    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    dirs=(); no_copy=1
+    qemu-img() { touch "$dir/disk.qcow2"; }
+}
+
 ## box_name -----------------------------------------------------------------
 eq "box_name plain" "$(box_name repo)" "repo"
 eq "box_name slash->dash" "$(box_name a/b)" "a-b"
@@ -53,6 +68,7 @@ exits 2 'copy_arg rel' "copy_arg rejects relative path"
 exits 2 'apply_flag n ..'       "-n .. rejected"
 exits 2 'apply_flag n .'        "-n . rejected"
 exits 2 'apply_flag n base'     "-n base rejected"
+exits 2 'apply_flag n .locks'   "-n .locks rejected"
 exits 2 'apply_flag n ""'       "-n empty rejected"
 exits 2 'apply_flag n a/b'      "-n with slash rejected"
 true_   "apply_flag n valid" 'apply_flag n goodname'
@@ -81,40 +97,7 @@ true_ "port in widened range" '[ "$p1" -ge 10000 ] && [ "$p1" -le 59999 ]'
 mkdir -p "$QEMUBOX_HOME/pbx"; echo 54321 > "$QEMUBOX_HOME/pbx/port"
 eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
-## mount matrix -------------------------------------------------------------
-reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }
-mount_mode() { # echo the mode for dest $1, or empty if absent
-    local i
-    for i in "${!mount_dests[@]}"; do
-        [ "${mount_dests[$i]}" = "$1" ] && { printf '%s' "${mount_modes[$i]}"; return; }
-    done
-}
-run_assemble() { # $1 extra setup expr
-    reset_mounts
-    name=testbox; primary="$PROJ"; dirs=("$PROJ")
-    no_copy=""; gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()
-    eval "${1:-:}"
-    assemble_mounts
-}
-slug_dest="/home/$USER/.claude/projects/${PROJ//\//-}"
-LIB="$fixture/lib"; mkdir -p "$LIB"
-
-run_assemble
-eq "default: project rw"         "$(mount_mode "$PROJ")" "rw"
-eq "default: .claude cfg ro"     "$(mount_mode /mnt/qemubox-cfg/.claude)" "ro"
-eq "default: per-slug memory rw" "$(mount_mode "$slug_dest")" "rw"
-
-run_assemble 'untrusted=1'
-eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"
-eq   "untrusted: no .claude cfg mount" "$(mount_mode /mnt/qemubox-cfg/.claude)" ""
-eq   "untrusted: no qemubox-home"      "$(mount_mode /mnt/qemubox-home)" ""
-eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
-
-run_assemble 'no_copy=1'
-eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
-
-run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
-eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
+source "$here/test-mounts.sh"
 
 ## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
@@ -122,6 +105,81 @@ sout="$(status_box sbx)"
 true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
+
+eq "default RAM" "$MEM" "16384"
+eq "default CPUs" "$CPUS" "4"
+eq "default disk" "$DISK" "40G"
+eq "guest user matches host" "$GUEST_USER" "$(id -un)"
+eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -d: -f6)"
+
+(
+    set -e
+    mkdir -p "$ROOT/base"
+    printf '%s\n' fixture > "$ROOT/base/current"
+    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    qemu-img() { printf '%s\n' "$@" > "$fixture/qemu-img.args"; touch "$dir/disk.qcow2"; }
+    ensure_box identitybox
+    head -4 "$ROOT/identitybox/config/identity" > "$fixture/actual-identity"
+    printf '%s\n' "$(id -un)" "$(id -u)" "$(id -g)" "$GUEST_HOME" > "$fixture/want-identity"
+    cmp "$fixture/actual-identity" "$fixture/want-identity"
+    cmp "$ROOT/identitybox/key.pub" "$ROOT/identitybox/config/authorized_keys"
+    [ "$(cat "$ROOT/identitybox/image-id")" = fixture ]
+    [ "$(tail -1 "$fixture/qemu-img.args")" = 40G ]
+    QEMU=fake_qemu
+    fake_qemu() { printf '%s\n' "$@" > "$fixture/qemu.args"; }
+    missing_deps() { :; }
+    ssh_plain_box() { :; }
+    assemble_mounts() { :; }
+    setup_guest_tmp() { :; }
+    mount_host_paths() { :; }
+    setup_guest_builds() { :; }
+    setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
+    setup_guest_sessions() { :; }
+    setup_guest_auth() { :; }
+    setup_guest_limits() { :; }
+    sync_guest_clock() { :; }
+    start_box identitybox
+    [ -f "$ROOT/identitybox/ready" ]
+    ! flock -n "$ROOT/.locks/identitybox" true
+    unlock_box
+    echo retained > "$ROOT/identitybox/disk.qcow2"
+    ensure_box identitybox
+    [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
+    grep -Fx -- '-kernel' "$fixture/qemu.args"
+    grep -Fx -- '-initrd' "$fixture/qemu.args"
+    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
+    grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
+    ! grep -q 'seed.iso' "$fixture/qemu.args"
+) >"$fixture/boot-test.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
+rm -f "$ROOT/base/fixture.vmlinuz"
+exits 1 'ensure_box identitybox' "missing recorded base refuses VM"
+
+fake_docker() {
+    case "$1" in
+        build) return 0 ;;
+        image) printf 'sha256:%064d\n' 0 ;;
+        create) echo fixture-container ;;
+        export)
+            echo "$3" > "$fixture/export-path"
+            echo partial > "$3"
+            return 42 ;;
+        rm) echo "$2" > "$fixture/removed-container" ;;
+    esac
+}
+QEMUBOX_DOCKER=fake_docker
+exits 42 'build_base' "export failure stays visible"
+eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
+false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
+unset QEMUBOX_DOCKER
+
+source "$here/test-lifecycle.sh"
+source "$here/test-parity.sh"
+source "$here/test-cli.sh"
+
+source "$here/test-refine.sh"
+source "$here/test-image.sh"
+source "$here/test-boot.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

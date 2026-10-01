@@ -53,7 +53,8 @@ extension and still carries every claim the reviewer will trust.
    type checker reads — NEVER one per directory. Every changed path and every
    claim lands in exactly one. A code context also carries language lenses: map
    its files to their skills (`.rs`→`rs`, `.tsx`→`tsx`, `programs/**`→`solana`,
-   plus every skill those require), `Skill(<matched>)` each so its cold rules
+   `docs/**`, `README.md`, `ARCHITECTURE.md`→`readme`, plus every skill those
+   require), `Skill(<matched>)` each so its cold rules
    are in context, and read the `<skill>.md` lens in this directory — list the
    directory, NEVER assume which exist. ALWAYS seed the correctness lenses from
    **Confessed defaults**. Tag each lens `simplify` (reuse, dead code,
@@ -63,9 +64,9 @@ extension and still carries every claim the reviewer will trust.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
 
-5. **Threads** — find the open PR (`gh pr list`/`view`; `gh auth status` fails →
-   `gh-comment` § Setup; a detached worktree has no local branch, so match by
-   pushed branch or head SHA). None → skip silently. Fetch UNRESOLVED threads
+5. **Threads** — find the open PR for this work: the one whose head is an
+   ancestor of HEAD (`gh-comment` § Setup, which also covers `GH_TOKEN` when
+   `gh auth status` fails). None → skip silently. Fetch UNRESOLVED threads
    via `gh-comment` § Fetch threads. Triage each FIX or WON'T-FIX against the
    live WISDOM, the project `CLAUDE.md` invariants and `BUGS.md`. Automated
    reviewers skew false-positive: ALWAYS verify the premise against the code.
@@ -120,14 +121,20 @@ extension and still carries every claim the reviewer will trust.
     subjects ≤72 characters, one logical change each, NO `Co-Authored-By`
     trailer, detached HEAD. ALWAYS do this before any push — afterwards amend,
     squash and force-push are all barred and the violation is permanent. Reply
-    to and resolve each step-5 thread via `gh-comment`, citing the SHA or the
-    invariant; ONLY threads addressed this pass. `git worktree remove --force`
-    each stale worktree under `.claude/worktrees/`. Then a verdict: what was
-    settled, what was corrected, what could not be settled from here and why,
-    and each step-1 instruction's outcome. NEVER `git push`, `gh pr merge`,
-    `gh pr review` or `gh pr create`.
-    → the verdict carries all four, and `git worktree list` shows only the main
-    tree.
+    to each step-5 WON'T-FIX thread, and each FIX that step 8 deferred, with the
+    invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
+    review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
+    here: list each with its thread id and fix SHA, and show the PR's own head
+    refspec, `git push origin <fix-sha>:refs/heads/<headRefName>`; resolve and
+    request re-review through `gh-comment` once that push lands. ONLY threads
+    addressed this pass. `git worktree remove --force` each stale Claude-managed
+    worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere. Then a
+    verdict: what was settled, what was corrected, what could not be settled
+    from here and why, and each step-1 instruction's outcome. NEVER `git push`
+    without the user's ask, and NEVER `gh pr merge`, `gh pr review` or
+    `gh pr create`.
+    → the verdict carries all four, every unfixed triaged thread is replied to
+    and every fixed one listed, and no stale `.claude/worktrees/` entry remains.
 
 Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.

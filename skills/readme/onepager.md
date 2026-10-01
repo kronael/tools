@@ -40,8 +40,8 @@ critique on file already refuted.
   badly — inline SVG or `<pre>`, never an image file. NEVER design past
   this — a taste-driven page is `create/web.md`'s job.
 - ALWAYS reread the rendered page as a stranger before handing over: the
-  first sentence says what it is, every claim has a source, a skeptic
-  survives it.
+  first sentence says what it is, every claim has a source linked on the
+  claim's own words (`page.md` § Evidence), a skeptic survives it.
 - NEVER publish through Claude Artifacts — ALWAYS write into the krons web
   root (`CLAUDE.md` § Publishing) and hand back the public URL, unless the
   request names a different destination; then write exactly there.

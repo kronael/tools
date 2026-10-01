@@ -9,6 +9,80 @@
 > • Negatives — output you cannot read looks like absence; re-check with the access the answer needs
 > • Swallowing — when the mechanism drops errors, replace it rather than bolting counters onto it
 
+## [v0.4.8] — 20261001
+
+> kronael v0.4.8 — ship runs a change end to end
+>
+> /ship asks once what to hammer, then plans, builds, refines and delivers a change without stopping for routine approval.
+>
+> • /ship — one opening question batch, including what to hammer, then plan, build, refine and deliver
+> • dockbox — bridge boxes follow the host's resolver, so DNS keeps working after a Wi-Fi change
+> • dockbox, qemubox — each box keeps its own Claude session registry, so boxes cannot message each other
+> • Install — sessions refuse messages from your other sessions and ask before one leaves the machine
+> • /readme — a doc-page mode for HTML explainer pages, with a fact pass before any style pass
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship` asks the answers the result depends on in one opening batch, what to
+  hammer included, and states open preferences as defaults. A fresh planner
+  writes one work record in the main tree's `.ship/`. Each step passes its
+  own gate, and `refine` and the chosen hammer checks run before acceptance.
+  Redesigns still need sign-off, and push and release keep their gates.
+- `dockbox` passes `--dns <bridge gateway>` when a resolver listens there
+  (for example systemd-resolved with `DNSStubListenerExtra=172.17.0.1`), and
+  prints a note when the host uses a loopback stub without one. An
+  unreachable Docker daemon stops the launch with docker's own error.
+- `dockbox` and `qemubox` mount a private tmpfs over `~/.claude/sessions`.
+  A box keeps the mounts it was created with until `dockbox rm`.
+- Install always applies `crossSessionInbound: "refuse"` and
+  `isolatePeerMachines: true`. Subagent reports still arrive.
+- `readme` gains `page.md` for HTML explainers. `writing` and `humanize` add
+  rules for links on the claim's words, colon headings, semicolon chains and
+  symbols standing in for words. `refine` routes project docs to a `readme`
+  lens that checks facts first.
+- `BUGS.md` records the shared Claude runtime state, NAT flows on a carrier
+  blip, the docker socket crossing boxes, two qemubox output defects and two
+  refine cleanup proposals.
+
+## [v0.4.7] — 20261001
+
+> kronael v0.4.7 — qemubox becomes a daily sandbox
+>
+> qemubox now boots the same image as dockbox and keeps each VM's disk, so you can reuse a VM every day.
+>
+> • qemubox — boots the dockbox image as your own user and stops idle VMs after 4 h, keeping the disk
+> • qemubox — shares ~/.claude and ~/.codex, puts build dirs on tmpfs, reads dockbox-style rc files
+> • dockbox — boxes allow io_uring, and sessions get nice, mlock and ptrace
+> • Git skills and rig — every checkout detaches, so no local branch appears; gco joins rco
+> • Install — turns off the Bash edit diff and the IDE diff viewer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox build-base` exports the Dockerfile's new `vm` stage into a qcow2
+  base named by image id; VMs boot it directly as the host user (same name,
+  uid, gid, home): 16 GiB RAM, 4 vCPUs, 40G sparse disk.
+- qemubox disks persist: the last session powers the VM off. One lock covers
+  setup, session markers, stop and remove; a dead session does not keep a VM
+  busy. `ls` shows RAM/DISK/USE; `prune` stops VMs idle past 4 h, removes
+  stopped ones past `[hours]` and deletes unused bases; `rm` takes patterns.
+- qemubox matches dockbox: rc files, worktree mount, tool table, tmpfs build
+  dirs (`-P`/`-T`), PAM limits, the host time zone, a `docker` CLI for `-D`.
+  The guest cannot edit the project rc or the plugins.
+- qemubox security: a disk made by a trusted launch refuses `-U`, because it
+  holds `~/.claude.json`. Missing `-G`/`-v` sources fail loud. `-D`/`-K`
+  forwards bind again after a relaunch.
+- `dockbox` boxes run Docker's default seccomp profile plus io_uring (the moby
+  profile ships with its Apache-2.0 notice); sessions enter through setpriv
+  with SYS_NICE, IPC_LOCK and SYS_PTRACE ambient. Another user's box is refused
+  with a pointer to `-n`. Both tools resume sessions for project paths with
+  any non-alphanumeric character.
+- Git rules: detached HEAD only, never a local branch; reads go through
+  `git fetch origin` and `origin/<default head>`; pushes go by SHA. Review
+  fixes push to the open PR's head; fixed threads resolve silently.
+- `rig`: `gco` is `rco` without the fetch, plus `--` file restore, and new
+  diff/stash/rebase aliases; `rco` takes refs and hashes.
+- Install pins `bashEditDiffEnabled: false` and the `diffTool` `terminal`.
+
 ## [v0.4.6] — 20260929
 
 > kronael v0.4.6 — dockbox ls sees every box
