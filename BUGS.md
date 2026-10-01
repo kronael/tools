@@ -40,6 +40,16 @@
   `plugins/kronael/skills/kronael-install/SKILL.md` is 238, against the
   repo's 200-line rule (`CLAUDE.md:107`, `skills/wisdom/SKILL.md:60`).
   **Fix:** move cold detail to `kronael/install/reference.md`.
+- **WISDOM-OVER-LINE-CAP** (LOW, docs) — proposed, needs sign-off. 2026-10-01:
+  `skills/global/SKILL.md` has a 223-line body against the 200-line cap
+  (`awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`); it loads in
+  every session. § Git's two-phase GitHub-text rule stays: `pr-draft`,
+  `gh-comment`, `gh-issue` and `release` cite it. **Proposal** (~23 lines):
+  move the doc-topology bullets (`UPPERCASE at root`, `specs/`/`.ship/`) to
+  `readme`; the worktree bullet to `worktree`; the tracking-refs bullet to
+  `merge` § Sync; merge the two negative-claim bullets in § Response style;
+  cut the `/pr-draft` bullet to its pointer; fold the § Agents fable and
+  sonnet bullets into one.
 
 
 - **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
