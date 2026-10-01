@@ -20,7 +20,10 @@ your report.
 
 Produce a PLAN.md matching the shape in `SKILL.md` § PLAN.md shape.
 Every step carries a Gate: the exact build/test/lint command that
-must pass before the next step starts.
+must pass before the next step starts. Settle every cross-cutting
+choice in the plan — names, signatures, data shapes, which existing
+mechanism to extend — so no implementer re-decides it. Each step is
+one coherent change that leaves the tree green.
 
 Do not implement anything — plan only. Flag any genuine ambiguity or
 irreversible decision as an open question rather than guessing.
@@ -37,9 +40,13 @@ Follow the project's CLAUDE.md conventions exactly (naming, commit
 format, detached-HEAD-only, no git add -A / --amend / push). Make a
 path-scoped commit per logical change, message "type(scope): message".
 
+If the code contradicts the plan, stop and report the mismatch — do
+not work around it.
+
 When done, run this step's Gate command yourself and report the
 actual output — not "should pass." If the gate fails, fix it before
-reporting done.
+reporting done. Report the files changed, each command run with its
+output, and every deviation from the step.
 ```
 
 Notes:

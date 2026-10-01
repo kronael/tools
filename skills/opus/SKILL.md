@@ -1,22 +1,20 @@
 ---
 name: opus
-description: "/opus — xhigh-effort subagent for implementation, multi-file fixes/features, and design decisions. NOT for investigation/hunting (use /sonnet) or mechanical single-file work (use /haiku)."
-when_to_use: "do this in an opus sub, spawn an opus sub, use opus, implement, apply the fix, write the code, execute changes, multi-file implementation, feature implementation, write tests, refactor, fix the bug, cross-package change, new daemon, complex reasoning, architecture review, design decision, deep analysis, cross-cutting, opus sub"
+description: "/opus — xhigh-effort subagent for design decisions, deep analysis, and plans that need a clean context. NOT for the steps of a written plan or investigation (use /sonnet), or mechanical work (use /haiku)."
+when_to_use: "do this in an opus sub, spawn an opus sub, use opus, opus sub, design decision, architecture review, deep analysis, cross-cutting analysis, complex reasoning, write the plan in a sub, plan step needs judgment, step failed twice, protocol design"
 user-invocable: true
 ---
 
-Launch the prompt after /opus as a background agent (run_in_background: true, subagent_type: "opus").
+Launch the prompt after /opus as a background agent (`run_in_background: true`, `subagent_type: "opus"`).
 Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /opus without being asked when the task is:
-- Implementing a fix or feature (multi-file code changes)
-- New daemon, new protocol, cross-package refactor
-- Applying findings from a sonnet investigation
-- A design/architecture decision or deep cross-cutting analysis
-- Any task where the output is working code, not a report
+- A design or architecture decision, or a deep cross-cutting analysis, that needs a clean context.
+- The plan for bigger work when the main thread is not Opus — the plan then runs through `sonnet` § Plan, then execute.
+- A plan step that needs judgment the plan cannot settle, or that failed twice on sonnet.
 
-- ALWAYS use `subagent_type: "opus"` on the Agent tool (NOT `model: "opus"`). The `opus` agent definition pins `model: opus` AND `effort: xhigh` — effort is INHERITED from the parent session when not pinned, so `model: "opus"` alone would just carry over whatever effort the parent (often Fable/Opus at xhigh already, but not always) is running at.
-- NEVER reach for `/opus` just to get xhigh cheaply on a task `/sonnet` (medium) could handle — the fixed xhigh cost applies on every call regardless of task size.
-- NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
-- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (briefing rules: `dispatch` skill).
-- For mechanical single-file work, prefer `/haiku`. For investigation/hunting with no code changes, use `/sonnet` first. For planning or security/deep-audit work that warrants the most capable subagent, escalate to `/fable`.
+- ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
+- NEVER reach for `/opus` on a task `/sonnet` (high) can do — the xhigh cost is the same on every call, whatever the task size.
+- NEVER set effort with prompt text — only the agent file sets it.
+- ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
+- Unplanned multi-file code written unattended, a `ship` plan, and a security or deep audit go to `/fable` (global § Agents).

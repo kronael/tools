@@ -47,10 +47,11 @@ against an explicit override.
    implementation budget. Skip this only if the user already approved
    the scope.
 3. **Ship (sonnet)** — for each PLAN.md step in order: spawn one
-   `sonnet` subagent to implement that step, then run the step's
-   green-gate yourself. **Never take a sub's report at face value —
-   check the diff.** One code-editing sub at a time on the shared
-   tree; if a step is genuinely parallelizable, isolate each sub in
+   `sonnet` subagent to implement that step, then review it and run
+   the step's green-gate yourself — brief, review and recover per the
+   `sonnet` skill § Plan, then execute, steps 2-4. **Never take a
+   sub's report at face value — check the diff.** One code-editing
+   sub at a time on the shared tree; if a step is genuinely parallelizable, isolate each sub in
    its own `git worktree add --detach` and merge sequentially — never
    run overlapping edits on the same tree. See `prompt.md` for the
    implementation brief template.
@@ -130,7 +131,8 @@ workers, state in `./.ship`) need the overrides `cli.md` gives.
 
 ## Steps
 ### Step 1 — <title>
-<files, concrete changes>
+<files, concrete changes, the decisions it must not re-open>
+**Out of scope:** <files and changes this step must not touch>
 **Gate:** <build/test/lint command that must pass>
 
 ### Step 2 — ...

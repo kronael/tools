@@ -199,5 +199,8 @@ append a Co-Authored-By line). These win.
   as it lands. Cheap models are for READ-ONLY fan-out (Explore, research); an
   unattended writer's mistakes are paid for in review, not in tokens. NEVER let
   such a sub fall through to the default subagent model.
+- Bigger work (a refactor, many call sites): ALWAYS plan in the main thread,
+  then run each step on a `sonnet` sub and review its diff before the next —
+  `sonnet` § Plan, then execute. That is not the unattended generation above.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
