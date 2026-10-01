@@ -388,13 +388,16 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 read_rc "$_primary_dir/.dockboxrc"
 strip_long "${rc_tokens[@]}"
 rc_tokens=("${stripped[@]}")
-OPTIND=1
-while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
-    case "$opt" in
-        A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
-        *) apply_flag "$opt" "${OPTARG:-}" ;;
-    esac
-done
+# getopts with no words parses "$@", the command-line leftovers: skip it.
+if (( ${#rc_tokens[@]} )); then
+    OPTIND=1
+    while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
+        case "$opt" in
+            A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            *) apply_flag "$opt" "${OPTARG:-}" ;;
+        esac
+    done
+fi
 _session_dir="$HOME/.claude/projects/${_primary_dir//[^A-Za-z0-9]/-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1

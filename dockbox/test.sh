@@ -336,6 +336,13 @@ true_  "project rc --no-ephemeral passes no -- to claude" \
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
 rm -f -- "$proj/.dockboxrc"
 
+# Without a project .dockboxrc the project-rc pass has no words to read; the
+# tool flags after the tool name reach the tool, not dockbox's own parser.
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2>"$tmp/err"
+claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
+true_  "no project rc leaves the tool flags to the tool" \
+    '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
+
 # The help line naming the flags a project rc ignores lists exactly the set the
 # rc loop's `case` ignores.
 ignored=$(sed -n 's/^[[:space:]]*\([A-Za-z|]*\)) echo "dockbox: ignoring -\$opt.*/\1/p' "$here/dockbox" | tr '|' '\n' | sort)
