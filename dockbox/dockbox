@@ -104,6 +104,21 @@ box_use() {
         }'
 }
 
+resolver_on() {
+    awk -v addr="$1" '{
+            l = $4
+            sub(/:[0-9]+$/, "", l)
+            sub(/%.*$/, "", l)
+            if (l == addr || l == "0.0.0.0" || l == "*" || l == "[::]") found = 1
+        }
+        END { exit !found }'
+}
+
+loopback_resolver() {
+    awk '$1 == "nameserver" { n++; if ($2 !~ /^(127\.|::1$)/) other = 1 }
+        END { exit !(n && !other) }' "$1"
+}
+
 # Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
 # so tests can exercise them directly.
 [ -n "${DOCKBOX_LIB:-}" ] && return 0
@@ -285,8 +300,14 @@ of starting a new one. Tool/model/effort and env flags (-e, -g) apply to the
 session; mount/network flags (-v, -H, -D) don't — they're fixed when the
 container is created. Use -n <name> to force a separate, fully-provisioned box.
 
-Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
-        ~/.gitconfig (ro), ~/.dockbox_history (rw)
+Mounts: ~/.claude (rw; ~/.claude/sessions is a private tmpfs, so boxes and
+        the host never list or message each other's Claude sessions),
+        ~/.claude.json (ephemeral), ~/.gitconfig (ro), ~/.dockbox_history (rw)
+
+DNS:    A bridge box gets a resolver listening on the bridge gateway (e.g.
+        systemd-resolved with DNSStubListenerExtra=172.17.0.1), which follows
+        the host across network changes; without one Docker copies the current
+        network's servers into the box once, at creation. -H uses the host's.
 
 Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
         dockbox flags, one per line, # comments ok. The command line
@@ -500,6 +521,17 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
+dns_args=()
+if [[ ${#network_arg[@]} -eq 0 ]]; then
+    gw=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null)
+    if [[ -n "$gw" ]] && command -v ss >/dev/null \
+        && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
+        dns_args=(--dns "$gw")
+    elif loopback_resolver /etc/resolv.conf; then
+        echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
+    fi
+fi
+
 # gpg-agent socket is a live signing credential: forward it only on -K, and only
 # when the agent actually answers -- a socket FILE can outlive its agent, and
 # forwarding a dead one gives the confusing "agent not running" inside the box.
@@ -573,6 +605,11 @@ done
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
 
+if [[ -d "$HOME/.claude" ]]; then
+    mkdir -p -m 700 "$HOME/.claude/sessions"
+    mounts+=(--tmpfs "/home/dockbox/.claude/sessions:rw,mode=0700,uid=$(id -u),gid=$(id -g)")
+fi
+
 mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 
 # Cargo target dir: dedicated tmpfs so builds never write to the host workdir.
@@ -643,6 +680,7 @@ docker run -d --init \
     --security-opt "seccomp=$SECCOMP" \
     "${cap_args[@]}" \
     "${network_arg[@]}" \
+    "${dns_args[@]}" \
     "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
     -e TERM \

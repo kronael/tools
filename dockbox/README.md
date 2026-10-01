@@ -133,10 +133,47 @@ Both are optional. Global applies first, project appends. The
 project `.dockboxrc` is overmounted with `/dev/null` inside the
 container so the boxed agent can't modify it.
 
+## Roaming between networks
+
+A bridge box does not resolve names through the host's resolver: Docker
+copies nameservers into the box once, when the container is created. When
+the host's `/etc/resolv.conf` is a loopback stub (systemd-resolved's
+`127.0.0.53`), unreachable from the box, Docker substitutes the uplink
+servers behind it — the DHCP servers of the network the laptop is on at that
+moment, which usually answer only from that network. Move to another Wi-Fi
+and every lookup in the box times out while the host, whose resolver
+switched with the link, is fine. Docker never rewrites a running
+container's `resolv.conf` (moby `libnetwork/sandbox_dns_unix.go`: written
+at sandbox setup and endpoint join only).
+
+dockbox therefore gives a new bridge box the resolver listening on the
+bridge gateway when there is one (`--dns 172.17.0.1`); that resolver follows
+the host across network changes. Expose systemd-resolved there:
+
+```sh
+# /etc/systemd/resolved.conf.d/docker.conf
+[Resolve]
+DNSStubListenerExtra=172.17.0.1
+```
+
+then `systemctl restart systemd-resolved`. resolved binds the extra address
+with `IP_FREEBIND`, so it works before `docker0` exists at boot. Boxes
+created before the change keep their copied servers until recreated
+(`dockbox rm <name>`). Without a gateway resolver dockbox prints a one-line
+note at creation and the box keeps Docker's copy. `-H` (host network) uses
+the host's resolver and sockets directly and has neither problem; it also
+has no NAT, so a box's connections survive a brief Wi-Fi drop exactly as the
+host's do.
+
 ## Mounts
 
 Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
+- `~/.claude/sessions` -> private tmpfs per box. Claude Code registers every
+  live session there and lists them with `ListAgents`; the inbox sockets
+  live in each box's own `/tmp`, so a private registry means boxes and the
+  host neither see nor message each other's sessions, and two boxes' low
+  container PIDs no longer overwrite each other's records.
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -264,6 +301,13 @@ mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
 passed by the `claude` wrapper in the image. This is intentional — the use
 case is a trusted agent doing real work, not untrusted code execution. If you
 need security isolation, this is not the tool.
+
+Boxes are kept apart from each other and from the host's Claude sessions
+(private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the
+bundle's settings refuse inbound cross-session messages everywhere. `-D`
+undoes that: it hands the box the host's Docker socket, so its agent can
+`docker exec` into every other dockbox. Pass it only to a box you trust with
+all the others.
 
 ## Cookbook
 

@@ -61,6 +61,23 @@ true_  "use idle when only the keepers run"   '[ "$(box_use < "$tmp/top-idle")" 
 true_  "use busy with any other process"      '[ "$(box_use < "$tmp/top-busy")" = busy ]'
 false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use'
 
+## resolver_on (bridge-gateway DNS from ss) ----------------------------------
+true_  "resolver on the gateway address" \
+    'printf "UNCONN 0 0 172.17.0.1:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
+true_  "resolver on every address counts" \
+    'printf "UNCONN 0 0 0.0.0.0:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
+false_ "the loopback stub is not a gateway resolver" \
+    'printf "UNCONN 0 0 127.0.0.53%%lo:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
+false_ "no listener, no resolver" ': | resolver_on 172.17.0.1'
+
+## loopback_resolver (host resolv.conf shape) --------------------------------
+printf 'nameserver 127.0.0.53\noptions edns0 trust-ad\n' > "$tmp/stub.conf"
+printf 'nameserver 127.0.0.53\nnameserver 1.1.1.1\n' > "$tmp/mixed.conf"
+: > "$tmp/empty.conf"
+true_  "a stub-only resolv.conf is loopback"      'loopback_resolver "$tmp/stub.conf"'
+false_ "a resolv.conf with an uplink server is not" 'loopback_resolver "$tmp/mixed.conf"'
+false_ "an empty resolv.conf is not"              'loopback_resolver "$tmp/empty.conf"'
+
 ## seccomp profile -----------------------------------------------------------
 true_ "the profile allows the three io_uring syscalls" \
     '[ "$(grep -Ec "^[[:space:]]+\"io_uring_(setup|enter|register)\",$" "$here/seccomp.json")" = 3 ]'
@@ -118,10 +135,17 @@ case "$1" in
         esac ;;
     ps) [ -n "${STUB_FRESH:-}" ] || echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
+    network) echo 172.17.0.1 ;;
 esac
 exit 0
 STUB
 chmod +x "$tmp/docker"
+# The stub ss lists one UDP 53 listener, at $STUB_DNS, or none.
+cat > "$tmp/ss" <<'SS'
+#!/bin/bash
+[ -z "${STUB_DNS:-}" ] || echo "UNCONN 0      0      ${STUB_DNS}:53 0.0.0.0:*"
+SS
+chmod +x "$tmp/ss"
 # The fake box's df reports each path whose dir holds a .df (`fstype used`) and
 # fails on any other, with df's own error for a missing one.
 mkdir -p "$tmp/box/bin" "$tmp/box/tmp/cargo-target" "$tmp/box/dev/shm" \
@@ -249,11 +273,29 @@ true_  "another user's box refuses entry and names -n" \
     '[ "$rc" = 1 ] && grep -q "use -n" "$tmp/err" && ! grep -q "^exec -it" "$log"'
 mkdir -p "$share"
 cp "$here/seccomp.json" "$share/"
-HOME="$tmp/home" STUB_FRESH=1 dockbox -n fresh exec true >/dev/null 2>&1; rc=$?
-run=$(grep "^run " "$log")
-settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' <<< "$run")
-[ -n "$settings" ] && rm -f -- "$settings"
+# Start a fresh box with the given flags; leaves its run line in $run and
+# removes the merged-settings temp file the launch left behind.
+fresh() {
+    HOME="$tmp/home" STUB_FRESH=1 dockbox "$@" exec true >/dev/null 2>&1; rc=$?
+    run=$(grep "^run " "$log")
+    settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' <<< "$run")
+    [ -n "$settings" ] && rm -f -- "$settings"
+    return "$rc"
+}
+fresh -n fresh; rc=$?
 true_  "a new box starts"                               '[ "$rc" = 0 ]'
+false_ "without a gateway resolver the box keeps Docker's DNS" \
+    'grep -q -- " --dns " <<< "$run"'
+mkdir -p "$tmp/home/.claude"
+fresh -n fresh
+sessions="--tmpfs /home/dockbox/.claude/sessions:rw,mode=0700,uid=$(id -u),gid=$(id -g)"
+true_  "a new box gets a private session registry" 'grep -q -- " $sessions " <<< "$run"'
+true_  "the host registry dir exists for the overmount" '[ -d "$tmp/home/.claude/sessions" ]'
+STUB_DNS=172.17.0.1 fresh -n fresh
+true_  "a gateway resolver becomes the box's DNS" 'grep -q -- " --dns 172.17.0.1 " <<< "$run"'
+STUB_DNS=172.17.0.1 fresh -n fresh -H
+false_ "a host-network box takes no --dns" 'grep -q -- " --dns " <<< "$run"'
+fresh -n fresh
 true_  "a new box runs the io_uring seccomp profile" \
     'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'
 true_  "a new box adds the session caps" \
