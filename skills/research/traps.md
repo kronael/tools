@@ -7,14 +7,14 @@ result.
 ## Data
 
 - `pd.read_csv(names=..., header=N)` means "row N is the header", not "skip N
-  lines": with `names` supplied, row 0 AND row N are discarded, so `header=1`
-  eats the first DATA row. It emptied every one-row daily file for a year and
-  dropped the first bar of every day, and a "dispersion helps" conclusion — a
-  regression that had fit on zero rows and fallen back to a constant — stood
-  in three documents before it was retracted. ALWAYS count the rows of one
-  raw file by hand and match them against the reader before believing
-  anything built on it; ALWAYS one reader per dataset — two readers in one
-  process disagree by a bar and nothing says so.
+  lines": with `names` supplied, every row up to and including row N is
+  discarded, so `header=1` eats the first DATA row. It emptied every one-row
+  daily file for a year and dropped the first bar of every day, and a
+  "dispersion helps" conclusion — a regression that had fit on zero rows and
+  fallen back to a constant — stood in three documents before it was retracted.
+  ALWAYS count the rows of one raw file by hand and match them against the
+  reader before believing anything built on it; ALWAYS one reader per dataset —
+  two readers in one process disagree by a bar and nothing says so.
 - A bar is labelled by its observation instant, the CLOSE. A bare
   `resample().last()` is left-labelled while carrying the bin's closing price,
   putting the label one bar before the observation; an event stamped at
@@ -29,7 +29,7 @@ result.
   path, NEVER a quiet market.
 - A cross-check derived from the series it checks is identical by
   construction: a 5-minute proxy aliased to the model-bar series read
-  `rv_5m == rv_1m` for the whole default configuration. ALWAYS derive a check
+  `vol_5m == vol_1m` for the whole default configuration. ALWAYS derive a check
   from the raw source, never from the thing under test.
 - The horizon actually covered is shorter than the one requested when one
   member of a pool has less history, and a stale cache is reused when its key
