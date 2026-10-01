@@ -26,10 +26,10 @@ from time import time_ns
 
 import click
 from selenium import webdriver
+from selenium.common.exceptions import InvalidCookieDomainException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
@@ -60,7 +60,7 @@ def browser(headless=True):
 def inject_cookies(driver, cookies):
     driver.get('https://x.com')
     for c in cookies:
-        with suppress(Exception):
+        with suppress(InvalidCookieDomainException):
             driver.add_cookie(c)
     driver.get('https://x.com')
 
@@ -112,7 +112,7 @@ def parse_tweet(elem):
         except ValueError:
             return None
 
-    except (NoSuchElementException, StaleElementReferenceException, WebDriverException):
+    except (NoSuchElementException, StaleElementReferenceException):
         return None
     return {'id': id_, 'url': link, 'author': author, 'text': text, 'ctime': ctime}
 
@@ -181,7 +181,7 @@ def collect_round(driver, existing, path):
             )
             tab.click()
             sleep(2)
-        except (NoSuchElementException, WebDriverException):
+        except NoSuchElementException:
             pass
 
         timeline = wait_timeline(driver)
