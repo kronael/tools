@@ -81,13 +81,14 @@ skills it replaces.
 
 ## Subagent effort defaults
 
-- `opus` and `fable` subagents default to high effort. Do not make xhigh the
-  default; reserve xhigh for explicit planning work and security/deep-audit
-  work, or when the user explicitly asks for maximum effort.
-- `sonnet` subagents default to high effort for investigations, bug hunts,
-  pre-review, and implementation support. Use medium only when the task is
-  clear enough that `haiku` could plausibly do it, but `sonnet` is chosen for
-  slightly better judgment or context handling.
+- The agent files in `agents/` pin each tier, and the launcher skills quote
+  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh, `haiku` =
+  model only, no effort key. ALWAYS change an agent file and every skill that
+  quotes it in one commit.
+- `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
+  written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
+  plan steps that need judgment. `fable` takes unattended multi-file code,
+  `ship` plans, and security or deep audits.
 - `haiku` subagents are for cheap exploration, research, mapping, grep-style
   surveys, and mechanical bounded edits. Escalate once the work requires
   multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.

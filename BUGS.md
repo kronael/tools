@@ -71,13 +71,16 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **SUBAGENT-EFFORT-DOCS-DISAGREE** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-24. `skills/CLAUDE.md` § Subagent effort defaults says opus and
-  fable subagents default to high and sonnet to high, but the agent
-  definitions pin `agents/opus.md` at xhigh and `agents/sonnet.md` at medium,
-  and `skills/opus/SKILL.md:19` quotes "/sonnet (medium)". A reader of the
-  structure rules picks the wrong model tier. **Fix:** make one side match
-  the other; which effort is intended is the maintainer's call.
+- **ORACLE-FABLE-HIGH-UNREACHABLE** (LOW, docs) — CONFIRMED 2026-10-01.
+  `skills/oracle/SKILL.md:17,21,36` route code critique to "`fable` subagent,
+  high effort", but `agents/fable.md` pins xhigh, so `subagent_type: "fable"`
+  cannot run at high. **Fix:** the maintainer's call — accept xhigh and drop
+  the high rows, or add a fable-at-high agent file.
+- **HAIKU-AGENT-NO-EFFORT** (LOW, config) — CONFIRMED 2026-10-01.
+  `agents/haiku.md` sets no `effort` key, so a haiku sub inherits the parent's
+  effort, if Haiku 4.5 honours `effort` at all (unverified). **Fix:** the
+  maintainer's call — pin `effort: low` after a check that the model accepts
+  it, or leave it.
 
 
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
