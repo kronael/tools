@@ -12,7 +12,8 @@ install:
 	rm -f ~/bin/gt ~/bin/gco ~/bin/gto ~/bin/gtp ~/bin/gtr
 
 clean:
-	for s in $$(bash rig aliases) rig; do rm -f ~/.local/bin/$$s; done
+	find ~/.local/bin -maxdepth 1 -type l \( -lname rig -o -lname ~/.local/bin/rig \) -delete
+	rm -f ~/.local/bin/rig
 
 test: check
 	bash test.sh

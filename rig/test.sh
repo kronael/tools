@@ -157,6 +157,38 @@ for alias in "${aliases[@]}"; do
         '[[ $(readlink "$tmp/install/$alias") == rig ]]'
 done
 
+# Reinstalling drops a link to rig that the list no longer ships and leaves
+# everything else in the dir: files, links elsewhere, and the current aliases.
+ln -s rig "$tmp/install/riq"
+ln -s "$tmp/install/rig" "$tmp/install/riq-abs"
+ln -s "$tmp/work" "$tmp/install/elsewhere"
+ln -s "$tmp/missing" "$tmp/install/dangling"
+echo keep > "$tmp/install/gpx"
+"$tmp/install/rig" install >"$tmp/out" 2>&1
+false_ "install removes a dropped alias"            '[[ -L "$tmp/install/riq" ]]'
+false_ "install removes a dropped alias linked by absolute path" \
+    '[[ -L "$tmp/install/riq-abs" ]]'
+true_  "install leaves a link pointing elsewhere"   '[[ $(readlink "$tmp/install/elsewhere") == "$tmp/work" ]]'
+true_  "install leaves a dangling link elsewhere"   '[[ -L "$tmp/install/dangling" ]]'
+true_  "install leaves a regular file"              '[[ $(< "$tmp/install/gpx") == keep ]]'
+true_  "install leaves the shipped aliases linked" \
+    '[[ $(readlink "$tmp/install/${aliases[0]}") == rig ]]'
+true_  "install leaves rig itself"                  '[[ -f "$tmp/install/rig" && ! -L "$tmp/install/rig" ]]'
+
+# make clean takes the same links away, dropped aliases included, and rig.
+mkdir -p "$tmp/home/.local/bin"
+cp "$rig" "$tmp/home/.local/bin/rig"
+HOME="$tmp/home" "$tmp/home/.local/bin/rig" install >/dev/null 2>&1
+ln -s rig "$tmp/home/.local/bin/riq"
+ln -s "$tmp/work" "$tmp/home/.local/bin/elsewhere"
+echo keep > "$tmp/home/.local/bin/gpx"
+HOME="$tmp/home" make -s -C "$here" clean >/dev/null 2>&1
+false_ "clean removes a dropped alias"              '[[ -L "$tmp/home/.local/bin/riq" ]]'
+false_ "clean removes a shipped alias"              '[[ -L "$tmp/home/.local/bin/${aliases[0]}" ]]'
+false_ "clean removes rig"                          '[[ -e "$tmp/home/.local/bin/rig" ]]'
+true_  "clean leaves a link pointing elsewhere"     '[[ -L "$tmp/home/.local/bin/elsewhere" ]]'
+true_  "clean leaves a regular file"                '[[ -f "$tmp/home/.local/bin/gpx" ]]'
+
 mv "$tmp/offline" "$tmp/origin"
 source "$here/test-checkout.sh"
 

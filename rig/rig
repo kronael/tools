@@ -190,6 +190,18 @@ cmd_install(){
         echo "  $dir/$s -> rig"
     done
     echo "installed ${#symlinks[@]} symlinks"
+    # Links to rig that the list does not name are leftovers of a dropped
+    # alias. Only a symlink pointing at rig goes, never a file or a link
+    # elsewhere.
+    local l s
+    for l in "$dir"/*; do
+        [[ -L "$l" ]] || continue
+        s=${l##*/}
+        case "$(readlink "$l")" in rig|"$dir/rig") ;; *) continue ;; esac
+        [[ " ${symlinks[*]} " == *" $s "* ]] && continue
+        rm -f -- "$l"
+        echo "  removed $l"
+    done
 }
 
 usage(){
