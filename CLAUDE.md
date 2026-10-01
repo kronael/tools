@@ -53,7 +53,8 @@ make clean         # clean projects + sweep __pycache__
 ## Architecture: sync paths, one source
 
 `skills/`, `agents/`, `hooks/` at repo root **are** the bundle. The Claude
-plugin path (`/kronael:sync` from `${CLAUDE_PLUGIN_ROOT}`) and the manual
+plugin path (`/kronael:sync`, from a CWD clone that holds the assets, else
+`${CLAUDE_PLUGIN_ROOT}`) and the manual
 path (user opens Claude Code at the cloned root and says "sync") both put
 them into `~/.claude/`.
 

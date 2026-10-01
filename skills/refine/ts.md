@@ -2,7 +2,7 @@
 
 What a TypeScript refine pass goes looking for. Read WITH the `ts` skill
 (write-time rules), NEVER instead of it. A `.tsx` context reads this file too.
-Each lens carries the tag the refine skill's `model=` rule reads.
+Each lens carries the tag refine step 6 reads to pick the agent type.
 
 ## A green test run is not a typecheck `correctness`
 

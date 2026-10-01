@@ -145,8 +145,8 @@ whitespace-separated, with lines starting `#` as comments.
   `~/.dockboxrc`.
 
 Both are optional. Global applies first, project appends. Neither file
-reaches `docker run`: a Docker flag such as `--gpus all` is parsed as
-dockbox and tool flags, not passed to Docker. The project `.dockboxrc` is
+reaches `docker run`: a Docker flag such as `--gpus all` in either file is
+an error (`unknown flag`), not passed to Docker. The project `.dockboxrc` is
 overmounted with `/dev/null` inside the container so the boxed agent can't
 modify it.
 

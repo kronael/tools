@@ -1,8 +1,8 @@
 # Refine lenses — tsx
 
 What a React/Next.js refine pass goes looking for. Read WITH the `tsx` skill
-(write-time rules), NEVER instead of it. Each lens carries the tag the refine
-skill's `model=` rule reads.
+(write-time rules), NEVER instead of it. Each lens carries the tag refine step 6
+reads to pick the agent type.
 
 ## Effect emission identity `correctness`
 

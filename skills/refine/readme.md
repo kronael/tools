@@ -2,8 +2,8 @@
 
 What a refine pass over documentation goes looking for — README, ARCHITECTURE,
 `docs/**`, an HTML explainer page. Read WITH the `readme` skill (write-time
-rules), NEVER instead of it. Each lens carries the tag the refine skill's
-`model=` rule reads.
+rules), NEVER instead of it. Each lens carries the tag refine step 6
+reads to pick the agent type.
 
 ## Facts drift from the repo `correctness`
 
