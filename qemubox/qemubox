@@ -773,6 +773,8 @@ build_base() (
         exit 1
     }
     read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
+    # Debian installs mke2fs in /usr/sbin, which a non-root PATH omits.
+    PATH="$PATH:/usr/sbin:/sbin"
     missing_deps "${docker_cmd[0]}" bsdtar mke2fs qemu-img tar flock
     tmp=$(mktemp -d)
     trap 'rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"; rmdir "$tmp"' EXIT
