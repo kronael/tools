@@ -1,7 +1,7 @@
 ---
 name: refine
-description: Finalize a change before it is called done — read-only subagents per context of the project and the change, every claim the change makes re-derived against the tree. NOT for a targeted fix (use improve) or a second opinion (use oracle).
-when_to_use: "refine this, polish this, final pass before shipping, tighten this before commit, finalize the PR, before I call the PR done, settle the claims, is that actually true, verify the numbers, check the counts and the cross-references, the subagent says it is done, run the acceptance criteria, docs-only PR, spec PR"
+description: Finalize a change before it is called done — the code good and every claim it makes true. NOT for a targeted fix (use improve) or a second opinion (use oracle).
+when_to_use: "refine this, polish this, final pass before shipping, tighten this before commit, finalize the PR, before I call the PR done, settle the claims, is that actually true, verify the numbers, check the counts and the cross-references, the subagent says it is done, run the acceptance criteria, docs-only PR, spec PR, refine the changes, clean up the diff, finalize a finished feature"
 user-invocable: true
 ---
 
@@ -15,7 +15,7 @@ change into **contexts**, dispatch one read-only subagent per context, re-derive
 every finding here. A context is an aspect of the project this change touches —
 its deployment, its spec set, its data layer, its agent surface. A language
 bucket is ONE KIND of context, never the axis: a documents-only PR matches no
-extension and still carries every claim the reviewer will trust.
+code extension and still carries every claim the reviewer will trust.
 
 `/release` is the later gate (version bumps). Run this first.
 
@@ -26,9 +26,8 @@ extension and still carries every claim the reviewer will trust.
    document, the host. ALWAYS read `intent.md` first. When the user's numbers
    disagree with what you measure, the user is naming a different object —
    ALWAYS check the referent before correcting the number. Every separate
-   instruction
-   in the message goes on a list and gets a verdict by step 11, including the
-   ones you will not carry out.
+   instruction in the message goes on a list and gets a verdict by step 11,
+   including the ones you will not carry out.
    → each noun resolves to one path, ref or record, and no instruction is
    unaccounted for.
 
@@ -53,12 +52,17 @@ extension and still carries every claim the reviewer will trust.
    type checker reads — NEVER one per directory. Every changed path and every
    claim lands in exactly one. A code context also carries language lenses: map
    its files to their skills (`.rs`→`rs`, `.tsx`→`tsx`, `programs/**`→`solana`,
-   `docs/**`, `README.md`, `ARCHITECTURE.md`→`readme`, plus every skill those
-   require), `Skill(<matched>)` each so its cold rules
+   plus every skill those require), `Skill(<matched>)` each so its cold rules
    are in context, and read the `<skill>.md` lens in this directory — list the
-   directory, NEVER assume which exist. ALWAYS seed the correctness lenses from
+   directory, NEVER assume which exist. A document context (`docs/**`,
+   `README.md`, `ARCHITECTURE.md`) reads the `readme.md` lens here beside the
+   `claims.md` sections that apply. ALWAYS hand each context the chunks of the
+   live WISDOM that govern it — NEVER a frozen checklist. A validation gate a
+   lens names that the test target misses (a typecheck) runs once the lens is
+   read, and again at step 10. ALWAYS seed the correctness lenses from
    **Confessed defaults**. Tag each lens `simplify` (reuse, dead code,
-   minimisation, cross-boundary leaks and coupling between packages) or
+   minimisation, a new path grown beside an old one the change should have
+   changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
    recurring contexts and what each one's sub must be handed.
    → every path and claim sits in exactly one context, and each context names
@@ -68,18 +72,20 @@ extension and still carries every claim the reviewer will trust.
    ancestor of HEAD (`gh-comment` § Setup, which also covers `GH_TOKEN` when
    `gh auth status` fails). None → skip silently. Fetch UNRESOLVED threads
    via `gh-comment` § Fetch threads. Triage each FIX or WON'T-FIX against the
-   live WISDOM, the project `CLAUDE.md` invariants and `BUGS.md`. Automated
-   reviewers skew false-positive: ALWAYS verify the premise against the code.
-   An out-of-scope core-logic change is flagged, never applied. FIX items fold
+   live WISDOM, the project `CLAUDE.md` invariants and `BUGS.md`. A documented
+   invariant or a `BUGS.md` by-design entry is WON'T-FIX. Automated reviewers
+   skew false-positive: ALWAYS verify the premise against the code. An
+   out-of-scope core-logic change is flagged, never applied. FIX items fold
    into the context that owns their path.
    → every unresolved thread carries a verdict and a reason.
 
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Set `model=` by the context's heaviest tag: `simplify` → sonnet,
-   `correctness` → opus (fable under `/release`). The subs report findings with
-   commands and outputs and NEVER edit. ALWAYS leave a context's files alone in main context until its
-   sub returns.
+   `correctness` → opus (fable under `/release`). A context whose lenses carry
+   no tag (a document context) runs on the `correctness` model. The subs report
+   findings with commands and outputs and NEVER edit. ALWAYS leave a context's
+   files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
    it.
 
@@ -95,7 +101,8 @@ extension and still carries every claim the reviewer will trust.
 8. **Triage and apply** — DROP a finding that adds an abstraction, targets
    unused code (grep first), conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (`software/code.md` § System changes); NEVER build one without sign-off. Apply the rest with serial
+   (`software/code.md` § System changes); NEVER build one without sign-off.
+   Apply a finding only if the result is simpler. Apply the rest with serial
    `Task(agent="improve")`, one context at a time, briefed from `brief.md`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
@@ -114,7 +121,8 @@ extension and still carries every claim the reviewer will trust.
     the project keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
     number left standing in a second file is the next pass's false premise.
-    Then final build and test, `Skill(commit, "refa: apply refinements")`.
+    Then final build and test, and `Skill(commit, "refa: apply refinements")`
+    when a file changed — NEVER skip that commit otherwise.
     → docs name every changed behaviour, tests pass in this turn, tree is clean.
 
 11. **Close** — `git log --format='%an %s%n%b'` over the range: conventional
@@ -126,7 +134,8 @@ extension and still carries every claim the reviewer will trust.
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
     here: list each with its thread id and fix SHA, and show the PR's own head
     refspec, `git push origin <fix-sha>:refs/heads/<headRefName>`; resolve and
-    request re-review through `gh-comment` once that push lands. ONLY threads
+    request re-review through `gh-comment` once that push lands. A bot-authored
+    thread resolves once replied (`gh-comment` § Resolve a thread). ONLY threads
     addressed this pass. `git worktree remove --force` each stale Claude-managed
     worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere. Then a
     verdict: what was settled, what was corrected, what could not be settled

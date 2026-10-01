@@ -8,25 +8,25 @@ proves or breaks.
 ## Absence — "there is no X", "nothing references Y", "I can't from here"
 
 Settled by the same query returning a hit where one exists, then re-run with
-the access and the scope the answer needs. NEVER rest a design decision, a
-document or a subagent brief on an unproven negative.
+the access and the scope the answer needs.
 
 - **A projection hides what the pattern targets.** `docker ps --format
   '{{.Names}}\t{{.Ports}}' | grep postgres` finds nothing when the image name
   carries the word. ALWAYS grep a field you printed.
 - **A failure prints nothing.** A refused SSH fetch, a path that does not
-  exist and a ref that does not resolve are all silent; the shell expands a
-  glob as YOU before `sudo` runs; the wrapped `grep` excludes `.git`.
+  exist and a ref that does not resolve are all silent; the wrapped `grep`
+  excludes `.git` and every gitignored path.
 - **One branch is not the repository.** A directory holding no `specs/` here
-  held eleven on an unmerged branch nine commits old. `git ls-tree -r
-  FETCH_HEAD`, `git branch -r`, `git remote -v` in the directory whose name
-  you are trusting — and fetch by explicit HTTPS URL where the origin is SSH.
+  held eleven on an unmerged branch nine commits old. `git fetch origin`, then
+  `git ls-tree -r origin/<branch>`, `git branch -r` and `git remote -v` in the
+  directory whose name you are trusting; where the SSH origin refuses, fetch
+  by explicit HTTPS URL and read `FETCH_HEAD`.
 - **A thing is missing where you looked, not where it is kept.** Config in
   `cfg/`, data on the deployment host, a running service behind `sudo`.
-- **`2>/dev/null` destroys the falsifier.** Every probe in these sessions that
-  carried a status code (`curl -w '%{http_code}'`) recovered from its miss;
-  every probe that silenced stderr reported absence instead. ALWAYS let a
-  probe print why it failed.
+- **`2>/dev/null` destroys the falsifier.** Every probe that carried a status
+  code (`curl -w '%{http_code}'`) recovered from its miss; every probe that
+  silenced stderr reported absence instead. ALWAYS let a probe print why it
+  failed.
 
 ## The label is not the output
 

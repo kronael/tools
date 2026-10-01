@@ -121,13 +121,12 @@ at it in-body), `gh-review`, `gh-fix` (folded into the `review` router —
 + cherry-pick), `docs-audit` (removed in the skills cleanup pass — deliberately
 dropped, not folded), `eye-13yo` (renamed to `13yo-eval`), `hacker-eval`
 (renamed to `red-eval`), `testing` (folded into the `software` router), `settle`
-(folded into `refine`, whose subagents fork by context rather than by file
-extension), `useless` (folded into the `specs` router — `specs/useless.md`),
-`onepager`, `doc-topology` (folded into the `readme` router —
-`readme/onepager.md`, `readme/topology.md`), `resolve` (renamed to `solve`),
-and the pre-kronael language skills `bash`, `python`, `rust`, `typescript`
-(superseded by `sh`, `py`, `rs`, `ts`/`tsx`, whose descriptions they collide
-with — a routing race).
+(folded into `refine`, whose subagents fork by context), `useless` (folded into
+the `specs` router — `specs/useless.md`), `onepager`, `doc-topology` (folded
+into the `readme` router — `readme/onepager.md`, `readme/topology.md`),
+`resolve` (renamed to `solve`), and the pre-kronael language skills `bash`,
+`python`, `rust`, `typescript` (superseded by `sh`, `py`, `rs`, `ts`/`tsx`,
+whose descriptions they collide with — a routing race).
 
 NEVER delete `create-eval` (still bundled), `codex` or `oracle` (both bundled —
 `codex` is canonical, `oracle` its alias; the v0.3.26 codex→oracle rename was

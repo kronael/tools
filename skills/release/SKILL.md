@@ -24,11 +24,11 @@ user-invocable: true
 1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
    tree on a first release) before bumping anything. A bare "release" implies
    it — NEVER ask whether to refine. Run it at full depth whatever the diff
-   size: every applicable lens, a bucket needing more than refine's 3 taking
-   further review passes of up to 3 each — NEVER drop a lens; `correctness`
-   lenses on `fable`; and a `codex` second opinion over the same range (the
-   `codex` skill directly, not `oracle`), its findings fed through refine's
-   triage and apply steps — NEVER applied in main context. Any change landing
+   size: every context and every applicable lens — NEVER drop one;
+   `correctness` contexts on `fable` (`opus` when fable is unavailable); and a
+   second opinion over the same range — the `codex` skill directly, or an
+   `opus` or `fable` sub when codex cannot run — its findings settled in refine
+   step 7 and applied through step 8, NEVER in main context. Any change landing
    after the refine, other than the refine's own commits and the release
    commit, reruns it — NEVER tag code the refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).

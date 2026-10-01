@@ -33,7 +33,7 @@ the ansible flavour — print the path you resolved it to, and carry on.
 A noun you have never seen is not a value for whichever slot is currently open.
 Mapping it there spends turns proving the wrong thing absent.
 
-- ALWAYS ask "what is X?" — four words — before searching for X or fitting X
+- ALWAYS ask "what is X?" — three words — before searching for X or fitting X
   into the task in hand.
 - NEVER ask "did you mean X is the <thing I am working on>?". A yes to a
   compound question confirms the half you did not mean.
