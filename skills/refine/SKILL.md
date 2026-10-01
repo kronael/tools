@@ -86,7 +86,7 @@ first; `/release` after.
     and no other thread is touched.
 12. **Clean up** — `git worktree remove --force` each stale Claude-managed
     worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere.
-    → `git worktree list` shows only the main tree.
+    → no stale `.claude/worktrees/` entry remains.
 
 Pass the agent `Intent:` (the user's original words), `Primary:` (files to
 modify) and `Context:` (read-only reference) — NEVER a summary of the request.

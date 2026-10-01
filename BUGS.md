@@ -3,24 +3,27 @@
 ## Bundle
 
 - **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
-  needs sign-off. `skills/refine/SKILL.md:74-85` requires replies to every
-  unfixed PR thread and declares them a completion condition, even when the
-  owner requested only a verified local change. WISDOM's Git rules and
-  `gh-comment` retain their external-action gates; a local ship can finish
-  its code while that unconditional completion condition remains unmet.
-  **Proposal:** make public replies conditional on the owner's requested
-  destination; otherwise report local dispositions and outstanding thread
-  actions. Keep approval gates in `gh-comment`; no new review mode, skill,
-  saved plan or hook. No test — design.
+  needs sign-off. Step 4 of `skills/refine/SKILL.md:32-42` skips unless an
+  open PR whose head is an ancestor of HEAD exists, and step 11
+  (`:75-86`) already posts each reply through `gh-comment`'s sign-off gate.
+  The gap: while such a PR is open, step 11's completion line
+  needs every unfixed triaged thread replied to, so refine cannot complete
+  for a local-only delivery unless the owner approves or declines the
+  replies. **Proposal:** let a reply the owner declined, or a delivery the
+  owner kept local, close step 11 as an outstanding thread action listed in
+  the report. Keep approval gates in `gh-comment`. No new review mode,
+  skill, saved plan or hook. No test — design.
 
 - **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
-  needs sign-off. `skills/refine/SKILL.md:86-88` removes stale managed
-  worktrees and requires only the main tree to remain. A ship can own a
-  detached worktree while another task owns a different one;
-  `skills/worktree/SKILL.md:54-55` forbids removing another task's worktree.
-  **Proposal:** make cleanup and its completion condition refer only to
-  verified worktrees owned by the current run, preserving unique unfinished
-  work. Change rule text only; no enforcement machinery. No test — design.
+  needs sign-off. Step 12 of `skills/refine/SKILL.md:87-89` runs
+  `git worktree remove --force` on each stale entry under
+  `.claude/worktrees/`. A single `--force` removes an unlocked entry even
+  when it holds another task's unreconciled work, which
+  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 12
+  apply the existing orphan test in `skills/commit/SKILL.md:68-74` —
+  remove only an entry superseded by HEAD whose lock pid is dead, and
+  surface unique work to the user. Rule text only, no enforcement
+  machinery. No test — design.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
   `skills/create/social/references/research-social-meme.md:196-217` carries a
