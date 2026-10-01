@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Web One-Pager: README as Terminal-Native Landing
 
 ## TL;DR
@@ -249,9 +253,9 @@ prefix files when there are >10 (`hero-*`, `arch-*`).
   `Workflow (14)`, …) drift on every skill add/remove. Lean: accept
   the drift — a review-time grep catches mismatches and the full
   catalog stays in `skills/README.md`, which is the source of truth.
-- **README length**: target ~500 lines max. Current README is ~94 lines.
-  We'll roughly 5× it. If a section starts to dominate, split out to a
-  dedicated `docs/<topic>.md` and link from the one-pager.
+- **README length**: target ~500 lines max, roughly 5× the current ~94
+  lines. If a section starts to dominate, split out to a dedicated
+  `docs/<topic>.md` and link from the one-pager.
 - **`docs/` vs `assets/`**: GitHub Pages convention names the published
   dir `docs/`. We're not publishing yet, so `assets/` avoids confusion.
   If we ever stand up a Pages site, asset dir gets symlinked/migrated.
