@@ -40,25 +40,30 @@ NOT_IN_PATH = frozenset(' \t*?{}<>$|"\'()[]=,;!`')
 SKIP_DIRS = frozenset({'.git', 'node_modules', '.venv', '__pycache__', 'dist', 'build'})
 
 
+def is_spec_corpus(path: Path) -> bool:
+    """A dir named specs that holds an index or a numbered spec file.
+
+    A test suite in `e2e/specs/` or a skill's own `skills/specs/` is also a
+    directory named specs; requiring an index or one numbered file keeps both
+    off discovery and off `nearest_root()`.
+    """
+    numbered = any(NUMBERED.match(child.name) for child in path.glob('*.md'))
+    return (path / 'index.md').is_file() or numbered
+
+
 def nearest_root(path: Path) -> Path | None:
     for candidate in (path, *path.parents):
-        if candidate.name == 'specs' and candidate.is_dir():
+        if candidate.name == 'specs' and candidate.is_dir() and is_spec_corpus(candidate):
             return candidate
     return None
 
 
 def discovered(root: Path) -> list[Path]:
-    """Dirs named specs that hold a spec corpus.
-
-    A test suite in `e2e/specs/` is also a directory named specs; requiring an
-    index or one numbered file keeps discovery off it.
-    """
     found: list[Path] = []
     for path in root.glob('**/specs'):
         if not path.is_dir() or SKIP_DIRS & set(path.parts):
             continue
-        numbered = any(NUMBERED.match(child.name) for child in path.glob('*.md'))
-        if (path / 'index.md').is_file() or numbered:
+        if is_spec_corpus(path):
             found.append(path)
     return found
 

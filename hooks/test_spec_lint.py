@@ -137,3 +137,12 @@ def test_test_suite_named_specs_is_not_discovered(tmp_path: Path) -> None:
     suite.mkdir(parents=True)
     (suite / 'auth.md').write_text('# auth case\n')
     assert spec_roots([tmp_path]) == []
+
+
+def test_skill_dir_named_specs_has_no_root(tmp_path: Path) -> None:
+    skill = tmp_path / 'skills' / 'specs'
+    skill.mkdir(parents=True)
+    skill_file = skill / 'SKILL.md'
+    skill_file.write_text('# Specs skill\n')
+    (skill / 'format.md').write_text('# Format\n')
+    assert spec_roots([skill_file]) == []
