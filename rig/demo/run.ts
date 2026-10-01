@@ -241,40 +241,11 @@ console.log(
 await Bun.sleep(1800)
 
 clear()
-h1("Squash 'fixup' commits before pushing")
-story("Prefix a commit with 'fixup:' to mark it for squashing.")
-note("riq finds them automatically and squashes into the parent commit.")
-await Bun.sleep(1000)
-
-await type("gl")
-console.log(
-  `${Y}f1e2d3c${R} fixup: remove debug log
-${Y}b4a5968${R} fixup: correct off-by-one
-${G}7c8d9e0${R} feat: add token refresh
-${G}9ab0cde${R} chore: update dependencies`,
-)
-note("Two sloppy fixup commits sitting on top of the real commit.")
-await Bun.sleep(1800)
-
-await type("riq")
-console.log(`Successfully rebased and updated detached HEAD.`)
-await Bun.sleep(800)
-
-await type("gl")
-console.log(
-  `${G}2e3f4a5${R} feat: add token refresh
-${G}9ab0cde${R} chore: update dependencies`,
-)
-note("Clean. One commit. Ready to push.")
-await Bun.sleep(2000)
-
-clear()
 console.log(`\n  ${B}${C}rig${R}  workflow in full\n`)
 console.log(`  ${C}${B}rco${R} ${D}[branch]${R}    fetch + jump to origin/branch  ${D}(no local branch)${R}`)
 console.log(`  ${C}${B}rip${R} ${D}[branch]${R}    push HEAD → origin              ${D}(auto-detects branch)${R}`)
 console.log(`  ${C}${B}rir${R} ${D}[branch]${R}    fetch + rebase -i on origin     ${D}(clean history)${R}`)
-console.log(`  ${C}${B}rim${R} ${D}[branch]${R}    fetch + merge from origin`)
-console.log(`  ${C}${B}riq${R}             squash fixup: commits\n`)
+console.log(`  ${C}${B}rim${R} ${D}[branch]${R}    fetch + merge from origin\n`)
 console.log(`  ${G}${B}gl${R}   ${G}${B}gis${R}   ${G}${B}gig${R}   ${G}${B}gitg${R}       log · status · graph`)
 console.log(`  ${G}${B}gp${R}   ${G}${B}gpc${R}   ${G}${B}gpa${R}          cherry-pick · continue · abort`)
 console.log(`  ${G}${B}gw${R}                       git worktree\n`)

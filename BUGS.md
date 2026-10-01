@@ -163,18 +163,10 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **RIG-SQ-NEVER-FINDS-FIXUPS** (MED, correctness) — proposed, needs sign-off.
-  2026-10-01. `rig sq`/`rig fixup` always prints "no fixup commits" and exits 0
-  (since 60a3041, 2026-04-17): `rig/rig:189` matches `^fixup` against "<hash>
-  <subject>"; the sequence-editor regex is a bash syntax error (unquoted `;`);
-  `git rebase -i "$oldest^"` puts the fixup first in the todo; and a failed
-  rebase still returns 0. A fix exists (subject-only match, regex in a
-  variable, base `$oldest~2`, rebase status returned, three tests that fail
-  without it). **Hazard:** fixed, the scan covers all history — here it would
-  rebase 1017 commits and flatten 28 merges to fold 13 `fixup:` commits
-  already on `origin/master`. **Fix:** ship the repair with the scan limited
-  to unpushed commits (`git log HEAD --not --remotes`) and a refusal when the
-  rebase range reaches a pushed commit — the owner decides the scope.
+- **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
+  still plays the removed `riq` section; `rig/demo/run.ts` no longer has it.
+  `make -C rig demo` needs `asciinema` and `agg`, which this host lacks.
+  **Fix:** re-record with `make -C rig demo` on a host that has both.
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
   `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
   command string, so it never matches `rig push`, `rig p` or the `rip`

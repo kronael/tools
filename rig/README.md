@@ -51,7 +51,6 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
-| `rig fixup` / `rig sq` | `riq` | Auto-squash fixup commits |
 
 **Selection flags**: `-n` dry-run, `?` force fzf.
 `rco`, `rir`, and `rim` also accept `-z` offline (no fetch); `gco` never fetches.
@@ -161,7 +160,7 @@ rim ?             # Interactive branch selection
 ## How It Works
 
 Single busybox-style script. `rig aliases` lists every installed symlink,
-including `rco`, `gco`, `rip`, `rir`, `rim`, `riq`, and the git aliases above.
+including `rco`, `gco`, `rip`, `rir`, `rim`, and the git aliases above.
 They dispatch via `basename $0`. Checkout, rebase, and merge share a
 `cmd_branch_op` helper; push has its own handler. Checkout (`rco`), rebase,
 and merge fetch by default; `-z` suppresses fetch. `gco` never fetches.

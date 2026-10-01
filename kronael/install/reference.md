@@ -96,7 +96,7 @@ one toolchain is missing — report that tool skipped and continue.
 
 | Tool | Command | Notes |
 |------|---------|-------|
-| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim/riq |
+| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
 | `clp` | `cd clp && make install` | sourceable bash; prints how to source it |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |

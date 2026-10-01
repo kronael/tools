@@ -164,7 +164,7 @@ explicit, always.
 
 ## Bash shortcuts
 
-`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, `riq`, and the
+`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, and the
 git aliases (`gif`, `gib`, and others); `rig aliases` lists them all.
 Add the install directory to PATH.
 
