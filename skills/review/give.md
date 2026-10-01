@@ -22,7 +22,7 @@ property silently disappears. ALWAYS check for this shape.
 
 ## 3. Parallel lens agents
 
-One `Agent(subagent_type="general-purpose", model="opus", run_in_background=true)`
+One `Agent(subagent_type="opus", run_in_background=true)`
 per bucket. Give each its lens, files, the language skills for those
 extensions, and the house rules from project CLAUDE.md — without them agents
 propose fixes the project forbids. Findings only, no edits, each as
@@ -39,8 +39,8 @@ ALWAYS wait for all agents before step 4.
 
 ## 4. Fable deep-dive + reverification
 
-A single `Agent(model="fable")` doing both jobs at once (fable unavailable →
-`model="opus"`; NEVER skip this pass):
+A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailable →
+`subagent_type="opus"`; NEVER skip this pass):
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
    regression risks, and broken invariants. NEVER seed it with the sonnet

@@ -34,7 +34,7 @@ error output>. Return findings only, with file:line or concrete trace.
 
 Rules:
 
-- NEVER set effort in the prompt text — only the agent file sets it.
+- NEVER set effort in the prompt text — ALWAYS rely on the agent file's pin.
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.

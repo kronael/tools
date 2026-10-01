@@ -10,11 +10,11 @@ Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /opus without being asked when the task is:
 - A design or architecture decision, or a deep cross-cutting analysis, that needs a clean context.
-- The plan for bigger work when the main thread is not Opus — the plan then runs through `sonnet` § Plan, then execute.
+- The plan for bigger work when the session runs a smaller model (Sonnet, Haiku) — the plan then runs through `sonnet` § Plan, then execute.
 - A plan step that leaves implementation judgment to the worker (a `ship` step by default), or that failed twice on sonnet.
 
 - ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
-- NEVER reach for `/opus` on a task `/sonnet` (high) can do — the xhigh cost is the same on every call, whatever the task size.
-- NEVER set effort with prompt text — only the agent file sets it.
+- NEVER reach for `/opus` on a task `/sonnet` (high) can do — ALWAYS send it to `/sonnet`; xhigh thinks deeper and costs more on every call.
+- NEVER set effort with prompt text — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
-- Unplanned multi-file code written unattended, a `ship` plan, and a security or deep audit go to `/fable` (global § Agents).
+- ALWAYS send unplanned multi-file code written unattended (WISDOM § Agents), a `ship` plan, and a security or deep audit to `/fable`.

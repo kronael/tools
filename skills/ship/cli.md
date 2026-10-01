@@ -29,9 +29,16 @@ in its Bash tool, and every role fails with "Not logged in". The default
 fix is the owner running `claude auth login` once outside the session.
 With the owner's explicit OK in this session, a scratchpad wrapper may
 instead read the token from `/proc/$CLAUDE_PID/environ`, export it and
-`exec "$@"`. NEVER echo, log or commit the token. `ship -k <spec>` runs
-only the spec validator, which proves the login and the spec before a
-full run.
+`exec "$@"`. NEVER echo, log or commit the token.
+
+`ship` runs every role on `--model` (env `MODEL`, default `sonnet`) with
+fixed role timeouts sized for sonnet. ALWAYS launch with
+`MODEL=fable TIMEOUT_SCALE=3`: fable is the model WISDOM requires for
+unattended code, and at scale 1 fable's validator fails on the 180 s
+timeout. `ship -k <spec>` runs only the spec validator, which proves the
+login and the spec, but it is not read-only: the validator runs with
+`bypassPermissions` and can commit, so ALWAYS run it on a worktree you can
+reset and check `git log` afterwards.
 
 If the CLI is absent, report the requirement. Installation is a separate
 owner choice. NEVER install its bundled skill over the toolkit's `ship`.

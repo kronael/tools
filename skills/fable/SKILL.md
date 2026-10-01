@@ -9,11 +9,11 @@ Launch the prompt after /fable as a background agent (`run_in_background: true`,
 Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /fable without being asked when the task is:
-- A comprehensive or multi-file change written unattended, with no review per step (global § Agents).
+- A comprehensive or multi-file change written unattended, with no review per step (WISDOM § Agents).
 - The plan of a `ship` feature.
 - A security or deep audit, or a user request for maximum effort.
 
 - ALWAYS use `subagent_type: "fable"`, NEVER `model: "fable"`: `agents/fable.md` pins Fable at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
-- NEVER reach for `/fable` when `/opus` or the `sonnet` plan loop can do the work — fable is the most expensive tier.
-- NEVER set effort with prompt text ("Think deeply") — only the agent file sets it.
+- NEVER reach for `/fable` when `/opus` or the `sonnet` plan loop can do the work — ALWAYS use those first; fable is the most expensive tier.
+- NEVER set effort with prompt text ("Think deeply") — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.

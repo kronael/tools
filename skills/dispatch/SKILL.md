@@ -13,5 +13,5 @@ Report what was launched. Continue immediately without waiting.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers. A written plan's decisions are not analysis — ALWAYS pass them to an executor as constraints (`sonnet` § Plan, then execute).
 - NEVER assume dispatch/`general-purpose` runs cheap — it has no effort pin, so it INHERITS the parent session's effort (often xhigh, when the parent is Fable/Opus). ALWAYS use a tier skill (`/haiku`, `/sonnet`, `/opus`, `/fable`) when a specific effort is required; only accept dispatch when the parent's inherited effort is acceptable.
-- NEVER dispatch autonomous code generation here — a comprehensive or multi-file change written unattended goes to `/fable` (CLAUDE.md § Agents).
+- NEVER dispatch autonomous code generation here — a comprehensive or multi-file change written unattended goes to `/fable` (WISDOM § Agents).
 - For a specific model tier, use `/haiku` (fast/cheap), `/sonnet` (investigation and plan steps, high), `/opus` (design calls, xhigh), or `/fable` (max, xhigh) instead.
