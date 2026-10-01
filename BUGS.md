@@ -53,7 +53,6 @@
   the `/pr-draft` bullet to its pointer; fold the § Agents fable and sonnet
   bullets into one.
 
-
 - **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
   2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
   `@learn`, while `hooks/README.md:21-23` and `skills/learn/SKILL.md:3,34`
@@ -75,48 +74,17 @@
 - **HUMANIZE-OVER-LINE-CAP** (LOW, design) — needs sign-off. `make
   skills-frontmatter` warns: `skills/humanize/SKILL.md` has a 629-line body, 3.1x
   the 200-line cap, and `humanize` is not in the linter's `LONG_SKILLS` allowance
-  (`{install, ship}`). Skills persist in context all session, so this is a
+  (`{ship}`). Skills persist in context all session, so this is a
   standing context cost on every session. It is an external skill vendored
   intact (it ships its own LICENSE and Attribution section) and has no sibling
   files. **Fix:** split the pattern catalogs into on-demand siblings — a
   restructuring of imported content, not a one-line fix.
-
-- **REFINE-IMPROVE-NO-MODEL** (LOW, docs) — CONFIRMED 2026-10-01. Refine step 8
-  dispatches `Task(agent="improve")` with no model
-  (`skills/refine/SKILL.md:106`), and `agents/improve.md` pins none, so the
-  writer runs on the parent's model and effort. **Fix:** the owner picks the
-  model for refine's writing subs.
 
 - **GLOBAL-COMMIT-TYPES-DISAGREE** (LOW, docs) — CONFIRMED 2026-10-01.
   `skills/global/SKILL.md:120-121` § Git lists
   fix/feat/docs/test/chore/refactor; the `commit` skill uses `refa`/`splx`
   (`skills/commit/SKILL.md:31-32`) and refine `refa`
   (`skills/refine/SKILL.md:124`). **Fix:** one list, owned by `commit`.
-
-- **DOCKBOXRC-NO-EPHEMERAL-IGNORED** (LOW, correctness) — CONFIRMED 2026-10-01.
-  `--no-ephemeral` in a project `.dockboxrc` becomes `--` in the claude
-  arguments with a misleading "ignoring -n" warning (`dockbox/dockbox` rc
-  parsing `:330-390`). **Fix:** honour it, or list it among the ignored flags.
-
-- **DOCKBOX-HELP-RC-FLAGS** (LOW, docs) — CONFIRMED 2026-10-01. dockbox help
-  (`dockbox/dockbox:311`) says a project `.dockboxrc` ignores `-A/-D/-S`; the
-  code (`:387`) also ignores `K`, `n`, `d`, `x`. **Fix:** make the help list
-  match.
-
-- **QEMUBOX-E2FSPROGS-VERSION** (LOW, docs) — CONFIRMED 2026-10-01.
-  `qemubox/README.md:40` says e2fsprogs ≥1.47; Debian 12's 1.47.0 has no
-  `mke2fs -d` tarball support (`strings /usr/sbin/mke2fs | grep -ci archive`
-  → 0), so the build probe (`qemubox/qemubox:780-782`) fails after the
-  README's apt install. **Fix:** state the version that adds tarball support
-  once confirmed (unverified: 1.47.1).
-
-- **TWFETCH-SWALLOWS-DRIVER-ERRORS** (LOW, correctness) — CONFIRMED 2026-10-01.
-  `tw-fetch/main.py:184-185` catches `WebDriverException` (a superclass of
-  `NoSuchElementException`) around the Following-tab click and passes, so a
-  failed click silently archives the default tab; `parse_tweet` drops a tweet
-  on any `WebDriverException` (`:115`); `suppress(Exception)` at `:63` hides a
-  rejected cookie. **Fix:** catch `NoSuchElementException` for an absent tab
-  only, and let other driver errors surface.
 
 ## Codex bridge
 
