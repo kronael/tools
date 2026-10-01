@@ -42,6 +42,8 @@ regression_setup() {
     for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
     dirs=(); no_copy=1
     qemu-img() { touch "$dir/disk.qcow2"; }
+    bsdtar() { :; }
+    mke2fs() { :; }
 }
 
 ## box_name -----------------------------------------------------------------
@@ -168,10 +170,13 @@ fake_docker() {
     esac
 }
 QEMUBOX_DOCKER=fake_docker
+bsdtar() { :; }
+mke2fs() { :; }
 exits 42 'build_base' "export failure stays visible"
 eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
 false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
 unset QEMUBOX_DOCKER
+unset -f bsdtar mke2fs
 
 source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"
