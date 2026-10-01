@@ -26,8 +26,8 @@ The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
 Every sync path puts them into `~/.claude/`.
 
 **Claude plugin path** — Claude Code's marketplace clones this repo into its
-plugin cache. `/kronael:sync` reads the cached repo at
-`${CLAUDE_PLUGIN_ROOT}` and syncs the bundle into `~/.claude/`.
+plugin cache. `/kronael:sync` syncs the bundle into `~/.claude/` from CWD
+when it holds the repo's assets, else from the cached `${CLAUDE_PLUGIN_ROOT}`.
 
 **Claude manual path** — User clones the repo themselves, opens Claude Code at
 the root, says "sync". Source is `cwd`; the rest of the procedure is

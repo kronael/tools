@@ -16,9 +16,9 @@ WISDOM § Git) and **merge origin** (`origin` → the repo's git line, `merge`).
 
 ## Terms
 
-- **source** (`SRC`) — the repo working tree: `CLAUDE_PLUGIN_ROOT` if it holds
-  the assets below, else CWD. Merge-back writes here, so a live edit survives
-  only in the owner's clone — NEVER a plugin or marketplace snapshot.
+- **source** (`SRC`) — the repo working tree: CWD if it holds the assets
+  below, else `CLAUDE_PLUGIN_ROOT`. Merge-back writes here, so a live edit
+  survives only in the owner's clone — NEVER a plugin or marketplace snapshot.
 - **live** — `~/.claude/`. **bundle** — the live paths sync owns and replaces:
   `skills/ agents/ hooks/ output-styles/ commands/ CLAUDE.md RECLAUDE.md
   kronael-install-manifest.json`. NOTHING else in `~/.claude/` moves:
@@ -63,14 +63,14 @@ the failure. Settings still confirm before applying.
    output-styles/ commands/ codex-hooks.json settings-recommended.json
    RECLAUDE.md codex/AGENTS.md` — missing means the wrong directory: stop and
    ask. No `kronael@*` in `~/.claude/plugins/installed_plugins.json` → note
-   `/kronael:sync` won't resolve; the user says "sync" in this repo. A
-   leftover `~/.claude/.kronael-sync-new` or `.kronael-sync-old` is an
-   interrupted swap: STOP, show both, ask — NEVER delete or reuse either. A
-   bundle path that is a symlink (`~/.claude/skills` → a checkout): stop and
-   ask. Export `SRC` and `RUN`, then `mkdir "$RUN"`. Read the manifest
-   `release` and report installed → source (commit, version, the
-   `## [vX.Y.Z]` CHANGELOG sections between); no manifest means "first
-   tracked sync".
+   `/kronael:sync` won't resolve; the user says "sync" in this repo. A leftover
+   `~/.claude/.kronael-sync-new` or `.kronael-sync-old` is a killed swap or a
+   failed rollback: STOP, show both, ask — NEVER delete or reuse either; `-new`
+   holds new copies not swapped in, `-old` old copies swapped out (those live
+   paths are new). Export `SRC` and `RUN`, `mkdir "$RUN"`, write `reference.md`
+   § Keep-list's `keep.py` there. Read the manifest `release` and report
+   installed → source (commit, version, the `## [vX.Y.Z]` CHANGELOG sections
+   between); no manifest means "first tracked sync".
    Completion criterion: assets verified, `RUN` printed, release delta
    written down, no leftover swap dir.
 
@@ -80,13 +80,15 @@ the failure. Settings still confirm before applying.
    older install), `edited` (S = M: only live changed), `both` (all three
    differ), `merged` (a `both` already in the repo), `no-base` (no `M`),
    `kept`, `shadow`, `retired` (a name the bundle dropped), `only-live` (no
-   source counterpart, not kept), `junk` (caches). `UNRESOLVED` lines are
-   settings hook commands pointing at paths the swap would drop.
+   source counterpart, not kept), `junk` (caches, a session's `.claude/`).
+   Exit 1 = a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line; step 3 settles each.
    Completion criterion: the class counts and every decision line printed.
 
-2. **Merge live edits into the repo.** `SRC` a snapshot (not the owner's
-   clone) and any `edited`/`both`/`no-base` line → STOP: list them, rerun from
-   the clone (`LOCAL.md` names it); NEVER swap them away.
+2. **Merge live edits into the repo.** `SRC` is the owner's clone only if
+   `git -C "$SRC" rev-parse --show-toplevel` = `realpath "$SRC"` and it is
+   not under `~/.claude/plugins/` or `~/.codex/`. A snapshot and any
+   `edited`/`both`/`no-base` line → STOP: list them, rerun from the clone
+   (`LOCAL.md` names it); NEVER swap them away.
    - `edited` → copy the live file over the repo file.
    - `both` → three-way merge per `reference.md` § Merge; a clean result goes
      into the repo; conflicts → show the hunks, ask: hand-merge, take repo, or
@@ -104,27 +106,28 @@ the failure. Settings still confirm before applying.
    declined); `git -C "$SRC" diff --stat` shows the merged files; no
    `^<<<<<<<` line in them; the lint exits 0.
 
-3. **Decide installed-only paths.** For each `only-live` entry show what it
-   is and ask: **keep** (append it to the keep-list), **repo** (generic
-   content only, on the owner's explicit yes — copy it into `SRC`), or
-   **leave** (the default; it ends in `RUN/old`). NEVER put an installed-only
-   path in the repo without that yes — it may be an org or private skill —
-   and NEVER drop one unlisted. Each `shadow`: the owner deletes the line.
-   Each `UNRESOLVED` hook path MUST be kept or unwired first: a missing hook
-   script makes `python3` exit 2, which Claude Code treats as blocking — every
-   prompt and tool call in every session fails.
-   Completion criterion: rerun § Classify prints no `shadow` or `UNRESOLVED`,
-   and every `only-live` line has an answer or the stated default.
+3. **Decide installed-only paths.** For each `only-live` entry show what it is
+   and ask: **keep** (append it to the keep-list), **repo** (generic content
+   only, on the owner's explicit yes — copy it into `SRC`), or **leave** (the
+   default; it ends in `RUN/old`). NEVER put an installed-only path in the repo
+   without that yes — it may be an org or private skill — and NEVER drop one
+   unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line.
+   Each `SYMLINK`: the owner keeps it (keep-list, under a bundle dir) or `mv`s
+   it into `RUN`. Each `UNRESOLVED` hook path MUST be kept or unwired first: a
+   missing hook script makes `python3` exit 2, which Claude Code treats as
+   blocking — every prompt and tool call in every session fails.
+   Completion criterion: rerun § Classify exits 0 with no `shadow` line, and
+   every `only-live` line has an answer or the stated default.
 
-4. **Swap.** Re-run § Classify first: any `edited`, `both` or `no-base` line
-   the owner did not decline in step 2 → back to step 2. Then run
-   `reference.md` § Swap as ONE Bash command — NEVER split it. It builds the
-   new bundle in `~/.claude/.kronael-sync-new` (source, wisdom body, fresh
+4. **Swap.** Re-run § Classify first: exit 1 → back to step 3; an `edited`,
+   `both` or `no-base` line the owner did not decline → back to step 2. Then
+   run `reference.md` § Swap as ONE Bash command — NEVER split it. It builds
+   the new bundle in `~/.claude/.kronael-sync-new` (source, wisdom body, fresh
    manifest, then the keep-list entries copied from live), exchanges each
    bundle path with its new copy atomically, and moves the old bundle to
-   `RUN/old`. Why: hooks fire before every tool call of this session and at
-   any moment in others, and a hook whose script is missing blocks its call —
-   a swap split across calls cannot even finish.
+   `RUN/old`. A failure leaves `~/.claude/` as it was; `ROLLBACK FAILED` →
+   step 0. Why: hooks fire at any moment, in any session, and one whose
+   script is missing blocks its call — a split swap cannot even finish.
    Completion criterion: it printed `swap ok`; § Classify now shows only
    `same` and `kept`; manifest `gitCommit` = `git -C "$SRC" rev-parse HEAD`.
 
@@ -199,6 +202,4 @@ the failure. Settings still confirm before applying.
   path left in `RUN/old` is named in the report.
 - NEVER `rm -r` anything — `mv` moves aside; the OS clears `/tmp`.
 - NEVER commit, push or merge origin as part of a sync.
-- NEVER sync `skipDangerousModePermissionPrompt` from live back into
-  `settings-recommended.json`.
 - NEVER copy skills into `~/.codex/skills` — Codex reads `~/.agents/skills`.

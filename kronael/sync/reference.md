@@ -2,15 +2,15 @@
 
 Cold lookup data for `SKILL.md`. Read the section a step names when that step
 runs; the decision logic stays in `SKILL.md`. Every script expects `SRC` (the
-source root) and `RUN` (the run dir) exported, and writes nothing outside
-`RUN` unless its section says so.
+source root) and `RUN` (the run dir) exported and `$RUN/keep.py` written
+(§ Keep-list), and writes nothing outside `RUN` unless its section says so.
 
-## Keep-list (steps 1, 3, 4)
+## Keep-list (steps 0, 1, 3, 4)
 
 `~/.claude/kronael-keep.txt` — one path per line, relative to `~/.claude/`,
-glob patterns allowed (`*` stays inside one path segment), `#` starts a
-comment. Each entry is an installed-only path the owner wants back after
-every sync:
+glob patterns allowed (`*` stays inside one path segment); a line starting
+with `#` is a comment. Each entry is an installed-only path inside one of the
+bundle dirs that the owner wants back after every sync:
 
 ```text
 # installed-only paths a sync carries over; never published
@@ -19,28 +19,77 @@ skills/ripwire-*
 agents/acme-oncall.md
 ```
 
-An entry the source also ships shadows the source copy: § Classify prints it
-as `shadow`, and the owner deletes the line.
+A trailing `/` is dropped. An entry that is absolute, has an empty, `.` or
+`..` segment, or names no path inside `skills/ agents/ hooks/ output-styles/
+commands/` is an error: § Classify prints `BADKEEP <entry>` and exits 1, and
+§ Swap refuses before it creates anything. An entry whose path the source
+also has, as a file or a dir, shadows it: § Classify prints `shadow`, § Swap
+refuses it, and the owner deletes the line.
+
+Step 0 writes the one reader of the list; § Classify and § Swap both import
+it, so the paths Classify prints as `kept` are the paths Swap copies:
+
+```sh
+cat > "$RUN/keep.py" <<'PY'
+import glob, os, sys
+
+DIRS = ('skills', 'agents', 'hooks', 'output-styles', 'commands')
+
+
+def invalid(entry):
+    parts = entry.split('/')
+    return (os.path.isabs(entry) or parts[0] not in DIRS or len(parts) < 2
+            or not {'', '.', '..'}.isdisjoint(parts))
+
+
+def expand(live):
+    """Paths under live that the keep-list names, outermost only.
+
+    A bad entry prints BADKEEP lines and exits 1.
+    """
+    path = os.path.join(live, 'kronael-keep.txt')
+    lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
+    entries = [x.rstrip('/') for x in lines if x and not x.startswith('#')]
+    bad = [k for k in entries if invalid(k)]
+    if bad:
+        print('\n'.join(f'BADKEEP {k}' for k in bad))
+        sys.exit(1)
+    paths = {p for k in entries for p in glob.glob(k, root_dir=live)}
+    return sorted(p for p in paths
+                  if not any(p.startswith(q + '/') for q in paths))
+
+
+if __name__ == '__main__':
+    expand(os.path.expanduser('~/.claude'))
+PY
+```
 
 ## Classify (step 1)
 
 Read-only. Prints a count per class and one line per path that needs a
-decision; exits 1 when a settings hook command points at a path the swap
-would drop. A live file identical to any committed version of its source path
-is an older install, not local work: it counts as `stale`. A `both` file whose
-three-way merge into the repo copy changes nothing is `merged`. A path under
-a name the bundle shipped and dropped (`RETIRED`), or a legacy nested
+decision; exits 1 on a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line. A live file
+identical to any committed version of its source path is an older install,
+not local work: it counts as `stale`. A `both` file whose three-way merge
+into the repo copy changes nothing is `merged`. A path under a name the
+bundle shipped and dropped (`RETIRED`), or a legacy nested
 `skills/<name>/<name>/` copy, is `retired`: it moves aside with the old bundle
-and needs no answer. Scratch files
-go to `$RUN/classify/`.
+and needs no answer. Caches and the `.claude/` scratch a session run inside a
+bundle dir leaves are `junk`. A bundle dir the live tree lacks (a first sync,
+an older install) is skipped; a dir or file it cannot read, live or source,
+stops the run with one `Cannot read <path>` line and exit 1. A symlink is
+never read through: a bundle root that is one, or one under a bundle dir that
+the keep-list does not name, prints `SYMLINK <path>`. `UNRESOLVED` lines are
+settings hook commands pointing at paths the swap would drop. Scratch files
+go to `$RUN/classify/`. An empty or absent live bundle prints `no live bundle
+files`.
 
 ```sh
-python3 - <<'PY'
-import glob, hashlib, json, os, re, subprocess, sys
+PYTHONPATH="$RUN" python3 -B - <<'PY'
+import hashlib, json, os, re, subprocess, sys
+import keep
 src, home, tmp = os.environ['SRC'], os.path.expanduser('~'), os.path.join(os.environ['RUN'], 'classify')
 live = os.path.join(home, '.claude')
-DIRS = ('skills', 'agents', 'hooks', 'output-styles', 'commands')
-JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache'}
+JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
     *(f'skills/{n}' for n in (
@@ -58,8 +107,11 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
 }
 
 def read(p):
-    with open(p, 'rb') as f:
-        return f.read()
+    try:
+        with open(p, 'rb') as f:
+            return f.read()
+    except OSError as err:
+        sys.exit(f'Cannot read {p}: {err.strerror}')
 
 def sha(b):
     return hashlib.sha256(b).hexdigest()
@@ -111,24 +163,38 @@ def retired(rel):  # a dropped name, or a legacy nested skills/<name>/<name>/ co
     return any(p in RETIRED for p in prefixes(rel)) or (
         len(parts) > 3 and parts[0] == 'skills' and parts[1] == parts[2])
 
-def kept(rel):  # the same glob expansion the swap copies
+def kept(rel):
     return any(p in keepset for p in prefixes(rel))
 
+def shadowed(rel):  # the source has the kept path itself, as a file or a dir
+    return any(os.path.lexists(os.path.join(src, p))
+               for p in prefixes(rel) if p in keepset)
+
 def fail(err):  # an unreadable dir must stop the run, not hide its files
-    raise err
+    sys.exit(f'Cannot read {err.filename}: {err.strerror}')
 
-mpath, kpath = os.path.join(live, 'kronael-install-manifest.json'), os.path.join(live, 'kronael-keep.txt')
-manifest = json.load(open(mpath)) if os.path.isfile(mpath) else {}
+mpath = os.path.join(live, 'kronael-install-manifest.json')
+manifest = json.loads(read(mpath)) if os.path.isfile(mpath) else {}
 files, commit = manifest.get('files', {}), manifest.get('release', {}).get('gitCommit')
-keep = [l.strip() for l in open(kpath) if l.strip() and not l.startswith('#')] if os.path.isfile(kpath) else []
-keepset = {p for k in keep for p in glob.glob(k, root_dir=live)}
+keepset = set(keep.expand(live))
 
-paths = [r for r in ('CLAUDE.md', 'RECLAUDE.md') if os.path.lexists(os.path.join(live, r))]
-for d in DIRS:
-    for root, dirs, names in os.walk(os.path.join(live, d), onerror=fail):
-        links = [x for x in dirs if os.path.islink(os.path.join(root, x))]
-        dirs[:] = [x for x in dirs if x not in links]
-        paths += [os.path.relpath(os.path.join(root, n), live) for n in names + links]
+paths, links = [], []
+for r in ('CLAUDE.md', 'RECLAUDE.md', *keep.DIRS):
+    top = os.path.join(live, r)
+    if os.path.islink(top):
+        links.append(r)
+    elif r in keep.DIRS and os.path.lexists(top):
+        for root, dirs, names in os.walk(top, onerror=fail):
+            subs = [x for x in dirs if os.path.islink(os.path.join(root, x))]
+            dirs[:] = [x for x in dirs if x not in subs]
+            for n in names + subs:
+                rel = os.path.relpath(os.path.join(root, n), live)
+                if os.path.islink(os.path.join(root, n)) and not kept(rel):
+                    links.append(rel)
+                else:
+                    paths.append(rel)
+    elif os.path.lexists(top):
+        paths.append(r)
 
 counts, out, only = {}, [], set()
 for rel in sorted(paths):
@@ -136,7 +202,7 @@ for rel in sorted(paths):
     if set(rel.split('/')) & JUNK or rel.endswith('.pyc'):
         cls = 'junk'
     elif kept(rel):
-        cls = 'kept' if s is None else 'shadow'
+        cls = 'shadow' if shadowed(rel) else 'kept'
     elif s is None and retired(rel):
         cls = 'retired'
     elif s is None:
@@ -154,16 +220,18 @@ for rel in sorted(paths):
         out.append(f'{cls:9} {rel}')
 out += [f'only-live {p}' for p in sorted(only)]
 out += [f'kept      {p}' for p in sorted(keepset)]
+out += [f'SYMLINK {p}' for p in sorted(links)]
 
-pat = re.compile(r'(?:~|\$HOME|' + re.escape(home) + r')/\.claude/((?:' + '|'.join(DIRS) + r')/[^\s"\';|&]+)')
+pat = re.compile(r'(?:~|\$HOME|' + re.escape(home) + r')/\.claude/((?:' + '|'.join(keep.DIRS) + r')/[^\s"\';|&]+)')
 for name in ('settings.json', 'settings.local.json'):
     p = os.path.join(live, name)
-    for rel in pat.findall(open(p).read()) if os.path.isfile(p) else []:
+    for rel in pat.findall(read(p).decode()) if os.path.isfile(p) else []:
         if not os.path.exists(os.path.join(src, rel)) and not kept(rel):
             out.append(f'UNRESOLVED {name}: ~/.claude/{rel}')
-print(' '.join(f'{k}={v}' for k, v in sorted(counts.items())))
-print('\n'.join(out))
-sys.exit(1 if any(o.startswith('UNRESOLVED') for o in out) else 0)
+print(' '.join(f'{k}={v}' for k, v in sorted(counts.items())) or 'no live bundle files')
+if out:
+    print('\n'.join(out))
+sys.exit(1 if any(o.startswith(('UNRESOLVED', 'SYMLINK')) for o in out) else 0)
 PY
 ```
 
@@ -213,21 +281,36 @@ in one `renameat2(RENAME_EXCHANGE)` call, so no path is ever missing — a
 only: elsewhere the first exchange fails and nothing has moved.
 
 ```sh
-set -eu
-test -d "$RUN" && test -d "$SRC/skills"
-L="$HOME/.claude"; mkdir -p "$L"
+set -euo pipefail
+L="$HOME/.claude"
+die() { echo "Swap refused: $*" >&2; exit 1; }
+[[ -d "$SRC/skills" && -f "$RUN/keep.py" ]] || die "need SRC/skills and RUN/keep.py"
+[[ ! -e "$RUN/old" ]] || die "$RUN/old exists: use a new run dir"
+[[ ! -e "$L/.kronael-sync-new" && ! -e "$L/.kronael-sync-old" ]] ||
+  die "a .kronael-sync-* dir is left in $L: step 0"
+python3 "$RUN/keep.py" || die "fix the BADKEEP lines in $L/kronael-keep.txt"
+mkdir -p "$L"
 mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
+aside() {
+  mv "$L/.kronael-sync-new" "$RUN/failed-$$"
+  rmdir "$L/.kronael-sync-old"
+  echo "Swap failed: $L is as it was; the unused build is in $RUN/failed-$$" >&2
+}
+trap aside EXIT
 tar -C "$SRC" --exclude=__pycache__ --exclude=.pytest_cache --exclude=.ruff_cache \
-  --exclude=skills/global -cf - skills agents hooks output-styles commands RECLAUDE.md \
+  --exclude=.claude --exclude=skills/global \
+  -cf - skills agents hooks output-styles commands RECLAUDE.md \
   | tar -C "$L/.kronael-sync-new" -xf -
 awk 'n>=2 && (p || NF) {p=1; print} /^---$/{n++}' "$SRC/skills/global/SKILL.md" \
   > "$L/.kronael-sync-new/CLAUDE.md"
-python3 - <<'PY'
-import ctypes, glob, hashlib, json, os, re, shutil, subprocess, time
+trap - EXIT
+PYTHONPATH="$RUN" python3 -B - <<'PY' || { s=$?; [[ $s -ne 1 ]] || aside; exit "$s"; }
+import ctypes, hashlib, json, os, re, shutil, signal, subprocess, sys, time
+import keep
 src, live = os.environ['SRC'], os.path.expanduser('~/.claude')
 new, old = os.path.join(live, '.kronael-sync-new'), os.path.join(live, '.kronael-sync-old')
-PATHS = ('skills', 'agents', 'hooks', 'output-styles', 'commands', 'CLAUDE.md', 'RECLAUDE.md',
-         'kronael-install-manifest.json')
+PATHS = (*keep.DIRS, 'CLAUDE.md', 'RECLAUDE.md', 'kronael-install-manifest.json')
+AT_FDCWD, RENAME_EXCHANGE = -100, 2
 
 def git(*args):
     r = subprocess.run(['git', '-C', src, *args], capture_output=True, text=True)
@@ -251,9 +334,11 @@ release = {'version': m.group(1) if m else None, 'gitCommit': git('rev-parse', '
 with open(os.path.join(new, 'kronael-install-manifest.json'), 'w') as f:
     json.dump({'version': 1, 'release': release, 'files': dict(sorted(files.items()))}, f, indent=1)
 
-kpath = os.path.join(live, 'kronael-keep.txt')
-keep = [l.strip() for l in open(kpath) if l.strip() and not l.startswith('#')] if os.path.isfile(kpath) else []
-for p in (p for k in keep for p in glob.glob(k, root_dir=live)):
+kept = keep.expand(live)
+shadows = [p for p in kept if os.path.lexists(os.path.join(src, p))]
+if shadows:
+    raise SystemExit(f'Swap refused: kept {shadows} shadow the source (step 3)')
+for p in kept:
     s, d = os.path.join(live, p), os.path.join(new, p)
     os.makedirs(os.path.dirname(d), exist_ok=True)
     if os.path.isdir(s) and not os.path.islink(s):
@@ -265,22 +350,59 @@ missing = [p for p in PATHS if not os.path.lexists(os.path.join(new, p))]
 if missing:
     raise SystemExit(f'new bundle lacks {missing}; nothing moved')
 libc = ctypes.CDLL(None, use_errno=True)
-for p in PATHS:
-    a, b = os.path.join(new, p).encode(), os.path.join(live, p).encode()
-    if os.path.lexists(b):
-        if libc.renameat2(-100, a, -100, b, 2) != 0:  # AT_FDCWD, RENAME_EXCHANGE
-            raise OSError(ctypes.get_errno(), f'exchange {p}')
+
+def exchange(a, b):
+    r = libc.renameat2(AT_FDCWD, a.encode(), AT_FDCWD, b.encode(), RENAME_EXCHANGE)
+    if r != 0:
+        raise OSError(ctypes.get_errno(), f'exchange {a} {b}')
+
+signal.pthread_sigmask(signal.SIG_BLOCK,
+                       {signal.SIGINT, signal.SIGTERM, signal.SIGHUP})
+swapped = []  # (path, where its old copy sits: None when live had none)
+try:
+    for p in PATHS:
+        a, b = os.path.join(new, p), os.path.join(live, p)
+        if not os.path.lexists(b):
+            os.rename(a, b)
+            swapped.append((p, None))
+            continue
+        exchange(a, b)
+        swapped.append((p, a))
         os.rename(a, os.path.join(old, p))
-    else:
-        os.rename(a, b)
-os.rmdir(new)
+        swapped[-1] = (p, os.path.join(old, p))
+except Exception as err:
+    failed = p
+    try:
+        while swapped:
+            p, at = swapped[-1]
+            a, b = os.path.join(new, p), os.path.join(live, p)
+            if at is None:
+                os.rename(b, a)
+            else:
+                exchange(at, b)
+                if at != a:
+                    os.rename(at, a)
+            swapped.pop()
+    except Exception as undo:
+        left = [p for p, _ in swapped]
+        print(f'ROLLBACK FAILED: {undo}\nstill swapped: {left}; '
+              f'their old copies are in {new} or {old} (step 0)', file=sys.stderr)
+        sys.exit(2)
+    sys.exit(f'Swap failed at {failed}: {err}; every exchanged path restored')
 PY
+rmdir "$L/.kronael-sync-new"
 mv "$L/.kronael-sync-old" "$RUN/old"
 echo "swap ok, previous bundle in $RUN/old"
 ```
 
-Any failure before the exchange loop leaves `~/.claude/` untouched and the two
-`.kronael-sync-*` dirs behind for step 0 to report.
+A failure leaves `~/.claude/` as it started — before the exchange loop
+nothing live has moved, and a failure inside it exchanges every swapped path
+back — and prints `Swap failed:` with the unused build moved to
+`$RUN/failed-<pid>`. The Python part exits 1 exactly when nothing live has
+changed, which is when the build moves aside. The `.kronael-sync-*` dirs stay
+only when the rollback fails (`ROLLBACK FAILED`, exit 2, naming the paths
+still swapped) or the run is killed; step 0 handles both. The loop blocks
+SIGINT, SIGTERM and SIGHUP, so a signal cannot stop it halfway.
 
 ## Codex bridge (step 6)
 
