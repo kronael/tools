@@ -9,7 +9,7 @@ Launch the prompt after /fable as a background agent (`run_in_background: true`,
 Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /fable without being asked when the task is:
-- A comprehensive or multi-file change written unattended, with no review per step (WISDOM § Agents).
+- Autonomous code generation: a comprehensive or multi-file change no parent reads before the work goes on (WISDOM § Agents).
 - The plan of a `ship` feature.
 - A security or deep audit, or a user request for maximum effort.
 

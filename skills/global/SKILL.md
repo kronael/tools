@@ -122,14 +122,14 @@ Claude Code" footer). These win.
 - ALWAYS read the remote through its tracking refs: `git fetch origin`, then
   `origin/<default head>` as the merge, rebase, diff or worktree base, where
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
-  `main`, trust a local `origin/HEAD`, or trust `git status`'s "up to date"
-  without a fetch — each reflects only the last fetch.
+  `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
+  `git status`'s "up to date" without a fetch.
 - Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
   dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
 - ONLY `git push` when the user asked for a push in that message — NEVER on your
   own initiative or as the silent tail of a commit, sync, release or ship
   workflow; those end at the local commit or tag. ALWAYS state the exact remote
-  and refspec and push only that, by SHA (`git push origin
+  and refspec first and push only that, by SHA (`git push origin
   <sha>:refs/heads/YYYYMMDD_<tag>`). NEVER `--force` or `--force-with-lease`.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
@@ -194,12 +194,12 @@ Claude Code" footer). These win.
 - Brief a subagent by GOAL, not numbered steps — models degrade on
   over-prescription. Give the goal, the context it needs, what is out of bounds
   and what "done" looks like, then let it choose the path.
-- ALWAYS run autonomous code generation — a comprehensive or multi-file change
-  written with nobody reviewing each step's diff before the next — on
-  `subagent_type: "fable"`, NEVER the default subagent model: an unattended
-  writer's mistakes are paid for in review, not tokens. Cheap models are for
-  READ-ONLY fan-out. Bigger work (a refactor, many call sites): ALWAYS plan in
-  the main thread (an `/opus` sub from a Sonnet or Haiku session), then run each
-  step on a `sonnet` sub and review its diff (`sonnet` § Plan, then execute).
+- ALWAYS run autonomous code generation — a sub writing a comprehensive or
+  multi-file change that no parent reads before the work goes on — on
+  `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
+  not tokens. Cheap models are for READ-ONLY fan-out. Bigger work: ALWAYS plan
+  in the main thread (an `/opus` sub from Sonnet or Haiku), then run each step
+  on a `sonnet` sub and read its diff before the next (`sonnet` § Plan, then
+  execute); a step read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

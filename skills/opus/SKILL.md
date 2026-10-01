@@ -17,4 +17,4 @@ ALWAYS reach for /opus without being asked when the task is:
 - NEVER reach for `/opus` on a task `/sonnet` (high) can do — ALWAYS send it to `/sonnet`; xhigh thinks deeper and costs more on every call.
 - NEVER set effort with prompt text — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
-- ALWAYS send unplanned multi-file code written unattended (WISDOM § Agents), a `ship` plan, and a security or deep audit to `/fable`.
+- ALWAYS send autonomous code generation (WISDOM § Agents), a `ship` plan, and a security or deep audit to `/fable`.
