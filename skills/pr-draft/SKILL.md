@@ -70,7 +70,7 @@ NEVER hard-wrap Markdown uploaded to GitHub just for source width — ALWAYS kee
 **Title**: ALWAYS follow the repo's own convention — read recent titles
 (`git log --oneline -20 origin/<default head>`); keep a ticket prefix (`[ABC-123]`)
 when the branch or commits carry one; default `type(scope): outcome` with
-`fix` `feat` `refactor` `docs` `chore`. ONE outcome, max 72 chars. NEVER a
+`fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
 **Body shape** — orientation first, then one paragraph per concern:

@@ -79,9 +79,10 @@ record the round in the diary — one line. Then stop.
 
 ## Model tier
 
-Standalone review → `model="opus"` for step 3. A `refine` flag pass → the
-caller passes `model="sonnet"` (cheap high-recall flagging; the subsequent
-`improve` call does opus verify+fix). ALWAYS respect the caller's model.
+Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
+the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
+flagging; the `improve` agent that verifies and fixes runs on Sonnet 5.5).
+ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
 
 ## GitHub PR (gh)
 

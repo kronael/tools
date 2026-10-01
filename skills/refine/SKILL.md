@@ -32,7 +32,7 @@ code extension and still carries every claim the reviewer will trust.
    unaccounted for.
 
 2. **Checkpoint and validate** — uncommitted changes → `Skill(commit, "chore:
-   checkpoint before refine")`. Then build and test through the project's own
+   Checkpoint before refine")`. Then build and test through the project's own
    target; fix failures before reviewing anything.
    → `git status --porcelain` is empty and the test target exits 0 in this turn.
 
@@ -81,9 +81,11 @@ code extension and still carries every claim the reviewer will trust.
 
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
-   brief. Set `model=` by the context's heaviest tag: `simplify` → sonnet,
-   `correctness` → opus (fable under `/release`). A context whose lenses carry
-   no tag (a document context) runs on the `correctness` model. The subs report
+   brief. Launch each with `subagent_type` set by the context's heaviest tag:
+   `simplify` → `sonnet`, `correctness` → `opus` (`fable` under `/release`,
+   `opus` when fable cannot run) — NEVER `model=`, which leaves the effort to
+   the parent. A context whose lenses carry no tag (a document context) runs
+   as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
    files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
@@ -121,7 +123,7 @@ code extension and still carries every claim the reviewer will trust.
     the project keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
     number left standing in a second file is the next pass's false premise.
-    Then final build and test, and `Skill(commit, "refa: apply refinements")`
+    Then final build and test, and `Skill(commit, "refa: Apply refinements")`
     when a file changed — NEVER skip that commit otherwise.
     → docs name every changed behaviour, tests pass in this turn, tree is clean.
 
@@ -197,6 +199,6 @@ where the gap shows.
 - ALWAYS route a critique, plan or creative second opinion to `oracle` instead.
 - A language lens lives at `<skill>.md` in this directory, named for the skill
   step 4 matched — adding the file is the whole registration. One lens per `##`
-  heading, each ending in its own tag so step 6 can set `model=` without
+  heading, each ending in its own tag so step 6 can pick the agent type without
   re-reading the code. NEVER copy write-time rules from a language skill into
   its lens; a lens carries only what a refine pass goes hunting for.
