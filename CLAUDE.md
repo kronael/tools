@@ -42,8 +42,7 @@ make clean         # clean projects + sweep __pycache__
   `test_*.py` does not run until it is added to that list — the suite passes
   while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
-  (installs to `~/.local/bin`; `clp` goes to `~/.local/share/clp`, sourced
-  from the shell rc). `dockbox` also has `make image`.
+  (installs to `~/.local/bin`). `dockbox` also has `make image`.
 - **Python scripts** (`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`
   (PEP 723 inline deps, no separate install).
 - **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.

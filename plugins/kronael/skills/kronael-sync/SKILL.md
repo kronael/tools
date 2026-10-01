@@ -1,6 +1,6 @@
 ---
 name: kronael-sync
-description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/clp/dockbox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
+description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/dockbox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
 when_to_use: "@kronael-sync, sync kronael from codex, set up kronael in codex, bridge claude skills into codex, bridge hooks into codex, kronael skills missing in codex, kronael hooks missing in codex"
 ---
 
@@ -78,7 +78,7 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 4. Execute the canonical sync's steps exactly as written there — the
    first-sync questionnaire, classify, merge live edits into the repo,
    installed-only decisions, swap, settings, Codex bridge, external tools,
-   CLI tools (rig/udfix/clp/dockbox — the marketplace snapshot carries their
+   CLI tools (rig/udfix/dockbox — the marketplace snapshot carries their
    source dirs), report. A marketplace snapshot is not the owner's clone:
    when `~/.claude/` holds live edits, the sync stops before the swap and
    asks for a run from the clone. Present the questionnaire inline as numbered options. NEVER

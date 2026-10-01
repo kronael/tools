@@ -27,7 +27,7 @@ Follow the canonical procedure in
 [`kronael/sync/SKILL.md`](kronael/sync/SKILL.md) step by step — on a first
 sync present its plan/consent questionnaire first, then preflight, classify,
 merge live edits into the repo, decide installed-only paths, swap, merge
-settings, bridge Codex, install the opted-in CLI tools (rig/udfix/clp/dockbox
+settings, bridge Codex, install the opted-in CLI tools (rig/udfix/dockbox
 via their Makefiles — the marketplace snapshot carries their source dirs),
 report. Its Review checklist (merge before swap, never-touch list, no
 recursive removal) applies verbatim. Below are only the Codex-specific
