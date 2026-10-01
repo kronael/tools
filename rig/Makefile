@@ -12,7 +12,7 @@ install:
 	rm -f ~/bin/gt ~/bin/gco ~/bin/gto ~/bin/gtp ~/bin/gtr
 
 clean:
-	find ~/.local/bin -maxdepth 1 -type l \( -lname rig -o -lname ~/.local/bin/rig \) -delete
+	test ! -d ~/.local/bin || find ~/.local/bin -maxdepth 1 -type l \( -lname rig -o -lname ~/.local/bin/rig \) -delete
 	rm -f ~/.local/bin/rig
 
 test: check
