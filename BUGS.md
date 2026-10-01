@@ -40,19 +40,6 @@
   repo's 200-line rule (`CLAUDE.md:115`, `skills/wisdom/SKILL.md:65`); the
   canonical `kronael/sync/SKILL.md` is at 199. **Fix:** cut the bridge to its
   Codex-only deltas, or move detail to `kronael/sync/reference.md`.
-- **WISDOM-OVER-LINE-CAP** (LOW, docs) — proposed, needs sign-off. 2026-10-01:
-  `skills/global/SKILL.md` has a 224-line body against the 200-line cap
-  (`awk 'n>=2; /^---$/{n++}' skills/global/SKILL.md | wc -l`); it loads in
-  every session. v0.4.8 was at 200: the local rules this release ships
-  (`/pr-draft`, the negative-claim and swallowing extensions, the fable and
-  sonnet bullets) added the overflow. § Git's two-phase GitHub-text rule stays:
-  `pr-draft`, `gh-comment`, `gh-issue` and `release` cite it. **Proposal** (~24
-  lines): move the doc-topology bullets (`UPPERCASE at root`, `specs/`/`.ship/`)
-  to `readme`; the worktree bullet to `worktree`; the tracking-refs bullet to
-  `merge` § Sync; merge the two negative-claim bullets in § Response style; cut
-  the `/pr-draft` bullet to its pointer; fold the § Agents fable and sonnet
-  bullets into one.
-
 - **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
   2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
   `@learn`, while `hooks/README.md:21-23` and `skills/learn/SKILL.md:3,34`
@@ -79,12 +66,6 @@
   intact (it ships its own LICENSE and Attribution section) and has no sibling
   files. **Fix:** split the pattern catalogs into on-demand siblings — a
   restructuring of imported content, not a one-line fix.
-
-- **GLOBAL-COMMIT-TYPES-DISAGREE** (LOW, docs) — CONFIRMED 2026-10-01.
-  `skills/global/SKILL.md:120-121` § Git lists
-  fix/feat/docs/test/chore/refactor; the `commit` skill uses `refa`/`splx`
-  (`skills/commit/SKILL.md:31-32`) and refine `refa`
-  (`skills/refine/SKILL.md:124`). **Fix:** one list, owned by `commit`.
 
 ## Codex bridge
 
