@@ -1,3 +1,7 @@
+---
+status: shipped
+---
+
 # clp — Claude Project Launcher
 
 Bash function: fzf-pick a project dir, cd there, launch claude.

@@ -1,3 +1,7 @@
+---
+status: draft
+---
+
 # Skill Auto-Improvement: v3 — Bundle Eval Loop
 
 ## TL;DR
