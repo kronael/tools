@@ -165,3 +165,29 @@ def test_stale_diary_warns_without_touching_the_file(tmp_path) -> None:
 
     assert 'Diary not updated in over an hour' in out['reason']
     assert diary.read_text() == before
+
+
+def test_ignored_diary_in_main_tree_silences_linked_worktree(tmp_path) -> None:
+    git(tmp_path, 'init', '-q')
+    commit(tmp_path, '.gitignore', '/.diary/\n', 'chore: ignore diary')
+    linked = tmp_path / '.linked'
+    git(tmp_path, 'worktree', 'add', '-q', '--detach', str(linked))
+    (tmp_path / '.diary').mkdir()
+    (tmp_path / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
+
+    assert run_hook(linked) is None
+
+
+def test_tracked_diary_only_in_main_tree_blocks_linked_worktree(tmp_path) -> None:
+    git(tmp_path, 'init', '-q')
+    commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
+    linked = tmp_path / '.linked'
+    git(tmp_path, 'worktree', 'add', '-q', '--detach', str(linked))
+    (tmp_path / '.diary').mkdir()
+    (tmp_path / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
+
+    out = run_hook(linked)
+
+    assert out['decision'] == 'block'
+    assert out['reason'].startswith('No diary entry for today')
+    assert 'Run /diary.' in out['reason']

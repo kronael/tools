@@ -92,7 +92,7 @@ func lintOf(in string) []issue {
 func TestLint(t *testing.T) {
 	tests := []struct {
 		name, in string
-		want     int // number of issues expected
+		want     int
 	}{
 		{"correct box is clean", "┌─┬─┐\n│ │ │\n└─┴─┘", 0},
 		{"tree listing is clean (overspecified branches tolerated)",
