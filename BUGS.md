@@ -274,6 +274,20 @@
   has tested it here, because this box has no `/dev/kvm` access (see the KVM
   entry above).
 
+- **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
+  `qemubox -n x -N exec sudo poweroff` ends with ssh's
+  "kex_exchange_identification: Connection reset by peer" and
+  `qemubox:322` "cannot remove session marker; keeping qemubox-x running",
+  while `qemubox status x` already reports `process=stopped`. `running` at
+  `:316` still sees the QEMU process during shutdown; the marker ssh then
+  fails. **Fix:** re-check `running` before printing the note; say the VM is
+  shutting down instead.
+- **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
+  First boot prints systemctl's two "Removed '/etc/systemd/system/...
+  systemd-timesyncd.service'" lines into the user's terminal from
+  `sync_guest_clock` (`qemubox:524`). **Fix:** `systemctl disable --now
+  --quiet`.
+
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
