@@ -2,6 +2,26 @@
 
 ## Bundle
 
+- **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
+  needs sign-off. `skills/refine/SKILL.md:74-85` requires replies to every
+  unfixed PR thread and declares them a completion condition, even when the
+  owner requested only a verified local change. WISDOM's Git rules and
+  `gh-comment` retain their external-action gates; a local ship can finish
+  its code while that unconditional completion condition remains unmet.
+  **Proposal:** make public replies conditional on the owner's requested
+  destination; otherwise report local dispositions and outstanding thread
+  actions. Keep approval gates in `gh-comment`; no new review mode, skill,
+  saved plan or hook. No test — design.
+
+- **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
+  needs sign-off. `skills/refine/SKILL.md:86-88` removes stale managed
+  worktrees and requires only the main tree to remain. A ship can own a
+  detached worktree while another task owns a different one;
+  `skills/worktree/SKILL.md:54-55` forbids removing another task's worktree.
+  **Proposal:** make cleanup and its completion condition refer only to
+  verified worktrees owned by the current run, preserving unique unfinished
+  work. Change rule text only; no enforcement machinery. No test — design.
+
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
   `skills/create/social/references/research-social-meme.md:196-217` carries a
   "Corrections (post-codex)" section narrating what the document itself changed
