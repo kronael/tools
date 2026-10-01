@@ -1,13 +1,56 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.9] — 20261001
 
-> An unverified negative is not a finding
+> kronael v0.4.9 — plan on Opus, build on Sonnet, sync clean
 >
-> Two rules the wisdom file carries, both earned by breaking them with that file already loaded.
+> Bigger work runs as a reviewed plan built on Sonnet, and sync rebuilds ~/.claude so stale files cannot pile up.
 >
-> • Negatives — output you cannot read looks like absence; re-check with the access the answer needs
-> • Swallowing — when the mechanism drops errors, replace it rather than bolting counters onto it
+> • /sonnet — plan, brief, review, recover and close for multi-file work, with a ~200-line size gate
+> • /kronael:sync — merges your ~/.claude edits into your clone first, then rebuilds ~/.claude from it
+> • /refine — reviews a change by context and settles every claim it makes before a release
+> • /research — one router for backtest method, report layout and silent-number traps
+> • dockbox — fails a box that dies at startup; a project .dockboxrc honours --no-ephemeral
+> • rig — sq and riq removed; they never found a fixup commit
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- **Breaking:** `/kronael:install` and `@kronael-install` are `/kronael:sync`
+  and `@kronael-sync`. A sync merges files edited in `~/.claude` into your
+  clone three-way, then swaps in a bundle built from source plus
+  `~/.claude/kronael-keep.txt`; the old bundle moves to a `/tmp` run dir.
+  Installed-only skills survive only when the keep-list names them; names the
+  bundle dropped move aside without a question. A failed build, a bad keep-list
+  entry or a symlink in the bundle stops the sync with `~/.claude` unchanged, and
+  a failure during the swap restores every path already exchanged.
+- **Breaking:** `rig sq`, `rig fixup` and `riq` are removed; `rig install` and
+  `make clean` delete any alias missing from rig's list.
+- `sonnet` owns "Plan, then execute": a change under ~200 lines stays in the
+  main thread; bigger work plans top-down (end state, design, steps), researches
+  the code through a sub that gets questions only, runs each step on Sonnet
+  against a recorded snapshot SHA, and discards a step whose design is wrong.
+  `opus`, `fable`, `haiku`, `dispatch` and `oracle` state the model and effort
+  their agent files pin; `improve` runs on Sonnet 5.5 at high.
+- `refine` cuts a change into contexts, briefs one read-only sub per context and
+  re-derives every finding, launching each review by agent type; release step
+  1.5 and `oracle` fall back to opus or fable when codex cannot run.
+- `research` (method, layout, traps) absorbs `research-analysis`; its QLIKE rule
+  follows Patton 2011.
+- The wisdom file sits at its 200-line cap, with the repo doc layout in
+  `readme/topology.md`. New rules: an unverified negative is not a finding, and
+  a mechanism that swallows errors gets replaced, not instrumented.
+- dockbox: a box that exits or never becomes ready fails the launch with its
+  last log lines; a project `.dockboxrc` honours `--no-ephemeral`, an empty one
+  leaves command-line flags alone, an unknown `--flag` in either rc is an
+  error, and the help lists the flags a project rc ignores.
+- hooks and diary: the diary resolves from the repo toplevel on the UTC date,
+  and its main tree in submodules and separate-git-dir repos; the Stop hook
+  stays silent in ship's judging roles; `make -C hooks test` runs through
+  `uvx --with pyyaml`.
+- qemubox: `build-base` finds `mke2fs` in `/usr/sbin`, the README states the
+  `mke2fs -d` tarball requirement, and the build tests run without host tools.
+- tw-fetch surfaces driver errors instead of archiving the wrong tab.
+- About 100 comment lines that restated the code are gone.
 
 ## [v0.4.8] — 20261001
 
