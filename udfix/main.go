@@ -19,7 +19,6 @@ import (
 
 type sides struct{ up, down, left, right bool }
 
-// subsetOf reports whether every arm of s is also drawn by o.
 func (s sides) subsetOf(o sides) bool {
 	return (!s.up || o.up) && (!s.down || o.down) &&
 		(!s.left || o.left) && (!s.right || o.right)
@@ -56,7 +55,6 @@ func init() {
 	}
 }
 
-// touching returns the sides on which a neighbour connects toward cell (r, c).
 func touching(lines [][]rune, r, c int) sides {
 	get := func(r, c int) rune {
 		if r < 0 || r >= len(lines) || c < 0 || c >= len(lines[r]) {
@@ -128,7 +126,6 @@ func lint(lines [][]rune) []issue {
 	return issues
 }
 
-// splitDiagram returns the diagram's lines and whether it ended with a newline.
 func splitDiagram(input []byte) (lines [][]rune, trailingNewline bool) {
 	text := string(input)
 	trailingNewline = strings.HasSuffix(text, "\n")
@@ -141,8 +138,6 @@ func splitDiagram(input []byte) (lines [][]rune, trailingNewline bool) {
 	return lines, trailingNewline
 }
 
-// process fixes an entire diagram. It preserves the input's trailing-newline
-// state and returns empty output for empty input.
 func process(input []byte) []byte {
 	if len(input) == 0 {
 		return nil

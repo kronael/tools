@@ -42,9 +42,6 @@ BACKOFF_JITTER = 60
 log = logging.getLogger('tw-fetch')
 
 
-# --- browser ---
-
-
 @contextmanager
 def browser(headless=True):
     opts = webdriver.ChromeOptions()
@@ -66,9 +63,6 @@ def inject_cookies(driver, cookies):
         with suppress(Exception):
             driver.add_cookie(c)
     driver.get('https://x.com')
-
-
-# --- parsing ---
 
 
 class _Strip(HTMLParser):
@@ -123,9 +117,6 @@ def parse_tweet(elem):
     return {'id': id_, 'url': link, 'author': author, 'text': text, 'ctime': ctime}
 
 
-# --- i/o ---
-
-
 def seen_ids(path):
     ids = set()
     if not os.path.exists(path):
@@ -149,9 +140,6 @@ def append(f, record, existing):
     return True
 
 
-# --- scrolling ---
-
-
 def wait_timeline(driver, label='Timeline'):
     condition = (By.XPATH, f"//main//section//div[contains(@aria-label, '{label}')]")
     return WebDriverWait(driver, TIMEOUT).until(visibility_of_element_located(condition))
@@ -165,8 +153,6 @@ def scroll_down(driver):
 def get_tweets(timeline):
     return timeline.find_elements(By.XPATH, './/article')
 
-
-# --- commands ---
 
 COOKIE_DIR = './cookies'
 
@@ -189,7 +175,6 @@ def collect_round(driver, existing, path):
     try:
         driver.get('https://x.com')
         sleep(3)
-        # click Following tab if present
         try:
             tab = driver.find_element(
                 By.XPATH, "//div[@role='tablist']//span[contains(text(),'Following')]"
@@ -359,7 +344,6 @@ def login(username):
     else:
         log.info(f'auth_token: {auth["value"][:12]}...')
 
-    # strip non-serializable fields selenium adds
     clean = [
         {
             'name': c['name'],
