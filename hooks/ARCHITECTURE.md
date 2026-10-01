@@ -154,25 +154,68 @@ unwired.
 
 ### stop.py (Stop)
 
-**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`.
+**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`; env
+`SHIP_ROLE`, `CLAUDE_EVAL`, `KRONAEL_HOOK_EVENT`.
 **Output:** `{"decision": "block", "reason": "..."}` on real Stop,
 advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 **Flow:**
-1. With `stop_hook_active` set, skip the nudges — this prevents recursion, and
+1. With `CLAUDE_EVAL` set, or `SHIP_ROLE` set and not starting with
+   `worker`, exit silently before any git call and before the event split,
+   so PostToolUse is silent too. The `ship` CLI sets `SHIP_ROLE` per
+   `claude` child (`planner`, `judge`, `verifier`, `validator`,
+   `replanner`, `worker-<id>`); only workers build and commit.
+2. With `stop_hook_active` set, skip the nudges — this prevents recursion, and
    with nothing left to say the hook is silent.
-2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
-   with `git diff --stat`. A failed `git status` inside a repo appends its
-   stderr instead — an unreadable tree is reported, never read as clean.
-3. Check for today's `YYYYMMDD.md` (UTC) under the repo's `.diary/`. Missing
-   or >1h stale → append a diary nudge on every Stop; no stamp throttles
-   it. The directory need not exist; a repo without one is nudged to
-   start it.
-4. Real Stop blocks with the combined message and stops there. Periodic
+3. Check `git status --porcelain -uno`; if dirty and the stamp is missing or
+   at least `NUDGE_INTERVAL` (600 s) old, append a commit nudge with
+   `git diff --stat` and re-stamp. A failed `git status` inside a repo
+   appends its stderr instead, unthrottled — an unreadable tree is reported,
+   never read as clean.
+4. Resolve the diary tree (`diary_trees`, below) and check for today's
+   `YYYYMMDD.md` (UTC) under its `.diary/`. Missing or >1h stale → append a
+   diary nudge on every Stop; no stamp throttles it. The directory need not
+   exist; a repo without one is nudged to start it.
+5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
-`<git-dir>/claude-commit-nudge` (nudge throttle).
+`<git-dir>/claude-commit-nudge` (commit nudge throttle).
+
+**Diary tree:** an ignored diary is never committed, so its one copy lives
+in the main worktree; any other is committed per branch and read in the
+current worktree. The check tests the dated file: a `.diary/` ignore rule
+matches the bare `.diary` only once the directory exists.
+
+```
+git_dir = rev-parse --absolute-git-dir
+common  = rev-parse --path-format=absolute --git-common-dir
+current = rev-parse --show-toplevel
+     │
+     v
+same realpath(git_dir, common)? ──yes──> main = current
+     │                               (plain repo, submodule,
+     │ no: linked worktree            --separate-git-dir repo)
+     v
+core.worktree in <common>/config? ──yes──> main = <common>/<value>
+     │                                     (worktree of a submodule)
+     │ no
+     v
+main = dirname(<common>)                   (worktree of a plain repo)
+
+check-ignore -q .diary/YYYYMMDD.md, run in current
+     │
+     ├── ignored ─────> <main>/.diary/YYYYMMDD.md
+     └── not ignored ──> <current>/.diary/YYYYMMDD.md
+```
+
+`dirname(<common>)` cannot be the general rule: a submodule's or a
+`--separate-git-dir` repo's common dir is a git dir stored elsewhere, so its
+parent is not their checkout. Git records no main tree for a
+linked worktree of a `--separate-git-dir` repo; there the last branch yields
+the git dir's parent, and an ignored diary is looked for beside the git dir.
+`../skills/diary/SKILL.md` § Where to write resolves `<main>` the same way;
+change both together.
 
 ### memory_nudge.py (PreCompact + Stop)
 
@@ -224,17 +267,13 @@ stdin:
   // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
 }
 
-stdout (dirty tree + stale diary):
+stdout (dirty tree + stale diary; commit guidance elided):
 {
   "decision": "block",
-  "reason": "Uncommitted changes detected.\n <diff stat>\nRun /commit.\nDiary not updated in over an hour. Run /diary."
+  "reason": "Uncommitted changes detected.\n<diff stat>\nCommit your work — ... Run /commit.\nRules: ...\nDiary not updated in over an hour (now 16:52 2026-10-01). Run /diary deliberately if there is work to record."
 }
 
-stdout (nothing to block on):
-{
-  "ok": true,
-  "systemMessage": "since 14:02Z: 2 commits\n+ b78cf4c1 docs(bugs): Record B7E as resolved\n+ b0214954 docs(diary): The re-baseline was interrupted\nuncommitted: 1 changed, 1 untracked (+40 -3)\n  server/strategy.py server/foo.py"
-}
+stdout (nothing to nudge, or a judging SHIP_ROLE): empty
 ```
 
 Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and

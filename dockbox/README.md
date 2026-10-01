@@ -77,6 +77,12 @@ the container's writable layer, volumes excluded. USE and TMPFS show `-` for
 a stopped box and `?` when the probe fails. `dockbox prune` removes idle boxes
 at least 4 hours old and never a busy one.
 
+A new box that exits before `dockbox-init` marks it ready (after registering
+your user) fails the launch: dockbox prints `Container exited during
+startup` and the last 20 lines of the box's log, exits 1 and opens no
+session. The stopped box stays for `docker logs` until `dockbox rm <name>`
+or the next launch replaces it.
+
 ### Re-entry into a running box
 
 If a dockbox for the project is already running, the next `dockbox`
@@ -126,14 +132,23 @@ Realtime priority and locked memory draw on the host's CPU and RAM.
 
 ## Configuration
 
-Extra docker args via `.dockboxrc` files (bash-style, `#` comments):
+Default dockbox flags via `.dockboxrc` files: the Usage flags,
+whitespace-separated, with lines starting `#` as comments.
 
-- `~/.dockboxrc` — global defaults (e.g. `--gpus all`)
-- `.dockboxrc` in project dir — per-project overrides
+- `~/.dockboxrc` — global defaults, every flag. It is read ahead of the
+  command line, so a command-line `-n`, `-d` or `-x` wins over it.
+- `.dockboxrc` in the project dir (the last dir named) — per-project
+  defaults. It takes `-e`, `-v`, `-H`, `-T`, `-g`, `-G` and `-P` /
+  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`
+  with a warning, so a cloned repo cannot grant itself sudo, the Docker
+  socket or your SSH/gpg agent, or switch the tool or box name. Put those in
+  `~/.dockboxrc`.
 
-Both are optional. Global applies first, project appends. The
-project `.dockboxrc` is overmounted with `/dev/null` inside the
-container so the boxed agent can't modify it.
+Both are optional. Global applies first, project appends. Neither file
+reaches `docker run`: a Docker flag such as `--gpus all` is parsed as
+dockbox and tool flags, not passed to Docker. The project `.dockboxrc` is
+overmounted with `/dev/null` inside the container so the boxed agent can't
+modify it.
 
 ## Roaming between networks
 
@@ -278,7 +293,8 @@ keep toolchains, caches and dependency dirs out of your host workdir:
 no stale artifacts persist, only source code is long-lived. A warm cache
 is a liability; the source tree is the truth.
 
-**Opt out** (`dockbox -P` / `--no-ephemeral`):
+**Opt out** (`dockbox -P` / `--no-ephemeral`, also from either
+`.dockboxrc`):
 
 - You want to share a single `node_modules/` across runs (and accept the
   cache-poisoning risk).
@@ -330,12 +346,6 @@ Then in dockbox Claude, reference `capture.png` — it auto-attaches.
 
 ```bash
 dockbox -v /tmp/data.csv ~/wk/project    # mounts at same path, ro
-```
-
-### GPU passthrough
-
-```
---gpus all
 ```
 
 ## Included Tools

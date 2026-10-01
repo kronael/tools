@@ -84,15 +84,31 @@ instructing the model to preserve the wisdom across the compact.
 ### stop.py (Stop)
 
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
--uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
-the repo diary has today's entry missing or >1h stale ("consider /diary";
-Codex sees `@diary`). The diary nudge has no throttle: it repeats on every
+-uno` shows uncommitted changes ("Run /commit"; Codex sees `@commit`) or
+today's diary entry is missing or >1h stale ("Run /diary"; Codex sees
+`@diary`). The commit nudge repeats at most every 10 minutes
+(`NUDGE_INTERVAL`); the diary nudge has no throttle: it repeats on every
 Stop until today's entry exists and is under an hour old. When called from
 periodic `PostToolUse`, the same checks emit advisory
 `hookSpecificOutput.additionalContext` and never block a tool call.
 
+Today's entry is `.diary/YYYYMMDD.md` (UTC date). A worktree is one checkout
+of a repo; `git worktree add` makes linked ones beside the main checkout. An
+entry git ignores is read from the main worktree, its single uncommitted
+copy; any other from the current worktree, since a tracked diary is
+committed per branch. A plain repo, a submodule and a `--separate-git-dir`
+repo are their own main worktree (linked worktrees: ARCHITECTURE.md), and
+`../skills/diary/SKILL.md` § Where to write uses the same rule.
+
 A `git status` that fails inside a repo blocks with its stderr — the tree is
 reported as unreadable rather than assumed clean.
+
+Under the `ship` CLI ([kronael/ship](https://github.com/kronael/ship)), each
+`claude` process it starts carries its role in `SHIP_ROLE`. A worker
+(`worker-<id>`) gets both nudges — the commit nudge is what makes it commit.
+Any other non-empty role (planner, judge, verifier, validator, replanner)
+judges rather than builds, and the hook exits silently for it, on Stop and
+PostToolUse alike.
 
 The hook reports a missing or stale diary entry and never writes a header —
 run `/diary` deliberately when a session is worth recording. Pure script, no
@@ -117,5 +133,16 @@ nudge, tied to the moment context would otherwise be lost:
 
 State: the session-keyed stamps `memory-nudge-{start,done}-{session_id}` in `~/.claude/state` (`lib/state.py`). The `start`
 file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
+
+## Tests
+
+```bash
+make test        # from hooks/; make test-all is the verbose run
+```
+
+Runs the Makefile's `TEST_FILES` through `uvx --with pyyaml pytest` when
+`uvx` is on PATH, since the frontmatter-lint test imports `yaml`; otherwise
+through the first `pytest` on PATH (else `~/.local/bin/pytest`), which needs
+PyYAML for that file. TEST.md has the manual smoke tests.
 
 See ARCHITECTURE.md for per-hook data flow.
