@@ -221,8 +221,9 @@ Claude Code" footer). These win.
   as it lands. Cheap models are for READ-ONLY fan-out (Explore, research); an
   unattended writer's mistakes are paid for in review, not in tokens. NEVER let
   such a sub fall through to the default subagent model.
-- Bigger work (a refactor, many call sites): ALWAYS plan in the main thread,
-  then run each step on a `sonnet` sub and review its diff before the next —
-  `sonnet` § Plan, then execute. That is not the unattended generation above.
+- Bigger work (a refactor, many call sites): ALWAYS plan in the main thread — an
+  `/opus` sub from a Sonnet or Haiku session — then run each step on a `sonnet`
+  sub (`sonnet` § Plan, then execute). A step whose diff the parent reviews
+  before the next, here or in `ship`, is not the unattended generation above.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
