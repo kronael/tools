@@ -119,6 +119,8 @@ case "$1" in
             *" -it "*)
                 [ -n "${STUB_WIPE:-}" ] && rm -f "$STUB"/run/sess/* && rmdir "$STUB/run/sess"
                 exit "${STUB_RC:-0}" ;;
+            */run/dockbox/ready)
+                [ -n "${STUB_UNREADY:-}" ] && exit 1 ;;
             */run/dockbox/sess*)
                 script="${*: -1}"
                 exec "$box_sh" -c "${script//"/run/dockbox"/$STUB/run}" ;;
@@ -271,7 +273,7 @@ cp "$here/seccomp.json" "$share/"
 # Start a fresh box with the given flags; leaves its run line in $run and
 # removes the merged-settings temp file the launch left behind.
 fresh() {
-    HOME="$tmp/home" STUB_FRESH=1 dockbox "$@" exec true >/dev/null 2>&1; rc=$?
+    HOME="$tmp/home" STUB_FRESH=1 dockbox "$@" exec true >/dev/null 2>"$tmp/err"; rc=$?
     run=$(grep "^run " "$log")
     settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' <<< "$run")
     [ -n "$settings" ] && rm -f -- "$settings"
@@ -294,6 +296,9 @@ HOME="$tmp/home" STUB_FRESH=1 STUB_DOWN=1 \
     dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
 true_  "an unreachable daemon fails the launch with docker's error" \
     '[ "$rc" != 0 ] && grep -q "Cannot connect to the Docker" "$tmp/err"'
+STUB_UNREADY=1 fresh -n fresh
+true_  "a box that exits before it is ready fails the launch" \
+    '[ "$rc" = 1 ] && grep -qx "Container exited during startup" "$tmp/err"'
 fresh -n fresh
 true_  "a new box runs the io_uring seccomp profile" \
     'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'

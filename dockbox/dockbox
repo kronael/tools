@@ -680,7 +680,7 @@ docker run -d --init \
 
 for _ in $(seq 1 100); do
     docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
-    docker ps -q -f "name=^${CONTAINER_NAME}$" >/dev/null 2>&1 || \
+    [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]] || \
         { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
     sleep 0.1
 done
