@@ -1,8 +1,19 @@
+---
+status: partial
+---
+
 # Redirect Hook Overhaul + Committer
 
 Rewrite `redirect.py` as a generic declarative rule engine.
 Rules in a flat text file, three response modes, prefix matching.
 Add git safety rules. Update prompt_nudge.py and commit skill.
+
+**Status note**: the committer half shipped — `hooks/prompt_nudge.py`
+(`COMMIT_RULES`) and `skills/commit/SKILL.md` carry the git safety rules this
+spec called for. The redirect.py rule-engine half below was built, never
+wired into any settings file, and was deleted as an orphan hook
+(`kronael/install/SKILL.md`, commit c539aed) — it is not current design, kept
+here as the record of what was tried.
 
 ## Background
 
@@ -192,15 +203,18 @@ automatically. Skill handles message format and cohesive check.
 
 ## What happens to toolchain.py
 
-Current redirect.py uses `lib/toolchain.py` for cwd-aware command
-lookup (detect Makefile, Cargo.toml, etc). The rules file replaces
-this — nudge rules are static per-project or global.
+The old redirect.py used `lib/toolchain.py` for cwd-aware command
+lookup (detect Makefile, Cargo.toml, etc). The rules file design below
+replaced this with static nudge rules, per-project or global.
 
-If a project needs `pytest` → `make test` only when Makefile
-exists, put the rule in `.claude/redirect.rules` in that project.
-Global rules apply everywhere. Simpler than runtime detection.
+The design put a project override at `.claude/redirect.rules` — if a
+project needed `pytest` → `make test` only when Makefile exists, the
+rule would live there instead of in runtime detection. Global rules
+apply everywhere. This file was never built; see the status note above.
 
-toolchain.py and lib/ can be removed after migration.
+`toolchain.py` and `lib/` were removed with redirect.py (`kronael/install/SKILL.md`,
+commit c539aed) — the migration this line anticipated happened by deletion,
+not by the rules file taking over.
 
 ## Sync to agent SDK
 
@@ -211,6 +225,9 @@ could be:
 - Both: defaults embedded, overrides from file
 
 ## Testing
+
+Acceptance checks for the redirect.py design above; never run — the design
+was deleted before it was wired up (see status note).
 
 1. `git add .` → blocked
 2. `git add -A` → blocked
