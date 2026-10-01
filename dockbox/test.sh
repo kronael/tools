@@ -87,7 +87,10 @@ true_ "the profile allows the three io_uring syscalls" \
 # runs the session-marker snippets against $STUB/run and the ls probe against
 # the fake box in $STUB/box — under dash when installed, the box's /bin/sh —
 # and logs every call. It reports the box running unless STUB_FRESH is set,
-# when a launch starts a new one.
+# when a launch starts a new one; STUB_STAYS then makes that box show up in
+# `ps` once it has been run, STUB_PSDOWN makes `ps` fail, and STUB_UNREADY keeps
+# the ready marker from appearing. Its `logs` are 25 numbered lines. The sleep
+# stub (not part of docker) skips the wait between readiness probes.
 export STUB="$tmp"
 log="$tmp/log"
 cat > "$tmp/docker" <<'STUB'
@@ -134,7 +137,11 @@ case "$1" in
             *CapAdd*) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
             *) echo "DOCKBOX_UID=${STUB_OWNER:-$(id -u)}" ;;
         esac ;;
-    ps) [ -n "${STUB_FRESH:-}" ] || echo c0ffee ;;
+    ps)
+        [ -n "${STUB_PSDOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
+        [ -z "${STUB_FRESH:-}" ] || { [ -n "${STUB_STAYS:-}" ] && grep -q '^run ' "$STUB/log"; } &&
+            echo c0ffee ;;
+    logs) seq -f "boot line %g" 1 25 ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
     network)
         [ -n "${STUB_DOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
@@ -143,6 +150,8 @@ esac
 exit 0
 STUB
 chmod +x "$tmp/docker"
+printf '#!/bin/sh\nexit 0\n' > "$tmp/sleep"
+chmod +x "$tmp/sleep"
 cat > "$tmp/ss" <<'SS'
 #!/bin/bash
 [ -z "${STUB_DNS:-}" ] || echo "UNCONN 0      0      ${STUB_DNS}:53 0.0.0.0:*"
@@ -299,6 +308,17 @@ true_  "an unreachable daemon fails the launch with docker's error" \
 STUB_UNREADY=1 fresh -n fresh
 true_  "a box that exits before it is ready fails the launch" \
     '[ "$rc" = 1 ] && grep -qx "Container exited during startup" "$tmp/err"'
+STUB_UNREADY=1 STUB_STAYS=1 fresh -n fresh
+true_  "a box that never becomes ready fails the launch, not enters" \
+    '[ "$rc" = 1 ] && grep -qx "Container not ready after the startup wait" "$tmp/err" && ! grep -q "^exec -it" "$log"'
+out=$(HOME="$tmp/home" STUB_FRESH=1 STUB_UNREADY=1 STUB_STAYS=1 dockbox -n fresh exec true 2>/dev/null)
+settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' "$log")
+[ -n "$settings" ] && rm -f -- "$settings"
+true_  "a box that never becomes ready shows the last 20 log lines" \
+    '[ "$(grep -c "^boot line" <<< "$out")" = 20 ] && grep -qx "boot line 25" <<< "$out" && ! grep -qx "boot line 5" <<< "$out"'
+STUB_UNREADY=1 STUB_PSDOWN=1 fresh -n fresh
+true_  "a daemon that dies during startup reports docker's error, exit 1" \
+    '[ "$rc" = 1 ] && grep -q "Cannot connect to the Docker" "$tmp/err" && ! grep -q "exited during startup" "$tmp/err"'
 fresh -n fresh
 true_  "a new box runs the io_uring seccomp profile" \
     'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'
@@ -342,6 +362,26 @@ HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2
 claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
     '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
+
+# Any other long flag in an rc file is an error naming the file and the flag,
+# in the project rc and in ~/.dockboxrc alike. After the tool name it is the
+# tool's argument and reaches the tool (the test above).
+echo "--verbose" > "$proj/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+true_  "a project rc long flag it does not know is an error" \
+    '[ "$rc" = 1 ] && grep -qx "dockbox: unknown flag --verbose in $proj/.dockboxrc" "$tmp/err"'
+false_ "a rejected project rc starts no box" 'grep -q "^run " "$log"'
+rm -f -- "$proj/.dockboxrc"
+echo "--verbose" > "$tmp/home/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+true_  "a home rc long flag it does not know is an error" \
+    '[ "$rc" = 1 ] && grep -qx "dockbox: unknown flag --verbose in $tmp/home/.dockboxrc" "$tmp/err"'
+echo "--no-ephemeral" > "$tmp/home/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+run=$(grep "^run " "$log")
+true_  "a home rc --no-ephemeral still persists builds" \
+    '[ "$rc" = 0 ] && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+rm -f -- "$tmp/home/.dockboxrc"
 
 # The help line naming the flags a project rc ignores lists exactly the set the
 # rc loop's `case` ignores.

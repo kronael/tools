@@ -323,23 +323,31 @@ read_rc() {
     done < "$1"
 }
 
-# ~/.dockboxrc: default flags, prepended so the command line overrides them.
-read_rc "$HOME/.dockboxrc"
-set -- "${rc_tokens[@]}" "$@"
-
 # Apply the long flags getopts can't parse and leave the rest in stripped[].
+# $1 is the rc file the words came from, or "" for the command line. Any other
+# --word in an rc file is an error: getopts would read it as short flags. On
+# the command line it belongs to the tool and passes through.
 strip_long() {
+    local src="$1" a
+    shift
     stripped=()
-    local a
     for a in "$@"; do
         case "$a" in
             --no-ephemeral) persist_builds=1 ;;
+            --*)
+                [[ -z "$src" ]] || { echo "dockbox: unknown flag $a in $src" >&2; exit 1; }
+                stripped+=("$a") ;;
             *) stripped+=("$a") ;;
         esac
     done
 }
 
-strip_long "$@"
+# ~/.dockboxrc: default flags, prepended so the command line overrides them.
+read_rc "$HOME/.dockboxrc"
+strip_long "$HOME/.dockboxrc" "${rc_tokens[@]}"
+set -- "${stripped[@]}" "$@"
+
+strip_long "" "$@"
 set -- "${stripped[@]}"
 
 while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
@@ -386,7 +394,7 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 # silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
 # or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
 read_rc "$_primary_dir/.dockboxrc"
-strip_long "${rc_tokens[@]}"
+strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
 rc_tokens=("${stripped[@]}")
 # getopts with no words parses "$@", the command-line leftovers: skip it.
 if (( ${#rc_tokens[@]} )); then
@@ -688,11 +696,15 @@ docker run -d --init \
     -- "$IMAGE" \
     sleep infinity >/dev/null || { echo "Failed to start container" >&2; exit 1; }
 
+ready=""
 for _ in $(seq 1 100); do
-    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
-    [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]] || \
+    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && { ready=1; break; }
+    up=$(docker ps -q -f "name=^${CONTAINER_NAME}$") || exit 1
+    [[ -n "$up" ]] || \
         { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
     sleep 0.1
 done
+[[ -n "$ready" ]] || \
+    { echo "Container not ready after the startup wait" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
 
 enter_session -w "$workdir"
