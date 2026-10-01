@@ -49,7 +49,7 @@ A **first sync** = neither `~/.claude/CLAUDE.md` nor `~/.claude/skills/`
 exists. Before any write, explain sync in 2-3 lines and ask which groups to
 run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
 (default on — nothing else works without it), **Settings** (step 5),
-**External tools** (step 7 core), **CLI tools** rig/udfix/clp, **dockbox**
+**External tools** (step 7 core), **CLI tools** rig/udfix + CDPATH, **dockbox**
 (needs Docker), **Heavy** security-audit + video, **ripwire**. Run ONLY the
 opted-in groups.
 
@@ -176,10 +176,10 @@ the failure. Settings still confirm before applying.
    ask: SHOW the curl-pipe one-liner and let the user run it.
    Completion criterion: each tool is present, installed, or declined.
 
-8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix,
-   clp always, dockbox on its own ask — when their dirs exist at `SRC`; else
-   point to `cd <tool> && make install` from a clone. One missing toolchain
-   skips that tool, never the sync.
+8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig and udfix
+   always, dockbox on its own ask, from their dirs at `SRC` (else point to
+   `cd <tool> && make install` from a clone) — and write its CDPATH block into
+   `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.
 
 9. **Report.** Release delta (installed → source, or "first tracked sync");

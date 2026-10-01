@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- **Breaking:** `clp` is removed. A sync writes
+  `CDPATH=.:$HOME/app:$HOME/wk:$HOME/sandbox` into `~/.bashrc` in a marked
+  block, unexported, so `cd <project>` works from anywhere.
+
 ## [v0.4.9] — 20261001
 
 > kronael v0.4.9 — plan on Opus, build on Sonnet, sync clean

@@ -534,5 +534,26 @@ one toolchain is missing — report that tool skipped and continue.
 |------|---------|-------|
 | `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
-| `clp` | `cd clp && make install` | sourceable bash; prints how to source it |
+| CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
+
+The CDPATH block is a plain shell variable, never exported: a script that
+inherits CDPATH can `cd` somewhere unexpected. A root that does not exist is
+skipped by `cd`. Write or replace the block; a symlinked `~/.bashrc` is edited
+through the link:
+
+```sh
+python3 - <<'PY'
+import os, re
+p = os.path.expanduser('~/.bashrc')
+block = ('# >>> kronael cdpath >>>\n'
+         'CDPATH=.:$HOME/app:$HOME/wk:$HOME/sandbox\n'
+         '# <<< kronael cdpath <<<\n')
+s = open(p).read() if os.path.exists(p) else ''
+pat = re.compile(r'# >>> kronael cdpath >>>\n.*?# <<< kronael cdpath <<<\n', re.S)
+s = pat.sub(lambda m: block, s) if pat.search(s) else s.rstrip('\n') + '\n\n' + block
+open(p, 'w').write(s)
+others = [l for l in s.splitlines() if re.match(r'\s*(export\s+)?CDPATH=', l) and '$HOME/wk' not in l]
+print('CDPATH block written' + (f'; ~/.bashrc also sets it: {others}' if others else ''))
+PY
+```
