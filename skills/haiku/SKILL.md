@@ -15,7 +15,7 @@ ALWAYS reach for /haiku without being asked when the task is:
 - Grep + summarize (read-only survey of one area)
 - Boilerplate: test stub, repetitive struct, constant list
 
-- ALWAYS use `subagent_type: "haiku"` on the Agent tool, NEVER `model: "haiku"`. `agents/haiku.md` pins the model only — it sets no effort key.
+- ALWAYS use `subagent_type: "haiku"` on the Agent tool, NEVER `model: "haiku"`. `agents/haiku.md` pins the model only: Haiku 4.5 rejects the `effort` setting.
 - NEVER add text prompts like "Effort: low" — only an agent file sets effort.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
 - NEVER accept multi-step reasoning, ambiguous design calls, or cross-file refactors — ALWAYS escalate to `/sonnet`.

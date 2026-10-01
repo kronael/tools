@@ -95,18 +95,6 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **ORACLE-FABLE-HIGH-UNREACHABLE** (LOW, docs) — CONFIRMED 2026-10-01.
-  `skills/oracle/SKILL.md:17,21,36` route code critique to "`fable` subagent,
-  high effort", but `agents/fable.md` pins xhigh, so `subagent_type: "fable"`
-  cannot run at high. **Fix:** the maintainer's call — accept xhigh and drop
-  the high rows, or add a fable-at-high agent file.
-- **HAIKU-AGENT-NO-EFFORT** (LOW, config) — CONFIRMED 2026-10-01.
-  `agents/haiku.md` sets no `effort` key, so a haiku sub inherits the parent's
-  effort, if Haiku 4.5 honours `effort` at all (unverified). **Fix:** the
-  maintainer's call — pin `effort: low` after a check that the model accepts
-  it, or leave it.
-
-
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
   `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
   command string, so it never matches `rig push`, `rig p` or the `rip`

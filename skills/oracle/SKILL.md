@@ -14,17 +14,18 @@ codex, fable, creative, code, planning, or security routing, follow that route.
 
 | Request | Route |
 |---|---|
-| Code review, bug hunt, algorithm/design critique | `fable` subagent, high effort |
-| Planning critique, release plan, architecture plan | `fable` subagent, xhigh |
-| Security, red-team, exploitability, deep audit | `fable` subagent, xhigh |
+| Code review, bug hunt, algorithm/design critique | `fable` subagent |
+| Planning critique, release plan, architecture plan | `fable` subagent |
+| Security, red-team, exploitability, deep audit | `fable` subagent |
 | Naming, prose, narrative, product copy, ideation | `codex` CLI, high effort |
-| Ambiguous but touches code or operations | `fable` subagent, high effort |
+| Ambiguous but touches code or operations | `fable` subagent |
 | Explicit "ask codex" / "use codex" | `codex` CLI, high effort |
 
 ## Fable Route
 
-Launch a background `fable` agent. Include the goal, target files/dirs, and
-what to return. Frame adversarially:
+Launch a background agent with `subagent_type: "fable"` — `agents/fable.md`
+pins it at xhigh, so every fable route runs at xhigh. Include the goal,
+target files/dirs, and what to return. Frame adversarially:
 
 ```text
 Goal: <X>. Find the flaw in <code/design/plan>. Entry points: <files, symbols,
@@ -33,9 +34,7 @@ error output>. Return findings only, with file:line or concrete trace.
 
 Rules:
 
-- Use high effort by default.
-- Use xhigh only for planning and security/deep-audit routes, or when the user
-  explicitly asks for maximum effort.
+- NEVER set effort in the prompt text — only the agent file sets it.
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.
