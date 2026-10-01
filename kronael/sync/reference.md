@@ -48,7 +48,11 @@ def expand(live):
     A bad entry prints BADKEEP lines and exits 1.
     """
     path = os.path.join(live, 'kronael-keep.txt')
-    lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
+    try:
+        lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
+    except OSError as e:
+        print(f'Cannot read {path}: {e.strerror}')
+        sys.exit(1)
     entries = [x.rstrip('/') for x in lines if x and not x.startswith('#')]
     bad = [k for k in entries if invalid(k)]
     if bad:
@@ -86,6 +90,7 @@ files`.
 ```sh
 PYTHONPATH="$RUN" python3 -B - <<'PY'
 import hashlib, json, os, re, subprocess, sys
+sys.path.insert(0, os.environ['RUN'])  # ahead of the CWD entry `python3 -` adds
 import keep
 src, home, tmp = os.environ['SRC'], os.path.expanduser('~'), os.path.join(os.environ['RUN'], 'classify')
 live = os.path.join(home, '.claude')
@@ -288,7 +293,7 @@ die() { echo "Swap refused: $*" >&2; exit 1; }
 [[ ! -e "$RUN/old" ]] || die "$RUN/old exists: use a new run dir"
 [[ ! -e "$L/.kronael-sync-new" && ! -e "$L/.kronael-sync-old" ]] ||
   die "a .kronael-sync-* dir is left in $L: step 0"
-python3 "$RUN/keep.py" || die "fix the BADKEEP lines in $L/kronael-keep.txt"
+python3 "$RUN/keep.py" || die "fix $L/kronael-keep.txt (the lines above)"
 mkdir -p "$L"
 mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
 aside() {
@@ -306,10 +311,14 @@ awk 'n>=2 && (p || NF) {p=1; print} /^---$/{n++}' "$SRC/skills/global/SKILL.md" 
 trap - EXIT
 PYTHONPATH="$RUN" python3 -B - <<'PY' || { s=$?; [[ $s -ne 1 ]] || aside; exit "$s"; }
 import ctypes, hashlib, json, os, re, shutil, signal, subprocess, sys, time
+sys.path.insert(0, os.environ['RUN'])  # ahead of the CWD entry `python3 -` adds
 import keep
 src, live = os.environ['SRC'], os.path.expanduser('~/.claude')
 new, old = os.path.join(live, '.kronael-sync-new'), os.path.join(live, '.kronael-sync-old')
 PATHS = (*keep.DIRS, 'CLAUDE.md', 'RECLAUDE.md', 'kronael-install-manifest.json')
+links = [p for p in PATHS if os.path.islink(os.path.join(live, p))]
+if links:
+    raise SystemExit(f'live {links} are symlinks (Classify: SYMLINK); nothing moved')
 AT_FDCWD, RENAME_EXCHANGE = -100, 2
 
 def git(*args):
