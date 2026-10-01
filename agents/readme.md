@@ -64,7 +64,7 @@ For ASCII component/flow diagrams, follow the `diagrams` skill: draw with Unicod
 
 ### 5. Verify claims against code
 
-NEVER trust existing doc text — ALWAYS grep every referenced function/variable/constant to confirm it exists and behaves as described. ALWAYS fix doc to match code, NEVER the reverse.
+NEVER trust existing doc text — ALWAYS grep every referenced function/variable/constant/test name/path to confirm it exists and behaves as described, and check every result a doc cites against the newest run. ALWAYS fix doc to match code, NEVER the reverse.
 
 ### 6. Route content
 

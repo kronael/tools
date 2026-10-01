@@ -27,6 +27,7 @@ Load this skill whenever the user asks to:
 - edit a draft (blog post, essay, PR description, docs, memo, email, tweet, resume bullet) to sound more natural
 - match their voice in writing they're producing
 - review text for AI tells before publishing
+- de-slop an HTML doc page — this pass covers its prose; its structure (evidence badges and ledgers, legend walls, callout walls, nav labels, diagrams, contrast) is `readme/page.md`
 
 Also apply this skill to **your own** output when writing user-facing prose — release notes, PR descriptions, documentation, long-form explanations, summaries. Hermes's baseline voice already strips most of these, but a focused pass catches what slips through.
 
@@ -367,9 +368,9 @@ Same family, same treatment: "that's it", "and that's all there is to it",
 > The product launches in Q3. User research showed a preference for simplicity. Next step: schedule a follow-up meeting.
 
 
-### 19. Curly Quotation Marks
+### 19. Curly Quotation Marks and Apostrophes
 
-**Problem:** ChatGPT uses curly quotes ("...") instead of straight quotes ("...").
+**Problem:** ChatGPT uses curly quotes and apostrophes (“ ” ’) instead of straight ones (" '). In source — HTML, Markdown, code — they also arrive mixed with the straight ones already there, so one file carries both. ALWAYS straight, everywhere in source.
 
 **Before:**
 > He said "the project is on track" but others disagreed.
@@ -527,7 +528,7 @@ Same family, same treatment: "that's it", "and that's all there is to it",
 
 ### 31. Function-Naming Headings and Labels
 
-**Signs to watch:** headings that name a section's rhetorical job instead of its topic — "The business case", "The engineering evidence", "Evidence, not claims"; also bold lead-in labels ("**Cost and risk posture.**") and audience-addressed sections ("For the CEO", "For developers:").
+**Signs to watch:** headings that name a section's rhetorical job instead of its topic — "The business case", "The engineering evidence", "Evidence, not claims"; also bold lead-in labels ("**Cost and risk posture.**"), audience-addressed sections ("For the CEO", "For developers:"), and "X: Y" colon headings that state a topic then gloss it ("The program: one per deployment", "Spot prices: anyone can update") — in h2–h4, card titles and SVG `<title>` alike.
 
 **Problem:** AI writes headings that name the rhetorical function; humans write headings that name the topic. "For the CEO" or "The engineering evidence" is how people *think* about a document's structure, not how they *write* it. It's a strong AI tell, sibling to "Conclusion"-style scaffolding leaking into the prose.
 
@@ -541,7 +542,31 @@ Same family, same treatment: "that's it", "and that's all there is to it",
 > ## How it holds up
 > ## What it costs to try
 
-**Fix:** name the topic or the reader's actual question, not the section's role in your argument. Same for bold lead-in labels and "For X:" openers.
+**Fix:** name the topic or the reader's actual question, not the section's role in your argument. Same for bold lead-in labels and "For X:" openers. A colon heading names its topic plainly: "One program per deployment", "Anyone can update a spot price".
+
+
+### 32. Semicolon-Chained Clauses
+
+**Signs to watch:** two or three independent clauses joined by semicolons inside one sentence, sentence after sentence — a list wearing a sentence.
+
+**Problem:** AI reaches for the semicolon to pack related facts into one line; a person writing to be read makes each fact its own sentence or a real list.
+
+**Before:**
+> The owner queues the exit; the manager fills it through Squads; the owner collects the tokens once the fill is recorded.
+
+**After:**
+> The owner queues the exit. The manager fills it through Squads. Once the fill is recorded, the owner collects the tokens.
+
+**Fix:** split at every semicolon. Keep one only where the two halves genuinely cannot stand apart.
+
+
+### 33. Symbols Standing in for Words
+
+**Signs to watch:** "+" for "and", "/" for "or", "→" for "then", "&" in titles, labels, captions and diagram boxes — "Liquid tokens + mSOL collateral", "Vault flags + NAV/AUM breaker".
+
+**Problem:** AI compresses a label the way a slide does; a reader hears the symbol as a gap and has to supply the word. Paths, units and code keep their symbols.
+
+**Fix:** write the word: "Liquid tokens and mSOL collateral".
 
 ---
 

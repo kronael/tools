@@ -110,7 +110,8 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
   and observability; `specs/` the design record; `readme/` syncs docs after
-  shipping and holds the doc file topology and single-page shape; `review/`
+  shipping and holds the doc file topology, single-page shape and the HTML
+  pages (onepager, doc page); `review/`
   gives or takes a code review. Structure rules: [`CLAUDE.md`](CLAUDE.md) in
   this directory.
 - **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
