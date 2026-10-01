@@ -177,10 +177,10 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `CLAUDE_CODE_BASH_EDIT_DIFF` in the environment overrides the key.
    - **`crossSessionInbound`** and **`isolatePeerMachines`** — ALWAYS apply
      the recommended `"refuse"` and `true`, never ask (Claude Code v2.1.224+).
-     Unset, every session accepts messages from the user's other Claude
-     Code sessions (same machine over a per-session socket; other machines
-     and cloud sessions through Remote Control). `refuse` drops them
-     undelivered; `isolatePeerMachines` asks before a message leaves the
+     Unset, Claude Code decides per message from the two sessions'
+     permission modes: it delivers between sessions in the same class
+     (prompting or bypassing) and holds cross-class messages for approval.
+     `refuse` drops them undelivered; `isolatePeerMachines` asks before a message leaves the
      machine. `SendMessage` stays allowed: it is also the subagent channel.
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
@@ -196,7 +196,8 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      `sandbox.excludedCommands`, never move `permissions.defaultMode` from
      `bypassPermissions` toward `default`, never drop an installed `allow`
      entry. Install may only widen (add `allow` entries, relax the sandbox).
-     The recursive-removal deny guard is the one exception — it always applies.
+     The exceptions are the recursive-removal deny guard,
+     `crossSessionInbound` and `isolatePeerMachines` — they always apply.
    - **Deny moved to ask** — an installed `deny` entry the source now lists
      under `ask`: remove the `deny` copy (a loosening, which loosen-only
      allows) and add the `ask` entry. Deny evaluates before ask, so keeping

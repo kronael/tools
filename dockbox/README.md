@@ -32,7 +32,9 @@ can share it.
 Tools (cargo, nvm, bun, rustup, sdkman, go, uv, nushell, etc.) live in
 `/opt/dev-tools/` inside the image, world-readable. Each runtime user gets
 a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
-`~/.gitconfig`, etc.) nested in.
+`~/.gitconfig`, etc.) nested in. Mounts are fixed when a box is created, so a
+running box picks up a newer dockbox's mounts (including the private sessions
+registry) only after `dockbox rm <name>` and a new launch.
 
 ## Install
 
@@ -143,7 +145,7 @@ servers behind it — the DHCP servers of the network the laptop is on at that
 moment, which usually answer only from that network. Move to another Wi-Fi
 and every lookup in the box times out while the host, whose resolver
 switched with the link, is fine. Docker never rewrites a running
-container's `resolv.conf` (moby `libnetwork/sandbox_dns_unix.go`: written
+container's `resolv.conf` (moby `daemon/libnetwork/sandbox_dns_unix.go`: written
 at sandbox setup and endpoint join only).
 
 dockbox therefore gives a new bridge box the resolver listening on the
@@ -157,10 +159,12 @@ DNSStubListenerExtra=172.17.0.1
 ```
 
 then `systemctl restart systemd-resolved`. resolved binds the extra address
-with `IP_FREEBIND`, so it works before `docker0` exists at boot. Boxes
-created before the change keep their copied servers until recreated
-(`dockbox rm <name>`). Without a gateway resolver dockbox prints a one-line
-note at creation and the box keeps Docker's copy. `-H` (host network) uses
+with `IP_FREEBIND`, so it works before `docker0` exists at boot. A box keeps
+the servers copied at its creation until it is recreated (`dockbox rm
+<name>`). Without a gateway resolver, when the host uses a loopback stub
+resolver, dockbox prints a one-line note at creation and the box keeps
+Docker's copy. The gateway detection reads the host's sockets with `ss`, so
+it assumes a rootful local Docker daemon. `-H` (host network) uses
 the host's resolver and sockets directly and has neither problem; it also
 has no NAT, so a box's connections survive a brief Wi-Fi drop exactly as the
 host's do.
@@ -173,7 +177,7 @@ Automatic:
   live session there and lists them with `ListAgents`; the inbox sockets
   live in each box's own `/tmp`, so a private registry means boxes and the
   host neither see nor message each other's sessions, and two boxes' low
-  container PIDs no longer overwrite each other's records.
+  container PIDs cannot overwrite each other's records.
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)

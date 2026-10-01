@@ -145,8 +145,8 @@ always applied, never asked — the 30-day default silently deletes session
 transcripts at startup, an unset `attribution.commit` asks for a
 `Co-Authored-By` trailer on every commit, an unset `bashEditDiffEnabled`
 diffs the working tree around every Bash command in `auto` and
-`bypassPermissions` modes, an unset `crossSessionInbound` accepts other sessions'
-messages, and the deny guard holds even when the rest of the permissions block is
+`bypassPermissions` modes, an unset `crossSessionInbound` lets Claude Code decide per message
+by permission class, and the deny guard holds even when the rest of the permissions block is
 declined. For the rest of permissions and sandbox, show the diff and ask:
 
 ```sh
