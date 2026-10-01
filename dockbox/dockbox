@@ -38,8 +38,6 @@ eph_no_tmpfs=""
 claude_args=()
 exec_cmd=()
 
-# Apply one parsed flag. Single source of truth for flag semantics, shared by
-# the command line and both rc files.
 apply_flag() {
     case "$1" in
         n)
@@ -66,8 +64,6 @@ apply_flag() {
     return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
 }
 
-# Decide whether container $1 matches the user's rm name or glob $2. A pattern
-# lacking the dockbox- prefix gets it; one that has it is taken literally.
 rm_matches() {
     local pat="$2"
     [[ "$pat" == dockbox-* ]] || pat="dockbox-$pat"
@@ -317,8 +313,6 @@ EOF
         exit 0 ;;
 esac
 
-# Read whitespace-split flag tokens from an rc file into global rc_tokens.
-# Blank lines and # comments ignored. Missing file -> empty.
 read_rc() {
     rc_tokens=()
     [[ -f "$1" ]] || return 0
@@ -348,11 +342,9 @@ while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
 done
 shift $((OPTIND - 1))
 
-# First positional arg: if not a path and -x wasn't given, it's the tool.
-# Model aliases map to claude with --model; anything else is the binary name.
 if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
     case "$1" in
-        /*|./*|.|~*) : ;;  # path — use default entrypoint
+        /*|./*|.|~*) : ;;
         *)
             _tool="$1"; shift
             case "$_tool" in
@@ -399,8 +391,6 @@ done
 _session_dir="$HOME/.claude/projects/${_primary_dir//[^A-Za-z0-9]/-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-# Default tool: opus at xhigh effort — the workhorse. Explicit model
-# aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
 if [[ "$entrypoint" == "claude" ]] && \
    ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
     claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}")
@@ -623,12 +613,6 @@ chown_paths=("/home/dockbox")
 # inside is untouched) so signing works.
 [[ -n "$gpg_forward" ]] && chown_paths+=("/home/dockbox/.gnupg")
 
-# Ephemeral overmounts (default): each build-artifact dir found under workdir
-# becomes a fresh empty mount inside the container, chowned by dockbox-init.
-#   tmpfs (default) — kernel tmpfs (RAM-backed).
-#   -T              — anonymous Docker volume (disk-backed).
-# Disable with -P / --no-ephemeral.
-#
 # Cap depth at 4: covers workspace patterns (./node_modules,
 # ./packages/foo/node_modules, ./apps/bar/dist). Vendored pnpm/yarn
 # stores nest hundreds of node_modules deeper — overmounting each
@@ -694,7 +678,6 @@ docker run -d --init \
     -- "$IMAGE" \
     sleep infinity >/dev/null || { echo "Failed to start container" >&2; exit 1; }
 
-# Wait for dockbox-init to finish per-user setup before the first session.
 for _ in $(seq 1 100); do
     docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
     docker ps -q -f "name=^${CONTAINER_NAME}$" >/dev/null 2>&1 || \

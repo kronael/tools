@@ -1,12 +1,11 @@
-## mount matrix -------------------------------------------------------------
 reset_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }
-mount_mode() { # echo the mode for dest $1, or empty if absent
+mount_mode() {
     local i
     for i in "${!mount_dests[@]}"; do
         [ "${mount_dests[$i]}" = "$1" ] && { printf '%s' "${mount_modes[$i]}"; return; }
     done
 }
-run_assemble() { # $1 extra setup expr
+run_assemble() {
     reset_mounts
     name=testbox; primary="$PROJ"; dirs=("$PROJ")
     no_copy=""; gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()

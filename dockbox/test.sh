@@ -22,7 +22,6 @@ exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 tmp=$(mktemp -d)
 trap 'rm -rf -- "$tmp"' EXIT
 
-## rm_matches (bare or dockbox- prefixed) -----------------------------------
 false_ "rm empty pattern matches nothing"  'rm_matches dockbox-repo ""'
 true_  "rm '\''*'\'' matches all"               'rm_matches dockbox-repo "*"'
 true_  "rm exact bare"                     'rm_matches dockbox-repo repo'
@@ -32,7 +31,6 @@ true_  "rm glob star"                      'rm_matches dockbox-repo-1 "repo-*"'
 false_ "rm glob non-match"                 'rm_matches dockbox-other "repo-*"'
 false_ "rm prefixed name is taken literally" 'rm_matches dockbox-dockbox-repo dockbox-repo'
 
-## tmpfs_used (ls TMPFS column) --------------------------------------------
 df_out='Type    Used Mounted on
 tmpfs     84 /tmp
 ext4  900000 /tmp/cargo-target
@@ -48,7 +46,6 @@ true_ "tmpfs counts a mount sampled twice at new usage once" \
 true_ "tmpfs keys the whole target, spaces included" \
     '[ "$(printf "h\ntmpfs 1024 /w/a b\ntmpfs 2048 /w/a c\n" | tmpfs_used)" = 3M ]'
 
-## box_use (ls USE column, prune eligibility) -----------------------------
 cat > "$tmp/top-idle" <<'EOF'
 UID          PID    PPID  C STIME TTY          TIME CMD
 root        4101    4080  0 09:00 ?        00:00:00 /sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity
@@ -61,7 +58,6 @@ true_  "use idle when only the keepers run"   '[ "$(box_use < "$tmp/top-idle")" 
 true_  "use busy with any other process"      '[ "$(box_use < "$tmp/top-busy")" = busy ]'
 false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use'
 
-## resolver_on (bridge-gateway DNS from ss) ----------------------------------
 true_  "resolver on the gateway address" \
     'printf "UNCONN 0 0 172.17.0.1:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
 true_  "resolver on every address counts" \
@@ -76,7 +72,6 @@ false_ "the loopback stub is not a gateway resolver" \
     'printf "UNCONN 0 0 127.0.0.53%%lo:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
 false_ "no listener, no resolver" ': | resolver_on 172.17.0.1'
 
-## loopback_resolver (host resolv.conf shape) --------------------------------
 printf 'nameserver 127.0.0.53\noptions edns0 trust-ad\n' > "$tmp/stub.conf"
 printf 'nameserver 127.0.0.53\nnameserver 1.1.1.1\n' > "$tmp/mixed.conf"
 : > "$tmp/empty.conf"
@@ -84,11 +79,9 @@ true_  "a stub-only resolv.conf is loopback"      'loopback_resolver "$tmp/stub.
 false_ "a resolv.conf with an uplink server is not" 'loopback_resolver "$tmp/mixed.conf"'
 false_ "an empty resolv.conf is not"              'loopback_resolver "$tmp/empty.conf"'
 
-## seccomp profile -----------------------------------------------------------
 true_ "the profile allows the three io_uring syscalls" \
     '[ "$(grep -Ec "^[[:space:]]+\"io_uring_(setup|enter|register)\",$" "$here/seccomp.json")" = 3 ]'
 
-## commands against a stub docker on PATH ----------------------------------
 # The stub serves the boxes in $STUB/boxes (name, state, age in seconds, use,
 # size) through each --format template, answers `top` from the fixtures above,
 # runs the session-marker snippets against $STUB/run and the ls probe against
@@ -148,7 +141,6 @@ esac
 exit 0
 STUB
 chmod +x "$tmp/docker"
-# The stub ss lists one UDP 53 listener, at $STUB_DNS, or none.
 cat > "$tmp/ss" <<'SS'
 #!/bin/bash
 [ -z "${STUB_DNS:-}" ] || echo "UNCONN 0      0      ${STUB_DNS}:53 0.0.0.0:*"
@@ -183,7 +175,6 @@ chmod +x "$tmp/box/bin/df"
 boxes() { printf '%s\t%s\t%s\t%s\t%s\n' "$@" > "$tmp/boxes"; }
 dockbox() { : > "$log"; PATH="$tmp:$PATH" bash "$here/dockbox" "$@"; }
 
-## ls ------------------------------------------------------------------------
 boxes dockbox-up   running 7200   idle "12.3MB (virtual 1.2GB)" \
       dockbox-busy running 7200   busy "5MB (virtual 1.2GB)" \
       dockbox-old  exited  432000 -    "0B (virtual 1.2GB)" \
@@ -206,7 +197,6 @@ ls_out=$(DOCKBOX_EPH_PATHS="$tmp/box/home/dockbox:$tmp/box/w/broken" \
 true_  "ls shows ? when df fails on a path that exists" 'grep -Eq "^dockbox-up .* [?] +0B$" <<< "$ls_out"'
 true_  "ls passes that df error through"                'grep -q "w/broken: Input/output error" "$tmp/err"'
 
-## prune ---------------------------------------------------------------------
 boxes dockbox-idle-old running 14410           idle 0B \
       dockbox-idle-new running 14399           idle 0B \
       dockbox-busy     running 18000           busy 0B \
@@ -224,7 +214,6 @@ false_ "prune spares a young exited box"           'grep -q "^rm .*dockbox-recen
 true_  "prune prints what it removed" \
     '[ "$prune_out" = "$(printf "removed %s\n" dockbox-idle-old dockbox-gone)" ]'
 
-## rm ------------------------------------------------------------------------
 boxes dockbox-a            running 60 idle 0B \
       dockbox-b            exited  60 -    0B \
       dockbox-c            running 60 busy 0B \
@@ -244,7 +233,6 @@ true_  "rm -a removes every box" '[ "$(grep -c "^rm -f -v " "$log")" = 5 ]'
 boxes dockbox-stuck running 60 fail 0B
 exits 1 'dockbox rm stuck' "rm exits 1 when docker rm fails"
 
-## session cleanup -----------------------------------------------------------
 mkdir -p "$tmp/home"
 cd "$tmp/home" || exit 1
 HOME="$tmp/home" STUB_RC=3 dockbox -n sess exec false >/dev/null 2>&1; rc=$?
@@ -258,7 +246,6 @@ HOME="$tmp/home" STUB_WIPE=1 dockbox -n sess exec true >/dev/null 2>&1
 false_ "a session keeps the box when markers can't be listed" 'grep -q "^rm " "$log"'
 cd "$here" || exit 1
 
-## box start and session wrapper -------------------------------------------
 share="$tmp/home/.local/share/dockbox"
 sess="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups"
 sess="$sess --inh-caps=+sys_nice,+ipc_lock,+sys_ptrace"
@@ -316,7 +303,6 @@ true_  "its first session drops through setpriv in the workdir" \
     'grep -q "^exec -it -u 0:0 -e TERM .* -w $tmp/home dockbox-fresh $sess$" "$log"'
 cd "$here" || exit 1
 
-## resume slug ---------------------------------------------------------------
 mkdir -p "$tmp/repo_with.dot+space name"
 primary="$tmp/repo_with.dot+space name"
 slug="${primary//[^A-Za-z0-9]/-}"
@@ -326,13 +312,11 @@ HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
 true_ "resume maps every nonalphanumeric path character" \
     'grep -q "claude --resume" "$log"'
 
-## -n traversal guard ------------------------------------------------------
 exits 2 'apply_flag n ..'  "-n .. rejected"
 exits 2 'apply_flag n ""'  "-n empty rejected"
 exits 2 'apply_flag n a/b' "-n with slash rejected"
 true_   "-n keys the dir, prefix stays" 'apply_flag n goodname; [ "$dir_override" = goodname ]'
 
-## -K gpg opt-in ------------------------------------------------------------
 gpg_forward=""; apply_flag K
 true_ "-K sets gpg_forward" '[ -n "$gpg_forward" ]'
 

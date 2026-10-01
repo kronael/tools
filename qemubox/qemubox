@@ -739,8 +739,8 @@ remove_box() {
     local name dir rel
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    # Never delete a box's disk/keys while its VM is still alive -- stop_box now
-    # escalates to SIGKILL, so a failure here means it genuinely could not die.
+    # stop_box escalates to SIGKILL, so a failure means the VM is still alive:
+    # never delete its disk or keys then.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" \
         "$dir/config/ephemeral" "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
@@ -1110,8 +1110,6 @@ tool_cmd() {
     esac
 }
 
-# Decide whether box $1 matches the user's rm pattern $2. Empty pattern -> all;
-# a pattern containing * or ? is a glob, otherwise an exact name match.
 rm_matches() {
     _n="$1"; _pat="${2#qemubox-}"
     [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
@@ -1141,8 +1139,6 @@ apply_untrusted() {
     esac
 }
 
-# Build the 9p mount list (mount_* arrays) for the resolved flag set. Reads the
-# globals set during argument parsing; called once from the main flow.
 assemble_mounts() {
     if [ -z "$untrusted" ]; then
         host_cfg="$(box_dir "$name")/hostcfg"

@@ -46,12 +46,10 @@ regression_setup() {
     mke2fs() { :; }
 }
 
-## box_name -----------------------------------------------------------------
 eq "box_name plain" "$(box_name repo)" "repo"
 eq "box_name slash->dash" "$(box_name a/b)" "a-b"
 eq "box_name default" "$(box_name)" "default"
 
-## rm_matches ---------------------------------------------------------------
 false_ "rm empty pattern matches nothing"    'rm_matches anything ""'
 true_  "rm '\''*'\'' matches all"                 'rm_matches anything "*"'
 true_  "rm exact match"                      'rm_matches staking-rewards staking-rewards'
@@ -59,14 +57,12 @@ false_ "rm exact does not substring-match"   'rm_matches staking-rewards-facade 
 true_  "rm glob star"                        'rm_matches repo-1 "repo-*"'
 false_ "rm glob non-match"                   'rm_matches other "repo-*"'
 
-## copy_arg -----------------------------------------------------------------
 eq "copy_arg abs"        "$(copy_arg /a/b)" "/a/b"
 eq "copy_arg strip :rw"  "$(copy_arg /a/b:rw)" "/a/b"
 eq "copy_arg strip :ro"  "$(copy_arg /a/b:ro)" "/a/b"
 eq "copy_arg keep inner colon" "$(copy_arg /a:b:rw)" "/a:b"
 exits 2 'copy_arg rel' "copy_arg rejects relative path"
 
-## -n traversal guard ------------------------------------------------------
 exits 2 'apply_flag n ..'       "-n .. rejected"
 exits 2 'apply_flag n .'        "-n . rejected"
 exits 2 'apply_flag n base'     "-n base rejected"
@@ -75,13 +71,11 @@ exits 2 'apply_flag n ""'       "-n empty rejected"
 exits 2 'apply_flag n a/b'      "-n with slash rejected"
 true_   "apply_flag n valid" 'apply_flag n goodname'
 
-## -H / -U set network off --------------------------------------------------
 network=1; apply_flag H; eq "-H disables network" "$network" ""
 network=1; untrusted=""; apply_flag U
 eq "-U disables network" "$network" ""
 eq "-U sets untrusted"   "$untrusted" "1"
 
-## -U neutralizes every credential-forwarding flag (not just config mounts) --
 ssh_agent=1; docker_sock=/x; docker_remote=/y; gpg_forward=1; gcloud_creds=1
 envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep"); warnings=()
 apply_untrusted
@@ -91,7 +85,6 @@ eq "-U clears gpg_forward" "$gpg_forward" ""
 eq "-U clears gcloud"      "$gcloud_creds" ""
 eq "-U drops cred envs, keeps the rest" "${envs[*]}" "MYVAR=keep"
 
-## port_for -----------------------------------------------------------------
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
 true_ "port differs by name" '[ "$p1" != "$p3" ]'
@@ -101,7 +94,6 @@ eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
 source "$here/test-mounts.sh"
 
-## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
 sout="$(status_box sbx)"
 true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
