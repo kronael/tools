@@ -40,7 +40,9 @@ directory path; a leading `~` is expanded to `$HOME`. Example:
 ```
 
 If `~/.config/clp/projects` is missing, `clp` falls back to listing
-immediate subdirectories of `~/wk`.
+immediate subdirectories of `~/wk`. With neither, it says so and returns 1;
+closing fzf with no pick (Esc, or Enter on no match) also returns 1 and
+starts no `claude`.
 
 ## Why
 
