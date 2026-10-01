@@ -164,11 +164,12 @@ fake_docker() {
 QEMUBOX_DOCKER=fake_docker
 bsdtar() { :; }
 mke2fs() { :; }
+qemu-img() { :; }
 exits 42 'build_base' "export failure stays visible"
 eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
 false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
 unset QEMUBOX_DOCKER
-unset -f bsdtar mke2fs
+unset -f bsdtar mke2fs qemu-img
 
 source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"

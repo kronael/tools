@@ -8,7 +8,7 @@ trap 'rm -f "$stub"/*; rmdir "$stub"' EXIT
 PATH="$stub:$PATH"
 fail=0
 
-check() { # name, expected-substring, actual
+check() {
     if [[ "$3" == *"$2"* ]]; then
         echo "ok   $1"
     else
