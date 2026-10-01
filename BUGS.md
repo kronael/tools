@@ -81,15 +81,6 @@
   files. **Fix:** split the pattern catalogs into on-demand siblings — a
   restructuring of imported content, not a one-line fix.
 
-- **RESEARCH-SKILLS-DUPLICATE** (MED, docs) — CONFIRMED 2026-10-01.
-  `skills/research/` (local) and `skills/research-analysis/` (upstream) share
-  triggers (backtest, walk-forward, holdout, overfitting, baseline, null
-  result, lineage), repeat "did not earn its place" verbatim
-  (`research/method.md:82`, `research-analysis/SKILL.md:78`), and contradict
-  on report order (`research/layout.md:63-67` verdict first;
-  `research-analysis/SKILL.md:20` lineage at the top, `:104` table first).
-  **Fix:** fold one into the other; the owner picks the report order.
-
 - **REFINE-IMPROVE-NO-MODEL** (LOW, docs) — CONFIRMED 2026-10-01. Refine step 8
   dispatches `Task(agent="improve")` with no model
   (`skills/refine/SKILL.md:106`), and `agents/improve.md` pins none, so the

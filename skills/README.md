@@ -80,7 +80,7 @@ the authoritative entry. The categories:
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
   `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`,
-  `emacs`, `research-analysis`) —
+  `emacs`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
   language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
