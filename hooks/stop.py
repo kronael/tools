@@ -38,6 +38,32 @@ def git_path(cwd, name):
     return None if gd is None else os.path.join(gd, name)
 
 
+def rev_parse(cwd, *args):
+    r = git_run(cwd, 'git', 'rev-parse', *args)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def diary_trees(cwd):
+    """(current worktree, main worktree), or None outside a repo.
+
+    The main tree is not dirname(common dir): in a submodule or a
+    --separate-git-dir repo the common dir is a git dir elsewhere. Only a
+    linked worktree has a git dir that differs from the common one.
+    """
+    git_dir = rev_parse(cwd, '--absolute-git-dir')
+    common = rev_parse(cwd, '--path-format=absolute', '--git-common-dir')
+    if git_dir is None or common is None:
+        return None
+    worktree = rev_parse(cwd, '--show-toplevel') or cwd
+    if os.path.realpath(git_dir) == os.path.realpath(common):
+        return worktree, worktree
+    r = git_run(cwd, 'git', 'config', '--file', os.path.join(common, 'config'), 'core.worktree')
+    configured = r.stdout.strip() if r.returncode == 0 else ''
+    if configured:
+        return worktree, os.path.normpath(os.path.join(common, configured))
+    return worktree, os.path.dirname(common)
+
+
 def write_stamp(path, text):
     try:
         with open(path, 'w') as f:
@@ -112,16 +138,12 @@ def nudges(cwd, now):
     # Diary freshness (missing today or stale > 1h) — only inside a git repo.
     # A tracked diary is committed on its branch, so it lives in the current
     # worktree; an ignored one keeps a single copy in the main tree.
-    common = git_run(cwd, 'git', 'rev-parse', '--git-common-dir')
-    if common.returncode == 0:
-        common_dir = common.stdout.strip()
-        if not os.path.isabs(common_dir):
-            common_dir = os.path.join(cwd, common_dir)
+    trees = diary_trees(cwd)
+    if trees is not None:
+        worktree, main_tree = trees
         dated = '.diary/' + now.strftime('%Y%m%d') + '.md'
-        top = git_run(cwd, 'git', 'rev-parse', '--show-toplevel')
-        worktree = top.stdout.strip() if top.returncode == 0 else cwd
         ignored = git_run(worktree, 'git', 'check-ignore', '-q', dated).returncode == 0
-        base = os.path.dirname(common_dir) if ignored else worktree
+        base = main_tree if ignored else worktree
         diary_dir = os.path.join(base, '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
         hhmm = now.strftime('%H:%M %Y-%m-%d')

@@ -90,16 +90,6 @@
   `research-analysis/SKILL.md:20` lineage at the top, `:104` table first).
   **Fix:** fold one into the other; the owner picks the report order.
 
-- **DIARY-SUBMODULE-LOCATION** (LOW, correctness) — CONFIRMED 2026-10-01. In a
-  submodule or a `--separate-git-dir` repo, `hooks/stop.py` takes
-  `dirname(git-common-dir)` as the main tree (`:115`, `:124`), so an ignored
-  diary is looked for under `.git/modules/…` and every Stop blocks; the diary
-  skill's `git worktree list | head -1` (`skills/diary/SKILL.md:29`) returns
-  the git dir there too. Predates this release. **Fix:** resolve the main
-  worktree from `git worktree list --porcelain`'s first `worktree` line only
-  when it is not inside a git dir, in both the hook and the skill — a contract
-  change, so proposed.
-
 - **REFINE-IMPROVE-NO-MODEL** (LOW, docs) — CONFIRMED 2026-10-01. Refine step 8
   dispatches `Task(agent="improve")` with no model
   (`skills/refine/SKILL.md:106`), and `agents/improve.md` pins none, so the

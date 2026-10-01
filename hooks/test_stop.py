@@ -191,3 +191,48 @@ def test_tracked_diary_only_in_main_tree_blocks_linked_worktree(tmp_path) -> Non
     assert out['decision'] == 'block'
     assert out['reason'].startswith('No diary entry for today')
     assert 'Run /diary.' in out['reason']
+
+
+def write_today_diary(tree):
+    (tree / '.diary').mkdir(exist_ok=True)
+    (tree / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
+
+
+def make_submodule(tmp_path):
+    origin = tmp_path / 'origin'
+    origin.mkdir()
+    git(origin, 'init', '-q')
+    commit(origin, '.gitignore', '/.diary/\n', 'chore: ignore diary')
+    super_repo = tmp_path / 'super'
+    super_repo.mkdir()
+    git(super_repo, 'init', '-q')
+    git(
+        super_repo, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', str(origin), 'sub'
+    )
+    return super_repo / 'sub'
+
+
+def test_ignored_diary_in_submodule_tree_is_silent(tmp_path) -> None:
+    sub = make_submodule(tmp_path)
+    write_today_diary(sub)
+
+    assert run_hook(sub) is None
+
+
+def test_ignored_diary_in_separate_git_dir_repo_is_silent(tmp_path) -> None:
+    work = tmp_path / 'work'
+    work.mkdir()
+    git(tmp_path, 'init', '-q', '--separate-git-dir', str(tmp_path / 'gitdir'), str(work))
+    commit(work, '.gitignore', '/.diary/\n', 'chore: ignore diary')
+    write_today_diary(work)
+
+    assert run_hook(work) is None
+
+
+def test_ignored_diary_in_submodule_main_tree_silences_its_linked_worktree(tmp_path) -> None:
+    sub = make_submodule(tmp_path)
+    linked = tmp_path / '.linked'
+    git(sub, 'worktree', 'add', '-q', '--detach', str(linked))
+    write_today_diary(sub)
+
+    assert run_hook(linked) is None
