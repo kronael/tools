@@ -782,7 +782,7 @@ build_base() (
     if ! mke2fs -q -t ext4 -F -d "$tmp/probe.tar" "$tmp/probe.raw" 8M >"$tmp/probe.log" 2>&1
     then
         cat "$tmp/probe.log" >&2
-        echo "Missing: mke2fs with -d tarball support (e2fsprogs >=1.47 with libarchive)" >&2
+        echo "Missing: mke2fs with -d tarball support (the build needs a mke2fs -d that accepts a tarball)" >&2
         exit 1
     fi
     rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"
