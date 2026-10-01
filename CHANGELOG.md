@@ -1,5 +1,40 @@
 # Changelog
 
+## [v0.4.8] — 20261001
+
+> kronael v0.4.8 — ship runs a change end to end
+>
+> /ship asks once what to hammer, then plans, builds, refines and delivers a change without stopping for routine approval.
+>
+> • /ship — one opening question batch, including what to hammer, then plan, build, refine and deliver
+> • dockbox — bridge boxes follow the host's resolver, so DNS keeps working after a Wi-Fi change
+> • dockbox, qemubox — each box keeps its own Claude session registry, so boxes cannot message each other
+> • Install — sessions refuse messages from your other sessions and ask before one leaves the machine
+> • /readme — a doc-page mode for HTML explainer pages, with a fact pass before any style pass
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship` asks the answers the result depends on in one opening batch, what to
+  hammer included, and states open preferences as defaults. A fresh planner
+  writes one work record in the main tree's `.ship/`. Each step passes its
+  own gate, and `refine` and the chosen hammer checks run before acceptance.
+  Redesigns still need sign-off, and push and release keep their gates.
+- `dockbox` passes `--dns <bridge gateway>` when a resolver listens there
+  (for example systemd-resolved with `DNSStubListenerExtra=172.17.0.1`), and
+  prints a note when the host uses a loopback stub without one. An
+  unreachable Docker daemon stops the launch with docker's own error.
+- `dockbox` and `qemubox` mount a private tmpfs over `~/.claude/sessions`.
+  A box keeps the mounts it was created with until `dockbox rm`.
+- Install always applies `crossSessionInbound: "refuse"` and
+  `isolatePeerMachines: true`. Subagent reports still arrive.
+- `readme` gains `page.md` for HTML explainers. `writing` and `humanize` add
+  rules for links on the claim's words, colon headings, semicolon chains and
+  symbols standing in for words. `refine` routes project docs to a `readme`
+  lens that checks facts first.
+- `BUGS.md` records the shared Claude runtime state, NAT flows on a carrier
+  blip, the docker socket crossing boxes, two qemubox output defects and two
+  refine cleanup proposals.
+
 ## [v0.4.7] — 20261001
 
 > kronael v0.4.7 — qemubox becomes a daily sandbox
