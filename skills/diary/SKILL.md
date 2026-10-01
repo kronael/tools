@@ -7,7 +7,8 @@ user-invocable: true
 
 # Diary
 
-File: `.diary/YYYYMMDD.md`. Append to today's entry; create if missing.
+File: `.diary/YYYYMMDD.md`, the UTC date the Stop hook checks. Append to today's
+entry; create if missing.
 A standalone document goes beside it as `.diary/YYYYMMDD-<name>.md` — see
 "Named companions" below.
 
@@ -19,10 +20,12 @@ BEFORE writing. Test the actual dated FILE path, not the bare `.diary` dir — a
 slash) but DOES match `.diary/<file>`, so checking the dir gives a false "tracked":
 
 ```bash
-git check-ignore -q ".diary/$(date +%Y%m%d).md" && echo ignored || echo tracked
+git -C "$(git rev-parse --show-toplevel)" check-ignore -q ".diary/$(date -u +%Y%m%d).md" \
+  && echo ignored || echo tracked
 ```
 
-- **Tracked (not gitignored)** → write in the **current worktree** (`<cwd>/.diary/`).
+- **Tracked (not gitignored)** → write in the **current worktree** (`<toplevel>/.diary/`, toplevel =
+  `git rev-parse --show-toplevel`).
   A tracked diary is committed on its branch, so each worktree records its own
   work and the entry travels with that branch's commits.
 - **Gitignored / not part of git** → write to the **main worktree**, at

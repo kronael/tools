@@ -16,7 +16,7 @@ STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/ca
 
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
-- Organized in directories: use lowercase (specs/multi-tenancy.md, todos/general.md, plans/migration.md)
+- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dirs
 - Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
