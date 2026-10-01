@@ -98,6 +98,8 @@ Examples:
 
 Ingress: dirs and config are mounted into the VM with QEMU 9p.
 SSH is only the control channel used to enter the guest.
+~/.claude/sessions is a private tmpfs in the guest: VMs and the host never
+list or message each other's Claude sessions.
 
 Environment: QEMUBOX_MEM=16384 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
@@ -523,6 +525,11 @@ sync_guest_clock() {
     ssh_plain_box "$1" "sudo date -u -s $(quote "@$(date +%s.%N)") >/dev/null"
 }
 
+setup_guest_sessions() {
+    [ -z "$untrusted" ] || return 0
+    ssh_plain_box "$1" "mkdir -p ~/.claude/sessions && sudo mount -t tmpfs -o rw,mode=0700,uid=$(id -u),gid=$(id -g) tmpfs ~/.claude/sessions"
+}
+
 setup_mount_path() {
     ssh_plain_box "$1" \
         "sudo bash -s -- $(id -u) $(id -g) $(quote "$2")" <<'EOF'
@@ -614,6 +621,7 @@ start_box() {
     mount_host_paths "$name"
     setup_guest_builds "$name"
     setup_guest_runtime "$name"
+    setup_guest_sessions "$name"
     setup_guest_auth "$name"
     setup_guest_limits "$name"
     sync_guest_clock "$name"

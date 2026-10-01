@@ -124,9 +124,10 @@ Default host access includes:
 1. **Your project dir(s)** — 9p-mounted at their real host paths, read-write,
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
    read-write one. `-N` runs an empty VM with no project mount.
-2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings,
-   credentials, skills, all project histories) are mounted read-write
-   at their host paths. `~/.claude/plugins` is mounted read-only. Guest edits reach the host, and absolute skill links
+2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
+   all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
+   read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
+   message each other's Claude sessions. Guest edits reach the host, and absolute skill links
    resolve because the guest has the host username, UID, GID and home path.
 
 Other home paths require an explicit mount or forwarding flag.
@@ -139,10 +140,10 @@ shared `~/.claude/settings.json` needs no edit or overlay.
 That share uses a hard link; `QEMUBOX_HOME` and the history file must be on
 the same filesystem. A failed link stops launch.
 
-Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't
-reach or log into each other. `-A` forwards your SSH agent, `-D` the Docker
-socket, `-K` the gpg-agent (commit signing; off by default), `-G` mounts
-`~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
+Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't reach or
+log into each other. `-A` forwards your SSH agent, `-D` the Docker socket (and with it
+`docker exec` into every dockbox on the host), `-K` the gpg-agent (commit signing; off by
+default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
 (or `--untrusted`) goes further — it injects **no** host config or credentials
@@ -184,8 +185,7 @@ are masked read-only inside the guest.
 Git worktrees also mount their common git directory at its host path.
 Claude opens its session selector when the project has JSONL history;
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-5.6-sol` with `xhigh` effort.
-SSH allocates a terminal only when both stdin and stdout are terminals.
+Codex defaults to `gpt-5.6-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
 
 Guest setup disables guest NTP and syncs the clock from the host before
 the first session of each boot. The guest also uses the host time zone.

@@ -98,3 +98,19 @@ exits 23 'set -e; ssh_plain_box() { return 23; }; sync_guest_clock vm' \
     "clock sync errors fail launch"
 exits 23 'set -e; ssh_plain_box() { return 23; }; setup_guest_limits vm' \
     "limits setup errors fail launch"
+
+(
+    set -e
+    untrusted=""
+    ssh_plain_box() { echo "$2" > "$fixture/sessions-command"; }
+    setup_guest_sessions vm
+    [ "$(cat "$fixture/sessions-command")" = "mkdir -p ~/.claude/sessions && sudo mount -t tmpfs -o rw,mode=0700,uid=$(id -u),gid=$(id -g) tmpfs ~/.claude/sessions" ]
+    rm "$fixture/sessions-command"
+    untrusted=1
+    setup_guest_sessions vm
+    [ ! -e "$fixture/sessions-command" ]
+) > "$fixture/sessions.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/sessions.log"; bad "private session registry in the guest"; }
+untrusted=""
+exits 23 'set -e; ssh_plain_box() { return 23; }; setup_guest_sessions vm' \
+    "session registry mount errors fail launch"
