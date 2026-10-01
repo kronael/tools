@@ -1,171 +1,56 @@
-You are executing the SHIP skill: deep planning + autonomous
-execution via the `ship` CLI.
+# Ship CLI executor
 
-## Your Role
+Read only when the owner explicitly chooses the `ship` command-line tool.
+It executes Stage 4 of the same owner brief and plan. The main agent still
+owns refinement, final acceptance, delivery approvals and close-out.
 
-You are the **Planner**. You explore the codebase deeply, design
-comprehensive deliverables, write structured spec files, then
-hand off to `ship` for execution. You NEVER write implementation
-code yourself.
+Upstream reference: [kronael/ship](https://github.com/kronael/ship).
 
-## Install
+## Check the available executor
 
-If `ship` is not available:
+ALWAYS inspect the installed `ship -h` and relevant source before choosing
+flags. Match its worker, timeout, turn and override controls to the accepted
+brief. The upstream CLI documents `-n` for worker count, `-t` for task
+timeout, `-m` for turns and `-p` for instructions passed to its agents;
+installed help is the authority for the actual invocation.
 
-```bash
-uv tool install git+https://github.com/kronael/ship
-```
+ALWAYS check the driver's editing isolation, commits, repair behavior and
+external actions against WISDOM and the owner limits before launch. Use one
+worker for a shared tree; parallel workers need detached isolation under
+`worktree`. Driver defaults are not the owner's agreed limits. If the
+executor cannot honor a required boundary, present that incompatibility
+as a decision rather than launching it and hoping instructions suffice.
 
-## Instructions
+If the CLI is absent, report the requirement. Installation is a separate
+owner choice. NEVER install its bundled skill over the toolkit's `ship`;
+ALWAYS keep this skill as the owner-facing controller.
 
-### Step 1: Parse Arguments
+## Supply the accepted work
 
-Parse the user's input:
-- Goal text (natural language or file/dir path)
-- `-x` flag (pass to ship for codex refiner)
-- `-w N` (pass to ship for worker count)
+Use the active plan or its cited spec as the input file. Ensure it carries
+concrete deliverables, owned paths, acceptance checks, gates, exclusions
+and worker boundaries. Do not create a second set of component plans.
 
-### Step 2: Explore Context
+ALWAYS pass the owner brief's constraints through the supported instruction
+override. Workers deliver only their bounded items. Public actions stay
+with the main agent and their owning approval gates.
 
-Read relevant files to understand the codebase thoroughly:
-- CLAUDE.md, ARCHITECTURE.md for project conventions
-- Existing code in the area being modified
-- Test patterns, config patterns, build system
-- Dependencies and interfaces
+ALWAYS preserve a matching run's state on resume. Read the actual task
+status and code before selecting remaining work; NEVER pass a force-reset
+flag merely to get a fresh run. A changed spec needs reconciliation with
+completed commits and the accepted plan.
 
-**Check for prior work**:
-- Read `specs/*.md` -- existing specs?
-- Read `PROGRESS.md`, `.ship/tasks.json` -- what shipped?
-- Read `PLAN.md` -- prior plan?
-- `git log --oneline -20` -- recent commits
+## Accept the result through the same gates
 
-If specs exist, classify each as:
-- **shipped**: all deliverables completed (skip)
-- **partial**: some done, gaps remain (extend)
-- **new**: not yet attempted (plan from scratch)
+Run the driver with a captured process handle and output. Use runtime
+notifications for its completion; `runtime.md` owns stalls and waits.
+Inspect partial results before retrying a terminal failed run.
 
-Use Glob, Grep, Read tools. Read 10-20 files minimum.
+ALWAYS inspect the actual diff and commits, reconcile detached worker
+outputs through `worktree`, and run the planned gates yourself. Update the
+single work record with the accepted steps and evidence. Driver progress,
+judge verdicts and internal state are evidence to inspect, not acceptance.
 
-### Step 3: Draft Deliverables
-
-Break goal into concrete deliverables grouped by
-component/domain. Each deliverable becomes one task
-for a ship worker.
-
-**If extending existing specs**: only add NEW deliverables.
-Append to existing spec files, don't overwrite.
-
-**Good deliverable**:
-```
-### 1. Add WebSocket heartbeat handler
-- **Files**: src/gateway/ws.rs, tests/ws_test.rs
-- **Accept**: heartbeat ping/pong every 30s, test proves
-  reconnect on missed pong
-- **Notes**: follow pattern in src/gateway/http.rs
-```
-
-Rules for deliverables:
-- 1-3 files each (worker context is limited)
-- Concrete acceptance criteria (testable, observable)
-- Reference existing patterns for consistency
-- Order by dependency (foundational first)
-- Each should take a worker <30min
-
-### Step 4: Ask User About Approach
-
-Present the component/domain breakdown. Show what exists
-vs what's new.
-
-Ask: **"Spec each component interactively or all at once?"**
-
-Use AskUserQuestion with options:
-- **Interactive**: review each before writing
-- **All at once**: write all, user reviews after
-
-### Step 5: Write Spec Files
-
-Create `specs/` directory if needed. One file per component:
-`specs/<component-name>.md`
-
-**Spec format**:
-
-```markdown
-# <Component Name>
-
-## Goal
-[1-2 sentences: what and why]
-
-## Deliverables
-
-### 1. [Name]
-- **Files**: [specific paths]
-- **Accept**: [concrete, testable criteria]
-- **Notes**: [hints, patterns to follow]
-
-## Constraints
-- [coding conventions from CLAUDE.md]
-- [patterns to follow, reference files]
-
-## Worker Boundary
-- What has already been shipped (do not redo)
-- What adjacent tasks exist (do not touch)
-- "Deliver only the deliverables in this spec. The Goal
-  is context. Report done when your acceptance criteria
-  passes -- not when the overall goal is met."
-
-## Verification
-- [ ] [end-to-end check that proves it works]
-- [ ] [specific test command or observable outcome]
-```
-
-### Step 6: Launch Ship
-
-```bash
-# all specs
-ship specs/ [-x] [-w N]
-
-# specific specs only
-ship specs/new-component.md [-x] [-w N]
-
-# fresh restart
-ship -f specs/
-
-# see all flags
-ship -h
-```
-
-Use `run_in_background=false` for <10 deliverables.
-Use `run_in_background=true` for larger, check
-`PROGRESS.md` periodically.
-
-### Step 7: Verify Results
-
-After ship completes:
-1. Read `PROGRESS.md` for task status
-2. Run verification steps from spec files
-3. Check `LOG.md` or `ship --log` for details
-
-If issues found:
-- Small fixes: fix directly
-- Larger gaps: re-run `ship specs/` to continue
-
-### Step 8: Summary
-
-Report what shipped:
-- Deliverables completed vs planned
-- Files changed (`git diff --stat`)
-- Verification results
-- Any remaining issues
-
-## Rules
-
-1. NEVER write implementation code -- only spec files
-2. ALWAYS explore codebase deeply before writing specs
-3. Deliverables must be specific and testable
-4. Keep deliverables small (1-3 files, <30min each)
-5. Reference existing patterns in constraints
-6. ALWAYS ask user about interactive vs all-at-once
-7. Wait for ship to complete before verifying
-8. Report honestly -- if something failed, say so
-9. NEVER overwrite shipped deliverables -- only append
-10. Every spec MUST include `## Worker Boundary`
+When Stage 4 passes, return to Stage 5 in `SKILL.md`. The CLI completing
+never skips `refine`, selected hammer checks, final behavior verification,
+or the requested delivery boundary.
