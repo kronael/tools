@@ -37,6 +37,10 @@ TICKED = re.compile(r'`([^`\n]+)`')
 AT_LINE = re.compile(r':\d+(?:-\d+)?$')
 SUFFIX = re.compile(r'\.[a-z][a-z0-9+]{0,9}$')
 NOT_IN_PATH = frozenset(' \t*?{}<>$|"\'()[]=,;!`')
+# This repo's two unbracketed placeholders — `.diary/YYYYMMDD.md`
+# (skills/diary/SKILL.md) and `specs/NN-topic.md` (format.md) — spelled out as
+# a path segment rather than inside `<...>`, which NOT_IN_PATH already excludes.
+PLACEHOLDER = re.compile(r'(?:^|/)(?:YYYYMMDD|NN)(?:[-_.]|$)')
 SKIP_DIRS = frozenset({'.git', 'node_modules', '.venv', '__pycache__', 'dist', 'build'})
 
 
@@ -115,7 +119,9 @@ def pointer_path(token: str) -> str | None:
 
     A pointer is `path:line` or a backticked path with a slash — a bare
     `config.yaml` reads as a kind of file more often than a place in this repo.
-    An extension is lowercase, which keeps `net/http.Server` out.
+    An extension is lowercase, which keeps `net/http.Server` out. A segment
+    that is itself a documented placeholder (PLACEHOLDER) names a shape, not a
+    file, and is never meant to resolve.
     """
     if NOT_IN_PATH & set(token) or '://' in token or '..' in token:
         return None
@@ -125,6 +131,8 @@ def pointer_path(token: str) -> str | None:
     if SUFFIX.search(path) is None:
         return None
     if '/' not in path and path == token:
+        return None
+    if PLACEHOLDER.search(path):
         return None
     return path
 

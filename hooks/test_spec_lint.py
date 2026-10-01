@@ -146,3 +146,8 @@ def test_skill_dir_named_specs_has_no_root(tmp_path: Path) -> None:
     skill_file.write_text('# Specs skill\n')
     (skill / 'format.md').write_text('# Format\n')
     assert spec_roots([skill_file]) == []
+
+
+def test_diary_date_placeholder_is_not_a_pointer(tmp_path: Path) -> None:
+    root = corpus(tmp_path, spec=SPEC + '\nLogged to `.diary/YYYYMMDD.md` after significant work.\n')
+    assert check_corpus(root) == []
