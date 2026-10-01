@@ -37,8 +37,9 @@ sudo pacman -S qemu-base openssh tar libarchive e2fsprogs docker
 sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cli
 ```
 
-The build needs Docker, `bsdtar` from libarchive, and e2fsprogs ≥1.47 with
-`mke2fs -d <tarball>` support. It probes that support before building. Allow
+The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
+`mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
+that support before it starts. Allow
 about 20 GB free in `/tmp` and 11 GB per base on the state filesystem.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
