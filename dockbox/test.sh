@@ -317,6 +317,32 @@ HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
 true_ "resume maps every nonalphanumeric path character" \
     'grep -q "claude --resume" "$log"'
 
+# A project .dockboxrc takes --no-ephemeral like the command line does: builds
+# persist (no overmount for node_modules), claude gets no stray "--", and no
+# "ignoring" warning. The run without an rc proves the overmount is there to lose.
+proj="$tmp/proj"
+mkdir -p "$proj/node_modules"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
+run=$(grep "^run " "$log")
+true_  "a box without an rc overmounts node_modules" \
+    'grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+echo "--no-ephemeral" > "$proj/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
+run=$(grep "^run " "$log")
+true_  "project rc --no-ephemeral persists builds" \
+    '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+true_  "project rc --no-ephemeral passes no -- to claude" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
+false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
+rm -f -- "$proj/.dockboxrc"
+
+# The help line naming the flags a project rc ignores lists exactly the set the
+# rc loop's `case` ignores.
+ignored=$(sed -n 's/^[[:space:]]*\([A-Za-z|]*\)) echo "dockbox: ignoring -\$opt.*/\1/p' "$here/dockbox" | tr '|' '\n' | sort)
+helped=$(dockbox --help | grep 'ignored there' | grep -oE -- '-[A-Za-z]' | tr -d - | sort)
+true_  "the ignored-flag set is read from the code" '[ -n "$ignored" ]'
+true_  "help names exactly the flags a project rc ignores" '[ "$helped" = "$ignored" ]'
+
 exits 2 'apply_flag n ..'  "-n .. rejected"
 exits 2 'apply_flag n ""'  "-n empty rejected"
 exits 2 'apply_flag n a/b' "-n with slash rejected"

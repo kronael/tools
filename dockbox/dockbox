@@ -308,7 +308,7 @@ DNS:    A bridge box gets a resolver listening on the bridge gateway (e.g.
 Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
         dockbox flags, one per line, # comments ok. The command line
         overrides ~/.dockboxrc. Project .dockboxrc takes the safe
-        subset only — -A/-D/-S are ignored there (use ~/.dockboxrc).
+        subset only — -A/-D/-K/-S/-n/-d/-x are ignored there (use ~/.dockboxrc).
 EOF
         exit 0 ;;
 esac
@@ -327,15 +327,20 @@ read_rc() {
 read_rc "$HOME/.dockboxrc"
 set -- "${rc_tokens[@]}" "$@"
 
-# pre-strip long flags getopts can't parse
-_args=()
-for a in "$@"; do
-    case "$a" in
-        --no-ephemeral) persist_builds=1 ;;
-        *) _args+=("$a") ;;
-    esac
-done
-set -- "${_args[@]}"
+# Apply the long flags getopts can't parse and leave the rest in stripped[].
+strip_long() {
+    stripped=()
+    local a
+    for a in "$@"; do
+        case "$a" in
+            --no-ephemeral) persist_builds=1 ;;
+            *) stripped+=("$a") ;;
+        esac
+    done
+}
+
+strip_long "$@"
+set -- "${stripped[@]}"
 
 while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
     apply_flag "$opt" "${OPTARG:-}"
@@ -381,6 +386,8 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 # silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
 # or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
 read_rc "$_primary_dir/.dockboxrc"
+strip_long "${rc_tokens[@]}"
+rc_tokens=("${stripped[@]}")
 OPTIND=1
 while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
     case "$opt" in
