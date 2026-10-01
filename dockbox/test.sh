@@ -66,6 +66,12 @@ true_  "resolver on the gateway address" \
     'printf "UNCONN 0 0 172.17.0.1:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
 true_  "resolver on every address counts" \
     'printf "UNCONN 0 0 0.0.0.0:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
+true_  "a dual-stack wildcard counts" \
+    'printf "UNCONN 0 0 *:53 *:*\n" | resolver_on 172.17.0.1'
+false_ "a v6-only wildcard does not answer on the v4 gateway" \
+    'printf "UNCONN 0 0 [::]:53 [::]:*\n" | resolver_on 172.17.0.1'
+false_ "a wildcard bound to one device is not a gateway resolver" \
+    'printf "UNCONN 0 0 0.0.0.0%%lo:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
 false_ "the loopback stub is not a gateway resolver" \
     'printf "UNCONN 0 0 127.0.0.53%%lo:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
 false_ "no listener, no resolver" ': | resolver_on 172.17.0.1'
@@ -135,7 +141,9 @@ case "$1" in
         esac ;;
     ps) [ -n "${STUB_FRESH:-}" ] || echo c0ffee ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
-    network) echo 172.17.0.1 ;;
+    network)
+        [ -n "${STUB_DOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
+        echo 172.17.0.1 ;;
 esac
 exit 0
 STUB
@@ -282,7 +290,7 @@ fresh() {
     [ -n "$settings" ] && rm -f -- "$settings"
     return "$rc"
 }
-fresh -n fresh; rc=$?
+fresh -n fresh
 true_  "a new box starts"                               '[ "$rc" = 0 ]'
 false_ "without a gateway resolver the box keeps Docker's DNS" \
     'grep -q -- " --dns " <<< "$run"'
@@ -295,6 +303,10 @@ STUB_DNS=172.17.0.1 fresh -n fresh
 true_  "a gateway resolver becomes the box's DNS" 'grep -q -- " --dns 172.17.0.1 " <<< "$run"'
 STUB_DNS=172.17.0.1 fresh -n fresh -H
 false_ "a host-network box takes no --dns" 'grep -q -- " --dns " <<< "$run"'
+HOME="$tmp/home" STUB_FRESH=1 STUB_DOWN=1 \
+    dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_  "an unreachable daemon fails the launch with docker's error" \
+    '[ "$rc" != 0 ] && grep -q "Cannot connect to the Docker" "$tmp/err"'
 fresh -n fresh
 true_  "a new box runs the io_uring seccomp profile" \
     'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'

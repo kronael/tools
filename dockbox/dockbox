@@ -108,8 +108,8 @@ resolver_on() {
     awk -v addr="$1" '{
             l = $4
             sub(/:[0-9]+$/, "", l)
-            sub(/%.*$/, "", l)
-            if (l == addr || l == "0.0.0.0" || l == "*" || l == "[::]") found = 1
+            dev = sub(/%.*$/, "", l)
+            if (l == addr || (!dev && (l == "0.0.0.0" || l == "*"))) found = 1
         }
         END { exit !found }'
 }
@@ -497,6 +497,17 @@ for m in "${MOUNTS[@]}"; do
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
 
+dns_args=()
+if [[ ${#network_arg[@]} -eq 0 ]]; then
+    gw=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+    if [[ -n "$gw" ]] && command -v ss >/dev/null \
+        && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
+        dns_args=(--dns "$gw")
+    elif loopback_resolver /etc/resolv.conf; then
+        echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
+    fi
+fi
+
 # Override settings.json with sandbox disabled — settings.local.json alone does
 # not suppress the sandbox restart loop when the host settings.json enables it.
 # Merge host settings then force sandbox off so the host config (permissions,
@@ -519,17 +530,6 @@ docker_gid_arg=()
 if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
-fi
-
-dns_args=()
-if [[ ${#network_arg[@]} -eq 0 ]]; then
-    gw=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null)
-    if [[ -n "$gw" ]] && command -v ss >/dev/null \
-        && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
-        dns_args=(--dns "$gw")
-    elif loopback_resolver /etc/resolv.conf; then
-        echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
-    fi
 fi
 
 # gpg-agent socket is a live signing credential: forward it only on -K, and only
