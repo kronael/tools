@@ -13,7 +13,7 @@ Paths are relative to this directory.
 | If you need | Read |
 |---|---|
 | to bring existing docs back in line with shipped code — README, ARCHITECTURE, CHANGELOG edits, run through the @readme agent | `sync.md` |
-| to decide WHICH file a fact belongs in, or to lay out a doc set from scratch — README vs ARCHITECTURE vs `notes/` vs `compare/` vs `facts/`, the how-to-read index, dated-number chain, anti-marketing rules | `topology.md` |
+| to decide WHICH file a fact belongs in, or to lay out a doc set from scratch — README vs ARCHITECTURE vs `notes/` vs `compare/` vs `facts/`, the how-to-read index, dated-number chain, anti-marketing rules; the house repo layout (UPPERCASE root files, `specs/`, `docs/`, `.ship/`, `.diary/`, no `todos/`/`plans/`, root-anchored ignores) | `topology.md` |
 | the order of sections INSIDE one integration guide or API-reference page — guide vs reference shape, examples before or after parameters, where errors go, Diátaxis on one page | `shape.md` |
 | one self-contained public HTML page for a stranger — what it is, who it is for, what is different, what it costs, what to do next, published to the web root | `onepager.md` |
 | one HTML explainer page under `docs/` for someone who will use or change the code — sections, inline SVG flow diagrams, claims linked to tests; and stripping the generated look from one: evidence pills and ledgers, legend walls, colon headings, callout walls, unfinished diagrams, light-mode contrast, stale facts | `page.md` |

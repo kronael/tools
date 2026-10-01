@@ -34,17 +34,13 @@ mtime.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is
-  unverified; never assert then correct when challenged. An absence claim ("no
-  such knob", "X can't do Y") is only as strong as the search behind it — a
-  self-designed grep for guessed synonyms can miss the vendor's own word for it,
-  so verify the vendor's actual vocabulary (or read the source) before asserting
-  the negative.
-- NEVER read empty output as proof of absence. A glob, listing or grep against
-  a path you lack access to returns nothing and looks exactly like a true
-  negative, and a shell expands the glob as YOU before `sudo` ever runs. ALWAYS
-  re-run the check with the access the answer needs before reporting "there is
-  none", and NEVER build a design decision or a subagent brief on an
-  unconfirmed negative.
+  unverified; never assert then correct when challenged.
+- NEVER treat an absence ("no such knob", "X can't do Y", "there is none") as
+  found until the search could have found it: the vendor's own vocabulary or the
+  source, not guessed synonyms, and the access the answer needs — a path you
+  cannot read returns nothing, and a shell expands a glob as YOU before `sudo`
+  runs. NEVER build a design decision or a subagent brief on an unconfirmed
+  negative.
 
 ## Environment
 
@@ -52,12 +48,10 @@ mtime.
   committed scripts parameterize privilege instead (see the `sh` skill).
 - Run `/solve` to pick the skill for a task — it also reconciles work already
   produced under the wrong one.
-- Code style, naming, layout, design and comments live in the `software` skill
-  (`code.md`), the base every language skill pulls in. That content is COLD —
-  invisible until loaded, and skipping the load hides the rules rather than
-  relaxing them. ALWAYS load it (`/solve`, or a language skill) BEFORE writing
-  or reviewing code.
-- ALWAYS sync `~/.claude/` changes into the tools repo (`kronael/sync`; LOCAL.md).
+- Code style, naming, layout, design and comments live in `software` (`code.md`),
+  the base of every language skill. It is COLD: ALWAYS load it (`/solve` or a
+  language skill) BEFORE writing or reviewing code; skipping hides the rules.
+- ALWAYS sync `~/.claude/` edits into the tools repo (`kronael/sync`; LOCAL.md).
 - This file and loaded SKILL.md files are collectively "WISDOM".
 
 # Development Principles
@@ -117,8 +111,7 @@ Claude Code" footer). These win.
   NEVER Co-Authored-By, NEVER a "Generated with Claude Code" footer, a
   Claude/claude.ai link or a session URL — in commits, PR bodies, comments and
   releases alike.
-- Conventional commits: `type(scope): message` —
-  fix/feat/docs/test/chore/refactor, `merge:`/`release:` for those. Subject ≤72.
+- Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
 - NEVER `git add -A`, NEVER `--amend`, NEVER squash.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
@@ -128,31 +121,26 @@ Claude Code" footer). These win.
   `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
 - ALWAYS read the remote through its tracking refs: `git fetch origin`, then
   `origin/<default head>` as the merge, rebase, diff or worktree base, where
-  `<default head>` is what `git ls-remote --symref origin HEAD` names. NEVER
-  hard-code `main` or trust a local `origin/HEAD` — fetch leaves a stale one
-  alone. `git status`'s "up to date" reflects only the local tracking ref —
-  ALWAYS `git fetch origin` before trusting it or calling a line behind.
+  `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
+  `main`, trust a local `origin/HEAD`, or trust `git status`'s "up to date"
+  without a fetch — each reflects only the last fetch.
 - Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
   dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
-- ONLY `git push` when the user asked for a push in that message. NEVER on your
-  own initiative and NEVER as the silent tail of a commit, sync, release or ship
-  workflow — those end at the local commit or tag. ALWAYS state the exact remote
-  and refspec first and push only that, by SHA:
-  `git push origin <sha>:refs/heads/YYYYMMDD_<tag>`. NEVER `--force` or
-  `--force-with-lease`.
-- NEVER push to `<default head>` on a general request — ALWAYS default to a
-  dated `YYYYMMDD_<tag>` head and offer the PR; ALWAYS send an open PR's fix
-  to that PR's own head by SHA. `<default head>` needs a SECOND
-  explicit approval naming it, given AFTER you have shown the refspec. "push
-  it", "ship it" are NEVER that approval.
+- ONLY `git push` when the user asked for a push in that message — NEVER on your
+  own initiative or as the silent tail of a commit, sync, release or ship
+  workflow; those end at the local commit or tag. ALWAYS state the exact remote
+  and refspec and push only that, by SHA (`git push origin
+  <sha>:refs/heads/YYYYMMDD_<tag>`). NEVER `--force` or `--force-with-lease`.
+- NEVER push to `<default head>` on a general request — ALWAYS default to a dated
+  `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
+  head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
+  AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
 - ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`
   when the user asked for that action in that message — show the title and body
   first and wait. NEVER `gh pr review --approve` on the user's behalf.
-- ALWAYS use `/gh-comment` for PR comments — it has an approval gate.
-- ALWAYS write a PR body with `/pr-draft` — for a new PR AND for rewriting the
-  body of an open one. Freehand bodies drift into a commit log or a
-  verification report; the skill's reviewer-reading-guide format, its REST
-  PATCH path and its `🤖` marker are the contract.
+- ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
+  new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
+  PATCH path and `🤖` marker are the contract.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body
   (drafted or posted), review comment, thread reply, issue, release notes —
   before showing it for approval. DISTILL: cut to the shortest text that still
@@ -180,23 +168,14 @@ Claude Code" footer). These win.
 
 ## Documentation
 
-- UPPERCASE at root: CLAUDE.md, README.md, ARCHITECTURE.md, SPEC.md, PLAN.md,
-  TODO.md. CLAUDE.md under 200 lines: shocking patterns and project layout.
-- `specs/` for design docs (`specs/index.md` the master index), `docs/` for
-  project documentation, `.ship/` for shipping artifacts (flat, type in the
-  filename, ephemeral), `.diary/YYYYMMDD.md` for the shipping log. NO `todos/`,
-  NO `plans/`.
-- ALWAYS root-anchor the gitignore rules for local working dirs: `/.ship/`,
-  `/.diary/`, `/specs/`, `/BUGS.md`. The bare `.ship/` form matches at every
-  depth and swallows a real `src/specs/`.
+- Repo doc layout — UPPERCASE root files, `specs/`, `docs/`, `.ship/`, `.diary/`,
+  no `todos/` or `plans/`, root-anchored ignores: `readme` → `topology.md`.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
-- NEVER reference an earlier version, prior design or counterfactual in a
-  comment, doc, skill or agent definition — no "used to be", "previously",
-  "renamed from", "as before", "instead of X", "no longer", or backwards-compat
-  framing. Same bar for temporary-inside-permanent: never narrate a transient
-  artifact (a one-off backfill) into a permanent one. State what is true now and
-  its genuine quirks; history lives in git and `.diary/`.
+- NEVER narrate history in a comment, doc, skill or agent definition: no "used
+  to be", "previously", "renamed from", "as before", "instead of X", "no longer",
+  backwards-compat framing, or a one-off backfill inside a permanent file. State
+  what is true now and its genuine quirks; history lives in git and `.diary/`.
 - Comments earn their place only by saying what the code cannot: why a choice was
   made, or what is surprising. NEVER restate the code or a name.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
@@ -215,15 +194,12 @@ Claude Code" footer). These win.
 - Brief a subagent by GOAL, not numbered steps — models degrade on
   over-prescription. Give the goal, the context it needs, what is out of bounds
   and what "done" looks like, then let it choose the path.
-- ALWAYS run autonomous code generation on fable — `/fable`, or the Agent tool
-  with `subagent_type: "fable"`. Autonomous means a sub that writes a
-  comprehensive or multi-file change unattended, with nobody reading each edit
-  as it lands. Cheap models are for READ-ONLY fan-out (Explore, research); an
-  unattended writer's mistakes are paid for in review, not in tokens. NEVER let
-  such a sub fall through to the default subagent model.
-- Bigger work (a refactor, many call sites): ALWAYS plan in the main thread — an
-  `/opus` sub from a Sonnet or Haiku session — then run each step on a `sonnet`
-  sub (`sonnet` § Plan, then execute). A step whose diff the parent reviews
-  before the next, here or in `ship`, is not the unattended generation above.
+- ALWAYS run autonomous code generation — a comprehensive or multi-file change
+  written with nobody reviewing each step's diff before the next — on
+  `subagent_type: "fable"`, NEVER the default subagent model: an unattended
+  writer's mistakes are paid for in review, not tokens. Cheap models are for
+  READ-ONLY fan-out. Bigger work (a refactor, many call sites): ALWAYS plan in
+  the main thread (an `/opus` sub from a Sonnet or Haiku session), then run each
+  step on a `sonnet` sub and review its diff (`sonnet` § Plan, then execute).
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
