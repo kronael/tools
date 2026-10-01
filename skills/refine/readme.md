@@ -14,6 +14,5 @@ rules), NEVER instead of it. Each lens carries the tag the refine skill's
 
 ## Generated style `simplify`
 
-- Prose tells are the `humanize` catalogue. An HTML page's structural tells —
-  evidence badges and ledgers, legend walls, colon headings, callout walls,
-  unfinished diagrams, light-mode contrast — are `readme/page.md`.
+- Prose tells are the `humanize` catalogue. An HTML page's structural tells are
+  `readme/page.md`.

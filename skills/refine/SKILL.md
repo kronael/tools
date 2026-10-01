@@ -20,8 +20,8 @@ first; `/release` after.
 2. **Validate** — build and test; fix failures before reviewing anything.
    → the project's test target exits 0 in this turn.
 3. **Language lenses** — map the target files to their language/domain skills
-   (`.rs`→`rs`, `.tsx`→`tsx`, `programs/**`→`solana`, `docs/**` and
-   `*.md`→`readme`) plus every skill those require (`tsx` requires `ts`).
+   (`.rs`→`rs`, `.tsx`→`tsx`, `programs/**`→`solana`, `docs/**`,
+   `README.md`, `ARCHITECTURE.md`→`readme`) plus every skill those require (`tsx` requires `ts`).
    ALWAYS list this skill's own directory and
    read each `<skill>.md` lens that exists; NEVER assume which do. An absent
    lens falls back to that skill's own `SKILL.md` and any review sibling it

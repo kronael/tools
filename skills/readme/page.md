@@ -10,10 +10,9 @@ before handing over (`visual` agent) — an unfinished layout shows only there.
 
 ## Evidence
 
-- ALWAYS put the link on the words of the claim it proves (`writing`, the
-  parentheses rule) and NEVER a provenance badge on every line: when the
-  apparatus outweighs the content the page reads as a dashboard, not an
-  explanation.
+- ALWAYS put the link on the words of the claim it proves (`writing`) and
+  NEVER a provenance badge on every line: when the apparatus outweighs the
+  content the page reads as a dashboard, not an explanation.
 - ALWAYS mark only what is NOT proven, in words ("not yet run on the copy");
   a proven claim carries its link and nothing else. A legend of status kinds
   means the marking has outgrown the content — cut the kinds, keep the words.
@@ -25,8 +24,8 @@ before handing over (`visual` agent) — an unfinished layout shows only there.
 
 ## Headings and navigation
 
-- ALWAYS name the topic plainly. NEVER an "X: Y" colon heading — in h2–h4,
-  card titles or SVG `<title>` alike (humanize #31).
+- ALWAYS name the topic plainly (humanize #31), in h2–h4, card titles and SVG
+  `<title>` alike.
 - ALWAYS make a nav label the heading it jumps to, word for word.
 
 ## Sections
@@ -56,6 +55,4 @@ before handing over (`visual` agent) — an unfinished layout shows only there.
 ## Keeping it true
 
 A page is checked when written; the repo moves on. ALWAYS run the fact pass
-on every later refine — every cited test name, path and count grepped, every
-claim against the newest results — before any style pass (`refine` lens
-`readme.md`).
+first on every later refine (`refine` lens `readme.md`).

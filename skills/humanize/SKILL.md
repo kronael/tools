@@ -27,7 +27,7 @@ Load this skill whenever the user asks to:
 - edit a draft (blog post, essay, PR description, docs, memo, email, tweet, resume bullet) to sound more natural
 - match their voice in writing they're producing
 - review text for AI tells before publishing
-- de-slop an HTML doc page — this pass covers its prose; its structure (evidence badges and ledgers, legend walls, callout walls, nav labels, diagrams, contrast) is `readme/page.md`
+- de-slop an HTML doc page — this pass covers its prose; its structure is `readme/page.md`
 
 Also apply this skill to **your own** output when writing user-facing prose — release notes, PR descriptions, documentation, long-form explanations, summaries. Hermes's baseline voice already strips most of these, but a focused pass catches what slips through.
 
@@ -44,7 +44,7 @@ Always show the rewrite to the user. For file edits, show a diff or the changed 
 
 When given text to humanize:
 
-1. **Identify AI patterns** — scan for the 29 patterns listed below.
+1. **Identify AI patterns** — scan for the patterns listed below.
 2. **Rewrite problematic sections** — replace AI-isms with natural alternatives.
 3. **Preserve meaning** — keep the core message intact.
 4. **Maintain voice** — match the intended tone (formal, casual, technical, etc.). If a voice sample was provided, match it specifically.
@@ -373,7 +373,7 @@ Same family, same treatment: "that's it", "and that's all there is to it",
 **Problem:** ChatGPT uses curly quotes and apostrophes (“ ” ’) instead of straight ones (" '). In source — HTML, Markdown, code — they also arrive mixed with the straight ones already there, so one file carries both. ALWAYS straight, everywhere in source.
 
 **Before:**
-> He said "the project is on track" but others disagreed.
+> He said “the project is on track” but others disagreed.
 
 **After:**
 > He said "the project is on track" but others disagreed.
