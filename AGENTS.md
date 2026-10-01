@@ -138,15 +138,16 @@ awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
 hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit`,
-`bashEditDiffEnabled` and the four `Bash(rm …)` deny entries instead of
-overwriting (the event wiring is whatever `settings-recommended.json` says —
-don't restate it). These are always applied, never asked — the 30-day default
-silently deletes session transcripts at startup, an unset `attribution.commit`
-asks for a `Co-Authored-By` trailer on every commit, an unset
-`bashEditDiffEnabled` diffs the working tree around every Bash command in
-`auto` and `bypassPermissions` modes, and the deny guard holds even when the
-rest of the permissions block is declined. For the rest of permissions and
-sandbox, show the diff and ask:
+`bashEditDiffEnabled`, `crossSessionInbound`, `isolatePeerMachines` and the
+four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
+whatever `settings-recommended.json` says — don't restate it). These are
+always applied, never asked — the 30-day default silently deletes session
+transcripts at startup, an unset `attribution.commit` asks for a
+`Co-Authored-By` trailer on every commit, an unset `bashEditDiffEnabled`
+diffs the working tree around every Bash command in `auto` and
+`bypassPermissions` modes, an unset `crossSessionInbound` accepts other sessions'
+messages, and the deny guard holds even when the rest of the permissions block is
+declined. For the rest of permissions and sandbox, show the diff and ask:
 
 ```sh
 jq -s '.[0].hooks = .[1].hooks
@@ -154,6 +155,8 @@ jq -s '.[0].hooks = .[1].hooks
   | .[0].outputStyle = .[1].outputStyle
   | .[0].attribution.commit = .[1].attribution.commit
   | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].crossSessionInbound = .[1].crossSessionInbound
+  | .[0].isolatePeerMachines = .[1].isolatePeerMachines
   | (.[0].permissions.deny // []) as $d
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
   | .[0]' \

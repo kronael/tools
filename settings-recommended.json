@@ -136,6 +136,8 @@
   "promptSuggestionEnabled": false,
   "spinnerTipsEnabled": false,
   "bashEditDiffEnabled": false,
+  "crossSessionInbound": "refuse",
+  "isolatePeerMachines": true,
   "attribution": {
     "commit": ""
   },

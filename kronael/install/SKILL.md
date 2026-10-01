@@ -175,6 +175,13 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
      working tree around every Bash command (a temp snapshot per command) and
      prints the changed files under the command output.
      `CLAUDE_CODE_BASH_EDIT_DIFF` in the environment overrides the key.
+   - **`crossSessionInbound`** and **`isolatePeerMachines`** — ALWAYS apply
+     the recommended `"refuse"` and `true`, never ask (Claude Code v2.1.224+).
+     Unset, every session accepts messages from the user's other Claude
+     Code sessions (same machine over a per-session socket; other machines
+     and cloud sessions through Remote Control). `refuse` drops them
+     undelivered; `isolatePeerMachines` asks before a message leaves the
+     machine. `SendMessage` stays allowed: it is also the subagent channel.
    - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
      `Bash(rm -fr*)`, `Bash(rm --recursive*)`. ALWAYS apply all four, never ask,
      and keep them even when the user declines the rest of the permissions
