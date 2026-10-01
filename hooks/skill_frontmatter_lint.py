@@ -130,9 +130,6 @@ def fix_frontmatter(text: str) -> str:
     return '\n'.join(lines).rstrip() + '\n'
 
 
-# --- body checks (wisdom rules) -------------------------------------------
-
-
 def check_keys(path: Path, meta: dict | None) -> list[Finding]:
     if meta is None:
         return []  # unparseable YAML — the frontmatter check owns that failure

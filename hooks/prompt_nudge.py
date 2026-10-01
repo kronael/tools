@@ -108,7 +108,6 @@ def exact_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
-    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs).
     if word.endswith('s') and word[:-1] in keywords:
         return keywords[word[:-1]]
     if word + 's' in keywords:

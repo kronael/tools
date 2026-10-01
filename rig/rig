@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# ── Shared helpers ──────────────────────────────────────────────────
-
 dedupe(){ awk '!seen[$0]++'; }
 strip_origin(){ sed 's|^origin/||'; }
 
@@ -60,15 +58,12 @@ pick_branch(){
         <(branches) | fzf "${args[@]}"
 }
 
-# ── Subcommands ─────────────────────────────────────────────────────
-
 BRANCH_HELP="Usage: rig %s [-z] [-n] [ref|pattern]
 Flags: -z offline (no fetch), -n dry-run, ? force fzf"
 
 cmd_branch_op(){
     local op=$1; shift
 
-    # Parse flags
     local fetch=1 restore= dryrun= args=() restore_args=()
     [[ "$op" == gco ]] && { op=checkout; fetch=; restore=1; }
     while [[ $# -gt 0 ]]; do
@@ -108,7 +103,6 @@ cmd_branch_op(){
         git fetch --refmap= origin '+refs/heads/*:refs/remotes/origin/*' || return
     fi
 
-    # Select branch
     local pattern="${args[0]:-}" branch target
     if [[ "$op" == checkout && -n "$pattern" ]] && {
         is_commit_not_branch "$pattern" ||
@@ -129,7 +123,6 @@ cmd_branch_op(){
         target="origin/$branch"
     fi
 
-    # Execute
     if [[ ${dryrun:-} ]]; then
         echo "$target"
     else
@@ -142,7 +135,6 @@ cmd_branch_op(){
 }
 
 cmd_push(){
-    # Parse flags
     while [[ "${1:-}" =~ ^- ]]; do
         case "$1" in
             -n) local dryrun=1; shift ;;
@@ -178,19 +170,15 @@ EOF
         branch=$(get_current_branch 2>/dev/null) || branch=$(pick_branch "?")
     fi
 
-    # Validate
     [[ -z "$branch" ]] && {
         echo "error: could not determine branch"
         echo "usage: rig push [branch] or rig push ?"
         exit 1
     }
 
-    # Execute (dry-run prints the exact command)
     local cmd=(git push origin "$@" "$commit:refs/heads/$branch" --tags)
     if [[ ${dryrun:-} ]]; then echo "${cmd[*]}"; else "${cmd[@]}"; fi
 }
-
-# ── Fixup squash ────────────────────────────────────────────────────
 
 cmd_fixup(){
     local fixup_pat='^fixup[[:space:]:!;]'
@@ -201,7 +189,6 @@ cmd_fixup(){
         awk -v p="$fixup_pat" '$0 ~ p {last=$1} END{print last}')
     [[ -z "$oldest" ]] && { echo "no fixup commits"; return 0; }
 
-    # Sequence editor: mark fixup-pattern picks as fixup
     local seq_ed
     seq_ed=$(mktemp /tmp/rig-fixup-XXXXX.sh)
     cat > "$seq_ed" <<'EOF'
@@ -223,8 +210,6 @@ EOF
     rm -f "$seq_ed"
 }
 
-# ── Install ──────────────────────────────────────────────────────────
-
 symlinks=(rco rip rir rim riq gl gis gig gitg gp gpc gpa gw
           gif gifs gss gsp gsl grec grea gres gco gib gitsu)
 
@@ -236,8 +221,6 @@ cmd_install(){
     done
     echo "installed ${#symlinks[@]} symlinks"
 }
-
-# ── Dispatch ────────────────────────────────────────────────────────
 
 usage(){
     cat <<EOF

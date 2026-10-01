@@ -12,20 +12,16 @@ except (json.JSONDecodeError, EOFError, ValueError):
 if not isinstance(data, dict):
     sys.exit(0)
 
-# Output directory for flow reports
 REPORT_DIR = os.path.expanduser('~/.claude/flow-reports')
 os.makedirs(REPORT_DIR, exist_ok=True)
 
-# Generate report filename
 timestamp = datetime.now().astimezone().strftime('%Y%m%d-%H%M%S')
 event = data.get('hook_event', 'unknown')
 report_file = os.path.join(REPORT_DIR, f'{timestamp}-{event}.md')
 
-# Extract session info
 session_id = data.get('session_id', 'unknown')
 cwd = data.get('cwd', os.getcwd())
 
-# Create report content
 report = f"""# Flow Report
 
 **Event:** {event}
@@ -53,7 +49,6 @@ Run `/learn` to analyze this session and extract patterns into skills.
 try:
     with open(report_file, 'w') as f:
         f.write(report)
-    # Notify about report
     print(json.dumps({'ok': True, 'systemMessage': f'Flow report saved: {report_file}'}))
 except OSError:
     # Silent fail - don't break session

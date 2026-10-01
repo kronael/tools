@@ -22,7 +22,6 @@ ignore = [
     "ISC001", # implicit string concat — conflicts with formatter
     "Q",      # quotes — handled by ruff-format quote-style
 
-    # disagree with for this repo
     "EM",      # string literals in exceptions — too pedantic
     "INP001",  # implicit namespace package — fine for hook scripts
     "PLR09",   # too many arguments/branches/returns

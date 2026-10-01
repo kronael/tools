@@ -53,7 +53,6 @@ def test_first_stop_is_silent_and_records(tmp_path, monkeypatch, capsys, state_r
 
 
 def test_short_session_fires_on_count_threshold(tmp_path, monkeypatch, capsys):
-    # Three rapid Stops (never near 30 min) still yield exactly one nudge.
     assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
     assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
     out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
@@ -65,7 +64,6 @@ def test_short_session_fires_on_count_threshold(tmp_path, monkeypatch, capsys):
 def test_fires_once_then_silent(tmp_path, monkeypatch, capsys):
     for _ in range(memory_nudge.STOP_COUNT_THRESHOLD):
         run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-    # Next Stop after the done marker stays silent.
     out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
 
     assert out is None

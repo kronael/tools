@@ -74,7 +74,6 @@ async function fzf(all: string[], query: string, pick: number) {
   await Bun.sleep(700)
 }
 
-// ── Title card ───────────────────────────────────────────────────────
 // Render at t=0 so the poster / first frame is the title, not a blank screen.
 clear()
 console.log(`\n\n  ${B}${C}rig${R}  ${D}—${R}  ${B}ripgit${R}\n`)
@@ -83,7 +82,6 @@ console.log(`  ${D}You grab a remote branch, make changes, push back.${R}`)
 console.log(`  ${D}No checkout -b. No tracking. No cleanup.${R}\n`)
 await Bun.sleep(3200)
 
-// ── Section 1: The old way (briefly) ────────────────────────────────
 clear()
 h1("The usual way to start on a remote branch")
 story("Five commands before you can even start working")
@@ -98,7 +96,6 @@ await Bun.sleep(1000)
 console.log(`\n  ${Y}» With rig: one command. No branch created.${R}\n`)
 await Bun.sleep(2200)
 
-// ── Section 2: Orientation ───────────────────────────────────────────
 clear()
 h1("Know where you are")
 story("gl — last 20 commits at a glance")
@@ -139,7 +136,6 @@ await Bun.sleep(1200)
 note("Each * is a commit. Lines show ancestry. Branch labels are origin pointers.")
 await Bun.sleep(2000)
 
-// ── Section 3: Checkout with fzf ─────────────────────────────────────
 clear()
 h1("Grab a remote branch — pick it with fzf")
 story("rco ? opens a fuzzy picker over every remote branch.")
@@ -174,7 +170,6 @@ console.log(`${D}Fetching...${R}
 HEAD is now at 7c8d9e0 feat: add token refresh`)
 await Bun.sleep(1800)
 
-// ── Section 4: Push back to origin ──────────────────────────────────
 clear()
 h1("Make changes, push back")
 story("rip = rig push. Detects which remote branch you came from.")
@@ -194,7 +189,6 @@ note("No branch name needed — rip walks ancestry to find origin/feature/auth."
 note("No -u, no tracking config, no cleanup. Done.")
 await Bun.sleep(2200)
 
-// ── Section 5: Rebase workflow ───────────────────────────────────────
 clear()
 h1("Keep history clean: rebase before push")
 story("rir = rig rebase. Fetch + interactive rebase on origin/branch.")
@@ -218,7 +212,6 @@ console.log(
 )
 await Bun.sleep(1800)
 
-// ── Section 6: Merge workflow ────────────────────────────────────────
 clear()
 h1("Merge a feature into main")
 story("rco main, then rim to merge the feature branch in, then rip.")
@@ -247,7 +240,6 @@ console.log(
 )
 await Bun.sleep(1800)
 
-// ── Section 7: Fixup squash ──────────────────────────────────────────
 clear()
 h1("Squash 'fixup' commits before pushing")
 story("Prefix a commit with 'fixup:' to mark it for squashing.")
@@ -276,7 +268,6 @@ ${G}9ab0cde${R} chore: update dependencies`,
 note("Clean. One commit. Ready to push.")
 await Bun.sleep(2000)
 
-// ── Summary ──────────────────────────────────────────────────────────
 clear()
 console.log(`\n  ${B}${C}rig${R}  workflow in full\n`)
 console.log(`  ${C}${B}rco${R} ${D}[branch]${R}    fetch + jump to origin/branch  ${D}(no local branch)${R}`)

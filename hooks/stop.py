@@ -83,7 +83,6 @@ def emit(parts, data):
 def nudges(cwd, now):
     parts = []
 
-    # Uncommitted changes
     stamp = git_path(cwd, 'claude-commit-nudge')
     r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
     if stamp is not None and r.returncode != 0:
