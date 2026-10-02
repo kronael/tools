@@ -53,15 +53,19 @@ For narrated deliverables, the `vo` line drives audio and caption timing.
 ALWAYS honor an explicitly silent video request: omit TTS and audio checks,
 and ALWAYS time any captions against the visual scenes.
 
+For narrated deliverables:
+
 1. ALWAYS use an available local TTS engine for each `vo` → wav by default.
    ALWAYS verify the installed engine and voice before choosing it; NEVER
    assume a service is free or local. ALWAYS require explicit authorization
    for paid narration; a configured key is not authorization.
 2. `faster-whisper` for word-level timestamps on the *rendered* wav — ALWAYS align captions to whisper timings, NEVER to the input text (TTS pacing drifts).
-3. ALWAYS emit `.srt` captions. For explainers, ALWAYS use readable phrase
-   captions; for promotional shorts, use per-word highlights (1-3 words).
-   ALWAYS burn captions into the mp4 when needed for silent playback.
-4. NEVER speak a URL — caption/description only.
+3. NEVER speak a URL — caption/description only.
+
+For narration or silent videos with captions, ALWAYS emit `.srt` captions.
+For explainers, ALWAYS use readable phrase captions; for promotional shorts,
+use per-word highlights (1-3 words). ALWAYS burn captions into the mp4 when
+needed for silent playback.
 
 ## Text overlay — cards format
 

@@ -65,10 +65,11 @@ vibes.
   stays in `art/p5js.md`).
 - Manim via the script-to-video pipeline → `video/render.md` flavor table;
   Manim as the primary deliverable → `video/manim.md`.
-- Reviewing drafts: publish every version under your OWN draft dir in the web
-  root (CLAUDE.md § Publishing) and drop a SIMPLE auto-generated index OF THAT DIR
-  (plain file listing, NEVER a bespoke gallery). NEVER auto-index a shared /
-  multi-tenant root — it exposes other people's projects.
+- Reviewing drafts: ALWAYS review local files by default. Publish only when
+  the user requests it; ALWAYS follow the applicable project publishing policy.
+  For published drafts, ALWAYS use your OWN draft directory and a SIMPLE
+  auto-generated index OF THAT DIR (plain file listing, NEVER a bespoke gallery).
+  NEVER auto-index a shared / multi-tenant root — it exposes other people's projects.
 
 Sibling creative skills (own their domain, not folded here): `demo` (terminal
 recordings + animated narrative shorts — its `cutout.md` holds the Monty Python
