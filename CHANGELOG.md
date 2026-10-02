@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [v0.4.12] — 20261002
+
+> kronael v0.4.12 — clearer explanations and host context
+>
+> Explanations can use interactive pages or narrated videos, while writing rules preserve facts and sandbox notes identify where agents run.
+>
+> • create explains source evidence through diagrams, interactive HTML, or narrated video.
+> • writing uses plain, complete sentences; humanize preserves facts and uncertainty.
+> • server-init records host facts; the first sync offers it as an optional step.
+> • dockbox and qemubox describe their mounts, network, and file persistence.
+> • spec-lint checks spec status, index rows, filenames, and code references.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Explainers select the requested format, verify claims and interactions, and keep draft review local unless publication is requested. Video narration uses verified local TTS by default; paid narration requires authorization. Silent captions follow scenes.
+- Shared language rules apply to technical prose and documentation. The chat length and structure limits apply only to chat. Humanize preserves supplied facts and uncertainty.
+- `server-init` creates or refreshes a per-host memory. The first sync offers it as an optional step; sandbox sessions cannot create host memory.
+- `dockbox` and `qemubox` write sandbox notes and set `CLAUDE_SANDBOX`. Notes identify mounts, network access, and file persistence, including when edits to shared Claude configuration reach the host.
+- `spec-lint` checks the closed status vocabulary, filenames, index rows, and code references. Root detection distinguishes skill guides from spec corpora and supports explicit spec directories. Pre-commit and `make test` run the relevant checks.
+
 ## [v0.4.11] — 20261002
 
 > kronael v0.4.11 — recall-memories recovers more context
