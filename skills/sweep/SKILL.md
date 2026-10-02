@@ -107,10 +107,9 @@ for it. Agent success reports are not evidence; the diff is.
 After verifying each sub's output:
 
 1. `git diff --name-only` — take the FULL list, no tail.
-2. Stage an explicit file list — never `git add -A` or `git add -a`.
-3. One commit per concern. Format: `[section] message`.
-4. Never amend, never squash, never push.
-5. Watch for parallel hazard: if another session is editing the shared
+2. One commit per concern, through the `commit` skill — WISDOM § Git owns the
+   staging, message and history rules.
+3. Watch for parallel hazard: if another session is editing the shared
    tree (user mid-edit, another sub in flight), scope your `git add` to
    YOUR files only. Verify `git diff --cached` before committing.
 
@@ -134,7 +133,6 @@ slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
   can be wrong outright, or right but stated backwards.
 - NEVER run overlapping code-editing subs on the shared tree.
 - NEVER commit a behavior change without its test.
-- NEVER use `git add -A` or amend/squash.
 - NEVER conflate multiple concerns in one sub or one commit.
 
 ## Failure modes this prevents

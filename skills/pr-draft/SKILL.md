@@ -1,7 +1,7 @@
 ---
 name: pr-draft
-description: Draft a PR description. NOT for commit messages (use commit).
-when_to_use: "draft a PR, open a PR, write the PR description, PR body, PR summary, update the PR description"
+description: Draft or rewrite a PR description. NOT for commit messages (use commit).
+when_to_use: "draft a PR, open a PR, write the PR description, PR body, PR summary, update the PR description, rewrite/update the body of an open PR"
 user-invocable: true
 ---
 
@@ -13,13 +13,16 @@ Run directly in main context (no subagent).
 
 1. Find true merge base and read the whole change:
    ```
-   BASE=$(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD main)
+   git fetch origin
+   BASE=$(git merge-base HEAD origin/<default head>)
    git log $BASE..HEAD --oneline
    git diff $BASE..HEAD --stat
    git diff $BASE..HEAD
    ```
-   The base is the merge-base with main, NOT `origin/main` itself — that misses commits
-   already on the branch before the last merge. If both fail, ask the user.
+   `<default head>` per WISDOM § Git; for an existing PR, its `baseRefName`.
+   The base is the merge-base, NOT `origin/<default head>` itself — that
+   misses commits already on the line before the last merge. If it fails, ask
+   the user.
    ALWAYS read the full diff, NEVER draft from the stat and the commit log —
    the one-line changes a stat hides (a pinned key, a changed default, a
    dropped field) are the ones a review bot names and the author's body misses.
@@ -33,11 +36,12 @@ Run directly in main context (no subagent).
    alternative would have cost, so a reader who never saw the diff could
    rebuild the same design. NEVER sell a change to a wire-visible contract
    (event name, API field, route) as neutral — verify it against what's
-   documented or already emitted, since absence from `origin/main` isn't
+   documented or already emitted, since absence from the default head isn't
    proof it's free to change — and flag it for the reviewer instead. ALWAYS
    flag verified-but-unfixed issues as "known, deferred" — never drop them
    to look clean.
-3. Cut to the shape and size below.
+3. DISTILL, then REVIEW-ON-WISDOM (both as WISDOM § Git defines them), with
+   § Format below as the size and shape checklist.
 4. Show the draft and ask if they want to tweak anything. For a NEW PR, STOP —
    NEVER run `gh pr create` or open the PR.
 
@@ -46,10 +50,6 @@ Run directly in main context (no subagent).
 To update an existing PR's body, write the body to `tmp/body.md` and PATCH via
 REST. NEVER use `gh pr edit --body` — it runs a GraphQL `login` query that
 requires `read:org`; the REST endpoint needs only `repo`:
-
-This path actually posts to GitHub as the user, unlike a new-PR draft the user
-still has to submit themselves — ALWAYS end `tmp/body.md` with a bare `🤖`
-line before the PATCH, so a reader can tell Claude wrote the description.
 
 ```
 gh api -X PATCH repos/<owner>/<repo>/pulls/<N> -f body="$(cat tmp/body.md)" --jq '.body | length'
@@ -68,17 +68,17 @@ NEVER hard-wrap Markdown uploaded to GitHub just for source width — ALWAYS kee
 ## Format
 
 **Title**: ALWAYS follow the repo's own convention — read recent titles
-(`git log --oneline -20 origin/main`); keep a ticket prefix (`[ABC-123]`)
+(`git log --oneline -20 origin/<default head>`); keep a ticket prefix (`[ABC-123]`)
 when the branch or commits carry one; default `type(scope): outcome` with
-`fix` `feat` `refactor` `docs` `chore`. ONE outcome, max 72 chars. NEVER a
+`fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
 **Body shape** — orientation first, then one paragraph per concern:
 
-- **Lead**: ALWAYS open with one or two sentences giving the outcome and its
-  cause, and — when more than one layer changes — every layer in reading
-  order with its entry file, so the reviewer knows the shape before opening a
-  file. NEVER open on a header, a ticket line, or a narrative.
+- **Lead**: ALWAYS open with `**TL;DR:**` and one or two sentences giving the
+  outcome and its cause, and — when more than one layer changes — every layer
+  in reading order with its entry file, so the reviewer knows the shape before
+  opening a file. NEVER open on a header, a ticket line, or a narrative.
 - **Concerns**: ALWAYS one short paragraph per concern, opened by a bold
   lead-in stating the claim or a `before → after` result, with enumerations
   folded inline ("A, B and C"). NEVER headers, tables, or `---` rules.
@@ -97,10 +97,10 @@ comma list of changes — needing "and" twice means name the outcome above them.
 - **Close**, each only when real: `Contract to confirm:` for wire-visible
   changes, `Known, deferred:` for verified-but-unfixed issues, and a `⚠️`
   line for merge order, rollout, or a manual step before or after merge.
+- **Last line**: a bare `🤖` (WISDOM § Git), in the draft too.
 - NEVER a file table, effort estimate, sequence diagram, or release-note
   categories (Features / Bug Fixes / Chores) — review bots such as CodeRabbit
   post those already, and category bullets ("Improved X") carry no reasoning.
-- NEVER a claude.ai session URL or a second attribution footer.
 - No "This PR...". Prose follows the `writing` skill's copy rules.
 
 **Size**: ALWAYS scale the body to the change — a bump or one-liner gets 1–3
@@ -109,7 +109,7 @@ sentences (~400 chars); a mid change the lead plus up to 3 paragraphs
 narrative, incident timelines, and measurement tables go to a linked doc or
 issue.
 
-ALWAYS draft then cut — the first version is a draft, NEVER the deliverable.
+DISTILL means draft then cut — the first version is a draft, NEVER the deliverable.
 Strip every word that doesn't change meaning: hedges, context the diff
 already shows, adjectives, filler kept only because it "sounds complete."
 Cutting removes narration and restatement, NEVER the reasoning behind a
@@ -125,7 +125,7 @@ lead-ins, reasoning inline, `Also:` sweep, closing flags), not the topic:
 ```
 feat(unstake): send quote and settlement events to Mixpanel
 
-Instruments instant unstake so drop-off and settlement outcomes reach Mixpanel, not only server logs — the event helper (`analytics/unstake.ts`), the quote and confirm screens, then the settlement watcher.
+**TL;DR:** Instruments instant unstake so drop-off and settlement outcomes reach Mixpanel, not only server logs — the event helper (`analytics/unstake.ts`), the quote and confirm screens, then the settlement watcher.
 
 **One event shape.** Every call site routes through `trackUnstakeEvent()`, so a bad field breaks all events at once instead of drifting per call site.
 
@@ -136,4 +136,6 @@ Also: the quote screen's retry button emits `instant_unstake_quote_retry`.
 Contract to confirm: `instant_unstake_amount_adjusted` becomes `instant_unstake_adjustment_prompted` — the event fires before the user confirms, so downstream counted it as a settled adjustment; check nothing still keys on the old name.
 
 Known, deferred: the native-auction path can't attach a cost basis yet (`costsKnown: false`).
+
+🤖
 ```

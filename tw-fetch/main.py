@@ -26,10 +26,10 @@ from time import time_ns
 
 import click
 from selenium import webdriver
+from selenium.common.exceptions import InvalidCookieDomainException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import visibility_of_element_located
 from selenium.webdriver.support.ui import WebDriverWait
@@ -40,9 +40,6 @@ BACKOFF = 120
 BACKOFF_JITTER = 60
 
 log = logging.getLogger('tw-fetch')
-
-
-# --- browser ---
 
 
 @contextmanager
@@ -63,12 +60,9 @@ def browser(headless=True):
 def inject_cookies(driver, cookies):
     driver.get('https://x.com')
     for c in cookies:
-        with suppress(Exception):
+        with suppress(InvalidCookieDomainException):
             driver.add_cookie(c)
     driver.get('https://x.com')
-
-
-# --- parsing ---
 
 
 class _Strip(HTMLParser):
@@ -118,12 +112,9 @@ def parse_tweet(elem):
         except ValueError:
             return None
 
-    except (NoSuchElementException, StaleElementReferenceException, WebDriverException):
+    except (NoSuchElementException, StaleElementReferenceException):
         return None
     return {'id': id_, 'url': link, 'author': author, 'text': text, 'ctime': ctime}
-
-
-# --- i/o ---
 
 
 def seen_ids(path):
@@ -149,9 +140,6 @@ def append(f, record, existing):
     return True
 
 
-# --- scrolling ---
-
-
 def wait_timeline(driver, label='Timeline'):
     condition = (By.XPATH, f"//main//section//div[contains(@aria-label, '{label}')]")
     return WebDriverWait(driver, TIMEOUT).until(visibility_of_element_located(condition))
@@ -165,8 +153,6 @@ def scroll_down(driver):
 def get_tweets(timeline):
     return timeline.find_elements(By.XPATH, './/article')
 
-
-# --- commands ---
 
 COOKIE_DIR = './cookies'
 
@@ -189,14 +175,13 @@ def collect_round(driver, existing, path):
     try:
         driver.get('https://x.com')
         sleep(3)
-        # click Following tab if present
         try:
             tab = driver.find_element(
                 By.XPATH, "//div[@role='tablist']//span[contains(text(),'Following')]"
             )
             tab.click()
             sleep(2)
-        except (NoSuchElementException, WebDriverException):
+        except NoSuchElementException:
             pass
 
         timeline = wait_timeline(driver)
@@ -359,7 +344,6 @@ def login(username):
     else:
         log.info(f'auth_token: {auth["value"][:12]}...')
 
-    # strip non-serializable fields selenium adds
     clean = [
         {
             'name': c['name'],

@@ -9,7 +9,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
-Claude stops ──> Stop ──> stop.py       (commit + diary block, else turn recap)
+Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
@@ -26,10 +26,13 @@ first runs through `codex_hook.py`.
 ### lib/ (shared modules, not hooks)
 
 `state.py` — per-session throttle stamp paths, the state root, and
-`hook_event(data)`, the one reader of the event key across all three spellings.
+`hook_event(data)`, which reads the event key across all three spellings.
 
-Every hook imports these by absolute path from `~/.claude/hooks/lib/` at import
-time, so an install that omits the directory tracebacks on every prompt.
+`local.py`, `memory_nudge.py`, `prompt_nudge.py` and `reclaude.py` import it as
+`lib.state`, resolved from the hook script's own directory (`sys.path[0]`), so
+an install that omits the directory tracebacks on every prompt. `stop.py`
+imports nothing from it: it carries its own `hook_event`, which checks
+`KRONAEL_HOOK_EVENT` before the three payload keys.
 
 ### codex_hook.py (Codex adapter)
 
@@ -66,8 +69,9 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. Match explicit Codex second-opinion phrases in Claude only: `ask codex`,
-   `oracle`, and `second opinion`.
+4. In Claude only, route a prompt that starts with `/astra` or `/sol` to that
+   skill; route `ask codex`, `ask astra`, `oracle`, and `second opinion` to
+   `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
 6. Tokenise prompt and exact-match words against `AGENT_KEYWORDS`. A trailing
@@ -151,37 +155,68 @@ unwired.
 
 ### stop.py (Stop)
 
-**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`.
+**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`; env
+`SHIP_ROLE`, `CLAUDE_EVAL`, `KRONAEL_HOOK_EVENT`.
 **Output:** `{"decision": "block", "reason": "..."}` on real Stop,
-advisory `hookSpecificOutput.additionalContext` on PostToolUse,
-`{"ok": true, "systemMessage": "<recap>"}` when nothing blocks, or silent.
+advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
 
 **Flow:**
-1. With `stop_hook_active` set, skip the nudges (prevents recursion) and go
-   straight to the recap.
-2. Check `git status --porcelain -uno`; if dirty, append a commit nudge
-   with `git diff --stat`. A failed `git status` inside a repo appends its
-   stderr instead — an unreadable tree is reported, never read as clean.
-3. Check for today's `YYYYMMDD.md` (UTC) under the repo's `.diary/`. Missing
-   or >1h stale → append a diary nudge, once per session: the stamp
-   `diary-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) never
-   expires. The directory need not exist; a repo without one is nudged to
-   start it.
-4. Real Stop blocks with the combined message and stops there. Periodic
+1. With `CLAUDE_EVAL` set, or `SHIP_ROLE` set and not starting with
+   `worker`, exit silently before any git call and before the event split,
+   so PostToolUse is silent too. The `ship` CLI sets `SHIP_ROLE` per
+   `claude` child (`planner`, `judge`, `verifier`, `validator`,
+   `replanner`, `worker-<id>`); only workers build and commit.
+2. With `stop_hook_active` set, skip the nudges — this prevents recursion, and
+   with nothing left to say the hook is silent.
+3. Check `git status --porcelain -uno`; if dirty and the stamp is missing or
+   at least `NUDGE_INTERVAL` (600 s) old, append a commit nudge with
+   `git diff --stat` and re-stamp. A failed `git status` inside a repo
+   appends its stderr instead, unthrottled — an unreadable tree is reported,
+   never read as clean.
+4. Resolve the diary tree (`diary_trees`, below) and check for today's
+   `YYYYMMDD.md` (UTC) under its `.diary/`. Missing or >1h stale → append a
+   diary nudge on every Stop; no stamp throttles it. The directory need not
+   exist; a repo without one is nudged to start it.
+5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
-5. Otherwise, on a real Stop outside Codex, build the recap: `git log
-   --since=<stamp>` (or `head` when the session has no stamp yet), `git status
-   --porcelain -z` (`-z` never quotes, so non-ASCII and spaced paths survive)
-   filtered so untracked paths count only when touched after the stamp, `git diff --numstat HEAD` for `+added -deleted`, and git-dir probes
-   for merge/rebase/cherry-pick/revert/bisect in progress. Each git call
-   shares one `RECAP_BUDGET` deadline; any failure drops the whole recap and
-   leaves the stamp untouched so the next turn's window still covers this one.
-6. Emit the recap as `systemMessage` and write the stamp.
-
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
-`<git-dir>/claude-commit-nudge` (nudge throttle) and
-`<git-dir>/claude-recap-{session_id}` (ISO time of the last recap).
+`<git-dir>/claude-commit-nudge` (commit nudge throttle).
+
+**Diary tree:** an ignored diary is never committed, so its one copy lives
+in the main worktree; any other is committed per branch and read in the
+current worktree. The check tests the dated file: a `.diary/` ignore rule
+matches the bare `.diary` only once the directory exists.
+
+```
+git_dir = rev-parse --absolute-git-dir
+common  = rev-parse --path-format=absolute --git-common-dir
+current = rev-parse --show-toplevel
+     │
+     v
+same realpath(git_dir, common)? ──yes──> main = current
+     │                               (plain repo, submodule,
+     │ no: linked worktree            --separate-git-dir repo)
+     v
+core.worktree in <common>/config? ──yes──> main = <common>/<value>
+     │                                     (worktree of a submodule)
+     │ no
+     v
+main = dirname(<common>)                   (worktree of a plain repo)
+
+check-ignore -q .diary/YYYYMMDD.md, run in current
+     │
+     ├── ignored ─────> <main>/.diary/YYYYMMDD.md
+     └── not ignored ──> <current>/.diary/YYYYMMDD.md
+```
+
+`dirname(<common>)` cannot be the general rule: a submodule's or a
+`--separate-git-dir` repo's common dir is a git dir stored elsewhere, so its
+parent is not their checkout. Git records no main tree for a
+linked worktree of a `--separate-git-dir` repo; there the last branch yields
+the git dir's parent, and an ignored diary is looked for beside the git dir.
+`../skills/diary/SKILL.md` § Where to write resolves `<main>` the same way;
+change both together.
 
 ### memory_nudge.py (PreCompact + Stop)
 
@@ -233,17 +268,13 @@ stdin:
   // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
 }
 
-stdout (dirty tree + stale diary):
+stdout (dirty tree + stale diary; commit guidance elided):
 {
   "decision": "block",
-  "reason": "Uncommitted changes detected.\n <diff stat>\nRun /commit.\nDiary not updated in over an hour. Run /diary."
+  "reason": "Uncommitted changes detected.\n<diff stat>\nCommit your work — ... Run /commit.\nRules: ...\nDiary not updated in over an hour (now 16:52 2026-10-01). Run /diary deliberately if there is work to record."
 }
 
-stdout (nothing to block on):
-{
-  "ok": true,
-  "systemMessage": "since 14:02Z: 2 commits\n+ b78cf4c1 docs(bugs): Record B7E as resolved\n+ b0214954 docs(diary): The re-baseline was interrupted\nuncommitted: 1 changed, 1 untracked (+40 -3)\n  server/strategy.py server/foo.py"
-}
+stdout (nothing to nudge, or a judging SHIP_ROLE): empty
 ```
 
 Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and

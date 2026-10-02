@@ -46,7 +46,7 @@ human and bot (CodeRabbit etc.) alike, never a hand-picked subset. If `gh`
 is unauthenticated, see `gh-comment` § Setup for `GH_TOKEN`.
 
 ```bash
-gh pr view <N> --json number,headRefOid,title,body            # no args = current branch
+gh pr view <N> --json number,headRefOid,headRefName,title,body # no <N>: gh-comment § Setup finds it
 gh pr view <N> --json comments                                # issue-level comments
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api repos/$REPO/pulls/<N>/comments --paginate               # inline review comments (REST — no resolution state)
@@ -67,18 +67,14 @@ Classify (§2 above) with two GH additions:
   a CLAIM, not evidence — re-verify the finding at HEAD regardless of what
   GitHub or the bot already claims happened.
 
-Fix → verify as above (§3), then reply to and resolve EVERY thread — this is
-the default for "take GH review"; skip only if the user explicitly asked for
-code-only, no reply. Route it all through `gh-comment` (owns the reply/resolve
-GraphQL, the sign-off gate, and the 🤖 markers) — never call the thread API
-directly from here.
-
-- Every thread gets a reply naming its disposition: fixed (cite the commit),
-  won't-fix (cite the invariant/`BUGS.md` entry it matches), deferred, or
-  refuted (say why).
-- Bot-authored threads resolve in the same turn once replied. Human-authored
-  threads get the reply only and stay open for the reviewer to resolve.
-- Resolve ONLY threads this pass addressed — never touch one it didn't.
+Fix → verify as above (§3), then answer EVERY thread — the default for "take
+GH review"; skip only if the user explicitly asked for code-only, no reply.
+`gh-comment` owns every disposition (§ Reply to a thread, § Resolve a thread,
+§ Re-review request) — NEVER call the thread API directly from here. Reply to
+the unfixed threads now. ALWAYS show the PR's own head refspec,
+`git push origin <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
+user's ask (WISDOM § Git). The fixed threads' resolve and the one re-review
+request run once that push has landed.
 
 ## Rules
 
@@ -86,5 +82,5 @@ directly from here.
 - ALWAYS re-verify a finding against current code before editing — report
   refuted/already-fixed findings, NEVER edit around them
 - NEVER unilaterally act on a design/product decision — surface it and wait
-- NEVER post to a PR directly — route through `gh-comment` after showing the user
-- NEVER `git push`, `gh pr create`, `gh pr merge`, or `gh pr review --approve`
+- NEVER post to a PR, push, or run a `gh pr` action from here — ALWAYS
+  through `gh-comment` and WISDOM § Git, which own those gates

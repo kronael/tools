@@ -29,5 +29,6 @@ in fixes too.
 
 ## Rules
 
-- ALWAYS route GitHub posting through the `gh-comment` skill — its approval gate and 🤖 markers.
-- NEVER `gh pr merge`, `gh pr review --approve`, or `git push` to a branch the user did not name.
+- ALWAYS route GitHub posting through the `gh-comment` skill — its distill and
+  review-on-wisdom phases, approval gate and `🤖` prefix.
+- NEVER `gh pr merge` or `gh pr review --approve`.

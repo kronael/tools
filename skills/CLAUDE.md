@@ -11,7 +11,8 @@ repo CLAUDE.md links to this file.
   data `.md` files, read on demand. Current routers: `create/` (artifact
   generators), `software/` (engineering baseline + runbooks), `specs/` (spec
   workflow), `readme/` (documentation: sync, file topology, page shape),
-  `review/` (give/take a code review — see `review/SKILL.md`).
+  `review/` (give/take a code review — see `review/SKILL.md`), `research/`
+  (research baseline).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -80,18 +81,26 @@ skills it replaces.
 
 ## Subagent effort defaults
 
-- `opus` and `fable` subagents default to high effort. Do not make xhigh the
-  default; reserve xhigh for explicit planning work and security/deep-audit
-  work, or when the user explicitly asks for maximum effort.
-- `sonnet` subagents default to high effort for investigations, bug hunts,
-  pre-review, and implementation support. Use medium only when the task is
-  clear enough that `haiku` could plausibly do it, but `sonnet` is chosen for
-  slightly better judgment or context handling.
+- The agent files in `agents/` pin each tier, and the launcher skills quote
+  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh, `haiku` =
+  model only (Haiku 4.5 rejects `effort`). ALWAYS change an agent file and
+  every skill that quotes it in one commit.
+- `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
+  written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
+  plan steps that need judgment. `fable` takes unattended multi-file code,
+  `ship` plans, and security or deep audits.
 - `haiku` subagents are for cheap exploration, research, mapping, grep-style
   surveys, and mechanical bounded edits. Escalate once the work requires
   multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
+
+## Earning a rule's place
+
+- ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
+  rules: a fresh sub writes its defaults for the topic, and whatever it produces
+  unprompted does not go in. Only drifts, unguessable local facts, workflows and
+  deliberate harness overrides survive.
 
 ## Prompt examples and context
 
@@ -111,7 +120,7 @@ skills it replaces.
 2. Update the router dispatch table row.
 3. Add the mode's trigger keywords to router `when_to_use` if missing
    (keep trimmed — it preloads).
-4. If a dir is removed/renamed, add it to the prune list in
-   `../kronael/install/reference.md` (§ "Removed kronael skills to prune") so
-   reinstalls delete orphans.
+4. If a dir is removed or renamed, add its old name to `RETIRED` in
+   `../kronael/sync/reference.md` § Classify, so a sync moves the installed
+   copy aside without asking the owner about it.
 5. Per-router edit notes: `create/CLAUDE.md`, `software/CLAUDE.md`.

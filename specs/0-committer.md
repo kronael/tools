@@ -12,7 +12,7 @@ Add git safety rules. Update prompt_nudge.py and commit skill.
 (`COMMIT_RULES`) and `skills/commit/SKILL.md` carry the git safety rules this
 spec called for. The redirect.py rule-engine half below was built, never
 wired into any settings file, and was deleted as an orphan hook
-(`kronael/install/SKILL.md`, commit c539aed) — it is not current design, kept
+(`kronael/sync/SKILL.md`, commit c539aed) — it is not current design, kept
 here as the record of what was tried.
 
 ## Background
@@ -212,7 +212,7 @@ project needed `pytest` → `make test` only when Makefile exists, the
 rule would live there instead of in runtime detection. Global rules
 apply everywhere. This file was never built; see the status note above.
 
-`toolchain.py` and `lib/` were removed with redirect.py (`kronael/install/SKILL.md`,
+`toolchain.py` and `lib/` were removed with redirect.py (`kronael/sync/SKILL.md`,
 commit c539aed) — the migration this line anticipated happened by deletion,
 not by the rules file taking over.
 

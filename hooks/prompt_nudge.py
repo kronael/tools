@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-import importlib.util
 import json
 import os
 import re
 import sys
 
-spec = importlib.util.spec_from_file_location(
-    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
-)
-hook_state = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(hook_state)
-session_state = hook_state.session_state
+from lib.state import session_state
 
 STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
 - Lead with the answer. No preamble, no recap of what the diff already shows.
@@ -22,7 +16,7 @@ STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/ca
 
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
-- Organized in directories: use lowercase (specs/multi-tenancy.md, todos/general.md, plans/migration.md)
+- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dirs
 - Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
@@ -96,7 +90,7 @@ AGENT_KEYWORDS = {
 }
 
 CODEX_PATTERNS = [
-    r'\bask\s+codex\b',
+    r'\bask\s+(?:codex|astra)\b',
     r'\boracle\b',
     r'\bsecond\s+opinion\b',
 ]
@@ -114,7 +108,6 @@ def exact_match(word, keywords):
     word = word.lower()
     if word in keywords:
         return keywords[word]
-    # match singular/plural across a trailing 's' (bug<->bugs, spec<->specs).
     if word.endswith('s') and word[:-1] in keywords:
         return keywords[word[:-1]]
     if word + 's' in keywords:
@@ -135,9 +128,14 @@ META_PATTERNS = [
 def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
+        # A leading slash command only: "use sol" is as likely the Solana token
+        # as the skill, and "/sol/data" a path.
+        match = re.match(r'\s*/(astra|sol)(?![\w/.-])', lower)
+        if match:
+            return '/' + match.group(1)
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
-                return '/codex'
+                return '/astra'
     for pattern, routes in ESCALATION_PATTERNS:
         match = re.search(pattern, lower)
         if match:

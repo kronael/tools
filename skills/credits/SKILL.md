@@ -1,6 +1,6 @@
 ---
 name: credits
-description: Attribution and licensing practice for LLM-assisted work — how to acknowledge upstream sources, ported code, and AI tools. NOT a slash command; loaded as ambient context.
+description: Attribution and licensing practice for LLM-assisted work — how to acknowledge upstream sources and ported code. NOT for the `🤖` marker on Claude's own PRs, issues and comments (WISDOM § Git). NOT a slash command; loaded as ambient context.
 when_to_use: "porting code, adapting a skill, adding a dependency, shipping anything built on prior work"
 ---
 
@@ -52,17 +52,10 @@ One entry per upstream source. Group minor sources under a shared line if they
 share the same origin repo. Keep it readable — a legal file someone will actually
 look at.
 
-## AI tool attribution
+## AI tool
 
-When a project is substantially shaped by an AI tool (code generation, skill
-authoring, architectural decisions), note it in README or NOTICE:
-
-```
-Development assisted by Claude Code (Anthropic).
-```
-
-This is not legally required for most licenses, but sets accurate expectations
-for contributors and auditors about the project's provenance.
+NEVER a "Development assisted by …" or "Generated with …" line in README or
+NOTICE — the AI marker is the `🤖` in WISDOM § Git, nowhere else.
 
 ## License compatibility
 

@@ -5,8 +5,8 @@
 ```
 .claude-plugin/             marketplace.json + plugin.json
 .agents/plugins/            repo-local Codex marketplace metadata
-plugins/kronael/            thin Codex plugin with one installer skill
-kronael/install/            the only plugin-exposed skill — install procedure
+plugins/kronael/            thin Codex plugin with one sync skill
+kronael/sync/               the only plugin-exposed skill — sync procedure
 skills/                     bundle — auto-activating skills (languages, workflow, domain)
 agents/                     bundle — specialized task agents
 hooks/                      bundle — lifecycle hook scripts
@@ -20,34 +20,35 @@ COOKBOOK.md                 daily git recipes (detached HEAD with rig)
 udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in README.md)
 ```
 
-## Install paths, one source
+## Sync paths, one source
 
 The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
-All install paths copy them into `~/.claude/`.
+Every sync path puts them into `~/.claude/`.
 
 **Claude plugin path** — Claude Code's marketplace clones this repo into its
-plugin cache. `/kronael:install` reads the cached repo at
-`${CLAUDE_PLUGIN_ROOT}` and copies the bundle to `~/.claude/`.
+plugin cache. `/kronael:sync` syncs the bundle into `~/.claude/` from CWD
+when it holds the repo's assets, else from the cached `${CLAUDE_PLUGIN_ROOT}`.
 
 **Claude manual path** — User clones the repo themselves, opens Claude Code at
-the root, says "install". Source is `cwd`; the rest of the procedure is
-identical.
+the root, says "sync". Source is `cwd`; the rest of the procedure is
+identical. Only this path can take live edits back: merge-back writes into
+the owner's clone.
 
 **Codex bridge path** — Codex installs the thin plugin from
 `plugins/kronael/.codex-plugin/plugin.json` via
 `.agents/plugins/marketplace.json`. The only Codex skill is
-`plugins/kronael/skills/kronael-install/SKILL.md`; it reads
-`kronael/install/SKILL.md` from the GitHub marketplace snapshot and deploys the
-bundle to `~/.claude/`. It does not duplicate the bundle into the plugin cache.
+`plugins/kronael/skills/kronael-sync/SKILL.md`; it reads
+`kronael/sync/SKILL.md` from the GitHub marketplace snapshot and syncs the
+bundle into `~/.claude/`. It does not duplicate the bundle into the plugin cache.
 
 Codex does not discover `~/.claude/CLAUDE.md` as global guidance. The bridge
 writes the `codex/AGENTS.md` block into a real `~/.codex/AGENTS.md`, and the
 block tells Codex to read the wisdom file. The block stays out of the wisdom
-file, because install reverse-syncs installed-side additions to it into source.
+file, because a sync merges live edits to it into source.
 An existing `AGENTS.override.md` is a conflict.
 
 Codex does not scan `~/.claude/skills`. If the user wants the installed Claude
-skills available inside Codex, the install bridge exposes them with
+skills available inside Codex, the sync bridge exposes them with
 `~/.agents/skills -> ~/.claude/skills` when possible. If
 `~/.agents/skills` already exists as a directory, it adds per-skill symlinks
 for source-owned Kronael skills. Codex invokes those bridged skills as
@@ -55,7 +56,7 @@ for source-owned Kronael skills. Codex invokes those bridged skills as
 Claude-style `/skill` to Codex-style `@skill`.
 
 The procedure is documented in
-[`kronael/install/SKILL.md`](kronael/install/SKILL.md) — the single source of
+[`kronael/sync/SKILL.md`](kronael/sync/SKILL.md) — the single source of
 truth for all paths. Codex/non-Claude agents follow
 [`AGENTS.md`](AGENTS.md).
 
@@ -75,46 +76,53 @@ them:
 - Global installed Kronael skills: expose them to Codex with
   `~/.agents/skills -> ~/.claude/skills` when requested.
 
-## Why hybrid (plugin + install step)
+## Why hybrid (plugin + sync step)
 
 A pure-plugin design would register skills/agents/hooks via
 `plugin.json` and skip the copy step. The hybrid design exists for
 two practical reasons that pure-plugin doesn't provide:
 
-**1. Two-way sync, not one-way push.** The bundle in `~/.claude/`
-is the user's working copy. They customize skills, fix bugs in
-hooks, add personal patterns. When they want to contribute back, they
-diff their `~/.claude/` against the source repo and PR the changes.
-A pure-plugin install is read-only — every edit is overwritten on
-update.
+**1. Live is a working copy, and its edits come home.** Three sides:
+**source** (this repo), **live** (`~/.claude/` on a host — the running
+bundle), and **upstream** (the `origin` remote). The user customizes skills,
+fixes bugs in hooks and adds personal patterns in live. The next sync merges
+those edits into their clone, where they can be committed and PR'd upstream,
+then rebuilds live from the clone. A pure-plugin install is read-only — every
+edit is overwritten on update. Sync reconciles source ↔ live; push reaches
+upstream, and live never assumes it matches upstream.
 
-**2. LLM-coordinated merges, not blind overrides.** The install step
-is an LLM following a procedure (`kronael/install/SKILL.md`),
-not a blind `cp -r`. It diffs each destination, surfaces conflicts,
-extracts user-local content to `LOCAL.md`, asks before overwriting
-relaxed settings, preserves user-added skills (overlays, personal
-files), and never touches `settings.local.json` / `LOCAL.md` /
-`CLAUDE.local.md`. A pure-plugin update can't do any of that — it
-just replaces files.
+**2. LLM-coordinated merges, not blind overrides.** The sync step is an LLM
+following a procedure (`kronael/sync/SKILL.md`), not a blind `cp -r`. It
+merges live edits three-way, surfaces conflicts, keeps local paths and
+secrets out of the public repo (into `LOCAL.md`), asks before overwriting
+relaxed settings, carries the owner's installed-only files (overlays,
+private skills) through a keep-list, and never touches `settings.local.json`
+or `CLAUDE.local.md`. A pure-plugin update can't do any of that — it just
+replaces files.
+
+**3. Nothing stale accumulates.** Each sync rebuilds the bundle from source
+plus the keep-list and moves the old bundle to `/tmp`, so a file the source
+renamed or dropped cannot keep loading next to its replacement.
 
 This is the basis of **evolvability and modularity** of the setup:
 the user's `~/.claude/` is a working surface, not a frozen artifact.
 The plugin system provides distribution and update detection; the
-install step provides the smart merge. Each layer does one thing.
+sync step provides the smart merge. Each layer does one thing.
 
 ## Sync strategies
 
 | Target | Strategy |
 |---|---|
-| `skills/`, `agents/`, `hooks/` | Two-way sync: source-advanced files replace the install, a clean installed superset reverse-syncs into source, anything else shows a diff and asks (preserve user-added files not in source) |
-| `~/.claude/CLAUDE.md` | Merge from `skills/global/SKILL.md` body (diff, ask) |
+| `skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` | Live edits merge three-way into source first; then rebuilt from source plus the keep-list (`~/.claude/kronael-keep.txt`); the old copy moves to `/tmp` |
+| `~/.claude/CLAUDE.md` | Same, against the `skills/global/SKILL.md` body |
 | `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
 | `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the keys `README.md` § Settings names skip the ask) |
-| `~/.claude/settings.local.json` | NEVER touch |
-| `~/.claude/LOCAL.md`, `CLAUDE.local.md` | NEVER touch |
+| `~/.claude/settings.local.json`, `CLAUDE.local.md` | NEVER touch |
+| `~/.claude/LOCAL.md` | Receives only the private hunks a merge keeps out of source |
 
-Backup `~/.claude/` and the `~/.codex/` guidance, config and hook files to
-`~/.claude/backup/<timestamp>/` before overwriting.
+The old bundle and backups of `settings.json`, `~/.claude.json` and the
+`~/.codex/` guidance, config and hook files go to a run dir under `/tmp`,
+which the OS clears on reboot.
 
 ## Runtime flow
 
@@ -143,11 +151,13 @@ rationale, and workflow diagram: [`skills/README.md`](skills/README.md).
 ## Org overlays
 
 Org-specific skills live in separate repos layered on top of the base
-install:
+sync:
 
 ```
 cp -r <org-repo>/skills/<org> ~/.claude/skills/
+echo 'skills/<org>' >> ~/.claude/kronael-keep.txt
 ```
 
-The install procedure never deletes skills not in source — overlays
-persist across updates.
+A sync carries an overlay across only when the keep-list names it; an
+unlisted one is named in the sync report and moves to `/tmp` with the old
+bundle. Overlays never enter this repo without the owner's yes.

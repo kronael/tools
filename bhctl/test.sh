@@ -8,7 +8,7 @@ trap 'rm -f "$stub"/*; rmdir "$stub"' EXIT
 PATH="$stub:$PATH"
 fail=0
 
-check() { # name, expected-substring, actual
+check() {
     if [[ "$3" == *"$2"* ]]; then
         echo "ok   $1"
     else
@@ -19,7 +19,6 @@ check() { # name, expected-substring, actual
 
 mkstub() { printf '%s\n' "$2" > "$stub/$1"; chmod +x "$stub/$1"; }
 
-# No paired audio device.
 mkstub bluetoothctl '#!/bin/sh
 exit 0'
 mkstub pactl '#!/bin/sh
@@ -27,7 +26,6 @@ exit 0'
 check "no headphones" "no paired headphones" "$(./bhctl 2>&1)"
 ./bhctl >/dev/null 2>&1; check "no headphones exits 1" "1" "$?"
 
-# A paired, connected headset.
 mkstub bluetoothctl '#!/bin/bash
 case "$1 $2" in
   "devices Paired") echo "Device AA:BB:CC:DD:EE:FF Cans" ;;

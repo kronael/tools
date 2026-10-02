@@ -18,13 +18,13 @@ The **kronael toolkit** — three things in one repo:
    its row there.
 2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`, `output-styles/`,
    `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
-   deployed into a user's `~/.claude/` by an install step.
-3. **A thin Codex installer bridge** (`plugins/kronael/` plus
-   `.agents/plugins/`) exposing one Codex skill that runs the same install
+   deployed into a user's `~/.claude/` by a sync step.
+3. **A thin Codex sync bridge** (`plugins/kronael/` plus
+   `.agents/plugins/`) exposing one Codex skill that runs the same sync
    procedure without duplicating bundle assets.
 
 The bundle is Claude Code *configuration*. It does not run here — it runs in
-the user's Claude Code sessions after install. When editing the bundle you are
+the user's Claude Code sessions after a sync. When editing the bundle you are
 authoring config, not application code.
 
 ## Commands
@@ -42,46 +42,53 @@ make clean         # clean projects + sweep __pycache__
   `test_*.py` does not run until it is added to that list — the suite passes
   while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
-  (installs to `~/.local/bin`; `clp` goes to `~/.local/share/clp`, sourced
-  from the shell rc). `dockbox` also has `make image`.
+  (installs to `~/.local/bin`). `dockbox` also has `make image`.
 - **Python scripts** (`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`
   (PEP 723 inline deps, no separate install).
 - **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.
   `ruff.toml` is the config. Pre-commit reformats on first run — retry the
   commit if it does.
 
-## Architecture: install paths, one source
+## Architecture: sync paths, one source
 
 `skills/`, `agents/`, `hooks/` at repo root **are** the bundle. The Claude
-plugin path (`/kronael:install` from `${CLAUDE_PLUGIN_ROOT}`) and the manual
-path (user opens Claude Code at the cloned root and says "install") both copy
+plugin path (`/kronael:sync`, from a CWD clone that holds the assets, else
+`${CLAUDE_PLUGIN_ROOT}`) and the manual
+path (user opens Claude Code at the cloned root and says "sync") both put
 them into `~/.claude/`.
 
 Codex has a third, thin bridge path:
-`plugins/kronael/skills/kronael-install/SKILL.md` reads the canonical
-installer and runs the manual path. NEVER duplicate the bundle under
-Codex-specific directories.
+`plugins/kronael/skills/kronael-sync/SKILL.md` reads the canonical sync and
+runs the manual path. NEVER duplicate the bundle under Codex-specific
+directories.
 
-`kronael/install/SKILL.md` is the **single source of truth** for the
-procedure (the only plugin-exposed skill); its cold data — tool commands and
-the removed-skills prune list — lives in the sibling `kronael/install/reference.md`.
-When you change install behavior, change those files and keep `AGENTS.md` plus
-the Codex installer skill in sync.
-Why the install step exists at all:
-`ARCHITECTURE.md#why-hybrid-plugin--install-step`.
+`kronael/sync/SKILL.md` is the **single source of truth** for the procedure
+(the only plugin-exposed skill); its scripts, keep-list format and tool
+commands live in the sibling `kronael/sync/reference.md`. When you change
+sync behavior, change those files and keep `AGENTS.md` plus the Codex sync
+skill in step.
+Why the sync step exists at all:
+`ARCHITECTURE.md#why-hybrid-plugin--sync-step`.
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
-- **Install is a two-way sync, not a one-way copy** — source-advanced files
-  update the install; a clean live-ahead superset (source-owned file, additions
-  only) is reverse-synced INTO the repo, never overwritten. Overwriting a
-  live-ahead file downgrades local work.
-- **NEVER `rm -rf`** into `~/.claude/` — replace matching files only; org
-  overlays and user-added skills must survive. NEVER delete anything in
-  `~/.claude/` that isn't in this source tree.
-- **NEVER touch** `settings.local.json`, `LOCAL.md`, `CLAUDE.local.md`.
-- `skills/global/` installs as the wisdom file (→ `~/.claude/CLAUDE.md`),
-  **not** as a skill — installing it both ways would duplicate always-loaded
+- **Sync is source ↔ live, nothing else**: **source** (this repo tree),
+  **live** (`~/.claude/` on a host — the running bundle). **Push** reaches
+  **upstream** (the `origin` remote); **merge origin** brings upstream into
+  the git line. NEVER conflate the three — live can be ahead of, behind, or
+  forked from upstream.
+- **Live edits merge into the repo first, then live is rebuilt** — a file
+  edited in `~/.claude/` since the last sync merges three-way into the repo
+  BEFORE the swap; the bundle is then rebuilt from source plus the owner's
+  keep-list (`~/.claude/kronael-keep.txt`), and the old bundle moves to
+  `/tmp`. Nothing the source dropped survives a sync.
+- **NEVER `rm -rf`** into `~/.claude/` — sync moves the old bundle aside with
+  `mv`. Installed-only files (org overlays, private skills) come back only
+  through the keep-list and NEVER enter this repo without the owner's yes.
+- **NEVER touch** `settings.local.json` or `CLAUDE.local.md`; `LOCAL.md`
+  receives only the private hunks a merge keeps out of the repo.
+- `skills/global/` becomes the wisdom file (→ `~/.claude/CLAUDE.md`),
+  **not** a skill — shipping it both ways would duplicate always-loaded
   content.
 
 ## The bundle
@@ -112,7 +119,7 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **NEVER put local paths, org-specific refs, or secrets in source.** Those
   live in `~/.claude/LOCAL.md` (auto-injected by the `local` hook), which is
   never committed.
-- **Testing bundle changes**: re-run `/kronael:install` (or "say install") and
+- **Testing bundle changes**: re-run `/kronael:sync` (or say "sync") and
   use the result in a real project. There's no unit test for skill behavior.
 
 ## Conformance — mandatory, and checked
@@ -172,6 +179,6 @@ the wiring being right and the tool running are different claims.
 ## Docs map
 
 The full map is `README.md#documentation`. Most-used here:
-`kronael/install/SKILL.md` (canonical install), `ARCHITECTURE.md` (design
+`kronael/sync/SKILL.md` (canonical sync), `ARCHITECTURE.md` (design
 rationale), `COOKBOOK.md` (git recipes), `skills/README.md` +
 `hooks/README.md` (bundle rationale by family).

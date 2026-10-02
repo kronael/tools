@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # PreToolUse hook: block unsafe commands and emit per-language file nudges.
-# Production: silent-fail on any error except explicit unsafe-command blocks. Tests:
-# `pytest hooks/pretool_nudge.py` or `make test`.
+# Production: silent-fail on any error except explicit unsafe-command blocks.
 from __future__ import annotations
 
 import contextlib

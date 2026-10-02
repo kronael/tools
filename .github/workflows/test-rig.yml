@@ -1,0 +1,17 @@
+---
+name: Test — rig
+
+on:
+    push:
+        paths: [rig/**]
+    pull_request:
+        branches: [master]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - run: make -C rig test
+            - run: bash tests/drift_test.sh

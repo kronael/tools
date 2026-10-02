@@ -6,7 +6,7 @@ minimality → triage → report. Supersedes the built-in `/code-review` locally
 ## 1. Scope
 
 Default = the local uncommitted diff (`git diff` + `git diff --staged`).
-Override only when the user names files, a branch (`main...HEAD`), or a range.
+Override only when the user names files, a base (`origin/<default head>...HEAD`), or a range.
 Empty diff → say so and stop.
 
 ## 2. Bucket + lenses
@@ -22,7 +22,7 @@ property silently disappears. ALWAYS check for this shape.
 
 ## 3. Parallel lens agents
 
-One `Agent(subagent_type="general-purpose", model="opus", run_in_background=true)`
+One `Agent(subagent_type="opus", run_in_background=true)`
 per bucket. Give each its lens, files, the language skills for those
 extensions, and the house rules from project CLAUDE.md — without them agents
 propose fixes the project forbids. Findings only, no edits, each as
@@ -39,8 +39,8 @@ ALWAYS wait for all agents before step 4.
 
 ## 4. Fable deep-dive + reverification
 
-A single `Agent(model="fable")` doing both jobs at once (fable unavailable →
-`model="opus"`; NEVER skip this pass):
+A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailable →
+`subagent_type="opus"`; NEVER skip this pass):
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
    regression risks, and broken invariants. NEVER seed it with the sonnet
@@ -79,17 +79,19 @@ record the round in the diary — one line. Then stop.
 
 ## Model tier
 
-Standalone review → `model="opus"` for step 3. A `refine` flag pass → the
-caller passes `model="sonnet"` (cheap high-recall flagging; the subsequent
-`improve` call does opus verify+fix). ALWAYS respect the caller's model.
+Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
+the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
+flagging; the `improve` agent that verifies and fixes runs on Sonnet 5.5).
+ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
 
 ## GitHub PR (gh)
 
-Same engine over `gh pr diff <N>` — `/review give gh [<N>]`. No args = current
-branch.
+Same engine over `gh pr diff <N>` — `/review give gh [<N>]`. No args → the
+open PR whose `headRefOid` is an ancestor of HEAD (`gh-comment` § Setup); a
+detached HEAD gives `gh` no current branch to resolve.
 
 ```bash
-gh pr view --json number,headRefOid,baseRefName,title,body
+gh pr view <N> --json number,headRefOid,baseRefName,title,body
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api repos/$REPO/pulls/<N>/comments --paginate   # inline comments
 ```
@@ -99,6 +101,5 @@ job 1. ALWAYS read existing comments and DROP anything already raised — never
 re-litigate a resolved thread.
 
 Present the report and WAIT. On "post", hand the survivors to `gh-comment`,
-which owns the gate, batching, out-of-diff fallback, and 🤖 markers. A whole-PR
-summary body gets a bare 🤖 prepended when most of the PR was auto-generated
-(ask if unsure), and a bare 🤖 appended.
+which owns the distill and review-on-wisdom phases, the gate, batching,
+out-of-diff fallback and the `🤖` prefix — a whole-PR summary body included.

@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
-# Debian "generic" (not "genericcloud"): the genericcloud kernel is trimmed and
-# omits the 9p filesystem module, so `mount -t 9p` fails with "unknown filesystem
-# type '9p'". The generic image ships the full module set including 9p.
-BASE_URL="${QEMUBOX_BASE_URL:-https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2}"
 ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
-MEM="${QEMUBOX_MEM:-4096}"
-CPUS="${QEMUBOX_CPUS:-2}"
-USER="${QEMUBOX_USER:-sandbox}"
+MEM="${QEMUBOX_MEM:-16384}"
+CPUS="${QEMUBOX_CPUS:-4}"
+DISK="${QEMUBOX_DISK:-40G}"
+GUEST_USER="$(id -un)"
+GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
+EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
 
 name_override=""
 entrypoint="claude"
@@ -20,10 +19,15 @@ gpg_sock=""
 docker_sock=""
 docker_remote=""
 no_copy=""
+persist_builds=""
+eph_no_tmpfs=""
 gcloud_creds=""
 gpg_forward=""
 untrusted=""
 booted=""
+locked=""
+sid=""
+session_pid=""
 args=()
 dirs=()
 extra_dirs=()
@@ -35,24 +39,21 @@ mount_srcs=()
 mount_dests=()
 mount_modes=()
 
-# Single-file host configs copied into a per-box staging dir and 9p-mounted
-# read-only at /mnt/qemubox-home. Only these leave the host -- never all of
-# $HOME -- so the guest cannot read ~/.ssh, cloud creds, or other projects.
-host_cfg_files=(.claude.json .gitconfig .dockbox_history .gnupg/pubring.kbx .gnupg/pubring.gpg)
+host_cfg_files=(.claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg)
 
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | status <name> | rm <pattern|-a> | prune [hours] | build-base [--force]
+       qemubox ls | status <name> | rm <name|glob|-a>... | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
 
 Tools (first positional arg -- no leading dash):
     (default)       Claude Code, opus @ xhigh effort
     claude          Claude Code, opus (same as default)
-    codex           OpenAI Codex
+    codex           Codex -m gpt-5.6-sol @ xhigh
     haiku           Claude Code --model claude-haiku-4-5-20251001
-    sonnet          Claude Code --model claude-sonnet-5 --effort high
+    sonnet          Claude Code --model claude-sonnet-5-5 --effort high
     opus            Claude Code --model claude-opus-5-5 --effort xhigh
     fable           Claude Code --model claude-fable-5-1
     gpt             Codex -m gpt-6-astra
@@ -79,7 +80,8 @@ Options:
     -S         Accepted for dockbox parity; guest user already has sudo
     -g         Forward GH_TOKEN / GITHUB_TOKEN for this SSH command
     -G         Mount ~/.config/gcloud ro
-    -P|-T      Accepted for dockbox parity; no ephemeral overmounts in qemubox
+    -P         Keep project build dirs on the host (--no-ephemeral)
+    -T         Put build-dir overmounts on guest disk; /tmp stays tmpfs
 
 Examples:
     qemubox
@@ -96,10 +98,20 @@ Examples:
 
 Ingress: dirs and config are mounted into the VM with QEMU 9p.
 SSH is only the control channel used to enter the guest.
+~/.claude/sessions is a private tmpfs in the guest: VMs and the host never
+list or message each other's Claude sessions.
 
 Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
 is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 
+Environment: QEMUBOX_MEM=16384 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
+Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
+Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
+Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
+        Project files cannot set -A/-D/-K/-S/-n/-d/-x.
+Lifecycle: last session powers off; disk survives until rm.
+Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
+       Reclaim unreferenced bases except current.
 State: $ROOT
 EOF
 }
@@ -123,7 +135,9 @@ port_for() {
 
 missing_deps() {
     miss=""
-    for dep in "$QEMU" qemu-img cloud-localds ssh ssh-keygen curl tar flock; do
+    local deps=("$QEMU" qemu-img ssh ssh-keygen tar flock)
+    [ "$#" -eq 0 ] || deps=("$@")
+    for dep in "${deps[@]}"; do
         command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
     done
     [ -z "$miss" ] || {
@@ -144,92 +158,201 @@ note() {
     fi
 }
 
-# Verify a freshly downloaded base image before it is trusted. A pinned
-# QEMUBOX_BASE_SHA512 wins (offline/deterministic); otherwise check Debian's
-# published SHA512SUMS beside the image. A checksum MISMATCH aborts; only an
-# unreachable/missing SHA512SUMS is warn-and-proceed, so a mirror hiccup does
-# not block installs.
-verify_base() {
-    tmp="$1"
-    want="${QEMUBOX_BASE_SHA512:-}"
-    if [ -z "$want" ]; then
-        sums="$(curl -fsL "${BASE_URL%/*}/SHA512SUMS" 2>/dev/null || true)"
-        [ -n "$sums" ] || { note "WARNING: could not fetch SHA512SUMS; skipping base checksum"; return 0; }
-        want="$(printf '%s\n' "$sums" | awk -v f="${BASE_URL##*/}" '$2==f {print $1}')"
-        [ -n "$want" ] || { note "WARNING: ${BASE_URL##*/} absent from SHA512SUMS; skipping checksum"; return 0; }
+ensure_base() {
+    if [ ! -s "$ROOT/base/current" ]
+    then
+        build_base >&2
     fi
-    note "verifying base image sha512"
-    printf '%s  %s\n' "$want" "$tmp" | sha512sum -c - >/dev/null 2>&1 || {
-        echo "qemubox: base image checksum MISMATCH -- refusing $tmp" >&2
-        rm -f "$tmp"
-        exit 1
-    }
+    image_id=$(cat "$ROOT/base/current")
+    printf '%s/%s.qcow2\n' "$ROOT/base" "$image_id"
 }
 
-ensure_base() {
-    mkdir -p "$ROOT/base"
-    base="$ROOT/base/${BASE_URL##*/}"
-    [ -s "$base" ] || {
-        note "downloading base cloud image"
-        note "source: $BASE_URL"
-        note "why: this is the reusable Debian disk template for new VM overlays"
-        curl -fL "$BASE_URL" -o "$base.tmp"
-        verify_base "$base.tmp"
-        mv "$base.tmp" "$base"
-        note "saved base image: $base"
+check_trust() {
+    local dir mode saved=unknown
+    dir="$(box_dir "$1")"
+    [ -f "$dir/disk.qcow2" ] || return 0
+    mode=trusted
+    [ -z "$untrusted" ] || mode=untrusted
+    [ ! -f "$dir/trust" ] || saved=$(cat "$dir/trust")
+    [ "$saved" = "$mode" ] || {
+        echo "qemubox-$1: disk trust is $saved, requested $mode; use -n for a new box or qemubox rm $1" >&2
+        return 1
     }
-    echo "$base"
 }
 
 ensure_box() {
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
-    # Prefer the prebuilt base (packages baked in -> boxes skip first-boot apt);
-    # fall back to the raw generic image so the lazy-apt path still works if it
-    # was never built. build-base sets $backing_override to the raw base so it
-    # never bakes on top of an existing prebuilt base.
-    provisioned="$ROOT/base/provisioned.qcow2"
-    if [ -n "${backing_override:-}" ]; then
-        base="$backing_override"
-    elif [ -s "$provisioned" ]; then
-        base="$provisioned"
+    check_trust "$name" || return 1
+    [ -f "$dir/image-id" ] || ensure_base >/dev/null
+    exec 8>"$ROOT/base/.lock"
+    flock -s 8
+    if [ -f "$dir/image-id" ]
+    then
+        image_id=$(cat "$dir/image-id")
+        base="$ROOT/base/$image_id.qcow2"
     else
         base="$(ensure_base)"
+        image_id=${base##*/}
+        image_id=${image_id%.qcow2}
     fi
+    for file in "$base" "$ROOT/base/$image_id.vmlinuz" "$ROOT/base/$image_id.initrd"
+    do
+        [ -s "$file" ] || {
+            echo "Missing base file $file; run qemubox rm $name, then qemubox build-base" >&2
+            exit 1
+        }
+    done
     [ -f "$dir/key" ] || {
         note "creating SSH key for qemubox-$name"
-        note "why: cloud-init uses this key so the host can enter the guest"
         ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
     }
-    [ -f "$dir/seed.iso" ] || {
-        note "creating cloud-init seed for qemubox-$name"
-        note "why: it creates the sandbox user and installs the SSH key on first boot"
-        pub="$(cat "$dir/key.pub")"
-        {
-            echo "#cloud-config"
-            echo "users:"
-            echo "  - name: $USER"
-            echo "    sudo: ALL=(ALL) NOPASSWD:ALL"
-            echo "    groups: sudo"
-            echo "    shell: /bin/bash"
-            echo "    ssh_authorized_keys:"
-            echo "      - $pub"
-            echo "ssh_pwauth: false"
-        } > "$dir/user-data"
-        echo "instance-id: qemubox-$name" > "$dir/meta-data"
-        cloud-localds "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
-    }
+    mkdir -p "$dir/config"
+    chmod 700 "$dir/config"
+    {
+        printf '%s\n' "$GUEST_USER" "$(id -u)" "$(id -g)" "$GUEST_HOME"
+        for gid in $(id -G)
+        do
+            gname=$(getent group "$gid" | cut -d: -f1) || gname=""
+            [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"
+            printf '%s:%s ' "$gid" "$gname"
+        done
+        printf '\n'
+        zone=$(readlink -f /etc/localtime)
+        zone=${zone#*/zoneinfo/}
+        [ -f "/usr/share/zoneinfo/$zone" ] || zone=$(cat /etc/timezone)
+        printf '%s\n' "$zone"
+    } > "$dir/config/identity"
+    cp "$dir/key.pub" "$dir/config/authorized_keys"
+    stage_ephemeral "$dir/config/ephemeral"
     [ -f "$dir/disk.qcow2" ] || {
-        note "creating disposable qcow2 overlay for qemubox-$name"
-        note "why: VM writes go to this overlay, not the cached base image"
-        qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" >/dev/null
+        note "creating persistent qcow2 overlay for qemubox-$name"
+        qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" "$DISK" >/dev/null
+        printf '%s\n' "$image_id" > "$dir/image-id"
+        mode=trusted
+        [ -z "$untrusted" ] || mode=untrusted
+        printf '%s\n' "$mode" > "$dir/trust"
     }
+    flock -u 8
+    exec 8>&-
 }
 
 running() {
+    local dir pid state
     dir="$(box_dir "$1")"
-    [ -s "$dir/pid" ] && kill -0 "$(cat "$dir/pid")" 2>/dev/null
+    [ -s "$dir/pid" ] || return 1
+    pid=$(cat "$dir/pid")
+    state=$(ps -o stat= -p "$pid") || return 1
+    [[ "$state" != Z* ]] || return 1
+    grep -zFq -- "file=$dir/disk.qcow2," "/proc/$pid/cmdline"
+}
+
+ready_error() {
+    echo "VM qemubox-$1 not ready; serial log: $(box_dir "$1")/serial.log" >&2
+    tail -40 "$(box_dir "$1")/serial.log" >&2 || true
+}
+
+lock_box() {
+    mkdir -p "$ROOT/.locks"
+    exec 9>"$ROOT/.locks/$(box_name "$1")"
+    flock -w "${QEMUBOX_READY_TIMEOUT:-180}" 9 || {
+        ready_error "$1"
+        return 1
+    }
+    locked=1
+}
+
+unlock_box() {
+    flock -u 9
+    exec 9>&-
+    locked=""
+}
+
+wait_ready() {
+    local name="$1" gate="$2" deadline
+    deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
+    while [ "$SECONDS" -lt "$deadline" ]
+    do
+        if ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1
+        then
+            [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ] || {
+                sleep 1
+                continue
+            }
+            return 0
+        fi
+        sleep 1
+    done
+    ready_error "$name"
+    return 1
+}
+
+session_markers() {
+    local markers marker
+    [ -n "$locked" ] || { echo "Session count requires the VM lock" >&2; return 1; }
+    markers=$(ssh_plain_box "$1" 'sudo ls -1 /run/qemubox/sess') || return 1
+    for marker in $markers
+    do
+        [[ "$marker" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid session marker: $marker" >&2; return 1; }
+        if kill -0 "$marker" 2>/dev/null
+        then
+            printf '%s\n' "$marker"
+        else
+            ssh_plain_box "$1" "sudo rm -f /run/qemubox/sess/$marker" || return 1
+        fi
+    done
+}
+
+leave_session() {
+    local rc=$? left
+    trap - EXIT HUP TERM INT
+    if [ -n "$session_pid" ]
+    then
+        kill "$session_pid" 2>/dev/null || true
+        wait "$session_pid" 2>/dev/null || true
+    fi
+    if [ -z "$locked" ] && ! lock_box "$name"
+    then
+        exit 1
+    fi
+    if running "$name"
+    then
+        if [ -n "$sid" ]
+        then
+            if ! ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid"
+            then
+                note "cannot remove session marker; keeping qemubox-$name running"
+                rc=1
+            elif left=$(session_markers "$name")
+            then
+                if [ -z "$left" ]
+                then
+                    note "last session exited; powering off qemubox-$name, keeping disk"
+                    stop_box "$name" || rc=1
+                fi
+            else
+                note "cannot count sessions; keeping qemubox-$name running"
+                rc=1
+            fi
+        elif [ -n "$booted" ]
+        then
+            stop_box "$name" || rc=1
+        fi
+    fi
+    unlock_box
+    exit "$rc"
+}
+
+enter_session() {
+    trap leave_session EXIT
+    trap 'exit 129' HUP
+    trap 'exit 143' TERM
+    trap 'exit 130' INT
+    start_box "$name"
+    sid=$$
+    ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid"
+    unlock_box
 }
 
 ssh_box() {
@@ -239,16 +362,18 @@ ssh_box() {
     agent=()
     [ -n "$ssh_agent" ] && agent=(-A)
     gpg=()
-    [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "/home/$USER/.gnupg/S.gpg-agent:$gpg_sock")
+    [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "$GUEST_HOME/.gnupg/S.gpg-agent:$gpg_sock")
     docker=()
     [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
-    ssh -i "$dir/key" -p "$(port_for "$name")" \
+    exec ssh -i "$dir/key" -p "$(port_for "$name")" \
         "${agent[@]}" \
         "${gpg[@]}" \
         "${docker[@]}" \
+        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
+        -o BatchMode=yes -o LogLevel=ERROR -o ExitOnForwardFailure=yes \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
-        "$USER@127.0.0.1" "$@"
+        "$GUEST_USER@127.0.0.1" "$@"
 }
 
 ssh_plain_box() {
@@ -256,9 +381,11 @@ ssh_plain_box() {
     dir="$(box_dir "$name")"
     shift
     ssh -i "$dir/key" -p "$(port_for "$name")" \
+        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
+        -o BatchMode=yes -o LogLevel=ERROR \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new \
-        "$USER@127.0.0.1" "$@"
+        "$GUEST_USER@127.0.0.1" "$@"
 }
 
 # Guest voice: run a guest command and stream its output behind a dim gutter so
@@ -282,7 +409,11 @@ add_mount() {
     src="$1"
     dest="$2"
     mode="$3"
-    [ -e "$src" ] || return 0
+    [ -e "$src" ] || {
+        [ "${4:-optional}" = optional ] && return 0
+        echo "Missing mount source: $src" >&2
+        return 1
+    }
     case "$src" in
         *,*) echo "Cannot 9p-mount path containing comma: $src" >&2; exit 2 ;;
     esac
@@ -316,36 +447,151 @@ qemu_mount_args() {
     done
 }
 
+stage_ephemeral() {
+    local output="$1" d name
+    local mode=tmpfs find_expr=()
+    [ -z "$eph_no_tmpfs" ] || mode=disk
+    printf '%s\0' "$mode" > "$output"
+    [ -z "$persist_builds$no_copy" ] || return 0
+    for name in "${EPHEMERAL_DIRS[@]}"
+    do
+        [ "${#find_expr[@]}" -eq 0 ] || find_expr+=(-o)
+        find_expr+=(-name "$name")
+    done
+    for d in "${dirs[@]}"
+    do
+        find "$d" -maxdepth 4 -type d \
+            \( "${find_expr[@]}" \) -prune -print0 >> "$output"
+    done
+}
+
+setup_guest_tmp() {
+    ssh_stream_box "$1" 'set -e
+sudo mount -t tmpfs -o rw,exec,mode=1777 tmpfs /tmp
+sudo mkdir -p /tmp/cargo-target
+sudo mount -t tmpfs -o "rw,exec,mode=1777,uid=$(id -u),gid=$(id -g)" \
+    tmpfs /tmp/cargo-target'
+}
+
+setup_guest_builds() {
+    ssh_stream_box "$1" \
+        "sudo bash -s -- $(id -u) $(id -g) /run/qemubox/config/ephemeral" <<'EOF'
+set -Eeuo pipefail
+uid=$1
+gid=$2
+{
+    IFS= read -r -d '' mode
+    while IFS= read -r -d '' path
+    do
+        mkdir -p -- "$path"
+        case "$mode" in
+            tmpfs)
+                mount -t tmpfs -o "rw,exec,mode=1777,uid=$uid,gid=$gid" tmpfs "$path"
+                ;;
+            disk)
+                key=$(realpath -e -- "$path" | sha256sum)
+                backing="/var/lib/qemubox/builds/${key%% *}"
+                mkdir -p "$backing"
+                chown "$uid:$gid" "$backing"
+                mount --bind "$backing" "$path"
+                ;;
+            *) echo "Invalid build mount mode: $mode" >&2; exit 1 ;;
+        esac
+    done
+} < "$3"
+EOF
+}
+
+qemu_acceleration() {
+    local device="${1:-/dev/kvm}"
+    accel=()
+    cpu=max
+    if [ -r "$device" ] && [ -w "$device" ]
+    then
+        accel=(-enable-kvm)
+        cpu=host
+    fi
+}
+
+setup_guest_limits() {
+    ssh_plain_box "$1" "sudo bash -s -- $(quote "$GUEST_USER")" <<'EOF'
+set -Eeuo pipefail
+mkdir -p /etc/security/limits.d
+printf '%s - nice -20\n%s - rtprio 99\n%s - memlock unlimited\n' \
+    "$1" "$1" "$1" > /etc/security/limits.d/90-qemubox.conf
+EOF
+}
+
+sync_guest_clock() {
+    ssh_plain_box "$1" \
+        "sudo systemctl disable --now systemd-timesyncd.service"
+    ssh_plain_box "$1" "sudo date -u -s $(quote "@$(date +%s.%N)") >/dev/null"
+}
+
+setup_guest_sessions() {
+    [ -z "$untrusted" ] || return 0
+    ssh_plain_box "$1" "mkdir -p ~/.claude/sessions && sudo mount -t tmpfs -o rw,mode=0700,uid=$(id -u),gid=$(id -g) tmpfs ~/.claude/sessions"
+}
+
+setup_mount_path() {
+    ssh_plain_box "$1" \
+        "sudo bash -s -- $(id -u) $(id -g) $(quote "$2")" <<'EOF'
+set -Eeuo pipefail
+uid=$1
+gid=$2
+path=$3
+missing=()
+while [ ! -d "$path" ]
+do
+    missing+=("$path")
+    path=$(dirname "$path")
+done
+for ((i=${#missing[@]}-1; i>=0; i--))
+do
+    install -d -m 755 -o "$uid" -g "$gid" -- "${missing[$i]}"
+done
+EOF
+}
+
+session_tty() {
+    tty=()
+    if [ -t 0 ] && [ -t 1 ]
+    then
+        tty=(-t)
+    fi
+}
+
 start_box() {
     name="$(box_name "$1")"
     missing_deps
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
+    lock_box "$name"
+    check_trust "$name" || return 1
     port="$(port_for "$name")"
-    # Serialize concurrent same-name launches so two invocations don't both
-    # ssh-keygen / qemu-img / boot a second qemu on one disk and port. Held only
-    # through boot; released before the long-lived interactive session.
-    exec 9>"$dir/.lock"
-    flock 9
-    ensure_box "$name"
-    running "$name" && {
-        note "reusing running VM qemubox-$name on 127.0.0.1:$port"
+    if running "$name"
+    then
+        image_id=$(cat "$dir/image-id")
+        [ -s "$ROOT/base/$image_id.qcow2" ] || {
+            echo "Missing base $image_id; run qemubox rm $name" >&2
+            return 1
+        }
+        note "waiting for running VM qemubox-$name"
+        wait_ready "$name" session
         booted=""
-        flock -u 9
         return
-    }
-    # Fresh boot: from the name-hash port, walk up to the first free one and
-    # persist it to $dir/port, so re-entry and ssh reuse the same port and a
-    # name-hash collision with another box reallocates instead of failing.
-    if [ ! -s "$dir/port" ]; then
-        for _ in $(seq 1 100); do
-            (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || break
-            port=$(( (port - 10000 + 1) % 50000 + 10000 ))
-        done
-        echo "$port" > "$dir/port"
     fi
-    accel=()
-    [ -e /dev/kvm ] && accel=(-enable-kvm)
+    assemble_mounts
+    ensure_box "$name"
+    rm -f "$dir/ready" "$dir/known_hosts"
+    for ((attempt=0; attempt<100; attempt++))
+    do
+        (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || break
+        port=$(( (port - 10000 + 1) % 50000 + 10000 ))
+    done
+    [ "$attempt" -lt 100 ] || { echo "No free SSH port for $name" >&2; return 1; }
+    echo "$port" > "$dir/port"
+    qemu_acceleration
     restrict=",restrict=on"
     [ -n "$network" ] && restrict=""
     if [ "${#accel[@]}" -gt 0 ]; then
@@ -359,28 +605,32 @@ start_box() {
         note "guest network: restricted; only host SSH forwarding is open"
     fi
     mapfile -t mounts < <(qemu_mount_args)
+    # Docker-built initramfs can detect host swap; this VM must not wait for it.
     "$QEMU" "${accel[@]}" \
-        -m "$MEM" -smp "$CPUS" \
+        -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2" \
-        -drive "file=$dir/seed.iso,media=cdrom,readonly=on" \
+        -kernel "$ROOT/base/$image_id.vmlinuz" -initrd "$ROOT/base/$image_id.initrd" \
+        -append "root=/dev/vda rw console=ttyS0 noresume" \
+        -virtfs "local,path=$dir/config,mount_tag=qbxcfg,security_model=none,readonly=on" \
         "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
         -serial "file:$dir/serial.log" \
-        -display none -daemonize -pidfile "$dir/pid"
-    note "waiting for SSH on 127.0.0.1:$port"
-    note "why: cloud-init must finish user/key setup before commands can run"
-    for i in $(seq 1 90); do
-        ssh_plain_box "$name" true >/dev/null 2>&1 && { booted=1; flock -u 9; return; }
-        [ $((i % 10)) -eq 0 ] && note "still waiting for SSH; serial log: $dir/serial.log"
-        sleep 2
-    done
-    # SSH never came up: kill the daemonized qemu so a boot that never reached
-    # SSH isn't orphaned holding RAM/CPU and the rw 9p mounts.
-    pid="$(cat "$dir/pid" 2>/dev/null || true)"
-    [ -n "$pid" ] && kill "$pid" 2>/dev/null || true
-    rm -f "$dir/pid"
-    echo "SSH not ready; see $dir/serial.log" >&2
-    exit 1
+        -display none -daemonize -pidfile "$dir/pid" 9>&-
+    booted=1
+    note "waiting for guest setup on 127.0.0.1:$port"
+    wait_ready "$name" boot
+    ssh_plain_box "$name" 'sudo rm -f /run/qemubox/ready'
+    setup_guest_tmp "$name"
+    mount_host_paths "$name"
+    setup_guest_builds "$name"
+    setup_guest_runtime "$name"
+    setup_guest_sessions "$name"
+    setup_guest_auth "$name"
+    setup_guest_limits "$name"
+    sync_guest_clock "$name"
+    ssh_plain_box "$name" 'sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/ready'
+    touch "$dir/ready"
+
 }
 
 detect_gpg() {
@@ -409,15 +659,9 @@ mount_host_paths() {
     name="$1"
     note "mounting host paths into qemubox-$name with 9p"
     note "why: qemubox mirrors dockbox access patterns without copying files"
-    # 9p fs + virtio transport are kernel modules; load them, then verify the
-    # guest kernel actually provides 9p before mounting. A trimmed "cloud" kernel
-    # omits it entirely (no modprobe can help) — fail loud with the fix instead of
-    # a cryptic "unknown filesystem type '9p'".
-    ssh_plain_box "$name" 'sudo modprobe 9p 9pnet_virtio 2>/dev/null || true'
+    ssh_plain_box "$name" 'sudo modprobe -a 9p 9pnet_virtio'
     ssh_plain_box "$name" 'grep -qw 9p /proc/filesystems' || {
-        note "guest kernel lacks 9p filesystem support."
-        note "use a full-kernel base image (Debian 'generic', not 'genericcloud')"
-        note "then rebuild: qemubox rm $name"
+        note "guest kernel lacks 9p filesystem support; rebuild with qemubox build-base --force"
         exit 1
     }
     for i in "${!mount_tags[@]}"; do
@@ -425,71 +669,52 @@ mount_host_paths() {
         dest="${mount_dests[$i]}"
         opts="trans=virtio,version=9p2000.L,msize=104857600"
         [ "${mount_modes[$i]}" = ro ] && opts="$opts,ro"
-        ssh_plain_box "$name" "sudo mkdir -p $(quote "$dest")"
+        setup_mount_path "$name" "$dest"
         ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
     done
-}
-
-provision_guest_packages() {
-    name="$1"
-    marker="/var/lib/qemubox/packages-v3"
-    if ! ssh_plain_box "$name" "[ -f $marker ]" >/dev/null 2>&1; then
-        note "installing guest base packages in qemubox-$name"
-        note "why: qemubox needs the same practical shell/git/gpg/runtime layer as dockbox"
-        ssh_stream_box "$name" 'sudo mkdir -p /var/lib/qemubox
-export DEBIAN_FRONTEND=noninteractive
-sudo apt-get update
-sudo apt-get install -y --no-install-recommends \
-  ca-certificates curl tar xz-utils make \
-  less git procps sudo fzf zsh man-db unzip zip \
-  openssh-client gnupg2 jq bc nano vim \
-  iproute2 dnsutils pkg-config libssl-dev libudev-dev \
-  mold bubblewrap socat postgresql-client
-sudo touch /var/lib/qemubox/packages-v3'
-    fi
-    if [ -n "$docker_sock" ]; then
-        note "installing Docker CLI in qemubox-$name for -D"
-        ssh_stream_box "$name" 'command -v docker >/dev/null 2>&1 || \
-sudo apt-get install -y --no-install-recommends docker.io'
+    if [ -z "$no_copy" ]
+    then
+        for dest in "${dirs[@]}"
+        do
+            ssh_plain_box "$name" "if [ -f $(quote "$dest/.qemuboxrc") ]; then sudo mount --bind /dev/null $(quote "$dest/.qemuboxrc") && sudo mount -o remount,bind,ro $(quote "$dest/.qemuboxrc"); fi"
+        done
     fi
 }
 
 setup_guest_runtime() {
     name="$1"
-    note "provisioning qemubox-$name guest wrappers"
-    note "why: claude/codex run from the host-mounted /opt/dev-tools tree"
-    ssh_stream_box "$name" 'sudo mkdir -p /usr/local/bin; mkdir -p ~/.gnupg && chmod 700 ~/.gnupg'
-    ssh_stream_box "$name" 'node_bin=$(ls -d /opt/dev-tools/nvm/versions/node/*/bin 2>/dev/null | sort | tail -1 || true)
-if [ -n "$node_bin" ]; then
-  sudo ln -sf "$node_bin/node" /usr/local/bin/node
-  sudo ln -sf "$node_bin/npm" /usr/local/bin/npm
-  sudo ln -sf "$node_bin/npx" /usr/local/bin/npx
-fi
-sudo ln -sf /opt/dev-tools/bun/bin/bun /usr/local/bin/bun
-sudo tee /usr/local/bin/claude >/dev/null <<'\''EOF'\''
-#!/bin/sh
-exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"
-EOF
+    settings='--settings '\''{"sandbox":{"enabled":false}}'\'''
+    wrapper_edit="s/--dangerously-skip-permissions \"/--dangerously-skip-permissions $settings \"/"
+    ssh_plain_box "$name" "sudo sed -i $(quote "$wrapper_edit") /usr/local/bin/claude"
+    ssh_stream_box "$name" 'set -e
+mkdir -p ~/.docker/run ~/.gnupg
+chmod 700 ~/.gnupg
 sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 #!/bin/sh
 exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
-sudo chmod 755 /usr/local/bin/claude /usr/local/bin/codex'
-    note "writing the sandbox note to /etc/claude-code/CLAUDE.md in qemubox-$name"
-    note "why: Claude Code loads that file in every session, so the agent knows it is boxed"
+sudo chmod 755 /usr/local/bin/codex'
     guest_note "$HOSTNAME" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
-    ssh_stream_box "$name" 'mkdir -p ~/.docker/run'
-    note "copying agent config into qemubox-$name (writable guest copy; host stays read-only)"
-    ssh_stream_box "$name" 'for d in .claude .codex .agents; do
-  s="/mnt/qemubox-cfg/$d"; [ -d "$s" ] || continue
-  sudo mkdir -p ~/"$d"; sudo chown "$(id -u):$(id -g)" ~/"$d"
-  ( cd "$s" && tar -cpf - --exclude=./projects --exclude=./todos --exclude=./sessions --exclude="./*.sqlite*" --exclude=./log --exclude=./cache --exclude=./.cache --exclude=./.tmp --exclude=./history.jsonl --exclude=./statsig --exclude=./file-history --exclude=./shell_snapshots --exclude=./shell-snapshots . ) | tar -C ~/"$d" -xpf -
-done'
-    ssh_stream_box "$name" '[ -e /mnt/qemubox-home/.claude.json ] && ln -sf /mnt/qemubox-home/.claude.json ~/.claude.json || true
-[ -e /mnt/qemubox-home/.gitconfig ] && ln -sf /mnt/qemubox-home/.gitconfig ~/.gitconfig || true
-[ -e /mnt/qemubox-home/.dockbox_history ] && ln -sf /mnt/qemubox-home/.dockbox_history ~/.bash_history || true
-[ -e /mnt/qemubox-home/.gnupg/pubring.kbx ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.kbx ~/.gnupg/pubring.kbx || true
-[ -e /mnt/qemubox-home/.gnupg/pubring.gpg ] && ln -sf /mnt/qemubox-home/.gnupg/pubring.gpg ~/.gnupg/pubring.gpg || true'
+    ssh_stream_box "$name" 'set -e
+if [ -f /mnt/qemubox-home/.claude.json ]
+then
+    ln -sf /mnt/qemubox-home/.claude.json /tmp/host-claude.json
+fi
+for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+do
+    if [ -f "/mnt/qemubox-home/$rel" ]
+    then
+        ln -sf "/mnt/qemubox-home/$rel" "$HOME/$rel"
+    fi
+done
+if [ -f /mnt/qemubox-history/history ]
+then
+    for rel in .bash_history .zsh_history
+    do
+        touch "$HOME/$rel"
+        sudo mount --bind /mnt/qemubox-history/history "$HOME/$rel"
+    done
+fi'
 }
 
 stop_box() {
@@ -497,91 +722,259 @@ stop_box() {
     running "$name" || return 0
     dir="$(box_dir "$name")"
     pid="$(cat "$dir/pid")"
-    ssh_box "$name" sudo poweroff >/dev/null 2>&1 || true
+    ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 || note "poweroff SSH closed; waiting for qemu"
     # Wait for a clean guest shutdown (systemd can take ~90s), then escalate
     # SIGTERM -> SIGKILL so a wedged VM is terminated, never left as an orphaned
     # qemu whose disk remove_box is about to unlink.
-    for _ in $(seq 1 90); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    kill -0 "$pid" 2>/dev/null && kill "$pid" 2>/dev/null || true
-    for _ in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
-    for _ in $(seq 1 5); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    if kill -0 "$pid" 2>/dev/null; then
+    for _ in $(seq 1 90); do running "$name" || break; sleep 1; done
+    running "$name" && kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 10); do running "$name" || break; sleep 1; done
+    running "$name" && kill -9 "$pid" 2>/dev/null || true
+    for _ in $(seq 1 5); do running "$name" || break; sleep 1; done
+    if running "$name"; then
         echo "VM still running as PID $pid" >&2
         return 1
     fi
-    rm -f "$dir/pid"
+    rm -f "$dir/pid" "$dir/ready"
+    touch "$dir/stopped"
 }
 
 remove_box() {
+    local name dir rel
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    # Never delete a box's disk/keys while its VM is still alive -- stop_box now
-    # escalates to SIGKILL, so a failure here means it genuinely could not die.
+    # stop_box escalates to SIGKILL, so a failure means the VM is still alive:
+    # never delete its disk or keys then.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
-    rm -f "$dir/disk.qcow2" "$dir/seed.iso" "$dir/user-data" "$dir/meta-data"
+    rm -f "$dir/config/identity" "$dir/config/authorized_keys" \
+        "$dir/config/ephemeral" "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
+    if [ -d "$dir/config" ]
+    then
+        rmdir "$dir/config"
+    fi
+    rm -f "$dir/disk.qcow2"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
-    rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" 2>/dev/null || true
-    rmdir "$dir" 2>/dev/null || true
+    rm -f "$dir/history/history"
+    if [ -d "$dir/history" ]
+    then
+        rmdir "$dir/history"
+    fi
+    if [ -d "$dir/hostcfg" ]
+    then
+        rmdir "$dir/hostcfg/.gnupg" "$dir/hostcfg" || return 1
+    fi
+    rmdir "$dir" || return 1
     echo "removed qemubox-$name"
 }
 
-# Bake the apt package layer once into a reusable base image so new boxes skip
-# first-boot apt. Rides the same ensure_box/start_box/ssh/provision paths as a
-# normal box -- just a throwaway box in a hidden dir ($ROOT/.build, so ls/rm/prune
-# never see it) with no host mounts. Idempotent: skips if the base already exists
-# unless a rebuild is forced.
-build_base() {
+build_base() (
+    set -Eeuo pipefail
     force="${1:-}"
-    missing_deps
-    provisioned="$ROOT/base/provisioned.qcow2"
-    if [ -s "$provisioned" ] && [ -z "$force" ]; then
-        note "prebuilt base already present: $provisioned"
-        note "why: new boxes boot from it and skip apt; pass --force to rebuild"
-        return 0
+    source_dir="${QEMUBOX_SOURCE:-$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")}"
+    [ -f "$source_dir/dockbox/Dockerfile" ] || {
+        echo "Set QEMUBOX_SOURCE to the tools repo containing dockbox/Dockerfile" >&2
+        exit 1
+    }
+    read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
+    # Debian installs mke2fs in /usr/sbin, which a non-root PATH omits.
+    PATH="$PATH:/usr/sbin:/sbin"
+    missing_deps "${docker_cmd[0]}" bsdtar mke2fs qemu-img tar flock
+    tmp=$(mktemp -d)
+    trap 'rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"; rmdir "$tmp"' EXIT
+    tar -cf "$tmp/probe.tar" --files-from /dev/null
+    if ! mke2fs -q -t ext4 -F -d "$tmp/probe.tar" "$tmp/probe.raw" 8M >"$tmp/probe.log" 2>&1
+    then
+        cat "$tmp/probe.log" >&2
+        echo "Missing: mke2fs with -d tarball support (the build needs a mke2fs -d that accepts a tarball)" >&2
+        exit 1
     fi
-    # Force the raw generic image as the build overlay's backing so we never bake
-    # on top of an existing prebuilt base; the flattened result replaces it below.
-    backing_override="$(ensure_base)"
-    name=".build"
-    dir="$(box_dir "$name")"
-    remove_box "$name" >/dev/null 2>&1 || true
-    note "building prebuilt base image in a throwaway box"
-    note "why: bake the apt layer once so every new box boots in seconds"
-    start_box "$name"
-    provision_guest_packages "$name"
-    note "cleaning cloud-init state so boxes built from this base re-run it fresh"
-    ssh_plain_box "$name" 'sudo cloud-init clean --logs --seed'
-    note "dropping the throwaway build key and powering off"
-    # Once the key is gone SSH cannot reconnect, so the power-off must ride the
-    # same connection; the dropped connection at poweroff is expected.
-    ssh_plain_box "$name" 'rm -f ~/.ssh/authorized_keys; sudo poweroff' >/dev/null 2>&1 || true
-    stop_box "$name"
-    note "flattening build overlay into a standalone base: $provisioned"
-    note "why: convert (not commit) leaves the pristine generic image untouched"
-    qemu-img convert -O qcow2 "$dir/disk.qcow2" "$provisioned.tmp"
-    mv "$provisioned.tmp" "$provisioned"
-    remove_box "$name" >/dev/null 2>&1 || true
-    note "prebuilt base ready; new boxes skip first-boot apt"
-}
+    rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"
+    mkdir -p "$ROOT/base"
+    exec 8>"$ROOT/base/.lock"
+    flock 8
+    build_args=()
+    [ -z "$force" ] || build_args+=(--build-arg "AGENTS_CACHEBUST=$(date +%s)")
+    "${docker_cmd[@]}" build --force-rm --target vm -t qemubox-vm \
+        "${build_args[@]}" -f "$source_dir/dockbox/Dockerfile" "$source_dir"
+    image_id=$("${docker_cmd[@]}" image inspect -f '{{.Id}}' qemubox-vm)
+    image_id=${image_id#sha256:}
+    [[ "$image_id" =~ ^[a-f0-9]{64}$ ]]
+    base="$ROOT/base/$image_id"
+    if [ ! -s "$base.qcow2" ] || [ ! -s "$base.vmlinuz" ] || [ ! -s "$base.initrd" ]
+    then
+        container=""
+        cleanup_image() {
+            rc=$?
+            trap - EXIT
+            if [ -n "$container" ]
+            then
+                "${docker_cmd[@]}" rm "$container" >/dev/null || rc=1
+            fi
+            rm -f "$tmp/export.tar" "$tmp/rootfs.tar" "$tmp/rootfs.raw" \
+                "$base.qcow2.tmp" "$base.vmlinuz.tmp" "$base.initrd.tmp"
+            rmdir "$tmp"
+            exit "$rc"
+        }
+        trap cleanup_image EXIT
+        trap 'exit 130' INT
+        trap 'exit 143' TERM
+        note "exporting VM rootfs: $image_id"
+        container=$("${docker_cmd[@]}" create "$image_id")
+        "${docker_cmd[@]}" export -o "$tmp/export.tar" "$container"
+        "${docker_cmd[@]}" rm "$container" >/dev/null
+        container=""
+        bsdtar -cf "$tmp/rootfs.tar" --exclude=.dockerenv "@$tmp/export.tar"
+        rm "$tmp/export.tar"
+        kernel=$(tar -tf "$tmp/rootfs.tar" | sed -n 's,^boot/vmlinuz-,,p' | sort -V | tail -1)
+        [ -n "$kernel" ]
+        tar -xOf "$tmp/rootfs.tar" "boot/vmlinuz-$kernel" > "$base.vmlinuz.tmp"
+        tar -xOf "$tmp/rootfs.tar" "boot/initrd.img-$kernel" > "$base.initrd.tmp"
+        note "creating ext4 base in /tmp"
+        mke2fs -q -t ext4 -F -d "$tmp/rootfs.tar" "$tmp/rootfs.raw" 20G
+        note "converting base to qcow2"
+        qemu-img convert -O qcow2 "$tmp/rootfs.raw" "$base.qcow2.tmp"
+        mv "$base.vmlinuz.tmp" "$base.vmlinuz"
+        mv "$base.initrd.tmp" "$base.initrd"
+        mv "$base.qcow2.tmp" "$base.qcow2"
+    fi
+    printf '%s\n' "$image_id" > "$ROOT/base/current"
+    note "base ready: $base.qcow2"
+)
 
 list_boxes() {
+    local dir name state use ram disk markers found=""
     mkdir -p "$ROOT"
-    found=""
-    for dir in "$ROOT"/*; do
+    for dir in "$ROOT"/*
+    do
         [ -d "$dir" ] || continue
         [ "${dir##*/}" = base ] && continue
-        [ -n "$found" ] || printf "NAME\tSTATUS\tSSH\tPATH\n"
+        [ -n "$found" ] || printf "NAME\tSTATUS\tUSE\tRAM\tDISK\tPATH\n"
         found=1
         name="${dir##*/}"
-        state=stopped
-        running "$name" && state=running
-        printf "qemubox-%s\t%s\t127.0.0.1:%s\t%s\n" \
-            "$name" "$state" "$(port_for "$name")" "$dir"
+        state=stopped; use=idle; ram=0
+        lock_box "$name" || return 1
+        if running "$name"
+        then
+            state=running
+            ram=$(ps -o rss= -p "$(cat "$dir/pid")") || ram="?"
+            if markers=$(session_markers "$name")
+            then
+                [ -z "$markers" ] || use=busy
+            else
+                use="?"
+            fi
+        fi
+        disk=0
+        if [ -f "$dir/disk.qcow2" ]
+        then
+            disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
+        fi
+        unlock_box
+        printf "qemubox-%s\t%s\t%s\t%sKiB\t%sKiB\t%s\n" \
+            "$name" "$state" "$use" "${ram// /}" "$disk" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
 }
+
+remove_boxes() {
+    local pat dir name matched rc=0 targets=() target
+    [ "$#" -gt 0 ] || {
+        echo "qemubox rm: a name or glob is required (-a for all)" >&2
+        return 2
+    }
+    for pat in "$@"
+    do
+        case "$pat" in
+            -a|--all) pat='*' ;;
+            -*) echo "qemubox rm: unknown option '$pat'" >&2; return 2 ;;
+        esac
+        matched=""
+        for dir in "$ROOT"/*
+        do
+            [ -d "$dir" ] || continue
+            name=${dir##*/}
+            [ "$name" = base ] && continue
+            rm_matches "$name" "$pat" || continue
+            matched=1
+            for target in "${targets[@]}"
+            do
+                [ "$target" != "$name" ] || continue 2
+            done
+            targets+=("$name")
+        done
+        [ -n "$matched" ] || { echo "qemubox rm: no match for '$pat'" >&2; rc=1; }
+    done
+    for name in "${targets[@]}"
+    do
+        lock_box "$name" || { rc=1; continue; }
+        remove_box "$name" || rc=1
+        unlock_box
+    done
+    return "$rc"
+}
+
+prune_boxes() {
+    local hours="${1:-2160}" now cutoff grace dir name ts markers rc=0
+    [[ "$hours" =~ ^[0-9]+$ ]] || {
+        echo "qemubox prune: hours must be a whole number, got '$hours'" >&2
+        return 2
+    }
+    now=$(date +%s)
+    cutoff=$((now - 10#$hours * 3600))
+    grace=$((now - 4 * 3600))
+    for dir in "$ROOT"/*
+    do
+        [ -d "$dir" ] || continue
+        name=${dir##*/}
+        [ "$name" = base ] && continue
+        lock_box "$name" || { rc=1; continue; }
+        if running "$name"
+        then
+            ts=$(stat -c %Y "$dir/ready") || { unlock_box; continue; }
+            if [ "$ts" -le "$grace" ]
+            then
+                if markers=$(session_markers "$name")
+                then
+                    [ -n "$markers" ] || stop_box "$name" || rc=1
+                else
+                    note "cannot count sessions; keeping qemubox-$name running"
+                    rc=1
+                fi
+            fi
+        else
+            ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || {
+                unlock_box; continue;
+            }
+            [ "$ts" -ge "$cutoff" ] || remove_box "$name" || rc=1
+        fi
+        unlock_box
+    done
+    prune_bases || rc=1
+    return "$rc"
+}
+
+prune_bases() (
+    [ -d "$ROOT/base" ] || exit 0
+    exec 8>"$ROOT/base/.lock"
+    flock 8
+    current=$(cat "$ROOT/base/current") || exit 1
+    for base in "$ROOT/base/"*.qcow2
+    do
+        [ -f "$base" ] || continue
+        image_id=${base##*/}
+        image_id=${image_id%.qcow2}
+        [ "$image_id" != "$current" ] || continue
+        for ref in "$ROOT"/*/image-id
+        do
+            [ -f "$ref" ] || continue
+            ref_id=$(cat "$ref") || exit 1
+            [ "$ref_id" != "$image_id" ] || continue 2
+        done
+        rm -f "$base" "$ROOT/base/$image_id.vmlinuz" "$ROOT/base/$image_id.initrd" || exit 1
+        note "removed unused base $image_id"
+    done
+)
 
 # Report a box's readiness from the pidfile / serial log / SSH port only -- no
 # shell into the guest -- so a wedged VM (process up, SSH dead) is distinguishable
@@ -595,7 +988,7 @@ status_box() {
     ssh_state=closed
     (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && ssh_state=open
     boot=pending
-    [ -f "$dir/serial.log" ] && grep -qiE 'cloud-init.*(finished|done)|login:' "$dir/serial.log" && boot=ready
+    [ -f "$dir/serial.log" ] && grep -qiE 'qemubox: ready' "$dir/serial.log" && boot=ready
     printf "qemubox-%s\tprocess=%s\tssh=%s\tboot=%s\tport=%s\n" \
         "$name" "$proc" "$ssh_state" "$boot" "$port"
     # 9p mounts are set up post-boot over SSH, not at boot, so they never appear
@@ -633,7 +1026,7 @@ apply_flag() {
             # box_name keeps '.', so reject traversal/reserved names here in the
             # main shell (apply_flag runs un-subshelled) where exit stops the run.
             case "$2" in
-                ""|.|..|base|.build|*/*)
+                ""|.|..|base|.build|.locks|*/*)
                     echo "qemubox: invalid -n name: '$2'" >&2; exit 2 ;;
             esac
             name_override="$2" ;;
@@ -652,14 +1045,15 @@ apply_flag() {
         D)
             if [ -S /var/run/docker.sock ]; then
                 docker_sock=/var/run/docker.sock
-                docker_remote="/home/$USER/.docker/run/docker.sock"
+                docker_remote="$GUEST_HOME/.docker/run/docker.sock"
                 envs+=("DOCKER_HOST=unix://$docker_remote")
             else
                 warnings+=("-D ignored: /var/run/docker.sock is not available")
             fi ;;
         K) gpg_forward=1 ;;
         S) warnings+=("-S ignored: qemubox guest user already has passwordless sudo") ;;
-        P|T) warnings+=("-$1 ignored: qemubox copies dirs instead of overmounting build dirs") ;;
+        P) persist_builds=1 ;;
+        T) eph_no_tmpfs=1 ;;
         g)
             [ -n "${GH_TOKEN:-}" ] && envs+=("GH_TOKEN=$GH_TOKEN")
             [ -n "${GITHUB_TOKEN:-}" ] && envs+=("GITHUB_TOKEN=$GITHUB_TOKEN") ;;
@@ -669,12 +1063,46 @@ apply_flag() {
     return 0  # never let a falsey last branch (e.g. -g with no token) trip set -e
 }
 
+read_rc() {
+    rc_tokens=()
+    [[ -f "$1" ]] || return 0
+    while IFS= read -r line || [ -n "$line" ]
+    do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        read -ra words <<< "$line"
+        rc_tokens+=("${words[@]}")
+    done < "$1"
+}
+
+project_rc() {
+    read_rc "$1/.qemuboxrc"
+    OPTIND=1
+    while getopts ":n:d:x:e:v:HKUADgGPTSN" opt "${rc_tokens[@]}"
+    do
+        case "$opt" in
+            A|D|K|S|n|d|x)
+                echo "qemubox: ignoring -$opt in project .qemuboxrc (use ~/.qemuboxrc)" >&2 ;;
+            *) apply_flag "$opt" "${OPTARG:-}" ;;
+        esac
+    done
+}
+
+resume_session() {
+    local slug="${primary//[^A-Za-z0-9]/-}" sessions
+    [ "${cmd[0]}" = claude ] || return 0
+    sessions=("$HOME/.claude/projects/$slug/"*.jsonl)
+    if [ -f "${sessions[0]}" ]
+    then
+        cmd=(claude --resume "${cmd[@]:1}")
+    fi
+}
+
 tool_cmd() {
     case "$1" in
         claude) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
-        codex) cmd=(codex) ;;
+        codex) cmd=(codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh) ;;
         haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
-        sonnet) cmd=(claude --model claude-sonnet-5 --effort high) ;;
+        sonnet) cmd=(claude --model claude-sonnet-5-5 --effort high) ;;
         opus) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
         fable) cmd=(claude --model claude-fable-5-1) ;;
         gpt) cmd=(codex -m gpt-6-astra) ;;
@@ -686,10 +1114,8 @@ tool_cmd() {
     esac
 }
 
-# Decide whether box $1 matches the user's rm pattern $2. Empty pattern -> all;
-# a pattern containing * or ? is a glob, otherwise an exact name match.
 rm_matches() {
-    _n="$1"; _pat="$2"
+    _n="$1"; _pat="${2#qemubox-}"
     [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
     case "$_pat" in
         *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
@@ -717,43 +1143,50 @@ apply_untrusted() {
     esac
 }
 
-# Build the 9p mount list (mount_* arrays) for the resolved flag set. Reads the
-# globals set during argument parsing; called once from the main flow.
 assemble_mounts() {
-    add_mount "/opt/dev-tools" "/opt/dev-tools" ro
-    add_mount "/usr/local/share/npm-global" "/usr/local/share/npm-global" ro
-    add_mount "/opt/playwright-browsers" "/opt/playwright-browsers" ro
-    # Untrusted mode injects no host config or credentials: skip the single-file
-    # staging mount, the agent-config mounts, and the per-slug memory mount below.
-    # Only the project dir(s) and tool binaries above cross in.
     if [ -z "$untrusted" ]; then
         host_cfg="$(box_dir "$name")/hostcfg"
         stage_host_cfg "$host_cfg"
         add_mount "$host_cfg" "/mnt/qemubox-home" ro
-        # Agent config: mounted read-only at a staging path, then copied into the
-        # guest's own writable home (setup_guest_runtime). Guest writes to config never
-        # reach the host, and the guest sees config at the normal paths so tools find it.
         for d in .claude .codex .agents; do
-            add_mount "$HOME/$d" "/mnt/qemubox-cfg/$d" ro
+            add_mount "$HOME/$d" "$HOME/$d" rw
         done
+        add_mount "$HOME/.claude/plugins" "$HOME/.claude/plugins" ro
+        history_dir="$(box_dir "$name")/history"
+        mkdir -p "$history_dir"
+        chmod 700 "$history_dir"
+        [ -f "$HOME/.dockbox_history" ] || touch "$HOME/.dockbox_history"
+        if [ ! "$HOME/.dockbox_history" -ef "$history_dir/history" ]
+        then
+            ln -fL "$HOME/.dockbox_history" "$history_dir/history"
+        fi
+        add_mount "$history_dir" /mnt/qemubox-history rw
     fi
-    # Session data for THIS project persists to the host (transcripts + auto-memory),
-    # scoped to the active project's slug so the guest never sees or writes any other
-    # project's history. Everything else stays inside the disposable VM.
-    if [ -z "${no_copy:-}" ] && [ -d "$HOME/.claude" ] && [ -z "$untrusted" ]; then
-        slug="${primary//\//-}"
-        mkdir -p "$HOME/.claude/projects/$slug"
-        add_mount "$HOME/.claude/projects/$slug" "/home/$USER/.claude/projects/$slug" rw
+    if [ -n "$gcloud_creds" ]
+    then
+        add_mount "$HOME/.config/gcloud" "$GUEST_HOME/.config/gcloud" ro required || return 1
     fi
-    [ -n "$gcloud_creds" ] && add_mount "$HOME/.config/gcloud" "/home/$USER/.config/gcloud" ro
     if [ -z "${no_copy:-}" ]; then
-        for dir in "${dirs[@]}"; do
+        local gc gcr gitmounts=()
+        for dir in "${dirs[@]}"
+        do
             add_mount "$dir" "$dir" rw
+            gc=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
+            [[ "$gc" == "$dir" || "$gc" == "$dir"/* ]] && continue
+            case " ${gitmounts[*]} " in *" $gc "*) continue ;; esac
+            if gcr=$(realpath -e "$gc")
+            then
+                gitmounts+=("$gc")
+                add_mount "$gcr" "$gc" rw
+            else
+                echo "qemubox: worktree git dir missing ($gc); repair the .git gitlink" >&2
+                return 1
+            fi
         done
     fi
     for i in "${!extra_dirs[@]}"; do
-        dir="$(cd "${extra_dirs[$i]}" && pwd)"
-        add_mount "$dir" "$dir" "${extra_modes[$i]}"
+        dir="$(realpath -e -- "${extra_dirs[$i]}")" || return 1
+        add_mount "$dir" "$dir" "${extra_modes[$i]}" required || return 1
     done
     return 0
 }
@@ -772,11 +1205,13 @@ the host itself. CLAUDE_SANDBOX=qemubox. The launcher writes this file at boot;
 a wrong line here is a qemubox launcher bug.
 
 - Host files are absent unless mounted below. Outbound network: $net.
-- Survives the box: the rw mounts below. \`~/.claude\` is never the host's: a
-  guest copy (empty under -U), so skill, memory and settings edits here are
-  lost unless a rw mount below holds them.
-- Lost when the last session exits: the VM and its disk, everything off a rw
-  mount.
+- Survives the box: the rw mounts below and the guest disk until the box is
+  removed. \`~/.claude\` shares the host's config unless -U omits it, so edits
+  to shared skills, memory and settings reach the host. NEVER edit a
+  \`server-*\` skill here: it describes the host, not this VM.
+- The last session powers off the VM. Disk files survive re-entry; removing
+  the box deletes its disk. Private tmpfs files, including Claude sessions
+  and temporary build files, are lost at power-off.
 
 9p mounts (guest path, mode, host source):
 EOF
@@ -796,41 +1231,8 @@ case "${1:-}" in
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
-    rm|destroy)
-        pat="${2:-}"
-        [ -z "$pat" ] && { echo "qemubox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
-        case "$pat" in -a|--all) pat='*' ;; esac
-        found=""
-        for dir in "$ROOT"/*; do
-            [ -d "$dir" ] || continue
-            name="${dir##*/}"
-            [ "$name" = base ] && continue
-            rm_matches "$name" "$pat" || continue
-            found=1
-            remove_box "$name" || true
-        done
-        if [ -z "$found" ]; then
-            if [ -n "$pat" ]; then
-                echo "no match for '$pat'"
-            else
-                echo "no qemubox VMs"
-            fi
-        fi
-        exit 0 ;;
-    prune)
-        hours="${2:-2160}"
-        cutoff=$(date -d "-$hours hours" +%s 2>/dev/null) || cutoff=$(date -v-"$hours"H +%s)
-        for dir in "$ROOT"/*; do
-            [ -d "$dir" ] || continue
-            name="${dir##*/}"
-            [ "$name" = base ] && continue
-            running "$name" && continue
-            # A dir vanishing between the glob and here (concurrent rm/prune)
-            # must skip, not trip set -e and abort the whole prune.
-            ts=$(stat -c %Y "$dir" 2>/dev/null || stat -f %m "$dir" 2>/dev/null) || continue
-            [ "$ts" -lt "$cutoff" ] && remove_box "$name" || true
-        done
-        exit 0 ;;
+    rm|destroy) shift; remove_boxes "$@"; exit $? ;;
+    prune) prune_boxes "${2:-2160}"; exit $? ;;
     build-base)
         force=""
         case "${2:-}" in
@@ -842,10 +1244,13 @@ case "${1:-}" in
     -h|--help|help) usage; exit 0 ;;
 esac
 
+read_rc "$HOME/.qemuboxrc"
+set -- "${rc_tokens[@]}" "$@"
+
 _args=()
 for a in "$@"; do
     case "$a" in
-        --no-ephemeral) warnings+=("--no-ephemeral ignored: qemubox has no ephemeral overmounts") ;;
+        --no-ephemeral) persist_builds=1 ;;
         --untrusted) untrusted=1; network="" ;;
         *) _args+=("$a") ;;
     esac
@@ -880,31 +1285,14 @@ done
 
 [ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
 primary="${dirs[-1]}"
+project_rc "$primary"
+[ "$entrypoint" = exec ] || resume_session
 name="$(box_name "${name_override:-${primary##*/}}")"
 
 [ -n "$untrusted" ] && apply_untrusted
 
-assemble_mounts
-
 [ -n "$gpg_forward" ] && detect_gpg
-start_box "$name"
-# Drop this session's ref-count marker BEFORE provisioning, so a sibling session
-# exiting mid-setup cannot see left=0 and tear the VM down under us.
-sid="$$"
-ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid" >/dev/null 2>&1 || true
-# A running box's 9p device set is fixed at boot, so re-provisioning it with a
-# different mount set fails hard; skip it on re-entry (matches dockbox), where
-# mount/-v/dir changes don't apply. The tool/model still applies to the session.
-# $booted is set from inside start_box's flock (1 = we just booted; "" = reused),
-# so this is race-free against a concurrent first launch of the same box.
-if [ -n "$booted" ]; then
-    mount_host_paths "$name"
-    provision_guest_packages "$name"
-    setup_guest_runtime "$name"
-    setup_guest_auth "$name"
-else
-    note "re-entering running qemubox-$name; mount/-v/dir changes are ignored (use -n <name> for a separate box)"
-fi
+enter_session
 
 for warning in "${warnings[@]}"; do
     note "$warning"
@@ -916,29 +1304,23 @@ if [ -z "${no_copy:-}" ]; then
 fi
 
 remote=""
+envs+=("CARGO_TARGET_DIR=/tmp/cargo-target")
 for arg in CLAUDE_SANDBOX=qemubox "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     printf -v q "%q" "$arg"
     remote="$remote $q"
 done
 
-# Ref-counted session lifecycle (mirrors dockbox): the marker was dropped right
-# after start_box; run the session, then remove the marker and count what's left.
-# When the last session exits, tear the disposable VM down so none is left idle;
-# concurrent sessions each hold a marker and keep it up until all have exited.
 rc=0
-if [ -n "$workdir" ]; then
-    note "running in qemubox-$name:$workdir"
-    ssh_box "$name" -t "cd $(quote "$workdir") && exec env$remote" || rc=$?
+if [ -n "$workdir" ]
+then
+    remote="cd $(quote "$workdir") && exec env$remote"
 else
-    note "running in qemubox-$name home"
-    ssh_box "$name" -t "exec env$remote" || rc=$?
+    remote="exec env$remote"
 fi
-# Only tear down when the remaining-session count SUCCEEDS and is zero. An ssh
-# hiccup while counting leaves $left empty -> keep the VM up (a sibling may still
-# hold it); prune reaps a genuinely idle box later. Never teardown on error.
-left="$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid; ls /run/qemubox/sess 2>/dev/null | wc -l" 2>/dev/null)" || left=""
-if [ -n "$left" ] && [ "$left" -eq 0 ]; then
-    note "last session exited -- shutting down qemubox-$name"
-    remove_box "$name" >/dev/null || true
-fi
+note "running in qemubox-$name${workdir:+:$workdir}"
+session_tty
+ssh_box "$name" "${tty[@]}" "$remote" <&0 9>&- &
+session_pid=$!
+wait "$session_pid" || rc=$?
+session_pid=""
 exit "$rc"

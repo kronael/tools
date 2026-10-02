@@ -118,7 +118,7 @@ def rewrite_skill_refs(text: str) -> str:
 
     def replace(match: re.Match[str]) -> str:
         name = match.group('name')
-        if name == 'codex':
+        if name in {'astra', 'sol'}:
             return 'the current Codex session'
         if name in names:
             return f'@{name}'
@@ -165,7 +165,7 @@ def translate_output(stdout: str, event: str, target: str = '') -> str:
     if not isinstance(system_message, str) or not system_message:
         return json.dumps(output)
     if event not in CONTEXT_EVENTS:
-        return stdout
+        return json.dumps(output)
 
     hook_output = output.get('hookSpecificOutput')
     if not isinstance(hook_output, dict):

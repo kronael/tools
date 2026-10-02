@@ -15,36 +15,37 @@ tool inventory:
 2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`, `output-styles/`,
    `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
    distributed via
-   `.claude-plugin/` + `kronael/install/`.
-3. **Codex installer bridge** — `plugins/kronael/` and
+   `.claude-plugin/` + `kronael/sync/`.
+3. **Codex sync bridge** — `plugins/kronael/` and
    `.agents/plugins/marketplace.json`.
    It exposes one Codex skill that teaches Codex to run the same manual
-   install path. It does not duplicate the bundle.
+   sync path. It does not duplicate the bundle.
 
-## Installing the toolkit from Codex
+## Syncing the toolkit from Codex
 
 Follow the canonical procedure in
-[`kronael/install/SKILL.md`](kronael/install/SKILL.md) step by step — on a
-new install present its plan/consent questionnaire first, then verify source,
-backup, copy assets, install the wisdom file, merge settings, install the
-opted-in CLI tools (rig/udfix/clp/dockbox via their Makefiles — the
-marketplace snapshot carries their source dirs), build the opted-in server
-memory, report. Its Rules section
-(backup first, never-touch list, no deletions) applies verbatim. Below are
-only the Codex-specific deltas.
+[`kronael/sync/SKILL.md`](kronael/sync/SKILL.md) step by step — on a first
+sync present its plan/consent questionnaire first, then preflight, classify,
+merge live edits into the repo, decide installed-only paths, swap, merge
+settings, bridge Codex, install the opted-in CLI tools (rig/udfix/dockbox
+via their Makefiles — the marketplace snapshot carries their source dirs) and
+write the CDPATH block, build opted-in first-sync server memory, and
+report. Its Review checklist (merge before swap, never-touch list, no
+recursive removal) applies verbatim. Below are only the Codex-specific
+deltas.
 
-- `/kronael:install` is a Claude Code slash command — you can't run it
-  from Codex. Run the canonical installer from the source root discovered by
+- `/kronael:sync` is a Claude Code slash command — you can't run it
+  from Codex. Run the canonical sync from the source root discovered by
   the bridge.
-- The bundle installs hook scripts into `~/.claude/hooks/`. Claude Code uses
+- A sync puts hook scripts into `~/.claude/hooks/`. Claude Code uses
   `settings-recommended.json`; Codex uses `codex-hooks.json` plus
   `hooks/codex_hook.py` to normalize Codex hook payloads before delegating to
   those same scripts.
 - The Codex plugin is a thin bridge only. Its one skill is
-  `plugins/kronael/skills/kronael-install/SKILL.md`; keep install behavior in
-  `kronael/install/SKILL.md` and update the bridge only when Codex-specific
+  `plugins/kronael/skills/kronael-sync/SKILL.md`; keep sync behavior in
+  `kronael/sync/SKILL.md` and update the bridge only when Codex-specific
   translation changes.
-- Installing from Codex deploys the Claude bundle to `~/.claude/`, exposes
+- Syncing from Codex deploys the Claude bundle to `~/.claude/`, exposes
   those installed skills to Codex through `~/.agents/skills`, and writes
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
   block from `codex/AGENTS.md` into global Codex guidance. That block tells
@@ -65,19 +66,19 @@ codex plugin add kronael@kronael
 Then start a fresh Codex thread and invoke:
 
 ```text
-Use @kronael-install to install/update Kronael.
+Use @kronael-sync to sync Kronael.
 ```
 
-Bridge-only invocation (for repair or existing installs):
+Bridge-only invocation (for repair or an existing sync):
 
 ```text
-Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
+Use @kronael-sync to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
 Global installed-skill bridge:
 
 ```text
-Use @kronael-install to bridge .claude/skills and hooks into Codex.
+Use @kronael-sync to bridge .claude/skills and hooks into Codex.
 ```
 
 After the bridge, installed Kronael skills are invoked in Codex as
@@ -104,54 +105,45 @@ Codex compatibility for Claude projects:
   source-owned Kronael skills. Codex does not scan `~/.claude/skills`
   directly.
 
-If `@kronael-install` cannot find the source root, refresh the GitHub
+If `@kronael-sync` cannot find the source root, refresh the GitHub
 marketplace with `codex plugin marketplace upgrade kronael` (or
 `kronael-local` for older installs). NEVER make the bridge copy source bundle
 files into `plugins/kronael/`.
 
 Shell translations for the non-obvious steps:
 
-**Copy skills, skipping `global/`** (its body becomes the wisdom file;
-copying it as a skill too would duplicate always-loaded content). NEVER
-`rm -rf ~/.claude/skills/` first. Run the sync protocol from
-`kronael/install/SKILL.md` before this copy so local installed edits are
-merged or explicitly overwritten, never clobbered silently:
-
-```sh
-for d in skills/*/; do
-  [ "$(basename "$d")" = "global" ] && continue
-  cp -r "$d" ~/.claude/skills/
-done
-```
+**Classify, merge, swap** — run `kronael/sync/reference.md` § Classify,
+§ Merge and § Swap as written; the swap is ONE shell command, and it also
+writes the wisdom file (the `skills/global/SKILL.md` body, never a
+`skills/global/` skill). NEVER copy skills into `~/.claude/skills/` by hand
+and NEVER `rm -rf` it: a hand copy over the old bundle keeps every file the
+source dropped, and live edits not yet merged into the repo would be lost.
 
 **Codex guidance** — merge the marked `codex/AGENTS.md` block into a real
 `~/.codex/AGENTS.md`, replacing a symlink to the wisdom file. NEVER write the
 block into `~/.claude/CLAUDE.md`.
 
-**Install the wisdom file** — strip the YAML frontmatter from
-`skills/global/SKILL.md`; if `~/.claude/CLAUDE.md` already has user
-content, diff and ask first:
-
-```sh
-awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' \
-  skills/global/SKILL.md > ~/.claude/CLAUDE.md
-```
-
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
-hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit` and the
+hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit`,
+`bashEditDiffEnabled`, `crossSessionInbound`, `isolatePeerMachines` and the
 four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
 whatever `settings-recommended.json` says — don't restate it). These are
 always applied, never asked — the 30-day default silently deletes session
 transcripts at startup, an unset `attribution.commit` asks for a
-`Co-Authored-By` trailer on every commit, and the deny guard holds even when
-the rest of the permissions block is declined. For the rest of permissions
-and sandbox, show the diff and ask:
+`Co-Authored-By` trailer on every commit, an unset `bashEditDiffEnabled`
+diffs the working tree around every Bash command in `auto` and
+`bypassPermissions` modes, an unset `crossSessionInbound` lets Claude Code decide per message
+by permission class, and the deny guard holds even when the rest of the permissions block is
+declined. For the rest of permissions and sandbox, show the diff and ask:
 
 ```sh
 jq -s '.[0].hooks = .[1].hooks
   | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   | .[0].outputStyle = .[1].outputStyle
   | .[0].attribution.commit = .[1].attribution.commit
+  | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].crossSessionInbound = .[1].crossSessionInbound
+  | .[0].isolatePeerMachines = .[1].isolatePeerMachines
   | (.[0].permissions.deny // []) as $d
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
   | .[0]' \
@@ -160,25 +152,25 @@ jq -s '.[0].hooks = .[1].hooks
   && mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
-**Diff sidebar off** — `diffSidebarOpen` is global config, not a settings key,
-so `settings-recommended.json` cannot carry it. Pin it in `~/.claude.json`,
-keeping every other key; it applies on the next Claude Code start:
+**Diff panel and IDE diff viewer off** — `diffSidebarOpen` and `diffTool` are
+global config, not settings keys, so `settings-recommended.json` cannot carry
+them. Pin both in `~/.claude.json`, keeping every other key; they apply on the
+next Claude Code start:
 
 ```sh
-jq '.diffSidebarOpen=false' ~/.claude.json > ~/.claude.json.new \
+jq '.diffSidebarOpen=false | .diffTool="terminal"' ~/.claude.json > ~/.claude.json.new \
   && mv ~/.claude.json.new ~/.claude.json
 ```
 
 **Codex hooks** — copy `codex-hooks.json` to `~/.codex/hooks.json` after the
-Claude hook scripts are installed. This is part of Codex bridge-only repair,
-not only full installs. In a fresh Codex TUI session, the user must open
+Claude hook scripts are in place. This is part of Codex bridge-only repair,
+not only full syncs. In a fresh Codex TUI session, the user must open
 `/hooks` once and trust changed command hooks.
 
-**Verify** — file counts under `~/.claude/{skills,agents,hooks}` match
-the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
+**Verify** — § Classify prints only `same` and `kept`,
 `~/.codex/AGENTS.md` holds the Kronael block,
 `~/.agents/skills` bridges to `~/.claude/skills`, and
-`~/.codex/hooks.json` exists. Report counts and the backup path.
+`~/.codex/hooks.json` exists. Report the class counts and the run dir.
 
 ## Conventions
 
@@ -190,4 +182,5 @@ the source dirs (skills: minus `global/`), `~/.claude/CLAUDE.md` exists,
 - NEVER use `git add -A` or `git commit --amend`.
 - ONLY `git push` when the user asked in that message, and NEVER to
   `master`/`main` without a second approval naming the branch.
-- NEVER delete files in `~/.claude/` that aren't in this source tree.
+- NEVER delete files in `~/.claude/` — a sync moves the old bundle to
+  `/tmp`, and installed-only files come back through the keep-list.

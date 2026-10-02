@@ -51,9 +51,15 @@ Three layers: autocomplete (codeium), chat (gptel), agentic (Claude Code / aider
 (use-package gptel :ensure t
   :bind ("C-c a g" . gptel)
   :config
-  (setq gptel-model 'claude-sonnet-4-6
+  (require 'gptel-anthropic)
+  (setq gptel-model 'claude-sonnet-5-5
         gptel-backend (gptel-make-anthropic "Anthropic"
                         :stream t
+                        :models (cons '(claude-sonnet-5-5
+                                        :capabilities (media tool-use cache)
+                                        :mime-types ("image/jpeg" "image/png" "image/gif"
+                                                     "image/webp" "application/pdf"))
+                                      gptel--anthropic-models)
                         :key (lambda ()
                                (or (getenv "ANTHROPIC_API_KEY")
                                    (user-error "ANTHROPIC_API_KEY is not set"))))))

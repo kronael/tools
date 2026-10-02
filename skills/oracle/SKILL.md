@@ -8,23 +8,25 @@ user-invocable: true
 # Oracle
 
 One router for second opinions. User text wins: if the user explicitly asks for
-codex, fable, creative, code, planning, or security routing, follow that route.
+astra, sol, fable, creative, code, planning, or security routing, follow that route.
 
 ## Dispatch
 
 | Request | Route |
 |---|---|
-| Code review, bug hunt, algorithm/design critique | `fable` subagent, high effort |
-| Planning critique, release plan, architecture plan | `fable` subagent, xhigh |
-| Security, red-team, exploitability, deep audit | `fable` subagent, xhigh |
-| Naming, prose, narrative, product copy, ideation | `codex` CLI, high effort |
-| Ambiguous but touches code or operations | `fable` subagent, high effort |
-| Explicit "ask codex" / "use codex" | `codex` CLI, high effort |
+| Code review, bug hunt, algorithm/design critique | `fable` subagent |
+| Planning critique, release plan, architecture plan | `fable` subagent |
+| Security, red-team, exploitability, deep audit | `fable` subagent |
+| Naming, prose, narrative, product copy, ideation | `astra` skill, high effort |
+| Ambiguous but touches code or operations | `fable` subagent |
+| Explicit "ask codex" / "use codex" | `astra` skill, high effort |
+| Explicit Astra or Sol request | The named `astra` or `sol` skill |
 
 ## Fable Route
 
-Launch a background `fable` agent. Include the goal, target files/dirs, and
-what to return. Frame adversarially:
+Launch a background agent with `subagent_type: "fable"` — `agents/fable.md`
+pins it at xhigh, so every fable route runs at xhigh. Include the goal,
+target files/dirs, and what to return. Frame adversarially:
 
 ```text
 Goal: <X>. Find the flaw in <code/design/plan>. Entry points: <files, symbols,
@@ -33,18 +35,26 @@ error output>. Return findings only, with file:line or concrete trace.
 
 Rules:
 
-- Use high effort by default.
-- Use xhigh only for planning and security/deep-audit routes, or when the user
-  explicitly asks for maximum effort.
+- NEVER set effort in the prompt text — ALWAYS rely on the agent file's pin.
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.
+- When fable cannot run (a usage limit), ALWAYS take the same route on
+  `subagent_type: "opus"` — NEVER skip the opinion.
 
-## Codex Route
+## Astra Route
 
-Load the `codex` skill and follow its runbook. Use it for creative critique and
-explicit Codex requests. Keep the prompt adversarial and high-level; do not
+Load the `astra` skill and follow its runbook. Use it for creative critique and
+explicit Codex or Astra requests. Keep the prompt adversarial and high-level; do not
 paste your full reasoning chain.
+
+For an explicit Sol opinion, ALWAYS invoke `sol` with the adversarial review
+rules in `astra` § Rules; NEVER route a Sol request to Astra silently.
+
+When the Astra CLI call cannot run (revoked auth, missing CLI), ALWAYS report
+the failure and take the Fable Route, on opus when fable cannot run either.
+For a missing pinned model, ALWAYS follow the named skill's stop-and-report
+rule; NEVER substitute an engine without the user's choice.
 
 ## Output
 

@@ -1,7 +1,16 @@
 import json
+from pathlib import Path
 
+import pytest
 from codex_hook import normalize
 from codex_hook import translate_output
+
+
+def install_skills(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *names: str) -> None:
+    for name in names:
+        (tmp_path / name).mkdir()
+        (tmp_path / name / 'SKILL.md').touch()
+    monkeypatch.setattr('codex_hook.SKILLS_DIR', tmp_path)
 
 
 def test_normalize_keeps_claude_shape() -> None:
@@ -56,29 +65,36 @@ def test_translate_output_promotes_system_message_for_codex_prompt() -> None:
     }
 
 
-def test_translate_output_rewrites_prompt_nudge_refs_for_codex() -> None:
+def test_translate_output_rewrites_prompt_nudge_refs_for_codex(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    install_skills(monkeypatch, tmp_path, 'refine')
     output = translate_output(
-        json.dumps({'ok': True, 'systemMessage': 'Invoke /refine.'}),
+        json.dumps({'ok': True, 'systemMessage': 'Invoke /refine, not /nope.'}),
         'UserPromptSubmit',
         'prompt_nudge',
     )
     parsed = json.loads(output)
-    assert parsed['systemMessage'] == 'Invoke @refine.'
-    assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine.'
+    assert parsed['systemMessage'] == 'Invoke @refine, not /nope.'
+    assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine, not /nope.'
 
 
-def test_translate_output_never_rewrites_codex_ref_recursively() -> None:
+@pytest.mark.parametrize('skill', ['astra', 'sol'])
+def test_translate_output_never_rewrites_codex_ref_recursively(skill) -> None:
     output = translate_output(
-        json.dumps({'ok': True, 'systemMessage': 'Invoke /codex.'}),
+        json.dumps({'ok': True, 'systemMessage': f'Invoke /{skill}.'}),
         'UserPromptSubmit',
         'prompt_nudge',
     )
     parsed = json.loads(output)
     assert parsed['systemMessage'] == 'Invoke the current Codex session.'
-    assert '@codex' not in parsed['hookSpecificOutput']['additionalContext']
+    assert f'@{skill}' not in parsed['hookSpecificOutput']['additionalContext']
 
 
-def test_translate_output_rewrites_pretool_refs_for_codex() -> None:
+def test_translate_output_rewrites_pretool_refs_for_codex(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    install_skills(monkeypatch, tmp_path, 'py')
     output = translate_output(
         json.dumps(
             {
@@ -101,7 +117,10 @@ def test_translate_output_leaves_stop_block_unchanged() -> None:
     assert translate_output(original, 'Stop') == original
 
 
-def test_translate_output_rewrites_stop_refs_for_codex() -> None:
+def test_translate_output_rewrites_stop_refs_for_codex(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    install_skills(monkeypatch, tmp_path, 'commit', 'diary')
     output = translate_output(
         json.dumps({'decision': 'block', 'reason': 'Run /commit. Run /diary.'}),
         'Stop',

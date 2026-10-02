@@ -1,16 +1,19 @@
 ---
 name: fable
-description: /fable — most capable xhigh-effort subagent for hardest architecture and long-horizon work. NOT for tasks opus can handle (use /opus).
-when_to_use: "do this in a fable sub, spawn a fable sub, use fable, use claude fable, hardest problem, maximum intelligence, long-horizon, deep reasoning, most capable"
+description: /fable — most capable xhigh-effort subagent for unattended multi-file code, ship plans, security or deep audits, and the hardest long-horizon work. NOT for tasks opus can handle (use /opus).
+when_to_use: "do this in a fable sub, spawn a fable sub, use fable, use claude fable, hardest problem, maximum intelligence, long-horizon, deep reasoning, most capable, unattended implementation, autonomous code generation"
 user-invocable: true
 ---
 
-Launch the prompt after /fable as a background agent (run_in_background: true, subagent_type: "fable").
+Launch the prompt after /fable as a background agent (`run_in_background: true`, `subagent_type: "fable"`).
 Report what was launched. Continue immediately without waiting.
 
-- ALWAYS use `subagent_type: "fable"` on the Agent tool (NOT `model: "fable"`). The `fable` agent definition pins `model: fable` AND `effort: xhigh` — effort is INHERITED from the parent session when not pinned, so `model: "fable"` alone gives no guarantee of xhigh if this call is ever made from a lower-effort parent.
-- NEVER make xhigh the default. Reserve xhigh for explicit planning work, security/deep-audit work, or a user request for maximum effort.
-- NEVER add text prompts like "Think deeply / Effort: high" — effort is set at the API level via the agent definition, not via prompt text.
-- NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
-- ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers (briefing rules: `dispatch` skill).
-- Fable is the most capable and most expensive model — prefer `/opus` for tasks that don't require maximum intelligence.
+ALWAYS reach for /fable without being asked when the task is:
+- Autonomous code generation: a comprehensive or multi-file change no parent reads before the work goes on (WISDOM § Agents).
+- The plan of a `ship` feature.
+- A security or deep audit, or a user request for maximum effort.
+
+- ALWAYS use `subagent_type: "fable"`, NEVER `model: "fable"`: `agents/fable.md` pins Fable at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
+- NEVER reach for `/fable` when `/opus` or the `sonnet` plan loop can do the work — ALWAYS use those first; fable is the most expensive tier.
+- NEVER set effort with prompt text ("Think deeply") — ALWAYS rely on the agent file's pin.
+- ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.

@@ -1,5 +1,354 @@
 # Changelog
 
+## [Unreleased]
+
+## [v0.4.11] — 20261002
+
+> kronael v0.4.11 — recall-memories recovers more context
+>
+> recall-memories now ships a helper that digests earlier sessions and finds a prior tool or agent result to reuse.
+>
+> • recall.py — sessions, results, prompts, digest, show over Claude Code and Codex transcripts
+> • digest — compaction summaries, recaps, each prompt with its final reply, agents, edited files
+> • results, show — find an earlier tool or agent result and read it in full, not re-run
+> • make test — runs the recall.py tests
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `recall-memories` digests prior sessions (compaction summaries, recaps,
+  each prompt with its final reply, agents, edited files) and finds an
+  earlier tool or agent result with its full output, so it is reused
+  instead of re-run. The new `recall.py` helper reads Claude Code
+  transcripts, subagent transcripts, spilled tool outputs and Codex
+  rollouts; `make test` runs its tests.
+
+## [v0.4.10] — 20261002
+
+> kronael v0.4.10 — astra and sol second opinions, cd anywhere
+>
+> The codex second-opinion skill is now astra, sol adds a second Codex model, and sync makes `cd <project>` work from any directory.
+>
+> • /astra — the codex CLI pinned to gpt-6-astra, on every route codex had
+> • /sol — the same adversarial second opinion from gpt-5.6-sol
+> • sync — writes a CDPATH block into ~/.bashrc, so `cd <project>` finds ~/app, ~/wk and ~/sandbox
+> • clp — removed; CDPATH covers it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- **Breaking:** the `codex` skill is `astra`: the codex CLI pinned to
+  `gpt-6-astra`, on every route codex had (oracle, release and ship
+  critique, scavenge checkpoints). `/codex` no longer resolves; a sync moves
+  an installed `skills/codex` aside. The model is a fixed slug checked in the
+  Codex catalog (`$CODEX_HOME`, default `~/.codex`); a missing slug stops the
+  call and asks, never substitutes.
+- `sol`: the same second opinion on `gpt-5.6-sol`, run ephemeral so it never
+  reads Astra's thread. Oracle routes to it only on an explicit request.
+- Prompt routing: a prompt that starts with `/astra` or `/sol` goes to that
+  skill; `ask codex`, `ask astra`, `oracle` and `second opinion` go to
+  `/astra`.
+- **Breaking:** `clp` is removed. A sync writes
+  `CDPATH=:$HOME/app:$HOME/wk:$HOME/sandbox` into `~/.bashrc` in a marked
+  block, so `cd <project>` works from anywhere. The empty first entry keeps a
+  local `cd` silent; a marker without its pair stops the write.
+
+## [v0.4.9] — 20261001
+
+> kronael v0.4.9 — plan on Opus, build on Sonnet, sync clean
+>
+> Bigger work runs as a reviewed plan built on Sonnet, and sync rebuilds ~/.claude so stale files cannot pile up.
+>
+> • /sonnet — plan, brief, review, recover and close for multi-file work, with a ~200-line size gate
+> • /kronael:sync — merges your ~/.claude edits into your clone first, then rebuilds ~/.claude from it
+> • /refine — reviews a change by context and settles every claim it makes before a release
+> • /research — one router for backtest method, report layout and silent-number traps
+> • dockbox — fails a box that dies at startup; a project .dockboxrc honours --no-ephemeral
+> • rig — sq and riq removed; they never found a fixup commit
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- **Breaking:** `/kronael:install` and `@kronael-install` are `/kronael:sync`
+  and `@kronael-sync`. A sync merges files edited in `~/.claude` into your
+  clone three-way, then swaps in a bundle built from source plus
+  `~/.claude/kronael-keep.txt`; the old bundle moves to a `/tmp` run dir.
+  Installed-only skills survive only when the keep-list names them; names the
+  bundle dropped move aside without a question. A failed build, a bad keep-list
+  entry or a symlink in the bundle stops the sync with `~/.claude` unchanged, and
+  a failure during the swap restores every path already exchanged.
+- **Breaking:** `rig sq`, `rig fixup` and `riq` are removed; `rig install` and
+  `make clean` delete any alias missing from rig's list.
+- `sonnet` owns "Plan, then execute": a change under ~200 lines stays in the
+  main thread; bigger work plans top-down (end state, design, steps), researches
+  the code through a sub that gets questions only, runs each step on Sonnet
+  against a recorded snapshot SHA, and discards a step whose design is wrong.
+  `opus`, `fable`, `haiku`, `dispatch` and `oracle` state the model and effort
+  their agent files pin; `improve` runs on Sonnet 5.5 at high.
+- `refine` cuts a change into contexts, briefs one read-only sub per context and
+  re-derives every finding, launching each review by agent type; release step
+  1.5 and `oracle` fall back to opus or fable when codex cannot run.
+- `research` (method, layout, traps) absorbs `research-analysis`; its QLIKE rule
+  follows Patton 2011.
+- The wisdom file sits at its 200-line cap, with the repo doc layout in
+  `readme/topology.md`. New rules: an unverified negative is not a finding, and
+  a mechanism that swallows errors gets replaced, not instrumented.
+- dockbox: a box that exits or never becomes ready fails the launch with its
+  last log lines; a project `.dockboxrc` honours `--no-ephemeral`, an empty one
+  leaves command-line flags alone, an unknown `--flag` in either rc is an
+  error, and the help lists the flags a project rc ignores.
+- hooks and diary: the diary resolves from the repo toplevel on the UTC date,
+  and its main tree in submodules and separate-git-dir repos; the Stop hook
+  stays silent in ship's judging roles; `make -C hooks test` runs through
+  `uvx --with pyyaml`.
+- qemubox: `build-base` finds `mke2fs` in `/usr/sbin`, the README states the
+  `mke2fs -d` tarball requirement, and the build tests run without host tools.
+- tw-fetch surfaces driver errors instead of archiving the wrong tab.
+- About 100 comment lines that restated the code are gone.
+
+## [v0.4.8] — 20261001
+
+> kronael v0.4.8 — ship runs a change end to end
+>
+> /ship asks once what to hammer, then plans, builds, refines and delivers a change without stopping for routine approval.
+>
+> • /ship — one opening question batch, including what to hammer, then plan, build, refine and deliver
+> • dockbox — bridge boxes follow the host's resolver, so DNS keeps working after a Wi-Fi change
+> • dockbox, qemubox — each box keeps its own Claude session registry, so boxes cannot message each other
+> • Install — sessions refuse messages from your other sessions and ask before one leaves the machine
+> • /readme — a doc-page mode for HTML explainer pages, with a fact pass before any style pass
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship` asks the answers the result depends on in one opening batch, what to
+  hammer included, and states open preferences as defaults. A fresh planner
+  writes one work record in the main tree's `.ship/`. Each step passes its
+  own gate, and `refine` and the chosen hammer checks run before acceptance.
+  Redesigns still need sign-off, and push and release keep their gates.
+- `dockbox` passes `--dns <bridge gateway>` when a resolver listens there
+  (for example systemd-resolved with `DNSStubListenerExtra=172.17.0.1`), and
+  prints a note when the host uses a loopback stub without one. An
+  unreachable Docker daemon stops the launch with docker's own error.
+- `dockbox` and `qemubox` mount a private tmpfs over `~/.claude/sessions`.
+  A box keeps the mounts it was created with until `dockbox rm`.
+- Install always applies `crossSessionInbound: "refuse"` and
+  `isolatePeerMachines: true`. Subagent reports still arrive.
+- `readme` gains `page.md` for HTML explainers. `writing` and `humanize` add
+  rules for links on the claim's words, colon headings, semicolon chains and
+  symbols standing in for words. `refine` routes project docs to a `readme`
+  lens that checks facts first.
+- `BUGS.md` records the shared Claude runtime state, NAT flows on a carrier
+  blip, the docker socket crossing boxes, two qemubox output defects and two
+  refine cleanup proposals.
+
+## [v0.4.7] — 20261001
+
+> kronael v0.4.7 — qemubox becomes a daily sandbox
+>
+> qemubox now boots the same image as dockbox and keeps each VM's disk, so you can reuse a VM every day.
+>
+> • qemubox — boots the dockbox image as your own user and stops idle VMs after 4 h, keeping the disk
+> • qemubox — shares ~/.claude and ~/.codex, puts build dirs on tmpfs, reads dockbox-style rc files
+> • dockbox — boxes allow io_uring, and sessions get nice, mlock and ptrace
+> • Git skills and rig — every checkout detaches, so no local branch appears; gco joins rco
+> • Install — turns off the Bash edit diff and the IDE diff viewer
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox build-base` exports the Dockerfile's new `vm` stage into a qcow2
+  base named by image id; VMs boot it directly as the host user (same name,
+  uid, gid, home): 16 GiB RAM, 4 vCPUs, 40G sparse disk.
+- qemubox disks persist: the last session powers the VM off. One lock covers
+  setup, session markers, stop and remove; a dead session does not keep a VM
+  busy. `ls` shows RAM/DISK/USE; `prune` stops VMs idle past 4 h, removes
+  stopped ones past `[hours]` and deletes unused bases; `rm` takes patterns.
+- qemubox matches dockbox: rc files, worktree mount, tool table, tmpfs build
+  dirs (`-P`/`-T`), PAM limits, the host time zone, a `docker` CLI for `-D`.
+  The guest cannot edit the project rc or the plugins.
+- qemubox security: a disk made by a trusted launch refuses `-U`, because it
+  holds `~/.claude.json`. Missing `-G`/`-v` sources fail loud. `-D`/`-K`
+  forwards bind again after a relaunch.
+- `dockbox` boxes run Docker's default seccomp profile plus io_uring (the moby
+  profile ships with its Apache-2.0 notice); sessions enter through setpriv
+  with SYS_NICE, IPC_LOCK and SYS_PTRACE ambient. Another user's box is refused
+  with a pointer to `-n`. Both tools resume sessions for project paths with
+  any non-alphanumeric character.
+- Git rules: detached HEAD only, never a local branch; reads go through
+  `git fetch origin` and `origin/<default head>`; pushes go by SHA. Review
+  fixes push to the open PR's head; fixed threads resolve silently.
+- `rig`: `gco` is `rco` without the fetch, plus `--` file restore, and new
+  diff/stash/rebase aliases; `rco` takes refs and hashes.
+- Install pins `bashEditDiffEnabled: false` and the `diffTool` `terminal`.
+
+## [v0.4.6] — 20260929
+
+> kronael v0.4.6 — dockbox ls sees every box
+>
+> `dockbox ls` now reports a real tmpfs number for boxes whose worktrees were deleted, and the wisdom file points at `/solve`.
+>
+> • dockbox ls — skips build dirs the host deleted, so those boxes show their RAM instead of `?`
+> • Wisdom — routes through `/solve`, the new name of `/resolve`
+> • /fin — sends resumes to `/continue`, the new name of `con`
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox ls` passes `df` only the overmount paths that still exist in the
+  box; a host-deleted worktree detaches its mounts, and `df` exiting on the
+  missing path made the whole row `?`. `dockbox/test.sh` runs the real probe
+  against a fake box, under dash when installed (the box's `/bin/sh`).
+- `skills/global/SKILL.md` names `/solve` (renamed from `/resolve`, which
+  install prunes); `fin` names `continue` (renamed from `con`).
+- `BUGS.md` drops the `doc-shape` entry; `doc-topology` is folded into
+  `readme`.
+
+## [v0.4.5] — 20260929
+
+> kronael v0.4.5 — saying release now means a full refine first
+>
+> A bare `release` runs the most thorough refine over every unreleased change before it bumps anything, and Sonnet moves to 5.5.
+>
+> • /release — refines every change since the last tag first: all lenses, fable on correctness, a codex second opinion
+> • /release — a late change reruns the refine, so nothing ships unreviewed
+> • Models — Sonnet is claude-sonnet-5-5 in the sonnet agent, dockbox, qemubox and the Emacs setup
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `release` step 1.5 runs `/refine` over `git diff <last>..HEAD` (the whole
+  tree on a first release) at full depth whatever the diff size — every lens,
+  extra passes past refine's 3-lens cap, `correctness` on `fable`, and a
+  `codex` second opinion fed through refine's triage and apply. Any later
+  change other than the refine's own commits and the release commit reruns
+  it. Step 2 also bumps version strings in `README.md`/`CLAUDE.md`; `refine`
+  names the `/release` exceptions to its scale-to-the-diff and model rules.
+- Sonnet pins move to `claude-sonnet-5-5` (`agents/sonnet.md`, `dockbox`,
+  `qemubox`); the Emacs gptel snippet registers it so gptel does not fall back
+  to a model it knows.
+- `dockbox/test.sh` pins prune's 4-hour idle grace on both sides.
+
+## [v0.4.4] — 20260929
+
+> kronael v0.4.4 — dockbox prune cleans up idle boxes
+>
+> `dockbox prune` now removes boxes nobody uses anymore, and a session that fails no longer leaves its box running.
+>
+> • dockbox ls — USE column shows busy or idle, so you see which boxes are safe to remove
+> • dockbox prune — removes idle boxes 4+ hours old and never touches a busy one
+> • dockbox — a session that errors out or loses its terminal still removes its box
+> • dockbox rm — takes several names and deletes the box's volumes too
+> • release — version parts never carry: after 0.3.99 comes 0.3.100
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox` sessions tear down from an EXIT trap (HUP and TERM too), so a
+  non-zero exit or a closed terminal leaves no stale marker; the teardown keeps
+  the box when the marker dir cannot be listed.
+- `dockbox ls` adds USE (`busy`/`idle` from `docker top`, `-` stopped, `?`
+  probe failed). `dockbox prune [hours]` also removes idle boxes created 4+
+  hours ago, parses Docker's `CreatedAt` under GNU date, and exits non-zero
+  when a removal fails.
+- `dockbox rm` takes several names or globs, matches `dockbox-`-prefixed names
+  literally, rejects unknown options, and exits non-zero on no match or
+  failure. Every teardown passes `-v`, so `-T` volumes go with the box.
+- `release`: MAJOR, MINOR and PATCH never carry — `0.3.99` → `0.3.100`.
+- Docs: dockbox `--help` and README match the code (`-T`, default model,
+  overmount lifetime); `hooks/ARCHITECTURE.md` names `stop.py`'s own event
+  reader; `BUGS.md` logs the dockbox lifecycle races and that duplicate reader.
+
+## [v0.4.3] — 20260929
+
+> kronael v0.4.3 — see which dockbox holds your RAM
+>
+> `dockbox ls` now shows how much tmpfs and disk each box holds, so you know which one to remove.
+>
+> • dockbox ls — TMPFS column: RAM-backed files in each running box, every mount counted once
+> • dockbox ls — DISK column: the box's writable layer, volumes not included
+> • hooks — the test suite passes on a fresh checkout, with no bundle installed
+> • commands — /improve, /learn, /readme, /refine and /visual ship with the bundle
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dockbox ls` adds TMPFS (`/tmp`, `/tmp/cargo-target`, `/dev/shm`, `$HOME`
+  and the build-dir overmounts of a running box, each mount once; `-` when
+  stopped, `?` when the probe fails) and DISK (writable layer, volumes
+  excluded). `dockbox/test.sh` runs `ls` against a stub docker.
+- hooks: `local`, `memory_nudge`, `prompt_nudge` and `reclaude` import
+  `lib.state` from their own directory, the codex rewrite tests build their own
+  skills dir, and CI installs PyYAML, so `Test — hooks` runs without an install.
+- `commands/` ships the `improve`, `learn`, `readme`, `refine` and `visual`
+  wrappers.
+- Docs: the dockbox README explains the `ls` columns and what `-T` covers; the
+  hooks docs say the diary nudge repeats on every Stop. `BUGS.md` logs the stale
+  installed hook docs and the dockbox `--help` drift.
+
+## [v0.4.2] — 20260927
+
+> kronael v0.4.2 — two lines become one
+>
+> The upstream and local development lines are reconciled into a single master, and the three sync sides are named.
+>
+> • merge — upstream's line (its v0.3.98) merged with the local ripwire/codex/wisdom work; the Stop recap stays gone (Claude Code ships its own)
+> • install — the sync docs now name source, live (~/.claude), and upstream (origin) explicitly
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Reconciled `upstream/master` (its `v0.3.98`) with the local release line: kept the local subtracted wisdom shape and the removed Stop recap, took upstream's readme/specs router restructure, unioned the bug queue and skill rules.
+- `install` / `CLAUDE.md` / `ARCHITECTURE.md`: name the three sync sides — source (this repo), live (`~/.claude`), upstream (`origin`) — so a live sync is never confused with an upstream push.
+
+## [v0.4.1] — 20260927
+
+> kronael v0.4.1 — codex knows when it's logged out
+>
+> A revoked codex token now reads as unavailable, and you get the one command that fixes it.
+>
+> • codex — a revoked token counts as unavailable despite `login status`; hands you `! codex login`, never retries
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codex`: a revoked refresh token now reads as unavailable — `codex login status` exits 0 and prints "Logged in" without exercising the credential, so `token_revoked`/401 in the real call is the signal; hand the user the interactive `! codex login`, never retry.
+
+## [v0.4.0] — 20260925
+
+> kronael v0.4.0 — one recap, not two
+>
+> Claude Code already generates a recap of its own, so the Stop hook stops writing a second one and goes back to the commit and diary nudges.
+>
+> • hooks — the Stop turn recap is removed; the built-in recap is left at its default
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Removed
+
+- `stop.py`'s turn recap, and with it the per-session stamp, the
+  `RECAP_BUDGET` deadline, the `RECAP_COMMITS`/`RECAP_PATHS` caps and the
+  landed/dirty/stuck builders. Claude Code generates its own recap from the
+  conversation — the away summary, keyed `awaySummaryEnabled` and shown as
+  *recap* in `/config`, with `/recap` as the on-demand form — so a second one
+  meant two summaries at every stop, and the git one spoke even on a quiet turn
+  (`since 07:48Z: no commits`). The hook is back to the commit and diary nudges.
+  `awaySummaryEnabled` is deliberately left unset, at Claude Code's default.
+
+## [v0.3.99] — 20260925
+
+> kronael v0.3.99 — Codex gets the turn recap, and the installer can copy again
+>
+> The Stop recap now runs in Codex sessions too, and the rsync the install protocol prescribes is no longer refused by the toolkit's own deny rule.
+>
+> • hooks — the turn recap is no longer withheld under Codex
+> • settings — `rsync` moves from deny to ask, so the narrow `~/.claude` allow can take effect
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- `stop.py` withheld the recap whenever `KRONAEL_IN_CODEX` was set, so a Codex
+  session got the commit and diary nudges but never the turn summary. The bridge
+  already routed `stop`'s `systemMessage` through the nudge rewrite, so the
+  exclusion was the only thing in the way.
+- `codex_hook.py` returned the raw hook stdout for a Stop carrying a
+  `systemMessage`, skipping both the `ok` strip and the `/skill` → `@skill`
+  rewrite every other nudge gets.
+- `settings-recommended.json` denied `Bash(rsync *)` while allowing
+  `Bash(rsync * ~/.claude/*)`. Deny wins, so the install protocol's own copy step
+  was refused and had to fall back to `cp`. The blanket rule is now `ask`, the
+  narrow allow stands, and a dry-run to `~/.claude` runs without a prompt.
+
 ## [v0.3.98] — 20260926
 
 > kronael v0.3.98 — two lines, one bundle, Bun for new TypeScript

@@ -7,7 +7,8 @@ user-invocable: true
 
 # Diary
 
-File: `.diary/YYYYMMDD.md`. Append to today's entry; create if missing.
+File: `.diary/YYYYMMDD.md`, the UTC date the Stop hook checks. Append to today's
+entry; create if missing.
 A standalone document goes beside it as `.diary/YYYYMMDD-<name>.md` — see
 "Named companions" below.
 
@@ -19,16 +20,35 @@ BEFORE writing. Test the actual dated FILE path, not the bare `.diary` dir — a
 slash) but DOES match `.diary/<file>`, so checking the dir gives a false "tracked":
 
 ```bash
-git check-ignore -q ".diary/$(date +%Y%m%d).md" && echo ignored || echo tracked
+git -C "$(git rev-parse --show-toplevel)" check-ignore -q ".diary/$(date -u +%Y%m%d).md" \
+  && echo ignored || echo tracked
 ```
 
-- **Tracked (not gitignored)** → write in the **current worktree** (`<cwd>/.diary/`).
+- **Tracked (not gitignored)** → write in the **current worktree** (`<toplevel>/.diary/`, toplevel =
+  `git rev-parse --show-toplevel`).
   A tracked diary is committed on its branch, so each worktree records its own
   work and the entry travels with that branch's commits.
-- **Gitignored / not part of git** → write to the **main worktree**
-  (`git worktree list | head -1 | awk '{print $1}'`), at `<main>/.diary/`.
-  An ignored diary is never committed, so keep one canonical copy in the main
-  tree instead of scattering ephemeral entries across worktrees.
+- **Gitignored / not part of git** → write to the **main worktree**, at
+  `<main>/.diary/`. An ignored diary is never committed, so keep one canonical
+  copy in the main tree instead of scattering ephemeral entries across
+  worktrees. Resolve `<main>` with this; it holds in a plain repo, a
+  submodule, a `--separate-git-dir` repo, and a linked worktree of a plain
+  repo or a submodule. Git records no main tree for a linked worktree of a
+  `--separate-git-dir` repo, so there the result is the git dir's parent:
+
+  ```bash
+  git_dir=$(git rev-parse --absolute-git-dir)
+  common=$(git rev-parse --path-format=absolute --git-common-dir)
+  if [[ "$git_dir" == "$common" ]]
+  then
+    main=$(git rev-parse --show-toplevel)
+  else
+    main=$(git config --file "$common/config" core.worktree || dirname "$common")
+    [[ "$main" == /* ]] || main=$(realpath -m "$common/$main")
+  fi
+  echo "$main"
+  ```
+
 - **Not a git repo** → fall back to `<cwd>/.diary/`.
 - `.diary/` is generally public — checked into git — unless the project's
   `CLAUDE.md` marks it local-only.

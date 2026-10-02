@@ -27,8 +27,10 @@ LLMs have no memory between conversations. Three pieces cover this:
 - **diary**: chronological work log at `<cwd>/.diary/YYYYMMDD.md`.
   Different from memory: diary is *what happened today*, memory is
   *what's true forever*.
-- **recall-memories**: explicit search across diary + memory + recent
-  session transcripts. Memory and diary don't auto-fire on relevant
+- **recall-memories**: explicit search across diary + memory + Claude
+  Code and Codex session records, down to single tool and agent results,
+  so an earlier run is reused instead of repeated. `recall.py` beside the
+  skill parses the records. Memory and diary don't auto-fire on relevant
   prompts — recall-memories is the "look it up" verb.
 
 ## Multi-pass refinement (refine, improve, readme)
@@ -80,7 +82,7 @@ the authoritative entry. The categories:
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
   `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`,
-  `emacs`, `research-analysis`) —
+  `emacs`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
   language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
@@ -91,7 +93,7 @@ the authoritative entry. The categories:
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `sync-tools-skills`, `codex`, `pi`) — triage, multi-pass
+  `scavenge`, `sync-tools-skills`, `astra`, `sol`, `pi`) — triage, multi-pass
   refinement, git flow, memory, scaffolding, second opinions, codifying
   public best practice, vendoring this bundle's skills into another project.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
@@ -100,8 +102,8 @@ the authoritative entry. The categories:
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
   `create-eval`, `13yo-eval`, `assess`) — judge a codebase or practice from a
   fixed perspective.
-- **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`) — one
-  preloaded
+- **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`,
+  `research/`) — one preloaded
   `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
@@ -110,9 +112,11 @@ the authoritative entry. The categories:
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
   and observability; `specs/` the design record; `readme/` syncs docs after
-  shipping and holds the doc file topology and single-page shape; `review/`
-  gives or takes a code review. Structure rules: [`CLAUDE.md`](CLAUDE.md) in
-  this directory.
+  shipping and holds the doc file topology, single-page shape and the HTML
+  pages (onepager, doc page); `review/` gives or takes a code review;
+  `research/` holds the quantitative-research runbooks: method (evidence),
+  layout (organisation), traps (silent wrong numbers). Structure rules:
+  [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
   `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
   `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
@@ -153,7 +157,7 @@ Side-channels (escalation, communication) fire at any stage.
 **orientation** — load context before acting. `solve` is the universal entry point;
 `recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
 
-**planning** — `specs` for design docs; `ship` for multi-session work tracking.
+**planning** — `specs` for design docs; `ship` to drive a change end to end, mostly unattended.
 Skip for one-off tasks.
 
 **coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
@@ -163,8 +167,10 @@ They compose: a Rust CLI loads `rs` + `cli`.
 **quality** — `review` covers the whole loop: `review give` produces findings
 (local diff, or a GitHub PR with `gh`), `review take` applies them (a local list
 or a PR's comments); it supersedes the built-in `/code-review` for local work.
-`improve`/`refine` for fixing; `visual` for UI; `software` (`testing.md`) for
-test patterns; `bugs` for the record-don't-fix queue.
+`improve` for a targeted fix; `refine` for the finalizing pass — read-only
+subagents per context of the change, and every claim it makes re-derived
+against the tree; `visual` for UI; `software` (`testing.md`) for test
+patterns; `bugs` for the record-don't-fix queue.
 
 **output** — `commit`, `pr-draft`, `release`, `gh-comment`, `gh-issue`. Use once work is verified.
 

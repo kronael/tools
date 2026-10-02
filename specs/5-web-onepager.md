@@ -121,7 +121,7 @@ and target placement.
 
 ### V3: Install + hook lifecycle — single combined flow
 
-- **Show**: Two parallel install paths converging on `kronael/install/SKILL.md`
+- **Show**: Two parallel sync paths converging on `kronael/sync/SKILL.md`
   (top half), then a timeline of when each hook fires during a session
   (bottom half): UserPromptSubmit → tool calls → Stop → next prompt →
   PreCompact. Each hook annotated with which script and what it does.

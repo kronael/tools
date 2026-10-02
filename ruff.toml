@@ -7,6 +7,8 @@ exclude = [".venv", "tmp", "tweetfeed_cookies", "skills/create", "skills/*/lints
 # floor so ruff-format never rewrites to 3.14-only syntax (e.g. paren-free
 # `except A, B:` per PEP 758), which would SyntaxError on any pre-3.14 python.
 "hooks/**" = "py39"
+# The recall helper runs under the user's python3 too (3.11 on Debian 12).
+"skills/recall-memories/*.py" = "py310"
 
 [lint]
 select = ["ALL"]
@@ -22,7 +24,6 @@ ignore = [
     "ISC001", # implicit string concat — conflicts with formatter
     "Q",      # quotes — handled by ruff-format quote-style
 
-    # disagree with for this repo
     "EM",      # string literals in exceptions — too pedantic
     "INP001",  # implicit namespace package — fine for hook scripts
     "PLR09",   # too many arguments/branches/returns
@@ -43,6 +44,7 @@ ignore = [
 "lints/*.py"   = ["T20", "S603", "S607"]   # lint harness prints results, runs ast-grep
 "**/main.py"   = ["T20"]                   # CLI entry points print status to stdout
 "tg-fetch/*.py" = ["T20"]                  # tg-fetch contains CLI entry-point scripts
+"skills/recall-memories/*.py" = ["T20", "S603", "S607"]  # CLI prints results, runs git
 
 [lint.isort]
 force-single-line = true

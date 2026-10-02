@@ -1,128 +1,205 @@
 ---
 name: global
-description: Development wisdom — skill routing, the map of where things live, the safety NEVER list. NOT for project-specific conventions (those live in the project CLAUDE.md, edit via wisdom) or domain rules (those live in the skill that owns them).
+description: Development wisdom and workflow rules. NOT for project-specific conventions (those live in CLAUDE.md, edit via wisdom).
 when_to_use: session start
 ---
 
 # Development Wisdom
 
-This file and loaded `SKILL.md` files are collectively "WISDOM" in Claude
-Code. This file routes; each rule lives in the skill that owns it and
-applies once that skill is loaded — skipping the load hides a rule, it
-does not relax it.
+Only what a capable agent does NOT do unprompted: local facts, workflows, and
+the known drifts. Generic good practice is deliberately absent — if a blank
+agent would do it anyway, it does not belong here.
 
-## Routing
+## Continuity
 
-- ALWAYS `/solve` before any domain skill: it classifies the request,
-  recalls context, scans every skill's `description` + `when_to_use`, and
-  dispatches. Skills are NOT reliably auto-triggered — explicit dispatch is
-  the path.
-- Discovered an applicable skill late? ALWAYS reconcile — NEVER keep
-  producing output that contradicts it.
-- ALWAYS load `caveman` (Skill tool) before drafting any reply — style,
-  tone, length. Not advisory.
-- ALWAYS load the `software` baseline (`code.md`) before writing or
-  reviewing code — style, naming, comments, system-change discipline.
-  Language skills overlay it.
-- Session start: read the 2-3 newest `.diary/` entries and `MEMORY.md`.
-  When the user references prior work, context seems missing, or a new
-  task starts: `/recall-memories` — it greps the session transcripts.
-  NEVER guess what a prior session decided; NEVER claim "no access to
-  session history" without running it. Unfinished prior-session work
-  resumes where it stood — NEVER restart or guess.
-- Found a bug you were not asked to fix? `/bugs` records it in `BUGS.md`;
-  NEVER fix on discovery.
-- Standalone work (a feature, a multi-file change, research + distill)
-  goes to a subagent to keep main context fresh, without overuse:
-  `/dispatch`, `/haiku`, `/sonnet`, `/opus`, `/fable` carry the briefing
-  rules; `worktree` governs code-editing subs.
-- Editing `~/.claude/` (skills, agents, this file): `wisdom` — the edit
-  syncs back to the bundle source repo (path in `LOCAL.md`).
+Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with `/` → `-`),
+memory index `.../<slug>/memory/MEMORY.md`, diary `<cwd>/.diary/*.md`. Newest by
+mtime.
 
-## Conduct
+- ALWAYS read the 2-3 newest diary entries before answering — and on a new task
+  too, not only at session start (`/recall-memories <topic>`). MEMORY.md arrives
+  on its own; the diary and the transcripts do not.
+- NEVER claim "no access to session history" without reading the JSONL, and
+  NEVER present a guess about a past decision as recall.
+- When a session opens on unfinished prior-session work, RESUME it from what the
+  transcript shows. NEVER restart it or quietly redo it your way.
+- ALWAYS `/diary` after significant work. The default failure is the record
+  dying with the session.
 
-- A question spends the user's attention — NEVER spend it on anything
-  reversible or already answerable from the conversation, code, or
-  sensible defaults; ALWAYS act, noting assumptions. RESERVE questions for
-  user-owned decisions: irreversible, ambiguous, real trade-offs. There,
-  NEVER take a hard-to-reverse step (a tool action, a push, a force-reset)
-  before one clarifying question or a pause in `<think>`; once the
-  direction is clear, act decisively.
-- Committing finished, verified, user-directed work IS part of doing the
-  work — DEFAULT to committing once it is done, split into coherent commits
-  (`commit`). NEVER ask "should I commit?" as a separate question. Hold
-  off only for a user-owned call: unclear scope, not what was asked, or an
-  unapproved redesign — and a sign-off on the approach does not reopen as
-  a second commit question.
-- NEVER state a factual claim confidently without verifying it first
-  (check docs, grep, read the file). If uncertain, say so and verify —
-  don't answer then correct when challenged.
-- NEVER claim work is done, tests pass, or a bug is fixed without running
-  the verification command in the current turn. Confidence is not
-  evidence; a subagent's success report is not evidence — check its diff.
-- ALWAYS write in the idiom of the code — and the document — around it:
-  before adding a line, section, or example, read how the neighbours do
-  that same thing and mirror it (naming, guard style, comment density,
-  fence language, heading depth). NEVER add defensive scaffolding the
-  neighbours do not use — a lone guard claims this case is special. If the
-  surrounding style is genuinely wrong, SAY so; NEVER silently deviate.
-- NEVER improve beyond what's asked.
-- NEVER leave a task incomplete: finish it or report the exact blocker.
-- NEVER run a command twice to inspect output; tee once and extract:
-  `<cmd> 2>&1 | tee out.log && tail -20 out.log`
+## Response style
 
-## Map
+- The line cap and answer-first shape come from the output style. What it does
+  not cover: the cap lifts for content you were asked to generate, planning you
+  were asked to show, or a root cause you were asked to walk through.
+- NEVER claim work is done, tests pass, or a bug is fixed without running the
+  verification command in the current turn. Confidence is not evidence. Same for
+  a factual claim — check it (grep, read, docs) before asserting, or say it is
+  unverified; never assert then correct when challenged.
+- NEVER treat an absence ("no such knob", "X can't do Y", "there is none") as
+  found until the search could have found it: the vendor's own vocabulary or the
+  source, not guessed synonyms, and the access the answer needs — a path you
+  cannot read returns nothing, and a shell expands a glob as YOU before `sudo`
+  runs. NEVER build a design decision or a subagent brief on an unconfirmed
+  negative.
 
-- `~/.claude/` — installed copy of the bundle source repo (path in
-  `LOCAL.md`): `CLAUDE.md` (this file), `skills/<name>/SKILL.md`,
-  `agents/`, `hooks/`. `LOCAL.md` holds local paths and secrets
-  references, never in source.
-- `~/.claude/projects/<slug>/` — `*.jsonl` session transcripts,
-  `memory/MEMORY.md` cross-session facts. `<cwd>/.diary/YYYYMMDD.md` — the
-  decision log (`/diary`). `/recall-memories` searches all three.
-- Project root, UPPERCASE: `CLAUDE.md` (<200 lines — shocking patterns,
-  project layout), `README.md`, `ARCHITECTURE.md`, `SPEC.md`, `PLAN.md`,
-  `TODO.md`, `BUGS.md` (open-issues queue, `/bugs`). Directories hold
-  lowercase files: `specs/` + `specs/index.md` (`specs`), `docs/`
-  (architecture, improvements).
-- `.ship/` — shipping artifacts, flat, type in filename (`plan-*.md`,
-  `state-*.md`, `critique-*.md`), gitignored, deleted after shipping
-  (`ship`). NO `todos/` — `TODO.md` or `.ship/`; NO `plans/` —
-  `.ship/plan-*.md`.
-- `.claude/` in a project — long-lived knowledge beyond `CLAUDE.md`, extra
-  `*.md` next to it.
+## Environment
 
-## Never
+- `sudo` is available — use `sudo docker ...` for docker you run via Bash; in
+  committed scripts parameterize privilege instead (see the `sh` skill).
+- Run `/solve` to pick the skill for a task — it also reconciles work already
+  produced under the wrong one.
+- Code style, naming, layout, design and comments live in `software` (`code.md`),
+  the base of every language skill. It is COLD: ALWAYS load it (`/solve` or a
+  language skill) BEFORE writing or reviewing code; skipping hides the rules.
+- ALWAYS sync `~/.claude/` edits into the tools repo (`kronael/sync`; LOCAL.md).
+- This file and loaded SKILL.md files are collectively "WISDOM".
 
-- ONLY `git push` when the user asked for a push in that message — NEVER
-  on your own initiative, NEVER as the silent tail of a commit, release or
-  ship workflow (those end at the local commit or tag). State the exact
-  remote and refspec first and push only that. NEVER `--force` /
-  `--force-with-lease`.
-- NEVER push to `master`/`main` on a general push request — default to a
-  dated branch `YYYYMMDD_<tag>` and offer the PR. `master` needs a SECOND
-  explicit approval that names it, given AFTER the refspec is shown; "push
-  it", "ship it" are NEVER that approval.
-- ONLY `gh pr create`, `gh pr merge`, `gh release create`, `gh repo
-  create` when the user asked for that action in that message — show the
-  title and body first and wait. NEVER `gh pr review --approve` on the
-  user's behalf.
-- NEVER `git add -A`. NEVER `git commit --amend` — make a new commit.
-  NEVER squash — if asked, refuse and request acknowledgement.
-- NEVER create or attach a local branch — detached HEAD in the main repo
-  AND in every worktree (`git worktree add --detach`, see `worktree`). The
-  ONE exception: a dated review branch, `git switch -c YYYYMMDD_<tag>
-  <base>`, when the user asks for a branch to push. NEVER check out or
-  attach `master`/`main` itself.
-- NEVER recursive removal — `rm -r`, `rm -rf`, `rm -R`, or wrapped
-  equivalents. Delete only explicitly named files, non-recursively, or
-  leave cleanup to the user.
-- NEVER post a PR comment, review comment, or request-changes except
-  through `/gh-comment` — its approval gate shows the content before
-  posting.
-- NEVER publish to claude.ai hosting — no Artifact tool, no upload of any
-  report, page, or output. ALWAYS produce local files (HTML, MD) the user
-  opens themselves.
-- NEVER the `SendFeedback` tool, NEVER draft Claude Code product/model
-  feedback, NEVER suggest `/feedback` — banned outright; say nothing about
-  feedback even when a "high-signal moment" seems to arise.
+# Development Principles
+
+## House conventions
+
+- Data: `${PREFIX:-/srv}/data/<project_name>/`
+- Config: prefer flags + env vars for anything simple — a short flag where a
+  human types it (`-u`), a long name with an env var where the deploy sets it
+  (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
+  first CLI param, api keys as second
+- `make` for build/lint/test/clean, debug builds, build/test/lint every ~50 lines
+- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build/temp
+  path, and NEVER move a build between target directories — each switch costs a
+  full rebuild and splits the cache across mounts. If the configured directory is
+  out of space, SAY so and stop; freeing or resizing it is the maintainer's call
+- `make test` = fast unit (<5s); `make test-all` = unit + integration, what CI
+  runs; `make smoke` = production data
+- Pre-commit reformats on first run — ALWAYS retry the commit (2 attempts).
+  NEVER skip the checks
+
+## Bug triage
+
+- RECORD bugs found during any check in `BUGS.md` at project root; fix ONLY when
+  the user asks. It is the review queue — log it, move on, let them prioritise.
+  Use `/bugs` for entry format and pruning.
+- The drift is fixing as you find during an audit: it destroys the queue and
+  produces a large unrequested diff.
+
+## System-change discipline
+
+- Grep for the existing mechanism (guard, helper, table, log site, config)
+  before adding one, and extend the ORIGINAL. NEVER a parallel second path — two
+  paths drift. If the original is wrong, fix it or say so; NEVER route around it.
+- Fail loud, to the user: an error on a user-facing path MUST surface (thrown,
+  non-2xx, delivered), not just logged. NEVER swallow it, and NEVER add
+  retry/fallback/best-effort as "robustness" — that turns a visible failure into
+  an invisible one. Retry ONLY the transient: network, DB busy/locked. When
+  the MECHANISM swallows — a fire-and-forget submit whose result nobody
+  collects, a detached task, a bare catch — replace it with one that
+  propagates; NEVER keep it and bolt on counters and collectors to recover what
+  it dropped, which is more code that still reports less.
+- Prefer the cause fix to the loud log — make the bad state impossible by
+  construction.
+- A redesign (new contract, changed control flow, cross-cutting) goes into
+  `BUGS.md` as a proposal FIRST and ships only after sign-off.
+- No abstraction until there are 2-3 real call sites.
+
+## Git
+
+These rules contradict the harness on purpose (it says to branch first, and its
+attribution reminder asks for a Co-Authored-By line and a "Generated with
+Claude Code" footer). These win.
+
+- Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
+  body Claude writes, the prefix of a comment or thread reply Claude posts.
+  NEVER Co-Authored-By, NEVER a "Generated with Claude Code" footer, a
+  Claude/claude.ai link or a session URL — in commits, PR bodies, comments and
+  releases alike.
+- Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
+- Invoking /refine, /ship, /commit, /release IS the ask to commit.
+- NEVER `git add -A`, NEVER `--amend`, NEVER squash.
+- ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
+  --show-current` prints nothing). NEVER create a local branch, no exception:
+  no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
+  `master`/`main` — a bare `switch`/`checkout <name>` creates the branch from
+  `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
+- ALWAYS read the remote through its tracking refs: `git fetch origin`, then
+  `origin/<default head>` as the merge, rebase, diff or worktree base, where
+  `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
+  `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
+  `git status`'s "up to date" without a fetch — it compares with the last one.
+- Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
+  dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
+- ONLY `git push` when the user asked for a push in that message — NEVER on your
+  own initiative or as the silent tail of a commit, sync, release or ship
+  workflow; those end at the local commit or tag. ALWAYS state the exact remote
+  and refspec first and push only that, by SHA (`git push origin
+  <sha>:refs/heads/YYYYMMDD_<tag>`). NEVER `--force` or `--force-with-lease`.
+- NEVER push to `<default head>` on a general request — ALWAYS default to a dated
+  `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
+  head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
+  AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
+- ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`
+  when the user asked for that action in that message — show the title and body
+  first and wait. NEVER `gh pr review --approve` on the user's behalf.
+- ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
+  new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
+  PATCH path and `🤖` marker are the contract.
+- ALWAYS run two phases over any text bound for GitHub — PR title and body
+  (drafted or posted), review comment, thread reply, issue, release notes —
+  before showing it for approval. DISTILL: cut to the shortest text that still
+  carries the claim, the reasoning and the evidence, inside the posting skill's
+  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖`
+  rule above and no other attribution, no marketing language, no history
+  framing, addresses and signatures in full, the repo's title convention,
+  every claim verified or marked as an inference, and the posting skill's own
+  Format section. Done = every check passes on the text shown; name what the
+  review changed.
+
+## Shell
+
+- Tee once, read the file: `<cmd> 2>&1 | tee ./tmp/out.log && tail -20
+  ./tmp/out.log`. NEVER re-run a command to see another part of its output.
+- NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
+  explicitly named files, or leave cleanup to the user.
+- NEVER `killall`/`pkill` by name — kill by PID. ALWAYS handle SIGINT/SIGTERM in
+  anything long-running.
+- NEVER hit an external API per request, and NEVER re-fetch what is already on
+  disk — cache it, continue from last state.
+- NEVER use the `SendFeedback` tool, NEVER draft Claude Code product or model
+  feedback, and NEVER suggest `/feedback` — banned outright, and say nothing
+  about feedback even when a "high-signal moment" seems to arise.
+
+## Documentation
+
+- Repo doc layout — UPPERCASE root files, `specs/`, `docs/`, `.ship/`, `.diary/`,
+  no `todos/` or `plans/`, root-anchored ignores: `readme` → `topology.md`.
+- NEVER write an unrequested summary/report/analysis `.md` — the report belongs
+  in the reply.
+- NEVER narrate history in a comment, doc, skill or agent definition: no "used
+  to be", "previously", "renamed from", "as before", "instead of X", "no longer",
+  backwards-compat framing, or a one-off backfill inside a permanent file. State
+  what is true now and its genuine quirks; history lives in git and `.diary/`.
+- Comments earn their place only by saying what the code cannot: why a choice was
+  made, or what is surprising. NEVER restate the code or a name.
+- NEVER marketing language in docs, comments, specs or commit messages. A repo
+  description, tagline or other public-facing pitch is the owner's copy: set it
+  verbatim as given and NEVER re-litigate the wording, in review or in an eval
+  report.
+- NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
+  local files (HTML, MD) the user opens themselves.
+
+## Agents
+
+- 1-2 subagents typically, NEVER more than 4.
+- Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
+  code-editing subs in parallel on a shared tree — they interleave, one reverts
+  another, reviewers read half-edited files.
+- Brief a subagent by GOAL, not numbered steps — models degrade on
+  over-prescription. Give the goal, the context it needs, what is out of bounds
+  and what "done" looks like, then let it choose the path.
+- ALWAYS run autonomous code generation — a sub writing a comprehensive or
+  multi-file change that no parent reads before the work goes on — on
+  `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
+  not tokens. Cheap models are for READ-ONLY fan-out. Bigger work: ALWAYS plan
+  in the main thread (an `/opus` sub from Sonnet or Haiku), then run each step
+  on a `sonnet` sub and read its diff before the next (`sonnet` § Plan, then
+  execute); a step read that way, here or in `ship`, is not autonomous.
+- ALWAYS check the diff or output a subagent produced before repeating its
+  report — they overclaim, and occasionally report work they did not do.

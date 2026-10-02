@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-import importlib.util
+import contextlib
 import json
 import os
 import re
 import sys
 
-spec = importlib.util.spec_from_file_location(
-    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
-)
-hook_state = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(hook_state)
-session_state = hook_state.session_state
-hook_event = hook_state.hook_event
+from lib.state import hook_event
+from lib.state import session_state
 
 RULES = """Development reminders:
 - ALWAYS use make for build/lint/test/clean
@@ -38,8 +33,6 @@ def main():
     session_id = data.get('session_id') or 'default'
     cwd = data.get('cwd') or '.'
 
-    # Session-keyed, not cwd-keyed: cd'ing to another repo mid-session used to
-    # reset this and re-inject LOCAL.md as if the session had just started.
     state_file = session_state('local', session_id)
 
     parts = []
@@ -61,10 +54,8 @@ def main():
                     pass
 
         if first_prompt and state_file is not None:
-            try:
+            with contextlib.suppress(OSError):
                 open(state_file, 'w').close()
-            except OSError:
-                pass
 
     prompt_lower = prompt.lower()
     if not re.search(r'\b(don\'?t|not|never)\s+\w*\s*(continue|recap)', prompt_lower) and re.search(

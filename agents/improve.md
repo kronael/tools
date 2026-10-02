@@ -1,5 +1,7 @@
 ---
 name: improve
+model: claude-sonnet-5-5
+effort: high
 description: Improve, enhance, fix, cleanup, refactor, optimize, polish code quality.
 tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 ---

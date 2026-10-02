@@ -26,8 +26,33 @@ def test_code_does_not_route_to_codex() -> None:
 
 
 def test_codex_route_requires_explicit_second_opinion() -> None:
-    assert explicit_route('ask codex for a second opinion') == '/codex'
-    assert explicit_route('oracle this') == '/codex'
+    assert explicit_route('ask codex for a second opinion') == '/astra'
+    assert explicit_route('oracle this') == '/astra'
+
+
+@pytest.mark.parametrize('skill', ['astra', 'sol'])
+def test_slash_route_to_astra_and_sol_suppressed_in_codex(skill) -> None:
+    assert explicit_route(f'/{skill} handle this') == f'/{skill}'
+    assert explicit_route(f'/{skill} handle this', harness='codex') is None
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'use SOL as collateral on the perp',
+        'run sol through the swap simulator',
+        'use astra db for vectors',
+        'ls /sol/data',
+        'cd /astra',
+        'sol configuration',
+    ],
+)
+def test_bare_astra_and_sol_words_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+def test_ask_astra_routes_like_ask_codex() -> None:
+    assert explicit_route('ask astra about this design') == '/astra'
 
 
 def test_codex_route_suppressed_inside_codex() -> None:

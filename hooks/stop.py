@@ -1,71 +1,67 @@
 #!/usr/bin/env python3
-"""Stop hook: nudge commit and diary if needed, else recap the turn.
+"""Stop hook: nudge commit and diary when either is due.
 
-Both nudges are throttled by stamps. The commit stamp lives in the repo's git
-dir and expires after NUDGE_INTERVAL; the diary stamp is session-keyed in
-~/.claude/state (lib/state.py) and never expires, so the diary nudge fires at
-most once per session no matter how many repos the session visits.
+Silent in a ship child that judges rather than builds: SHIP_ROLE set to
+anything but a worker. Workers keep the nudges; the commit nudge is what
+makes them commit.
 """
 
-import contextlib
-import importlib.util
 import json
 import os
 import subprocess
 import sys
-import time
 from datetime import UTC
 from datetime import datetime
 
-spec = importlib.util.spec_from_file_location(
-    'hook_state', os.path.expanduser('~/.claude/hooks/lib/state.py')
-)
-hook_state = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(hook_state)
-session_state = hook_state.session_state
-
 NUDGE_INTERVAL = 600
-DIARY_INTERVAL = None
-DIARY_STALE = 3600
-RECAP_BUDGET = 0.6
-RECAP_COMMITS = 6
-RECAP_PATHS = 4
-CONFLICT_CODES = frozenset({'DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU'})
-STUCK_OPS = {
-    'MERGE_HEAD': 'merge',
-    'rebase-merge': 'rebase',
-    'rebase-apply': 'rebase',
-    'CHERRY_PICK_HEAD': 'cherry-pick',
-    'REVERT_HEAD': 'revert',
-    'BISECT_LOG': 'bisect',
-}
 
 
 def git_run(cwd, *args, timeout=5):
-    try:
-        return subprocess.run(
-            args, capture_output=True, text=True, timeout=timeout, cwd=cwd, check=False
-        )
-    except subprocess.TimeoutExpired:
-        return subprocess.CompletedProcess(args, 1, '', 'timed out')
+    return subprocess.run(
+        args, capture_output=True, text=True, timeout=timeout, cwd=cwd, check=False
+    )
 
 
-def git_dir(cwd, deadline, run=git_run):
-    """Absolute git dir, or None outside a repo, on failure, or past the deadline."""
-    gd = recap_git(cwd, deadline, run, 'rev-parse', '--git-dir')
-    if gd is None:
+def git_dir(cwd):
+    """Absolute git dir, or None outside a repo or on failure."""
+    r = git_run(cwd, 'git', 'rev-parse', '--git-dir')
+    if r.returncode != 0:
         return None
-    gd = gd.strip()
+    gd = r.stdout.strip()
     if not os.path.isabs(gd):
         gd = os.path.join(cwd, gd)
     return gd
 
 
 def git_path(cwd, name):
-    gd = git_dir(cwd, time.monotonic() + 5)
-    if gd is None:
+    gd = git_dir(cwd)
+    return None if gd is None else os.path.join(gd, name)
+
+
+def rev_parse(cwd, *args):
+    r = git_run(cwd, 'git', 'rev-parse', *args)
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def diary_trees(cwd):
+    """(current worktree, main worktree), or None outside a repo.
+
+    The main tree is not dirname(common dir): in a submodule or a
+    --separate-git-dir repo the common dir is a git dir elsewhere. Only a
+    linked worktree has a git dir that differs from the common one.
+    """
+    git_dir = rev_parse(cwd, '--absolute-git-dir')
+    common = rev_parse(cwd, '--path-format=absolute', '--git-common-dir')
+    if git_dir is None or common is None:
         return None
-    return os.path.join(gd, name)
+    worktree = rev_parse(cwd, '--show-toplevel') or cwd
+    if os.path.realpath(git_dir) == os.path.realpath(common):
+        return worktree, worktree
+    r = git_run(cwd, 'git', 'config', '--file', os.path.join(common, 'config'), 'core.worktree')
+    configured = r.stdout.strip() if r.returncode == 0 else ''
+    if configured:
+        return worktree, os.path.normpath(os.path.join(common, configured))
+    return worktree, os.path.dirname(common)
 
 
 def write_stamp(path, text):
@@ -76,28 +72,21 @@ def write_stamp(path, text):
         pass
 
 
-def read_stamp(path):
-    """ISO time stored in a stamp, or '' when the stamp is missing or unreadable."""
-    try:
-        with open(path) as f:
-            text = f.read().strip()
-        datetime.fromisoformat(text)
-    except (OSError, ValueError):  # fmt: skip
-        return ''
-    return text
-
-
-def nudge_due(stamp, now, interval=NUDGE_INTERVAL):
-    """True if this nudge may fire. interval None means once per stamp, ever."""
+def nudge_due(stamp, now):
     if stamp is None or not os.path.exists(stamp):
         return True
-    if interval is None:
-        return False
-    return now.timestamp() - os.path.getmtime(stamp) >= interval
+    return now.timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
 
 
 def hook_event(data):
-    return os.environ.get('KRONAEL_HOOK_EVENT') or hook_state.hook_event(data)
+    env_event = os.environ.get('KRONAEL_HOOK_EVENT')
+    if env_event:
+        return env_event
+    for key in 'hook_event', 'hook_event_name', 'hookEventName':
+        value = data.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ''
 
 
 def emit(parts, data):
@@ -117,14 +106,9 @@ def emit(parts, data):
     print(json.dumps({'decision': 'block', 'reason': reason}))
 
 
-def emit_recap(recap):
-    print(json.dumps({'ok': True, 'systemMessage': recap}))
-
-
-def nudges(cwd, session_id, now):
+def nudges(cwd, now):
     parts = []
 
-    # Uncommitted changes
     stamp = git_path(cwd, 'claude-commit-nudge')
     r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
     if stamp is not None and r.returncode != 0:
@@ -144,172 +128,38 @@ def nudges(cwd, session_id, now):
             'premature fragments. Run /commit.\n'
             'Rules: "type(scope): Message" (scope optional), subject <= 72 chars '
             '(overflow -> second '
-            '-m body); NEVER add -A, -a, --amend, push, squash, '
+            '-m body); NEVER add -A, -a, --amend, push, squash, Co-Authored-By, '
             '--no-verify.'
         )
         parts.append(msg)
         if stamp is not None:
             write_stamp(stamp, now.isoformat())
 
-    # Diary freshness (missing today or stale > 1h) — once per session, only
-    # inside a git repo. --git-common-dir resolves to the main repo's .git even
-    # from a worktree.
-    diary_stamp = session_state('diary-nudge', session_id)
-    common = git_run(cwd, 'git', 'rev-parse', '--git-common-dir')
-    if common.returncode == 0 and nudge_due(diary_stamp, now, DIARY_INTERVAL):
-        common_dir = common.stdout.strip()
-        if not os.path.isabs(common_dir):
-            common_dir = os.path.join(cwd, common_dir)
-        diary_dir = os.path.join(os.path.dirname(common_dir), '.diary')
+    # Diary freshness (missing today or stale > 1h) — only inside a git repo.
+    # A tracked diary is committed on its branch, so it lives in the current
+    # worktree; an ignored one keeps a single copy in the main tree.
+    trees = diary_trees(cwd)
+    if trees is not None:
+        worktree, main_tree = trees
+        dated = '.diary/' + now.strftime('%Y%m%d') + '.md'
+        ignored = git_run(worktree, 'git', 'check-ignore', '-q', dated).returncode == 0
+        base = main_tree if ignored else worktree
+        diary_dir = os.path.join(base, '.diary')
         diary_file = os.path.join(diary_dir, now.strftime('%Y%m%d') + '.md')
         hhmm = now.strftime('%H:%M %Y-%m-%d')
         if not os.path.exists(diary_file):
-            state = f'No diary entry for today (now {hhmm}). Run /diary.'
-        elif now.timestamp() - os.path.getmtime(diary_file) > DIARY_STALE:
-            state = (
+            parts.append(f'No diary entry for today (now {hhmm}). Run /diary.')
+        elif now.timestamp() - os.path.getmtime(diary_file) > 3600:
+            parts.append(
                 f'Diary not updated in over an hour (now {hhmm}). '
                 'Run /diary deliberately if there is work to record.'
             )
-        else:
-            state = None
-        if state:
-            parts.append(state)
-            if diary_stamp is not None:
-                write_stamp(diary_stamp, now.isoformat())
     return parts
 
 
-def recap_git(cwd, deadline, run, *args):
-    """stdout of a git command, or None once it fails or the deadline is spent."""
-    left = deadline - time.monotonic()
-    if left <= 0:
-        return None
-    r = run(cwd, 'git', *args, timeout=left)
-    if r.returncode != 0:
-        return None
-    return r.stdout
-
-
-def landed_lines(cwd, deadline, run, since):
-    """Commits landed in the window, or None when the git call fails."""
-    if not since:
-        head = recap_git(cwd, deadline, run, 'log', '-n', '1', '--format=%h %s')
-        return None if head is None else ['head ' + head.strip()]
-    log = recap_git(cwd, deadline, run, 'log', f'--since={since}', '-n', '200', '--format=%h %s')
-    if log is None:
-        return None
-    commits = log.splitlines()
-    hhmm = datetime.fromisoformat(since).strftime('%H:%M')
-    if not commits:
-        return [f'since {hhmm}Z: no commits']
-    n = len(commits)
-    header = f'since {hhmm}Z: {n} commit' + ('s' if n != 1 else '')
-    if n > RECAP_COMMITS:
-        header += f', newest {RECAP_COMMITS}'
-    return [header] + ['+ ' + c for c in commits[:RECAP_COMMITS]]
-
-
-def plus_minus(numstat):
-    plus = 0
-    minus = 0
-    for line in numstat.splitlines():
-        added, deleted, _ = line.split('\t', 2)
-        if added.isdigit():
-            plus += int(added)
-        if deleted.isdigit():
-            minus += int(deleted)
-    return f'+{plus} -{minus}'
-
-
-def is_new(top, path, since_ts):
-    if since_ts is None:
-        return False
-    try:
-        return os.path.getmtime(os.path.join(top, path)) > since_ts
-    except OSError:
-        return False
-
-
-def dirty_lines(top, status, numstat, since_ts):
-    """Untracked paths count only when touched inside the window: the rest is old noise."""
-    changed = 0
-    conflicted = 0
-    untracked = 0
-    no_window = False
-    paths = []
-    records = iter(status.split('\0'))
-    for record in records:
-        if not record:
-            continue
-        code = record[:2]
-        path = record[3:]
-        if 'R' in code or 'C' in code:
-            next(records, None)  # rename/copy: the source path follows as its own record
-        if code == '??':
-            if not is_new(top, path, since_ts):
-                no_window = since_ts is None
-                continue
-            untracked += 1
-        elif code in CONFLICT_CODES:
-            conflicted += 1
-        else:
-            changed += 1
-        paths.append(path)
-    if not paths:
-        return ['no tracked changes'] if no_window else ['nothing uncommitted']
-    counts = []
-    if changed:
-        counts.append(f'{changed} changed')
-    if conflicted:
-        counts.append(f'{conflicted} conflicted')
-    if untracked:
-        counts.append(f'{untracked} untracked')
-    header = 'uncommitted: ' + ', '.join(counts)
-    if numstat:
-        header += f' ({plus_minus(numstat)})'
-    shown = ' '.join(paths[:RECAP_PATHS])
-    if len(paths) > RECAP_PATHS:
-        shown += ' …'
-    return [header, '  ' + shown]
-
-
-def stuck_lines(gd):
-    ops = sorted({op for name, op in STUCK_OPS.items() if os.path.exists(os.path.join(gd, name))})
-    return [', '.join(ops) + ' in progress'] if ops else []
-
-
-def build_recap(cwd, session_id, now, run=git_run, budget=RECAP_BUDGET):
-    """Compact turn recap: commits landed, dirty tree, stuck git operations."""
-    deadline = time.monotonic() + budget
-    gd = git_dir(cwd, deadline, run)
-    if gd is None:
-        return ''
-    session = str(session_id or 'default').replace('/', '_')
-    stamp = os.path.join(gd, f'claude-recap-{session}')
-    since = read_stamp(stamp)
-    since_ts = datetime.fromisoformat(since).timestamp() if since else None
-    lines = landed_lines(cwd, deadline, run, since)
-    status = recap_git(cwd, deadline, run, 'status', '--porcelain', '-z')
-    top = recap_git(cwd, deadline, run, 'rev-parse', '--show-toplevel')
-    if lines is None or status is None or top is None:
-        return ''
-    numstat = recap_git(cwd, deadline, run, 'diff', '--numstat', 'HEAD')
-    lines += dirty_lines(top.strip(), status, numstat, since_ts)
-    lines += stuck_lines(gd)
-    write_stamp(stamp, now.isoformat(timespec='seconds'))
-    return '\n'.join(lines)
-
-
-def safe_recap(cwd, session_id, now, run=git_run):
-    """The recap is best effort: any failure drops it and never touches the nudges."""
-    recap = ''
-    with contextlib.suppress(Exception):
-        recap = build_recap(cwd, session_id, now, run)
-    return recap
-
-
-def recap_wanted(data):
-    return hook_event(data) != 'PostToolUse' and not os.environ.get('KRONAEL_IN_CODEX')
+def is_ship_judge():
+    role = os.environ.get('SHIP_ROLE', '')
+    return bool(role) and not role.startswith('worker')
 
 
 def main():
@@ -320,18 +170,14 @@ def main():
 
     if not isinstance(data, dict) or os.environ.get('CLAUDE_EVAL'):
         sys.exit(0)
+    if is_ship_judge():
+        sys.exit(0)
 
     cwd = data.get('cwd', '.')
-    session_id = data.get('session_id')
     now = datetime.now(tz=UTC)
-    parts = [] if data.get('stop_hook_active') else nudges(cwd, session_id, now)
+    parts = [] if data.get('stop_hook_active') else nudges(cwd, now)
     if parts:
         emit(parts, data)
-        return
-    if recap_wanted(data):
-        recap = safe_recap(cwd, session_id, now)
-        if recap:
-            emit_recap(recap)
 
 
 if __name__ == '__main__':

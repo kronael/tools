@@ -4,10 +4,6 @@ import "testing"
 
 func run(in string) string { return string(process([]byte(in))) }
 
-// TestJunctionTable checks that a junction with a given set of connecting
-// neighbors is rewritten to the expected box-drawing character. Each case
-// centers the junction at row 1, column 1 and surrounds it with the segments
-// that should (and should not) connect.
 func TestJunctionTable(t *testing.T) {
 	tests := []struct {
 		name, in, want string
@@ -93,12 +89,10 @@ func lintOf(in string) []issue {
 	return lint(lines)
 }
 
-// TestLint covers the non-mutating checker: real junction defects and ASCII
-// arrows are reported, while correct diagrams and tree stubs are clean.
 func TestLint(t *testing.T) {
 	tests := []struct {
 		name, in string
-		want     int // number of issues expected
+		want     int
 	}{
 		{"correct box is clean", "┌─┬─┐\n│ │ │\n└─┴─┘", 0},
 		{"tree listing is clean (overspecified branches tolerated)",

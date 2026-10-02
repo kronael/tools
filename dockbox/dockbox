@@ -2,6 +2,8 @@
 set -euo pipefail
 
 IMAGE="dockbox"
+SECCOMP="$HOME/.local/share/dockbox/seccomp.json"
+CAPS=(sys_nice ipc_lock sys_ptrace)
 
 EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
 # dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
@@ -36,8 +38,6 @@ eph_no_tmpfs=""
 claude_args=()
 exec_cmd=()
 
-# Apply one parsed flag. Single source of truth for flag semantics, shared by
-# the command line and both rc files.
 apply_flag() {
     case "$1" in
         n)
@@ -64,16 +64,55 @@ apply_flag() {
     return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
 }
 
-# Decide whether container $1 matches the user's rm pattern $2. Empty never
-# matches (the caller requires a pattern); a pattern with * or ? is a glob,
-# otherwise an exact match on the bare or dockbox- prefixed name.
 rm_matches() {
-    _n="$1"; _pat="$2"
-    [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
-    case "$_pat" in
-        *[*?]*) case "$_n" in $_pat|dockbox-$_pat) return 0 ;; *) return 1 ;; esac ;;
-        *) [[ "$_n" == "$_pat" || "$_n" == "dockbox-$_pat" ]] ;;
-    esac
+    local pat="$2"
+    [[ "$pat" == dockbox-* ]] || pat="dockbox-$pat"
+    [[ "$1" == $pat ]]
+}
+
+# Total the tmpfs rows of `df -k --output=fstype,used,target` on stdin, each
+# mount once by target (df resamples it per path on it), printed as M or G.
+tmpfs_used() {
+    awk '$1 == "tmpfs" {
+            target = $0; sub(/^[^ ]+ +[^ ]+ +/, "", target)
+            if (!seen[target]++) kb += $2
+        }
+        END {
+            if (kb >= 1048576) printf "%.1fG\n", kb / 1048576
+            else printf "%dM\n", kb / 1024
+        }'
+}
+
+# Classify `docker top` output on stdin (ps -ef columns, CMD from field 8): idle
+# when only the docker-init and sleep keepers run, else busy; fails if none run.
+box_use() {
+    awk '$2 == "PID" { next }
+        {
+            cmd = $8
+            for (i = 9; i <= NF; i++) cmd = cmd " " $i
+            n++
+            if (cmd != "/sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity" &&
+                cmd != "sleep infinity") busy = 1
+        }
+        END {
+            if (!n) exit 1
+            print busy ? "busy" : "idle"
+        }'
+}
+
+resolver_on() {
+    awk -v addr="$1" '{
+            l = $4
+            sub(/:[0-9]+$/, "", l)
+            dev = sub(/%.*$/, "", l)
+            if (l == addr || (!dev && (l == "0.0.0.0" || l == "*"))) found = 1
+        }
+        END { exit !found }'
+}
+
+loopback_resolver() {
+    awk '$1 == "nameserver" { n++; if ($2 !~ /^(127\.|::1$)/) other = 1 }
+        END { exit !(n && !other) }' "$1"
 }
 
 # Print the box's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
@@ -127,44 +166,91 @@ EOF
 
 case "${1:-}" in
     ls)
-        docker container ls -a --filter "name=^dockbox-" \
-            --format "table {{.Names}}\t{{.Status}}\t{{.RunningFor}}"
+        {
+            printf 'NAMES\tSTATUS\tCREATED\tUSE\tTMPFS\tDISK\n'
+            docker container ls -a -s --filter "name=^dockbox-" \
+                --format "{{.Names}}\t{{.State}}\t{{.Status}}\t{{.RunningFor}}\t{{.Size}}" \
+                | while IFS=$'\t' read -r n state status created size; do
+                use="-"
+                tmpfs="-"
+                [[ "$state" == running ]] && {
+                    use=$(docker top "$n" | box_use) || use="?"
+                    tmpfs=$(docker exec "$n" sh -c \
+                        'set -f; IFS=:; set -- /tmp /tmp/cargo-target /dev/shm
+                        for p in $DOCKBOX_EPH_PATHS; do
+                            [ -e "$p" ] && set -- "$@" "$p"
+                        done
+                        df -k --output=fstype,used,target "$@"' \
+                        | tmpfs_used) || tmpfs="?"
+                }
+                printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+                    "$n" "$status" "$created" "$use" "$tmpfs" "${size%% (*}"
+            done
+        } | column -t -s $'\t'
         exit 0 ;;
     rm)
-        pattern="${2:-}"
+        shift
+        [[ $# -eq 0 ]] && { echo "dockbox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
+        patterns=()
+        for p in "$@"; do
+            case "$p" in
+                -a|--all) patterns+=('*') ;;
+                -*) echo "dockbox rm: unknown option '$p'" >&2; exit 2 ;;
+                *) patterns+=("$p") ;;
+            esac
+        done
         names=$(docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
-        [[ -z "$names" ]] && { echo "no dockbox containers"; exit 0; }
-        [[ -z "$pattern" ]] && { echo "dockbox rm: a name or glob is required (-a / '*' removes all)" >&2; exit 2; }
-        case "$pattern" in -a|--all) pattern='*' ;; esac
-        matched=""
-        while read -r n; do
-            [[ -z "$n" ]] && continue
-            rm_matches "$n" "$pattern" || continue
-            docker rm -f "$n" && echo "removed $n"
-            matched=1
-        done <<< "$names"
-        [[ -z "$matched" && -n "$pattern" ]] && echo "no match for '$pattern'"
-        exit 0 ;;
+        rc=0
+        targets=()
+        for p in "${patterns[@]}"; do
+            matched=""
+            while read -r n; do
+                [[ -z "$n" ]] && continue
+                rm_matches "$n" "$p" || continue
+                matched=1
+                case " ${targets[*]} " in *" $n "*) ;; *) targets+=("$n") ;; esac
+            done <<< "$names"
+            [[ -z "$matched" ]] && { echo "dockbox rm: no match for '$p'" >&2; rc=1; }
+        done
+        for n in "${targets[@]}"; do
+            if docker rm -f -v "$n" >/dev/null; then
+                echo "removed $n"
+            else
+                rc=1
+            fi
+        done
+        exit "$rc" ;;
     prune)
         hours="${2:-2160}"
-        cutoff=$(date -d "-${hours} hours" +%s 2>/dev/null) || \
-            cutoff=$(date -v-${hours}H +%s)
-        docker container ls -a \
-            --filter "name=^dockbox-" --filter "status=exited" \
-            --format "{{.Names}}\t{{.CreatedAt}}" \
-            | while IFS=$'\t' read -r name created; do
-            ts=$(date -d "$created" +%s 2>/dev/null) || \
-                ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" \
-                    "$created" +%s)
-            [[ "$ts" -lt "$cutoff" ]] && \
-                docker rm "$name" && echo "removed $name"
-        done
-        exit 0 ;;
+        [[ "$hours" =~ ^[0-9]+$ ]] || { echo "dockbox prune: hours must be a whole number, got '$hours'" >&2; exit 2; }
+        now=$(date +%s)
+        cutoff=$((now - 10#$hours * 3600))
+        grace=$((now - 4 * 3600))
+        rows=$(docker container ls -a --filter "name=^dockbox-" \
+            --format "{{.Names}}\t{{.State}}\t{{.CreatedAt}}")
+        rc=0
+        while IFS=$'\t' read -r n state created; do
+            [[ -z "$n" ]] && continue
+            ts=$(date -d "${created% *}" +%s 2>/dev/null) || \
+                ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" "${created% *}" +%s)
+            use="-"
+            if [[ "$state" == running && "$ts" -le "$grace" ]]; then
+                use=$(docker top "$n" | box_use) || use="?"
+            fi
+            if [[ "$use" == idle || ( "$state" == exited && "$ts" -lt "$cutoff" ) ]]; then
+                if docker rm -f -v "$n" >/dev/null; then
+                    echo "removed $n"
+                else
+                    rc=1
+                fi
+            fi
+        done <<< "$rows"
+        exit "$rc" ;;
     -h|--help)
         cat <<EOF
 Usage: dockbox [options] [tool] [dirs...] [tool-args...]
-       dockbox ls | rm <pattern|-a> | prune [hours]
+       dockbox ls | rm <name|glob|-a>... | prune [hours]
        dockbox [options] bash [dirs...]
        dockbox [options] exec <cmd> [args...]
 
@@ -173,7 +259,7 @@ Tools (first positional arg — no leading dash):
     claude          Claude Code, opus (same as default)
     codex           Codex -m gpt-5.6-sol @ xhigh (no sandbox/approvals)
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
-    sonnet          Claude Code --model claude-sonnet-5    (fast workhorse)
+    sonnet          Claude Code --model claude-sonnet-5-5    (fast workhorse)
     opus            Claude Code --model claude-opus-5-5      (default; xhigh)
     fable           Claude Code --model claude-fable-5-1   (max effort)
     gpt             Codex -m gpt-6-astra        (big)
@@ -183,13 +269,18 @@ Tools (first positional arg — no leading dash):
     exec <cmd>      Run <cmd> in the box, every later arg passed through
     <any cmd>       Any binary installed in the image
 
+Boxes:
+    ls              List boxes: USE busy/idle (idle: safe to rm), TMPFS (RAM), DISK
+    rm <name>...    Force-remove boxes and their volumes; globs ok, -a = all
+    prune [hours]   Remove idle boxes 4+ h old, exited ones over [hours] old (2160)
+
 Options:
     -n name    Key the container on this name, not the primary dir basename
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
-    -T         Disable tmpfs; use anonymous Docker volumes (disk) instead
+    -T         Build-dir overmounts on disk volumes; \$HOME and /tmp stay tmpfs
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -198,10 +289,18 @@ Options:
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
+Kernel:
+    io_uring works: boxes run moby's default seccomp profile plus the
+    io_uring syscalls, which make seccomp puts at
+        $SECCOMP
+    Sessions in a box created with ${CAPS[*]^^} hold them as
+    ambient caps, so nice, realtime priorities, mlock and ptrace attach
+    work as your user.
+
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
-    the container, owned by the container user, gone when the container
-    exits. Recursive (monorepo workspaces included).
+    the container, owned by the container user, removed with the box.
+    Recursive (monorepo workspaces included).
 
     Container starts as root; dockbox-init registers the host invoker in
     /etc/passwd, chowns \$HOME (/home/dockbox tmpfs) plus every overmount to
@@ -211,7 +310,7 @@ Ephemeral builds (default):
     Two backends pick the overmount type only:
       tmpfs  (default) — kernel tmpfs. RAM-backed.
       volume (-T)      — anonymous Docker volume. Disk-backed.
-                         No host footprint after --rm.
+                         Removed with the box.
 
     Pass -P / --no-ephemeral to disable both and see host build dirs.
 
@@ -219,8 +318,8 @@ Ephemeral builds (default):
     (dist/build excluded — build tools rm -rf them, hitting EBUSY on a mountpoint)
 
 Examples:
-    dockbox                           # current dir, sonnet @ medium (default)
-    dockbox ~/wk/project              # mount project, sonnet
+    dockbox                           # current dir, opus @ xhigh (default)
+    dockbox ~/wk/project              # mount project, opus
     dockbox haiku ~/wk/project        # drop to haiku for speed/cost
     dockbox codex ~/wk/project        # OpenAI Codex
     dockbox bash                      # interactive shell
@@ -229,7 +328,7 @@ Examples:
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
     dockbox -P                        # keep host build dirs (no overmount)
-    dockbox -T                        # disk-backed volumes (disable tmpfs)
+    dockbox -T                        # build-dir overmounts on disk volumes
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -242,8 +341,14 @@ of starting a new one. Tool/model/effort and env flags (-e, -g) apply to the
 session; mount/network flags (-v, -H, -D) don't — they're fixed when the
 container is created. Use -n <name> to force a separate, fully-provisioned box.
 
-Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
-        ~/.gitconfig (ro), ~/.dockbox_history (rw)
+Mounts: ~/.claude (rw; ~/.claude/sessions is a private tmpfs, so boxes and
+        the host never list or message each other's Claude sessions),
+        ~/.claude.json (ephemeral), ~/.gitconfig (ro), ~/.dockbox_history (rw)
+
+DNS:    A bridge box gets a resolver listening on the bridge gateway (e.g.
+        systemd-resolved with DNSStubListenerExtra=172.17.0.1), which follows
+        the host across network changes; without one Docker copies the current
+        network's servers into the box once, at creation. -H uses the host's.
 
 Sandbox note: /etc/claude-code/CLAUDE.md (generated, ro) tells the agent it
         is boxed and what survives; CLAUDE_SANDBOX=dockbox is set.
@@ -251,13 +356,11 @@ Sandbox note: /etc/claude-code/CLAUDE.md (generated, ro) tells the agent it
 Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
         dockbox flags, one per line, # comments ok. The command line
         overrides ~/.dockboxrc. Project .dockboxrc takes the safe
-        subset only — -A/-D/-S are ignored there (use ~/.dockboxrc).
+        subset only — -A/-D/-K/-S/-n/-d/-x are ignored there (use ~/.dockboxrc).
 EOF
         exit 0 ;;
 esac
 
-# Read whitespace-split flag tokens from an rc file into global rc_tokens.
-# Blank lines and # comments ignored. Missing file -> empty.
 read_rc() {
     rc_tokens=()
     [[ -f "$1" ]] || return 0
@@ -268,35 +371,46 @@ read_rc() {
     done < "$1"
 }
 
+# Apply the long flags getopts can't parse and leave the rest in stripped[].
+# $1 is the rc file the words came from, or "" for the command line. Any other
+# --word in an rc file is an error: getopts would read it as short flags. On
+# the command line it belongs to the tool and passes through.
+strip_long() {
+    local src="$1" a
+    shift
+    stripped=()
+    for a in "$@"; do
+        case "$a" in
+            --no-ephemeral) persist_builds=1 ;;
+            --*)
+                [[ -z "$src" ]] || { echo "dockbox: unknown flag $a in $src" >&2; exit 1; }
+                stripped+=("$a") ;;
+            *) stripped+=("$a") ;;
+        esac
+    done
+}
+
 # ~/.dockboxrc: default flags, prepended so the command line overrides them.
 read_rc "$HOME/.dockboxrc"
-set -- "${rc_tokens[@]}" "$@"
+strip_long "$HOME/.dockboxrc" "${rc_tokens[@]}"
+set -- "${stripped[@]}" "$@"
 
-# pre-strip long flags getopts can't parse
-_args=()
-for a in "$@"; do
-    case "$a" in
-        --no-ephemeral) persist_builds=1 ;;
-        *) _args+=("$a") ;;
-    esac
-done
-set -- "${_args[@]}"
+strip_long "" "$@"
+set -- "${stripped[@]}"
 
 while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
 
-# First positional arg: if not a path and -x wasn't given, it's the tool.
-# Model aliases map to claude with --model; anything else is the binary name.
 if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
     case "$1" in
-        /*|./*|.|~*) : ;;  # path — use default entrypoint
+        /*|./*|.|~*) : ;;
         *)
             _tool="$1"; shift
             case "$_tool" in
                 haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
-                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5 --effort high "${claude_args[@]}") ;;
+                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5-5 --effort high "${claude_args[@]}") ;;
                 opus)   entrypoint=claude; claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}") ;;
                 fable)  entrypoint=claude; claude_args=(--model claude-fable-5-1 "${claude_args[@]}") ;;
                 codex)  entrypoint=codex; claude_args=(-m gpt-5.6-sol -c model_reasoning_effort=xhigh "${claude_args[@]}") ;;
@@ -328,18 +442,21 @@ _primary_dir="$(cd "${dirs[-1]}" && pwd)"
 # silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
 # or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
 read_rc "$_primary_dir/.dockboxrc"
-OPTIND=1
-while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
-    case "$opt" in
-        A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
-        *) apply_flag "$opt" "${OPTARG:-}" ;;
-    esac
-done
-_session_dir="$HOME/.claude/projects/${_primary_dir//\//-}"
+strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
+rc_tokens=("${stripped[@]}")
+# getopts with no words parses "$@", the command-line leftovers: skip it.
+if (( ${#rc_tokens[@]} )); then
+    OPTIND=1
+    while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
+        case "$opt" in
+            A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            *) apply_flag "$opt" "${OPTARG:-}" ;;
+        esac
+    done
+fi
+_session_dir="$HOME/.claude/projects/${_primary_dir//[^A-Za-z0-9]/-}"
 _has_session=""
 ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-# Default tool: opus at high effort — the workhorse. Explicit model
-# aliases (haiku/sonnet/opus/fable) and -m/--model skip this.
 if [[ "$entrypoint" == "claude" ]] && \
    ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
     claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}")
@@ -366,25 +483,49 @@ CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 # Every session is a `docker exec` into a detached, long-lived container whose
 # PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
 # container is removed only after the LAST session exits — a session quitting
-# never tears the container out from under other live execs. Run as the host
-# user: exec defaults to --user 0:0 and skips dockbox-init's gosu-drop, so
-# without -u the session would be root. $@ = extra docker-exec flags (e.g. -w).
+# never tears the container out from under other live execs. exec skips
+# dockbox-init's gosu-drop, so the session enters as root and setpriv drops it
+# to the host user: `docker exec -u` would leave it no capabilities, setpriv
+# keeps CAPS ambient, and --init-groups reads the groups dockbox-init
+# registered, the set `-u uid:gid` gives. It asks only for the CAPS the box was
+# created with, so a box started without them still enters, without them.
+# $@ = extra docker-exec flags (-w).
 enter_session() {
     trap '' TSTP
-    local sid="$$"
-    docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$sid" 2>/dev/null
+    local rc=0 owner have c caps="" cap_opts=()
+    owner=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER_NAME" \
+        | sed -n 's/^DOCKBOX_UID=//p')
+    [[ -z "$owner" || "$owner" == "$(id -u)" ]] || {
+        echo "dockbox: $CONTAINER_NAME belongs to UID $owner -- use -n <name> for a box of your own" >&2
+        exit 1
+    }
+    have=$(docker inspect -f '{{join .HostConfig.CapAdd ","}}' "$CONTAINER_NAME")
+    for c in "${CAPS[@]}"; do
+        [[ ",$have," == *",CAP_${c^^},"* ]] && caps+="${caps:+,}+$c"
+    done
+    [[ -n "$caps" ]] && cap_opts=(--inh-caps="$caps" --ambient-caps="$caps")
+    docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$$" 2>/dev/null
+    trap leave_session EXIT
+    trap 'exit 129' HUP
+    trap 'exit 143' TERM
     # Forward run-time env (-e / -g token) into this exec too: unlike mounts and
     # network, env CAN be set per-exec, so a box first started without -g still
     # gets the token when a later invocation passes it.
-    docker exec -it -u "$(id -u):$(id -g)" -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" "${cmd[@]}"
-    local rc=$? left
-    # Only tear down when the count SUCCEEDS and is zero. A docker-exec hiccup
-    # leaves $left empty -> keep the container up (a sibling may still hold it)
-    # rather than removing it out from under a live session.
-    left=$(docker exec "$CONTAINER_NAME" sh -c \
-        "rm -f /run/dockbox/sess/$sid; ls /run/dockbox/sess 2>/dev/null | wc -l" 2>/dev/null) || left=""
-    [[ -n "$left" && "$left" -eq 0 ]] && docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1
+    docker exec -it -u 0:0 -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" \
+        setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups \
+        "${cap_opts[@]}" -- "${cmd[@]}" || rc=$?
     exit "$rc"
+}
+
+# enter_session's EXIT trap: drop this session's marker, then remove the box
+# only when the marker dir lists empty; a failed listing keeps the box up.
+leave_session() {
+    local left
+    left=$(docker exec "$CONTAINER_NAME" sh -c \
+        "rm -f /run/dockbox/sess/$$; ls /run/dockbox/sess" 2>/dev/null) || return 0
+    if [[ -z "$left" ]]; then
+        docker rm -f -v "$CONTAINER_NAME" >/dev/null || true
+    fi
 }
 
 # Container already up — re-enter it. No -w: inherit the container's working
@@ -397,6 +538,11 @@ if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
     enter_session
 fi
 
+[[ -f "$SECCOMP" ]] || {
+    echo "dockbox: no seccomp profile at $SECCOMP -- run 'make seccomp' in the dockbox source dir" >&2
+    exit 1
+}
+
 mounts=()
 workdir=""
 
@@ -406,6 +552,17 @@ for m in "${MOUNTS[@]}"; do
     src="${m%%:*}"
     [[ -e "$src" ]] && mounts+=(-v "$m")
 done
+
+dns_args=()
+if [[ ${#network_arg[@]} -eq 0 ]]; then
+    gw=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+    if [[ -n "$gw" ]] && command -v ss >/dev/null \
+        && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
+        dns_args=(--dns "$gw")
+    elif loopback_resolver /etc/resolv.conf; then
+        echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
+    fi
+fi
 
 # Override settings.json with sandbox disabled — settings.local.json alone does
 # not suppress the sandbox restart loop when the host settings.json enables it.
@@ -495,9 +652,19 @@ extra_env+=(-e "DOCKBOX_GID=$(id -g)")
 extra_env+=(-e "DOCKBOX_USER=$(id -un)")
 [[ -n "$grant_sudo" ]] && extra_env+=(-e DOCKBOX_SUDO=1)
 
+cap_args=()
+for c in "${CAPS[@]}"; do
+    cap_args+=(--cap-add "$c")
+done
+
 # Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
 # mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
+
+if [[ -d "$HOME/.claude" ]]; then
+    mkdir -p -m 700 "$HOME/.claude/sessions"
+    mounts+=(--tmpfs "/home/dockbox/.claude/sessions:rw,mode=0700,uid=$(id -u),gid=$(id -g)")
+fi
 
 mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 
@@ -512,12 +679,6 @@ chown_paths=("/home/dockbox")
 # inside is untouched) so signing works.
 [[ -n "$gpg_forward" ]] && chown_paths+=("/home/dockbox/.gnupg")
 
-# Ephemeral overmounts (default): each build-artifact dir found under workdir
-# becomes a fresh empty mount inside the container, chowned by dockbox-init.
-#   tmpfs (default) — kernel tmpfs (RAM-backed).
-#   -T              — anonymous Docker volume (disk-backed).
-# Disable with -P / --no-ephemeral.
-#
 # Cap depth at 4: covers workspace patterns (./node_modules,
 # ./packages/foo/node_modules, ./apps/bar/dist). Vendored pnpm/yarn
 # stores nest hundreds of node_modules deeper — overmounting each
@@ -563,16 +724,21 @@ _net=bridge
 sandbox_note "$HOSTNAME" "$_net" "${mounts[@]}" > "$_note"
 mounts+=(-v "$_note:/etc/claude-code/CLAUDE.md:ro")
 
-docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
 
 # Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
 # lifetime is independent of any session. dockbox-init runs the per-user setup,
 # touches /run/dockbox/ready, then holds the container open with sleep infinity.
+# The seccomp profile is Docker's default plus io_uring, which the default
+# denies and Agave's solana-test-validator needs.
 docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
     "${user_arg[@]}" \
+    --security-opt "seccomp=$SECCOMP" \
+    "${cap_args[@]}" \
     "${network_arg[@]}" \
+    "${dns_args[@]}" \
     "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
     -e CLAUDE_SANDBOX=dockbox \
@@ -587,12 +753,15 @@ docker run -d --init \
     -- "$IMAGE" \
     sleep infinity >/dev/null || { echo "Failed to start container" >&2; exit 1; }
 
-# Wait for dockbox-init to finish per-user setup before the first session.
+ready=""
 for _ in $(seq 1 100); do
-    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && break
-    docker ps -q -f "name=^${CONTAINER_NAME}$" >/dev/null 2>&1 || \
+    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && { ready=1; break; }
+    up=$(docker ps -q -f "name=^${CONTAINER_NAME}$") || exit 1
+    [[ -n "$up" ]] || \
         { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
     sleep 0.1
 done
+[[ -n "$ready" ]] || \
+    { echo "Container not ready after the startup wait" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
 
 enter_session -w "$workdir"

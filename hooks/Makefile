@@ -1,7 +1,8 @@
 .DEFAULT_GOAL := help
 .PHONY: help test test-all clean
 
-PYTEST := $(shell command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytest)
+# uvx supplies PyYAML, which a uv-tool pytest lacks; CI pip-installs both.
+PYTEST := $(shell command -v uvx >/dev/null 2>&1 && echo uvx --with pyyaml pytest || command -v pytest 2>/dev/null || echo $(HOME)/.local/bin/pytest)
 
 # Explicit list, not the directory: a new test_*.py runs only once it is added
 # here, and the suite stays green while silently skipping it.

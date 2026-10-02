@@ -18,8 +18,8 @@ Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
 telling Claude to invoke the matching command or agent. That field is the one
 UserPromptSubmit output the model reads; `systemMessage` renders in the
 transcript for the user and never reaches the model. Routes are `AGENT_KEYWORDS` in
-the source. Codex second-opinion routing is explicit only (`ask codex`,
-`oracle`, `second opinion`) and suppressed inside Codex so it never nudges
+the source. A prompt that starts with `/astra` or `/sol` routes to that skill;
+`ask codex`, `ask astra`, `oracle` and `second opinion` route to `/astra`. All are suppressed inside Codex so it never nudges
 Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
@@ -84,34 +84,35 @@ instructing the model to preserve the wisdom across the compact.
 ### stop.py (Stop)
 
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
--uno` shows uncommitted changes ("consider /commit"; Codex sees `@commit`) or
-the repo diary has today's entry missing or >1h stale ("consider /diary";
-Codex sees `@diary`). The diary nudge fires once per session, keyed by
-`session_id` in `~/.claude/state` (`lib/state.py`), however many repos the
-session visits. When called from periodic `PostToolUse`, the same checks
-emit advisory `hookSpecificOutput.additionalContext` and never block a tool
-call.
+-uno` shows uncommitted changes ("Run /commit"; Codex sees `@commit`) or
+today's diary entry is missing or >1h stale ("Run /diary"; Codex sees
+`@diary`). The commit nudge repeats at most every 10 minutes
+(`NUDGE_INTERVAL`); the diary nudge has no throttle: it repeats on every
+Stop until today's entry exists and is under an hour old. When called from
+periodic `PostToolUse`, the same checks emit advisory
+`hookSpecificOutput.additionalContext` and never block a tool call.
+
+Today's entry is `.diary/YYYYMMDD.md` (UTC date). A worktree is one checkout
+of a repo; `git worktree add` makes linked ones beside the main checkout. An
+entry git ignores is read from the main worktree, its single uncommitted
+copy; any other from the current worktree, since a tracked diary is
+committed per branch. A plain repo, a submodule and a `--separate-git-dir`
+repo are their own main worktree (linked worktrees: ARCHITECTURE.md), and
+`../skills/diary/SKILL.md` § Where to write uses the same rule.
 
 A `git status` that fails inside a repo blocks with its stderr — the tree is
 reported as unreadable rather than assumed clean.
 
+Under the `ship` CLI ([kronael/ship](https://github.com/kronael/ship)), each
+`claude` process it starts carries its role in `SHIP_ROLE`. A worker
+(`worker-<id>`) gets both nudges — the commit nudge is what makes it commit.
+Any other non-empty role (planner, judge, verifier, validator, replanner)
+judges rather than builds, and the hook exits silently for it, on Stop and
+PostToolUse alike.
+
 The hook reports a missing or stale diary entry and never writes a header —
 run `/diary` deliberately when a session is worth recording. Pure script, no
 LLM call, NEVER pushes.
-
-When a real `Stop` has nothing to block on, the hook instead emits a turn recap
-as `systemMessage` (shown to the user, never blocking):
-commits landed since the previous Stop of this session, what is still
-uncommitted (tracked changes with `+added -deleted`, plus untracked paths
-touched inside the window — older untracked noise is skipped), and any
-merge/rebase/cherry-pick/revert/bisect left in progress. About ten lines, capped
-at `RECAP_COMMITS` commits and `RECAP_PATHS` paths. The first Stop of a session
-has no window and shows the `head` commit instead; with no window the tree
-line reads `no tracked changes`, since untracked age cannot be judged yet. The recap is best effort:
-ALWAYS silent outside a git repository, when a git call fails, or once
-`RECAP_BUDGET` seconds are spent; NEVER emitted from periodic `PostToolUse` or
-under Codex (`KRONAEL_IN_CODEX`). State: `<git-dir>/claude-recap-{session_id}`,
-the ISO time of the last recap.
 
 ### memory_nudge.py (PreCompact + Stop)
 
@@ -132,5 +133,16 @@ nudge, tied to the moment context would otherwise be lost:
 
 State: the session-keyed stamps `memory-nudge-{start,done}-{session_id}` in `~/.claude/state` (`lib/state.py`). The `start`
 file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
+
+## Tests
+
+```bash
+make test        # from hooks/; make test-all is the verbose run
+```
+
+Runs the Makefile's `TEST_FILES` through `uvx --with pyyaml pytest` when
+`uvx` is on PATH, since the frontmatter-lint test imports `yaml`; otherwise
+through the first `pytest` on PATH (else `~/.local/bin/pytest`), which needs
+PyYAML for that file. TEST.md has the manual smoke tests.
 
 See ARCHITECTURE.md for per-hook data flow.

@@ -62,7 +62,8 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - ALWAYS dataclasses over Pydantic unless validation/coercion is needed
 
 ## Named Data Structures
-- ALWAYS dataclass/NamedTuple over bare tuples for return types (except trivial/test code)
+- ALWAYS a dataclass over bare tuples for return types (except trivial/test code)
+- NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — immutability prevents aliasing bugs, makes instances hashable, and catches accidental mutation at runtime. Drop `frozen` only for types that are deliberately mutated in place (accumulators, stateful objects like `World`/`Client`)
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS `@dataclass(frozen=True)` over a heterogeneous tuple used as a dict/map key — positional `key[2]` or `key[:4]` access is a smell; name the fields

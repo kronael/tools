@@ -16,6 +16,29 @@ Read on demand, in this directory:
 - `v8-deopt.md` — a hot path that measures slower than it should: proving
   megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
   profiling, and when to stop.
+## Runtime and packages
+- ALWAYS the newest Bun as package manager, in every JS/TS project: `bun
+  install`, `bun.lock` committed, `bunx` for one-offs. NEVER a second
+  lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) beside it
+- **CRITICAL**: `bun run` shells node-shebang bins (`vite`, `tsc`, `eslint`,
+  `playwright`) out to the system `node`. ALWAYS set `bunfig.toml`:
+  ```toml
+  [run]
+  bun = true
+  ```
+  else the project silently depends on whatever `node` is on PATH. Ad hoc:
+  `bun --bun run x`, `bunx --bun x`
+- Bun RUNS the Node toolchain, it does not replace it — Vite, tsc, eslint and
+  Playwright stay Node-ecosystem tools. `bun build` only when Bun's bundler is
+  the actual target
+- Frontends and script projects are Bun-only: Vite + `bun test` + Playwright,
+  `engines.bun`, CI on `oven-sh/setup-bun`. NEVER `.nvmrc`, `engines.node` or
+  a Node CI step there
+- Backends that deploy on Node: floor at Node 24 (current LTS) wherever it is
+  declared — `engines.node: ">=24"`, `.nvmrc` = `24`, CI `node-version: 24`,
+  images `node:24-slim` / `node:24-alpine` — same major at every site
+- NEVER leave an older major in place because it still builds — bump it with
+  the change that touches the file
 
 ## Code Style
 - ALWAYS use the `function` keyword for top-level functions where possible; arrow functions only for callbacks and inline lambdas

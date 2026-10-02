@@ -15,7 +15,7 @@ It's fast and convenient, and it keeps builds and mess out of your host workdir
 — but because your live credentials are inside and the box shares your kernel,
 it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
 working in a container. If you want a stronger host-filesystem wall — a full VM
-with a throwaway disk — use [qemubox](../qemubox/) instead.
+with a persistent disk — use [qemubox](../qemubox/) instead.
 
 ## Build
 
@@ -32,14 +32,21 @@ can share it.
 Tools (cargo, nvm, bun, rustup, sdkman, go, uv, nushell, etc.) live in
 `/opt/dev-tools/` inside the image, world-readable. Each runtime user gets
 a fresh tmpfs `$HOME` at `/home/dockbox` with bind mounts (`~/.claude`,
-`~/.gitconfig`, etc.) nested in.
+`~/.gitconfig`, etc.) nested in. Mounts are fixed when a box is created, so a
+running box picks up a newer dockbox's mounts (including the private sessions
+registry) only after `dockbox rm <name>` and a new launch.
 
 ## Install
 
 ```bash
-make install            # installs dockbox to ~/.local/bin
-make clean              # remove binary and docker image
+make install            # image, dockbox and its seccomp profile
+make seccomp            # the seccomp profile only, no image build
+make clean              # remove binary, profile and docker image
 ```
+
+dockbox goes to `~/.local/bin`, the profile to
+`~/.local/share/dockbox/seccomp.json`. A new box does not start without the
+profile; dockbox names `make seccomp` when it is missing.
 
 ## Usage
 
@@ -50,17 +57,31 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # tmpfs backend for ephemeral dirs
+dockbox -T                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
-dockbox ls                        # list dockbox containers
-dockbox rm [pattern]              # remove containers
-dockbox prune [hours]             # remove exited containers older than N hours (default: 2160)
+dockbox ls                        # list boxes: busy/idle, tmpfs use, disk (writable layer)
+dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = all)
+dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
 Default command: claude. Use `-x` to override.
+
+`dockbox ls` USE is `busy` while any session or command runs in the box and
+`idle` when only its sleeper is left — a box no session holds, safe to remove.
+TMPFS totals the tmpfs mounts of a running box (`/tmp`, `/tmp/cargo-target`,
+`/dev/shm`, `$HOME` and the build-dir overmounts), each mount once; DISK is
+the container's writable layer, volumes excluded. USE and TMPFS show `-` for
+a stopped box and `?` when the probe fails. `dockbox prune` removes idle boxes
+at least 4 hours old and never a busy one.
+
+A new box that exits before `dockbox-init` marks it ready (after registering
+your user) fails the launch: dockbox prints `Container exited during
+startup` and the last 20 lines of the box's log, exits 1 and opens no
+session. The stopped box stays for `docker logs` until `dockbox rm <name>`
+or the next launch replaces it.
 
 ### Re-entry into a running box
 
@@ -83,21 +104,95 @@ it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
 fixed when the container is created. Use `-n <name>` to key a
 separate, fully-provisioned container instead.
 
+## io_uring and capabilities
+
+Docker's default seccomp profile denies io_uring, which Agave's
+`solana-test-validator` needs. dockbox starts every box with
+`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: the default
+profile from moby/profiles with `io_uring_setup`, `io_uring_enter` and
+`io_uring_register` added to its allow list. It is newer than the profile
+Docker 29.6.2 builds in (moby/profiles v0.2.3) and also denies a few legacy
+socket families (AX25, IPX, AppleTalk and others).
+
+`seccomp.json` is `seccomp/default.json` from
+[moby/profiles](https://github.com/moby/profiles) at commit `a21872828a8e`,
+unchanged except for those three names after `io_submit`. It is Apache-2.0;
+the license ships as `seccomp.LICENSE` and installs beside the profile. To
+refresh it, fetch that file again and re-add them.
+
+Boxes also get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
+to the container does not reach a session started with `docker exec -u`, so
+each session enters as root and `setpriv` drops it to your UID/GID with the
+three held as ambient capabilities and the supplementary groups dockbox-init
+registered. `nice`/`renice` to a negative value, realtime scheduling (`chrt`),
+`mlock` past the memlock limit and ptrace attach to any process in the box
+work as your user. A box started by an older dockbox holds none of the three,
+and its sessions enter without them.
+Realtime priority and locked memory draw on the host's CPU and RAM.
+
 ## Configuration
 
-Extra docker args via `.dockboxrc` files (bash-style, `#` comments):
+Default dockbox flags via `.dockboxrc` files: the Usage flags,
+whitespace-separated, with lines starting `#` as comments.
 
-- `~/.dockboxrc` — global defaults (e.g. `--gpus all`)
-- `.dockboxrc` in project dir — per-project overrides
+- `~/.dockboxrc` — global defaults, every flag. It is read ahead of the
+  command line, so a command-line `-n`, `-d` or `-x` wins over it.
+- `.dockboxrc` in the project dir (the last dir named) — per-project
+  defaults. It takes `-e`, `-v`, `-H`, `-T`, `-g`, `-G` and `-P` /
+  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`
+  with a warning, so a cloned repo cannot grant itself sudo, the Docker
+  socket or your SSH/gpg agent, or switch the tool or box name. Put those in
+  `~/.dockboxrc`.
 
-Both are optional. Global applies first, project appends. The
-project `.dockboxrc` is overmounted with `/dev/null` inside the
-container so the boxed agent can't modify it.
+Both are optional. Global applies first, project appends. Neither file
+reaches `docker run`: a Docker flag such as `--gpus all` in either file is
+an error (`unknown flag`), not passed to Docker. The project `.dockboxrc` is
+overmounted with `/dev/null` inside the container so the boxed agent can't
+modify it.
+
+## Roaming between networks
+
+A bridge box does not resolve names through the host's resolver: Docker
+copies nameservers into the box once, when the container is created. When
+the host's `/etc/resolv.conf` is a loopback stub (systemd-resolved's
+`127.0.0.53`), unreachable from the box, Docker substitutes the uplink
+servers behind it — the DHCP servers of the network the laptop is on at that
+moment, which usually answer only from that network. Move to another Wi-Fi
+and every lookup in the box times out while the host, whose resolver
+switched with the link, is fine. Docker never rewrites a running
+container's `resolv.conf` (moby `daemon/libnetwork/sandbox_dns_unix.go`: written
+at sandbox setup and endpoint join only).
+
+dockbox therefore gives a new bridge box the resolver listening on the
+bridge gateway when there is one (`--dns 172.17.0.1`); that resolver follows
+the host across network changes. Expose systemd-resolved there:
+
+```sh
+# /etc/systemd/resolved.conf.d/docker.conf
+[Resolve]
+DNSStubListenerExtra=172.17.0.1
+```
+
+then `systemctl restart systemd-resolved`. resolved binds the extra address
+with `IP_FREEBIND`, so it works before `docker0` exists at boot. A box keeps
+the servers copied at its creation until it is recreated (`dockbox rm
+<name>`). Without a gateway resolver, when the host uses a loopback stub
+resolver, dockbox prints a one-line note at creation and the box keeps
+Docker's copy. The gateway detection reads the host's sockets with `ss`, so
+it assumes a rootful local Docker daemon. `-H` (host network) uses
+the host's resolver and sockets directly and has neither problem; it also
+has no NAT, so a box's connections survive a brief Wi-Fi drop exactly as the
+host's do.
 
 ## Mounts
 
 Automatic:
 - `~/.claude` -> `/home/dockbox/.claude` (rw) - credentials, skills, settings
+- `~/.claude/sessions` -> private tmpfs per box. Claude Code registers every
+  live session there and lists them with `ListAgents`; the inbox sockets
+  live in each box's own `/tmp`, so a private registry means boxes and the
+  host neither see nor message each other's sessions, and two boxes' low
+  container PIDs cannot overwrite each other's records.
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -145,25 +240,30 @@ container as a full peer that should continuously improve shared config.
 ## Ephemeral builds
 
 Build artifacts are an attack surface, not state to persist. Two layers
-work together so builds never touch your host workdir:
+keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`. Builds
-   produce artifacts in the workdir as usual; tool caches and toolchains
-   live in the image, not your project.
+   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
+   caches and toolchains live in the image, not your project. dockbox
+   also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
+   Cargo never writes `target/` to the workdir.
 
 2. **Overmount by default** (Node, Bun, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
-   mount inside the container. Owned by the runtime user, gone when
-   the container exits.
+   mount inside the container. Owned by the runtime user, removed with
+   the box.
 
    Names overmounted by default:
 
    ```
-   node_modules  .next  dist  build  .turbo  .cache
+   node_modules  .next  .turbo  .cache
    ```
+
+   `dist` and `build` are not overmounted, so they land in the host
+   workdir: build tools `rm -rf` them, which fails with EBUSY on a
+   mountpoint.
 
    Monorepo workspaces are handled automatically — every match under
    the workdir gets its own mount.
@@ -196,22 +296,22 @@ work together so builds never touch your host workdir:
 no stale artifacts persist, only source code is long-lived. A warm cache
 is a liability; the source tree is the truth.
 
-**Opt out** (`dockbox -P` / `--no-ephemeral`):
+**Opt out** (`dockbox -P` / `--no-ephemeral`, also from either
+`.dockboxrc`):
 
-- You've committed `dist/` or `build/` and need the container to see it.
 - You want to share a single `node_modules/` across runs (and accept the
   cache-poisoning risk).
 - You're debugging a build issue and need the artifacts to survive.
 
-The Rust/Python auto-redirects still apply with `-P` — they're baked into
-the image's env, not the overmount layer.
+The Rust/Python auto-redirects still apply with `-P` — they're set in the
+container env, not the overmount layer.
 
 ### Surprise on first run
 
 If you already have a populated `node_modules/` on the host, the container
 will see an empty one and re-install on the first command. This is the
-sandbox working correctly. Subsequent commands in the same container reuse
-the mount; exiting the container discards it.
+sandbox working correctly. Later sessions in the same box reuse the mount;
+the box, mounts included, is removed when its last session exits.
 
 ## Authentication
 
@@ -224,6 +324,13 @@ mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
 passed by the `claude` wrapper in the image. This is intentional — the use
 case is a trusted agent doing real work, not untrusted code execution. If you
 need security isolation, this is not the tool.
+
+Boxes are kept apart from each other and from the host's Claude sessions
+(private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the
+bundle's settings refuse inbound cross-session messages everywhere. `-D`
+undoes that: it hands the box the host's Docker socket, so its agent can
+`docker exec` into every other dockbox. Pass it only to a box you trust with
+all the others.
 
 ## Cookbook
 
@@ -242,12 +349,6 @@ Then in dockbox Claude, reference `capture.png` — it auto-attaches.
 
 ```bash
 dockbox -v /tmp/data.csv ~/wk/project    # mounts at same path, ro
-```
-
-### GPU passthrough
-
-```
---gpus all
 ```
 
 ## Included Tools

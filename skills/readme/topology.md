@@ -24,6 +24,18 @@ end to end — see `shape.md`.
 ALWAYS state the split explicitly — end the README with a **"How to read this"**
 section naming which file answers which question.
 
+## Repo layout (house)
+
+- UPPERCASE at root: CLAUDE.md, README.md, ARCHITECTURE.md, SPEC.md, PLAN.md,
+  TODO.md. CLAUDE.md under 200 lines: shocking patterns and project layout.
+- `specs/` for design docs (`specs/index.md` the master index), `docs/` for
+  project documentation, `.ship/` for shipping artifacts (flat, type in the
+  filename, ephemeral), `.diary/YYYYMMDD.md` for the shipping log. NO `todos/`,
+  NO `plans/`.
+- ALWAYS root-anchor the gitignore rules for local working dirs: `/.ship/`,
+  `/.diary/`, `/specs/`, `/BUGS.md`. The bare `.ship/` form matches at every
+  depth and swallows a real `src/specs/`.
+
 ## notes/ — the "why" layer
 
 Tribal design-rationale rots unless it's written down. Each note:

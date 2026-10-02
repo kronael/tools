@@ -54,7 +54,7 @@ DEFAULT_MAX_LINES = 200
 # Workflow/runbook skills carry procedure and legitimately run long (wisdom
 # tiered length). Keyed on the skill's directory name.
 LONG_MAX_LINES = 500
-LONG_SKILLS = frozenset({'install', 'ship'})
+LONG_SKILLS = frozenset({'ship'})
 # Claude Code lists each skill as "<description> - <when_to_use>" and cuts that
 # text at this many characters (its skillListingMaxDescChars default); a
 # keyword past the cap never reaches the model.
@@ -128,9 +128,6 @@ def fix_frontmatter(text: str) -> str:
         fixed = f'{key}: {fix_value(key, value)}' if sep and key in FIX_FIELDS else raw
         lines.append(fixed)
     return '\n'.join(lines).rstrip() + '\n'
-
-
-# --- body checks (wisdom rules) -------------------------------------------
 
 
 def check_keys(path: Path, meta: dict | None) -> list[Finding]:

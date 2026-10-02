@@ -6,16 +6,15 @@ Command-line utilities and Claude Code configuration.
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [dockbox](dockbox/) — dockerized Claude Code sandbox
-- [qemubox](qemubox/) — disposable QEMU VM, dockbox-style, for untrusted repo inspection
+- [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
-- [rig](rig/) — ripgit: smart branch checkout, push, rebase, merge
+- [rig](rig/) — ripgit: detached checkout, push, rebase, merge; git aliases (`gco`, `gif`, `gib`, and more)
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
-- [clp](clp/) — claude project picker (experimental; sourceable bash function)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 
-Makefile tools (`udfix`, `rig`, `bhctl`, `clp`, `dockbox`, `qemubox`):
+Makefile tools (`udfix`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`):
 `cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`):
 `uv run main.py`.
 
@@ -31,24 +30,25 @@ External tools used by the Claude Code config:
 ```
 /plugin marketplace add kronael/tools
 /plugin install kronael@kronael
-/kronael:install
+/kronael:sync
 ```
 
-This runs [`kronael/install/SKILL.md`](kronael/install/SKILL.md), the single
-source of truth for the procedure. The install step exists so your
-`~/.claude/` becomes a working copy you can edit and PR back; pure plugin
-updates would overwrite edits. Full rationale:
-[ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--install-step).
+This runs [`kronael/sync/SKILL.md`](kronael/sync/SKILL.md), the single
+source of truth for the procedure; re-run it to update. Sync keeps your
+`~/.claude/` a working copy you can edit: the next sync merges those edits
+into your clone, then rebuilds `~/.claude/` from it, so files the source
+dropped never pile up there. Pure plugin updates would overwrite edits. Full
+rationale: [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--sync-step).
 
-## Codex installer bridge
+## Codex sync bridge
 
-Codex does not run Claude Code slash commands, but it can install this same
-Claude bundle. The Codex plugin exposes one skill, `kronael-install`, whose job
-is to read [`kronael/install/SKILL.md`](kronael/install/SKILL.md) and run the
-install path from the GitHub marketplace snapshot.
+Codex does not run Claude Code slash commands, but it can sync this same
+Claude bundle. The Codex plugin exposes one skill, `kronael-sync`, whose job
+is to read [`kronael/sync/SKILL.md`](kronael/sync/SKILL.md) and run the
+sync from the GitHub marketplace snapshot.
 
-The Codex plugin is only the installer bridge. It contains one Codex skill
-(`kronael-install`); the Kronael bundle installs to `~/.claude/`, then the
+The Codex plugin is only the sync bridge. It contains one Codex skill
+(`kronael-sync`); the Kronael bundle syncs to `~/.claude/`, then the
 bridge exposes global wisdom through `~/.codex/AGENTS.md`, installed skills
 through `~/.agents/skills`, and lifecycle hooks through `~/.codex/hooks.json`.
 
@@ -62,13 +62,13 @@ codex plugin add kronael@kronael
 Then start a fresh Codex thread and ask:
 
 ```text
-Use @kronael-install to install/update Kronael.
+Use @kronael-sync to sync Kronael.
 ```
 
 The same skill also handles bridge-only setup:
 
 ```text
-Use @kronael-install to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
+Use @kronael-sync to bridge CLAUDE.md, .claude/skills, and hooks into Codex.
 ```
 
 The bridge does not duplicate `skills/`, `agents/`, or hook scripts into the
@@ -80,7 +80,7 @@ location, and copies `codex-hooks.json` into `~/.codex/hooks.json`.
 To repair or apply only the Codex side of that bridge, ask:
 
 ```text
-Use @kronael-install to bridge .claude/skills and hooks into Codex.
+Use @kronael-sync to bridge .claude/skills and hooks into Codex.
 ```
 
 That links `~/.agents/skills` to `~/.claude/skills` when possible and copies
@@ -109,18 +109,18 @@ Troubleshooting:
 - `kronael` missing from Codex: run `codex plugin marketplace upgrade kronael`
   (or `kronael-local` for older installs), then
   `codex plugin add kronael@kronael`.
-- Kronael skills missing in Codex after install: run the bridge prompt above,
+- Kronael skills missing in Codex after a sync: run the bridge prompt above,
   then start a new Codex thread and open `/skills`.
 - Global wisdom missing in Codex: run the bridge prompt, verify
   `~/.codex/AGENTS.md` holds the `kronael:start` block, then start a new
   thread. `AGENTS.override.md` takes precedence when present.
-- Kronael hooks missing in Codex after install: run the bridge prompt above to
+- Kronael hooks missing in Codex after a sync: run the bridge prompt above to
   refresh `~/.codex/hooks.json`, then start a fresh Codex TUI session, open
   `/hooks`, and trust the changed command hooks.
-- Claude hooks missing after install: rerun `@kronael-install`; it merges hook
+- Claude hooks missing after a sync: rerun `@kronael-sync`; it merges hook
   wiring from `settings-recommended.json`.
 - Codex says `Skipped loading ... invalid SKILL.md`: run
-  `make skills-frontmatter-fix`, reinstall/bridge with `@kronael-install`,
+  `make skills-frontmatter-fix`, re-sync/bridge with `@kronael-sync`,
   then start a new Codex thread. The lint extracts SKILL.md frontmatter,
   validates it with PyYAML, and fixes known loose forms Claude Code tolerated.
 
@@ -142,9 +142,10 @@ Troubleshooting:
 - **Settings** (`settings-recommended.json`) — hook wiring, permissions,
   sandbox, env, and session retention, merged into `~/.claude/settings.json`.
   The recursive-removal deny guard (`rm -r*`, `rm -R*`, `rm -fr*`,
-  `rm --recursive*`), `cleanupPeriodDays`, `outputStyle` and
-  `attribution.commit` are applied on every install without asking, even when
-  other permission entries are declined.
+  `rm --recursive*`), `cleanupPeriodDays`, `outputStyle`, `attribution.commit`,
+  `bashEditDiffEnabled`, `crossSessionInbound` and `isolatePeerMachines` are
+  applied on every sync without asking, even when other permission entries
+  are declined.
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
 
 ### Layout
@@ -152,8 +153,8 @@ Troubleshooting:
 ```
 .claude-plugin/             marketplace.json + plugin.json
 .agents/plugins/            repo-local Codex marketplace metadata
-plugins/kronael/            thin Codex plugin exposing kronael-install
-kronael/install/SKILL.md    plugin-exposed install procedure (source of truth)
+plugins/kronael/            thin Codex plugin exposing kronael-sync
+kronael/sync/SKILL.md       plugin-exposed sync procedure (source of truth)
 skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
 hooks/                      bundle copied to ~/.claude/hooks/
@@ -169,11 +170,11 @@ RECLAUDE.md                 template for ~/.claude/RECLAUDE.md
 | Doc | Purpose |
 |-----|---------|
 | [CLAUDE.md](CLAUDE.md) | Repo conventions for Claude Code (auto-loaded each session) |
-| [AGENTS.md](AGENTS.md) | Codex / non-Claude agent notes + pointer to the canonical install |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, install paths, sync strategies, org overlays |
+| [AGENTS.md](AGENTS.md) | Codex / non-Claude agent notes + pointer to the canonical sync |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, sync paths, sync strategies, org overlays |
 | [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `dockbox`, and the toolkit |
 | [skills/README.md](skills/README.md) | Skill rationale, index, and workflow diagram |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
-| [kronael/install/SKILL.md](kronael/install/SKILL.md) | Install procedure (all paths) |
+| [kronael/sync/SKILL.md](kronael/sync/SKILL.md) | Sync procedure (all paths) |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |

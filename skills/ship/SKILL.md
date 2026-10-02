@@ -1,147 +1,183 @@
 ---
 name: ship
-description: Drive a spec-sized feature from plan to shipped — fable plans, sonnet implements step-by-step, refine polishes. NOT for one-off or <30min fixes (use improve), and NOT for tracking without driving execution (use TODO.md).
-when_to_use: "ship this, ship it, let's ship, then ship, ship the feature, spec this and build it, plan and implement, build this end to end, track this project, drive this to done"
+description: Drive a spec-sized change through verified delivery, mostly unattended. NOT for quick fixes (use improve) or preparing a versioned release alone (use release).
+when_to_use: "ship this, ship it, ship the feature, spec this and build it, plan and implement, build this end to end, mostly unattended, what to hammer, drive this to done"
 user-invocable: true
+argument-hint: "<goal or spec>"
 ---
 
 # Ship
 
-Plan → ship → refine, for work that warrants a spec (multi-file,
-multi-session, or architecturally nontrivial). Not for a quick fix —
-use `improve` for that.
+The main agent owns delivery. Workers finish bounded steps, and the main
+agent keeps going until the owner's acceptance checks pass or a decision
+needs the owner. `fin` owns persistence within that scope.
 
-## Folder layout
+ALWAYS carry the owner boundaries into every worker and called skill. When
+a called skill's mandatory step conflicts with them, obey the owner and
+record any proposed contract change with `bugs`. Surface a genuinely
+blocked required gate through `intake.md`. NEVER silently skip it or report
+the pass complete.
 
-`.ship/NN-NAME/` — NN zero-padded sequential, NAME UPPERCASE-KEBAB.
-Next NN: `ls .ship/ | grep -E '^[0-9]' | tail -1` + 1.
-Plan lives at `.ship/NN-NAME/PLAN.md`.
+## Files
 
-**Check the project's CLAUDE.md for a `.ship/` policy override before
-pruning** — default is gitignored/ephemeral (delete on close-out), but
-some repos keep `.ship/` checked in as a build log. Don't force-delete
-against an explicit override.
+Read the ONE file matching the current stage, then return here.
+
+| Current need | Read |
+|---|---|
+| owner questions on outcome, what to hammer, limits and destination, defaults for open preferences, decision points after intake | `intake.md` |
+| planner and worker brief templates, the `.ship/plan-NN-name.md` fields | `prompt.md` |
+| resume after compaction, stalled workers, repair and review counters, cancellation, Workflow, /goal, /loop, ScheduleWakeup | `runtime.md` |
+| owner asked for the `ship` CLI as executor | `cli.md` |
+
+## Work record
+
+Use the project's `.ship/` policy. Default: flat, gitignored scratch,
+`.ship/plan-NN-name.md`, with the next free zero-padded NN and a lowercase
+kebab name. Reuse the active change's record. Project layout overrides win.
+The plan holds the owner brief, acceptance checks, decisions and progress.
+
+ALWAYS keep a gitignored record in the MAIN tree's `.ship/` — the first
+entry of `git worktree list` — and address it by absolute path from every
+worktree, as `diary` does for a gitignored diary. A controller worktree's
+copy is invisible from the main tree, and `git worktree remove` deletes it.
+ALWAYS keep one work record for the change. NEVER add a second progress
+tree, saved review plans or a workflow-specific backlog.
 
 ## Workflow
 
-1. **Plan (fable)** — spawn one `fable` subagent (foreground) to
-   research the codebase and produce `.ship/NN-NAME/PLAN.md`: a
-   comprehensive spec — architecture, tradeoffs, gaps, and a
-   step-by-step build order where **each step has a green-gate**
-   (build/test/lint command that must pass before the next step).
-   Fable does research and writes the plan only — it does not
-   implement. See `prompt.md` for the planning brief template.
-   - **Ship ALWAYS means plan + re-research, in a fresh subagent
-     (never a `fork` — it carries the stale context), against the
-     code as it is now** — even when this session already researched
-     the area or a PLAN.md / spec already exists. NEVER assemble the
-     plan from conversation context; NEVER take an existing plan or
-     spec at face value.
-   - An existing plan or spec is input to the sub, not its output:
-     the sub re-verifies every claim against the current code and
-     rewrites what drifted. A spec accurate when written is wrong a
-     few commits later, and a stale plan spends the implementation
-     budget on code that no longer exists.
-2. **Confirm** — read PLAN.md yourself, summarize it for the user in
-   a few lines (steps + gates), and get a go-ahead before spending
-   implementation budget. Skip this only if the user already approved
-   the scope.
-3. **Ship (sonnet)** — for each PLAN.md step in order: spawn one
-   `sonnet` subagent to implement that step, then run the step's
-   green-gate yourself. **Never take a sub's report at face value —
-   check the diff.** One code-editing sub at a time on the shared
-   tree; if a step is genuinely parallelizable, isolate each sub in
-   its own `git worktree add --detach` and merge sequentially — never
-   run overlapping edits on the same tree. See `prompt.md` for the
-   implementation brief template.
-4. **Refine** — once all steps are green, run the `refine` skill on
-   the touched paths to finalize (dead code, minimization, polish).
-5. **Close-out** — distill durable bits (decisions → `.diary/`,
-   architecture → `specs/`, release notes → `CHANGELOG.md`) then
-   prune `.ship/NN-NAME/` per the folder-layout note above.
+### 1. Recover scope and inspect the starting state
 
-## Close-out distillation (step 5)
+ALWAYS reconcile the owner's messages, applicable CLAUDE.md, recent diary,
+existing spec/plan, git history and active workers before dispatching work.
+Use `recall-memories` for referenced decisions. An owner asking to resume
+uses `continue`. Execution here stays within this change's accepted scope.
 
-`.ship/` is scratch, not an archive — unless the project's CLAUDE.md overrides
-that (see Folder layout). For each thing in `.ship/NN-NAME/`, ask "where does
-this belong long-term?":
+Record the starting HEAD, worktree, owned paths and relevant baseline
+checks. Unrelated dirt or failures stay outside the change, and `bugs` owns
+their record. With unrelated dirt, use `worktree` to select or create a
+clean detached controller checkout before implementation. ALWAYS commit
+this change's own uncommitted edits and untracked tests first, or carry
+them into that checkout, so only unrelated dirt stays behind. Record the
+checkout's identity and keep the pre-change HEAD as the review baseline.
+An edit-in-place restriction needs a decision. A failure that blocks
+acceptance becomes a decision if its repair exceeds the requested scope.
+For recovery, read `runtime.md`.
 
-| Kind of content | Permanent home |
-|---|---|
-| Decisions, discoveries, bug post-mortems | `.diary/YYYYMMDD.md` (today's entry) |
-| Architectural decisions, design choices | `specs/<NN>-<topic>.md` (move + add `status: shipped`; `specs` owns the naming) |
-| Release-notes-worthy changes | `CHANGELOG.md` |
-| Recurring rules / preferences / patterns | project `CLAUDE.md` or `MEMORY.md` |
-| Bench numbers worth tracking | `bench-baseline.json` + a short note in CHANGELOG |
-| Critique / review findings | resolved → fold into diary; deferred → `TODO.md` |
-| Forced-rank punch lists for "next sprint" | `TODO.md` + maybe seed the next `.ship/` plan |
+Completion criterion: the active change, prior decisions and baseline are
+known, and completed work is identified from the code and commits.
 
-Then prune. **NEVER recursively remove the directory** (WISDOM bans `rm -r`
-and wrapped equivalents such as `git rm -rf`): `git rm` the files by name, or
-leave the cleanup to the user.
+### 2. Batch the owner brief
 
-- NEVER keep a `REPORT.md` "for reference" — commit history + the diary IS the
-  reference.
-- NEVER keep progress notes after the work ships. The progress is `git log` now.
-- NEVER archive into `.ship/archive/` — that is the same hoarding, renamed.
-- Exception: a genuinely long-lived reference document (a spec, a runbook) moves
-  to `specs/` or `docs/` before the rest is pruned.
+ALWAYS read `intake.md` before asking anything. Fill answered fields from
+the owner's words, ask only the answers the result depends on, and proceed
+on stated defaults for the rest.
 
-**When NOT to prune:** the work is paused mid-flight (keep until it ships or is
-cancelled), or a critique/audit doc is the input to the NEXT plan (keep until
-that one starts, then fold it in and prune the source).
+Completion criterion: scope, acceptance, hammer focus, limits and finish
+line are explicit, with material owner decisions answered.
 
-Alternative execution path: the `ship` CLI (`uv tool install
-git+https://github.com/kronael/ship`) runs the plan autonomously instead of
-step-by-step subagents. Its planner brief is `cli.md`. Use it when the user
-asks for `ship` the tool; otherwise the subagent workflow above is the default.
+### 3. Plan against the current code
 
-## Guardrails (apply throughout, not just at close-out)
+ALWAYS plan in a fresh subagent with no conversation fork. Use `fable` when
+available, and `runtime.md` for supported role equivalents. The planner
+researches the live code and writes or updates the work record. Existing
+plans and specs are inputs to verify, not authority about code. Read
+`prompt.md` for the brief and plan fields.
 
-- **Detached HEAD only** — never create or attach a local branch, in
-  the main tree or any worktree. Isolated work uses
-  `git worktree add --detach <path> <ref>`.
-- **Path-scoped commits**, conventional-commit format `type(scope): message`
-  — never `git add -A`/`-A`-equivalents, never `--amend`, never push.
-- **Green-gate every step** — use the project's real commands (e.g.
-  `make check && make test && make lint`), not "looks right."
-- **Subagent budget**: 1-2 subs typical, never more than 4 concurrent.
-- **No external publishing** (crates.io/npm/PyPI/blog/push) unless the
-  user explicitly asks — respect the project's publishing policy.
+The main agent reads the plan and checks every requested acceptance item
+has a step and an observable check. Hammer focus gets concrete failure
+cases and a matching verification or review skill. Implementation details
+stay with workers. Use `oracle` for a consequential unresolved plan flaw.
 
-## PLAN.md shape (what fable writes)
+ALWAYS show the plan's scope, gates and finish line briefly. An approved
+brief authorizes its implementation, so NEVER add a routine plan-approval
+pause. Ask only when research exposes a material choice outside that brief.
+The brief never authorizes a redesign — a new contract, changed control
+flow or a cross-cutting change. ALWAYS record a concrete proposal through
+`bugs` and get the owner's sign-off before any redesign edit, per WISDOM.
 
-```markdown
-# NN — <feature name>
+Completion criterion: current code supports the plan, every step has a real
+gate, and no unresolved owner decision blocks the first step.
 
-## Goal
-<what and why, one paragraph>
+### 4. Implement and verify each step
 
-## Architecture / tradeoffs
-<key decisions, alternatives considered, why this one>
+ALWAYS dispatch each bounded step to `opus`, or to `sonnet` for a
+single-file or template step. `runtime.md` names supported equivalents.
+Follow `worktree` for isolation and reconciliation. Parallel work needs
+independent owned paths and dependencies. Read-only investigations may
+share the tree. If the owner explicitly chose the CLI, read `cli.md` at
+this same stage.
 
-## IO Surfaces
-<external APIs, files, ports, processes touched>
+ALWAYS inspect the returned diff and run the step's gate yourself before
+accepting it. A worker's commit or success report is not gate evidence.
+Use `commit` for logical verified changes. Record status, commit, gate
+result and next action in the work record after each accepted step.
 
-## Steps
-### Step 1 — <title>
-<files, concrete changes>
-**Gate:** <build/test/lint command that must pass>
+ALWAYS repair failures caused by this change within its accepted scope and
+limits. NEVER weaken an acceptance check to get a green result. Replan the
+affected remaining steps when code invalidates their premise. `runtime.md`
+owns bounded recovery. `later` and `bugs` park adjacent work.
 
-### Step 2 — ...
+Completion criterion: each implemented step has an inspected diff, passing
+gate evidence and a recorded disposition, and dependent steps never pass red.
 
-## Acceptance
-- <verifiable, observable checks — not "looks done">
+### 5. Refine and hammer the selected risks
 
-## Out of scope
-- <deferred items>
-```
+ALWAYS run `refine` on the change's touched paths and baseline-to-HEAD
+range. With a release destination, this pass is `release` step 1.5: run it
+once, at release depth over the release range, and NEVER refine the same
+range twice. Pass the same range and owned paths to each hammer skill, so
+committed work never becomes an empty uncommitted-diff review. `refine`
+owns quality lenses, docs, local commits and PR-thread intake.
 
-## Relationship to other tracking
+Run the owner-selected checks through the matching existing skills:
+`review` for an independent review, `red-eval` for hostile failure cases,
+`cto-eval` for operational risks, `design-eval` for UI craft and `13yo-eval`
+for first use. Load only lenses justified by the brief or a concrete
+unresolved concern. An explicit independent engine choice uses `astra` or
+`oracle`.
 
-| Location | Purpose |
-|----------|---------|
-| `TaskCreate` | in-session multi-step tracking, <30min |
-| `TODO.md` | backlog item not yet worth a spec |
-| `.ship/NN-NAME/` | this workflow — spec-sized, multi-step, gated |
-| `specs/N/*.md` | long-lived architectural reference (plan may cite or graduate into these) |
+ALWAYS re-verify findings against the code before acting. The brief covers
+fixes to defects this change causes, scoped simplification and docs. A
+redesign follows the Stage 3 sign-off rule, and an adjacent defect goes
+through `bugs`. `review` owns taking a findings list, and `refine` owns its
+refinement edits. Keep public replies behind `gh-comment`'s gates.
+
+Completion criterion: refinement finishes, the selected risks have evidence,
+and every finding is fixed, refuted, deferred or awaiting an owner decision.
+
+### 6. Prove acceptance and prepare delivery
+
+ALWAYS check the whole acceptance list against the final code, including
+the user path where applicable. Build/test success alone cannot close a
+behavior check. Run the project's required final checks. After a change,
+rerun the affected check, not a broad review merely to fill a loop. `fin`
+owns the final open-items pass within the accepted scope.
+
+Local commits are the default destination. A requested release uses
+`release`, and a requested PR uses `pr-draft`. Push, PR creation and merge,
+publication and deployment follow WISDOM and their owning skills' gates. A
+ship brief cannot waive them.
+
+Completion criterion: every acceptance item has final evidence, local work
+is committed, and the requested delivery is completed or concretely waiting
+at a named external-action gate.
+
+### 7. Close out or hand off
+
+ALWAYS report the achieved destination, commit SHAs, check results, hammer
+findings and remaining decisions. Distinguish verified local delivery,
+waiting for approval, and a blocked acceptance item. NEVER call a blocked
+or merely prepared destination shipped.
+
+Use `diary` for decisions and open items, `specs` for durable architecture,
+and `later` for owner-deferred follow-ups. Release notes belong to
+`release`. Retain the plan while paused, blocked or waiting for delivery
+approval. On completion, distill durable content, then prune only named
+scratch files under the project's policy. Directory removal is the owner's.
+
+Completion criterion: the owner can see what landed and what remains, and
+unfinished work has an exact resume point.
+
+## Anti-patterns
+
+NEVER end on a plan, a worker dispatch, passing unit tests or a prepared PR.

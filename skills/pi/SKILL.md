@@ -1,7 +1,7 @@
 ---
 name: pi
-description: Ask the pi coding-agent CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent and NOT codex — this is badlogic's `pi` CLI (a distinct model, complements /codex).
-when_to_use: "pi, ask pi, second opinion from pi, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, cross-check codex. NOT for routine lookups"
+description: Ask the pi coding-agent CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent and NOT codex — this is badlogic's `pi` CLI (a distinct model, complements /astra).
+when_to_use: "pi, ask pi, second opinion from pi, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, cross-check Astra. NOT for routine lookups"
 user-invocable: true
 ---
 
@@ -12,11 +12,11 @@ coding agent (badlogic/earendil, `pi.dev`) — same shape as codex: one binary,
 agent loop, its own tools (read/bash/edit/write). Methodology + citations:
 `docs/pi/research-pi.md`.
 
-Why alongside `/codex`: pi answers from a **different model** than this Claude
+Why alongside `/astra`: pi answers from a **different model** than this Claude
 harness (its default here is `codex-serve/gpt-5.5`; configurable to
-Gemini/GPT/Claude), so it's a real second opinion. Use it to cross-check codex
+Gemini/GPT/Claude), so it's a real second opinion. Use it to cross-check Astra
 or when you want a non-Claude view. NEVER use a raw `Agent(...)` for a second
-opinion — use this skill or `/codex`.
+opinion — use this skill or `/astra`.
 
 ## Invoke
 
@@ -31,7 +31,7 @@ behavior built in, so NO sandbox flag is needed. The container is the perimeter.
 # a `404 page not found` body or non-zero exit = not authed / endpoint down.
 
 # --no-session: don't persist a rollout file (a batch loop fills the disk otherwise)
-# --thinking high: match codex's "newest at high effort"
+# --thinking high: match Astra's high effort
 # </dev/null is REQUIRED — without it pi blocks waiting for more stdin
 pi -p --no-session --thinking high "Goal: <X>. Find the flaw in..." </dev/null
 ```
