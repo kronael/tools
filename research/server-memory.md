@@ -1,9 +1,32 @@
 # Server memory — how an agent learns the machine it runs on
 
-Design research, 2026-10-02. Not built. Question: replace the always-injected
+Design research, 2026-10-02. Question: replace the always-injected
 `LOCAL.md` with something the agent builds on a prompt, loads on demand and
 keeps current like memory; and let `dockbox` / `qemubox` tell the agent it is
-in a sandbox.
+in a sandbox. The decisions below supersede the body where they differ.
+
+## Decided (owner, 2026-10-02) — built
+
+- `server-init` builds the server memory,
+  `~/.claude/skills/server-<hostname>/SKILL.md`: read-only scan, no sudo (open
+  question 3), at most 5 questions, a body that grows under an Upkeep rule; a
+  refresh shows the diff first. Named per hostname (open question 1), so a
+  shared `~/.claude` keeps one memory per machine. It never writes `/etc` and
+  refuses inside a sandbox. `LOCAL.md` stays: server-init reads it, lists what
+  the memory now covers, and never edits it.
+- No `etc-init` and no generic `server` skill. Nothing on a bare host writes
+  `/etc/claude-code/CLAUDE.md`. One line in `server-init` says where a machine
+  fact goes: a note every session must see in that managed file (written only
+  when already writable, never with sudo), a host fact in `server-<hostname>`.
+- dockbox and qemubox write `/etc/claude-code/CLAUDE.md` inside the box — which
+  sandbox, the host, what survives, the mount list — and set
+  `CLAUDE_SANDBOX=dockbox|qemubox`. The launchers own the note (open question
+  2); `env_note.py` is not built. The note showing as policy in `/memory` is
+  accepted (open question 4).
+- Install offers `server-init` as an opt-in group on a new install, never when
+  `CLAUDE_SANDBOX` is set.
+- Open: the `local.py` fix (recommendation 5), the `/learn` upkeep line, and
+  test plan item 2 — no in-box `claude -p` has seen the note yet.
 
 ## Recommendation
 
