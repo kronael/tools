@@ -18,6 +18,7 @@ Each file is a single topic. Drop new findings into their own file rather than e
 | Multi-agent failures | [multi-agent-horror.md](multi-agent-horror.md) | What blows up at scale: no stop conditions, no cost ceilings, no observability |
 | **Competing systems** | [competing-systems.md](competing-systems.md) | Comparison matrix: Hermes, DSPy, Reflexion, LangGraph HITL, mem0, Letta, A-MEM, Voyager, AutoGen, CrewAI |
 | **Anti-patterns** | [anti-patterns.md](anti-patterns.md) | Documented horror stories + the exact mitigation each maps onto in v3 |
+| Server memory | [server-memory.md](server-memory.md) | Per-machine on-demand `server` skill, `/server-init`, and a box-written `/etc/claude-code/CLAUDE.md` sandbox note |
 
 The bolded files are load-bearing: read those first.
 
