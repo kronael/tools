@@ -95,6 +95,11 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
   - **CLI tools** — rig, udfix, clp (step 7).
   - **dockbox** — dockerized Claude Code sandbox; needs Docker (step 7).
   - **Heavy/optional** — security-audit + video tools (step 6 separate asks).
+  - **Server memory** — runs `server-init` on this host: a read-only scan
+    (services, ports, `docker ps`, crontabs) and a few questions, written to
+    `~/.claude/skills/server-<hostname>/` (step 8). NEVER offer it when
+    `CLAUDE_SANDBOX` is set: a box is not the host, and its launcher already
+    wrote the box's note.
   Run ONLY the opted-in groups. ALWAYS still back up (step 1) before any write.
 - **Update**: skip the first-time questionnaire, but ALWAYS still run steps 6–7
   — NEVER silently skip tools or dockbox on a re-run (a stale binary or an
@@ -220,13 +225,18 @@ nor `~/.claude/skills/` exists yet. An **update** = either already exists.
    install` from a clone and continue. NEVER fail the whole install on one
    missing toolchain — report that tool skipped.
 
-8. **Report**: summary — **release delta** (installed vX.Y.Z → source vX.Y.Z,
+8. **Server memory** — opted-in new installs only, and NEVER with
+   `CLAUDE_SANDBOX` set. Follow `skills/server-init/SKILL.md` at the source
+   root; it runs after step 2, which installs the lint it ends on.
+
+9. **Report**: summary — **release delta** (installed vX.Y.Z → source vX.Y.Z,
    or "first tracked install"), fast drift result, X skills, Y agents, Z hooks,
    RECLAUDE.md, **pruned dirs/hooks** (name every stale skill/hook removed per
    step 2 — renamed, consolidated, or dead; say "pruned: none" when nothing
    matched so the user knows removal ran), Claude settings merged, Codex global
    guidance + skills + hooks bridge
-   installed/skipped, W external tools, CLI tools installed/skipped. Claude skills are invocable
+   installed/skipped, W external tools, CLI tools installed/skipped, server
+   memory written/skipped. Claude skills are invocable
    bare (`/commit`, `/ship`, `/refine`, ...). Codex bridged skills are
    invocable as `@commit`, `@ship`, `@refine`, ...; remind the user that hook
    commands require `/hooks` trust after install/update.

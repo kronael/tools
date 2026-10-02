@@ -28,7 +28,8 @@ Follow the canonical procedure in
 new install present its plan/consent questionnaire first, then verify source,
 backup, copy assets, install the wisdom file, merge settings, install the
 opted-in CLI tools (rig/udfix/clp/dockbox via their Makefiles — the
-marketplace snapshot carries their source dirs), report. Its Rules section
+marketplace snapshot carries their source dirs), build the opted-in server
+memory, report. Its Rules section
 (backup first, never-touch list, no deletions) applies verbatim. Below are
 only the Codex-specific deltas.
 

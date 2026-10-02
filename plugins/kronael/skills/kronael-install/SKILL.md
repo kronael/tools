@@ -78,7 +78,7 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
    (incl. the removed-skills prune list), install wisdom, merge the Claude hooks
    block, install Codex hook wiring, external tools, CLI tools
    (rig/udfix/clp/dockbox — the marketplace snapshot carries their source
-   dirs), verify. Present the questionnaire inline as numbered options. NEVER
+   dirs), server memory, verify. Present the questionnaire inline as numbered options. NEVER
    restate or fork those steps here; that file is the only source of truth and
    copies drift.
 5. After successful install from Codex, run the global guidance, installed
