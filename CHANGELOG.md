@@ -2,9 +2,34 @@
 
 ## [Unreleased]
 
+## [v0.4.10] — 20261002
+
+> kronael v0.4.10 — astra and sol second opinions, cd anywhere
+>
+> The codex second-opinion skill is now astra, sol adds a second Codex model, and sync makes `cd <project>` work from any directory.
+>
+> • /astra — the codex CLI pinned to gpt-6-astra, on every route codex had
+> • /sol — the same adversarial second opinion from gpt-5.6-sol
+> • sync — writes a CDPATH block into ~/.bashrc, so `cd <project>` finds ~/app, ~/wk and ~/sandbox
+> • clp — removed; CDPATH covers it
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- **Breaking:** the `codex` skill is `astra`: the codex CLI pinned to
+  `gpt-6-astra`, on every route codex had (oracle, release and ship
+  critique, scavenge checkpoints). `/codex` no longer resolves; a sync moves
+  an installed `skills/codex` aside. The model is a fixed slug checked in the
+  Codex catalog (`$CODEX_HOME`, default `~/.codex`); a missing slug stops the
+  call and asks, never substitutes.
+- `sol`: the same second opinion on `gpt-5.6-sol`, run ephemeral so it never
+  reads Astra's thread. Oracle routes to it only on an explicit request.
+- Prompt routing: a prompt that starts with `/astra` or `/sol` goes to that
+  skill; `ask codex`, `ask astra`, `oracle` and `second opinion` go to
+  `/astra`.
 - **Breaking:** `clp` is removed. A sync writes
-  `CDPATH=.:$HOME/app:$HOME/wk:$HOME/sandbox` into `~/.bashrc` in a marked
-  block, unexported, so `cd <project>` works from anywhere.
+  `CDPATH=:$HOME/app:$HOME/wk:$HOME/sandbox` into `~/.bashrc` in a marked
+  block, so `cd <project>` works from anywhere. The empty first entry keeps a
+  local `cd` silent; a marker without its pair stops the write.
 
 ## [v0.4.9] — 20261001
 
