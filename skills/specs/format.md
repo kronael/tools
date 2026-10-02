@@ -44,7 +44,8 @@ e.g. `specs/1/2-webhooks.md`. Use phase subdirs ONLY when specs cluster into
 distinct workstreams; a single-project corpus stays flat. Next N: `ls specs/<phase>/`, max + 1.
 
 `specs/index.md` is the master table — ALWAYS add a row on create, update Status
-on ship; lint: spec-index-row, spec-index-dangling (hard fail):
+on ship; the Spec cell links the file and Status matches its frontmatter.
+Lint: spec-index-row, spec-index-dangling, spec-status (hard fail):
 
 ```markdown
 | Spec | Status | Summary |
@@ -84,6 +85,9 @@ on ship; lint: spec-index-row, spec-index-dangling (hard fail):
 
 ALWAYS run `python3 ~/.claude/hooks/spec_lint.py specs` from the repo root — it
 checks every item below except 3, a judgement call no lint can make.
+An explicit `specs/` directory is checked even without an index or numbered
+files. Discovery from a project directory or a changed file requires an index
+or numbered spec, so a test suite or the `skills/specs/` router is excluded.
 
 1. Frontmatter status matches reality
 2. index.md row added/updated

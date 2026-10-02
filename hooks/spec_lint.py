@@ -22,11 +22,7 @@ from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import parse_meta
 
-# format.md: four lifecycle values, `experiment` beside them, and `reference`
-# for docs with no lifecycle. A closed set; the index Status column uses the
-# same words.
 STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
-# specs/<NN>-<topic>.md flat; specs/<phase>/<N>-<topic>.md under a phase dir.
 NUMBERED = re.compile(r'^(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
 FLAT_PAD = 2
 PHASE_DEPTH = 2
@@ -37,9 +33,6 @@ TICKED = re.compile(r'`([^`\n]+)`')
 AT_LINE = re.compile(r':\d+(?:-\d+)?$')
 SUFFIX = re.compile(r'\.[a-z][a-z0-9+]{0,9}$')
 NOT_IN_PATH = frozenset(' \t*?{}<>$|"\'()[]=,;!`')
-# This repo's two unbracketed placeholders — `.diary/YYYYMMDD.md`
-# (skills/diary/SKILL.md) and `specs/NN-topic.md` (format.md) — spelled out as
-# a path segment rather than inside `<...>`, which NOT_IN_PATH already excludes.
 PLACEHOLDER = re.compile(r'(?:^|/)(?:YYYYMMDD|NN)(?:[-_.]|$)')
 SKIP_DIRS = frozenset({'.git', 'node_modules', '.venv', '__pycache__', 'dist', 'build'})
 
@@ -73,15 +66,17 @@ def discovered(root: Path) -> list[Path]:
 
 
 def spec_roots(paths: list[Path]) -> list[Path]:
+    """Explicit specs dirs are checked; discovery requires a corpus marker."""
     roots: list[Path] = []
     for path in paths:
+        if path.is_dir() and path.name == 'specs':
+            roots.append(path)
+            continue
         target = path.parent if path.is_file() else path
         named = nearest_root(target)
         if named is not None:
             roots.append(named)
             continue
-        if (target / 'specs').is_dir():
-            roots.append(target / 'specs')
         roots.extend(discovered(target))
     return sorted(set(roots))
 
@@ -135,9 +130,6 @@ def pointer_path(token: str) -> str | None:
     if PLACEHOLDER.search(path):
         return None
     return path
-
-
-# --- rules (format.md self-review) ----------------------------------------
 
 
 def check_naming(root: Path, path: Path) -> list[Finding]:
@@ -211,6 +203,7 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
         ]
     findings: list[Finding] = []
     linked: set[Path] = set()
+    specs = {path.resolve() for path in files}
     for number, line in prose(index.read_text()):
         for target in LINK.findall(line):
             if '://' in target or target.startswith('#'):
@@ -226,9 +219,10 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
                     )
                 )
                 continue
-            linked.add(resolved.resolve())
         cells = row_cells(line)
-        if len(cells) > 1 and LINK.search(cells[0]) and cells[1] not in STATUSES:
+        if len(cells) < 3 or not LINK.search(cells[0]):
+            continue
+        if cells[1] not in STATUSES:
             findings.append(
                 Finding(
                     Severity.ERROR,
@@ -238,6 +232,24 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
                     'lifecycle value, not prose',
                 )
             )
+        for target in LINK.findall(cells[0]):
+            resolved = (root / target.split('#')[0]).resolve()
+            if resolved not in specs:
+                continue
+            linked.add(resolved)
+            split = frontmatter(resolved.read_text())
+            meta = parse_meta(split[0]) if split else None
+            status = str(meta.get('status', '')).strip() if meta else ''
+            if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
+                findings.append(
+                    Finding(
+                        Severity.ERROR,
+                        'spec-status',
+                        f'{index}:{number}: [spec-status] index Status {cells[1]!r} differs '
+                        f'from {resolved.name} status {status!r} — format.md: update Status '
+                        'on ship',
+                    )
+                )
     findings.extend(
         Finding(
             Severity.ERROR,

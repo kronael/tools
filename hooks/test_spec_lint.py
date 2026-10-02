@@ -59,6 +59,28 @@ def test_index_status_prose_fails(tmp_path: Path) -> None:
     assert 'spec-status' in rules(root, Severity.ERROR)
 
 
+def test_index_status_mismatch_fails(tmp_path: Path) -> None:
+    root = corpus(tmp_path, index=INDEX.replace('| shipped |', '| draft |'))
+    assert 'spec-status' in rules(root, Severity.ERROR)
+    assert report(root) == 2
+
+
+def test_prose_link_does_not_count_as_index_row(tmp_path: Path) -> None:
+    root = corpus(tmp_path, index='See [auth](01-auth.md).\n')
+    assert 'spec-index-row' in rules(root, Severity.ERROR)
+
+
+def test_summary_link_does_not_count_as_spec_row(tmp_path: Path) -> None:
+    root = corpus(tmp_path, index=INDEX.replace('JWT auth flow', '[webhooks](02-webhooks.md)'))
+    (root / '02-webhooks.md').write_text(SPEC)
+    assert 'spec-index-row' in rules(root, Severity.ERROR)
+
+
+def test_index_anchor_links_match_spec_status(tmp_path: Path) -> None:
+    root = corpus(tmp_path, index=INDEX.replace('(01-auth.md)', '(01-auth.md#auth)'))
+    assert check_corpus(root) == []
+
+
 def test_missing_index_fails(tmp_path: Path) -> None:
     root = corpus(tmp_path, index='')
     assert 'spec-index-row' in rules(root, Severity.ERROR)
@@ -137,6 +159,22 @@ def test_test_suite_named_specs_is_not_discovered(tmp_path: Path) -> None:
     suite.mkdir(parents=True)
     (suite / 'auth.md').write_text('# auth case\n')
     assert spec_roots([tmp_path]) == []
+    assert spec_roots([suite.parent.parent]) == []
+    assert spec_roots([suite / 'auth.md']) == []
+
+
+def test_explicit_unnumbered_corpus_is_checked(tmp_path: Path) -> None:
+    root = corpus(tmp_path, index='', name='auth.md')
+    assert spec_roots([root]) == [root]
+    found = rules(root, Severity.ERROR)
+    assert 'spec-naming' in found
+    assert 'spec-index-row' in found
+
+
+def test_file_trigger_discovers_valid_corpus(tmp_path: Path) -> None:
+    root = corpus(tmp_path)
+    assert spec_roots([root / '01-auth.md']) == [root]
+    assert spec_roots([tmp_path]) == [root]
 
 
 def test_skill_dir_named_specs_has_no_root(tmp_path: Path) -> None:
@@ -149,5 +187,7 @@ def test_skill_dir_named_specs_has_no_root(tmp_path: Path) -> None:
 
 
 def test_diary_date_placeholder_is_not_a_pointer(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nLogged to `.diary/YYYYMMDD.md` after significant work.\n')
+    root = corpus(
+        tmp_path, spec=SPEC + '\nLogged to `.diary/YYYYMMDD.md` after significant work.\n'
+    )
     assert check_corpus(root) == []
