@@ -39,6 +39,15 @@ The text usually arrives one of three ways:
 
 Always show the rewrite to the user. For file edits, show a diff or the changed section — don't silently overwrite.
 
+## Scope for informational and technical prose
+
+ALWAYS read and follow the Language section of
+`~/.claude/output-styles/caveman.md` for informational and technical prose.
+Those rules take precedence over personality, fragments, idioms, and slang
+suggested below. ALWAYS preserve technical names, code, and quotations.
+When this skill is a finishing pass within another writing task, ALWAYS keep
+the draft and audit internal and return the result that task requests.
+
 ## Your task
 
 When given text to humanize:

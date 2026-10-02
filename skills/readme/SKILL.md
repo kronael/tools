@@ -9,6 +9,7 @@ user-invocable: true
 
 Only this file preloads. ALWAYS read exactly ONE matched file below.
 Paths are relative to this directory.
+ALWAYS load the `writing` skill before drafting or editing prose in any mode.
 
 | If you need | Read |
 |---|---|
