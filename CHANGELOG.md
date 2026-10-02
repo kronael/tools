@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [v0.4.11] — 20261002
+
+> kronael v0.4.11 — recall-memories recovers more context
+>
+> recall-memories now ships a helper that digests earlier sessions and finds a prior tool or agent result to reuse.
+>
+> • recall.py — sessions, results, prompts, digest, show over Claude Code and Codex transcripts
+> • digest — compaction summaries, recaps, each prompt with its final reply, agents, edited files
+> • results, show — find an earlier tool or agent result and read it in full, not re-run
+> • make test — runs the recall.py tests
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
 - `recall-memories` digests prior sessions (compaction summaries, recaps,
   each prompt with its final reply, agents, edited files) and finds an
   earlier tool or agent result with its full output, so it is reused
