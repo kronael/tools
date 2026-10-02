@@ -97,6 +97,9 @@ Examples:
 Ingress: dirs and config are mounted into the VM with QEMU 9p.
 SSH is only the control channel used to enter the guest.
 
+Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
+is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
+
 State: $ROOT
 EOF
 }
@@ -472,6 +475,9 @@ sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/claude /usr/local/bin/codex'
+    note "writing the sandbox note to /etc/claude-code/CLAUDE.md in qemubox-$name"
+    note "why: Claude Code loads that file in every session, so the agent knows it is boxed"
+    guest_note "$HOSTNAME" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
     ssh_stream_box "$name" 'mkdir -p ~/.docker/run'
     note "copying agent config into qemubox-$name (writable guest copy; host stays read-only)"
     ssh_stream_box "$name" 'for d in .claude .codex .agents; do
@@ -752,6 +758,35 @@ assemble_mounts() {
     return 0
 }
 
+# Print the guest's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
+# Claude Code loads in every session, so the agent knows it is in a throwaway VM
+# and what survives it. $1 host name; reads the assembled mount_* arrays.
+guest_note() {
+    net=off
+    [ -n "$network" ] && net=on
+    cat <<EOF
+# Environment: qemubox sandbox
+
+You are inside qemubox, a throwaway QEMU VM started from host \`$1\`, not on
+the host itself. CLAUDE_SANDBOX=qemubox. The launcher writes this file at boot;
+a wrong line here is a qemubox launcher bug.
+
+- Host files are absent unless mounted below. Outbound network: $net.
+- Survives the box: the rw mounts below. \`~/.claude\` is never the host's: a
+  guest copy (empty under -U), so skill, memory and settings edits here are
+  lost unless a rw mount below holds them.
+- Lost when the last session exits: the VM and its disk, everything off a rw
+  mount.
+
+9p mounts (guest path, mode, host source):
+EOF
+    for i in "${!mount_dests[@]}"; do
+        src="${mount_srcs[$i]}"
+        [ "$src" = "${mount_dests[$i]}" ] && src="same path"
+        echo "- ${mount_dests[$i]} (${mount_modes[$i]}) <- $src"
+    done
+}
+
 # Sourcing with QEMUBOX_LIB=1 loads the helpers above without running the CLI,
 # so tests can exercise them directly.
 [ -n "${QEMUBOX_LIB:-}" ] && return 0
@@ -881,7 +916,7 @@ if [ -z "${no_copy:-}" ]; then
 fi
 
 remote=""
-for arg in "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
+for arg in CLAUDE_SANDBOX=qemubox "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
     printf -v q "%q" "$arg"
     remote="$remote $q"
 done

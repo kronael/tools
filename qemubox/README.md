@@ -121,6 +121,11 @@ One thing persists past the throwaway VM: the **active project's**
 recall survives. Only that one slug is mounted — the guest can't see or write
 any other project's history.
 
+At boot the launcher writes `/etc/claude-code/CLAUDE.md` in the guest, which
+Claude Code loads in every session: the agent reads that it is in a throwaway
+VM, which mounts survive, and that `~/.claude` is a copy. Every session also
+gets `CLAUDE_SANDBOX=qemubox`.
+
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't
 reach or log into each other. `-A` forwards your SSH agent, `-D` the Docker
 socket, `-K` the gpg-agent (commit signing; off by default), `-G` mounts
