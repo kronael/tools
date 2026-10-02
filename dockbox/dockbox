@@ -76,6 +76,51 @@ rm_matches() {
     esac
 }
 
+# Print the box's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
+# Claude Code loads in every session, so the boxed agent knows where it is and
+# what survives. $1 host name, $2 network (host|bridge), then the docker mount
+# args as assembled: -v spec / --tmpfs spec pairs.
+sandbox_note() {
+    local host="$1" net="$2" spec src dst mode lost=()
+    shift 2
+    cat <<EOF
+# Environment: dockbox sandbox
+
+You are inside dockbox, a Docker container started from host \`$host\`, not on
+the host itself. CLAUDE_SANDBOX=dockbox. The launcher writes this file at
+container start; a wrong line here is a dockbox launcher bug.
+
+- Host files are absent unless mounted below. Network: $net (-H gives \`host\`,
+  where host ports answer on localhost).
+- Survives the box: the bind mounts below; rw ones take edits. \`~/.claude\` is
+  the HOST's own: skill, memory and settings edits here change the host. NEVER
+  edit a \`server-*\` skill from here: it describes the host, not this box.
+- Lost when the last session exits: the container and everything outside the
+  bind mounts (\`\$HOME\`, /tmp, installed packages, build dirs).
+
+Bind mounts (box path, mode, host source):
+EOF
+    while [[ $# -gt 0 ]]; do
+        spec="$2"
+        case "$1" in
+            --tmpfs) lost+=("${spec%%:*}") ;;
+            -v)
+                if [[ "$spec" == *:* ]]; then
+                    src="${spec%%:*}"; dst="${spec#*:}"; mode=rw
+                    [[ "$dst" == *:ro ]] && mode=ro
+                    dst="${dst%:r[ow]}"
+                    [[ "$src" == "$dst" ]] && src="same path"
+                    echo "- $dst ($mode) <- $src"
+                else
+                    lost+=("$spec")  # -T: an anonymous volume
+                fi ;;
+        esac
+        shift 2
+    done
+    echo
+    echo "Lost at exit (tmpfs or volume): ${lost[*]}"
+}
+
 # Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
 # so tests can exercise them directly.
 [ -n "${DOCKBOX_LIB:-}" ] && return 0
@@ -199,6 +244,9 @@ container is created. Use -n <name> to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw), ~/.claude.json (ephemeral),
         ~/.gitconfig (ro), ~/.dockbox_history (rw)
+
+Sandbox note: /etc/claude-code/CLAUDE.md (generated, ro) tells the agent it
+        is boxed and what survives; CLAUDE_SANDBOX=dockbox is set.
 
 Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
         dockbox flags, one per line, # comments ok. The command line
@@ -507,6 +555,14 @@ mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 [[ -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
+# Sandbox note from the final mount list, mounted at the managed-policy path the
+# image owns: the agent reads where it is, and no host config is touched.
+_note=$(mktemp)
+_net=bridge
+[[ ${#network_arg[@]} -gt 0 ]] && _net=host
+sandbox_note "$HOSTNAME" "$_net" "${mounts[@]}" > "$_note"
+mounts+=(-v "$_note:/etc/claude-code/CLAUDE.md:ro")
+
 docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
 # Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
@@ -519,6 +575,7 @@ docker run -d --init \
     "${network_arg[@]}" \
     "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
+    -e CLAUDE_SANDBOX=dockbox \
     -e TERM \
     ${CLAUDE_CODE_OAUTH_TOKEN:+-e CLAUDE_CODE_OAUTH_TOKEN} \
     ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \
