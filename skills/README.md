@@ -27,8 +27,10 @@ LLMs have no memory between conversations. Three pieces cover this:
 - **diary**: chronological work log at `<cwd>/.diary/YYYYMMDD.md`.
   Different from memory: diary is *what happened today*, memory is
   *what's true forever*.
-- **recall-memories**: explicit search across diary + memory + recent
-  session transcripts. Memory and diary don't auto-fire on relevant
+- **recall-memories**: explicit search across diary + memory + Claude
+  Code and Codex session records, down to single tool and agent results,
+  so an earlier run is reused instead of repeated. `recall.py` beside the
+  skill parses the records. Memory and diary don't auto-fire on relevant
   prompts — recall-memories is the "look it up" verb.
 
 ## Multi-pass refinement (refine, improve, readme)

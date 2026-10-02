@@ -2,6 +2,15 @@
 
 ## Bundle
 
+- **SLUG-RULE-DROPS-DOTS** (LOW, docs) — CONFIRMED. `skills/solve/SKILL.md:26`
+  and `skills/global/SKILL.md:15` say the transcript slug is the CWD with `/`
+  replaced by `-`. Claude Code replaces every non-alphanumeric character:
+  `/home/u/app/x/.wt/server` is stored as
+  `~/.claude/projects/-home-u-app-x--wt-server`. Built that way, a
+  path through a worktree or any dotted directory names a directory that does
+  not exist, and the search reports no history. `skills/recall-memories/layout.md`
+  states the full rule; the two files still carry the short one.
+
 - **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED,
   same at v0.4.9 with `/codex`. `hooks/prompt_nudge.py` sends any prompt with
   the bare word `oracle` or `second opinion` to `/astra`

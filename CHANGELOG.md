@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+- `recall-memories` digests prior sessions (compaction summaries, recaps,
+  each prompt with its final reply, agents, edited files) and finds an
+  earlier tool or agent result with its full output, so it is reused
+  instead of re-run. The new `recall.py` helper reads Claude Code
+  transcripts, subagent transcripts, spilled tool outputs and Codex
+  rollouts; `make test` runs its tests.
+
 ## [v0.4.10] — 20261002
 
 > kronael v0.4.10 — astra and sol second opinions, cd anywhere

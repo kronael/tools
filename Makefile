@@ -3,6 +3,7 @@ PROJECTS := bhctl dockbox hooks qemubox rig udfix
 # <<< projects <<<
 
 T := .github/templates
+PYTEST := $(shell command -v uvx >/dev/null 2>&1 && echo uvx pytest || echo python3 -m pytest)
 W := .github/workflows
 COMMA := ,
 
@@ -59,6 +60,7 @@ help:
 
 test: $(addprefix test-,$(PROJECTS))
 	bash tests/drift_test.sh
+	$(PYTEST) -q skills/recall-memories/test_recall.py
 	@echo "all tests passed ($(PROJECTS))"
 
 clean: $(addprefix clean-,$(PROJECTS))
