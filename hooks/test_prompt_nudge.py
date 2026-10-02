@@ -26,8 +26,16 @@ def test_code_does_not_route_to_codex() -> None:
 
 
 def test_codex_route_requires_explicit_second_opinion() -> None:
-    assert explicit_route('ask codex for a second opinion') == '/codex'
-    assert explicit_route('oracle this') == '/codex'
+    assert explicit_route('ask codex for a second opinion') == '/astra'
+    assert explicit_route('oracle this') == '/astra'
+
+
+@pytest.mark.parametrize('skill', ['astra', 'sol'])
+def test_cli_tier_route_is_explicit_and_suppressed_in_codex(skill) -> None:
+    for prompt in (f'/{skill} handle this', f'use {skill} for a second opinion'):
+        assert explicit_route(prompt) == f'/{skill}'
+        assert explicit_route(prompt, harness='codex') is None
+    assert explicit_route(f'{skill} configuration') is None
 
 
 def test_codex_route_suppressed_inside_codex() -> None:

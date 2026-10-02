@@ -133,7 +133,7 @@ Run the owner-selected checks through the matching existing skills:
 `review` for an independent review, `red-eval` for hostile failure cases,
 `cto-eval` for operational risks, `design-eval` for UI craft and `13yo-eval`
 for first use. Load only lenses justified by the brief or a concrete
-unresolved concern. An explicit independent engine choice uses `codex` or
+unresolved concern. An explicit independent engine choice uses `astra` or
 `oracle`.
 
 ALWAYS re-verify findings against the code before acting. The brief covers

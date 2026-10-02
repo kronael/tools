@@ -1,7 +1,7 @@
 # Research: the "pi" coding-agent CLI (for a codex-style `/pi` skill)
 
 Goal: identify the `pi` / "pi agent" / π CLI the user means, and document it
-precisely enough to wrap it like our `codex` skill (one-shot, non-interactive,
+precisely enough to wrap it like our `astra` skill (one-shot, non-interactive,
 text on stdout).
 
 ## What pi is (+confidence)
@@ -96,7 +96,7 @@ pi --thinking high "..."                    # off|minimal|low|medium|high|xhigh
 pi --list-models [search]                   # discover model ids
 ```
 Reasoning levels: `off, minimal, low, medium, high, xhigh` ([usage][usage]).
-To mirror codex's "newest model at high effort," pick the top model from
+For pi's newest-model policy, pick the top model from
 `--list-models` and pass `--thinking high` (or `--model <id>:high`).
 
 ## Blockers for a codex-style wrapper
@@ -126,7 +126,7 @@ bar (BYOK key, same as codex). Minor caveats, none blocking:
 
 ## Proposed `/pi` skill sketch
 
-Mirror the `codex` skill shape:
+Mirror the `astra` skill shape:
 
 ```bash
 # one-shot second opinion, danger-mode is the default (no flag needed)
@@ -138,9 +138,9 @@ pi --model <newest-from-list-models>:high -p "<prompt>" </dev/null
   present; if not, tell the user to `export …_API_KEY` or run `pi` + `/login`
   once. (No `login status` command to shell out to.)
 - **Model/effort:** default to the top-ranked model from `--list-models` at
-  `--thinking high` (or `xhigh`) to match codex's "newest at high effort."
+  `--thinking high` (or `xhigh`) to match Astra's high effort.
 - **Prompt framing:** same adversarial "find the flaw / second opinion" framing
-  as the codex skill; pass via arg or stdin.
+  as the astra skill; pass via arg or stdin.
 - **Output:** plain text by default (`-p`); add `--mode json` only if the skill
   needs to parse structured events.
 - **Isolation:** already YOLO — safe to run inside the tool container; document

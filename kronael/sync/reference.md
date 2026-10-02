@@ -98,7 +98,7 @@ JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
     *(f'skills/{n}' for n in (
-        'bash', 'con', 'cont', 'create-architecture-diagram', 'create-ascii-art',
+        'bash', 'codex', 'con', 'cont', 'create-architecture-diagram', 'create-ascii-art',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
         'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
         'create-p5js', 'create-popular-web-designs', 'create-pretext', 'create-sketch',
@@ -447,7 +447,7 @@ Run `which <tool>` first; skip if present and recent.
 |------|---------|--------|
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
-| `codex` | `bun install -g @openai/codex` | /codex /oracle |
+| `codex` | `bun install -g @openai/codex` | /astra /sol /oracle |
 | `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |

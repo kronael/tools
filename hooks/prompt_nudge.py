@@ -128,9 +128,12 @@ META_PATTERNS = [
 def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
+        match = re.search(r'(?<!\S)/(astra|sol)\b|\b(?:ask|use|run|invoke)\s+(astra|sol)\b', lower)
+        if match:
+            return '/' + (match.group(1) or match.group(2))
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
-                return '/codex'
+                return '/astra'
     for pattern, routes in ESCALATION_PATTERNS:
         match = re.search(pattern, lower)
         if match:

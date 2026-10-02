@@ -8,7 +8,7 @@ user-invocable: true
 # Oracle
 
 One router for second opinions. User text wins: if the user explicitly asks for
-codex, fable, creative, code, planning, or security routing, follow that route.
+astra, sol, fable, creative, code, planning, or security routing, follow that route.
 
 ## Dispatch
 
@@ -17,9 +17,10 @@ codex, fable, creative, code, planning, or security routing, follow that route.
 | Code review, bug hunt, algorithm/design critique | `fable` subagent |
 | Planning critique, release plan, architecture plan | `fable` subagent |
 | Security, red-team, exploitability, deep audit | `fable` subagent |
-| Naming, prose, narrative, product copy, ideation | `codex` CLI, high effort |
+| Naming, prose, narrative, product copy, ideation | `astra` skill, high effort |
 | Ambiguous but touches code or operations | `fable` subagent |
-| Explicit "ask codex" / "use codex" | `codex` CLI, high effort |
+| Explicit "ask codex" / "use codex" | `astra` skill, high effort |
+| Explicit Astra or Sol request | The named `astra` or `sol` skill |
 
 ## Fable Route
 
@@ -41,14 +42,19 @@ Rules:
 - When fable cannot run (a usage limit), ALWAYS take the same route on
   `subagent_type: "opus"` — NEVER skip the opinion.
 
-## Codex Route
+## Astra Route
 
-Load the `codex` skill and follow its runbook. Use it for creative critique and
-explicit Codex requests. Keep the prompt adversarial and high-level; do not
+Load the `astra` skill and follow its runbook. Use it for creative critique and
+explicit Codex or Astra requests. Keep the prompt adversarial and high-level; do not
 paste your full reasoning chain.
 
-When codex cannot run (revoked auth, missing CLI), ALWAYS take the Fable Route
-instead, on opus when fable cannot run either — NEVER drop the second opinion.
+For an explicit Sol opinion, ALWAYS invoke `sol` with the adversarial review
+rules in `astra` § Rules; NEVER route a Sol request to Astra silently.
+
+When the Astra CLI call cannot run (revoked auth, missing CLI), ALWAYS report
+the failure and take the Fable Route, on opus when fable cannot run either.
+For a missing pinned model, ALWAYS follow the named skill's stop-and-report
+rule; NEVER substitute an engine without the user's choice.
 
 ## Output
 

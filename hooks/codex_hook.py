@@ -118,7 +118,7 @@ def rewrite_skill_refs(text: str) -> str:
 
     def replace(match: re.Match[str]) -> str:
         name = match.group('name')
-        if name == 'codex':
+        if name in {'astra', 'sol'}:
             return 'the current Codex session'
         if name in names:
             return f'@{name}'

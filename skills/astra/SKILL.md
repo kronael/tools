@@ -1,34 +1,41 @@
 ---
-name: codex
-description: Ask the codex CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle.
-when_to_use: "codex, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, ask codex. NOT for routine lookups"
+name: astra
+description: "Ask the codex CLI on gpt-6-astra for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
+when_to_use: "astra, ask astra, codex, ask codex, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
 user-invocable: true
 ---
 
-# Codex
+# Astra
 
-Runs `codex exec` as a subprocess for a one-shot second opinion.
-NEVER use a raw `Agent(...)` call when you need a second opinion — ALWAYS use this skill instead.
+The codex CLI pinned to `gpt-6-astra`, at high effort. Its catalog description
+is "Frontier intelligence for the most demanding work." This is a subprocess,
+NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
 Routing lives in `oracle`. Use this skill directly only when the user
-explicitly asks for Codex or when `oracle` dispatches to the Codex route.
+explicitly asks for Astra or Codex or when `oracle` dispatches to the Astra route.
 
 ## Invoke
 
-We're inside dockbox (a container); codex's inner bwrap sandbox is unnecessary.
+ALWAYS complete the Model and Auth checks below before this invocation.
+For a Sol call, ALWAYS use Sol's command and slug with these shared rules.
+
+In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
 On kernels that block unprivileged user namespaces, bwrap fails with
 `No permissions to create a new namespace` — and `-s danger-full-access` does NOT
 help, because it still spins up bwrap (in full-access mode), so every shell
 command codex runs dies before executing. The ONLY reliable skip is the flag
 `--dangerously-bypass-approvals-and-sandbox`, which disables bwrap entirely.
-NEVER use `-s read-only` for an audit either — it sandboxes the network too, so
-codex's backend lookups fail (`failed to lookup address information`).
+NEVER use `-s read-only` for an audit on this path — ALWAYS use the bypass
+flag; sandboxed backend lookups can fail (`failed to lookup address information`).
 
 ALWAYS launch via the `resume` subcommand so codex continues this project's
 existing thread instead of starting cold every call. `--last` picks the most
 recent session for the current cwd (`--all` disables that cwd filter); with no
 prior session it cold-starts cleanly (fresh id, exit 0, no error), so
 `resume --last` is the ONE universal invocation — no first-call special case.
+
+ALWAYS serialize calls in one working directory: Astra and Sol share its
+latest session. NEVER overlap them and let `--last` pick another task's thread.
 
 ```bash
 # Auth check first — catches "never logged in" only. `codex login status`
@@ -50,7 +57,7 @@ fi
 #   perimeter; -s danger-full-access still runs bwrap, fails on no-userns kernels)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
 codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
-  -c model_reasoning_effort="high" \
+  -m gpt-6-astra -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -63,21 +70,30 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 (which contains "codex") and kills the harness. Kill codex by numeric PID
 (`ps -eo pid,args | grep -F 'codex exec' | grep -v grep | grep -v zsh`).
 
-## Model — ALWAYS the newest, at high effort
+## Model — fixed by the calling skill
 
-- ALWAYS inherit the newest model instead of hardcoding one in this file — a
-  literal model name here rots silently the day codex ships the next one.
-- ALWAYS verify what you inherit before trusting it: `~/.codex/models_cache.json`
-  lists models with a `priority`, and 1 is the newest. `~/.codex/config.toml`
-  may set no `model` key at all, leaving the choice to runtime resolution —
-  confirm that resolves to the priority-1 entry.
-- ALWAYS pass `-m <priority-1 model>` for the call when the inherited default is
-  NOT that entry; NEVER pass `-m` with any other value — every other value
-  downgrades the second opinion silently.
-- ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work.
-  Do not trust a lower local config default.
+- ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The calling
+  skill selects the slug; reading this shared runbook NEVER changes that choice.
+- ALWAYS confirm the selected slug exists with the check below before the
+  call; exit 0 means present. NEVER use the configured default or priority-1 entry.
+- If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
+  launch and report the exact missing model. ALWAYS ask the user to refresh
+  the Codex catalog or explicitly choose another tier; NEVER silently substitute.
+- ALWAYS pass `-c model_reasoning_effort="high"` for both skills and both
+  review and writing modes; NEVER trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
+
+```bash
+python3 - '<selected slug>' <<'PY'
+import json
+import sys
+from pathlib import Path
+
+catalog = json.loads((Path.home() / '.codex/models_cache.json').read_text())
+sys.exit(0 if any(m['slug'] == sys.argv[1] for m in catalog['models']) else 1)
+PY
+```
 
 ## Auth — two paths
 
@@ -97,7 +113,7 @@ a tool call. NEVER retry the call: a revoked refresh token does not recover.
 
 ## Rules
 
-codex is a peer agent — has tools, sees the repo. Give it the goal and entry points,
+Codex is a peer agent with tools and repo access. ALWAYS give it the goal and entry points,
 then let it explore freely. NEVER pre-chew the answer or walk it through steps;
 that defeats the point. For open-ended tasks (doc improvements, architecture
 reviews, broad audits) give a high-level goal and let codex decide how to research
@@ -128,5 +144,6 @@ ALWAYS verify codex's claim against the codebase before acting. NEVER implement 
 
 ## Output
 
-`codex exec resume --last "<prompt>"` writes the final message to stdout. `--json` emits JSON Lines. `--ephemeral` skips session persistence (and defeats `resume` — see Invoke).
-Treat the answer as advisory. Cite when acting on it.
+The invocation above writes the final message to stdout; `--json` emits JSON
+Lines. `--ephemeral` skips persistence — see Invoke. Treat the answer as
+advisory. Cite when acting on it.
