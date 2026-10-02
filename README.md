@@ -14,7 +14,7 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 
-Makefile tools (`udfix`, `rig`, `bhctl`, `dockbox`, `qemubox`):
+Makefile tools (`udfix`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`):
 `cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`):
 `uv run main.py`.
 

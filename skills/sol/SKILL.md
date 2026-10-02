@@ -1,7 +1,7 @@
 ---
 name: sol
-description: "Ask the codex CLI on gpt-5.6-sol for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
-when_to_use: "sol, ask sol, use sol, second opinion from sol, quick codex opinion, sanity check, disagreement after reasoning. NOT for routine lookups"
+description: "Ask the codex CLI on gpt-5.6-sol for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI."
+when_to_use: "ask sol, /sol, sol second opinion, second opinion from the sol model"
 user-invocable: true
 ---
 
@@ -12,20 +12,19 @@ is "Older generation workhorse model." It gives the same kind of second opinion
 as `astra`, from a different Codex model. This is a subprocess, NEVER a Claude
 `Agent(...)` type.
 
-Routing lives in `oracle`. Use this skill directly only when the user
-explicitly asks for Sol or when `oracle` dispatches to it.
+Use it only when the user explicitly asks for Sol; `oracle` routes to it only on
+such a request.
 
 ## Invoke
 
-ALWAYS follow `../astra/SKILL.md` for every rule of the call: Invoke, Model,
-Auth, Rules and Output. ALWAYS select `gpt-5.6-sol` in the catalog check and
-the command; NEVER inherit Astra's slug from its example.
+ALWAYS follow `astra` § Invoke, § Model, § Auth, § Rules and § Output, with two
+differences: select `gpt-5.6-sol` in the catalog check and the command, and run
+`codex exec --ephemeral` instead of `resume --last`. `resume --last` picks the
+working directory's latest session, which is Astra's thread after an Astra call,
+and Sol must answer without having read Astra's prompt and answer.
 
 ```bash
-codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
+codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
   -m gpt-5.6-sol -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
-
-ALWAYS serialize Sol and Astra calls in one working directory: they share its
-latest session, so `--last` would pick the other call's thread.

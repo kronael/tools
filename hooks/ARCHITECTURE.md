@@ -69,8 +69,9 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. In Claude only, route explicit Astra/Sol requests to `/astra` or `/sol`;
-   route `ask codex`, `oracle`, and `second opinion` to `/astra`.
+4. In Claude only, route a prompt that starts with `/astra` or `/sol` to that
+   skill; route `ask codex`, `ask astra`, `oracle`, and `second opinion` to
+   `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
 6. Tokenise prompt and exact-match words against `AGENT_KEYWORDS`. A trailing

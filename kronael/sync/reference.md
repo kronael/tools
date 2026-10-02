@@ -537,8 +537,10 @@ one toolchain is missing — report that tool skipped and continue.
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
 
-The CDPATH block is a plain shell variable, never exported: a script that
-inherits CDPATH can `cd` somewhere unexpected. A root that does not exist is
+The CDPATH block is a plain shell variable, not exported by the block: a
+script that inherits CDPATH can `cd` somewhere unexpected. Its first entry is
+empty, not `.`: the current directory still wins, and a `cd` into a local
+directory prints nothing, so `$(cd sub && pwd)` stays one line. A root that does not exist is
 skipped by `cd`. Write or replace the block; a symlinked `~/.bashrc` is edited
 through the link:
 
@@ -546,14 +548,18 @@ through the link:
 python3 - <<'PY'
 import os, re
 p = os.path.expanduser('~/.bashrc')
-block = ('# >>> kronael cdpath >>>\n'
-         'CDPATH=.:$HOME/app:$HOME/wk:$HOME/sandbox\n'
-         '# <<< kronael cdpath <<<\n')
-s = open(p).read() if os.path.exists(p) else ''
-pat = re.compile(r'# >>> kronael cdpath >>>\n.*?# <<< kronael cdpath <<<\n', re.S)
-s = pat.sub(lambda m: block, s) if pat.search(s) else s.rstrip('\n') + '\n\n' + block
-open(p, 'w').write(s)
-others = [l for l in s.splitlines() if re.match(r'\s*(export\s+)?CDPATH=', l) and '$HOME/wk' not in l]
+BEGIN, END = '# >>> kronael cdpath >>>', '# <<< kronael cdpath <<<'
+block = [BEGIN, 'CDPATH=:$HOME/app:$HOME/wk:$HOME/sandbox', END]
+lines = open(p).read().splitlines() if os.path.exists(p) else []
+if BEGIN in lines and END in lines[lines.index(BEGIN):]:
+    i = lines.index(BEGIN)
+    lines[i:lines.index(END, i) + 1] = block
+elif BEGIN in lines or END in lines:
+    raise SystemExit(f'{p}: a kronael cdpath marker without its pair; fix it by hand')
+else:
+    lines += ([''] if lines else []) + block
+open(p, 'w').write('\n'.join(lines) + '\n')
+others = [l for l in lines if re.match(r'\s*(export\s+)?CDPATH\b', l) and l != block[1]]
 print('CDPATH block written' + (f'; ~/.bashrc also sets it: {others}' if others else ''))
 PY
 ```

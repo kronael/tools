@@ -27,7 +27,8 @@ user-invocable: true
    size: every context and every applicable lens — NEVER drop one;
    `correctness` contexts on `fable` (`opus` when fable is unavailable); and a
    second opinion over the same range — the `astra` skill directly, or an
-   `opus` or `fable` sub when astra cannot run — its findings settled in refine
+   `opus` or `fable` sub when astra cannot run (auth or CLI failure; a missing
+   model follows `astra` § Model) — its findings settled in refine
    step 7 and applied through step 8, NEVER in main context. Any change landing
    after the refine, other than the refine's own commits and the release
    commit, reruns it — NEVER tag code the refine did not see.

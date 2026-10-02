@@ -31,11 +31,28 @@ def test_codex_route_requires_explicit_second_opinion() -> None:
 
 
 @pytest.mark.parametrize('skill', ['astra', 'sol'])
-def test_cli_tier_route_is_explicit_and_suppressed_in_codex(skill) -> None:
-    for prompt in (f'/{skill} handle this', f'use {skill} for a second opinion'):
-        assert explicit_route(prompt) == f'/{skill}'
-        assert explicit_route(prompt, harness='codex') is None
-    assert explicit_route(f'{skill} configuration') is None
+def test_slash_route_to_astra_and_sol_suppressed_in_codex(skill) -> None:
+    assert explicit_route(f'/{skill} handle this') == f'/{skill}'
+    assert explicit_route(f'/{skill} handle this', harness='codex') is None
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'use SOL as collateral on the perp',
+        'run sol through the swap simulator',
+        'use astra db for vectors',
+        'ls /sol/data',
+        'cd /astra',
+        'sol configuration',
+    ],
+)
+def test_bare_astra_and_sol_words_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+def test_ask_astra_routes_like_ask_codex() -> None:
+    assert explicit_route('ask astra about this design') == '/astra'
 
 
 def test_codex_route_suppressed_inside_codex() -> None:

@@ -17,7 +17,7 @@ explicitly asks for Astra or Codex or when `oracle` dispatches to the Astra rout
 ## Invoke
 
 ALWAYS complete the Model and Auth checks below before this invocation.
-For a Sol call, ALWAYS use Sol's command and slug with these shared rules.
+A Sol call shares these rules except the session: see `sol` § Invoke.
 
 In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
 On kernels that block unprivileged user namespaces, bwrap fails with
@@ -33,9 +33,6 @@ existing thread instead of starting cold every call. `--last` picks the most
 recent session for the current cwd (`--all` disables that cwd filter); with no
 prior session it cold-starts cleanly (fresh id, exit 0, no error), so
 `resume --last` is the ONE universal invocation — no first-call special case.
-
-ALWAYS serialize calls in one working directory: Astra and Sol share its
-latest session. NEVER overlap them and let `--last` pick another task's thread.
 
 ```bash
 # Auth check first — catches "never logged in" only. `codex login status`
@@ -75,22 +72,24 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 - ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The calling
   skill selects the slug; reading this shared runbook NEVER changes that choice.
 - ALWAYS confirm the selected slug exists with the check below before the
-  call; exit 0 means present. NEVER use the configured default or priority-1 entry.
+  call; exit 0 means present. NEVER pick the model by the configured default or by priority.
 - If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
   launch and report the exact missing model. ALWAYS ask the user to refresh
-  the Codex catalog or explicitly choose another tier; NEVER silently substitute.
-- ALWAYS pass `-c model_reasoning_effort="high"` for both skills and both
-  review and writing modes; NEVER trust a lower local config default.
+  the Codex catalog or explicitly choose another model; NEVER silently substitute.
+- ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work, in
+  both skills; NEVER trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 
 ```bash
 python3 - '<selected slug>' <<'PY'
 import json
+import os
 import sys
 from pathlib import Path
 
-catalog = json.loads((Path.home() / '.codex/models_cache.json').read_text())
+home = Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
+catalog = json.loads((home / 'models_cache.json').read_text())
 sys.exit(0 if any(m['slug'] == sys.argv[1] for m in catalog['models']) else 1)
 PY
 ```

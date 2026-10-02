@@ -90,7 +90,7 @@ AGENT_KEYWORDS = {
 }
 
 CODEX_PATTERNS = [
-    r'\bask\s+codex\b',
+    r'\bask\s+(?:codex|astra)\b',
     r'\boracle\b',
     r'\bsecond\s+opinion\b',
 ]
@@ -128,9 +128,11 @@ META_PATTERNS = [
 def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
-        match = re.search(r'(?<!\S)/(astra|sol)\b|\b(?:ask|use|run|invoke)\s+(astra|sol)\b', lower)
+        # A leading slash command only: "use sol" is as likely the Solana token
+        # as the skill, and "/sol/data" a path.
+        match = re.match(r'\s*/(astra|sol)(?![\w/.-])', lower)
         if match:
-            return '/' + (match.group(1) or match.group(2))
+            return '/' + match.group(1)
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
                 return '/astra'

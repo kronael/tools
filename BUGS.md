@@ -2,6 +2,23 @@
 
 ## Bundle
 
+- **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED,
+  same at v0.4.9 with `/codex`. `hooks/prompt_nudge.py` sends any prompt with
+  the bare word `oracle` or `second opinion` to `/astra`
+  (`CODEX_PATTERNS`), and checks those patterns before the escalation ones.
+  So `oracle: review this diff for bugs` skips `skills/oracle/SKILL.md`'s
+  table, which sends code and plan critique to fable, and `use opus for a
+  second opinion` loses the requested model. **Proposal:** route `oracle` and
+  `second opinion` to `/oracle`, keep `ask codex`/`ask astra` on `/astra`, and
+  test the escalation patterns first. No test yet — needs sign-off.
+
+- **SYNC-CDPATH-NO-OPT-OUT** (LOW, design) — proposed. `kronael/sync`
+  step 8 writes the CDPATH block on every sync (`SKILL.md` step 8,
+  `reference.md` CLI tools table "always"), so a block the owner deleted
+  comes back without a question. **Proposal:** skip the write when the
+  first-sync answer declined CLI tools, recorded in the manifest. No test —
+  design.
+
 - **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
   needs sign-off. Step 4 of `skills/refine/SKILL.md:32-42` skips unless an
   open PR whose head is an ancestor of HEAD exists, and step 11
