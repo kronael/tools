@@ -1,25 +1,5 @@
 # Changelog
 
-## [v0.3.100] — 20261002
-
-> kronael v0.3.100 — clearer explanations and host context
->
-> Explanations use the format that fits the question, technical prose uses complete English, and agents can identify their host or sandbox.
->
-> • `/create` supports interactive explanations and narrated video based on checked sources.
-> • `/writing` keeps technical prose complete; the caveman length budget applies only to chat.
-> • `/server-init` builds a host reference; a new installation offers it outside sandboxes.
-> • dockbox and qemubox tell agents where they run and which files survive.
-> • `spec-lint` checks specification structure and code references before a commit.
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
-- `/create` and `/show-me` select explanations by the reader's needs, honor requested formats, and verify interaction or playback against sources.
-- Documentation loads `/writing`; `/humanize` preserves technical terms and complete sentences. Creative work follows the requested voice, and routine editing keeps its audit internal.
-- `/server-init` records host services, ports, and paths after a read-only scan. Installation offers this step as an option outside sandboxes.
-- dockbox and qemubox provide environment notes and set `CLAUDE_SANDBOX`; `/server-init` refuses to build host records inside them.
-- `spec-lint` checks status, index entries, filenames, placeholders, and code references. It recognizes specification collections and excludes documented path placeholders.
-
 ## [v0.3.98] — 20260926
 
 > kronael v0.3.98 — two lines, one bundle, Bun for new TypeScript
