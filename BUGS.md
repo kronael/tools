@@ -8,6 +8,14 @@
   repo's 200-line rule (`CLAUDE.md:107`, `skills/wisdom/SKILL.md:60`).
   **Fix:** move cold detail to `kronael/install/reference.md`.
 
+- **CODEX-SKILL-FAILS-FRONTMATTER-LINT** (LOW, config) — CONFIRMED at HEAD
+  2026-10-02. `plugins/kronael/skills/kronael-install/SKILL.md:1-4` has no
+  `when_to_use`, and the `skill-frontmatter` hook (`.pre-commit-config.yaml:9-15`)
+  lints every `SKILL.md`, so `pre-commit run --files` on it exits 2
+  (`[skill-keys] missing ... when_to_use`); CI's `pre-commit/action` runs all
+  files. **Fix:** add a `when_to_use`, or exclude `plugins/` from the hook if
+  the Codex bridge follows Codex's frontmatter rules instead.
+
 
 - **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
   2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
