@@ -21,8 +21,8 @@ with sudo; a fact about this host goes in its `server-<hostname>` skill.
 
 1. **Refuse in a sandbox.** `CLAUDE_SANDBOX` set, or `/etc/claude-code/CLAUDE.md`
    naming dockbox or qemubox → stop and say so. NEVER build a memory from a
-   box: dockbox writes the box's facts into the host's `~/.claude`, qemubox
-   loses them at exit.
+   box: its services and paths describe the sandbox, not the host. ALWAYS use
+   the launcher's note for sandbox facts.
    Completion criterion: `CLAUDE_SANDBOX` is empty and no sandbox note exists.
 
 2. **Name the target.** `host=$(hostname -s)`, target
