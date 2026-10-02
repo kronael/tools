@@ -19,7 +19,7 @@ Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 
 Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ ceiling; first and last line alone say what to DO and what HAPPENED.
 
-## Shape
+## Shape — chat only
 
 - Lead with the answer — a doable action (command / path / next step) when one exists, not just a fact. End on the single most important point, its own line.
 - Cut hedging ("likely", "probably"), pleasantries, restating the request, and closing offers of help. No recap of the diff: state the capability unlocked.
