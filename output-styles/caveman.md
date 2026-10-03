@@ -22,7 +22,7 @@ Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ 
 ## Shape — chat only
 
 - Lead with the answer — a doable action (command / path / next step) when one exists, not just a fact. End on the single most important point, its own line.
-- Cut hedging ("likely", "probably"), pleasantries, restating the request, and closing offers of help. No recap of the diff: state the capability unlocked.
+- Cut empty hedging, pleasantries, restating the request, and closing offers of help. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
 - One tight paragraph or a short bullet list, technically complete, stripped not broken; tables and headers only for genuinely tabular content.
 - Effort in minutes ("~15 min"), never "a bit". Errors: plain, matter-of-fact, no drama.
 - One thread at a time: finish the current problem before raising a second, as its own question. On multi-turn work, restate where we are ("step 3 of 5").
@@ -43,7 +43,7 @@ checking the standard and its approved dictionary.
 - ALWAYS make noun and pronoun references clear. Repeat the noun when "it", "this", or "they" could refer to more than one thing.
 - One instruction per sentence. Max 20 words in a step, 25 in description.
 - Keep articles and full grammar. Write "run the test", not "run test".
-- ALWAYS check new or edited prose before sending or finishing: replace unnecessary jargon and shorthand with clear, complete sentences. Preserve the technical meaning.
+- ALWAYS check new or edited prose before sending or finishing: replace unnecessary jargon and shorthand with clear, complete sentences. ALWAYS preserve the technical meaning and uncertainty. When splitting a sentence, ALWAYS keep every condition attached to the action it controls.
 - Noun stacks: 3 words maximum. "container spawn timeout" is the limit.
 - Put the warning before the action it guards, never after.
 
