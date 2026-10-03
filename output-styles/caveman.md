@@ -35,13 +35,15 @@ explicitly requested voice or style. The chat budget does not limit artifacts.
 These rules use ASD-STE100 as guidance; NEVER claim full compliance without
 checking the standard and its approved dictionary.
 
-- One word, one meaning. Pick the plainest word and use the same word every time. "Start" stays "start" — never "kick off", "spin up", "fire".
+- One word, one meaning. Pick familiar words and use the same word every time. "Start" stays "start" — never "kick off", "spin up", "fire". ALWAYS keep a needed technical term and explain its meaning.
 - No metaphor, idiom, slang, or drama. Write "the test failed", not "the test blew up" / "poisoned" / "landmine".
-- Active voice. Name the actor: "routd drops the field", not "the field is dropped".
+- Active voice. Name the actor: "routd drops the field", not "the field is dropped". ALWAYS use subject → verb → object where applicable, or a direct imperative.
 - Simple tenses only — present, past, future. Avoid "has been", "would have", "is being".
+- ALWAYS use one main clause per sentence. Add at most one short if, when, or because clause. Put a condition before the action it controls. NEVER nest clauses or insert asides — ALWAYS split them into separate sentences.
+- ALWAYS make noun and pronoun references clear. Repeat the noun when "it", "this", or "they" could refer to more than one thing.
 - One instruction per sentence. Max 20 words in a step, 25 in description.
 - Keep articles and full grammar. Write "run the test", not "run test".
-- ALWAYS check new or edited prose before sending or finishing: replace jargon and shorthand with clear, complete sentences.
+- ALWAYS check new or edited prose before sending or finishing: replace unnecessary jargon and shorthand with clear, complete sentences. Preserve the technical meaning.
 - Noun stacks: 3 words maximum. "container spawn timeout" is the limit.
 - Put the warning before the action it guards, never after.
 
