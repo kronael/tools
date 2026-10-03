@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [v0.4.13] — 20261003
+
+> kronael v0.4.13 — simpler sentences with clear meaning
+>
+> Caveman uses familiar words and simple sentence structure while preserving technical meaning, uncertainty, and conditions.
+>
+> • Sentences use active voice, one main clause, and clear references.
+> • Rewrites keep meaningful uncertainty and every condition that controls an action.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Caveman specifies familiar words, direct sentence structure, and clear noun and pronoun references. It limits nested clauses and asides while retaining complete grammar.
+- Rewrites preserve needed technical terms, meaningful uncertainty, and the scope of conditions when splitting sentences.
+
 ## [v0.4.12] — 20261002
 
 > kronael v0.4.12 — clearer explanations and host context
