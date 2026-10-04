@@ -1,7 +1,7 @@
 ---
 name: merge
 description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; merge origin — bring a detached line up to date with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for syncing ~/.claude with the bundle repo (use kronael/sync).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date"
+when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date, update a pushed PR branch, merge the base forward into a pushed branch, PR diff ballooned after the base squash-merged"
 user-invocable: true
 ---
 
@@ -81,6 +81,31 @@ the head already holds.
   HEAD); do [ "$(git rev-parse $c^{tree})" = "$t" ] && echo "$c" && break; done`
 - ALWAYS prove nothing was lost: `git diff --quiet <old-tip> HEAD` (exit 0 =
   identical tree). The old tip stays in reflog — NEVER trust the replay blind.
+
+## 0c. Updating a pushed branch — merge, never rebase
+
+A line on the remote (an open PR, a layer of a stack) comes up to its base by
+merging the base in: force-push is banned (WISDOM § Git), so a rebase of it
+can never be pushed. § 0b is for a line that exists only locally.
+
+1. `git ls-remote origin refs/heads/<b>` — the remote tip is the starting
+   point, not the local one. Completion criterion: that SHA written down.
+2. Detached at it, `git -c merge.conflictstyle=zdiff3 merge --no-ff <base>`;
+   resolve per §§ 2-6 — the conflicts are the rebase's, with the same
+   resolution. Completion criterion: no markers, gates green on HEAD.
+3. ALWAYS prove the result is what was tested: `git diff <tested-commit>
+   HEAD` empty — a green suite on a rebase or another resolution says nothing
+   about this merge. Completion criterion: empty diff, or gates re-run on HEAD.
+4. Push `git push origin <sha>:refs/heads/<b>`, a fast-forward, only when asked.
+
+- A base squash-merged to trunk balloons the PR diff with conflicts though
+  nothing new is in the branch. Merge trunk in; when the branch already
+  carries every change the merge's tree equals the branch's (`git diff
+  <branch> HEAD` empty) and the diff shrinks back — `-s ours` is honest only
+  under that proof, NEVER on the assumption.
+- ALWAYS budget a pass over every layer above a changed base: each merges it
+  in, in order, and a test naming what a higher layer moves is re-aimed at
+  the new structure there, NEVER weakened.
 
 ## 1. Orient — which operation is in flight
 
