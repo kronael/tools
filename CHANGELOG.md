@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [v0.4.15] — 20261004
+
+> kronael v0.4.15 — opus subagents run at high effort
+>
+> The opus subagent now runs at high effort like sonnet; only fable keeps xhigh, so opus design calls cost less per step.
+>
+> • /opus runs Opus 5.5 at high effort; the opus, sonnet and dispatch skills state the new pin.
+> • /fable is the only xhigh tier — unattended code, ship plans and deep audits still go there.
+> • /oracle says its opus fallback runs at high, not xhigh.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `opus` agent pins effort `high`; `skills/CLAUDE.md`, `opus`, `sonnet` and `dispatch` quote the pin, and `fable` is the only xhigh tier.
+- `oracle`: the fable route's opus fallback is stated at high.
+
 ## [v0.4.14] — 20261004
 
 > kronael v0.4.14 — the tweet skill leans on the shared voice
