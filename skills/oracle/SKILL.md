@@ -25,8 +25,9 @@ astra, sol, fable, creative, code, planning, or security routing, follow that ro
 ## Fable Route
 
 Launch a background agent with `subagent_type: "fable"` — `agents/fable.md`
-pins it at xhigh, so every fable route runs at xhigh. Include the goal,
-target files/dirs, and what to return. Frame adversarially:
+pins it at xhigh, so every fable route runs at xhigh; the opus fallback
+(`agents/opus.md`) runs at high. Include the goal, target files/dirs, and
+what to return. Frame adversarially:
 
 ```text
 Goal: <X>. Find the flaw in <code/design/plan>. Entry points: <files, symbols,
