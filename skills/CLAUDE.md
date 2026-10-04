@@ -82,9 +82,9 @@ skills it replaces.
 ## Subagent effort defaults
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
-  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh, `haiku` =
-  model only (Haiku 4.5 rejects `effort`). ALWAYS change an agent file and
-  every skill that quotes it in one commit.
+  them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
+  xhigh, `haiku` = model only (Haiku 4.5 rejects `effort`). ALWAYS change an
+  agent file and every skill that quotes it in one commit.
 - `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
   written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
   plan steps that need judgment. `fable` takes unattended multi-file code,

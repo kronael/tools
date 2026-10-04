@@ -11,7 +11,7 @@ ALWAYS reach for /sonnet without being asked when the task is:
 - A bug hunt, a pre-review sweep, or a read-only survey or audit.
 - One step of a written plan whose design the plan settles (a `ship` step goes to `/opus`).
 
-- ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (often xhigh).
+- ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
 - NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin, and take lighter work to `/haiku`.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
 - ALWAYS send mapping and mechanical edits to `/haiku`, and a design call or a step that failed twice to `/opus`.
