@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [v0.4.14] — 20261004
+
+> kronael v0.4.14 — the tweet skill leans on the shared voice
+>
+> The tweet skill defers wording to the writing and humanize rules and adds the platform facts a post needs on X.
+>
+> • tweet — hook, thread arc and source checks stay; voice defers to writing, caveman Language, humanize
+> • tweet — plain text only since X renders markdown literally, weighted 280-char counts, no Premium fold
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `tweet`: rewritten to lean on the shared language stack instead of restating generic copy advice; keeps the hook, thread arc, claim-verification and caveat-placement discipline; adds a Platform section — plain text only, X weighted counts, no Premium long-post reliance, bare `🤖` attribution — and a DISTILL / humanize / REVIEW-ON-WISDOM close mirroring `pr-draft`.
+
 ## [v0.4.13] — 20261003
 
 > kronael v0.4.13 — simpler sentences with clear meaning
