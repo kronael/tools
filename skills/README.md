@@ -119,11 +119,12 @@ the authoritative entry. The categories:
   `research/` holds the quantitative-research runbooks: method (evidence),
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`, `caveman`) —
+- **Shared references** (`writing`, `humanize`) —
   `writing` owns the prose rules and, in its cold `page.md`, how a document or
   page is laid out; `humanize` is the AI-tells catalogue it finishes with; both
-  cited by `tweet`, `pr-draft`, `readme`, `diary`; `caveman` is the pointer
-  to the response style loaded before any reply.
+  cited by `tweet`, `pr-draft`, `readme`, `diary`. The response style itself is
+  `../output-styles/caveman.md`, applied or reverted per session by
+  `../commands/caveman.md`.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
