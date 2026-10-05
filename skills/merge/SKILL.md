@@ -40,7 +40,9 @@ history. Vendoring skills into another project is `sync-tools-skills`.
 4. Verify green (the repo's `make test` and lint), stage the resolved files
    by name, commit
    `merge: origin/<default head> <tag> into <what the local line is>` with a
-   body naming each resolution decision.
+   body naming each resolution decision. A repo whose commit-msg gate rejects
+   `merge:` keeps git's default `Merge …` subject with the same body
+   (`commit` § Format).
    Completion criterion:
    `git rev-list --left-right --count HEAD...origin/<default head>` prints
    `N 0` — ahead only, 0 behind.
@@ -173,7 +175,7 @@ After resolving all conflicts:
 
 Stage resolutions (`git add <resolved files>`), then finish per step 1's operation:
 
-- **merge**: `git commit -m "merge: <summary>"` (the repo's `type(scope):` form; a merge has no scope).
+- **merge**: `git commit -m "merge: <summary>"` (the repo's `type(scope):` form; a merge has no scope). A gate that rejects `merge:` keeps git's default `Merge …` subject (`commit` § Format).
 - **rebase**: `GIT_EDITOR=true git rebase --continue` (GIT_EDITOR avoids the
   message editor; a `pick` reuses its original message). This is a **LOOP** — a
   rebase replays many commits, so the next may conflict immediately: re-run

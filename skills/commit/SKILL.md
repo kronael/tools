@@ -23,6 +23,13 @@ One commit = one logical change. Group by WHY, not by directory:
 
 ## Format
 
+ALWAYS read the repo's commit-msg gate before its first commit
+(`commitlint.config.*`, `.commitlintrc*`, `.husky/commit-msg`); where it
+disagrees with this section, the gate wins. Under
+`@commitlint/config-conventional`: no `refa`/`splx`/`fixup`/`merge` types
+(`refactor` instead), lowercase subject, body lines ≤100; a merge keeps git's
+default `Merge remote-tracking branch …` subject, which commitlint ignores.
+
 Use `type(scope):` — scope is optional, omit only when the change is truly cross-cutting.
 
 Format shapes:
