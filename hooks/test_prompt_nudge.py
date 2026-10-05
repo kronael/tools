@@ -1,5 +1,6 @@
 import io
 import json
+from pathlib import Path
 
 import prompt_nudge
 import pytest
@@ -30,10 +31,23 @@ def test_codex_route_requires_explicit_second_opinion() -> None:
     assert explicit_route('oracle this') == '/astra'
 
 
-@pytest.mark.parametrize('skill', ['astra', 'sol'])
-def test_slash_astra_and_sol_route_to_astra_and_are_suppressed_in_codex(skill) -> None:
-    assert explicit_route(f'/{skill} handle this') == '/astra'
-    assert explicit_route(f'/{skill} handle this', harness='codex') is None
+def test_slash_astra_routes_to_astra_and_is_suppressed_in_codex() -> None:
+    assert explicit_route('/astra handle this') == '/astra'
+    assert explicit_route('/astra handle this', harness='codex') is None
+
+
+def test_every_route_names_a_bundled_skill() -> None:
+    skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
+    targets = {
+        *prompt_nudge.SKILL_KEYWORDS.values(),
+        *(v for _, routes in prompt_nudge.ESCALATION_PATTERNS for v in routes.values()),
+        explicit_route('/astra handle this'),
+        explicit_route('oracle this'),
+    }
+    missing = [
+        t for t in targets if not (t and t[0] == '/' and (skills / t[1:] / 'SKILL.md').is_file())
+    ]
+    assert not missing
 
 
 @pytest.mark.parametrize(

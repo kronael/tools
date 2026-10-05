@@ -49,7 +49,6 @@ SKILL_KEYWORDS = {
     'dispatch': '/dispatch',
     'draft': '/pr-draft',
     'eval': '/eval',
-    'explore': '/ans',
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',
@@ -127,9 +126,9 @@ META_PATTERNS = [
 def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
-        # A leading slash command only: "use sol" is as likely the Solana token
-        # as the skill, and "/sol/data" a path. /sol is astra's Sol variant.
-        if re.match(r'\s*/(astra|sol)(?![\w/.-])', lower):
+        # A leading slash command only: "use astra" is as likely the vector DB
+        # as the skill, and "/astra/data" a path.
+        if re.match(r'\s*/astra(?![\w/.-])', lower):
             return '/astra'
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
