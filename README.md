@@ -133,7 +133,7 @@ Troubleshooting:
   only ones that run locally are bundled. Index and rationale:
   [skills/README.md](skills/README.md).
 - **Agents** (`agents/`) — task workers (`@distill`, `@improve`, `@learn`,
-  `@readme`, `@refine`, `@visual`; model-tier: `@haiku`, `@sonnet`, `@opus`,
+  `@readme`, `@refine`, `@visual`; model-tier: `@sonnet`, `@opus`,
   `@fable`), mostly launched via slash commands.
 - **Hooks** (`hooks/`) — lifecycle scripts: keyword nudging, `LOCAL.md`
   injection, rule re-injection across compaction, stop-time checks. Claude

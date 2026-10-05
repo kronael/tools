@@ -53,7 +53,6 @@ AGENT_KEYWORDS = {
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',
-    'haiku': '/haiku',
     'humanize': '/humanize',
     'inline': '/gh-comment',
     'merge': '/merge',

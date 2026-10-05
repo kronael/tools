@@ -82,16 +82,15 @@ skills it replaces.
 ## Subagent effort defaults
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
-  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh, `haiku` =
-  model only (Haiku 4.5 rejects `effort`). ALWAYS change an agent file and
-  every skill that quotes it in one commit.
-- `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
-  written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
-  plan steps that need judgment. `fable` takes unattended multi-file code,
-  `ship` plans, and security or deep audits.
-- `haiku` subagents are for cheap exploration, research, mapping, grep-style
-  surveys, and mechanical bounded edits. Escalate once the work requires
-  multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
+  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh. ALWAYS
+  change an agent file and every skill that quotes it in one commit.
+- `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
+  mechanical edits too wide for the parent, and the steps of a written plan
+  (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
+  that need judgment. `fable` takes unattended multi-file code, `ship` plans,
+  and security or deep audits.
+- No Haiku tier: Haiku is batch-only (`global` § Agents owns the rule) —
+  NEVER add an agent file, launcher skill or nudge keyword that pins it.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 

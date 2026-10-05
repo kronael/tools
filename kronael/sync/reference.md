@@ -103,11 +103,11 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
         'create-p5js', 'create-popular-web-designs', 'create-pretext', 'create-sketch',
         'create-video-render', 'create-video-script', 'doc-topology', 'docs-audit',
-        'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'merge-trivial', 'onepager',
+        'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'haiku', 'merge-trivial', 'onepager',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'software-engineering',
         'sub', 'testing', 'typescript', 'useless',
     )),
-    'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
+    'agents/haiku.md', 'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',
 }
 
