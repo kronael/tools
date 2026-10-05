@@ -12,7 +12,7 @@ ALWAYS reach for /sonnet without being asked when the task is:
 - A mechanical edit too wide for the parent (§ Plan: a codemod stays in the parent).
 - One step of a written plan whose design the plan settles (a `ship` step goes to `/opus`).
 
-- ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (often xhigh).
+- ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
 - NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin; lighter work stays in the parent (WISDOM § Agents).
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
 - ALWAYS send a design call or a step that failed twice to `/opus`.
@@ -23,7 +23,7 @@ For work too big for one pass — a feature across packages, a refactor, a chang
 
 NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make it in the parent.
 
-1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file (scratchpad or `.ship/`) with a status and a snapshot SHA per step; a plan held only in context is lost at compaction.
+1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file (scratchpad or `.claude/plans/`) with a status and a snapshot SHA per step; a plan held only in context is lost at compaction.
    - ALWAYS plan top-down: the end state (what is true when done, the choices the user sees), then the design, then the steps; each level discards bad solutions before the next one builds on them. ALWAYS show the end state to the user when it holds a choice that is theirs. A change the design already pins needs no step list — its one step is "implement this design".
    - ALWAYS settle every cross-cutting choice in the plan: names, signatures, data shapes, the error convention, which existing mechanism to extend. A choice left to the executors gets a different answer in each step.
    - ALWAYS make each step one coherent behaviour change that leaves the tree green and stays readable in one pass (≤ ~1,000 changed lines). A step that must break the build says so, and its repair step comes next.

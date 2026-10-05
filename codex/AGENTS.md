@@ -8,6 +8,14 @@
   its directory for a closer `CLAUDE.md` and read it first.
 - NEVER choose between `AGENTS.md` and `CLAUDE.md`; apply both.
 
+## Work record
+
+Plans, the ship record and critiques live in the main tree's
+`.claude/plans/` — plan mode's directory, pinned by `plansDirectory` in
+`.claude/settings.json` and ignored by the root-anchored `/.claude/plans/`
+line. ALWAYS reuse the active change's record where it is; `ship` § Work record
+owns the rule.
+
 ## Response style
 
 ALWAYS apply the Response Style section in `~/.claude/CLAUDE.md` and read

@@ -269,6 +269,21 @@
   no NAT and none of this. **Fix:** none in dockbox short of host network;
   document, or test and close.
 
+- **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
+  `dockbox/dockbox:414,462` and `qemubox/qemubox:1102,1106` launch the bare
+  default and the `opus` alias at `--effort xhigh`; the help text
+  (`dockbox:258,263`, `qemubox:52,57`, `qemubox/README.md:63`) and
+  `dockbox/test.sh:355,364` pin it. The one reason on record (CHANGELOG
+  v0.3.35: the launcher matches the opus subagent) contradicts
+  `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
+  launchers to `high` (scripts, help, READMEs, test) or state the box's own
+  reason for xhigh. Owner's call.
+
+- **DOCKBOX-FABLE-HELP-CLAIMS-MAX-EFFORT** (LOW, docs) — CONFIRMED.
+  `dockbox/dockbox:264` lists `fable` as "(max effort)", but the `fable` arm
+  (`:415`) passes no `--effort`, so the session runs at the CLI default.
+  `qemubox/qemubox:58` makes no such claim.
+
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.

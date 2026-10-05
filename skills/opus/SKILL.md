@@ -1,6 +1,6 @@
 ---
 name: opus
-description: "/opus — xhigh-effort subagent for design decisions, deep analysis, and plans that need a clean context. NOT for a plan step whose design is settled, investigation, or mechanical work (use /sonnet)."
+description: "/opus — Opus subagent at high effort for design decisions, deep analysis, and plans that need a clean context. NOT for a plan step whose design is settled, investigation, or mechanical work (use /sonnet)."
 when_to_use: "do this in an opus sub, spawn an opus sub, use opus, opus sub, design decision, architecture review, deep analysis, cross-cutting analysis, complex reasoning, write the plan in a sub, plan step needs judgment, step failed twice, protocol design"
 user-invocable: true
 ---
@@ -13,8 +13,8 @@ ALWAYS reach for /opus without being asked when the task is:
 - The plan for bigger work when the session runs a smaller model (Sonnet) — the plan then runs through `sonnet` § Plan, then execute.
 - A plan step that leaves implementation judgment to the worker (a `ship` step by default), or that failed twice on sonnet.
 
-- ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
-- NEVER reach for `/opus` on a task `/sonnet` (high) can do — ALWAYS send it to `/sonnet`; xhigh thinks deeper and costs more on every call.
+- ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `high`, and a sub without the agent type inherits the parent's effort.
+- NEVER reach for `/opus` on a task `/sonnet` can do — ALWAYS send it to `/sonnet`; at the same effort, Opus costs more on every call.
 - NEVER set effort with prompt text — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
 - ALWAYS send autonomous code generation (WISDOM § Agents), a `ship` plan, and a security or deep audit to `/fable`.

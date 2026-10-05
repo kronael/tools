@@ -2,6 +2,57 @@
 
 ## [Unreleased]
 
+## [v0.4.17] — 20261005
+
+> kronael v0.4.17 — ship records live with plan mode's plans
+>
+> Ship plans and critiques now live in the project's `.claude/plans/`, where Claude Code's plan mode writes; Codex reads the same rule.
+>
+> • ship — `.claude/plans/plan-NN-name.md` holds the record; its first writer pins the setting.
+> • Critiques (assess, eval-all, ceo/cto-eval, useless) sit beside the plans as `critique-*.md`.
+> • Layout rule — `plans/` exists only as `.claude/plans/`; the doc-naming hook says the same.
+> • Codex — its global Kronael instructions name the directory, the ignore line and the reuse rule.
+> • release — an annotated tag carrying this broadcast is the release; never a GitHub release object.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship` § Work record: the record is `.claude/plans/plan-NN-name.md` in the main tree, addressed by absolute path from worktrees; the first writer adds `"plansDirectory": ".claude/plans"` to `.claude/settings.json` and the root-anchored `/.claude/plans/` line unless `git check-ignore -v` names an in-tree `.gitignore`, committed together. A project-local `plansDirectory` is outside the retention sweep, which walks `~/.claude/plans` alone. Spec: specs/06-ship-record.md.
+- `assess`, `eval-all`, `ceo-eval`, `cto-eval`, `specs/useless.md`, `create-eval`, `sonnet`, `readme`, `ship/cli.md`: every record path names `.claude/plans/`; the CEO and CTO memos are flat `critique-<lens>-<YYYYMMDD>.md` files.
+- `global` § Documentation, `readme/topology.md`, `hooks/prompt_nudge.py`: `.claude/plans/` is the only `plans/`; `todos/` stays banned.
+- `codex/AGENTS.md`: a Work record section — the path, the ignore line, reuse the active change's record where it is.
+- `release`, `global` § Git: the annotated tag (`git tag -a -F`) is the release; `gh release create` is never run. `software/docker.md`: `.dockerignore` excludes `.claude`.
+
+## [v0.4.16] — 20261005
+
+> kronael v0.4.16 — prepare and land a refactor stack
+>
+> The merge and software skills now cover bringing a pushed stack up to date and landing it on GitHub with evidence on the exact head that merges.
+>
+> • merge § 0c — update a pushed branch by merging its base forward, never a rebase; prove the merged tree is the tested one.
+> • refactor-stack — keeping the stack mergeable, evidence before the merge, landing stacked PRs through merge-async with a pinned sha, and long runs.
+> • continue — recover the survivors of a long run before starting a new one.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `merge` § 0c: fetch, detach at `origin/<b>`, merge `origin/<base>`, then gates on HEAD or an empty diff against the tested commit; a squash-merged base is merged in, `-s ours` only when the trees prove it.
+- `software/refactor-stack.md`: sections Long runs, Keeping the stack mergeable, Evidence before the merge and Landing on GitHub (`.stack` probe, merge-async with `sha`, 422 on a member's base PATCH, missing merge ref behind zero runs).
+- `continue`: survivors of an earlier run are found and reconciled before a relaunch.
+
+## [v0.4.15] — 20261004
+
+> kronael v0.4.15 — opus subagents run at high effort
+>
+> The opus subagent now runs at high effort like sonnet; only fable keeps xhigh, so opus design calls cost less per step.
+>
+> • /opus runs Opus 5.5 at high effort; the opus, sonnet and dispatch skills state the new pin.
+> • /fable is the only xhigh tier — unattended code, ship plans and deep audits still go there.
+> • /oracle says its opus fallback runs at high, not xhigh.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `opus` agent pins effort `high`; `skills/CLAUDE.md`, `opus`, `sonnet` and `dispatch` quote the pin, and `fable` is the only xhigh tier.
+- `oracle`: the fable route's opus fallback is stated at high.
+
 ## [v0.4.14] — 20261004
 
 > kronael v0.4.14 — the tweet skill leans on the shared voice

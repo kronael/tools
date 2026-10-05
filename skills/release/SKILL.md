@@ -118,8 +118,9 @@ user-invocable: true
    entries in this repo for what the project considers a typical wave.
 
    Then REVIEW-ON-WISDOM (WISDOM § Git) over both passes, with the Banned
-   list and Pass B's preserve rules as the shape checklist; a body for
-   `gh release create` (only on the user's ask) is this same text.
+   list and Pass B's preserve rules as the shape checklist. The tag message
+   carries this blockquote. NEVER create a GitHub release object — the
+   annotated tag is the release, and its push is the publication.
 4. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
 4.5. **Critique gate when unclear.** If verification passes but the release is
@@ -135,21 +136,24 @@ user-invocable: true
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.
 5. **Commit** — version files + the CHANGELOG(s) the repo keeps in one `release: vX.Y.Z` commit.
-6. **Tag** — `git tag vX.Y.Z` on the release commit. ONE tag per repo (subdir
-   versions track in their own pyprojects). **Collision-safe, ALWAYS:**
+6. **Tag** — an ANNOTATED tag on the release commit whose message is the
+   step-3.5 blockquote: `git tag -a vX.Y.Z -F <message file>`. ONE tag per repo
+   (subdir versions track in their own pyprojects). **Collision-safe, ALWAYS:**
    - Pick a version NOT already tagged. If `git rev-parse -q --verify vX.Y.Z`
      succeeds, that version is taken — bump to the next free patch (prevents a
      duplicate when a rebase or a parallel release already minted it).
    - If the tag name exists but points at a DIFFERENT / orphaned commit (e.g.
-     rebased away), recreate it: `git tag -d vX.Y.Z && git tag vX.Y.Z`. NEVER
+     rebased away), recreate it the same way:
+     `git tag -d vX.Y.Z && git tag -a vX.Y.Z -F <message file>`. NEVER
      leave a version tag on an orphaned commit.
    - After a rebase renumbers releases, re-point EVERY affected tag (delete the
-     stale ones, re-tag the rebased release commits) and verify each `vX.Y.Z`
-     resolves to a commit on HEAD's history.
+     stale ones, re-tag the rebased release commits as annotated tags) and
+     verify each `vX.Y.Z` resolves to a commit on HEAD's history.
 
 ## Rules
 
-- ALWAYS `git tag vX.Y.Z` on the release commit; pick a version NOT already
+- ALWAYS an ANNOTATED tag on the release commit, its message the step-3.5
+  blockquote (`git tag -a vX.Y.Z -F <message file>`); pick a version NOT already
   tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag

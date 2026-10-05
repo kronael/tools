@@ -82,8 +82,9 @@ skills it replaces.
 ## Subagent effort defaults
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
-  them: `sonnet` = Sonnet 5.5 at high, `opus` and `fable` = xhigh. ALWAYS
-  change an agent file and every skill that quotes it in one commit.
+  them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
+  xhigh. ALWAYS change an agent file and every skill that quotes it in one
+  commit.
 - `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
   mechanical edits too wide for the parent, and the steps of a written plan
   (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
