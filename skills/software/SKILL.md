@@ -23,6 +23,6 @@ Paths are relative to this directory.
 | to catch bugs no type checker sees, wired as make targets: race detector, ASan/TSan/MSan/LSan, Miri, fuzzing, leak and property testing (go, rust, py) | `dynamic-analysis.md` |
 | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs | `js-perf.md` |
 | exact arithmetic for money/token amounts: integer vs fixed-point vs arbitrary precision, deriving the overflow bound, round-once-at-the-edge, checked add | `money.md` |
-| re-shipping an unreviewable branch as a reviewable stack: tests before the refactor, mutation-proven vs tautological tests, deletion oracles, byte-neutral and AST-proven moves, dead-parameter proofs, the freeze run, diffstat split, merging the base forward through pushed layers, the evidence each branch carries, landing a native GitHub stack (merge-async, refused retargets, missing merge ref) | `refactor-stack.md` |
+| re-shipping an unreviewable branch as a reviewable stack: tests before the refactor, mutation-proven vs tautological tests, deletion oracles, byte-neutral and AST-proven moves, dead-parameter proofs, the freeze run, diffstat split, long runs (one writer per output, verified PIDs), merging the base forward through pushed layers, the evidence each branch carries, landing a native GitHub stack (merge-async, refused retargets, missing merge ref) | `refactor-stack.md` |
 
 NEVER duplicate these runbooks into ops or language skills — link here instead.
