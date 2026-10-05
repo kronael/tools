@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [v0.4.17] — 20261005
+
+> kronael v0.4.17 — ship records live with plan mode's plans
+>
+> Ship plans and critiques now live in the project's `.claude/plans/`, where Claude Code's plan mode writes; Codex reads the same rule.
+>
+> • ship — `.claude/plans/plan-NN-name.md` holds the record; its first writer pins the setting.
+> • Critiques (assess, eval-all, ceo/cto-eval, useless) sit beside the plans as `critique-*.md`.
+> • Layout rule — `plans/` exists only as `.claude/plans/`; the doc-naming hook says the same.
+> • Codex — its global Kronael instructions name the directory, the ignore line and the reuse rule.
+> • release — an annotated tag carrying this broadcast is the release; never a GitHub release object.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship` § Work record: the record is `.claude/plans/plan-NN-name.md` in the main tree, addressed by absolute path from worktrees; the first writer adds `"plansDirectory": ".claude/plans"` to `.claude/settings.json` and the root-anchored `/.claude/plans/` line unless `git check-ignore -v` names an in-tree `.gitignore`, committed together. A project-local `plansDirectory` is outside the retention sweep, which walks `~/.claude/plans` alone. Spec: specs/06-ship-record.md.
+- `assess`, `eval-all`, `ceo-eval`, `cto-eval`, `specs/useless.md`, `create-eval`, `sonnet`, `readme`, `ship/cli.md`: every record path names `.claude/plans/`; the CEO and CTO memos are flat `critique-<lens>-<YYYYMMDD>.md` files.
+- `global` § Documentation, `readme/topology.md`, `hooks/prompt_nudge.py`: `.claude/plans/` is the only `plans/`; `todos/` stays banned.
+- `codex/AGENTS.md`: a Work record section — the path, the ignore line, reuse the active change's record where it is.
+- `release`, `global` § Git: the annotated tag (`git tag -a -F`) is the release; `gh release create` is never run. `software/docker.md`: `.dockerignore` excludes `.claude`.
+
 ## [v0.4.16] — 20261005
 
 > kronael v0.4.16 — prepare and land a refactor stack
