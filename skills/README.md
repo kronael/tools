@@ -80,7 +80,7 @@ the authoritative entry. The categories:
 
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
-- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
+- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `solana`,
   `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `ingest`, `emacs`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
@@ -144,7 +144,7 @@ Side-channels (escalation, communication) fire at any stage.
                │
 ┌─ coding ─────▼──────────────┐
 │ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data trader         ├────────►│ haiku sonnet opus   │
+│ service data                ├────────►│ haiku sonnet opus   │
 └──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
@@ -164,7 +164,7 @@ Side-channels (escalation, communication) fire at any stage.
 Skip for one-off tasks.
 
 **coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
-shape skills (cli, service, data, trader) carry patterns for what you're building.
+shape skills (cli, service, data) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
 **quality** — `review` covers the whole loop: `review give` produces findings

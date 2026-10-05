@@ -118,7 +118,7 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'hiring-eval', 'markdown-converter',
         'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
-        'software-engineering', 'speed-demo', 'sub', 'testing', 'typescript', 'useless',
+        'software-engineering', 'speed-demo', 'sub', 'testing', 'trader', 'typescript', 'useless',
     )),
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',

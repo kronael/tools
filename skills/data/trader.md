@@ -1,13 +1,4 @@
----
-name: trader
-description: Trading bots. NOT for general data scraping (use data).
-when_to_use: "exchange APIs, paper trading"
----
-
 # Trader
-
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
 
 ## State Management
 - State machines: Waiting -> Active -> StopTake -> Done
