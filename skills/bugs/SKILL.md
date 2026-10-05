@@ -12,7 +12,8 @@ when_to_use: "log this bug, open issues, what's broken, what's the queue, prune 
 
 `BUGS.md` at the project root holds exactly two things:
 
-1. **Defects that are still true of the code.**
+1. **What is open** — defects still true of the code, and the decisions the
+   owner still owes (a redesign, a deliberate limit, a licence or product call).
 2. **Things that were reported as defects and are not** — so the next audit
    does not re-report them.
 
@@ -84,9 +85,13 @@ em-dash, then the body.
 - **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
   `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
   changes behaviour says so, with what was measured.
-- A redesign proposal (new contract, changed control flow, cross-cutting)
-  is an entry with `needs sign-off` and the options sketched; the user
-  signs off on the approach BEFORE it is built.
+- A redesign proposal (new contract, changed control flow, cross-cutting) or
+  any other call the owner owes is an entry tagged `needs sign-off` or `owner
+  decision`. ALWAYS give it `**Options:** (a) …; (b) …` and `**Default if
+  nothing is decided:** …` — what applies until the owner answers, so the
+  queue never stalls on silence. A gate the entry holds is one more tag:
+  `blocks go-live`, `blocks publication`. The user signs off on the approach
+  BEFORE it is built.
 
 ## Pin it with a failing test
 
