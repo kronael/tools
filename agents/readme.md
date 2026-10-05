@@ -32,9 +32,9 @@ For ASCII component/flow diagrams, follow the `diagrams` skill: draw with Unicod
 
 ### 4. Verify claims against code
 
-NEVER trust existing doc text — ALWAYS grep every referenced function/variable/constant/test name/path to confirm it exists and behaves as described, and check every result a doc cites against the newest run. ALWAYS fix doc to match code, NEVER the reverse. A number changes only by re-running its ledger command, then `make lint`.
+NEVER trust existing doc text — ALWAYS grep every referenced function/variable/constant/test name/path to confirm it exists and behaves as described, and check every result a doc cites against the newest run. ALWAYS fix doc to match code, NEVER the reverse.
 
 ## Rules
 
-- NEVER call a spec (`specs/`, `SPEC.md`) "documentation" — it is a specification
-- NEVER duplicate content across files — ALWAYS link instead
+- NEVER call a spec (`specs/`, `SPEC.md`) "documentation" — it is a
+  specification

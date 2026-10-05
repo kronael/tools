@@ -125,11 +125,11 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 
 - Every file above is tracked, `BUGS.md` included — it is in the reading order.
 - Local, root-anchored in `.gitignore`: `/.claude/plans/` (`ship` § Work record
-  owns the setting and the ignore step), `/.diary/` (`diary`), `/specs/`
-  (`specs`), `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every
-  depth and swallows a real `src/specs/`, and `/.claude/plans/` keeps the
-  committed `.claude/` files (settings, commands, skills) tracked. A repo that
-  already tracks `.diary/` or `specs/` keeps tracking them.
+  owns the setting and the ignore step), `/.diary/` (`diary`), `/specs/`,
+  `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every depth and
+  swallows a real `src/specs/`, and `/.claude/plans/` keeps the committed
+  `.claude/` files (settings, commands, skills) tracked. A repo that already
+  tracks `.diary/` or `specs/` keeps tracking them.
 
 ## Keeping it
 

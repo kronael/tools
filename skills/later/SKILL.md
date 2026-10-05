@@ -1,6 +1,6 @@
 ---
 name: later
-description: "Defer an idea, task, or follow-up to TODO.md. NOT for bugs (use /bugs). NOT for diary entries (use /diary)."
+description: "Defer an idea, task, or follow-up to TODO.md. NOT for bugs or a decision the owner owes (use /bugs). NOT for diary entries (use /diary)."
 when_to_use: "add to TODO, defer this, come back to this, note for later, later"
 user-invocable: true
 ---

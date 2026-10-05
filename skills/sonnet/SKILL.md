@@ -1,7 +1,7 @@
 ---
 name: sonnet
 description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, mechanical edits, and the steps of a written plan. NOT for a design call the plan leaves open (use /opus) or unattended multi-file code (use /fable)."
-when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, find bugs, pre-review, flagging, find simplification, survey codebase, read-only analysis, map files, map references, grep and report, find and replace across files, rename across files, mechanical edit, cheap sub, fast sub"
+when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, find bugs, pre-review, flagging, find simplification, survey codebase, read-only analysis, map files, grep and report, mechanical edit"
 user-invocable: true
 ---
 
@@ -13,9 +13,8 @@ ALWAYS reach for /sonnet without being asked when the task is:
 - One step of a written plan whose design the plan settles (a `ship` step goes to `/opus`).
 
 - ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
-- NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin; lighter work stays in the parent (WISDOM § Agents).
+- NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
-- ALWAYS send a design call or a step that failed twice to `/opus`.
 
 ## Plan, then execute
 

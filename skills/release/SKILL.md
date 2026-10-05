@@ -45,14 +45,15 @@ user-invocable: true
    - File exists with `[Unreleased]` → move to `[vX.Y.Z] — YYYYMMDD`.
    - File missing → create one ONLY when the project publishes versions to
      outside consumers (`readme` → `topology.md`), with one section
-     `[vX.Y.Z] — YYYYMMDD` and no `[Unreleased]` placeholder. Otherwise
-     NEVER create it: step 3.5 distills `git log <last>..HEAD` into the
-     text shown to the user, and the `Full notes:` line drops.
+     `[vX.Y.Z] — YYYYMMDD` and no `[Unreleased]` placeholder; otherwise
+     step 3.5 distills `git log <last>..HEAD` into the text shown to the
+     user, and the `Full notes:` line drops.
    - Multi-deployable repos (sibling subdirs with own pyproject) —
      each subdir that keeps a changelog has its OWN `CHANGELOG.md` for
      that deployable. Root changelog summarises across them.
    - Empty since-last-tag → generate entries from `git log <last>..HEAD`.
-3.5. **Distill to ~20%.** Re-read the just-written entry. Two passes:
+3.5. **Distill to ~20%.** Re-read the just-written entry — or, with no
+   CHANGELOG, write the text from `git log <last>..HEAD`. Two passes:
 
    **Pass A — the `>` blockquote (broadcast).** This is the verbatim
    chat-broadcast — what the user reads in Telegram/Discord/email.
@@ -135,7 +136,8 @@ user-invocable: true
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.
-5. **Commit** — version files + the CHANGELOG(s) the repo keeps in one `release: vX.Y.Z` commit.
+5. **Commit** — version files + the CHANGELOG(s) the repo keeps in one
+   `release: vX.Y.Z` commit.
 6. **Tag** — an ANNOTATED tag on the release commit whose message is the
    step-3.5 blockquote: `git tag -a vX.Y.Z -F <message file>`. ONE tag per repo
    (subdir versions track in their own pyprojects). **Collision-safe, ALWAYS:**

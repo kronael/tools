@@ -2,9 +2,10 @@
 name: bugs
 description: >
   The `BUGS.md` open-issues queue — the record-don't-fix policy, its two
-  sections (open defects, and what was ruled not a defect), entry format,
-  pruning. NOT for resolved-bug history (that lives in git and /diary), NOT
-  for feature backlog (use TODO.md/specs).
+  sections (what is open: defects, deliberate limits and decisions owed; and
+  what was ruled not a defect), entry format, pruning. NOT for resolved-bug
+  history (that lives in git and /diary), NOT for feature backlog (use
+  TODO.md/specs).
 when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
 ---
 
@@ -83,15 +84,16 @@ em-dash, then the body.
 - **test** — cites the failing test that proves it:
   `Measured: <file>::<test-name>`. Omit only for a carve-out type (see below).
 - **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
-  `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
-  changes behaviour says so, with what was measured.
+  `open (record only)`, `deferred — <why>`, `needs sign-off`,
+  `owner decision`. A fix that changes behaviour says so, with what was
+  measured.
 - A redesign proposal (new contract, changed control flow, cross-cutting) or
-  any other call the owner owes is an entry tagged `needs sign-off` or `owner
-  decision`. ALWAYS give it `**Options:** (a) …; (b) …` and `**Default if
-  nothing is decided:** …` — what applies until the owner answers, so the
-  queue never stalls on silence. A gate the entry holds is one more tag:
-  `blocks go-live`, `blocks publication`. The user signs off on the approach
-  BEFORE it is built.
+  any other call the owner owes is an entry whose status is `needs sign-off`
+  or `owner decision`. ALWAYS give it `**Options:** (a) …; (b) …` and
+  `**Default if nothing is decided:** …` — what applies until the owner
+  answers, so the queue never stalls on silence. A gate the entry holds is
+  one more clause: `blocks go-live`, `blocks publication`. The user signs off
+  on the approach BEFORE it is built.
 
 ## Pin it with a failing test
 

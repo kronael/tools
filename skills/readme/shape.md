@@ -1,12 +1,12 @@
 # Doc shape
 
-`topology.md` splits a project across *files* — README vs ARCHITECTURE vs
-`notes/`. This file is the orthogonal axis: the order and grouping of *sections
-inside one file* that an external integrator reads end to end — an
-`INTEGRATE.md`, a guide page, an endpoint-reference page. Diátaxis names the
-four needs (tutorial, how-to, reference, explanation —
-[diataxis.fr](https://diataxis.fr)) but states no page-level ordering rule; the
-shape below is what real API docs actually do with that framework on one page.
+`topology.md` splits a project across *files* — README vs PLAN vs ARCHITECTURE.
+This file is the orthogonal axis: the order and grouping of *sections inside one
+file* that an external integrator reads end to end — an `INTEGRATE.md`, a guide
+page, an endpoint-reference page. Diátaxis names the four needs (tutorial,
+how-to, reference, explanation — [diataxis.fr](https://diataxis.fr)) but states
+no page-level ordering rule; the shape below is what real API docs actually do
+with that framework on one page.
 
 ## The two shapes that recur
 
