@@ -25,26 +25,32 @@ Read the ONE file matching the current stage, then return here.
 | Current need | Read |
 |---|---|
 | owner questions on outcome, what to hammer, limits and destination, defaults for open preferences, decision points after intake | `intake.md` |
-| planner and worker brief templates, the `.claude/ship/plan-NN-name.md` fields | `prompt.md` |
+| planner and worker brief templates, the `.claude/plans/plan-NN-name.md` fields | `prompt.md` |
 | resume after compaction, stalled workers, repair and review counters, cancellation, Workflow, /goal, /loop, ScheduleWakeup | `runtime.md` |
 | owner asked for the `ship` CLI as executor | `cli.md` |
 
 ## Work record
 
-Default: flat, gitignored scratch at `.claude/ship/plan-NN-name.md`, with
-the next free zero-padded NN and a lowercase kebab name. Reuse the active
-change's record where it is. Project layout overrides win. The plan holds
-the owner brief, acceptance checks, decisions and progress. The `assess`,
-`eval-all` and `specs` critiques share the directory.
+Default: flat, gitignored scratch at `.claude/plans/plan-NN-name.md` — plan
+mode's directory — with the next free zero-padded NN and a lowercase kebab
+name. Reuse the active change's record where it is. Project layout overrides
+win. The plan holds the owner brief, acceptance checks, decisions and
+progress. The `assess`, `eval-all` and `specs` critiques share the directory;
+a record carries its type as the filename prefix, and plan mode's own files
+carry none.
 
-ALWAYS keep the record in the MAIN tree's `.claude/ship/` — the first entry
+ALWAYS keep the record in the MAIN tree's `.claude/plans/` — the first entry
 of `git worktree list` — and address it by absolute path from every
 worktree, as `diary` does for a gitignored diary. A controller worktree's
 copy is invisible from the main tree, and `git worktree remove` deletes it.
-ALWAYS confirm the path is ignored before the first write: when
-`git check-ignore -q .claude/ship/x` fails, append the root-anchored line
-`/.claude/ship/` to `.gitignore` and commit that line alone. A project that
-ignores all of `.claude/` needs nothing.
+ALWAYS pin and ignore the directory before the first write: when
+`.claude/settings.json` lacks `plansDirectory`, add
+`"plansDirectory": ".claude/plans"` (create the file with that key alone);
+when `git check-ignore -q .claude/plans/x` fails, append the root-anchored
+line `/.claude/plans/` to `.gitignore`; commit the two alone. Unpinned, plan
+mode writes to `~/.claude/plans/`, which Claude Code sweeps after
+`cleanupPeriodDays`. A project that ignores all of `.claude/` needs no
+ignore line.
 ALWAYS keep one work record for the change. NEVER add a second progress
 tree, saved review plans or a workflow-specific backlog.
 

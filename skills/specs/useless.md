@@ -7,7 +7,7 @@ blend them: "give me the full picture" is `assess`.
 
 ## Memo
 
-Write `.claude/ship/critique-useless-<YYYYMMDD>.md` — `ship` § Work record owns
+Write `.claude/plans/critique-useless-<YYYYMMDD>.md` — `ship` § Work record owns
 the directory and its ignore rule. Each step below is one section, in this
 order. Findings inside a section rank worst-first.
 

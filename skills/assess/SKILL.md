@@ -4,7 +4,7 @@ description: >
   Run an adversarial assessment of a product, codebase, or docs from a
   specified expert perspective (CEO, CTO, CISO, enterprise buyer, etc.).
   Produces a structured critique memo saved to
-  .claude/ship/critique-<role>-<date>.md.
+  .claude/plans/critique-<role>-<date>.md.
   NOT for code review (use /code-review). NOT for bug hunting (use /bugs).
 when_to_use: "assess this, adversarial assessment, critique memo, CEO/CTO/CISO/buyer perspective, expert review of the product or docs"
 user-invocable: true
@@ -45,7 +45,7 @@ Run an adversarial expert assessment and return a verdict.
    - Kill shot (single thing that would sink it)
    - Recommended next action (what would change the verdict)
 
-4. **Save** — write to `.claude/ship/critique-<role>-<YYYYMMDD>.md`; `ship`
+4. **Save** — write to `.claude/plans/critique-<role>-<YYYYMMDD>.md`; `ship`
    § Work record owns that directory and its ignore rule
 
 5. **Report** — return the verdict + blockers in ≤150 words

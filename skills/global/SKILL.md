@@ -169,8 +169,8 @@ Claude Code" footer). These win.
 
 ## Documentation
 
-- Layout — UPPERCASE root files, `specs/`, `docs/`, `.claude/ship/`, `.diary/`,
-  no `todos/` or `plans/`, root-anchored ignores: `readme` → `topology.md`.
+- Layout — UPPERCASE root files, `specs/`, `docs/`, `.diary/`, `.claude/plans/`
+  (plan mode, ship), no `todos/`, root-anchored ignores: `readme` → `topology.md`.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used

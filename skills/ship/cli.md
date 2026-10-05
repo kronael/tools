@@ -49,7 +49,7 @@ ALWAYS keep this skill as the owner-facing controller.
 ALWAYS pass exactly one `.md` path — the work record or its cited spec.
 With none or several, the CLI keeps its state in its own data directory
 (`DATA_DIR`; its README names the default) and wipes that directory at
-start, so NEVER point `DATA_DIR` at `.claude/ship/`. Ensure the file
+start, so NEVER point `DATA_DIR` at `.claude/plans/`. Ensure the file
 carries concrete deliverables, owned paths, acceptance checks, gates,
 exclusions and worker boundaries.
 
