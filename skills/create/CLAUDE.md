@@ -31,7 +31,8 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
   (e.g. `p5js/references/core-api.md`); paths inside the subtree stay
   subtree-relative. Keep that invariant when editing.
 - Ported files keep their frontmatter (author/license) — attribution;
-  `../../NOTICE` points at it. Update NOTICE when adding/removing a port.
+  `../../NOTICE` points at it. Update NOTICE when adding/removing a port;
+  its format and the header-retention rules are `../software/credits.md`.
 - Only port generators that run locally — no paid APIs, no cloud accounts;
   local CLI/lib deps (ffmpeg, manim, pyfiglet) are fine.
 - `humanize` and `create-eval` are NOT in this router — leave them flat.

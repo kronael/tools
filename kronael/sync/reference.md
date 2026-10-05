@@ -108,6 +108,7 @@ WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
     *(f'skills/{n}' for n in (
         'bash', 'codex', 'con', 'cont', 'create-architecture-diagram', 'create-ascii-art',
+        'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
         'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
         'create-p5js', 'create-popular-web-designs', 'create-pretext', 'create-sketch',

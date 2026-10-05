@@ -1,10 +1,4 @@
----
-name: credits
-description: Attribution and licensing practice for LLM-assisted work — how to acknowledge upstream sources and ported code. NOT for the `🤖` marker on Claude's own PRs, issues and comments (WISDOM § Git). NOT a slash command; loaded as ambient context.
-when_to_use: "porting code, adapting a skill, adding a dependency, shipping anything built on prior work"
----
-
-# Credit
+# Credits — attribution and licensing for ported work
 
 ## Why this matters more in LLM-vibed work
 

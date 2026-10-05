@@ -113,17 +113,17 @@ the authoritative entry. The categories:
   and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
-  and observability; `specs/` the design record; `readme/` syncs docs after
+  observability, and the attribution/NOTICE practice for ported work
+  (`credits.md`); `specs/` the design record; `readme/` syncs docs after
   shipping and holds the doc file topology, single-page shape and the HTML
   pages (onepager, doc page); `review/` gives or takes a code review;
   `research/` holds the quantitative-research runbooks: method (evidence),
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
+- **Shared references** (`writing`, `humanize`, `caveman`) —
   `writing` owns the prose rules and, in its cold `page.md`, how a document or
   page is laid out; `humanize` is the AI-tells catalogue it finishes with; both
-  cited by `tweet`, `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
-  context, loaded as context, not a judgment lens; `caveman` is the pointer
+  cited by `tweet`, `pr-draft`, `readme`, `diary`; `caveman` is the pointer
   to the response style loaded before any reply.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
