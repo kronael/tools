@@ -49,7 +49,7 @@ SKILL_KEYWORDS = {
     'dispatch': '/dispatch',
     'draft': '/pr-draft',
     'eval': '/create-eval',
-    'explore': '/explore',
+    'explore': '/ans',
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',

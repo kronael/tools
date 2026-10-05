@@ -135,7 +135,7 @@ Side-channels (escalation, communication) fire at any stage.
 
 ┌─ orientation ───────────────┐
 │ solve recall-memories       │
-│ explore                     │
+│ ans                         │
 └──────────────┬──────────────┘
                │
 ┌─ planning ───▼──────────────┐
@@ -158,7 +158,7 @@ Side-channels (escalation, communication) fire at any stage.
 └─────────────────────────────┘         └─────────────────────┘
 
 **orientation** — load context before acting. `solve` is the universal entry point;
-`recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
+`recall-memories` searches diary/memory/sessions; `ans` answers without modifying.
 
 **planning** — `specs` for design docs; `ship` to drive a change end to end, mostly unattended.
 Skip for one-off tasks.

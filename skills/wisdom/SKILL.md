@@ -50,7 +50,7 @@ argument-hint: "<question>"   # optional — shown after /name
 
 ## Body patterns
 
-- **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
+- **Mode-toggle** (fin/ans style): concise `## Behavior` block, no other sections.
 - **Self-contained** (visual/improve style): the body carries the full
   instructions; a `## Where it runs` block names the generic or model-pinned
   agent to launch — its thin same-named agent where one exists, else
