@@ -84,6 +84,25 @@
   rewrites the manifest with prefixed keys, so it bites once per host.
   **Fix:** read both key forms in § Classify and § Merge, or rewrite the keys
   in step 0.
+- **SYNC-JUNK-NAMED-KEPT-SYMLINK** (LOW, correctness) — CONFIRMED 2026-10-05.
+  `keep.expand` keeps a symlink named like junk (`hooks/__pycache__`,
+  `skills/.claude`); § Classify counts it `junk` and prints no `shadow`, but
+  § Swap runs its shadow check on it and refuses (`kept ['hooks/__pycache__']
+  shadow the source`) whenever the source tree holds that cache dir. Classify
+  exits 0 and step 3 has nothing to settle. Reproduce: scratch HOME,
+  `ln -s <dir> ~/.claude/hooks/__pycache__` with `hooks/__pycache__` in `SRC`.
+  **Fix:** have `expand` skip junk names, so both readers agree.
+- **SYNC-MANIFEST-SYMLINK-UNREPORTED** (LOW, correctness) — CONFIRMED
+  2026-10-05. A symlinked `~/.claude/kronael-install-manifest.json` passes
+  § Classify (it reads through the link and prints no `SYMLINK`), while § Swap
+  refuses with `live ['kronael-install-manifest.json'] are symlinks (Classify:
+  SYMLINK)` — citing a line Classify never printed. **Fix:** add the manifest
+  to the roots § Classify checks with `os.path.islink`.
+- **SYNC-ARCH-SYMLINK-ROW-DRIFT** (LOW, docs) — CONFIRMED 2026-10-05.
+  `ARCHITECTURE.md` § Sync strategies says the bundle dirs are rebuilt with
+  "every symlink under a bundle dir"; `keep.expand` keeps only a symlink that
+  is a direct child of one, and § Classify prints `SYMLINK` for a deeper one.
+  **Fix:** reword that row to "each symlink directly in a bundle dir".
 
 ## Codex bridge
 
