@@ -115,7 +115,7 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'create-sketch', 'create-video-render', 'create-video-script', 'cto-eval',
         'design-eval', 'doc-topology', 'docs-audit', 'eval-all', 'explore', 'eye-13yo',
         'finalize-crate',
-        'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'hiring-eval', 'markdown-converter',
+        'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'hiring-eval', 'later', 'markdown-converter',
         'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
         'software-engineering', 'speed-demo', 'sub', 'testing', 'trader', 'typescript', 'useless',

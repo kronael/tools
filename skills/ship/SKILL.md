@@ -129,7 +129,7 @@ result and next action in the work record after each accepted step.
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the
 affected remaining steps when code invalidates their premise. `runtime.md`
-owns bounded recovery. `later` and `bugs` park adjacent work.
+owns bounded recovery. `next` and `bugs` park adjacent work.
 
 Completion criterion: each implemented step has an inspected diff, passing
 gate evidence and a recorded disposition, and dependent steps never pass red.
@@ -184,7 +184,7 @@ waiting for approval, and a blocked acceptance item. NEVER call a blocked
 or merely prepared destination shipped.
 
 Use `diary` for decisions and open items, `specs` for durable architecture,
-and `later` for owner-deferred follow-ups. Release notes belong to
+and `next` § Later for owner-deferred follow-ups. Release notes belong to
 `release`. Retain the plan while paused, blocked or waiting for delivery
 approval. On completion, distill durable content, then prune only named
 scratch files under the project's policy. Directory removal is the owner's.
