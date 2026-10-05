@@ -32,10 +32,11 @@ instead read the token from `/proc/$CLAUDE_PID/environ`, export it and
 `exec "$@"`. NEVER echo, log or commit the token.
 
 `ship` runs every role on `--model` (env `MODEL`, default `sonnet`) with
-fixed role timeouts sized for sonnet. ALWAYS launch with
-`MODEL=fable TIMEOUT_SCALE=3`: fable is the model WISDOM requires for
-unattended code, and at scale 1 fable's validator fails on the 180 s
-timeout. `ship -k <spec>` runs only the spec validator, which proves the
+fixed role timeouts sized for sonnet. A fable sub writes and re-verifies
+the specs; `ship` then runs on its default sonnet, and the orchestrator
+reads each commit's diff as it lands. A slower model needs
+`TIMEOUT_SCALE=3`, or its validator fails on the 180 s timeout.
+`ship -k <spec>` runs only the spec validator, which proves the
 login and the spec, but it is not read-only: the validator runs with
 `bypassPermissions` and can commit, so ALWAYS run it on a worktree you can
 reset and check `git log` afterwards.
