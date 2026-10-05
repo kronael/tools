@@ -1,5 +1,5 @@
 ---
-description: Launch learn agent to extract patterns and create skills
+description: Invoke the learn skill to extract patterns and create skills
 ---
 
-Launch the learn agent to analyze conversation history and create or update skills.
+Invoke the `learn` skill (Skill tool) and name the pass: memory, skill or lint.

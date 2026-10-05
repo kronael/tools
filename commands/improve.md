@@ -1,5 +1,5 @@
 ---
-description: Launch improve agent for code quality improvements
+description: Invoke the improve skill for code quality improvements
 ---
 
-Launch the improve agent to enhance code quality through iterative improvement.
+Invoke the `improve` skill (Skill tool) and follow it: iterative criticism on the named code, run in a subagent.

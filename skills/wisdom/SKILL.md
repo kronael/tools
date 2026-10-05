@@ -51,7 +51,12 @@ argument-hint: "<question>"   # optional — shown after /name
 ## Body patterns
 
 - **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
-- **Agent-launcher** (visual style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
+- **Self-contained** (visual/improve style): the body carries the full
+  instructions; a `## Where it runs` block names the generic or model-pinned
+  agent to launch — its thin same-named agent where one exists, else
+  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
+  load the skill. A thin agent's body is one line that loads its skill;
+  NEVER put knowledge in an agent body.
 - **Runbook** (ship/merge/release style): numbered steps, each closing on a
   `Completion criterion:` line — an observable pass/fail condition, not "done
   when it looks right". Close with `## Review Checklist` restating the file's

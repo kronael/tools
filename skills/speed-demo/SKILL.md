@@ -126,7 +126,7 @@ demo-family, and reciprocal-chart failures behind the rules below.
   NEVER several competing links/asks.
 - ALWAYS type narrative at reading pace (~45 ms/char, sentence stops,
   paragraph beats) — NEVER race the reader with 15-20 ms/char typing.
-- ALWAYS spawn a parallel critique pass (visual + best-practices agent) on
+- ALWAYS spawn a parallel critique pass (a sub loading the `visual` skill, plus a best-practices one) on
   composited frames before calling a recording finished — NEVER ship on
   your own first-glance judgment.
 - ALWAYS lead a "lower is better" comparison with its reciprocal as a

@@ -79,7 +79,7 @@ tight and zoom on the specific seam/edge across a few frames spanning the
 motion range — a static-looking artifact can still change (or vanish) as
 things rotate relative to each other.
 
-The **`visual` agent** is the right tool for this iterate-render-critique loop.
+The **`visual` skill** is the right tool for this iterate-render-critique loop.
 
 ### Environment gotchas (hard-won)
 

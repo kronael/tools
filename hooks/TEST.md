@@ -45,8 +45,8 @@ Expected: exit 0, no `systemMessage` in output.
 ## 4. Prompt Routing (exact match)
 
 ```bash
-echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@improve" && echo "✓ PASS"
-echo '{"prompt": "visual"}'       | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "@visual"  && echo "✓ PASS"
+echo '{"prompt": "improve code"}' | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/improve" && echo "✓ PASS"
+echo '{"prompt": "visual"}'       | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/visual"  && echo "✓ PASS"
 echo '{"prompt": "ship"}'         | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/ship"    && echo "✓ PASS"
 echo '{"prompt": "diary"}'        | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "/diary"   && echo "✓ PASS"
 echo '{"prompt": "write code"}'   | python3 ~/.claude/hooks/prompt_nudge.py | grep -q "codex" && echo "✗ FAIL" || echo "✓ PASS"

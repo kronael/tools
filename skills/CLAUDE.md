@@ -12,7 +12,8 @@ repo CLAUDE.md links to this file.
   generators), `software/` (engineering baseline + runbooks), `specs/` (spec
   workflow), `readme/` (documentation: sync, file topology, page shape),
   `review/` (give/take a code review — see `review/SKILL.md`), `research/`
-  (research baseline).
+  (research baseline), `writing/` (prose rules hot, `page.md` for how a
+  document or page is laid out).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -76,8 +77,10 @@ skills it replaces.
 - Bare verbs and tech names stay flat top-level.
 - A verb skill may route its own modes under its own name (`readme/`,
   `review/`).
-- `writing`, `humanize` = shared references cited by prose skills
-  (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
+- `writing` = the one owner of the prose and page rules (router, `page.md`
+  cold); `humanize` = the AI-tells catalogue it finishes with. Cited by prose
+  skills (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`);
+  every other skill, agent or file points there in one line, NEVER restates.
 
 ## Subagent effort defaults
 
@@ -94,6 +97,18 @@ skills it replaces.
   multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
+
+## Agent definitions
+
+- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`, `haiku`,
+  with no body — and thin skill agents, one per skill that runs isolated
+  (`visual`, `readme`, `improve`, `refine`, `learn`, `distill`), whose body
+  only loads the same-named skill. Knowledge lives in the skill that owns the
+  concern, NEVER in an agent body.
+- A skill that needs isolation or a model says so in its own body (`## Where
+  it runs`): which generic or pinned agent to launch, and that the agent loads
+  the skill. NEVER write a content-bearing agent definition, and NEVER reduce
+  a skill body to one "launch agent X" line.
 
 ## Earning a rule's place
 

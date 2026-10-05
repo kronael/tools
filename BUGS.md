@@ -66,15 +66,6 @@
   repo's 200-line rule (`CLAUDE.md:115`, `skills/wisdom/SKILL.md:65`); the
   canonical `kronael/sync/SKILL.md` is at 199. **Fix:** cut the bridge to its
   Codex-only deltas, or move detail to `kronael/sync/reference.md`.
-- **HOOKS-LEARN-ROUTE-CONTRADICTS-DOCS** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-24. `hooks/prompt_nudge.py:74` routes the prompt word `learn` to
-  `@learn`, while `hooks/README.md:21-23` and `skills/learn/SKILL.md:3,34`
-  state that word is deliberately not a route, so `/learn` fires only when
-  invoked or through `memory_nudge.py`. The skill description preloads that
-  claim, so the model is told one thing and the hook does the other.
-  **Fix:** drop the route, or drop the claim from both docs; which is the
-  maintainer's call.
-
 - **DIAGRAMS-NO-SEQUENCE-SWIMLANE-STATE** (LOW, design) — open (record only).
   `skills/diagrams/SKILL.md` (52 lines) teaches only box-and-arrow component
   layout. It carries no pattern for the three other shapes that come up
@@ -147,7 +138,7 @@
 ## Hooks
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
-  `explicit_route` returns the route of the first `AGENT_KEYWORDS` word in
+  `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51
   user-typed prompts that say "ship it" / "and ship" / "then ship" / "ship the
   …", 18 route to `/ship` and 30 route elsewhere (`/specs` 7, `/fable` 6,

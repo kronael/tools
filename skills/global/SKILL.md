@@ -204,3 +204,7 @@ Claude Code" footer). These win.
   execute); a step read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
+- `agents/` holds model and effort pins (`fable`, `opus`, `sonnet`, `haiku`)
+  and thin skill agents (`visual`, `readme`, `improve`, `refine`, `learn`,
+  `distill`) whose body only loads the same-named skill. ALWAYS keep the
+  knowledge in the skill — NEVER in an agent body, where it drifts.

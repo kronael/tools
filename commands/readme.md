@@ -1,5 +1,5 @@
 ---
-description: Launch readme agent to update documentation
+description: Invoke the readme skill to update documentation
 ---
 
-Launch the readme agent to update README, ARCHITECTURE, and documentation files.
+Invoke the `readme` skill (Skill tool) and read its `sync.md` to update README, ARCHITECTURE and documentation files.

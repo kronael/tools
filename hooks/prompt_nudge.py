@@ -34,7 +34,7 @@ SOLVE_NUDGE = (
     'if this prompt is a direct continuation of work already in context.'
 )
 
-AGENT_KEYWORDS = {
+SKILL_KEYWORDS = {
     'architecture': '/specs',
     'background': '/dispatch',
     'bugs': '/bugs',
@@ -80,11 +80,10 @@ AGENT_KEYWORDS = {
     'walkthrough': '/13yo-eval',
     'wisdom': '/wisdom',
     'writing': '/writing',
-    'readme': '@readme',
-    'learn': '@learn',
-    'improve': '@improve',
-    'visual': '@visual',
-    'distill': '@distill',
+    'readme': '/readme',
+    'improve': '/improve',
+    'visual': '/visual',
+    'distill': '/distill',
     'review': '/review',
     'browse': '/browse',
 }
@@ -142,7 +141,7 @@ def explicit_route(prompt, harness=None):
             return routes.get(match.group(1))
     words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
     for word in words:
-        matched = exact_match(word, AGENT_KEYWORDS)
+        matched = exact_match(word, SKILL_KEYWORDS)
         if matched:
             return matched
     return None
