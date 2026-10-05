@@ -1,12 +1,6 @@
----
-name: go-gl
-description: Responsive minimal OpenGL desktop apps in Go (go-gl/gl + go-gl/glfw) — window + render loop, HiDPI/resize, alloc-free present, a movable GPU seam, data-dense screen design. NOT web (use tsx), NOT 3D game engines / scene graphs, NOT non-GL Go (use go).
-when_to_use: building a native desktop OpenGL window driven from Go — go-gl/glfw window, the render loop, resize/HiDPI, an alloc-free present path, a swappable render backend, or a minimal data-dense screen
----
-
 # go-gl — desktop OpenGL apps in Go
 
-Requires the `go` skill for base Go rules. This is the desktop-GL analogue of
+The base Go rules in `SKILL.md` apply. This is the desktop-GL analogue of
 `tsx`: on a GPU the *design* decisions ARE *loop* decisions, so build and screen
 are one skill. Reference: `rsx-glass/` (a fixed-size v1 heatmap viewer) — cite it
 for the render architecture, NOT as resize/pacing/HiDPI proof.
@@ -101,7 +95,7 @@ side only makes the GPU linearize while software doesn't: parity breaks and
 goldens don't catch it. This is a load-bearing invariant, state it. (finding 31)
 
 **12. Data-screen design gates** (each testable; generic HIG advice is not; the
-methodology is `design-systems-research.md` — Material 3 / Fluent / Carbon / DTCG):
+methodology is `gl/design-systems-research.md` — Material 3 / Fluent / Carbon / DTCG):
 - **Tokens, not raw hex; reserved contrast pairs.** Author a 3-tier palette —
   primitive stops → semantic roles → component inks (W3C DTCG); the render reads
   only semantic/component tiers, a theme swap rebinds tier 2. Every glyph fg is a
@@ -150,10 +144,9 @@ methodology is `design-systems-research.md` — Material 3 / Fluent / Carbon / D
 
 ## Reference
 
-Skill-local: `research.md` (build/test methodology + sources),
-`design-systems-research.md` (the token/contrast/channel design methodology),
-`codex-critique.md` + `fable-critique.md` (the adversarial audit trail this skill
-was rectified against). And `rsx-glass/`:
+Skill-local: `gl/research.md` (build/test methodology + sources) and
+`gl/design-systems-research.md` (the token/contrast/channel design
+methodology). And `rsx-glass/`:
 `render.go` (the seam), `glass.go` (loop), `gpu/gpu.go`+`pipeline.go` (go-gl
 backend, instanced quads, letterbox, FBO readback), `gpu/stub.go` (non-cgo),
 `gpu/parity_test.go` (parity + clean skip), `soft/` (oracle, goldens, alloc

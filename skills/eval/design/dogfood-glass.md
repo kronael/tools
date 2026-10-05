@@ -13,7 +13,7 @@ hierarchy 4 · colour+tokens 4 · contrast 2 · redundant-channel 2 ·
 typography/numerics 3 · spacing/density 4 · layout/responsive 3 ·
 consistency 3 · data-density/minimalism 3 · feedback/honesty 4
 
-## Prior-critique reconciliation (go-gl codex/fable audits, checked against pixels)
+## Prior-critique reconciliation (earlier codex/fable audits, checked against pixels)
 
 - **fg==bg wall glyph (fable #26): FIXED.** `glyphFg` picks the higher-contrast
   reserved ink (TextBright or Page); `TestGlyphContrast` gates the tier matrix.

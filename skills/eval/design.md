@@ -3,7 +3,7 @@
 Judge a UI's DESIGN CRAFT the way a design-system owner reviews a screen —
 evidence-based, not taste. Read `design/rubric.md` for the ten dimensions + the
 verdict template; `design/dogfood-glass.md` (a GPU renderer) and
-`design/dogfood-term.md` (a TUI) are two finished reports in that shape. Grounded in the methodology at `~/.claude/skills/go-gl/design-systems-research.md`
+`design/dogfood-term.md` (a TUI) are two finished reports in that shape. Grounded in the methodology in the `go` skill's `gl/design-systems-research.md`
 (Material 3 / Fluent / Carbon / DTCG tokens, WCAG + APCA, Cleveland-McGill,
 Okabe-Ito) and NN/g's heuristics.
 

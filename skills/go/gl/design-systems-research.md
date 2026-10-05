@@ -1,9 +1,9 @@
 # Design-systems research for `go-gl` data-dense desktop apps
 
-The design half of a `go-gl` skill. Not a citation tour: every rule below is an
+The design half of the `go` skill's `gl.md`. Not a citation tour: every rule below is an
 operational decision a GL renderer or its token table makes, grounded in a named
-system, and tied to concrete bugs the RSX reference already shipped
-(`fable-critique.md` findings 26–28, 35). Read against the artifacts it extends:
+system, and tied to concrete bugs the RSX reference already shipped. Read
+against the artifacts it extends:
 `rsx-glass/grid.go` (resolved 8-colour palette), `rsx-term/VISUALS.md` (encoding
 laws), `rsx-playground/CLAUDE.md` (colour = meaning). Web CSS and the go-gl
 threading/cgo engineering are out of scope.
