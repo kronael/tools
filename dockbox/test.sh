@@ -414,6 +414,15 @@ true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]
 true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'
 true_ "note lists volume and tmpfs as lost" \
     '[[ "$nout" == *"Lost at exit (tmpfs or volume): /p/node_modules /home/dockbox"* ]]'
+true_ "note lists a -T volume as an empty dependency dir" '[[ "$nout" == *"  - /p/node_modules"* ]]'
+true_ "note names the gh token -g brings" '[[ "$nout" == *"without \`-g\` has none"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw \
+    --tmpfs /p/.venv:rw,exec,mode=1777 --tmpfs /tmp:rw,exec,mode=1777)"
+true_ "note lists an empty dependency dir" \
+    '[[ "$nout" == *"empty box-only mounts."*"  - /p/.venv"$'"'"'\n'"'"'"- GitHub"* ]]'
+false_ "note omits a tmpfs that is no dependency dir" '[[ "$nout" == *"  - /tmp"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw --tmpfs /tmp:rw,exec,mode=1777)"
+false_ "note claims no empty dependency dir without one" '[[ "$nout" == *box-only* ]]'
 
 echo "dockbox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

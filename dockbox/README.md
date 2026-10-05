@@ -248,7 +248,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
-2. **Overmount by default** (Node, Bun, framework caches): for any
+2. **Overmount by default** (Node, Bun, Python venvs, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty

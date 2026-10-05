@@ -120,8 +120,31 @@ loopback_resolver() {
 # what survives. $1 host name, $2 network (host|bridge), then the docker mount
 # args as assembled: -v spec / --tmpfs spec pairs.
 sandbox_note() {
-    local host="$1" net="$2" spec src dst mode lost=()
+    local host="$1" net="$2" spec src dst mode lost=() deps=() binds=()
     shift 2
+    while [[ $# -gt 0 ]]; do
+        spec="$2"
+        case "$1" in
+            --tmpfs)
+                dst="${spec%%:*}"
+                lost+=("$dst")
+                case " ${EPHEMERAL_DIRS[*]} " in
+                    *" ${dst##*/} "*) deps+=("$dst") ;;
+                esac ;;
+            -v)
+                if [[ "$spec" == *:* ]]; then
+                    src="${spec%%:*}"; dst="${spec#*:}"; mode=rw
+                    [[ "$dst" == *:ro ]] && mode=ro
+                    dst="${dst%:r[ow]}"
+                    [[ "$src" == "$dst" ]] && src="same path"
+                    binds+=("- $dst ($mode) <- $src")
+                else
+                    lost+=("$spec")  # -T: an anonymous volume
+                    deps+=("$spec")
+                fi ;;
+        esac
+        shift 2
+    done
     cat <<EOF
 # Environment: dockbox sandbox
 
@@ -136,38 +159,31 @@ container start; a wrong line here is a dockbox launcher bug.
   edit a \`server-*\` skill from here: it describes the host, not this box.
 - Lost when the last session exits: the container and everything outside the
   bind mounts (\`\$HOME\`, /tmp, installed packages, build dirs).
-- Dependency dirs (\`${EPHEMERAL_DIRS[*]}\`) are empty box-only
-  mounts. ALWAYS install them here before a build or test (\`uv sync\`,
-  \`npm ci\`; \`sudo apt-get install\` for a missing system package). NEVER
-  report a check as unrunnable because a dependency is missing.
+EOF
+    if [[ ${#deps[@]} -gt 0 ]]; then
+        cat <<EOF
+- These dependency dirs are empty box-only mounts. ALWAYS install them here
+  before a build or test (\`uv sync\`, \`npm ci\`; \`sudo apt-get install\`
+  for a missing system package). NEVER report a check as unrunnable because
+  a dependency is missing.
+EOF
+        printf '  - %s\n' "${deps[@]}"
+    fi
+    cat <<EOF
 - GitHub over SSH fails here: the box has no \`~/.ssh\`, so host key
   verification fails. ALWAYS go over HTTPS, per command: \`git -c
   credential.helper= -c credential.helper='!gh auth git-credential'
   <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>\`,
   fetching into \`refs/remotes/origin/<head>\`. NEVER edit the remote or the
-  git config for it. A token without the \`workflow\` scope rejects a push
-  that changes \`.github/workflows/\`. In zsh write \`"\${SHA}:refs/heads/<name>"\`:
+  git config for it. The helper needs a gh token: the box mounts no
+  \`~/.config/gh\`, so a box started without \`-g\` has none. A token
+  without the \`workflow\` scope rejects a push that changes
+  \`.github/workflows/\`. In zsh write \`"\${SHA}:refs/heads/<name>"\`:
   \`\$SHA:r\` is a history modifier.
 
 Bind mounts (box path, mode, host source):
 EOF
-    while [[ $# -gt 0 ]]; do
-        spec="$2"
-        case "$1" in
-            --tmpfs) lost+=("${spec%%:*}") ;;
-            -v)
-                if [[ "$spec" == *:* ]]; then
-                    src="${spec%%:*}"; dst="${spec#*:}"; mode=rw
-                    [[ "$dst" == *:ro ]] && mode=ro
-                    dst="${dst%:r[ow]}"
-                    [[ "$src" == "$dst" ]] && src="same path"
-                    echo "- $dst ($mode) <- $src"
-                else
-                    lost+=("$spec")  # -T: an anonymous volume
-                fi ;;
-        esac
-        shift 2
-    done
+    printf '%s\n' "${binds[@]}"
     echo
     echo "Lost at exit (tmpfs or volume): ${lost[*]}"
 }
