@@ -323,6 +323,20 @@
   systemd-timesyncd.service'" lines into the user's terminal from
   `sync_guest_clock` (`qemubox:524`). **Fix:** `systemctl disable --now
   --quiet`.
+- **QEMUBOX-ENV-IN-SSH-ARGV** (MED, hardening) — CONFIRMED 2026-10-05.
+  Every `envs` value — `-g`'s `GH_TOKEN` and `GITHUB_TOKEN`, any `-e VAR` —
+  is inlined into the `exec env$remote` string, the last argument of the
+  session's `ssh`. Host `/proc/<pid>/cmdline` is mode 0444 and `/proc` has no
+  `hidepid`, so any host user reads `GH_TOKEN=...` for the session's lifetime.
+  The agent tokens already avoid this: `send_agent_creds` writes them over
+  stdin into the guest's `~/.qemubox-env`. **Fix:** route `envs` through the
+  same file.
+- **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-05.
+  Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
+  not the last in its `set -e` block asserts nothing: `test-cli.sh`
+  `! grep -q -- ' -t ' "$STUB/ssh.log"` and `test.sh`'s
+  `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
+  block pass whatever they find. **Fix:** `if cmd; then exit 1; fi`.
 
 ## Ruled not a defect
 
