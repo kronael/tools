@@ -7,15 +7,17 @@ source root) and `RUN` (the run dir) exported and `$RUN/keep.py` written
 
 ## Keep-list (steps 0, 1, 3, 4)
 
-`~/.claude/kronael-keep.txt` — one path per line, relative to `~/.claude/`,
-glob patterns allowed (`*` stays inside one path segment); a line starting
-with `#` is a comment. Each entry is an installed-only path inside one of the
-bundle dirs that the owner wants back after every sync:
+`~/.claude/.keep` — one path per line, relative to `~/.claude/`, glob
+patterns allowed (`*` stays inside one path segment); a line starting with `#`
+is a comment. Each entry is an installed-only path inside one of the bundle
+dirs that the owner wants back after every sync. A symlink under a bundle dir
+— an org skill linked from its own checkout, a `ripwire-*` skill — is kept
+without a line: it points at work that lives elsewhere, never at bundle
+content.
 
 ```text
 # installed-only paths a sync carries over; never published
 skills/acme-deploy
-skills/ripwire-*
 agents/acme-oncall.md
 ```
 
@@ -43,11 +45,12 @@ def invalid(entry):
 
 
 def expand(live):
-    """Paths under live that the keep-list names, outermost only.
+    """Paths under live that the keep-list names, plus every symlink under a
+    bundle dir, outermost only.
 
     A bad entry prints BADKEEP lines and exits 1.
     """
-    path = os.path.join(live, 'kronael-keep.txt')
+    path = os.path.join(live, '.keep')
     try:
         lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
     except OSError as e:
@@ -59,6 +62,12 @@ def expand(live):
         print('\n'.join(f'BADKEEP {k}' for k in bad))
         sys.exit(1)
     paths = {p for k in entries for p in glob.glob(k, root_dir=live)}
+    for d in DIRS:
+        if os.path.islink(os.path.join(live, d)):
+            continue  # a symlinked bundle root: § Classify prints SYMLINK
+        for root, dirs, names in os.walk(os.path.join(live, d)):
+            paths |= {os.path.relpath(os.path.join(root, n), live)
+                      for n in dirs + names if os.path.islink(os.path.join(root, n))}
     return sorted(p for p in paths
                   if not any(p.startswith(q + '/') for q in paths))
 
@@ -81,8 +90,8 @@ and needs no answer. Caches and the `.claude/` scratch a session run inside a
 bundle dir leaves are `junk`. A bundle dir the live tree lacks (a first sync,
 an older install) is skipped; a dir or file it cannot read, live or source,
 stops the run with one `Cannot read <path>` line and exit 1. A symlink is
-never read through: a bundle root that is one, or one under a bundle dir that
-the keep-list does not name, prints `SYMLINK <path>`. `UNRESOLVED` lines are
+never read through: one under a bundle dir is `kept`, and a bundle root that
+is one prints `SYMLINK <path>`. `UNRESOLVED` lines are
 settings hook commands pointing at paths the swap would drop. Scratch files
 go to `$RUN/classify/`. An empty or absent live bundle prints `no live bundle
 files`.
@@ -293,7 +302,7 @@ die() { echo "Swap refused: $*" >&2; exit 1; }
 [[ ! -e "$RUN/old" ]] || die "$RUN/old exists: use a new run dir"
 [[ ! -e "$L/.kronael-sync-new" && ! -e "$L/.kronael-sync-old" ]] ||
   die "a .kronael-sync-* dir is left in $L: step 0"
-python3 "$RUN/keep.py" || die "fix $L/kronael-keep.txt (the lines above)"
+python3 "$RUN/keep.py" || die "fix $L/.keep (the lines above)"
 mkdir -p "$L"
 mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
 aside() {
@@ -501,9 +510,8 @@ RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubuserconte
 
 - Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
   skills into `~/.claude/skills` — namespaced, so they never collide with
-  kronael skills. They are installed-only paths: on a yes, ALWAYS append
-  `skills/ripwire-*` to the keep-list, or the next sync moves them out with
-  the old bundle. It also detects `~/.codex`/`~/.agents` and activates for
+  kronael skills. As symlinks they survive every sync without a keep-list
+  line. It also detects `~/.codex`/`~/.agents` and activates for
   Codex.
 - Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
   armed they log only a local hashed routing meter, never prompt/command/path

@@ -75,6 +75,16 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
+- **SYNC-OLD-MANIFEST-KEYS** (LOW, correctness) — CONFIRMED 2026-10-05. A
+  manifest the install step wrote keys `files` by bare path (`CLAUDE.md`,
+  `skills/commit/SKILL.md`); § Classify and § Merge look up
+  `.claude/<path>` (`kronael/sync/reference.md` § Classify). On the first
+  sync over such a manifest every live-edited file reads `no-base` (43 on
+  this host) instead of `edited`/`both`, and step 2 asks about each. Swap
+  rewrites the manifest with prefixed keys, so it bites once per host.
+  **Fix:** read both key forms in § Classify and § Merge, or rewrite the keys
+  in step 0.
+
 ## Codex bridge
 
 - **LINT-PACK-NOT-INSTALLABLE** (MED, design) — needs sign-off. The lint pack

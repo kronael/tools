@@ -113,7 +113,7 @@ sync step provides the smart merge. Each layer does one thing.
 
 | Target | Strategy |
 |---|---|
-| `skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` | Live edits merge three-way into source first; then rebuilt from source plus the keep-list (`~/.claude/kronael-keep.txt`); the old copy moves to `/tmp` |
+| `skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` | Live edits merge three-way into source first; then rebuilt from source plus the keep-list (`~/.claude/.keep`) and every symlink under a bundle dir; the old copy moves to `/tmp` |
 | `~/.claude/CLAUDE.md` | Same, against the `skills/global/SKILL.md` body |
 | `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
 | `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the keys `README.md` § Settings names skip the ask) |
@@ -154,10 +154,9 @@ Org-specific skills live in separate repos layered on top of the base
 sync:
 
 ```
-cp -r <org-repo>/skills/<org> ~/.claude/skills/
-echo 'skills/<org>' >> ~/.claude/kronael-keep.txt
+ln -s <org-repo>/skills/<org> ~/.claude/skills/<org>
 ```
 
-A sync carries an overlay across only when the keep-list names it; an
-unlisted one is named in the sync report and moves to `/tmp` with the old
-bundle. Overlays never enter this repo without the owner's yes.
+A sync carries a symlinked overlay across as is, and a copied one only when
+the keep-list (`~/.claude/.keep`) names it; an unlisted copy is named in the
+sync report and moves to `/tmp` with the old bundle. Overlays never enter this repo without the owner's yes.

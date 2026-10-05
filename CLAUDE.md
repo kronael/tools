@@ -80,8 +80,8 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 - **Live edits merge into the repo first, then live is rebuilt** — a file
   edited in `~/.claude/` since the last sync merges three-way into the repo
   BEFORE the swap; the bundle is then rebuilt from source plus the owner's
-  keep-list (`~/.claude/kronael-keep.txt`), and the old bundle moves to
-  `/tmp`. Nothing the source dropped survives a sync.
+  keep-list (`~/.claude/.keep`, plus every symlink under a bundle dir), and
+  the old bundle moves to `/tmp`. Nothing the source dropped survives a sync.
 - **NEVER `rm -rf`** into `~/.claude/` — sync moves the old bundle aside with
   `mv`. Installed-only files (org overlays, private skills) come back only
   through the keep-list and NEVER enter this repo without the owner's yes.

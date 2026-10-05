@@ -28,9 +28,10 @@ WISDOM § Git) and **merge origin** (`origin` → the repo's git line, `merge`).
   `gitCommit`, `gitDescribe`, `installedAt`) and `files`
   (`".claude/<path>": {source, source_sha256}`), the sha of each file as the
   last sync wrote it (`CLAUDE.md`: the wisdom body).
-- **keep-list** — `~/.claude/kronael-keep.txt`, the owner's list of
-  installed-only paths a sync carries over (`reference.md` § Keep-list). It
-  lives outside the bundle and NEVER enters the repo.
+- **keep-list** — `~/.claude/.keep`, the owner's list of installed-only
+  paths a sync carries over (`reference.md` § Keep-list); a symlink under a
+  bundle dir is kept without a line. It lives outside the bundle and NEVER
+  enters the repo.
 - **run dir** (`RUN`) — `${TMPDIR:-/tmp}/kronael-sync-<UTC stamp>/`: scratch,
   backups for steps 5-6, and `old/`, the moved-aside bundle.
 
@@ -113,8 +114,8 @@ the failure. Settings still confirm before applying.
    default; it ends in `RUN/old`). NEVER put an installed-only path in the repo
    without that yes — it may be an org or private skill — and NEVER drop one
    unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line.
-   Each `SYMLINK`: the owner keeps it (keep-list, under a bundle dir) or `mv`s
-   it into `RUN`. Each `UNRESOLVED` hook path MUST be kept or unwired first: a
+   Each `SYMLINK` (a symlinked bundle root): the owner replaces it with a real
+   dir or `mv`s it into `RUN`. Each `UNRESOLVED` hook path MUST be kept or unwired first: a
    missing hook script makes `python3` exit 2, which Claude Code treats as
    blocking — every prompt and tool call in every session fails.
    Completion criterion: rerun § Classify exits 0 with no `shadow` line, and
