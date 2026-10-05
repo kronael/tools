@@ -38,13 +38,14 @@ sight as "AI slop".
 - ALWAYS let the content set a section's shape. NEVER one skeleton — intro,
   figure, caption, callout, evidence — stamped on every section.
 - ALWAYS make a nav label the heading it jumps to, word for word.
-- Craft: one self-contained file that renders from `file://`: inline CSS,
-  inline SVG, no CDN, no external fonts, no build step. One font family, at
-  most five font sizes, generous line height. One accent colour: links plus at
-  most one divider, nothing else. Dark-mode-safe via `prefers-color-scheme`
-  with an explicit background on `body`. A diagram only for a mechanism words
-  handle badly, inline SVG or `<pre>`, never an image file. NEVER design past
-  this: a taste-driven page is `create/web.md`'s job.
+- Craft, for a standalone document or explainer page: one self-contained file
+  that renders from `file://`: inline CSS, inline SVG, no CDN, no external
+  fonts, no build step. One font family, at most five font sizes, generous line
+  height. One accent colour: links plus at most one divider, nothing else.
+  Dark-mode-safe via `prefers-color-scheme` with an explicit background on
+  `body`. A diagram only for a mechanism words handle badly, inline SVG or
+  `<pre>`, never an image file. An existing app's UI keeps its own stack and
+  build. NEVER design past this: a taste-driven page is `create/web.md`'s job.
 
 ## Sources and links
 

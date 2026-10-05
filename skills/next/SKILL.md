@@ -18,8 +18,8 @@ working in the same turn.
 
 ## What to record
 
-If it looks like a bug: append a one-liner to `BUGS.md` at project root.
-Format: `- [ ] <description>` (create the file if missing).
+If it looks like a bug: append an entry to `BUGS.md` at project root, in the
+`bugs` skill's § Entry format (create the file if missing).
 
 If it looks like a feature or general TODO for this session: add it via the
 `TodoWrite` tool as a new pending task. NEVER write a session TODO to
@@ -49,4 +49,5 @@ context switch, no explanation of what was parked.
 NEVER end the turn on that line. ALWAYS resume the work that was in flight.
 When nothing is in flight, the parked item IS the work — ALWAYS start it in the
 same turn, oldest parked item first when several are waiting, marking it
-`in_progress` if it is in `TodoWrite`.
+`in_progress` if it is in `TodoWrite`. A § Later item is exempt: NEVER start
+it — the owner deferred it past this session.
