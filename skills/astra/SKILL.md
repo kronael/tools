@@ -1,7 +1,7 @@
 ---
 name: astra
 description: "Ask the codex CLI on gpt-6-astra (or gpt-5.6-sol, the Sol variant) for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
-when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, /sol, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
+when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
 user-invocable: true
 ---
 
@@ -70,7 +70,7 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Sol
 
-`/sol` is the same second opinion from `gpt-5.6-sol` (catalog description
+Sol is the same second opinion from `gpt-5.6-sol` (catalog description
 "Older generation workhorse model"), at high effort. Use it only when the user
 explicitly asks for Sol; `oracle` routes to it only on such a request. Two
 differences from the Astra invocation: select `gpt-5.6-sol` in the catalog

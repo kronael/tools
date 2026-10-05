@@ -185,8 +185,9 @@ for increasing capability. `/dispatch` for fire-and-forget at default model. `fi
 
 ## Working with skills
 
-- Each `SKILL.md` has YAML frontmatter (`name`, `description`,
-  optional `when_to_use`, `user-invocable`)
+- Each `SKILL.md` has YAML frontmatter: `name`, `description` and
+  `when_to_use` required (lint hard-fails without them), `user-invocable`
+  optional
 - Every skill is a `/<name>` slash command by default; `user-invocable: false`
   hides it from the `/` menu
 - Auto-activation matches `description` + `when_to_use` — make them specific

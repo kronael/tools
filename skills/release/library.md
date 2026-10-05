@@ -168,7 +168,7 @@ Before shipping:
 
 ## Execution template
 
-When executing this skill against a specific crate, run these steps:
+When running this checklist against a specific crate, run these steps:
 
 ```
 0. Step 0: if extracting, decouple from the host, name it, settle ownership

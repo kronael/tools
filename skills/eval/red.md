@@ -4,10 +4,9 @@ Deep adversarial developer evaluation. Goal: find the thing that breaks the
 system, embarrasses the claim, corrupts state, loses money, or makes the demo
 lie.
 
-This is **not** a generic security-audit wrapper. Use the platform/security
-audit skill for standard web/appsec checklist work. Red Eval is for hard
-source-level attack thinking across correctness, operations, protocols,
-durability, and exploitability.
+This is **not** a generic security-audit wrapper or a web/appsec checklist.
+Red Eval is for hard source-level attack thinking across correctness,
+operations, protocols, durability, and exploitability.
 
 ## Positioning
 

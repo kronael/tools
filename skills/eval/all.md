@@ -28,7 +28,7 @@ verdict, so a later session has the context instead of re-deriving it.
 
 ## Log (so it has context later) — ALWAYS persist, never just print
 - Each lens's full memo → `.claude/plans/critique-<lens>-<YYYYMMDD>.md`. The
-  individual eval skills don't all persist by default, so the RUN prompt above
+  individual lens files don't all persist by default, so the RUN prompt above
   tells each subagent to write its memo there — verify the file landed.
 - A consolidated roll-up → `.claude/plans/eval-all-<YYYYMMDD>.md`: per-lens
   verdict + blockers, the cross-cutting kill-shot, and the one next action.
@@ -48,5 +48,5 @@ action, and the `.claude/plans/eval-all-<date>.md` path.
 - ALWAYS read the memos before the roll-up; success reports are not evidence.
 - ALWAYS persist to `.claude/plans/` (`ship` § Work record owns the directory
   and its ignore rule) + a diary pointer. An eval with no log has no context
-  later — that is the whole point of this skill.
+  later — that is the whole point of this mode.
 - NEVER fix what a lens finds — record to `BUGS.md` and move on.

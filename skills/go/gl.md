@@ -2,7 +2,7 @@
 
 The base Go rules in `SKILL.md` apply. This is the desktop-GL analogue of
 `tsx`: on a GPU the *design* decisions ARE *loop* decisions, so build and screen
-are one skill. Reference: `rsx-glass/` (a fixed-size v1 heatmap viewer) — cite it
+share one file. Reference: `rsx-glass/` (a fixed-size v1 heatmap viewer) — cite it
 for the render architecture, NOT as resize/pacing/HiDPI proof.
 
 ## The gates — violate one, ship a broken or janky app

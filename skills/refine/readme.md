@@ -9,7 +9,7 @@ reads to pick the agent type.
 
 - A doc is checked when written; the repo moves on. ALWAYS grep every cited
   test name, symbol, path and count, and check every claim against the newest
-  results (`readme/sync.md` § Verify claims against code). NEVER run a style
+  results (`readme/sync.md` § Protocol, step 5). NEVER run a style
   pass alone — it polishes a page that is wrong.
 
 ## Generated style `simplify`

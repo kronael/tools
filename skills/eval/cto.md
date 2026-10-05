@@ -25,7 +25,7 @@ Rules:
   scope.
 - Findings are claims, not facts — the caller re-verifies load-bearing ones
   before acting on them (`Skill(sweep)` § verify a finding before
-  you fix it). A "DISPUTED" or "CONFIRMED" verdict in this skill's own report
+  you fix it). A "DISPUTED" or "CONFIRMED" verdict in this lens's own report
   is the sub's self-check; it does not exempt the caller from re-deriving a
   claim whose direction matters (e.g. which side of a ratio is baseline).
 - When paired with a CEO eval, keep the two reports separate and run a synthesis
