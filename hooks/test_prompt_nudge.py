@@ -31,8 +31,8 @@ def test_codex_route_requires_explicit_second_opinion() -> None:
 
 
 @pytest.mark.parametrize('skill', ['astra', 'sol'])
-def test_slash_route_to_astra_and_sol_suppressed_in_codex(skill) -> None:
-    assert explicit_route(f'/{skill} handle this') == f'/{skill}'
+def test_slash_astra_and_sol_route_to_astra_and_are_suppressed_in_codex(skill) -> None:
+    assert explicit_route(f'/{skill} handle this') == '/astra'
     assert explicit_route(f'/{skill} handle this', harness='codex') is None
 
 

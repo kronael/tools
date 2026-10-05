@@ -115,8 +115,8 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'create-video-render', 'create-video-script', 'doc-topology', 'docs-audit',
         'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'markdown-converter',
         'media-ingest', 'merge-trivial', 'onepager',
-        'python', 'research-analysis', 'resolve', 'rust', 'settle', 'software-engineering',
-        'speed-demo', 'sub', 'testing', 'typescript', 'useless',
+        'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
+        'software-engineering', 'speed-demo', 'sub', 'testing', 'typescript', 'useless',
     )),
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',
@@ -458,7 +458,7 @@ Run `which <tool>` first; skip if present and recent.
 |------|---------|--------|
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
-| `codex` | `bun install -g @openai/codex` | /astra /sol /oracle |
+| `codex` | `bun install -g @openai/codex` | /astra /oracle |
 | `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |

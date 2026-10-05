@@ -20,7 +20,7 @@ astra, sol, fable, creative, code, planning, or security routing, follow that ro
 | Naming, prose, narrative, product copy, ideation | `astra` skill, high effort |
 | Ambiguous but touches code or operations | `fable` subagent |
 | Explicit "ask codex" / "use codex" | `astra` skill, high effort |
-| Explicit Astra or Sol request | The named `astra` or `sol` skill |
+| Explicit Astra or Sol request | `astra` skill; for Sol, its § Sol variant |
 
 ## Fable Route
 
@@ -49,8 +49,9 @@ Load the `astra` skill and follow its runbook. Use it for creative critique and
 explicit Codex or Astra requests. Keep the prompt adversarial and high-level; do not
 paste your full reasoning chain.
 
-For an explicit Sol opinion, ALWAYS invoke `sol` with the adversarial review
-rules in `astra` § Rules; NEVER route a Sol request to Astra silently.
+For an explicit Sol opinion, ALWAYS run `astra` § Sol (`gpt-5.6-sol`,
+ephemeral) under the same `astra` § Rules; NEVER answer a Sol request on the
+Astra model silently.
 
 When the Astra CLI call cannot run (revoked auth, missing CLI), ALWAYS report
 the failure and take the Fable Route, on opus when fable cannot run either.

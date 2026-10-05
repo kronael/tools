@@ -128,10 +128,9 @@ def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
         # A leading slash command only: "use sol" is as likely the Solana token
-        # as the skill, and "/sol/data" a path.
-        match = re.match(r'\s*/(astra|sol)(?![\w/.-])', lower)
-        if match:
-            return '/' + match.group(1)
+        # as the skill, and "/sol/data" a path. /sol is astra's Sol variant.
+        if re.match(r'\s*/(astra|sol)(?![\w/.-])', lower):
+            return '/astra'
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
                 return '/astra'

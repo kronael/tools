@@ -92,7 +92,7 @@ the authoritative entry. The categories:
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `sync-tools-skills`, `astra`, `sol`, `pi`) — triage, multi-pass
+  `scavenge`, `sync-tools-skills`, `astra`, `pi`) — triage, multi-pass
   refinement, git flow, memory, scaffolding, second opinions, codifying
   public best practice, vendoring this bundle's skills into another project.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model

@@ -1,7 +1,7 @@
 ---
 name: astra
-description: "Ask the codex CLI on gpt-6-astra for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
-when_to_use: "astra, ask astra, codex, ask codex, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
+description: "Ask the codex CLI on gpt-6-astra (or gpt-5.6-sol, the Sol variant) for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
+when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, /sol, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
 user-invocable: true
 ---
 
@@ -12,12 +12,13 @@ is "Frontier intelligence for the most demanding work." This is a subprocess,
 NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
 Routing lives in `oracle`. Use this skill directly only when the user
-explicitly asks for Astra or Codex or when `oracle` dispatches to the Astra route.
+explicitly asks for Astra, Codex or Sol, or when `oracle` dispatches to the
+Astra route.
 
 ## Invoke
 
 ALWAYS complete the Model and Auth checks below before this invocation.
-A Sol call shares these rules except the session: see `sol` § Invoke.
+A Sol call shares these rules except the model and the session: see § Sol.
 
 In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
 On kernels that block unprivileged user namespaces, bwrap fails with
@@ -67,17 +68,34 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 (which contains "codex") and kills the harness. Kill codex by numeric PID
 (`ps -eo pid,args | grep -F 'codex exec' | grep -v grep | grep -v zsh`).
 
-## Model — fixed by the calling skill
+## Sol
 
-- ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The calling
-  skill selects the slug; reading this shared runbook NEVER changes that choice.
+`/sol` is the same second opinion from `gpt-5.6-sol` (catalog description
+"Older generation workhorse model"), at high effort. Use it only when the user
+explicitly asks for Sol; `oracle` routes to it only on such a request. Two
+differences from the Astra invocation: select `gpt-5.6-sol` in the catalog
+check and the command, and run `codex exec --ephemeral` instead of `resume
+--last`. `resume --last` picks the working directory's latest session, which is
+Astra's thread after an Astra call, and Sol must answer without having read
+Astra's prompt and answer.
+
+```bash
+codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
+  -m gpt-5.6-sol -c model_reasoning_effort="high" \
+  "Goal: <X>. Find the flaw in..." </dev/null
+```
+
+## Model — fixed by the variant asked for
+
+- ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The request
+  names the variant; reading this runbook NEVER changes that choice.
 - ALWAYS confirm the selected slug exists with the check below before the
   call; exit 0 means present. NEVER pick the model by the configured default or by priority.
 - If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
   launch and report the exact missing model. ALWAYS ask the user to refresh
   the Codex catalog or explicitly choose another model; NEVER silently substitute.
 - ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work, in
-  both skills; NEVER trust a lower local config default.
+  both variants; NEVER trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 

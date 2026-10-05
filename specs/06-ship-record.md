@@ -113,8 +113,8 @@ The bundle ships no project `AGENTS.md` template — only that global block
 and the pointer example in `plugins/kronael/skills/kronael-sync/SKILL.md`
 — so the rule Codex must not miss is stated in the block itself: the path,
 the ignore line and the reuse of the active change's record, with `ship` §
-Work record as the owner. The `astra` and `sol` skills launch Codex; Codex
-reads its own instruction chain, not theirs, so they carry no copy.
+Work record as the owner. The `astra` skill (and its Sol variant) launches Codex; Codex
+reads its own instruction chain, not the skill's, so it carries no copy.
 
 ## The `ship` CLI
 
