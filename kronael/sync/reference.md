@@ -107,7 +107,7 @@ JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
     *(f'skills/{n}' for n in (
-        'bash', 'caveman', 'codex', 'con', 'cont', 'create-architecture-diagram',
+        'agent-browser', 'bash', 'caveman', 'codex', 'con', 'cont', 'create-architecture-diagram',
         'create-ascii-art', 'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
         'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
