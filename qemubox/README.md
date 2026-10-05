@@ -131,8 +131,13 @@ Default host access includes:
    message each other's Claude sessions. Guest edits reach the host, and absolute skill links
    resolve because the guest has the host username, UID, GID and home path.
 3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
-   when set on the host, reach each session's environment, as in dockbox. They travel over
-   SSH stdin into the guest's `~/.qemubox-env` (mode 0600), never on a command line.
+   when set on the host, reach each session's environment, as in dockbox.
+
+Every session variable — the agent tokens, `-g`'s `GH_TOKEN`/`GITHUB_TOKEN`, `-D`'s
+`DOCKER_HOST`, each `-e VAR` — travels over SSH stdin into a per-session file in the guest's
+`/dev/shm` (mode 0600, guest tmpfs outside every 9p mount). The session sources and deletes it
+before it starts the tool, so no value reaches an SSH command line, which every host user can
+read in `/proc`.
 
 Other home paths require an explicit mount or forwarding flag.
 `~/.gitconfig` and gpg **public** keyrings are staged read-only.
@@ -155,8 +160,9 @@ default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TO
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
 (or `--untrusted`) goes further — it injects **no** host config or credentials
-and forces the network off. Project dirs and explicit `-v` paths remain mounted,
-so they must not contain credentials you want to withhold. The agent can't authenticate with
+(the agent tokens and `GH_TOKEN`/`GITHUB_TOKEN`/`DOCKER_HOST` are dropped, even from
+a `.qemuboxrc` `-e`) and forces the network off. Project dirs and explicit `-v` paths
+remain mounted, so they must not contain credentials you want to withhold. The agent can't authenticate with
 no credentials, so `-U` is for `bash`/build/test, not for running the agent.
 
 ## Security posture

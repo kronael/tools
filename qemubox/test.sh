@@ -77,13 +77,14 @@ eq "-U disables network" "$network" ""
 eq "-U sets untrusted"   "$untrusted" "1"
 
 ssh_agent=1; docker_sock=/x; docker_remote=/y; gpg_forward=1; gcloud_creds=1
-envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep"); warnings=()
+envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep" "CLAUDE_CODE_OAUTH_TOKEN=o"
+    "OPENAI_API_KEY=a" "CODEX_API_KEY=c"); warnings=()
 apply_untrusted
 eq "-U clears ssh_agent"   "$ssh_agent" ""
 eq "-U clears docker_sock" "$docker_sock" ""
 eq "-U clears gpg_forward" "$gpg_forward" ""
 eq "-U clears gcloud"      "$gcloud_creds" ""
-eq "-U drops cred envs, keeps the rest" "${envs[*]}" "MYVAR=keep"
+eq "-U drops cred envs and agent tokens, keeps the rest" "${envs[*]}" "MYVAR=keep"
 
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
@@ -96,15 +97,26 @@ source "$here/test-mounts.sh"
 
 ## guest note ---------------------------------------------------------------
 run_assemble
-network=1; gout="$(guest_note myhost)"
+persist_builds=""; eph_no_tmpfs=""; stage_ephemeral "$eph"
+network=1; gout="$(guest_note myhost "$eph")"
 true_ "note names the sandbox"     '[[ "$gout" == *CLAUDE_SANDBOX=qemubox* ]]'
 true_ "note names the host"        '[[ "$gout" == *"host \`myhost\`"* ]]'
 true_ "note: network on"           '[[ "$gout" == *"Outbound network: on."* ]]'
 true_ "note marks the project rw"  '[[ "$gout" == *"- $PROJ (rw) <- same path"* ]]'
 true_ "note maps config to host"   '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
 true_ "note lists shared history" '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
-network=""; gout="$(guest_note myhost)"
+true_ "note lists the empty dependency dirs" \
+    '[[ "$gout" == *"empty box-only mounts."*"  - $PROJ/server/.venv"* ]]'
+false_ "note omits a dependency dir absent at launch" '[[ "$gout" == *"$PROJ/.turbo"* ]]'
+network=""; gout="$(guest_note myhost "$eph")"
 true_ "note: network off"          '[[ "$gout" == *"Outbound network: off."* ]]'
+for flag in P T N; do
+    run_assemble
+    persist_builds=""; eph_no_tmpfs=""; apply_flag "$flag"
+    stage_ephemeral "$eph"; gout="$(guest_note myhost "$eph")"
+    false_ "-$flag note claims no empty dependency dir" '[[ "$gout" == *box-only* ]]'
+done
+persist_builds=""; eph_no_tmpfs=""; no_copy=""
 
 ## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
