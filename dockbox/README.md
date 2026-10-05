@@ -258,7 +258,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    Names overmounted by default:
 
    ```
-   node_modules  .next  .turbo  .cache
+   node_modules  .venv  .next  .turbo  .cache
    ```
 
    `dist` and `build` are not overmounted, so they land in the host

@@ -5,7 +5,7 @@ IMAGE="dockbox"
 SECCOMP="$HOME/.local/share/dockbox/seccomp.json"
 CAPS=(sys_nice ipc_lock sys_ptrace)
 
-EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
+EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
 # dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
 # mountpoint. Container writes to host paths for these; use -P to disable
 # all ephemeral mounts if you need a completely clean workdir.
@@ -136,6 +136,10 @@ container start; a wrong line here is a dockbox launcher bug.
   edit a \`server-*\` skill from here: it describes the host, not this box.
 - Lost when the last session exits: the container and everything outside the
   bind mounts (\`\$HOME\`, /tmp, installed packages, build dirs).
+- Dependency dirs (\`${EPHEMERAL_DIRS[*]}\`) are empty box-only
+  mounts. ALWAYS install them here before a build or test (\`uv sync\`,
+  \`npm ci\`; \`sudo apt-get install\` for a missing system package). NEVER
+  report a check as unrunnable because a dependency is missing.
 - GitHub over SSH fails here: the box has no \`~/.ssh\`, so host key
   verification fails. ALWAYS go over HTTPS, per command: \`git -c
   credential.helper= -c credential.helper='!gh auth git-credential'

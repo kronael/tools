@@ -275,7 +275,9 @@ RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
   && bun install -g @openai/codex \
   && chmod -R a+rwX /opt/dev-tools/bun
 
-RUN apt-get update && apt-get install -y --no-install-recommends docker-cli \
+# gcc sits in this late layer, which every build reruns anyway: psycopg2 and
+# other sdists call x86_64-linux-gnu-gcc, which clang does not provide.
+RUN apt-get update && apt-get install -y --no-install-recommends docker-cli gcc \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 FROM dockbox AS vm

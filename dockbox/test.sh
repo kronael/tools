@@ -341,11 +341,13 @@ true_ "resume maps every nonalphanumeric path character" \
 # persist (no overmount for node_modules), claude gets no stray "--", and no
 # "ignoring" warning. The run without an rc proves the overmount is there to lose.
 proj="$tmp/proj"
-mkdir -p "$proj/node_modules"
+mkdir -p "$proj/node_modules" "$proj/server/.venv"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")
 true_  "a box without an rc overmounts node_modules" \
     'grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+true_  "a box without an rc overmounts a nested .venv" \
+    'grep -q -- "--tmpfs $proj/server/.venv:" <<< "$run"'
 echo "--no-ephemeral" > "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")

@@ -107,7 +107,7 @@ VM references, keeping the `current` base.
 
 ## Build directories
 
-`node_modules`, `.next`, `.turbo` and `.cache` directories found under each
+`node_modules`, `.venv`, `.next`, `.turbo` and `.cache` directories found under each
 project become empty tmpfs mounts owned by the guest user. Discovery stops at
 depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.

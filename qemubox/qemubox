@@ -8,7 +8,7 @@ DISK="${QEMUBOX_DISK:-40G}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
-EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
+EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
 
 name_override=""
 entrypoint="claude"
@@ -1222,6 +1222,10 @@ a wrong line here is a qemubox launcher bug.
 - The last session powers off the VM. Disk files survive re-entry; removing
   the box deletes its disk. Private tmpfs files, including Claude sessions
   and temporary build files, are lost at power-off.
+- Dependency dirs (\`${EPHEMERAL_DIRS[*]}\`) are empty box-only
+  mounts. ALWAYS install them here before a build or test (\`uv sync\`,
+  \`npm ci\`; \`sudo apt-get install\` for a missing system package). NEVER
+  report a check as unrunnable because a dependency is missing.
 
 9p mounts (guest path, mode, host source):
 EOF
