@@ -279,6 +279,89 @@ built to be provable was still a third short until someone attacked it.
   its config includes; a defect in the rest — a test tree, an untyped
   package — needs the sweep.
 
+## Long runs
+
+- ALWAYS give a run its own output path and check nothing writes there
+  before launching: `ps -eo pid,args | grep -F <path>`. Two writers on one
+  log or results file truncate each other and fake a divergence or a pass.
+  The usual second writer is a run from an earlier session (`continue`).
+- NEVER wait on a PID you have not verified — `ps -p "$pid" -o args=` names
+  the program or it does not. `$!` of a `setsid` or `nohup` launcher can be
+  a wrapper that exited at once, and a wait on a dead PID returns at once
+  and reads an empty result file as done. NEVER `pgrep` for a pattern your
+  own command line contains: the loop counts itself.
+
+## Keeping the stack mergeable
+
+- NEVER rebase a branch that is on the remote — merge its base forward
+  (`merge` § 0c). A rebase makes every pushed branch above it
+  non-fast-forward.
+- A fix that undoes a cut lands in the layer that made the cut and merges up
+  from there — NEVER in the layer where it was noticed.
+- A change at the bottom costs a pass over every layer above it, in order.
+  Each layer merges it in, re-aims a test that names what the layer moves —
+  NEVER weakens it — and re-measures every claim its bug queue and PR body
+  made before the merge: a "no test reaches X" written before the test layer
+  arrived is false afterwards.
+
+## Evidence before the merge
+
+Each branch carries all of these on the exact head that will merge. A gate on
+an older head is a gate on something else.
+
+- Replays of the production configuration, byte-identical across base, branch
+  and `origin/<default head>` in every output file, not only the headline
+  metric, and a control mutant that moves them (§ Gates).
+- The change-detection layer — a golden over production-shaped input, one
+  named test per production-altering mutant — merged to the default head
+  first (§ Order, § Proof per test).
+- A proof per edited site against its production callers, with the sites that
+  hold only under a runtime condition and the deliberate differences listed
+  by name in the PR.
+- The base's own unchanged suite run on the branch, deleted names stubbed so
+  it collects. Failures on removed names and changed call shapes are
+  expected. An assertion or value error is a behaviour difference.
+- The adversarial review (§ Four passes) and a second-opinion sign-off
+  (`oracle`) ending in an explicit YES or NO.
+- A hosted-CI failure dismissed as pre-existing is first reproduced on the
+  unchanged tip of the PR's base — NEVER on the claim alone.
+- One verdict comment per PR — merged, ready, ready after its parent, or hold
+  naming an open owner decision. ALWAYS check the decision record before a
+  hold, and retract a hold the owner has overtaken. Fetch the posted comment
+  back and diff it against the draft.
+
+## Landing on GitHub
+
+GitHub treats PRs whose bases are each other's heads as a native stack, and
+the stack changes the API. ALWAYS read membership before acting:
+`gh api repos/<owner>/<repo>/pulls/<PR> --jq .stack` — `null` is a plain PR,
+an object (id, position, size) is a member.
+
+- The plain merge endpoint and `gh pr merge` refuse a stack member ("must be
+  merged using the asynchronous merge REST API"). ALWAYS land it with
+  `PUT /repos/<owner>/<repo>/pulls/<PR>/merge-async` carrying
+  `sha=<tested head>` and `merge_method=merge`. The response holds
+  `.details.uuid`, and `GET .../merge-async/<uuid>` polls `.status` from
+  `pending` to `merged` or `failed`. `sha` cancels the merge when the head
+  has moved — that is the pin.
+- Merging a stack member merges every open PR below it in the same
+  operation. ALWAYS merge from the bottom, one PR per call, so each gets its
+  own merge commit and its own head pin. After one lands, the next PR's base
+  can already be the default head — ALWAYS read `.base.ref` back before
+  patching it.
+- `PATCH` of `base` on a stack member fails 422 ("part of a stack"). NEVER
+  report a retarget GitHub refused as done — the PR body's `⚠️` line
+  (`pr-draft`) states the merge order instead.
+- Zero hosted runs and `mergeable: UNKNOWN` after a push mean the PR has no
+  integration merge ref (`git ls-remote origin refs/pull/<PR>/merge` prints
+  nothing), which `pull_request` workflows need. Look below first: a parent
+  whose remote head conflicts with the default head (`mergeable_state:
+  dirty`) while its resolution sits unpushed. ALWAYS push the parent's
+  resolution first, then close and reopen the PR to start its workflows. A
+  reopen before that starts nothing.
+- NEVER run the stack UI's "Rebase stack" — it force-pushes every unmerged
+  branch in the stack.
+
 ## Reporting
 
 - NEVER quote the total diffstat. Split `git diff --numstat` by kind —

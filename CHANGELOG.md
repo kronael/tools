@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.16] — 20261005
+
+> kronael v0.4.16 — prepare and land a refactor stack
+>
+> The merge and software skills now cover bringing a pushed stack up to date and landing it on GitHub with evidence on the exact head that merges.
+>
+> • merge § 0c — update a pushed branch by merging its base forward, never a rebase; prove the merged tree is the tested one.
+> • refactor-stack — keeping the stack mergeable, evidence before the merge, landing stacked PRs through merge-async with a pinned sha, and long runs.
+> • continue — recover the survivors of a long run before starting a new one.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `merge` § 0c: fetch, detach at `origin/<b>`, merge `origin/<base>`, then gates on HEAD or an empty diff against the tested commit; a squash-merged base is merged in, `-s ours` only when the trees prove it.
+- `software/refactor-stack.md`: sections Long runs, Keeping the stack mergeable, Evidence before the merge and Landing on GitHub (`.stack` probe, merge-async with `sha`, 422 on a member's base PATCH, missing merge ref behind zero runs).
+- `continue`: survivors of an earlier run are found and reconciled before a relaunch.
+
 ## [v0.4.15] — 20261004
 
 > kronael v0.4.15 — opus subagents run at high effort
