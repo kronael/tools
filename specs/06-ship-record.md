@@ -1,5 +1,5 @@
 ---
-status: planned
+status: shipped
 ---
 
 # Ship record in plan mode's directory
