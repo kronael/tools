@@ -50,8 +50,8 @@ git -C "$(git rev-parse --show-toplevel)" check-ignore -q ".diary/$(date -u +%Y%
   ```
 
 - **Not a git repo** → fall back to `<cwd>/.diary/`.
-- `.diary/` is generally public — checked into git — unless the project's
-  `CLAUDE.md` marks it local-only.
+- Whether `.diary/` is tracked is the repo's `.gitignore`; a new repo ignores
+  it (`readme` → `topology.md`).
 
 ## Format
 

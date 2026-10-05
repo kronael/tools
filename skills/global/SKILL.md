@@ -168,8 +168,8 @@ Claude Code" footer). These win.
 
 ## Documentation
 
-- Repo doc layout — UPPERCASE root files, `specs/`, `docs/`, `.ship/`, `.diary/`,
-  no `todos/` or `plans/`, root-anchored ignores: `readme` → `topology.md`.
+- ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
+  file or top-level dir — the one home of the house layout. NEVER `todos/`/`plans/`.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used

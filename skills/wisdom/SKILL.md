@@ -111,11 +111,12 @@ and treat agreement between them as the evidence.
 
 ## CLAUDE.md (project)
 
-- Project-specific only — skills carry general knowledge.
-- ALWAYS document architecture, state machines, external systems.
-- NEVER repeat what the project's README/ARCHITECTURE/docs already say — ALWAYS
-  cut re-explanation to a one-line pointer and keep only the invariants, gotchas,
-  and syntax an editor must not get wrong. CLAUDE.md holds what those docs don't.
+- Project-specific only — skills carry general knowledge; where each CLAUDE.md
+  sits (root, one per package) is `readme` → `topology.md`.
+- NEVER repeat what README/ARCHITECTURE/docs say — architecture, state machines
+  and external systems are ARCHITECTURE.md's. ALWAYS cut re-explanation to a
+  one-line pointer; keep only the invariants, gotchas and syntax an editor must
+  not get wrong.
 - Put critical rules at the top or bottom — middle content is least reliably attended to.
 - ALWAYS wrap task-specific sections (testing conventions, API patterns, state
   management, i18n) in `<important if="condition">…</important>` with one
