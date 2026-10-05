@@ -63,7 +63,8 @@ the file needs no dated scaffolding around it.
 ## Entry format
 
 One **bullet** per bug: bold UPPERCASE-KEBAB id, a `(SEVERITY, type)` tag, an
-em-dash, then the body.
+em-dash, then the body. An existing `BUGS.md` in another shape keeps it: ALWAYS
+add entries in the file's own format, NEVER convert it, and NEVER ask to.
 
 ```markdown
 - **COMPONENT-SHORT-NAME** (SEVERITY, type) — <what's broken>, at `file:line`;
