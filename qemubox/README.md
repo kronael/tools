@@ -130,6 +130,9 @@ Default host access includes:
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
    message each other's Claude sessions. Guest edits reach the host, and absolute skill links
    resolve because the guest has the host username, UID, GID and home path.
+3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
+   when set on the host, reach each session's environment, as in dockbox. They travel over
+   SSH stdin into the guest's `~/.qemubox-env` (mode 0600), never on a command line.
 
 Other home paths require an explicit mount or forwarding flag.
 `~/.gitconfig` and gpg **public** keyrings are staged read-only.
@@ -169,7 +172,8 @@ What qemubox gives you:
 What it does **not** give you — do **not** run genuinely hostile code here:
 
 - **Your real agent credentials are shared read-write.** Like dockbox, qemubox
-  shares your live `~/.claude` / `~/.codex` (tokens included).
+  shares your live `~/.claude` / `~/.codex` (tokens included) and the agent
+  token variables.
   Guest code can read, change and exfiltrate those tokens and config files.
 - **Outbound network is on by default.** Pass `-H` (egress kill-switch) to
   disable it, or `-U` for a credential-free, network-off inspection mode.

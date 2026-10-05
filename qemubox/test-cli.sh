@@ -1,6 +1,8 @@
 (
     set -e
     export QEMUBOX_HOME="$fixture/cli-state" STUB="$fixture/cli"
+    export CLAUDE_CODE_OAUTH_TOKEN=fixture-oat OPENAI_API_KEY=fixture-openai \
+        CODEX_API_KEY=fixture-codex
     mkdir -p "$STUB/bin" "$STUB/sess" "$QEMUBOX_HOME/cli" "$QEMUBOX_HOME/base"
     touch "$STUB/sess/$$" "$QEMUBOX_HOME/cli/ready"
     echo base > "$QEMUBOX_HOME/base/fixture.qcow2"
@@ -24,6 +26,7 @@ case "$command" in
         touch "$STUB/sess/${command##*/}" ;;
     'sudo rm -f /run/qemubox/sess/'*) rm "$STUB/sess/${command##*/}" ;;
     'sudo ls -1 /run/qemubox/sess') ls -1 "$STUB/sess" ;;
+    'umask 077 && cat > ~/.qemubox-env') cat > "$STUB/env" ;;
     *'exec env'*)
         echo "$command" > "$STUB/command"
         if [ -n "${STUB_HOLD:-}" ]; then
@@ -42,8 +45,15 @@ STUB
     printf '%s\n' '-n global' '-d codex' > "$HOME/.qemuboxrc"
     bash "$here/qemubox" -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
     grep -q 'codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh' "$STUB/command"
+    grep -q '^\. ~/\.qemubox-env && ' "$STUB/command"
+    grep -qxF 'export CLAUDE_CODE_OAUTH_TOKEN=fixture-oat' "$STUB/env"
+    grep -qxF 'export OPENAI_API_KEY=fixture-openai' "$STUB/env"
+    grep -qxF 'export CODEX_API_KEY=fixture-codex' "$STUB/env"
+    if grep -q fixture- "$STUB/ssh.log"; then exit 1; fi
     ! grep -q -- ' -t ' "$STUB/ssh.log"
     [ "$(ls "$STUB/sess")" = $$ ]
+    bash "$here/qemubox" -U -n cli exec true </dev/null > "$STUB/output" 2>&1
+    [ ! -s "$STUB/env" ]
     export STUB_RC=17
     if bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1; then
         exit 1
@@ -71,4 +81,4 @@ STUB
     done
     rm "$HOME/.qemuboxrc"
 ) > "$fixture/cli.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, exit, HUP, TERM and non-TTY"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and non-TTY"; }

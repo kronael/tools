@@ -1143,6 +1143,16 @@ apply_untrusted() {
     esac
 }
 
+# Agent tokens reach the guest on stdin, never in ssh argv: every host user can
+# read /proc/<pid>/cmdline. Under -U the file is written empty.
+send_agent_creds() {
+    local var
+    for var in CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY
+    do
+        [ -n "$untrusted" ] || [ -z "${!var:-}" ] || printf 'export %s=%q\n' "$var" "${!var}"
+    done | ssh_plain_box "$name" 'umask 077 && cat > ~/.qemubox-env'
+}
+
 assemble_mounts() {
     if [ -z "$untrusted" ]; then
         host_cfg="$(box_dir "$name")/hostcfg"
@@ -1293,6 +1303,7 @@ name="$(box_name "${name_override:-${primary##*/}}")"
 
 [ -n "$gpg_forward" ] && detect_gpg
 enter_session
+send_agent_creds
 
 for warning in "${warnings[@]}"; do
     note "$warning"
@@ -1313,9 +1324,9 @@ done
 rc=0
 if [ -n "$workdir" ]
 then
-    remote="cd $(quote "$workdir") && exec env$remote"
+    remote=". ~/.qemubox-env && cd $(quote "$workdir") && exec env$remote"
 else
-    remote="exec env$remote"
+    remote=". ~/.qemubox-env && exec env$remote"
 fi
 note "running in qemubox-$name${workdir:+:$workdir}"
 session_tty
