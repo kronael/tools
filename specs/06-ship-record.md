@@ -1,5 +1,5 @@
 ---
-status: planned
+status: shipped
 ---
 
 # Ship record under `.claude/ship/`
