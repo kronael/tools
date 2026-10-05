@@ -24,30 +24,32 @@ verdict, so a later session has the context instead of re-deriving it.
    its own SKILL and returns: one-line verdict (pass / fail / conditional), top-3
    blockers, and the single kill-shot.
    Prompt shape: "Run the `<lens>` skill on `<target>`. Save your full memo to
-   `.ship/critique-<lens>-<YYYYMMDD>.md`. Return verdict + top-3 blockers + kill-shot."
+   `.claude/ship/critique-<lens>-<YYYYMMDD>.md`. Return verdict + top-3
+   blockers + kill-shot."
 3. NEVER trust a sub's summary alone — READ each memo it wrote before rolling up
    (agent success reports are not evidence).
 
 ## Log (so it has context later) — ALWAYS persist, never just print
-- Each lens's full memo → `.ship/critique-<lens>-<YYYYMMDD>.md`. The individual
-  eval skills don't all persist by default, so the RUN prompt above tells each
-  subagent to write its memo there — verify the file landed.
-- A consolidated roll-up → `.ship/eval-all-<YYYYMMDD>.md`: per-lens verdict +
-  blockers, the cross-cutting kill-shot, and the one next action.
+- Each lens's full memo → `.claude/ship/critique-<lens>-<YYYYMMDD>.md`. The
+  individual eval skills don't all persist by default, so the RUN prompt above
+  tells each subagent to write its memo there — verify the file landed.
+- A consolidated roll-up → `.claude/ship/eval-all-<YYYYMMDD>.md`: per-lens
+  verdict + blockers, the cross-cutting kill-shot, and the one next action.
 - A one-line pointer via `/diary`: "eval-all `<target>`: N lenses, worst verdict
-  `<X>`, kill-shot `<Y>` — see `.ship/eval-all-<date>.md`" so `/recall-memories`
-  finds it next session.
+  `<X>`, kill-shot `<Y>` — see `.claude/ship/eval-all-<date>.md`" so
+  `/recall-memories` finds it next session.
 - Any concrete real defect a lens surfaces → log to `BUGS.md` via `/bugs`
   (record-only; NEVER fix here — Bug Triage Protocol).
 
 ## Report (≤ 20 lines)
 Verdict table (lens → verdict → kill-shot), the single most important next
-action, and the `.ship/eval-all-<date>.md` path.
+action, and the `.claude/ship/eval-all-<date>.md` path.
 
 ## Rules
 - ALWAYS run lenses as independent subagents, never inline — keeps each
   adversarial and uncontaminated by the others.
 - ALWAYS read the memos before the roll-up; success reports are not evidence.
-- ALWAYS persist to `.ship/` + a diary pointer. An eval with no log has no
-  context later — that is the whole point of this skill.
+- ALWAYS persist to `.claude/ship/` (`ship` § Work record owns the directory
+  and its ignore rule) + a diary pointer. An eval with no log has no context
+  later — that is the whole point of this skill.
 - NEVER fix what a lens finds — record to `BUGS.md` and move on.

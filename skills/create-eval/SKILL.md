@@ -33,7 +33,7 @@ see `cto-eval` (code/operations), `ceo-eval` (demo/business), and
 6. Write `.claude/skills/service-eval/SKILL.md` with:
    - Log locations and what to grep for
    - Health checks (pass/fail criteria from logs)
-   - When to generate improvement specs (to specs/ or .ship/)
+   - When to generate improvement specs (to `specs/` or `.claude/ship/`)
 
 ## Rules
 

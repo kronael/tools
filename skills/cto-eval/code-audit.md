@@ -67,9 +67,6 @@ spec sync update reality or wishes?
 `<wherever the sprint dir is>/CTO-REPORT.md` with claims, attack scenarios,
 grade, sprint spot-checks, and one-sentence call.
 
-Pattern references: `.ship/20-CTO-CEO-REVIEW-2/CTO-REPORT.md` and
-`.ship/27-REFINE-AUDIT/CTO-REPORT.md`.
-
 ## Anti-patterns
 
 - Re-reading docs and pronouncing them correct.

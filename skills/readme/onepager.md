@@ -2,8 +2,8 @@
 
 One page. A stranger decides in 60 seconds whether this matters to them.
 Everything else is a link. ALWAYS read the project's record first — README,
-plan/specs, BUGS.md, `.ship/critique-*.md`; NEVER let the page assert what a
-critique on file already refuted.
+plan/specs, BUGS.md, `.claude/ship/critique-*.md`; NEVER let the page assert
+what a critique on file already refuted.
 
 ## Sections — this order; cut any with nothing true to say
 

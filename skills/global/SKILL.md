@@ -169,7 +169,7 @@ Claude Code" footer). These win.
 
 ## Documentation
 
-- Repo doc layout — UPPERCASE root files, `specs/`, `docs/`, `.ship/`, `.diary/`,
+- Layout — UPPERCASE root files, `specs/`, `docs/`, `.claude/ship/`, `.diary/`,
   no `todos/` or `plans/`, root-anchored ignores: `readme` → `topology.md`.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
