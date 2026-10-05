@@ -20,8 +20,8 @@ hidden dir inside the repo root (WISDOM § Git, installed as
 `~/.claude/CLAUDE.md`).
 
 The `rig` recipes below are the human's hand tool. An agent follows
-WISDOM § Git: no force-push, no squash, and a push only when asked, by
-SHA.
+WISDOM § Git: no force-push, no squash of a pushed commit, and a push only
+when asked, by SHA.
 
 ## Start work on a feature
 

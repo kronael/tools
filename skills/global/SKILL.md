@@ -113,7 +113,8 @@ Claude Code" footer). These win.
   releases alike.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
-- NEVER `git add -A`, NEVER `--amend`, NEVER squash.
+- NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
+  local commits are squashed only through `/squash`.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
   --show-current` prints nothing). NEVER create a local branch, no exception:
   no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach

@@ -46,7 +46,8 @@ A subagent's harness can carry an instruction to sign commits with a
 `Co-Authored-By` trailer, which this house forbids. The install blanks
 `attribution.commit`; this block is the backstop when a harness ignores it.
 Seven commits once landed with the trailer because two briefs omitted this
-block, and amend and squash are both barred, so the violation is permanent.
+block, and amend is barred, so the trailer stays until a `/squash` of the
+still-unpushed stack — and for good once pushed.
 
 ```
 - Conventional commits, `type(scope): Message`, subject ≤72 characters.
