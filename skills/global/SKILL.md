@@ -183,6 +183,8 @@ Claude Code" footer). These win.
   description, tagline or other public-facing pitch is the owner's copy: set it
   verbatim as given and NEVER re-litigate the wording, in review or in an eval
   report.
+- ALWAYS write every address, signature and hash in full — in docs, code
+  comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
 - NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
   local files (HTML, MD) the user opens themselves.
 

@@ -75,15 +75,6 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
-- **HUMANIZE-OVER-LINE-CAP** (LOW, design) — needs sign-off. `make
-  skills-frontmatter` warns: `skills/humanize/SKILL.md` has a 629-line body, 3.1x
-  the 200-line cap, and `humanize` is not in the linter's `LONG_SKILLS` allowance
-  (`{ship}`). Skills persist in context all session, so this is a
-  standing context cost on every session. It is an external skill vendored
-  intact (it ships its own LICENSE and Attribution section) and has no sibling
-  files. **Fix:** split the pattern catalogs into on-demand siblings — a
-  restructuring of imported content, not a one-line fix.
-
 ## Codex bridge
 
 - **LINT-PACK-NOT-INSTALLABLE** (MED, design) — needs sign-off. The lint pack

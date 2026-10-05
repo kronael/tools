@@ -27,21 +27,14 @@ what a critique on file already refuted.
 
 - ALWAYS cap body prose near 500 words — longer material links out.
 - ALWAYS lead each section with its conclusion, then support it.
-- NEVER use marketing words — "revolutionary", "seamless", "powerful",
-  "next-generation"; state the capability and let it stand.
 - NEVER present planned behavior as shipped — a project with no code says so
   in its first sentence, and "How it works" is labeled as the design.
-- ALWAYS one self-contained file: inline CSS, inline SVG, no CDN, no external
-  fonts, no build step — it renders from `file://`. Dark-mode-safe via
-  `prefers-color-scheme`, explicit background on `body`.
-- Craft: one font family, at most five font sizes, generous line height,
-  measure ≤70ch; one accent colour — links plus at most one divider, nothing
-  else; prose over bullet soup. A diagram only for a mechanism words handle
-  badly — inline SVG or `<pre>`, never an image file. NEVER design past
-  this — a taste-driven page is `create/web.md`'s job.
+- Craft and presentation — one self-contained dark-mode-safe file, one font,
+  one accent, measure ≤70ch, prose over bullet soup, boxes, sources and links —
+  are the `writing` skill: ALWAYS read `writing/page.md` before writing.
 - ALWAYS reread the rendered page as a stranger before handing over: the
-  first sentence says what it is, every claim has a source linked on the
-  claim's own words (`page.md` § Evidence), a skeptic survives it.
+  first sentence says what it is, every claim is backed in its section's
+  sources note (`writing/page.md` § Sources and links), a skeptic survives it.
 - NEVER publish through Claude Artifacts — ALWAYS write into the krons web
   root (`CLAUDE.md` § Publishing) and hand back the public URL, unless the
   request names a different destination; then write exactly there.

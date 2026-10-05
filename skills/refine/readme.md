@@ -9,10 +9,10 @@ reads to pick the agent type.
 
 - A doc is checked when written; the repo moves on. ALWAYS grep every cited
   test name, symbol, path and count, and check every claim against the newest
-  results (`agents/readme.md` § Verify claims against code). NEVER run a style
+  results (`readme/sync.md` § Verify claims against code). NEVER run a style
   pass alone — it polishes a page that is wrong.
 
 ## Generated style `simplify`
 
-- Prose tells are the `humanize` catalogue. An HTML page's structural tells are
-  `readme/page.md`.
+- Prose tells are the `humanize` catalogue. A page's structural tells — headers,
+  boxes, layout, sources, links, diagrams, contrast — are `writing/page.md`.

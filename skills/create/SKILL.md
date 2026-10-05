@@ -77,6 +77,7 @@ cutout look), `visual` (headful UI/CSS render refinement).
 
 Related, NOT in this router: `show-me` (inline explanations of the current
 topic, including code; requested explainer artifacts use this router),
-`humanize` (strip AI-isms from prose),
-`diagrams` (Unicode box diagrams inside docs), `create-eval` (scaffold a
-project eval skill).
+`writing` (the owner's prose and page rules — any artifact with text obeys
+`writing/page.md`), `humanize` (strip AI-isms from prose), `diagrams`
+(Unicode box diagrams inside docs), `create-eval` (scaffold a project eval
+skill).

@@ -66,7 +66,7 @@ memory: `/fin` is faster than retyping the rule.
 
 Skills auto-activate by description match, but in practice the LLM
 often misses the right one. Hooks add explicit nudges: keyword →
-skill/agent routing on prompt submit, file extension → language skill
+skill routing on prompt submit, file extension → language skill
 on file touch, commit/diary checks on stop. Without them the LLM picks
 the wrong skill or none. With them, common workflows surface
 automatically. The hook list and wiring live in `../hooks/README.md`.
@@ -98,12 +98,14 @@ the authoritative entry. The categories:
   public best practice, vendoring this bundle's skills into another project.
 - **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
-  fire-and-forget at default model.
+  fire-and-forget at default model. Their `agents/*.md` files are model and
+  effort pins only; every other skill carries its own instructions and names
+  which of these subs it runs in.
 - **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
   `create-eval`, `13yo-eval`, `assess`) — judge a codebase or practice from a
   fixed perspective.
 - **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`,
-  `research/`) — one preloaded
+  `research/`, `writing/`) — one preloaded
   `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
@@ -118,8 +120,9 @@ the authoritative entry. The categories:
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
-  `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
-  `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
+  `writing` owns the prose rules and, in its cold `page.md`, how a document or
+  page is laid out; `humanize` is the AI-tells catalogue it finishes with; both
+  cited by `tweet`, `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
   context, loaded as context, not a judgment lens; `caveman` is the pointer
   to the response style loaded before any reply.
 - **`global`** — special case, not installed as a skill: its body
