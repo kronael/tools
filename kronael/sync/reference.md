@@ -137,6 +137,8 @@ RETIRED = {  # names the bundle shipped and dropped
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
         'software-engineering', 'speed-demo', 'sub', 'testing', 'trader', 'typescript', 'useless',
     )),
+    'commands/improve.md', 'commands/learn.md', 'commands/readme.md', 'commands/refine.md',
+    'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',
 }
