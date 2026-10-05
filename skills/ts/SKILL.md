@@ -60,8 +60,9 @@ Read on demand, in this directory:
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
 ## Types
-- NEVER annotate a return type or a const's type that inference already produces — exported or not.
-- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
+- NEVER annotate a return type or a const's type that inference already produces — exported or not. ALWAYS judge every line a change adds or rewrites, including one that predates the change.
+- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a type predicate, an empty `[]`, a `let x!` with no initializer, a return type that types the parameters of the function it returns, one value fed by several literals of a discriminated union (one `: T` beats a `satisfies` per site), a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
+- ALWAYS swap the annotation on a single literal that must stay narrow for `satisfies T` — `({ phase: "idle" }) satisfies State`, `[...] as const satisfies readonly T[]`. NEVER keep `: T` only to stop one literal widening.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
 - ALWAYS use discriminated unions for mutually exclusive state; NEVER force a union onto independent results — ALWAYS use a named result object with one field per result
