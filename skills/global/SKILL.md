@@ -135,9 +135,10 @@ Claude Code" footer). These win.
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
   AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
-- ONLY run `gh pr create`, `gh pr merge`, `gh release create` or `gh repo create`
-  when the user asked for that action in that message — show the title and body
-  first and wait. NEVER `gh pr review --approve` on the user's behalf.
+- ONLY run `gh pr create`, `gh pr merge` or `gh repo create` when the user
+  asked for that action in that message — show the title and body first and
+  wait. NEVER `gh release create`: the annotated tag is the release. NEVER
+  `gh pr review --approve` on the user's behalf.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
   new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
   PATCH path and `🤖` marker are the contract.

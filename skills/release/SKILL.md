@@ -115,8 +115,9 @@ user-invocable: true
    entries in this repo for what the project considers a typical wave.
 
    Then REVIEW-ON-WISDOM (WISDOM § Git) over both passes, with the Banned
-   list and Pass B's preserve rules as the shape checklist; a body for
-   `gh release create` (only on the user's ask) is this same text.
+   list and Pass B's preserve rules as the shape checklist. The tag message
+   carries this blockquote. NEVER create a GitHub release object — the
+   annotated tag is the release, and its push is the publication.
 4. **Verify** — `make test`, `make smoke` if defined. For monorepos
    with sibling deployables, run each subdir's `make test` too.
 4.5. **Critique gate when unclear.** If verification passes but the release is
