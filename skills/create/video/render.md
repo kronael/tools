@@ -7,7 +7,10 @@ user-invocable: true
 
 # Video Render — index
 
-Turns a prose script from [`video.md`](../video.md) into an mp4. This file is engine-agnostic: the bridge, house style, caption pipeline, and a flavor index. Pick a flavor, then read only its file.
+Turns a prose script into an mp4: educational explanations follow
+[`explainer.md`](../explainer.md); promotional scripts follow
+[`video.md`](../video.md). This file indexes the bridge, house style, caption
+pipeline, and engines. Pick an engine, then read only its file.
 
 Nodes for this medium: scenes → shots → layers; see `../SKILL.md` § Principle.
 
@@ -36,18 +39,33 @@ Derive structure from the script; NEVER ask the author for JSON.
 ## House style (every flavor)
 
 - ALWAYS define colors/fonts/dimensions in one tokens/config unit — NEVER hardcode a hex in a scene. The project owns its palette; ask the user or use a neutral default until supplied.
+
+For educational explainers, ALWAYS follow `../explainer.md` for motion and
+reading time. The following animation rules apply to promotional videos:
+
 - ALWAYS ease/spring entries — NEVER linear motion (reads as cheap). Clamp interpolations so values don't fly off-screen.
 - ALWAYS stagger sibling reveals (~8 frames / ~0.08s) — simultaneous reveals look flat. Hold nothing perfectly still (subtle idle float/glow).
 - ALWAYS communicate in bold headlines + visual flow, max 2 lines/scene — NEVER paragraphs or bullet walls on screen. Fill 80%+ of canvas.
 
 ## Voiceover + captions
 
-The `vo` line drives both audio and caption timing.
+For narrated deliverables, the `vo` line drives audio and caption timing.
+ALWAYS honor an explicitly silent video request: omit TTS and audio checks,
+and ALWAYS time any captions against the visual scenes.
 
-1. TTS each `vo` → wav (Edge TTS free / OpenAI / ElevenLabs with a key). One wav per scene.
+For narrated deliverables:
+
+1. ALWAYS use an available local TTS engine for each `vo` → wav by default.
+   ALWAYS verify the installed engine and voice before choosing it; NEVER
+   assume a service is free or local. ALWAYS require explicit authorization
+   for paid narration; a configured key is not authorization.
 2. `faster-whisper` for word-level timestamps on the *rendered* wav — ALWAYS align captions to whisper timings, NEVER to the input text (TTS pacing drifts).
-3. Per-word highlight captions (TikTok style, 1-3 words). Burn into the mp4 for autoplay; also emit `.srt`.
-4. NEVER speak a URL — caption/description only.
+3. NEVER speak a URL — caption/description only.
+
+For narration or silent videos with captions, ALWAYS emit `.srt` captions.
+For explainers, ALWAYS use readable phrase captions; for promotional shorts,
+use per-word highlights (1-3 words). ALWAYS burn captions into the mp4 when
+needed for silent playback.
 
 ## Text overlay — cards format
 
@@ -88,7 +106,7 @@ ALWAYS derive text from the script's `vo` lines and `[direction]` labels — NEV
 ## Pre-ship checklist
 
 - [ ] Colors from one config; one sans font; `tabular-nums` on counters
-- [ ] Eased/sprung entries; clamped interpolations; staggered reveals
-- [ ] Non-breaking spaces; headlines fill the canvas
+- [ ] Motion and reading time match the selected purpose; interpolations clamped
+- [ ] Non-breaking spaces; promotional headlines fill the canvas
 - [ ] Type-check / build passes before the (slow) render
 - [ ] No brand name, person, or internal code name on screen unless the user supplied it for THIS video

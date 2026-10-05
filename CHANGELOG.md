@@ -2,6 +2,68 @@
 
 ## [Unreleased]
 
+## [v0.4.15] — 20261004
+
+> kronael v0.4.15 — opus subagents run at high effort
+>
+> The opus subagent now runs at high effort like sonnet; only fable keeps xhigh, so opus design calls cost less per step.
+>
+> • /opus runs Opus 5.5 at high effort; the opus, sonnet and dispatch skills state the new pin.
+> • /fable is the only xhigh tier — unattended code, ship plans and deep audits still go there.
+> • /oracle says its opus fallback runs at high, not xhigh.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `opus` agent pins effort `high`; `skills/CLAUDE.md`, `opus`, `sonnet` and `dispatch` quote the pin, and `fable` is the only xhigh tier.
+- `oracle`: the fable route's opus fallback is stated at high.
+
+## [v0.4.14] — 20261004
+
+> kronael v0.4.14 — the tweet skill leans on the shared voice
+>
+> The tweet skill defers wording to the writing and humanize rules and adds the platform facts a post needs on X.
+>
+> • tweet — hook, thread arc and source checks stay; voice defers to writing, caveman Language, humanize
+> • tweet — plain text only since X renders markdown literally, weighted 280-char counts, no Premium fold
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `tweet`: rewritten to lean on the shared language stack instead of restating generic copy advice; keeps the hook, thread arc, claim-verification and caveat-placement discipline; adds a Platform section — plain text only, X weighted counts, no Premium long-post reliance, bare `🤖` attribution — and a DISTILL / humanize / REVIEW-ON-WISDOM close mirroring `pr-draft`.
+
+## [v0.4.13] — 20261003
+
+> kronael v0.4.13 — simpler sentences with clear meaning
+>
+> Caveman uses familiar words and simple sentence structure while preserving technical meaning, uncertainty, and conditions.
+>
+> • Sentences use active voice, one main clause, and clear references.
+> • Rewrites keep meaningful uncertainty and every condition that controls an action.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Caveman specifies familiar words, direct sentence structure, and clear noun and pronoun references. It limits nested clauses and asides while retaining complete grammar.
+- Rewrites preserve needed technical terms, meaningful uncertainty, and the scope of conditions when splitting sentences.
+
+## [v0.4.12] — 20261002
+
+> kronael v0.4.12 — clearer explanations and host context
+>
+> Explanations can use interactive pages or narrated videos, while writing rules preserve facts and sandbox notes identify where agents run.
+>
+> • create explains source evidence through diagrams, interactive HTML, or narrated video.
+> • writing uses plain, complete sentences; humanize preserves facts and uncertainty.
+> • server-init records host facts; the first sync offers it as an optional step.
+> • dockbox and qemubox describe their mounts, network, and file persistence.
+> • spec-lint checks spec status, index rows, filenames, and code references.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Explainers select the requested format, verify claims and interactions, and keep draft review local unless publication is requested. Video narration uses verified local TTS by default; paid narration requires authorization. Silent captions follow scenes.
+- Shared language rules apply to technical prose and documentation. The chat length and structure limits apply only to chat. Humanize preserves supplied facts and uncertainty.
+- `server-init` creates or refreshes a per-host memory. The first sync offers it as an optional step; sandbox sessions cannot create host memory.
+- `dockbox` and `qemubox` write sandbox notes and set `CLAUDE_SANDBOX`. Notes identify mounts, network access, and file persistence, including when edits to shared Claude configuration reach the host.
+- `spec-lint` checks the closed status vocabulary, filenames, index rows, and code references. Root detection distinguishes skill guides from spec corpora and supports explicit spec directories. Pre-commit and `make test` run the relevant checks.
+
 ## [v0.4.11] — 20261002
 
 > kronael v0.4.11 — recall-memories recovers more context

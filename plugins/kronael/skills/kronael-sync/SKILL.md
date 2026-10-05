@@ -79,7 +79,7 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
    first-sync questionnaire, classify, merge live edits into the repo,
    installed-only decisions, swap, settings, Codex bridge, external tools,
    CLI tools (rig/udfix/dockbox — the marketplace snapshot carries their
-   source dirs), report. A marketplace snapshot is not the owner's clone:
+   source dirs), opted-in first-sync server memory, report. A marketplace snapshot is not the owner's clone:
    when `~/.claude/` holds live edits, the sync stops before the swap and
    asks for a run from the clone. Present the questionnaire inline as numbered options. NEVER
    restate or fork those steps here; that file is the only source of truth and

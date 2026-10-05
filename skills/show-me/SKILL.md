@@ -1,7 +1,7 @@
 ---
 name: show-me
-description: Explain the current conversation topic with the smallest visual — pseudocode, call tree, component/file tree, mermaid, or a diff. NOT for permanent architecture docs (use diagrams), generated decks/pages (use create), or CSS/UI implementation (use visual).
-when_to_use: "show me, draw this, diagram this, visualize this, sketch this, explain visually, show the call tree, show the component tree, quick diagram mid-conversation"
+description: Explain the current conversation topic with the smallest visual — pseudocode, call tree, component/file tree, mermaid, or a diff. NOT for permanent architecture docs (use diagrams), interactive or narrated explainer artifacts (use create), or CSS/UI implementation (use visual).
+when_to_use: "explain this code, show me, draw this, diagram this, visualize this, sketch this, explain visually, show the call tree, show the component tree, quick diagram mid-conversation"
 user-invocable: true
 license: MIT
 metadata:
@@ -12,7 +12,9 @@ metadata:
 # Show Me
 
 Explain the CURRENT conversation topic — not a permanent doc, not a
-generated artifact. Pick the smallest visual that makes the point, then stop.
+generated artifact. ALWAYS honor the requested format; otherwise pick the
+smallest form that makes the point. ALWAYS route reusable interactive or narrated explainer
+artifacts to `create`, not this inline explanation skill.
 
 ## Choosing the form
 
@@ -27,12 +29,14 @@ generated artifact. Pick the smallest visual that makes the point, then stop.
   shape (+/- lines), not prose describing the change.
 - Layout, visual state comparison, or anything too dense for text/mermaid →
   one local HTML file matching the project's real colors/type/spacing,
-  opened with `Bash(open <path>)`.
+  opened with the available local browser or file opener.
 
 ## ALWAYS
 
 - ALWAYS pick one form, rarely two — never stack every form for the same
   question.
+- ALWAYS read the relevant code before explaining it; ALWAYS distinguish
+  observed behavior from assumptions.
 - ALWAYS use real identifiers from the codebase (files, functions,
   components) — never placeholder names.
 - ALWAYS trim to only the calls/props/states/boundaries the current question
@@ -44,10 +48,10 @@ generated artifact. Pick the smallest visual that makes the point, then stop.
 ## NEVER
 
 - NEVER publish the HTML fallback as a claude.ai Artifact — this repo is
-  local-output only (root `CLAUDE.md`); ALWAYS use `open` on a local file
-  instead.
-- NEVER reach for the HTML form first — ALWAYS try text or mermaid before
-  falling back to HTML for density.
+  local-output only (root `CLAUDE.md`); ALWAYS use an available local opener
+  on the file instead.
+- NEVER force text or mermaid before a requested HTML explanation — ALWAYS
+  select the form by the question and requested format.
 - NEVER let the visual outlive the conversation turn as a checked-in doc —
   persistent diagrams belong to `diagrams` or `specs`, not here.
 - NEVER build a multi-artboard deck or long-form asset here — that's

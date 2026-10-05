@@ -14,6 +14,14 @@ repos:
             files: (^|/)SKILL\.md$
             pass_filenames: true
 
+          - id: spec-lint
+            name: lint specs/ (naming, status, index rows, code pointers)
+            entry: python hooks/spec_lint.py
+            language: python
+            additional_dependencies: [PyYAML]
+            files: (^|/)specs/.*\.md$
+            pass_filenames: true
+
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.6.0
       hooks:

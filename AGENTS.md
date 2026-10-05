@@ -29,7 +29,7 @@ sync present its plan/consent questionnaire first, then preflight, classify,
 merge live edits into the repo, decide installed-only paths, swap, merge
 settings, bridge Codex, install the opted-in CLI tools (rig/udfix/dockbox
 via their Makefiles — the marketplace snapshot carries their source dirs) and
-write the CDPATH block,
+write the CDPATH block, build opted-in first-sync server memory, and
 report. Its Review checklist (merge before swap, never-touch list, no
 recursive removal) applies verbatim. Below are only the Codex-specific
 deltas.

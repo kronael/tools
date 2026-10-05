@@ -197,6 +197,9 @@ Automatic:
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
 - `~/.gnupg/pubring.{kbx,gpg}` -> `/home/dockbox/.gnupg/` (ro)
+- a generated sandbox note -> `/etc/claude-code/CLAUDE.md` (ro) — Claude
+  Code loads it in every session, so the agent knows it is in dockbox and
+  which mounts survive; `CLAUDE_SANDBOX=dockbox` is set as well
 
 Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`

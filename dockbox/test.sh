@@ -398,5 +398,19 @@ true_   "-n keys the dir, prefix stays" 'apply_flag n goodname; [ "$dir_override
 gpg_forward=""; apply_flag K
 true_ "-K sets gpg_forward" '[ -n "$gpg_forward" ]'
 
+## sandbox note -------------------------------------------------------------
+nout="$(sandbox_note myhost bridge \
+    -v /h/.claude:/home/dockbox/.claude:rw -v /p:/p:rw \
+    -v /tmp/s.json:/home/dockbox/.claude/settings.json:ro \
+    -v /p/node_modules --tmpfs /home/dockbox:rw,exec,mode=1777)"
+true_ "note names the sandbox"       '[[ "$nout" == *CLAUDE_SANDBOX=dockbox* ]]'
+true_ "note names the host"          '[[ "$nout" == *"host \`myhost\`"* ]]'
+true_ "note names the network"       '[[ "$nout" == *"Network: bridge"* ]]'
+true_ "note maps a box path to host" '[[ "$nout" == *"- /home/dockbox/.claude (rw) <- /h/.claude"* ]]'
+true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]]'
+true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'
+true_ "note lists volume and tmpfs as lost" \
+    '[[ "$nout" == *"Lost at exit (tmpfs or volume): /p/node_modules /home/dockbox"* ]]'
+
 echo "dockbox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

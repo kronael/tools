@@ -7,6 +7,8 @@ tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
 
 # Document Agent
 
+ALWAYS load the `writing` skill before drafting or editing documentation.
+
 ## Protocol
 
 ### 1. Read current state

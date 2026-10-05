@@ -94,6 +94,19 @@ eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
 source "$here/test-mounts.sh"
 
+## guest note ---------------------------------------------------------------
+run_assemble
+network=1; gout="$(guest_note myhost)"
+true_ "note names the sandbox"     '[[ "$gout" == *CLAUDE_SANDBOX=qemubox* ]]'
+true_ "note names the host"        '[[ "$gout" == *"host \`myhost\`"* ]]'
+true_ "note: network on"           '[[ "$gout" == *"Outbound network: on."* ]]'
+true_ "note marks the project rw"  '[[ "$gout" == *"- $PROJ (rw) <- same path"* ]]'
+true_ "note maps config to host"   '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
+true_ "note lists shared history" '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
+network=""; gout="$(guest_note myhost)"
+true_ "note: network off"          '[[ "$gout" == *"Outbound network: off."* ]]'
+
+## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
 sout="$(status_box sbx)"
 true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'

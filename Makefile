@@ -45,7 +45,7 @@ CI_WORKFLOWS := \
 # and an explicit rule beats a pattern rule, so `make test-hooks` silently ran
 # nothing. The pattern rule is phony-in-effect anyway — the target file never
 # exists.
-.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix lints
+.PHONY: help test clean workflows gen-ci skills-frontmatter skills-frontmatter-fix spec-lint lints
 
 help:
 	@echo "make test        - run tests in all projects ($(PROJECTS))"
@@ -56,6 +56,7 @@ help:
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
 	@echo "make skills-frontmatter     - lint SKILL.md (frontmatter YAML + wisdom body rules)"
 	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
+	@echo "make spec-lint   - lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)"
 	@echo "make lints       - prove co-located ast-grep lint rules against fixtures"
 
 test: $(addprefix test-,$(PROJECTS))
@@ -87,6 +88,13 @@ skills-frontmatter:
 
 skills-frontmatter-fix:
 	python3 hooks/skill_frontmatter_lint.py --write skills
+
+# Lints a spec corpus, this repo's own by default: SPECS=~/proj/specs checks
+# another. The rules are skills/specs/format.md, not this repo's layout.
+SPECS ?= specs
+
+spec-lint:
+	python3 hooks/spec_lint.py $(SPECS)
 
 lints:
 	python3 lints/check.py

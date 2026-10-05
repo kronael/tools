@@ -1,12 +1,21 @@
 ---
 name: writing
 description: Copywriting rules for tooltips, help text, UI strings, captions, labels, microcopy, prose in docs. NOT for PR descriptions (use pr-draft), tweets (use tweet), diary entries (use diary), or syncing existing docs (use readme).
-when_to_use: "writing a tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, simpler wording, 13yo style, rewrite this copy, explaining a metric or formula in plain English"
+when_to_use: "writing a tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, simpler wording, 13yo style, rewrite this copy, explaining a metric or formula in plain English, plain English, Simplified Technical English, ASD-STE100"
 ---
 
 # Writing
 
 Copy rules for any user-facing string.
+
+ALWAYS read the Language section of `~/.claude/output-styles/caveman.md` before
+writing informational or technical prose. It owns the shared language rules;
+its chat budget does not apply to documents. For creative work, ALWAYS follow
+an explicitly requested voice or style.
+
+ALWAYS preserve technical names, code, and quotations. Explain technical terms
+when the audience needs them; NEVER change a precise term merely to simplify
+it — ALWAYS keep the term and explain its meaning instead.
 
 ## Rules
 
@@ -20,7 +29,9 @@ Copy rules for any user-facing string.
 - NEVER write "this X" referring to the page/card/section you're on — the reader knows where they are. ALWAYS name what the thing does.
 - ALWAYS prefer plain verbs ("keep stake", "grow stake") over Latinate nouns ("retention", "expansion").
 - NEVER use jargon when a 13yo could read the plain version. ALWAYS test: would a smart non-expert understand this in one read?
-- ALWAYS finish longer prose with a de-slop pass: the `humanize` skill strips AI-isms and restores voice.
+- ALWAYS finish longer prose with the `humanize` skill to remove AI-isms.
+  For informational and technical prose, ALWAYS keep the shared language rules
+  when that pass suggests fragments, idioms, or slang.
 - NEVER title a section with a vague directive ("Change something", "Notes") or an "X: Y" colon title ("The program: one per deployment") — ALWAYS name the concrete action or content under it, plainly (humanize #31).
 - NEVER chain clauses with semicolons, stand a symbol in for a word ("+" for "and"), or mix curly quotes into source — ALWAYS separate sentences, the plain word, straight quotes (humanize #19, #32, #33).
 - NEVER marketing language — ALWAYS cut fluff.

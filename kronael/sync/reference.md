@@ -563,3 +563,10 @@ others = [l for l in lines if re.match(r'\s*(export\s+)?CDPATH\b', l) and l != b
 print('CDPATH block written' + (f'; ~/.bashrc also sets it: {others}' if others else ''))
 PY
 ```
+
+## Server memory
+
+For opted-in first syncs only, follow `skills/server-init/SKILL.md` at the
+source root after the bundle and tools are installed. It scans the host
+read-only and writes `~/.claude/skills/server-<hostname>/`. NEVER run it when
+`CLAUDE_SANDBOX` is set: the launcher writes the box's sandbox note.
