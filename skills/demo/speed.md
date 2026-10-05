@@ -1,11 +1,4 @@
----
-name: speed-demo
-description: Show off a library's REAL benchmark speed as a short thrilling terminal recording rendered to a mobile-friendly (tall+narrow) GIF — the bench appearing to run live, numbers landing, one headline holding. NOT for static bench tables or dated reports (those go in reports/), NOT for running the benchmark itself (use the lib's bench tool), NOT for UI/product video (use create video).
-when_to_use: show off library speed, benchmark demo gif, speed reveal, asciinema recording, thrilling benchmark results, animated latency/throughput, "something is happening" numbers, shareable perf gif, mobile portrait demo, present a lib's performance, per-lib demo in libs/xxxx.md
-user-invocable: true
----
-
-# speed-demo — a library's speed as a short terminal GIF
+# Speed demo — a library's speed as a short terminal GIF
 
 Turn a library's REAL benchmark numbers into a SHORT (~15-30 s) thrilling
 terminal recording → a shareable, MOBILE-friendly GIF (**tall + narrow**, legible
@@ -78,7 +71,7 @@ the user's creative call, so offer options, don't silently pick:
    tasteful — a big/cheesy mascot undercuts the credible numbers it follows.
 
 If the user asks for pictured or recognizable meme characters, route the
-opener to `demo`'s versus-scoreboard workflow. NEVER downgrade it to terminal
+opener to the versus-scoreboard workflow in `SKILL.md`. NEVER downgrade it to terminal
 labels, emoji/emoticons, or generic archetype portraits and call that the
 requested meme.
 
@@ -91,12 +84,12 @@ Canonical reference SET (not just one crate): every RSX per-crate demo
 (`rsx-book`, `rsx-matching`, `rsx-risk`, `rsx-cast`, `rsx-term` — each a
 `demo/bench-live.sh` or `demo/pitch.py` + `demo/CLAUDE.md` + tracked
 `<crate>-live-opt.gif`) runs this exact arc. Read that crate's `demo/CLAUDE.md`
-first as the template before writing a new script. Detail in `lessons.md`
-("RSX demo family").
+first as the template before writing a new script. Detail in
+`speed/lessons.md` ("RSX demo family").
 
 ## Failure details
 
-Read `lessons.md` when implementing or debugging the recording. It contains
+Read `speed/lessons.md` when implementing or debugging the recording. It contains
 the exact `agg` width, GIF disposal, theme, palette, typewriter-height, RSX
 demo-family, and reciprocal-chart failures behind the rules below.
 

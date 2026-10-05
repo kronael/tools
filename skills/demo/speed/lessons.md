@@ -1,7 +1,7 @@
-# speed-demo — shocking findings only
+# Speed demo — shocking findings only
 
-Full detail behind the ALWAYS/NEVER rules in `SKILL.md`. Read on demand — not
-preloaded with the skill. Generic design advice lives in `SKILL.md` itself or
+Full detail behind the ALWAYS/NEVER rules in `../speed.md`. Read on demand — not
+preloaded with the skill. Generic design advice lives in `../speed.md` itself or
 nowhere; this file is only for things that surprised us and would burn real
 time again if forgotten.
 

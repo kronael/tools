@@ -114,7 +114,7 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'create-video-render', 'create-video-script', 'doc-topology', 'docs-audit',
         'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'merge-trivial', 'onepager',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'software-engineering',
-        'sub', 'testing', 'typescript', 'useless',
+        'speed-demo', 'sub', 'testing', 'typescript', 'useless',
     )),
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',
