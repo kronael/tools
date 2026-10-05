@@ -1,11 +1,16 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release"
+when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release, finalize the crate or package, publish to crates.io/npm/PyPI"
 user-invocable: true
 ---
 
 # Release
+
+Finalizing a library for an external audience — extraction from a host repo,
+competitor survey, honest benchmarks, rtrb-style README, release verification
+— is `library.md`: read it and run it first, then the process below for the
+version, CHANGELOG and tag.
 
 ## Process
 

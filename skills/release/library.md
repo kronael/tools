@@ -1,10 +1,3 @@
----
-name: finalize-crate
-description: Finalize a library for an external audience in any language — extraction from a host repo, competitor survey, honest benchmarks, rtrb-style README, release verification. NOT for in-flight feature work (use ship) or doc-only sync (use readme).
-when_to_use: "finalize the X crate, finalize the X package, finalize the X library, prepare X for release, extract X into a standalone library, publish to crates.io / npm / PyPI, document X for external audience"
-user-invocable: true
----
-
 # Finalize Library
 
 Distilled from the rsx-cast / rsx-dxs open-source finalization sprint
