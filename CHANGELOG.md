@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [v0.4.18] — 20261005
+
+> kronael v0.4.18 — Haiku leaves the interactive workflows
+>
+> Subagents and sessions run on Sonnet, Opus or Fable; Haiku is for batch jobs only, and the repo layout has one home.
+>
+> • Agents — no haiku skill, agent or prompt keyword; light work runs on sonnet or in the main thread.
+> • readme — topology.md alone defines the repo layout: one question per file, one numbers ledger.
+> • bugs — an entry the owner must decide carries its options and a default; the queue never stalls.
+> • release — a CHANGELOG.md is created only for projects that publish versions.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `global` § Agents: Haiku is batch-only, never a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the main thread. `skills/haiku`, `agents/haiku.md` and the `haiku` nudge keyword are removed and `kronael/sync` retires the installed copies; `sonnet`, `opus`, `dispatch`, `skills/CLAUDE.md`, both READMEs and `scavenge/shapes.md` drop the tier. The `dockbox`/`qemubox` `haiku` aliases stay pending BUGS.md `BOX-HAIKU-ALIAS-VS-BATCH-ONLY`.
+- `readme/topology.md`: the house layout in one file — which file answers which question (README, PLAN, ARCHITECTURE, FEATURES, BUGS, the study page, `test/research/verified.md`, root and package CLAUDE.md), the README order, the numbers ledger, what `make lint` checks, what is tracked and what stays local. `agents/readme.md`, `finalize-crate`, `diary`, `wisdom`, `refine/brief.md`, `readme/shape.md`, the doc-naming hook and `global` § Documentation point to it.
+- `bugs`: an owed decision has status `needs sign-off` or `owner decision` and carries `**Options:**` and `**Default if nothing is decided:**`; a gate is one more clause (`blocks go-live`, `blocks publication`). `later` sends an owed decision to `bugs`.
+- `release`: CHANGELOG.md is created only when the project publishes versions to outside consumers; otherwise step 3.5 writes the release text from `git log <last>..HEAD`.
+- `sonnet`: `when_to_use` takes mapping and grep-and-report work and drops the find/replace and find-bugs phrases that race `astgrep` and `review`.
+
 ## [v0.4.17] — 20261005
 
 > kronael v0.4.17 — ship records live with plan mode's plans
