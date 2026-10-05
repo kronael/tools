@@ -406,6 +406,7 @@ nout="$(sandbox_note myhost bridge \
 true_ "note names the sandbox"       '[[ "$nout" == *CLAUDE_SANDBOX=dockbox* ]]'
 true_ "note names the host"          '[[ "$nout" == *"host \`myhost\`"* ]]'
 true_ "note names the network"       '[[ "$nout" == *"Network: bridge"* ]]'
+true_ "note routes GitHub over HTTPS" '[[ "$nout" == *"credential.helper='"'"'!gh auth git-credential'"'"'"* ]]'
 true_ "note maps a box path to host" '[[ "$nout" == *"- /home/dockbox/.claude (rw) <- /h/.claude"* ]]'
 true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]]'
 true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'

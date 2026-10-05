@@ -136,6 +136,14 @@ container start; a wrong line here is a dockbox launcher bug.
   edit a \`server-*\` skill from here: it describes the host, not this box.
 - Lost when the last session exits: the container and everything outside the
   bind mounts (\`\$HOME\`, /tmp, installed packages, build dirs).
+- GitHub over SSH fails here: the box has no \`~/.ssh\`, so host key
+  verification fails. ALWAYS go over HTTPS, per command: \`git -c
+  credential.helper= -c credential.helper='!gh auth git-credential'
+  <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>\`,
+  fetching into \`refs/remotes/origin/<head>\`. NEVER edit the remote or the
+  git config for it. A token without the \`workflow\` scope rejects a push
+  that changes \`.github/workflows/\`. In zsh write \`"\${SHA}:refs/heads/<name>"\`:
+  \`\$SHA:r\` is a history modifier.
 
 Bind mounts (box path, mode, host source):
 EOF
