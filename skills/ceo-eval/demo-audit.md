@@ -44,7 +44,7 @@ For each: what you did, what happened, what should have happened.
 NEVER target a finding count or manufacture novelty. Report every supported
 finding, even "none found in this pass," with repro, observed vs expected, and
 severity (critical / major / moderate / minor). NEW = absent from
-every earlier `CEO-REPORT.md` under `.claude/plans/`; a repeat is a regression.
+every earlier `critique-ceo-eval-*.md`; a repeat is a regression.
 
 ### 5. Grade honestly
 
@@ -62,8 +62,8 @@ the gaps honestly.
 
 ## Output
 
-`<sprint-dir>/CEO-REPORT.md` with boot, demo flow, faults, findings, numeric
-grade, and one-sentence call.
+`.claude/plans/critique-ceo-eval-<YYYYMMDD>.md` with boot, demo flow, faults,
+findings, numeric grade, and one-sentence call.
 
 ## Anti-patterns
 

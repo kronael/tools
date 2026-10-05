@@ -13,7 +13,7 @@
 Plans, the ship record and critiques live in the main tree's
 `.claude/plans/` — plan mode's directory, pinned by `plansDirectory` in
 `.claude/settings.json` and ignored by the root-anchored `/.claude/plans/`
-line. ALWAYS reuse the active change's record there; `ship` § Work record
+line. ALWAYS reuse the active change's record where it is; `ship` § Work record
 owns the rule.
 
 ## Response style

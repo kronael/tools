@@ -64,7 +64,7 @@ spec sync update reality or wishes?
 
 ## Output
 
-`<wherever the sprint dir is>/CTO-REPORT.md` with claims, attack scenarios,
+`.claude/plans/critique-cto-eval-<YYYYMMDD>.md` with claims, attack scenarios,
 grade, sprint spot-checks, and one-sentence call.
 
 ## Anti-patterns

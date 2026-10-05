@@ -3,8 +3,7 @@ name: assess
 description: >
   Run an adversarial assessment of a product, codebase, or docs from a
   specified expert perspective (CEO, CTO, CISO, enterprise buyer, etc.).
-  Produces a structured critique memo saved to
-  .claude/plans/critique-<role>-<date>.md.
+  Produces a structured critique memo.
   NOT for code review (use /code-review). NOT for bug hunting (use /bugs).
 when_to_use: "assess this, adversarial assessment, critique memo, CEO/CTO/CISO/buyer perspective, expert review of the product or docs"
 user-invocable: true

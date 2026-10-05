@@ -46,11 +46,14 @@ copy is invisible from the main tree, and `git worktree remove` deletes it.
 ALWAYS pin and ignore the directory before the first write: when
 `.claude/settings.json` lacks `plansDirectory`, add
 `"plansDirectory": ".claude/plans"` (create the file with that key alone);
-when `git check-ignore -q .claude/plans/x` fails, append the root-anchored
-line `/.claude/plans/` to `.gitignore`; commit the two alone. Unpinned, plan
-mode writes to `~/.claude/plans/`, which Claude Code sweeps after
-`cleanupPeriodDays`. A project that ignores all of `.claude/` needs no
-ignore line.
+run `git check-ignore -v .claude/plans/x` and append the root-anchored line
+`/.claude/plans/` to `.gitignore` unless the printed source is a `.gitignore`
+inside the tree (a global exclude or `.git/info/exclude` protects one machine
+only, not a clone); commit the two alone. Unpinned, plan mode writes to
+`~/.claude/plans/`, which Claude Code sweeps after `cleanupPeriodDays`. A
+project that ignores all of `.claude/` needs no ignore line and keeps the
+setting in its machine-local `.claude/settings.json`, which still points plan
+mode at the directory.
 ALWAYS keep one work record for the change. NEVER add a second progress
 tree, saved review plans or a workflow-specific backlog.
 
