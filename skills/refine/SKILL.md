@@ -104,9 +104,10 @@ code extension and still carries every claim the reviewer will trust.
    unused code (grep first), conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
    (`software/code.md` § System changes); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest with serial
-   `Agent(subagent_type=<by tag>)` loading the `improve` skill, one context at
-   a time, briefed from `brief.md`. Abort a context on a failure.
+   Apply a finding only if the result is simpler. Apply the rest serially, one
+   context at a time, briefed from `brief.md`: `simplify` →
+   `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
+   Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.
 
@@ -118,10 +119,10 @@ code extension and still carries every claim the reviewer will trust.
    → every acceptance command in the diff has been run in this turn and its
    coverage checked against a second query.
 
-10. **Document and commit** — `Agent(subagent_type="general-purpose")` told
-    to load the `readme` skill and read its `sync.md`, with what changed, one
-    line per file; it reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where
-    the project keeps them, against what the code now does. ALWAYS push every
+10. **Document and commit** — `Agent(subagent_type="readme")` told to read the
+    `readme` skill's `sync.md`, with what changed, one line per file; it
+    reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where the project
+    keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
     number left standing in a second file is the next pass's false premise.
     Then final build and test, and `Skill(commit, "refa: Apply refinements")`

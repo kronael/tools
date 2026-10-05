@@ -52,11 +52,8 @@ argument-hint: "<question>"   # optional — shown after /name
 
 - **Mode-toggle** (fin/ans style): concise `## Behavior` block, no other sections.
 - **Self-contained** (visual/improve style): the body carries the full
-  instructions; a `## Where it runs` block names the generic or model-pinned
-  agent to launch — its thin same-named agent where one exists, else
-  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
-  load the skill. A thin agent's body is one line that loads its skill;
-  NEVER put knowledge in an agent body.
+  instructions; a `## Where it runs` block names the agent to launch — rules
+  in `skills/CLAUDE.md` § Agent definitions.
 - **Runbook** (ship/merge/release style): numbered steps, each closing on a
   `Completion criterion:` line — an observable pass/fail condition, not "done
   when it looks right". Close with `## Review Checklist` restating the file's

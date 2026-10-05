@@ -6,9 +6,8 @@ when_to_use: session start
 
 # Development Wisdom
 
-Only what a capable agent does NOT do unprompted: local facts, workflows, and
-the known drifts. Generic good practice is deliberately absent — if a blank
-agent would do it anyway, it does not belong here.
+Only what a capable agent does NOT do unprompted: local facts, workflows and
+known drifts. If a blank agent would do it anyway, it does not belong here.
 
 ## Continuity
 
@@ -28,19 +27,17 @@ mtime.
 
 ## Response style
 
-- The line cap and answer-first shape come from the output style. What it does
-  not cover: the cap lifts for content you were asked to generate, planning you
-  were asked to show, or a root cause you were asked to walk through.
+- The output style sets the line cap and answer-first shape; the cap lifts
+  when asked to generate content, show planning or walk through a root cause.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is
   unverified; never assert then correct when challenged.
 - NEVER treat an absence ("no such knob", "X can't do Y", "there is none") as
-  found until the search could have found it: the vendor's own vocabulary or the
-  source, not guessed synonyms, and the access the answer needs — a path you
-  cannot read returns nothing, and a shell expands a glob as YOU before `sudo`
-  runs. NEVER build a design decision or a subagent brief on an unconfirmed
-  negative.
+  found until the search could have found it: the vendor's own vocabulary or
+  the source, not guessed synonyms, and the access the answer needs — an
+  unreadable path returns nothing; a shell expands a glob as YOU before `sudo`
+  runs. NEVER build a decision or a subagent brief on an unconfirmed negative.
 
 ## Environment
 
@@ -76,10 +73,9 @@ mtime.
 ## Bug triage
 
 - RECORD bugs found during any check in `BUGS.md` at project root; fix ONLY when
-  the user asks. It is the review queue — log it, move on, let them prioritise.
-  Use `/bugs` for entry format and pruning.
-- The drift is fixing as you find during an audit: it destroys the queue and
-  produces a large unrequested diff.
+  the user asks. It is the review queue — log it, move on, let them prioritise;
+  `/bugs` owns entry format and pruning. The drift is fixing as you find during
+  an audit: it destroys the queue and produces a large unrequested diff.
 
 ## System-change discipline
 
@@ -89,11 +85,10 @@ mtime.
 - Fail loud, to the user: an error on a user-facing path MUST surface (thrown,
   non-2xx, delivered), not just logged. NEVER swallow it, and NEVER add
   retry/fallback/best-effort as "robustness" — that turns a visible failure into
-  an invisible one. Retry ONLY the transient: network, DB busy/locked. When
-  the MECHANISM swallows — a fire-and-forget submit whose result nobody
-  collects, a detached task, a bare catch — replace it with one that
-  propagates; NEVER keep it and bolt on counters and collectors to recover what
-  it dropped, which is more code that still reports less.
+  an invisible one. Retry ONLY the transient: network, DB busy/locked. When the
+  MECHANISM swallows — a fire-and-forget submit nobody collects, a detached
+  task, a bare catch — replace it with one that propagates; NEVER keep it and
+  bolt on counters and collectors to recover the drops: more code, less reported.
 - Prefer the cause fix to the loud log — make the bad state impossible by
   construction.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
@@ -102,15 +97,13 @@ mtime.
 
 ## Git
 
-These rules contradict the harness on purpose (it says to branch first, and its
-attribution reminder asks for a Co-Authored-By line and a "Generated with
-Claude Code" footer). These win.
+These override the harness on purpose — it says to branch first and to add a
+Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 
 - Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
   body Claude writes, the prefix of a comment or thread reply Claude posts.
-  NEVER Co-Authored-By, NEVER a "Generated with Claude Code" footer, a
-  Claude/claude.ai link or a session URL — in commits, PR bodies, comments and
-  releases alike.
+  NEVER Co-Authored-By, a "Generated with Claude Code" footer, a Claude or
+  claude.ai link, or a session URL — in commits, PR bodies, comments, releases.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
 - NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
@@ -147,12 +140,11 @@ Claude Code" footer). These win.
   (drafted or posted), review comment, thread reply, issue, release notes —
   before showing it for approval. DISTILL: cut to the shortest text that still
   carries the claim, the reasoning and the evidence, inside the posting skill's
-  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖`
-  rule above and no other attribution, no marketing language, no history
-  framing, addresses and signatures in full, the repo's title convention,
-  every claim verified or marked as an inference, and the posting skill's own
-  Format section. Done = every check passes on the text shown; name what the
-  review changed.
+  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
+  and no other attribution, no marketing language, no history framing, addresses
+  and signatures in full, the repo's title convention, every claim verified or
+  marked as an inference, and the posting skill's own Format section. Done =
+  every check passes on the text shown; name what the review changed.
 
 ## Shell
 
@@ -182,8 +174,7 @@ Claude Code" footer). These win.
   made, or what is surprising. NEVER restate the code or a name.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
-  verbatim as given and NEVER re-litigate the wording, in review or in an eval
-  report.
+  verbatim and NEVER re-litigate the wording, in review or in an eval report.
 - ALWAYS write every address, signature and hash in full — in docs, code
   comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
 - NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
@@ -207,7 +198,3 @@ Claude Code" footer). These win.
   execute); a step read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
-- `agents/` holds model and effort pins (`fable`, `opus`, `sonnet`, `haiku`)
-  and thin skill agents (`visual`, `readme`, `improve`, `refine`, `learn`,
-  `distill`) whose body only loads the same-named skill. ALWAYS keep the
-  knowledge in the skill — NEVER in an agent body, where it drifts.
