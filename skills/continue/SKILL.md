@@ -17,10 +17,10 @@ Resume interrupted work this session; if there is none, look forward.
 
 - Check memory, diary, agent notifications, and conversation for anything unfinished
 - Resume or relaunch each; report what was resumed
-- ALWAYS list what the previous session left running before relaunching
-  anything (`ps -eo pid,etime,args`, filtered by the job's output path) — a
-  relaunch beside a survivor puts two writers on one output file and yields
-  two sets of numbers; adopt the survivor or kill it by PID first
+- ALWAYS check what the previous session left running before relaunching it
+  — `ps -eo pid,etime,args`, filtered by the job's output path. A relaunch
+  beside a survivor puts two writers on one output file. Adopt the survivor
+  or kill it first
 - If nothing is unfinished, do NOT stall — say the session/repo is in a clean
   state, then help the user look forward:
   - suggest `/recall-memories` to surface prior context and open threads
