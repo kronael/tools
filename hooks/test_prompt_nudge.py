@@ -80,6 +80,25 @@ def test_continue_routes_to_continue_skill() -> None:
     assert explicit_route('pick up where we left off') is None
 
 
+@pytest.mark.parametrize(
+    'word',
+    [
+        'ceo',
+        'cto',
+        'eval',
+        'novice',
+        'pentest',
+        'roi',
+        'security',
+        'ux',
+        'usability',
+        'walkthrough',
+    ],
+)
+def test_eval_lens_words_route_to_eval(word) -> None:
+    assert explicit_route(f'run a {word} pass on the dashboard') == '/eval'
+
+
 def test_ship_phrasings_route_to_ship() -> None:
     for prompt in ('ship this', 'ship it', "let's ship", 'and ship it'):
         assert explicit_route(prompt) == '/ship', prompt

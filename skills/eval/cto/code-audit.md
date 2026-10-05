@@ -24,8 +24,8 @@ Do not confirm by re-reading the same doc. Verify against code or fresh output.
 ### 2. Trace three attack scenarios
 
 A bounded three-trace sample for the SLA bet — not the deep sweep. If every
-trace draws blood, stop and recommend a dedicated `red-eval` instead of
-extending this audit.
+trace draws blood, stop and recommend a dedicated red-lens pass (`red.md`)
+instead of extending this audit.
 
 For each: describe the attack, trace from entry point through code to where it
 is caught or missed, and cite file:line. Rank by reachability — name the real
@@ -56,7 +56,7 @@ spec sync update reality or wishes?
 
 ## Constraints
 
-- Source-and-bench reads only. NOT an end-to-end demo audit (`ceo-eval` owns that).
+- Source-and-bench reads only. NOT an end-to-end demo audit (the CEO lens owns that).
 - Don't write code, don't commit fixes. Findings only.
 - Cite file:line for every claim.
 - Don't run the full benchmark suite; pick the 3-5 benches tied to claims.
@@ -64,7 +64,7 @@ spec sync update reality or wishes?
 
 ## Output
 
-`.claude/plans/critique-cto-eval-<YYYYMMDD>.md` with claims, attack scenarios,
+`.claude/plans/critique-cto-<YYYYMMDD>.md` with claims, attack scenarios,
 grade, sprint spot-checks, and one-sentence call.
 
 ## Anti-patterns

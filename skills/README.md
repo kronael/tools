@@ -100,11 +100,11 @@ the authoritative entry. The categories:
   fire-and-forget at default model. Their `agents/*.md` files are model and
   effort pins only; every other skill carries its own instructions and names
   which of these subs it runs in.
-- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
-  `create-eval`, `13yo-eval`, `assess`) — judge a codebase or practice from a
-  fixed perspective.
+- **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
+  UX, hiring, or every lens at once) — judge a product, codebase, UI or
+  engineer from a fixed perspective.
 - **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`,
-  `research/`, `writing/`) — one preloaded
+  `research/`, `writing/`, `eval/`) — one preloaded
   `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from

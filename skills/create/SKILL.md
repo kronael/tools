@@ -1,6 +1,6 @@
 ---
 name: create
-description: Router for creative artifact generation — CVs, web pages, explainers, videos, generative art, diagrams. NOT for code implementation (use language skills), Unicode box diagrams in docs (use diagrams), de-AI-ing prose (use humanize), or generating eval skills (use create-eval).
+description: Router for creative artifact generation — CVs, web pages, explainers, videos, generative art, diagrams. NOT for code implementation (use language skills), Unicode box diagrams in docs (use diagrams) or de-AI-ing prose (use humanize).
 when_to_use: "interactive explainer, HTML explanation, narrated explainer, 3b1b, meme, promo loop, cutout collage, animate real photos, CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, X image, timeline image, code-shot explainer"
 user-invocable: true
 ---
@@ -79,5 +79,4 @@ Related, NOT in this router: `show-me` (inline explanations of the current
 topic, including code; requested explainer artifacts use this router),
 `writing` (the owner's prose and page rules — any artifact with text obeys
 `writing/page.md`), `humanize` (strip AI-isms from prose), `diagrams`
-(Unicode box diagrams inside docs), `create-eval` (scaffold a project eval
-skill).
+(Unicode box diagrams inside docs).

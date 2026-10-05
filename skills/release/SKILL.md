@@ -123,12 +123,12 @@ user-invocable: true
 4.5. **Critique gate when unclear.** If verification passes but the release is
    still not obviously good enough from context, run the relevant critique lens
    before committing:
-   - demo/readiness uncertainty → `ceo-eval`
-   - production/SLA/operations uncertainty → `cto-eval`
+   - demo/readiness uncertainty → `eval` CEO lens
+   - production/SLA/operations uncertainty → `eval` CTO lens
    - hostile input, corrupted state, replay, concurrency, exploitability, or
-     "this needs a no-bullshit deep pass" → `red-eval`
-   - first-run comprehensibility or local tryability uncertainty →
-     `13yo-eval`
+     "this needs a no-bullshit deep pass" → `eval` red lens
+   - first-run comprehensibility or local tryability uncertainty → `eval`
+     novice lens
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.

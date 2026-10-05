@@ -1,4 +1,4 @@
-# design-eval — the rubric
+# Design eval — the rubric
 
 Score each observed dimension 1–5 (1 broken, 3 acceptable, 5 exemplary); mark an
 unobserved dimension N/A — NEVER infer interaction, responsiveness, motion, or
@@ -74,7 +74,7 @@ hard-block over a fat-finger cap, withhold an overflow rather than wrap it.
 ## Verdict template
 
 ```
-# design-eval: <subject>  (mode: review | system-audit)
+# design eval: <subject>  (mode: review | system-audit)
 Pixels seen: <goldens/screens read>   Palette source: <file>
 
 Scores (1–5; N/A = unobserved):

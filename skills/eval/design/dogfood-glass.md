@@ -1,4 +1,4 @@
-# design-eval: rsx-glass (desktop GPU renderer)  (mode: review)
+# design eval: rsx-glass (desktop GPU renderer)  (mode: review)
 Pixels seen: `rsx-glass/soft/testdata/heatmap.png`, `degraded.png` (read as images)
 Palette source: `rsx-glass/grid.go` (Ayam Cemani subset) + `heat.go` (`glyphFg`, `rampColor`, `aggressor`)
 Measured: WCAG 2.1 ratio + APCA-W3 0.1.9 Lc over every ink×bg pair (script: scratchpad `measure.py`, 2026-07-19)

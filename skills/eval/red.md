@@ -1,10 +1,3 @@
----
-name: red-eval
-description: Deep adversarial engineering evaluation — correctness, failure modes, exploitability, and "no bullshit" source review. NOT for routine refinement (use refine) or high-level production readiness (use cto-eval).
-when_to_use: "red eval, red-team review, adversarial code review, deep developer eval, no bullshit review, find what breaks, failure-mode audit, exploitability review, security-minded code audit"
-user-invocable: true
----
-
 # Red Eval
 
 Deep adversarial developer evaluation. Goal: find the thing that breaks the
@@ -19,10 +12,11 @@ durability, and exploitability.
 ## Positioning
 
 - `refine` applies fixes through review/apply loops.
-- `cto-eval` answers: would I bet an SLA or adoption decision on this?
-- `ceo-eval` answers: would I demo or buy this?
-- `red-eval` answers: what breaks if a hostile expert, bad state, or unlucky
-  runtime condition hits it?
+- the CTO lens (`cto.md`) answers: would I bet an SLA or adoption decision
+  on this?
+- the CEO lens (`ceo.md`) answers: would I demo or buy this?
+- the red lens answers: what breaks if a hostile expert, bad state, or
+  unlucky runtime condition hits it?
 
 Red Eval is findings-only by default. Do not fix during the eval. If the user
 then asks to address findings, route to `refine` or the relevant language skill.

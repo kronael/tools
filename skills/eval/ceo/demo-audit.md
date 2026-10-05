@@ -44,7 +44,7 @@ For each: what you did, what happened, what should have happened.
 NEVER target a finding count or manufacture novelty. Report every supported
 finding, even "none found in this pass," with repro, observed vs expected, and
 severity (critical / major / moderate / minor). NEW = absent from
-every earlier `critique-ceo-eval-*.md`; a repeat is a regression.
+every earlier `critique-ceo-*.md`; a repeat is a regression.
 
 ### 5. Grade honestly
 
@@ -54,7 +54,7 @@ the gaps honestly.
 
 ## Constraints
 
-- Run the actual system. NOT a code review (`cto-eval` owns that).
+- Run the actual system. NOT a code review (the CTO lens owns that).
 - Don't fix bugs. CEO finds; the fix sprint fixes.
 - Cite file:line for code findings and this run's log excerpts for runtime
   ones; unobserved evidence is UNVERIFIED, never reconstructed from memory.
@@ -62,7 +62,7 @@ the gaps honestly.
 
 ## Output
 
-`.claude/plans/critique-ceo-eval-<YYYYMMDD>.md` with boot, demo flow, faults,
+`.claude/plans/critique-ceo-<YYYYMMDD>.md` with boot, demo flow, faults,
 findings, numeric grade, and one-sentence call.
 
 ## Anti-patterns

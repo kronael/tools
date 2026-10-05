@@ -107,14 +107,15 @@ JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
     *(f'skills/{n}' for n in (
-        'agent-browser', 'bash', 'caveman', 'codex', 'con', 'cont', 'create-architecture-diagram',
-        'create-ascii-art', 'credits',
+        '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'codex', 'con',
+        'cont', 'create-architecture-diagram', 'create-ascii-art', 'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
-        'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
-        'create-p5js', 'create-popular-web-designs', 'create-pretext', 'create-sketch',
-        'create-video-render', 'create-video-script', 'doc-topology', 'docs-audit',
-        'explore', 'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'markdown-converter',
-        'media-ingest', 'merge-trivial', 'onepager',
+        'create-design-md', 'create-eval', 'create-excalidraw', 'create-humanizer',
+        'create-manim-video', 'create-p5js', 'create-popular-web-designs', 'create-pretext',
+        'create-sketch', 'create-video-render', 'create-video-script', 'cto-eval',
+        'design-eval', 'doc-topology', 'docs-audit', 'eval-all', 'explore', 'eye-13yo',
+        'gh-fix', 'gh-review', 'hacker-eval', 'hiring-eval', 'markdown-converter',
+        'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
         'software-engineering', 'speed-demo', 'sub', 'testing', 'typescript', 'useless',
     )),
@@ -484,12 +485,12 @@ chmod +x ~/.local/bin/pi
 
 | Tool | Command | Skills |
 |------|---------|--------|
-| `bandit` | `uv tool install bandit` | /red-eval |
-| `pip-audit` | `uv tool install pip-audit` | /red-eval |
-| `semgrep` | `uv tool install semgrep` | /red-eval |
-| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /red-eval |
-| `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /red-eval |
-| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /red-eval |
+| `bandit` | `uv tool install bandit` | /eval (red) |
+| `pip-audit` | `uv tool install pip-audit` | /eval (red) |
+| `semgrep` | `uv tool install semgrep` | /eval (red) |
+| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /eval (red) |
+| `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /eval (red) |
+| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /eval (red) |
 
 **Video rendering** — ask separately (heavy, rarely needed):
 

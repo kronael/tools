@@ -1,16 +1,9 @@
----
-name: ceo-eval
-description: CEO evaluation — business adoption by default; demo-readiness audit on request. NOT for technical due diligence (use cto-eval).
-when_to_use: "CEO evaluation, ROI, make vs buy, vendor risk, license risk, TCO, ceo audit, demo readiness"
-user-invocable: true
----
-
 # CEO Eval
 
 Dispatch:
 
-- Business adoption / ROI / make-vs-buy: read `checklist.md`.
-- Demo readiness / "would I show this?": read `demo-audit.md`.
+- Business adoption / ROI / make-vs-buy: read `ceo/checklist.md`.
+- Demo readiness / "would I show this?": read `ceo/demo-audit.md`.
 
 Rules:
 

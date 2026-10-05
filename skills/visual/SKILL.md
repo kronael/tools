@@ -44,7 +44,8 @@ rules unrendered.
   any page, document or diagram — the owner rejects every pattern it lists on
   sight as "AI slop". NEVER ship a page without checking it against that file.
 - A design recommendation — UX, visual, typography, layout, colour — follows
-  the `design-eval` skill's sourcing rule: a named published source with its
+  the `eval` skill's design lens (`eval/design.md`) sourcing rule: a named
+  published source with its
   URL, or labeled as your own opinion.
 - Web UI renders through the `agent-browser` CLI (`browse` skill), headful.
   NEVER `npx playwright screenshot` or ad-hoc browser tooling — it loses

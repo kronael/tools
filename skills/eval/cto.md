@@ -1,16 +1,9 @@
----
-name: cto-eval
-description: CTO evaluation — technical adoption by default; SLA/code audit on request. NOT for deep adversarial failure-mode review (use red-eval) or ROI/demo judgment (use ceo-eval).
-when_to_use: "CTO evaluation, technical due diligence, production readiness, cto audit, code audit, SLA bet, how do we run this, observe this, operate this"
-user-invocable: true
----
-
 # CTO Eval
 
 Dispatch:
 
-- Technical adoption / due diligence: read `checklist.md`.
-- SLA-bet / source audit: read `code-audit.md`.
+- Technical adoption / due diligence: read `cto/checklist.md`.
+- SLA-bet / source audit: read `cto/code-audit.md`.
 
 Rules:
 
@@ -27,8 +20,9 @@ Rules:
   tests, commit history. If judging correctness *requires* the running system,
   that gap IS a finding ("the code isn't auditable from source alone").
 - If the evidence is unclear because the system may break under hostile input,
-  corrupted state, replay, concurrency, or exploit-like conditions, invoke
-  `red-eval` as a separate deeper pass instead of stretching CTO scope.
+  corrupted state, replay, concurrency, or exploit-like conditions, run the
+  red lens (`red.md`) as a separate deeper pass instead of stretching CTO
+  scope.
 - Findings are claims, not facts — the caller re-verifies load-bearing ones
   before acting on them (`Skill(sweep)` § verify a finding before
   you fix it). A "DISPUTED" or "CONFIRMED" verdict in this skill's own report

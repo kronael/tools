@@ -1,10 +1,3 @@
----
-name: hiring-eval
-description: Hiring evaluation from artifacts, repos, demos, resumes, or interview evidence. Use for "would you hire this engineer?", "top notch?", senior/staff calibration, HFT/systems candidate assessment, and what evidence would change the decision. NOT for production adoption of a project (use cto-eval) or business/demo ROI (use ceo-eval).
-when_to_use: "hiring eval, candidate evaluation, would you hire, top notch engineer, senior engineer, staff engineer, HFT role, systems engineer interview, portfolio review, repo as hiring signal, artifact evaluation"
-user-invocable: true
----
-
 # Hiring Eval
 
 Evaluate the person, not the product. The output is a hiring recommendation

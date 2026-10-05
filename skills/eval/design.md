@@ -1,15 +1,9 @@
----
-name: design-eval
-description: Design evaluation — visual + interaction design craft of a UI from a senior product-designer / design-system-owner lens (hierarchy, colour + measured contrast, tokens, density, redundant channels, data-density, minimalism, honesty). NOT novice can-I-use-it UX (use 13yo-eval), NOT code/production (use cto-eval), NOT adversarial failure modes (use red-eval).
-when_to_use: "design evaluation, design review, design audit, is the UI good, visual design critique, design-system audit, contrast/accessibility audit, evaluate the screens, dashboard / data-dense UI design quality"
-user-invocable: true
----
-
 # Design Eval
 
 Judge a UI's DESIGN CRAFT the way a design-system owner reviews a screen —
-evidence-based, not taste. Read `rubric.md` for the ten dimensions + the verdict
-template. Grounded in the methodology at `~/.claude/skills/go-gl/design-systems-research.md`
+evidence-based, not taste. Read `design/rubric.md` for the ten dimensions + the
+verdict template; `design/dogfood-glass.md` (a GPU renderer) and
+`design/dogfood-term.md` (a TUI) are two finished reports in that shape. Grounded in the methodology at `~/.claude/skills/go-gl/design-systems-research.md`
 (Material 3 / Fluent / Carbon / DTCG tokens, WCAG + APCA, Cleveland-McGill,
 Okabe-Ito) and NN/g's heuristics.
 
@@ -51,9 +45,10 @@ Okabe-Ito) and NN/g's heuristics.
   source turns up, ALWAYS label the recommendation as your own opinion,
   explicitly and apart from the sourced ones. A dead or unread link is not a
   citation — ALWAYS open the page before citing it.
-- **NEVER blur the lenses.** design-eval owns visual + interaction *craft*;
-  13yo-eval owns novice *comprehension*; cto-eval owns *code/production*. If a
-  finding is really "a novice can't tell what this is", route it to 13yo-eval.
+- **NEVER blur the lenses.** This lens owns visual + interaction *craft*; the
+  novice lens (`novice.md`) owns novice *comprehension*; the CTO lens
+  (`cto.md`) owns *code/production*. If a finding is really "a novice can't
+  tell what this is", route it to the novice lens.
 - **ALWAYS reserve scope honestly for a pixels-only surface** (raw GL / canvas):
   it exposes no accessibility tree, focus order, screen-reader text, or IME —
   contrast + redundant channel is the *ceiling* of what you can claim, not "a11y

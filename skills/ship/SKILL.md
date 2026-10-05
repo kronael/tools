@@ -35,7 +35,7 @@ Default: flat, gitignored scratch at `.claude/plans/plan-NN-name.md` — plan
 mode's directory — with the next free zero-padded NN and a lowercase kebab
 name. Reuse the active change's record where it is. Project layout overrides
 win. The plan holds the owner brief, acceptance checks, decisions and
-progress. The `assess`, `eval-all` and `specs` critiques share the directory;
+progress. The `eval` and `specs` critiques share the directory;
 a record carries its type as the filename prefix, and plan mode's own files
 carry none.
 
@@ -144,9 +144,9 @@ committed work never becomes an empty uncommitted-diff review. `refine`
 owns quality lenses, docs, local commits and PR-thread intake.
 
 Run the owner-selected checks through the matching existing skills:
-`review` for an independent review, `red-eval` for hostile failure cases,
-`cto-eval` for operational risks, `design-eval` for UI craft and `13yo-eval`
-for first use. Load only lenses justified by the brief or a concrete
+`review` for an independent review, and the `eval` lenses — red for hostile
+failure cases, CTO for operational risks, design for UI craft and novice for
+first use. Load only lenses justified by the brief or a concrete
 unresolved concern. An explicit independent engine choice uses `astra` or
 `oracle`.
 

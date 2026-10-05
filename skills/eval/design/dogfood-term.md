@@ -1,4 +1,4 @@
-# design-eval: rsx-term (TUI — the visual-language template)  (mode: review)
+# design eval: rsx-term (TUI — the visual-language template)  (mode: review)
 Pixels seen: `rsx-term/ui/testdata/book_view.golden`, `dom_view.golden` (the
 byte-locked rendered frames — NOTE: goldens are ANSI-STRIPPED, see finding 7)
 Palette source: `ui/styles.go`; glyph channels/ramps: `ui/stream.go`; language:

@@ -1,9 +1,9 @@
 # The case against building it
 
 Argue the project should not exist. One-sided on purpose — the counterweight
-to a review that only hears reasons to build. `assess` gives the full picture
+to a review that only hears reasons to build. `eval` gives the full picture
 from a named role; this gives one verdict with prior art as its spine. NEVER
-blend them: "give me the full picture" is `assess`.
+blend them: "give me the full picture" is `eval`.
 
 ## Memo
 

@@ -4,8 +4,8 @@ status: shipped
 
 # Ship record in plan mode's directory
 
-The shipping work record — the `ship` plan, the `assess`, `eval-all` and
-`specs` critiques, and any other typed scratch file a skill writes while
+The shipping work record — the `ship` plan, the `eval` and `specs`
+critiques, and any other typed scratch file a skill writes while
 delivering a change — lives at `<main tree>/.claude/plans/`: the directory
 Claude Code's plan mode writes to once `<main tree>/.claude/settings.json`
 sets `"plansDirectory": ".claude/plans"`. Flat, kept out of git by a
@@ -86,8 +86,7 @@ the trailing slash so only the directory matches. It keeps the rest of
 addable, which a bare `.claude/` line does not.
 
 A project acquires both from the first skill that writes there. `ship` §
-Work record owns that step; `assess`, `eval-all` and `skills/specs/useless.md`
-point at it rather than repeating it. A project that already ignores all of
+Work record owns that step; `eval` and `skills/specs/useless.md` point at it rather than repeating it. A project that already ignores all of
 `.claude/` gets no line and keeps the setting machine-local, which still
 points plan mode at the directory.
 
@@ -145,8 +144,8 @@ directory exists.
 - `skills/ship/SKILL.md` § Work record — the location, the main-tree rule,
   the setting and the ignore check; the one place the rule lives.
 - `skills/ship/cli.md` — the CLI's directory is not the record's.
-- `skills/assess/SKILL.md`, `skills/eval-all/SKILL.md`,
-  `skills/specs/useless.md` — critiques written into the same directory.
+- `skills/eval/SKILL.md`, `skills/eval/all.md`, `skills/specs/useless.md` —
+  critiques written into the same directory.
 - `skills/readme/topology.md` — the house layout and the root-anchored
   ignore list; `skills/global/SKILL.md` § Documentation carries the one-line
   form that `~/.claude/CLAUDE.md` is generated from.

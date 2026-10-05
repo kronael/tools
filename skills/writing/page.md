@@ -62,7 +62,7 @@ sight as "AI slop".
 
 ## Diagrams
 
-- One colour means one actor across the whole page (design-eval rubric #8); a
+- One colour means one actor across the whole page (`eval/design/rubric.md` #8); a
   legend sits at the diagram that needs it, NEVER a legend wall before the
   first content, and a swatch's label covers every use of that colour.
 - A figure title and an SVG `<title>` state the claim, as headers do.
@@ -74,7 +74,7 @@ sight as "AI slop".
 ## Contrast
 
 - ALWAYS measure every text colour on every background it sits on, in BOTH
-  themes, against WCAG AA 4.5:1 (design-eval rubric #3) — a status colour that
+  themes, against WCAG AA 4.5:1 (`eval/design/rubric.md` #3) — a status colour that
   reads on dark fails on white, and a heading colour on its own tinted callout
   is a pair too. Prose is the primary ink, NEVER the muted token.
 

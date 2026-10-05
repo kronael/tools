@@ -35,4 +35,4 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
   its format and the header-retention rules are `../software/credits.md`.
 - Only port generators that run locally — no paid APIs, no cloud accounts;
   local CLI/lib deps (ffmpeg, manim, pyfiglet) are fine.
-- `humanize` and `create-eval` are NOT in this router — leave them flat.
+- `humanize` is NOT in this router — leave it flat.

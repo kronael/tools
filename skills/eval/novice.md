@@ -1,11 +1,4 @@
----
-name: 13yo-eval
-description: UX walkthrough of a web app from a 13-year-old novice's eyes (with manual access). NOT for functional/e2e testing (use software), design-craft critique (use design-eval), or visual fixes (use visual).
-when_to_use: "UX walkthrough, novice walkthrough, test as a 13yo, see this with fresh eyes, find what's confusing, evaluate-as-new-user, dashboard usability pass, screen-by-screen UX evaluation, find jargon and intimidation"
-user-invocable: true
----
-
-# 13yo-eval - fresh-eyes UX walkthrough
+# Novice eval — fresh-eyes UX walkthrough
 
 Solo UX evaluation through one persona: a bright 13-year-old novice
 **who can read the manual**. Goal: find what's confusing, what only
@@ -19,7 +12,7 @@ INVOKE: UX walkthrough, fresh-eyes pass, novice walkthrough, "test as
 a 13yo", post-feature usability check, periodic hygiene pass.
 
 NOT for: functional/e2e tests (use `software`), design-craft critique
-(use `design-eval`), visual fixes (use `visual`), a11y conformance
+(the design lens, `design.md`), visual fixes (use `visual`), a11y conformance
 audit, performance/load testing, apps with no users beyond the team.
 
 ## The persona

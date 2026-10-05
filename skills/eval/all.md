@@ -1,29 +1,26 @@
----
-name: eval-all
-description: Run every applicable evaluation lens over one target and log a consolidated verdict for later context. NOT for a single lens (use that eval directly) or code correctness (use /code-review).
-when_to_use: "run all evals, eval-all, full evaluation, evaluate from every angle, adversarial panel, all perspectives, ceo+cto+security+ux at once"
-user-invocable: true
----
-
-# eval-all — run every lens, log the results
+# All lenses — run every one, log the results
 
 Run all applicable evaluation lenses over one target and PERSIST a consolidated
 verdict, so a later session has the context instead of re-deriving it.
 
 ## The panel
-- `ceo-eval` — business adoption / ROI / demo-readiness
-- `cto-eval` — technical adoption / production readiness
-- `red-eval` — security / attack surface
-- `hiring-eval` — engineer/candidate calibration (ONLY when the target is a person / portfolio / repo-as-signal)
-- `13yo-eval` — novice UX walkthrough (ONLY when there's a UI to click)
+- `ceo.md` — business adoption / ROI / demo-readiness
+- `cto.md` — technical adoption / production readiness
+- `red.md` — failure modes / attack surface
+- `design.md` — design craft (ONLY when there's a rendered UI)
+- `novice.md` — novice UX walkthrough (ONLY when there's a UI to click)
+- `hiring.md` — engineer/candidate calibration (ONLY when the target is a person / portfolio / repo-as-signal)
 
 ## Run
-1. Pick the applicable lenses. Skip `hiring-eval` / `13yo-eval` when they don't
-   fit; SAY which you skipped and why (don't silently drop coverage).
-2. Dispatch one subagent per lens — parallel is safe (all read-only). Each runs
-   its own SKILL and returns: one-line verdict (pass / fail / conditional), top-3
-   blockers, and the single kill-shot.
-   Prompt shape: "Run the `<lens>` skill on `<target>`. Save your full memo to
+1. Pick the applicable lenses. Skip `design.md` / `novice.md` / `hiring.md`
+   when they don't fit; SAY which you skipped and why (don't silently drop
+   coverage).
+2. Dispatch one subagent per lens — parallel is safe (all read-only). Each
+   loads the `eval` skill, reads its ONE lens file and returns: one-line
+   verdict (pass / fail / conditional), top-3 blockers, and the single
+   kill-shot.
+   Prompt shape: "Load the `eval` skill, read `<lens>.md` and run that lens on
+   `<target>`. Save your full memo to
    `.claude/plans/critique-<lens>-<YYYYMMDD>.md`. Return verdict + top-3
    blockers + kill-shot."
 3. NEVER trust a sub's summary alone — READ each memo it wrote before rolling up
