@@ -197,11 +197,9 @@ Claude Code" footer). These win.
 - ALWAYS run autonomous code generation — a sub writing a comprehensive or
   multi-file change that no parent reads before the work goes on — on
   `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
-  not tokens. Haiku is for non-interactive batch jobs (`claude -p`) ONLY, NEVER
-  a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the
-  main thread. Bigger work: ALWAYS plan in the main thread (an `/opus` sub from
-  Sonnet), then run each step on a `sonnet` sub and read its diff before the
-  next (`sonnet` § Plan, then execute); a step read that way, here or in
-  `ship`, is not autonomous.
+  not tokens. Haiku is batch-only, NEVER a sub — light work goes to `sonnet` or
+  the main thread. Bigger work: ALWAYS plan in the main thread, then one
+  `sonnet` sub per step, its diff read before the next (`sonnet` § Plan, then
+  execute); a step read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
