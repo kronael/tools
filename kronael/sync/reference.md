@@ -10,10 +10,11 @@ source root) and `RUN` (the run dir) exported and `$RUN/keep.py` written
 `~/.claude/.keep` — one path per line, relative to `~/.claude/`, glob
 patterns allowed (`*` stays inside one path segment); a line starting with `#`
 is a comment. Each entry is an installed-only path inside one of the bundle
-dirs that the owner wants back after every sync. A symlink under a bundle dir
-— an org skill linked from its own checkout, a `ripwire-*` skill — is kept
-without a line: it points at work that lives elsewhere, never at bundle
-content.
+dirs that the owner wants back after every sync. A symlink that is a direct
+child of a bundle dir (`skills/<name>`, `agents/<file>`) — an org skill linked
+from its own checkout, a `ripwire-*` skill — is kept without a line: it points
+at work that lives elsewhere, never at bundle content. A deeper symlink no
+entry covers is not: § Classify prints `SYMLINK <path>` for it.
 
 ```text
 # installed-only paths a sync carries over; never published
@@ -26,7 +27,10 @@ A trailing `/` is dropped. An entry that is absolute, has an empty, `.` or
 commands/` is an error: § Classify prints `BADKEEP <entry>` and exits 1, and
 § Swap refuses before it creates anything. An entry whose path the source
 also has, as a file or a dir, shadows it: § Classify prints `shadow`, § Swap
-refuses it, and the owner deletes the line.
+refuses it, and the owner deletes the line — or, for a symlink kept without
+one, `mv`s the symlink into `RUN`. While a `~/.claude/kronael-keep.txt`
+exists, `expand` stops with exit 1 and tells the owner to rename it to
+`.keep`; an unreadable `.keep` or bundle dir stops it the same way.
 
 Step 0 writes the one reader of the list; § Classify and § Swap both import
 it, so the paths Classify prints as `kept` are the paths Swap copies:
@@ -45,16 +49,20 @@ def invalid(entry):
 
 
 def expand(live):
-    """Paths under live that the keep-list names, plus every symlink under a
-    bundle dir, outermost only.
+    """Paths under live that the keep-list names, plus every symlink that is a
+    direct child of a bundle dir, outermost only.
 
-    A bad entry prints BADKEEP lines and exits 1.
+    A bad entry, an unreadable list or bundle dir, or a kronael-keep.txt
+    prints the cause and exits 1.
     """
-    path = os.path.join(live, '.keep')
+    path, stray = os.path.join(live, '.keep'), os.path.join(live, 'kronael-keep.txt')
+    if os.path.lexists(stray):
+        print(f'Found {stray}: sync reads only {path}; rename it')
+        sys.exit(1)
     try:
         lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
-    except OSError as e:
-        print(f'Cannot read {path}: {e.strerror}')
+    except OSError as err:
+        print(f'Cannot read {path}: {err.strerror}')
         sys.exit(1)
     entries = [x.rstrip('/') for x in lines if x and not x.startswith('#')]
     bad = [k for k in entries if invalid(k)]
@@ -63,11 +71,17 @@ def expand(live):
         sys.exit(1)
     paths = {p for k in entries for p in glob.glob(k, root_dir=live)}
     for d in DIRS:
-        if os.path.islink(os.path.join(live, d)):
+        top = os.path.join(live, d)
+        if os.path.islink(top):
             continue  # a symlinked bundle root: § Classify prints SYMLINK
-        for root, dirs, names in os.walk(os.path.join(live, d)):
-            paths |= {os.path.relpath(os.path.join(root, n), live)
-                      for n in dirs + names if os.path.islink(os.path.join(root, n))}
+        try:
+            names = os.listdir(top)
+        except FileNotFoundError:
+            continue
+        except OSError as err:
+            print(f'Cannot read {top}: {err.strerror}')
+            sys.exit(1)
+        paths |= {f'{d}/{n}' for n in names if os.path.islink(os.path.join(top, n))}
     return sorted(p for p in paths
                   if not any(p.startswith(q + '/') for q in paths))
 
@@ -83,15 +97,18 @@ Read-only. Prints a count per class and one line per path that needs a
 decision; exits 1 on a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line. A live file
 identical to any committed version of its source path is an older install,
 not local work: it counts as `stale`. A `both` file whose three-way merge
-into the repo copy changes nothing is `merged`. A path under a name the
-bundle shipped and dropped (`RETIRED`), or a legacy nested
-`skills/<name>/<name>/` copy, is `retired`: it moves aside with the old bundle
-and needs no answer. Caches and the `.claude/` scratch a session run inside a
+into the repo copy changes nothing is `merged`. A legacy nested
+`skills/<name>/<name>/` copy, or a path under a name the bundle shipped and
+dropped (`RETIRED`) whose live bytes are a committed version of that path, is
+`retired`: it moves aside with the old bundle and needs no answer. A
+live-edited file under a `RETIRED` name is `only-live`, which step 3 asks
+about. Caches and the `.claude/` scratch a session run inside a
 bundle dir leaves are `junk`. A bundle dir the live tree lacks (a first sync,
 an older install) is skipped; a dir or file it cannot read, live or source,
 stops the run with one `Cannot read <path>` line and exit 1. A symlink is
-never read through: one under a bundle dir is `kept`, and a bundle root that
-is one prints `SYMLINK <path>`. `UNRESOLVED` lines are
+never read through: one that is a direct child of a bundle dir is `kept`; a
+bundle root that is one, or one deeper and not under a keep-list entry,
+prints `SYMLINK <path>`. `UNRESOLVED` lines are
 settings hook commands pointing at paths the swap would drop. Scratch files
 go to `$RUN/classify/`. An empty or absent live bundle prints `no live bundle
 files`.
@@ -105,7 +122,7 @@ src, home, tmp = os.environ['SRC'], os.path.expanduser('~'), os.path.join(os.env
 live = os.path.join(home, '.claude')
 JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
-RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
+RETIRED = {  # names the bundle shipped and dropped
     *(f'skills/{n}' for n in (
         '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'codex', 'con',
         'cont', 'create-architecture-diagram', 'create-ascii-art', 'credits',
@@ -176,10 +193,12 @@ def prefixes(rel):
     parts = rel.split('/')
     return ['/'.join(parts[:i]) for i in range(1, len(parts) + 1)]
 
-def retired(rel):  # a dropped name, or a legacy nested skills/<name>/<name>/ copy
+def retired(rel):  # committed bytes under a dropped name, or a legacy skills/<n>/<n>/ copy
     parts = rel.split('/')
-    return any(p in RETIRED for p in prefixes(rel)) or (
-        len(parts) > 3 and parts[0] == 'skills' and parts[1] == parts[2])
+    if len(parts) > 3 and parts[0] == 'skills' and parts[1] == parts[2]:
+        return True
+    return (any(p in RETIRED for p in prefixes(rel))
+            and committed(rel, read(os.path.join(live, rel))))
 
 def kept(rel):
     return any(p in keepset for p in prefixes(rel))
@@ -306,7 +325,7 @@ die() { echo "Swap refused: $*" >&2; exit 1; }
 [[ ! -e "$RUN/old" ]] || die "$RUN/old exists: use a new run dir"
 [[ ! -e "$L/.kronael-sync-new" && ! -e "$L/.kronael-sync-old" ]] ||
   die "a .kronael-sync-* dir is left in $L: step 0"
-python3 "$RUN/keep.py" || die "fix $L/.keep (the lines above)"
+python3 "$RUN/keep.py" || die "the keep-list check failed (the lines above)"
 mkdir -p "$L"
 mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
 aside() {
