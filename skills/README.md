@@ -81,12 +81,11 @@ the authoritative entry. The categories:
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
 - **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
-  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`,
-  `emacs`) —
+  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `ingest`, `emacs`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
-  language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
-  `media-ingest` (URL → transcript/audio/video via `yt-dlp`) are adapted from
+  language. `ingest` (any file → Markdown via `uvx markitdown`; URL →
+  transcript/audio/video via `yt-dlp`) is adapted from
   [steipete/agent-scripts](https://github.com/steipete/agent-scripts). `show-me`
   (opt-in `/show-me` — pseudocode/call-tree/mermaid/diff/local-HTML for the
   current conversation topic, distinct from `diagrams`' permanent ASCII docs)
