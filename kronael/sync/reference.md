@@ -107,7 +107,8 @@ RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked ab
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'software-engineering',
         'sub', 'testing', 'typescript', 'useless',
     )),
-    'agents/haiku.md', 'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
+    'agents/haiku.md',
+    'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'output-styles/80-caveman.md',
 }
 

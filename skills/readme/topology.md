@@ -30,8 +30,8 @@ page's craft: `page.md`. Prose: `writing`.
 - ALWAYS add a file only once its question has an answer the README cannot hold
   in one section — NEVER an empty stub. Root docs are UPPERCASE.
 - NEVER create `todos/`, `notes/`, `facts/`, `compare/` or `WHY.md` — each
-  one's content has a row above. `plans/` exists only as `.claude/plans/`, plan
-  mode's directory, where `ship` keeps its records (`ship` § Work record).
+  one's content has a row above. `plans/` exists only as `.claude/plans/`
+  (§ Tracked and local).
 - NEVER create `CHANGELOG.md` unless the project publishes versions to outside
   consumers (crates.io, npm, PyPI, a plugin) — history lives in git and
   `.diary/`. A repo that keeps one keeps it; `release` writes it.
@@ -102,8 +102,8 @@ This order; cut a section with nothing true to say. Under 150 lines.
 
 ALWAYS wire these into `make lint`, so a stale doc fails the build:
 
-- every FEATURES.md row's test exists at its path under a test directory, and
-  every `untested` id exists in `BUGS.md`;
+- every FEATURES.md row's test exists at its path, and every `untested` id
+  exists in `BUGS.md`;
 - every page claim's link carries `data-evidence="path::exact test name"` or
   `data-evidence="BUGS.md::<BUG-ID>"`, checked the same way;
 - every number of two or more digits in the README, FEATURES.md, the package

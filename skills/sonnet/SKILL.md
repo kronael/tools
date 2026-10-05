@@ -1,7 +1,7 @@
 ---
 name: sonnet
 description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, mechanical edits, and the steps of a written plan. NOT for a design call the plan leaves open (use /opus) or unattended multi-file code (use /fable)."
-when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, find bugs, pre-review, flagging, find simplification, survey codebase, read-only analysis, map files, grep and report, mechanical edit"
+when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, pre-review, flagging, find simplification, survey codebase, read-only analysis, map files, grep and report"
 user-invocable: true
 ---
 

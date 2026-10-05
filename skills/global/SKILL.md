@@ -199,8 +199,8 @@ Claude Code" footer). These win.
   multi-file change that no parent reads before the work goes on — on
   `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
   not tokens. Haiku is batch-only, NEVER a sub — light work goes to `sonnet` or
-  the main thread. Bigger work: ALWAYS plan in the main thread, then one
-  `sonnet` sub per step, its diff read before the next (`sonnet` § Plan, then
-  execute); a step read that way, here or in `ship`, is not autonomous.
+  the main thread. Bigger work: ALWAYS plan first, then one `sonnet` sub per
+  step, its diff read before the next (`sonnet` § Plan, then execute); a step
+  read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

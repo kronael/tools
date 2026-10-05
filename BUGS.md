@@ -93,23 +93,25 @@
   files. **Fix:** split the pattern catalogs into on-demand siblings — a
   restructuring of imported content, not a one-line fix.
 
-- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision.
-  `skills/global/SKILL.md` § Agents makes Haiku batch-only — never an
-  interactive sub or session — while `dockbox haiku` (`dockbox/dockbox:412`)
-  and `qemubox haiku` (`qemubox/qemubox:1104`) start an interactive Claude Code
-  session on `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
+- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
+  design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
+  sub, while `dockbox haiku` (`dockbox/dockbox:412`) and `qemubox haiku`
+  (`qemubox/qemubox:1104`) start an interactive Claude Code session on
+  `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
   `qemubox/test-parity.sh:8` pin the alias in both. **Options:** (a) drop the
-  `haiku` alias from both launchers, their READMEs and the two tests; (b) keep
-  it as a typed model flag the rule does not govern — the user picks it, no
-  skill routes to it. **Default if nothing is decided:** (b).
+  `haiku` alias from both launchers, their usage text, qemubox's README and
+  the two tests; (b) keep it as a typed model flag the rule does not govern —
+  the user picks it, no skill routes to it. **Default if nothing is
+  decided:** (b).
 
-- **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision.
-  `skills/bugs/SKILL.md` § Entry format requires `**Options:**` and
-  `**Default if nothing is decided:**` on every entry whose status is
-  `needs sign-off`; 11 entries in this file carry it, 10 have neither field
-  and `LINT-PACK-NOT-INSTALLABLE` has options without a default. **Options:**
-  (a) backfill each entry when its subject is next touched; (b) backfill all
-  11 in one pass; (c) grandfather them. **Default if nothing is decided:** (a).
+- **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
+  test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
+  and `**Default if nothing is decided:**` on every entry whose status is
+  `needs sign-off`; the entries in this file with that status predate the
+  rule — none carries a default, and only `LINT-PACK-NOT-INSTALLABLE`
+  sketches options. **Options:** (a) backfill each entry when its subject is
+  next touched; (b) backfill them all in one pass; (c) grandfather them.
+  **Default if nothing is decided:** (a).
 
 ## Codex bridge
 
@@ -234,12 +236,12 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
-- **PROMPT-NUDGE-TARGETS-UNTESTED** (LOW, test) — open (record only).
-  `hooks/prompt_nudge.py` `AGENT_KEYWORDS` maps 51 keywords to `/skill` and
-  `@agent` targets, and no test in `hooks/test_prompt_nudge.py` resolves each
-  target against `skills/` and `agents/`, so a deleted skill leaves a dangling
-  route until someone types the word. **Fix:** one test that resolves every
-  target against the tree.
+- **PROMPT-NUDGE-TARGETS-UNTESTED** (LOW, traceability) — open (record only),
+  no test — traceability. `hooks/prompt_nudge.py` `AGENT_KEYWORDS` maps 51
+  keywords to `/skill` and `@agent` targets, and no test in
+  `hooks/test_prompt_nudge.py` resolves each target against `skills/` and
+  `agents/`, so a deleted skill leaves a dangling route until someone types
+  the word. **Fix:** one test that resolves every target against the tree.
 
 ## dockbox
 

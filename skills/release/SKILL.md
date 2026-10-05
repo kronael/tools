@@ -45,9 +45,8 @@ user-invocable: true
    - File exists with `[Unreleased]` → move to `[vX.Y.Z] — YYYYMMDD`.
    - File missing → create one ONLY when the project publishes versions to
      outside consumers (`readme` → `topology.md`), with one section
-     `[vX.Y.Z] — YYYYMMDD` and no `[Unreleased]` placeholder; otherwise
-     step 3.5 distills `git log <last>..HEAD` into the text shown to the
-     user, and the `Full notes:` line drops.
+     `[vX.Y.Z] — YYYYMMDD` and no `[Unreleased]` placeholder; otherwise no
+     file is created and the `Full notes:` line drops.
    - Multi-deployable repos (sibling subdirs with own pyproject) —
      each subdir that keeps a changelog has its OWN `CHANGELOG.md` for
      that deployable. Root changelog summarises across them.
