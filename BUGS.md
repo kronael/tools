@@ -222,6 +222,18 @@
 
 ## dockbox
 
+- **DOCKBOX-DEFAULTMODE-TOP-LEVEL** (LOW, config) — CONFIRMED 2026-10-06.
+  The box settings override sets `d['defaultMode'] = 'bypassPermissions'`
+  (`dockbox/dockbox:610`), a top-level key Claude Code does not read; the
+  setting is `permissions.defaultMode`. No effect today: the image's `claude`
+  wrapper passes `--dangerously-skip-permissions` (`dockbox/Dockerfile:167`).
+  **Fix:** set `permissions.defaultMode`, or drop the line.
+- **DOCKBOX-README-OPTIN-MOUNTS** (LOW, docs) — CONFIRMED 2026-10-06.
+  `dockbox/README.md` § Mounts lists `~/.dockbox_history` and `/etc/localtime`
+  under Opt-in (`:214-215`), but both are in the `MOUNTS` array
+  (`dockbox/dockbox:13-22`) and mount on every start. **Fix:** move them to
+  Automatic.
+
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
