@@ -1,222 +1,200 @@
 # Code — the engineering baseline
 
-The language-agnostic base every language skill builds on. `go`, `rs`, `py`,
-`ts`, `sh`, and `sql` read this first — they say so in their body — then apply
-their language-specific overlay.
-Nothing here is language-specific; if a rule only holds for one language it
-belongs in that language's skill, not here.
+The language-agnostic base every language skill reads before its first edit; a
+rule that holds for one language only lives in that language's skill. The
+rules sessions break most come first; pairs read wrong → right. ALWAYS re-scan
+your diff against every `##` heading here before calling an edit done.
 
 ## Naming
 
-Shorter is better. Omit prefixes and suffixes the context already makes clear —
-`parse_tokens(symbol)`, not `parse_tokens_from_symbol()`. The entrypoint is
-always `main`. Use short file extensions (`.jl`, not `.jsonl`) and short CLI
-flags.
-
-Single-letter and short variable names are fine where the scope is small and the
-meaning is obvious: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`;
-doubled forms for nested or plural (`kk`, `vv`); and short descriptive words
-(`data`, `msg`). Never use the visually ambiguous singles `o`, `O`, `l`, `I` —
-they read as `0` and `1`. But those singles are for generic values — indices,
-counts, math. A value that stands for a specific concept keeps that concept's
-name (`url`, `slot`, `epoch`), never collapsed to its bare initial.
-
-Never rename something that already has a name — aliases, intermediate bindings,
-import renames. A rename erases where the value came from and forces the reader
-to hold two names for one thing.
-
-Discard with a bare `_`, never a named `_prefix` binding — `|(_, account)|`, not
-`|(_withdraw, account)|`. The name labels a value you are throwing away; it is
-clutter the reader still has to parse.
-
-Inherit names; never invent one when the surrounding code already has it.
-Before naming a function, parameter, field, type, test helper, or
-commit-message term, check what the code, the schema, the domain, and
-existing callers already call that thing, and reuse it exactly. A new word is
-a claim that no existing name fits, and it has to be earned. Name a parameter
-or local after its own type or the domain concept it holds, not after a role
-you invented — a `&WithdrawerTracker` parameter is `tracker`, not `scope`. Use
-the domain's word, not a synonym you prefer — if the column and the
-surrounding code say `withdrawer`, the accessor is `withdrawers_of`, never
-`owners_of`. An API-visible function — anything `pub`/`pub(crate)`, called
-across modules, or that reads as part of the surface — is named by a verb
-phrase: the verb is the action, the type it returns is the verb's object —
-`filter_resolved_snapshots(...)`, not the value-shaped noun
-`snapshots_with_resolved_withdraw(...)` that reads like the thing returned
-rather than the act. A small local or inline helper may instead take the noun of
-the type it returns, not a structure it builds internally or a nearby map.
-Either way, `is_`/`has_` for predicates, `to_`/`into_` for conversions. The verb MUST match the behavior — a
-`finish_task()` that cancels, or a `get_*()` that mutates, is a lie; rename the
-moment name and behavior diverge. If an
-existing name is genuinely wrong,
-change it everywhere — never coin a second name that competes with it. A
-rename is not licence to rewrite prose: the same word can be a variable in
-code and a domain term in a comment, and a blind rename corrupts the comment.
-
-## Layout and formatting
-
-One import per line; it keeps diffs clean. Keep code at 80 columns or under and
-prose at 100, with 120 the hard ceiling reserved for the rare line that genuinely
-hurts to wrap (a long URL, a table row).
-
-Never nest a long or multi-line expression inside an `if`/`if let` condition —
-a condition the reader cannot take in at a glance divorces the test from the
-`{` that answers it. Bind the expression to a name, then branch on that name:
-`let sent = retry_with_backoff(...).await;` then `if let Err(err) = sent`.
-
-Utility files are named `*_utils.*`.
-
-A script runs from a fixed working directory with simple relative paths — NEVER
-`basename $0`, `__dirname`, or complex path resolution.
-
-For user-facing output, lowercase informational messages and Capitalize errors
-(`"checking..."` vs `"Failed: ..."`), and follow the Unix log format:
-`Sep 18 10:34:26 INFO subsystem: message`.
-
-Services and CLI entrypoints write logs to stdout/stderr only. Never install
-file log handlers or pass log-file paths through application code — let the
-supervisor, container runtime, CI, or top-level runner persist logs. If the
-whole orchestration stack is Python, implement artifact capture/compression in
-that top-level Python runner instead of requiring shell redirection.
+- ALWAYS reuse the name the code, the schema, the domain and existing callers
+  already give a thing — function, parameter, field, type, test helper,
+  commit-message term. A new word claims that no existing name fits; earn it.
+- ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
+  surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
+- ALWAYS name a parameter or local after its own type or the domain concept it
+  holds, NEVER a role you invented: `scope: &WithdrawerTracker` →
+  `tracker: &WithdrawerTracker`.
+- NEVER rename what already has a name — no alias, intermediate binding or
+  import rename. A rename erases where the value came from and makes the reader
+  hold two names for one thing.
+- ALWAYS the shortest name the context leaves clear; drop the prefixes and
+  suffixes it already supplies: `parse_tokens_from_symbol()` →
+  `parse_tokens(symbol)`.
+- ALWAYS make the verb match the behaviour, and rename the moment they diverge —
+  a `finish_task()` that cancels, or a `get_*()` that mutates, is a lie.
+- ALWAYS name an API-visible function — `pub`/`pub(crate)`, called across
+  modules, or reading as part of the surface — by a verb phrase: the verb is
+  the action, the type it returns is the verb's object.
+  `snapshots_with_resolved_withdraw()` → `filter_resolved_snapshots()`.
+- NEVER name a small local or inline helper after a structure it builds
+  internally or a nearby map — it may take the noun of the type it returns.
+- ALWAYS `is_`/`has_` for predicates, `to_`/`into_` for conversions.
+- ALWAYS change a genuinely wrong name everywhere it occurs — NEVER coin a
+  second name that competes with it.
+- NEVER let a rename rewrite prose: the same word can be a variable in code and
+  a domain term in a comment, and a blind rename corrupts the comment.
+- ALWAYS discard with a bare `_`, NEVER a named binding — the name labels a
+  value you throw away: `|(_withdraw, account)|` → `|(_, account)|`.
+- ALWAYS short names for generic values — indices, counts, math — in a small
+  scope: `n`, `k`, `r`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; doubled
+  forms for nested or plural (`kk`, `vv`); short words (`data`, `msg`).
+- NEVER collapse a value that stands for a specific concept to its initial — it
+  keeps the concept's name: `u` → `url`, `s` → `slot`, `e` → `epoch`.
+- NEVER `o`, `O`, `l`, `I` — they read as `0` and `1`.
+- ALWAYS `main` for the entrypoint.
+- ALWAYS short file extensions and short CLI flags: `.jsonl` → `.jl`.
 
 ## Comments
 
-NEVER write a comment. Intent travels in names, types and structure; a comment
-is not a fallback for code that failed to carry it. The ONE general exception is
-a doc comment on a PUBLIC API item — an exported function, type, struct, module
-— and it states only what a caller cannot see from the signature: contract,
-units, ownership, error conditions. A private item gets none. A line inside a
-body gets none.
-
-Three narrow exceptions beyond it, each owned by the skill that states it and
-valid only on the construct it names: a test's scenario-to-outcome intro
-(`testing.md`), a `// SAFETY:` invariant on an `unsafe` block (`rs`), and the
-WHY on a deliberate error suppression (`go`). Nothing else inside a body.
-
-ALWAYS sweep the WHOLE file when you touch it, not only the lines you edit:
-read every comment standing there and delete the ones this section bans.
-Leaving one standing is a defect, not a no-op.
-
-Redundancy test — delete the comment if it fails: NEVER leave standing a
-comment whose content is already visible in adjacent code, INCLUDING a log,
-warn, or error message on a neighbouring line. Paraphrasing that message in a
-comment above it is the canonical redundant comment.
-
+- NEVER write a comment. Intent travels in names, types and structure; a
+  comment is no fallback for code that failed to carry it.
+- ALWAYS limit the one general exception to a doc comment on a PUBLIC API item
+  — exported function, type, struct, module — stating only what a caller cannot
+  see from the signature: contract, units, ownership, error conditions. NEVER
+  one on a private item, NEVER one on a line inside a body.
+- NEVER leave a comment whose content adjacent code already shows, a log, warn
+  or error message on a neighbouring line included — paraphrasing that message
+  above it is the canonical redundant comment:
+  `// load failed` over `error!("load failed")` → delete the comment.
+- ALWAYS sweep the WHOLE file you touch, not only the lines you edit: read
+  every comment standing there and delete the ones this section bans. One left
+  standing is a defect, not a no-op.
 - NEVER stack `//`, `#`, `///` or `/** */` lines inside a function body — the
-  ban is on the comment, not merely its length. A public-API doc comment MAY
-  span lines when the caller's contract needs the room.
-- NEVER a source line number in a comment (`// see line 200`, `// as in L42`),
-  and NEVER a diff-gutter number (`255 +`) — point to a file and/or function
-  name instead.
+  ban is on the comment, not its length. A public-API doc comment MAY span
+  lines when the caller's contract needs the room.
+- NEVER a comment about past state, a prior design or backwards compat — the
+  `writing` skill's no-history rule covers comments too; history lives in
+  `.diary/`.
+- NEVER a source line number or a diff-gutter number (`255 +`) in a comment —
+  point to a file or function: `see line 200` → `see parse_header`.
 - NEVER a ticket number or issue ID in a comment.
-- NEVER a comment about past state, a prior design, or backwards compat — the
-  `writing` skill's no-history rule covers comments too; history lives in `.diary/`.
-
-## Design
-
-Reach for a struct or object only when you need to hold state or inject
-dependencies; otherwise plain functions in modules compose better and leak less.
-Model states as explicit enum variants rather than implicit boolean flags, and
-always validate input before it reaches persistence. Name a variant by what
-happens at the use site — the action or effect — never an interpretive label
-the reader has to decode: `Notify::Send`/`Notify::Skip`, not
-`Notify::Partners`/`Notify::Silent`.
-
-A function-typed field in a struct is a jump, not an abstraction. The call site
-names the field; the value is whatever another file assigned, and that value is
-a literal with no name, so no other code can refer to it. An interface method is
-the same seam with a name on each destination: the implementations are types,
-and the language server lists them. Five-second test — from the call site, can
-you name every assignment of this field without a search? If not, it is a jump:
-write an interface with one method, or call the function directly. The test
-double is the usual reason for the field and fails the test the same way; a
-one-method interface with a fake type is as short and stays findable.
-
-A function value is right where the reader sees it created: passed as an
-argument (`sort.Slice`), adapted to the library's own interface
-(`http.HandlerFunc`), or assigned in one wiring site because the caller holds a
-package function and the callee must not import that package. Cost: arizuko,
-2026-09-23 — 82 exported func fields in 14 files, and `Authorize` is a function
-in one package, a method in a second and a func field in a third, so a grep for
-the field answers about the wrong one.
-
-## System changes
-
-- **No duplication — amend the original.** Before adding a mechanism (guard,
-  helper, table, log site, config), grep for an existing one. If it exists,
-  fix/extend the ORIGINAL; NEVER add a parallel second path — two paths drift.
-  If the original is wrong, fix it or call it out; NEVER route around it.
-- **Fail loud, fail to the user.** An error on a user-facing path MUST surface
-  to the user (thrown / returned non-2xx / delivered to the chat), not just
-  logged — a logged-but-invisible failure is still silent. NEVER swallow
-  (`_ = err`, `if err == nil { use }` with no else); ALWAYS handle-and-surface.
-- **Retry ONLY transient errors** — remote/network calls and DB busy/locked.
-  Everything else (misconfig, missing data, programming errors) throws
-  immediately: no retry, no fallback, no best-effort continue past a failed
-  precondition.
-- **Fix causes, not symptoms.** A loud log is a symptom patch; the cause fix is
-  the redesign that makes the bad state impossible-by-construction (gate the
-  precondition, funnel to one renderer, guard at the boundary). ALWAYS prefer
-  the cause fix.
-- **Redesigns need sign-off.** When a fix is a redesign (new contract, changed
-  control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST
-  (`bugs` skill); the user signs off BEFORE you ship. Only symptom-level
-  loud-logging ships inline.
-- **An external contract is the provider's published spec.** ALWAYS build and
-  re-check a client of another team's service against the provider's integrator
-  guide or API spec at its default head, fetched fresh before you merge or ship
-  — NEVER against an in-repo summary, a stub branch, or a parameter name you
-  assumed. ALWAYS check a formula derived from the spec against the spec's own
-  worked examples; a derivation can drop a term the examples carry.
-- ALWAYS build/test/lint every ~50 lines — errors cascade.
+- ALWAYS confine comments inside a body to three narrow exceptions, each owned
+  by the skill that states it and valid only on the construct it names: a
+  test's scenario-to-outcome intro (`testing.md`), a `// SAFETY:` invariant on
+  an `unsafe` block (`rs`), the WHY on a deliberate error suppression (`go`).
+  NEVER anything else.
 
 ## Boring code
 
-Prefer the boring solution. Debugging is twice as hard as writing, so leave
-yourself mental headroom — write code simpler than you are capable of, and choose
-clarity over cleverness. When two constructs are equivalent, pick the one that
-takes the least mental model to read (a plain `for` loop over a combinator chain
-when the body is non-trivial).
+- ALWAYS copy a thing two or three times before you abstract it. Every line is
+  a liability, deletion lowers cost, and a premature abstraction freezes the
+  wrong shape in place. ALWAYS design for replaceability.
+- NEVER call an abstraction simpler when it brings concepts the call sites do
+  not have — function pointers, closures, generics, combinator chains. It has
+  to cut TOTAL complexity; judge by cognitive overhead, not diff size.
+- ALWAYS reframe before adding a branch, a fallback or a config knob: check
+  whether an existing parameter, path or environment variable makes the edge
+  case normal. Branch only when no existing mechanism can express it — one code
+  path beats ten.
+- ALWAYS choose the boring solution: debugging is twice as hard as writing, so
+  write simpler than you are capable of, clarity over cleverness.
+- ALWAYS pick the construct that takes the least mental model when two are
+  equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
+- ALWAYS prefer a simple solution that is mostly right over a complex one that
+  is fully correct — the simple one spreads and evolves, embedded complexity
+  never leaves.
+- NEVER braid components: if A cannot be understood without tracking B's
+  state, separate them — braided code grows combinatorially, separated code
+  composes linearly. ALWAYS minimise state and make what remains explicit; an
+  `f(x)` whose result changes over time leaks that complexity to every caller.
+- ALWAYS hold information as plain data over objects; encapsulate I/O, expose
+  information. Ten structures and ten functions give a hundred composable
+  operations; a hundred classes of ten methods give a thousand and no
+  composition.
+- NEVER spend an innovation token on fashion — there are roughly three, for
+  where they buy competitive advantage. Every new technology is an unknown
+  failure mode; boring, documented tech is a solved one.
 
-Before you add a branch, a fallback, or a config knob, check whether an existing
-parameter, path, or environment variable can make the edge case normal. Reframe
-first; branch only when no existing mechanism can express it. Good taste
-eliminates the special case by redesigning so the edge *is* the normal path — one
-code path beats ten.
+## Design
 
-Every line is a liability, so deletion lowers cost while premature abstraction
-freezes the wrong shape in place. Copy a thing two or three times before you
-abstract it, and design for replaceability. When you do abstract, the helper has
-to reduce *total* complexity, not just line count: if it introduces concepts that
-aren't at the call sites — function pointers, closures, generics, combinator
-chains — it is not simpler. Judge by cognitive overhead, not diff size. A simple
-solution that is mostly right beats a complex one that is fully correct, because
-the simple one spreads and evolves while embedded complexity can never be removed.
+- ALWAYS model states as explicit enum variants, NEVER implicit boolean flags:
+  `sent: bool, skipped: bool` → `enum Notify { Send, Skip }`.
+- ALWAYS name a variant by what happens at the use site — the action or effect
+  — NEVER an interpretive label the reader has to decode:
+  `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
+- ALWAYS plain functions in modules; reach for a struct or object only to hold
+  state or inject dependencies — functions compose better and leak less.
+- ALWAYS validate input before it reaches persistence.
+- NEVER a function-typed struct field: it is a jump, not an abstraction. The
+  call site names the field, the value is a nameless literal another file
+  assigned, and no other code can refer to it. Five-second test — from the call
+  site, can you name every assignment of the field without a search? If not,
+  write a one-method interface (its implementations are types the language
+  server lists) or call the function directly. A test double fails the test the
+  same way; a one-method interface with a fake type is as short and stays
+  findable: `Authorize func(ctx) error` field →
+  `type Authorizer interface { Authorize(ctx) error }`.
+- ALWAYS keep a function value where the reader sees it created: passed as an
+  argument (`sort.Slice`), adapted to the library's own interface
+  (`http.HandlerFunc`), or assigned at one wiring site because the caller holds
+  a package function the callee must not import. Cost: arizuko, 2026-09-23 —
+  82 exported func fields in 14 files, and `Authorize` is a function in one
+  package, a method in a second and a func field in a third, so a grep for the
+  field answers about the wrong one.
 
-Spend your roughly three innovation tokens where they buy competitive advantage.
-Every new technology is an unknown failure mode; boring, documented tech is a
-solved one. Don't spend a token on fashion.
+## System changes
 
-Watch for complecting — if you cannot understand component A without tracking B's
-state, they are braided together, and braided code grows combinatorially while
-separated code composes linearly. State is the usual culprit: if `f(x)` returns
-different results over time, that complexity escapes to every caller. Values
-compose; stateful objects leak. Minimize state and make what remains explicit.
-Prefer information as plain data over objects — ten data structures and ten
-functions give a hundred composable operations; a hundred classes with ten
-methods each give a thousand operations and no composition. Encapsulate I/O,
-expose information.
+- **Fail loud, fail to the user.** ALWAYS surface an error on a user-facing
+  path to the user — thrown, non-2xx, delivered to the chat; logged but
+  invisible is still silent. NEVER swallow: `_ = err`, or
+  `if err == nil { use }` with no else → handle and surface.
+- **Retry ONLY transient errors** — remote/network calls and DB busy/locked.
+  ALWAYS throw at once on everything else (misconfig, missing data,
+  programming errors): NEVER a retry, a fallback or a best-effort continue past
+  a failed precondition.
+- **No duplication — amend the original.** ALWAYS grep for an existing
+  mechanism (guard, helper, table, log site, config) before adding one, and fix
+  or extend the ORIGINAL. NEVER a parallel second path — two paths drift. If
+  the original is wrong, fix it or call it out; NEVER route around it.
+- **Fix causes, not symptoms.** ALWAYS prefer the cause fix — the redesign
+  that makes the bad state impossible by construction (gate the precondition,
+  funnel to one renderer, guard at the boundary). A loud log is a symptom
+  patch.
+- **Redesigns need sign-off.** ALWAYS record a fix that is a redesign (new
+  contract, changed control flow, cross-cutting) in `BUGS.md` as a proposal
+  FIRST (`bugs` skill); the user signs off BEFORE you ship. Only symptom-level
+  loud-logging ships inline.
+- **An external contract is the provider's published spec.** ALWAYS build and
+  re-check a client of another team's service against the provider's
+  integrator guide or API spec at its default head, fetched fresh before you
+  merge or ship — NEVER an in-repo summary, a stub branch, or a parameter name
+  you assumed.
+- ALWAYS check a formula derived from that spec against the spec's own worked
+  examples; a derivation can drop a term the examples carry.
+- ALWAYS build/test/lint every ~50 lines — errors cascade.
+
+## Layout and formatting
+
+- NEVER nest a long or multi-line expression inside an `if`/`if let` condition
+  — the reader loses the test before reaching the `{` that answers it. Bind it,
+  then branch on the name: `if let Err(err) = retry_with_backoff(...).await` →
+  `let sent = retry_with_backoff(...).await;` then `if let Err(err) = sent`.
+- ALWAYS code at 80 columns or under and prose at 100; 120 is the hard ceiling,
+  for the rare line that genuinely hurts to wrap (a long URL, a table row).
+- ALWAYS one import per line — it keeps diffs clean.
+- ALWAYS name utility files `*_utils.*`.
+- ALWAYS run a script from a fixed working directory with simple relative
+  paths — NEVER `basename $0`, `__dirname`, or complex path resolution.
+- ALWAYS lowercase informational user-facing messages and Capitalize errors:
+  `"checking..."`, `"Failed: ..."`.
+- ALWAYS the Unix log format: `Sep 18 10:34:26 INFO subsystem: message`.
+- ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
+  NEVER a file log handler or a log-file path passed through application code;
+  the supervisor, container runtime, CI or top-level runner persists them.
+- ALWAYS implement artifact capture and compression in the top-level Python
+  runner when the whole orchestration stack is Python — NEVER require shell
+  redirection for it.
 
 ## Grug rules
 
-Three reminders from grugbrain.dev that the above doesn't already cover:
+Three reminders from grugbrain.dev the sections above do not cover.
 
-Match the tool to the weight of the task. If the scaffolding — subagents,
-generated machinery, a lookbehind regex — is bigger than the change it serves,
-it's the wrong tool. Small task, small tool.
-
-Prefer locality of behavior: put the code on the thing that does the thing, and
-don't scatter understanding across files just to honor separation of concerns.
-
-Respect Chesterton's fence. Never delete or "simplify" code you don't yet
-understand — the ugliness often encodes a real constraint. Understand it first.
+- NEVER use a tool heavier than the task — scaffolding (subagents, generated
+  machinery, a lookbehind regex) bigger than the change it serves is the wrong
+  tool. Small task, small tool.
+- ALWAYS keep locality of behaviour: put the code on the thing that does the
+  thing. NEVER scatter understanding across files just to honour separation of
+  concerns.
+- NEVER delete or "simplify" code you do not yet understand (Chesterton's
+  fence) — the ugliness often encodes a real constraint. Understand it first.
