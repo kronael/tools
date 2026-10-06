@@ -30,9 +30,8 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
 
 ## Naming
-- ALWAYS name functions and methods as verbs: `get_programs()`, `build_index()`, `compute_pnl()`
-- NEVER name a function as a noun: `program_lookup`, `symbol_map`, `client_index` — these read as data, not actions
-- Exception: boolean predicates — `is_funded()`, `has_positions()`, `can_advance()`
+- ALWAYS name an API-visible function or method (public, called across modules) as a verb: `get_programs()`, `build_index()`, `compute_pnl()` — NEVER a noun like `program_lookup` or `symbol_map`, which reads as data. A small local helper may take the noun of the type it returns — `software/code.md` § Naming owns this.
+- Predicates: `is_funded()`, `has_positions()`, `can_advance()`
 - The verb MUST match the behavior — a `finish_task()` that cancels, or a `get_*()` that mutates, is a lie. Rename the moment name and behavior diverge.
 
 ## Properties and accessor overrides

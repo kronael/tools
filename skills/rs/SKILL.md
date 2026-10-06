@@ -29,8 +29,10 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
   imports make any file quick to reason about. Split a file that outgrows that.
 
 ## Naming
-- ALWAYS verb-based function names unless trivially a constructor
-  - `collect_tx_summaries()` not `tx_summaries()`; nouns ok for `new()`, `from_str()`
+- ALWAYS a verb phrase for an API-visible function (`pub`/`pub(crate)`,
+  called across modules): `collect_tx_summaries()` not `tx_summaries()`. A small
+  local helper may take the noun of the type it returns, and constructors
+  (`new()`, `from_str()`) are nouns — `software/code.md` § Naming owns this.
 - Function params: full names for multi-word concepts; short OK in closures (`v`, `k`, `n` in `.map(|v| ...)`)
 - Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine
 - NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
