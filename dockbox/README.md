@@ -193,6 +193,13 @@ Automatic:
   live in each box's own `/tmp`, so a private registry means boxes and the
   host neither see nor message each other's sessions, and two boxes' low
   container PIDs cannot overwrite each other's records.
+- `~/.claude/plugins` -> `/home/dockbox/.claude/plugins` and the same host
+  path (ro) - installed plugins. `installed_plugins.json` records absolute
+  host paths.
+- `~/.claude/settings.json` -> a copy of the host file with the sandbox off
+  (ro), written once when the box is created. A plugin enabled on the host
+  after that stays disabled in the box until the box is recreated.
+- `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)

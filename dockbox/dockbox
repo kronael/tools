@@ -371,6 +371,8 @@ container is created. Use -n <name> to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw; ~/.claude/sessions is a private tmpfs, so boxes and
         the host never list or message each other's Claude sessions),
+        ~/.claude/plugins (ro, also at its host path), ~/.claude/settings.json
+        (ro copy with the sandbox off, made at box creation), ~/.codex (rw),
         ~/.claude.json (ephemeral), ~/.gitconfig (ro), ~/.dockbox_history (rw)
 
 DNS:    A bridge box gets a resolver listening on the bridge gateway (e.g.
