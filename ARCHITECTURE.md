@@ -155,15 +155,19 @@ owns that rule.
 
 ## Org overlays
 
-Org-specific skills live in separate repos layered on top of the base
-sync:
+Org-specific skills live in separate repos. Install one as a Claude Code
+plugin when its repo ships one:
 
 ```
-ln -s <org-repo>/skills/<org> ~/.claude/skills/<org>
+claude plugin marketplace add <org-repo>
+claude plugin install <plugin>@<marketplace>
 ```
 
-A sync keeps an overlay symlinked directly under `skills/`, as above,
-without a keep-list line, and a copied one only by a keep-list line.
+A plugin lives in `~/.claude/plugins`, which the sync never touches and both
+boxes mount, so its skills load on the host and in every dockbox and qemubox.
+A skill copied into `~/.claude/skills` survives a sync only by a keep-list
+line. A symlinked one is kept without a line, but a box resolves the link only
+when it also mounts the target, so most boxes lose it.
 [The keep-list rule](kronael/sync/reference.md#keep-list-steps-0-1-3-4) in
-`kronael/sync/reference.md` owns this. Overlays never enter this repo
+`kronael/sync/reference.md` owns the sync side. Overlays never enter this repo
 without the owner's yes.
