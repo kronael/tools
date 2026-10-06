@@ -364,9 +364,10 @@
   https://github.com/kronael/ship e417572`, keeping its 114 commits) and make
   it a runner of steps: each step has a role, a shell gate and a review mode
   (pause or auto), and the spec planner becomes one producer of steps beside
-  the ship skill's plan file. Not a general workflow engine: Claude Code's
-  Workflow tool covers that inside a session; ship's niche is running outside
-  one, with state on disk across usage-limit outages. Order: (1) a usage
+  the ship skill's plan file. Ship's pipeline (validate, plan, run, judge,
+  replan, verify) is the owner's workflow model; Claude Code's Workflow tool
+  is a script per job inside one session and does not replace it. Ship runs
+  outside a session, with state on disk across usage-limit outages. Order: (1) a usage
   limit or a lost login exits with state kept (today 3 verifier failures
   reach `mark_complete`, `ship/judge.py:381-389`); (2) a per-step shell gate
   decides COMPLETED (the judge's verdict is discarded, `judge.py:98`); (3) a
