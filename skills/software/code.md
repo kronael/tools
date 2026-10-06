@@ -7,6 +7,9 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Naming
 
+- ALWAYS name a predicate `is_`/`has_`/`can_` and a conversion `to_`/`into_`:
+  `valid()` → `is_valid()`, camelCase `isValid()`. The `<lang>-bool-fn-prefix`
+  lint flags the miss.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.
@@ -29,7 +32,6 @@ your diff against every `##` heading here before calling an edit done.
   `snapshots_with_resolved_withdraw()` → `filter_resolved_snapshots()`.
 - NEVER name a small local or inline helper after a structure it builds
   internally or a nearby map — it may take the noun of the type it returns.
-- ALWAYS `is_`/`has_` for predicates, `to_`/`into_` for conversions.
 - ALWAYS change a genuinely wrong name everywhere it occurs — NEVER coin a
   second name that competes with it.
 - NEVER let a rename rewrite prose: the same word can be a variable in code and
@@ -74,6 +76,8 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Boring code
 
+- ALWAYS choose the boring solution: debugging is twice as hard as writing, so
+  write simpler than you are capable of, clarity over cleverness.
 - ALWAYS copy a thing two or three times before you abstract it. Every line is
   a liability, deletion lowers cost, and a premature abstraction freezes the
   wrong shape in place. ALWAYS design for replaceability.
@@ -84,8 +88,6 @@ your diff against every `##` heading here before calling an edit done.
   whether an existing parameter, path or environment variable makes the edge
   case normal. Branch only when no existing mechanism can express it — one code
   path beats ten.
-- ALWAYS choose the boring solution: debugging is twice as hard as writing, so
-  write simpler than you are capable of, clarity over cleverness.
 - ALWAYS prefer a simple solution that is mostly right over a complex one that
   is fully correct — the simple one spreads and evolves, embedded complexity
   never leaves.

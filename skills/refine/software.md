@@ -18,6 +18,9 @@ reads to pick the agent type.
 - ALWAYS read each new or renamed function body against its verb — a `get_`
   that writes, an `is_` that mutates, a `finish_` that cancels is a finding,
   and a `simplify` fix is the rename, never a comment explaining the verb.
+- ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
+  the changed files: each `<lang>-bool-fn-prefix` hit, a predicate not named
+  `is_`/`has_`/`can_`, is a finding fixed by the rename (§ Naming).
 
 ## Comments the baseline bans `simplify`
 
@@ -43,6 +46,10 @@ reads to pick the agent type.
   five-second test on each.
 - ALWAYS flag two or more booleans that together encode one state — § Design
   wants the enum.
+- ALWAYS read each new construct against the plain version: a clever or novel
+  construct — a one-liner trick, a pattern the codebase does not use, a
+  generic or macro — where a plain `if` or loop does the job is a finding,
+  rewritten plain (§ Boring code).
 
 ## Second path beside the first `simplify`
 
