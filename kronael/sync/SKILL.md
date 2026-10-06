@@ -154,10 +154,10 @@ the failure. Settings still confirm before applying.
      (`Bash(rm -rf /)*` matches nothing); verify the four after merging.
    - **Loosen-only** — NEVER tighten the owner's posture: never flip
      `sandbox.enabled` to true, narrow `sandbox.excludedCommands`, move
-     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow`.
-     Only the deny guard, `crossSessionInbound` and `isolatePeerMachines`
-     override. An installed `deny` the source lists under `ask`: remove the
-     `deny` and add the `ask` (deny evaluates first).
+     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow` or
+     `enabledPlugins` entry (add the recommended ones). Only the deny guard,
+     `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
+     replaces an installed `deny` of the same rule (deny evaluates first).
    - Rest of permissions, sandbox, env: show the diff, ask.
    - `diffSidebarOpen` `false` and `diffTool` `"terminal"` are global config,
      not settings keys: set them in `~/.claude.json`, keeping every other key;

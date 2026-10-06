@@ -128,9 +128,9 @@ Default host access includes:
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
    all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
-   message each other's Claude sessions. Guest edits reach the host. An absolute skill link
-   resolves only when its target is mounted too; the guest has the host username, UID, GID
-   and home path.
+   message each other's Claude sessions. Guest edits reach the host. The guest has the host
+   username, UID, GID and home path, so an absolute skill link resolves when its target is
+   mounted too.
 3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
    when set on the host, reach each session's environment, as in dockbox.
 

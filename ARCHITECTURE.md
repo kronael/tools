@@ -97,8 +97,8 @@ upstream, and live never assumes it matches upstream.
 following a procedure (`kronael/sync/SKILL.md`), not a blind `cp -r`. It
 merges live edits three-way, surfaces conflicts, keeps local paths and
 secrets out of the public repo (into `LOCAL.md`), asks before overwriting
-relaxed settings, carries the owner's installed-only files (overlays,
-private skills) across by the keep-list rule, and never touches
+relaxed settings, carries the owner's private skills across by the keep-list
+rule (org overlays install as plugins, § Org overlays), and never touches
 `settings.local.json` or `CLAUDE.local.md`. A pure-plugin update can't do
 any of that — it just replaces files.
 
@@ -155,19 +155,34 @@ owns that rule.
 
 ## Org overlays
 
-Org-specific skills live in separate repos. Install one as a Claude Code
-plugin when its repo ships one:
+Org-specific skills live in separate repos and install as Claude Code
+plugins. The org repo ships `.claude-plugin/marketplace.json`. ALWAYS add the
+marketplace from its git or GitHub source, NEVER from a local path:
 
 ```
-claude plugin marketplace add <org-repo>
+claude plugin marketplace add <owner>/<org-repo>
 claude plugin install <plugin>@<marketplace>
 ```
 
-A plugin lives in `~/.claude/plugins`, which the sync never touches and both
-boxes mount, so its skills load on the host and in every dockbox and qemubox.
+Claude Code copies a plugin from a git or GitHub marketplace into
+`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`. A plugin from a
+marketplace added by local path loads in place from the checkout, and a box
+that does not mount the checkout misses it. The sync never touches
+`~/.claude/plugins`, and both boxes mount it read-only, so the copied skills
+load on the host and in the boxes, with two limits:
+
+- `qemubox -U` mounts no host config and no plugins.
+- dockbox writes the box's `settings.json`, which holds `enabledPlugins`, once
+  when it creates the box. A box created before the install keeps the plugin
+  disabled until the box is recreated.
+
+Codex never loads a Claude plugin. It reads skills from `~/.agents/skills`,
+which the Codex bridge links to `~/.claude/skills`, and installs its own
+plugins (`AGENTS.md` § Codex plugin usage).
+
 A skill copied into `~/.claude/skills` survives a sync only by a keep-list
-line. A symlinked one is kept without a line, but a box resolves the link only
-when it also mounts the target, so most boxes lose it.
+line. A symlinked one is kept without a line, but a box resolves a skill link
+only when it also mounts the link's target.
 [The keep-list rule](kronael/sync/reference.md#keep-list-steps-0-1-3-4) in
 `kronael/sync/reference.md` owns the sync side. Overlays never enter this repo
 without the owner's yes.

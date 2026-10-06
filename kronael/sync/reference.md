@@ -13,10 +13,9 @@ is a comment. Each entry is an installed-only path inside one of the bundle
 dirs that the owner wants back after every sync. A symlink that is a direct
 child of a bundle dir (`skills/<name>`, `agents/<file>`) — a `ripwire-*` skill,
 a skill linked from another checkout — is kept without a line: it points at
-work that lives elsewhere, never at bundle content. A box resolves such a link
-only when it mounts the target; an org skill installs as a plugin instead
-(`ARCHITECTURE.md` § Org overlays). A deeper symlink no
-entry covers is not: § Classify prints `SYMLINK <path>` for it.
+work that lives elsewhere, never at bundle content. A deeper symlink no entry
+covers is not: § Classify prints `SYMLINK <path>` for it. Org skills install as
+plugins, not by the keep-list: `ARCHITECTURE.md` § Org overlays.
 
 ```text
 # installed-only paths a sync carries over; never published

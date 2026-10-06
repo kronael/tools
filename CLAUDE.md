@@ -84,8 +84,9 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   and the old bundle moves to `/tmp`. Nothing the source dropped survives a
   sync.
 - **NEVER `rm -rf`** into `~/.claude/` — sync moves the old bundle aside with
-  `mv`. Installed-only files (org overlays, private skills) come back only
-  by that keep-list rule and NEVER enter this repo without the owner's yes.
+  `mv`. Private skills come back only by that keep-list rule. Org overlays
+  install as plugins (`ARCHITECTURE.md#org-overlays`). NEVER let either
+  enter this repo without the owner's yes.
 - **NEVER touch** `settings.local.json` or `CLAUDE.local.md`; `LOCAL.md`
   receives only the private hunks a merge keeps out of the repo.
 - `skills/global/` becomes the wisdom file (→ `~/.claude/CLAUDE.md`),
