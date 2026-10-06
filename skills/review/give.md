@@ -14,6 +14,7 @@ Empty diff → say so and stop.
 Group files into ≤4 non-overlapping buckets by domain. Per bucket pick 3-5
 orthogonal lenses: correctness, simplicity, error handling, type safety, test
 coverage, security, performance, API contract, invariant/topology.
+ALWAYS hand a code bucket the `../refine/software.md` lenses (`code.md` hunts).
 
 **Invariant/topology lens** — topology/multiplicity/scope changes (one process
 split into many, a new scope-key on shared storage, a type gaining a collection
