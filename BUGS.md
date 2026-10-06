@@ -2,6 +2,15 @@
 
 ## Bundle
 
+- **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
+  `skills/recall-memories/recall.py` `read_records` (~250) opens every
+  transcript under `~/.claude/projects/` and lets a `PermissionError` escape:
+  one unreadable file kills every `results` search, scoped or `-a`. Here it is
+  `~/.claude/projects/-/399a5e4c-d151-43d2-8aeb-292ba1c6b8a1.jsonl`, in a
+  root-owned dir a session run as root from `/` left.
+  Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
+  Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
+
 - **SLUG-RULE-DROPS-DOTS** (LOW, docs) — CONFIRMED. `skills/solve/SKILL.md:26`
   and `skills/global/SKILL.md:14` say the transcript slug is the CWD with `/`
   replaced by `-`. Claude Code replaces every non-alphanumeric character:
