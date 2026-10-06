@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [v0.4.18] — 20261006
+
+> kronael v0.4.18 — fewer skills, qemubox logs in
+>
+> The bundle drops from 88 to 69 skills, and Claude Code in a qemubox VM starts logged in with the host's account.
+>
+> • eval — one router holds the CEO, CTO, red, design, novice, hiring and all-lenses evaluations.
+> • Skill agents now load their skill, and nine small skills fold into their neighbours.
+> • qemubox — session variables and agent tokens reach the VM over ssh stdin, never a command line.
+> • sync — symlinked skills stay without a keep-list line, and edited retired skills are asked about.
+> • Boxes — each box gets its own `.venv` and gcc, and dockbox points the agent at GitHub over HTTPS.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `eval` router replaces `ceo-eval`, `cto-eval`, `red-eval`, `design-eval`, `13yo-eval`, `hiring-eval` and `eval-all`; `assess` folds its four extra roles in; `create-eval` is removed. Nudge words route to `/eval`.
+- Folded: `speed-demo` → `demo/speed.md`, `credits` → `software/credits.md`, `markdown-converter` + `media-ingest` → `ingest`, `sol` → `astra` § Sol, `finalize-crate` → `release/library.md`, `go-gl` → `go/gl.md`, `trader` → `data/trader.md`, `later` → `next` § Later. Dropped: `caveman` (the output style and command carry it), `explore`, `agent-browser` (`browse`). Every retired name is in the sync's `RETIRED` list.
+- `visual`, `readme`, `improve`, `refine`, `learn`, `distill` agents only load the same-named skill, and the skills launch them; `skills/CLAUDE.md` § Agent definitions owns the rule. The five `commands/` files their skills shadowed are removed. The prompt nudge routes to `/skill`, and a test proves every route names a bundled skill.
+- `writing` is a router whose `page.md` owns how a document or page reads and looks; `humanize` keeps its workflow and moves the catalogue to `patterns.md`.
+- `global` § Git: squashing unpushed commits through `/squash` is allowed; a pushed commit is never squashed. `commit` reads the repo's commit-msg gate first.
+- qemubox: `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY` join the session env when set. Every env value (`-e`, `-g`, the tokens) goes over ssh stdin into a per-session 0600 file in the guest's `/dev/shm`, which the session sources and deletes. `-U` drops the tokens, even from a project `.qemuboxrc`.
+- Boxes: a per-box `.venv` and gcc for sdists. The sandbox notes name the empty dependency dirs only when the box overmounts them, and the dockbox note gives the HTTPS form for GitHub (needs `-g`). The qemubox base build reuses dockbox's TZ argument and cache.
+- sync: a symlink directly under a bundle dir is kept without a line, and a deeper one is asked about. The keep-list file is `~/.claude/.keep`, and a leftover `kronael-keep.txt` stops the sync. A live-edited file under a retired name is asked about.
+
 ## [v0.4.17] — 20261005
 
 > kronael v0.4.17 — ship records live with plan mode's plans
