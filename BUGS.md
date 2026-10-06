@@ -3,7 +3,7 @@
 ## Bundle
 
 - **SLUG-RULE-DROPS-DOTS** (LOW, docs) — CONFIRMED. `skills/solve/SKILL.md:26`
-  and `skills/global/SKILL.md:15` say the transcript slug is the CWD with `/`
+  and `skills/global/SKILL.md:14` say the transcript slug is the CWD with `/`
   replaced by `-`. Claude Code replaces every non-alphanumeric character:
   `/home/u/app/x/.wt/server` is stored as
   `~/.claude/projects/-home-u-app-x--wt-server`. Built that way, a
@@ -11,10 +11,11 @@
   not exist, and the search reports no history. `skills/recall-memories/layout.md`
   states the full rule; the two files still carry the short one.
 
-- **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED,
-  same at v0.4.9 with `/codex`. `hooks/prompt_nudge.py` sends any prompt with
+- **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED at
+  HEAD 2026-10-06. `hooks/prompt_nudge.py` sends any prompt with
   the bare word `oracle` or `second opinion` to `/astra`
-  (`CODEX_PATTERNS`), and checks those patterns before the escalation ones.
+  (`CODEX_PATTERNS`, `:90-94`), and checks those patterns before the
+  escalation ones (`:133-136`).
   So `oracle: review this diff for bugs` skips `skills/oracle/SKILL.md`'s
   table, which sends code and plan critique to fable, and `use opus for a
   second opinion` loses the requested model. **Proposal:** route `oracle` and
@@ -29,10 +30,10 @@
   design.
 
 - **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
-  needs sign-off. Step 4 of `skills/refine/SKILL.md:32-42` skips unless an
+  needs sign-off. Step 5 of `skills/refine/SKILL.md:71-80` skips unless an
   open PR whose head is an ancestor of HEAD exists, and step 11
-  (`:75-86`) already posts each reply through `gh-comment`'s sign-off gate.
-  The gap: while such a PR is open, step 11's completion line
+  (`:136-139`) already posts each reply through `gh-comment`'s sign-off gate.
+  The gap: while such a PR is open, step 11's completion line (`:150-151`)
   needs every unfixed triaged thread replied to, so refine cannot complete
   for a local-only delivery unless the owner approves or declines the
   replies. **Proposal:** let a reply the owner declined, or a delivery the
@@ -41,31 +42,26 @@
   skill, saved plan or hook. No test — design.
 
 - **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
-  needs sign-off. Step 12 of `skills/refine/SKILL.md:87-89` runs
+  needs sign-off. Step 11 of `skills/refine/SKILL.md:144-145` runs
   `git worktree remove --force` on each stale entry under
   `.claude/worktrees/`. A single `--force` removes an unlocked entry even
   when it holds another task's unreconciled work, which
-  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 12
-  apply the existing orphan test in `skills/commit/SKILL.md:68-74` —
+  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 11
+  apply the existing orphan test in `skills/commit/SKILL.md:75-82` —
   remove only an entry superseded by HEAD whose lock pid is dead, and
   surface unique work to the user. Rule text only, no enforcement
   machinery. No test — design.
 
-- **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED.
-  `skills/create/social/references/research-social-meme.md:196-217` carries a
-  "Corrections (post-codex)" section narrating what the document itself changed
-  ("Modes collapsed 4 → 3", "Folklore cut", "Transferability test added"), and
-  `references/codex-critique.md` is framed as a verbatim audit trail. Both are
-  the prior-version narration the wisdom file bans in permanent content. They
-  are cold provenance files nothing reads by accident. **Fix:** the maintainer's
-  call — keep them as attribution, or move them to `.diary/`. Not a silent
-  rewrite.
+- **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
+  2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
+  file as a "Raw adversarial pass by codex-cli 0.144.4" over an earlier draft
+  of `research-social-meme.md`, whose § Where the SKILL departs from this
+  research (`research-social-meme.md:196-223`) states the outcome as it stands.
+  The critique is the prior-version record the wisdom file bans in permanent
+  content, kept as a cold provenance file nothing reads by accident. **Fix:**
+  the maintainer's call — keep it as attribution, or move it to `.diary/`;
+  no test — docs.
 
-- **SYNC-BRIDGE-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-01.
-  `plugins/kronael/skills/kronael-sync/SKILL.md` has a 239-line body against the
-  repo's 200-line rule (`CLAUDE.md:115`, `skills/wisdom/SKILL.md:65`); the
-  canonical `kronael/sync/SKILL.md` is at 199. **Fix:** cut the bridge to its
-  Codex-only deltas, or move detail to `kronael/sync/reference.md`.
 - **DIAGRAMS-NO-SEQUENCE-SWIMLANE-STATE** (LOW, design) — open (record only).
   `skills/diagrams/SKILL.md` (52 lines) teaches only box-and-arrow component
   layout. It carries no pattern for the three other shapes that come up
@@ -98,19 +94,11 @@
   refuses with `live ['kronael-install-manifest.json'] are symlinks (Classify:
   SYMLINK)` — citing a line Classify never printed. **Fix:** add the manifest
   to the roots § Classify checks with `os.path.islink`.
-- **SYNC-ARCH-SYMLINK-ROW-DRIFT** (LOW, docs) — CONFIRMED 2026-10-05.
-  `ARCHITECTURE.md` § Sync strategies says the bundle dirs are rebuilt with
-  "every symlink under a bundle dir"; `keep.expand` keeps only a symlink that
-  is a direct child of one, and § Classify prints `SYMLINK` for a deeper one.
-  **Fix:** reword that row to "each symlink directly in a bundle dir".
-
-## Codex bridge
 
 - **LINT-PACK-NOT-INSTALLABLE** (MED, design) — needs sign-off. The lint pack
   (`skills/<lang>/lints/`, aggregated by `sgconfig.yml`, proven by
   `make lints`) enforces code rules only in THIS repo. Getting it into a user's
-  project is a new install contract. Options (see
-  `.ship/plan-skills-as-lints.md` § Distribution): **A (recommended)** an
+  project is a new install contract. Options: **A (recommended)** an
   opt-in install step — "wire kronael lints into this repo?" writes/updates the
   project's `sgconfig.yml` + `.pre-commit-config.yaml` and references the pack,
   matching the opt-in-skills posture; **B** publish the pack as a standalone
@@ -119,41 +107,30 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
-  still plays the removed `riq` section; `rig/demo/run.ts` no longer has it.
-  `make -C rig demo` needs `asciinema` and `agg`, which this host lacks.
-  **Fix:** re-record with `make -C rig demo` on a host that has both.
-- **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
-  `Bash(git push*)` ask rule (`settings-recommended.json:19`) matches the
-  command string, so it never matches `rig push`, `rig p` or the `rip`
-  symlink, though each runs `git push origin …` (`rig/rig:146`, dispatch at
-  `rig/rig:226`). An unlisted command still gets the default prompt, but an
-  allow rule that admits them pushes with no ask gate left. **Fix:** an ask
-  rule for the rig push forms; which forms, and whether to gate them at all,
-  is the maintainer's call.
-
-- **COMMIT-SUBJECT-CASE-RULE-UNFOLLOWED** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-25. `skills/commit/SKILL.md:42` says "capitalize first word after
-  the colon", but 49 of the last 50 non-release subjects start lowercase
-  (`e482962 chore(commit): drop …`). Every commit either breaks the rule or
-  breaks the history's own idiom. **Fix:** drop the rule or start following
-  it; which case is intended is the maintainer's call; no test — docs.
-
 - **COMMIT-EVALS-BRACKET-FORMAT** (LOW, docs) — CONFIRMED at HEAD 2026-09-25.
   `evals/commit/0[1-5].json` `must_use_format` expects `[fix] …`-style
   subjects (`01.json:13`, `03.json:18`), and `research/eval-sets.md:196`
-  shows the same, while `skills/commit/SKILL.md:25` prescribes
+  shows the same, while `skills/commit/SKILL.md:33` prescribes
   `type(scope): …`. A run scores a skill-compliant commit as a format
   failure. **Fix:** rewrite the regexes and rubric lines to the
   `type(scope):` form; no test — docs.
 
 - **SWEEP-READS-PRUNED-FIXED-ENTRIES** (LOW, docs) — CONFIRMED at HEAD
   2026-09-25. `/sweep` with no argument reads "the most recent `BUGS.md` ✅
-  FIXED/Resolved entries" (`skills/sweep/SKILL.md:20`), but
+  FIXED/Resolved entries" (`skills/sweep/SKILL.md:35-36`), but
   `skills/bugs/SKILL.md` § Pruning deletes an entry once its fix is
   committed, so a queue kept by that skill has none to read. **Fix:** take
   the fixed pattern from the latest fix commit (`git log`) and the diary;
   no test — docs.
+
+## Codex bridge
+
+- **SYNC-BRIDGE-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-06.
+  `plugins/kronael/skills/kronael-sync/SKILL.md` is 244 lines against the
+  repo's 200-line rule (`CLAUDE.md:116`, `skills/wisdom/SKILL.md:67`), and
+  the canonical `kronael/sync/SKILL.md` is 209. **Fix:** cut the bridge to
+  its Codex-only deltas, and move detail from both to
+  `kronael/sync/reference.md`; no test — docs.
 
 ## Hooks
 
@@ -161,9 +138,8 @@
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51
   user-typed prompts that say "ship it" / "and ship" / "then ship" / "ship the
-  …", 18 route to `/ship` and 30 route elsewhere (`/specs` 7, `/fable` 6,
-  `/fix` 4, `/create` 3, `/opus` 2, `/review` 2, `/merge` 2, one each
-  `/continue` `/eye-13yo` `/codex` `@improve`) because an earlier word matched.
+  …", 18 routed to `/ship` and 30 elsewhere, most often `/specs` (7),
+  `/fable` (6) and `/fix` (4), because an earlier word matched.
   "spec this and build it" is in ship's own `when_to_use` and still routes
   `/specs`. Reproduce: `echo '{"prompt":"spec this and ship it"}' | python3
   hooks/prompt_nudge.py`. **Fix:** a precedence rule (workflow verbs before
@@ -202,9 +178,10 @@
   needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
-  `hooks/stop.py:149` suppresses the commit/diary block when `CLAUDE_EVAL` is
-  set. Nothing sets it: its only other hit is `hooks/test_stop.py:16`, which
-  strips it from the test env — not `Makefile`, `.github/`, `evals/`, or any
+  `hooks/stop.py:171` suppresses the commit/diary block when `CLAUDE_EVAL` is
+  set. Nothing sets it: its other hits are `hooks/test_stop.py:16`, which
+  strips it from the test env, and `hooks/ARCHITECTURE.md:159,164`, which
+  documents the clause — none in `Makefile`, `.github/`, `evals/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
   get the block messages injected into their transcripts. **Fix:** one line
   either way — set it in the eval runner, or delete the clause — but which
@@ -212,36 +189,52 @@
 
 - **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off.
   `hooks/lib/state.py:30` names four stamps per session — `local-`
-  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:152`),
+  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:153`),
   `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:110-118`)
   — and no hook deletes one or expires a session id, so `~/.claude/state`
   gains up to four files per session. Harmless in bytes; the question is
   whether stamps should self-prune on write past N days; no test — design.
 
 - **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:55-63` defines its own `hook_event`: the same
+  2026-09-29. `hooks/stop.py:81-89` defines its own `hook_event`: the same
   three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:56-58`, set by `post_tool_nudge.sh:20`). `stop.py` imports
+  override (`:82-84`, set by `post_tool_nudge.sh:20`). `stop.py` imports
   nothing from `lib.state`, so a spelling added to one reader misses the
   other. **Fix:** import `hook_event` from `lib.state` and keep the override
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
+
+## rig
+
+- **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
+  still plays the removed `riq` section; `rig/demo/run.ts` no longer has it.
+  `make -C rig demo` needs `asciinema` and `agg`, which this host lacks.
+  **Fix:** re-record with `make -C rig demo` on a host that has both.
+
+- **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
+  `Bash(git push*)` ask rule (`settings-recommended.json:18`) matches the
+  command string, so it never matches `rig push`, `rig p` or the `rip`
+  symlink, though each runs `git push origin …` (`rig/rig:179`, dispatch at
+  `rig/rig:244`). An unlisted command still gets the default prompt, but an
+  allow rule that admits them pushes with no ask gate left. **Fix:** an ask
+  rule for the rig push forms; which forms, and whether to gate them at all,
+  is the maintainer's call.
 
 ## dockbox
 
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
-  its marker and lists the marker dir (`dockbox/dockbox:468-469`), then
-  force-removes the box on an empty listing (`:470-471`). A second invocation
-  that passed the running check (`:481`) and writes its marker (`:451`)
+  its marker and lists the marker dir (`dockbox/dockbox:552-553`), then
+  force-removes the box on an empty listing (`:554-555`). A second invocation
+  that passed the running check (`:565`) and writes its marker (`:535`)
   between that listing and the removal has its box removed under it; one
-  that writes it just after the removal exits with no message, since `:451`
+  that writes it just after the removal exits with no message, since `:535`
   discards the error. (b) Two launchers for a project with no box both pass
-  the same check (`:481`), and the second's pre-run `docker rm -f -v`
-  (`:669`) removes the box the first just started (`:676`), with any session
+  the same check (`:565`), and the second's pre-run `docker rm -f -v`
+  (`:755`) removes the box the first just started (`:762`), with any session
   already in it. `prune` probes an idle box and removes it in two steps
-  (`:198-201`), so a session entering between them is removed the same way.
+  (`:267-270`), so a session entering between them is removed the same way.
   **Fix:** a per-box host lock (e.g. `flock`) held across marker
   registration, the empty-listing-to-removal step, and creation — a new
   lifecycle contract; no test — design.
@@ -281,73 +274,76 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:414,462` and `qemubox/qemubox:1102,1106` launch the bare
-  default and the `opus` alias at `--effort xhigh`; the help text
-  (`dockbox:258,263`, `qemubox:52,57`, `qemubox/README.md:63`) and
-  `dockbox/test.sh:355,364` pin it. The one reason on record (CHANGELOG
+  `dockbox/dockbox:442,490` and `qemubox/qemubox:1105,1109` launch the
+  `opus` alias and the bare default at `--effort xhigh`; the help text
+  (`dockbox:286,291`, `qemubox:53,58`, `qemubox/README.md:63`) and
+  `dockbox/test.sh:357,366` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
   launchers to `high` (scripts, help, READMEs, test) or state the box's own
   reason for xhigh. Owner's call.
 
 - **DOCKBOX-FABLE-HELP-CLAIMS-MAX-EFFORT** (LOW, docs) — CONFIRMED.
-  `dockbox/dockbox:264` lists `fable` as "(max effort)", but the `fable` arm
-  (`:415`) passes no `--effort`, so the session runs at the CLI default.
-  `qemubox/qemubox:58` makes no such claim.
+  `dockbox/dockbox:292` lists `fable` as "(max effort)", but the `fable` arm
+  (`:443`) passes no `--effort`, so the session runs at the CLI default.
+  `qemubox/qemubox:59` makes no such claim.
+
+- **BOX-TZ-BUILD-ARG-ABBREVIATION** (MED, config) — proposed, CONFIRMED at
+  HEAD 2026-10-06. `dockbox/Makefile:5` sets the `TZ` build arg to
+  `date +%Z`, and `qemubox/qemubox:799` copies it into the base build without
+  the `UTC` fallback. `dockbox/Dockerfile:3-4` turns it into `ENV TZ`. `%Z`
+  prints a DST-dependent abbreviation (`CEST`, then `CET`), so both layer
+  caches miss twice a year. `CEST` is no zone name: `TZ=CEST date +%z` prints
+  `+0000`, so a dockbox session clock runs in UTC labelled `CEST`, and the
+  `ENV TZ` overrides the `/etc/localtime` mount (`dockbox/dockbox:21`).
+  **Proposal:** drop the `TZ` build arg from both builds; the
+  `/etc/localtime` mount and the zone qemubox reads at boot
+  (`qemubox/qemubox:223`) carry it. A build change in two tools — needs
+  sign-off; no test — config.
 
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:166-171` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:180-186` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:127-131`) and the guest user has
-  passwordless sudo (`:174`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:128-132`) and the guest user has
+  passwordless sudo (`:189`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:592`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:596`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:613`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so the `exec env$remote` line (`qemubox:1283-1285`) carries them.
+  `-nic` at `qemubox:617`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1155-1161`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
   DNS, so the host proxy resolves names and there is no UDP/53 side channel.
   Unmeasured: that slirp actually drops guest DNS under `restrict=on` — the
   documentation says the guest is "not able to contact the host", and no one
-  has tested it here, because this box has no `/dev/kvm` access (see the KVM
-  entry above).
+  has tested it here, because this box has no `/dev/kvm` access.
 
 - **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
   `qemubox -n x -N exec sudo poweroff` ends with ssh's
   "kex_exchange_identification: Connection reset by peer" and
-  `qemubox:322` "cannot remove session marker; keeping qemubox-x running",
+  `qemubox:326` "cannot remove session marker; keeping qemubox-x running",
   while `qemubox status x` already reports `process=stopped`. `running` at
-  `:316` still sees the QEMU process during shutdown; the marker ssh then
+  `:320` still sees the QEMU process during shutdown; the marker ssh then
   fails. **Fix:** re-check `running` before printing the note; say the VM is
   shutting down instead.
 - **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
   First boot prints systemctl's two "Removed '/etc/systemd/system/...
   systemd-timesyncd.service'" lines into the user's terminal from
-  `sync_guest_clock` (`qemubox:524`). **Fix:** `systemctl disable --now
+  `sync_guest_clock` (`qemubox:528`). **Fix:** `systemctl disable --now
   --quiet`.
-- **QEMUBOX-ENV-IN-SSH-ARGV** (MED, hardening) — CONFIRMED 2026-10-05.
-  Every `envs` value — `-g`'s `GH_TOKEN` and `GITHUB_TOKEN`, any `-e VAR` —
-  is inlined into the `exec env$remote` string, the last argument of the
-  session's `ssh`. Host `/proc/<pid>/cmdline` is mode 0444 and `/proc` has no
-  `hidepid`, so any host user reads `GH_TOKEN=...` for the session's lifetime.
-  The agent tokens already avoid this: `send_agent_creds` writes them over
-  stdin into the guest's `~/.qemubox-env`. **Fix:** route `envs` through the
-  same file.
-- **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-05.
+- **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
   Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
-  not the last in its `set -e` block asserts nothing: `test-cli.sh`
-  `! grep -q -- ' -t ' "$STUB/ssh.log"` and `test.sh`'s
+  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:162`
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
-  block pass whatever they find. **Fix:** `if cmd; then exit 1; fi`.
+  block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
 
 ## Ruled not a defect
 
