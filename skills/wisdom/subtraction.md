@@ -7,23 +7,38 @@ says the rules are too many or not upheld.
 
 ## The clean room
 
-- ALWAYS measure with a model that loads none of the bundle:
-  `claude --safe-mode -p "<prompt>"` starts with no CLAUDE.md, skills, plugins,
-  hooks or output style. NEVER use an `Agent(...)` sub as the clean room — it
-  inherits `~/.claude/CLAUDE.md` and the skill listing and paraphrases the
-  rules under audit.
-- ALWAYS run it from a scratch dir outside every repo
-  (`cd "$(mktemp -d -p /var/tmp)"`), so no project CLAUDE.md loads.
-- The run needs the owner's login: `CLAUDE_CODE_OAUTH_TOKEN` in its env. A
-  tool shell strips it; load only that export line from the owner's shell rc,
-  and NEVER print it.
+A clean room loads nothing of the owner's setup: no CLAUDE.md, no skill of any
+kind, no tools, no settings, no memory. Anything less lets the model read or
+paraphrase the rules under audit, and the test measures the bundle, not the
+model.
+
+- NEVER use an `Agent(...)` sub: it inherits `~/.claude/CLAUDE.md` and the
+  skill listing, and its tools can Read the skills.
+- NEVER rely on `--safe-mode` alone: it still lists Claude Code's built-in
+  skills, keeps tools, reads the real home and runs its default model.
+- ALWAYS run every prompt like this, with a fresh root per pass:
+
+  ```sh
+  R=$(mktemp -d -p /var/tmp cleanroom-XXXX); mkdir -p "$R/home" "$R/cwd"
+  cd "$R/cwd" && env -i HOME="$R/home" CLAUDE_CONFIG_DIR="$R/home/.claude" \
+    PATH="/usr/bin:/bin:$(dirname "$(command -v claude)")" \
+    CLAUDE_CODE_OAUTH_TOKEN="$tok" \
+    claude --model <the model sessions use> --safe-mode \
+      --disable-slash-commands --tools "" -p "<prompt>"
+  ```
+
+  `$tok` is the owner's login, read from their shell rc into a variable;
+  NEVER print it. Pin the model: an empty config falls back to another one.
+- ALWAYS prove the isolation from the run's own transcript, never from its
+  self-report: under `$R/home/.claude/projects/` no `skill_listing`,
+  `claudeMd` or `nested_memory` attachment, zero `tool_use` blocks, and the
+  pinned model in every assistant record.
 - Two prompts per topic, each a fresh run:
   1. "Write the rules you follow by default when <topic>. Mark each rule you
      know you drift on `[NEEDS TELLING]` with a one-clause why."
   2. "Describe how you actually behave when <task> with no instructions: your
      real defaults, the wrong ones included."
-- Keep both answers in the run dir (`/var/tmp/subtraction-<date>/<topic>.md`);
-  they are scratch, not the record.
+- Keep both answers in `$R/<topic>-<n>.md`; they are scratch, not the record.
 
 ## Order — highest cost per rule first
 

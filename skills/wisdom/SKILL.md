@@ -79,8 +79,8 @@ not judge that from memory; measure it.
 
 1. Ask a clean-room model per topic group, at most 4 groups: "write the
    guidelines you would follow by default for X, from your own judgment". The
-   clean room is `claude --safe-mode -p` from a scratch dir — NEVER an
-   `Agent(...)` sub, which inherits CLAUDE.md and paraphrases what is audited.
+   clean room is `subtraction.md` § The clean room — empty home, no tools, no
+   skills; NEVER an `Agent(...)` sub, which inherits CLAUDE.md and the skills.
 2. ALWAYS make it mark every rule it knows it drifts on as `[NEEDS TELLING]`
    with a one-clause why. That marking is the output; the rest is the control.
 3. Cut what it produced unprompted. KEEP only: `[NEEDS TELLING]` items, local

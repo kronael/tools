@@ -119,8 +119,9 @@ skills it replaces.
 ## Earning a rule's place
 
 - ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
-  rules: a clean-room model (`claude --safe-mode -p`) writes its defaults for
-  the topic, and whatever it produces and follows unprompted does not go in.
+  rules: a clean-room model (`wisdom/subtraction.md` § The clean room) writes
+  its defaults for the topic, and whatever it produces and follows unprompted
+  does not go in.
   Only drifts, unguessable local facts, workflows and deliberate harness
   overrides survive. The bundle-wide pass is `wisdom/subtraction.md`.
 
