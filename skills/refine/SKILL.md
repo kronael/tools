@@ -103,7 +103,7 @@ code extension and still carries every claim the reviewer will trust.
 8. **Triage and apply** — DROP a finding that adds an abstraction, targets
    unused code (grep first), conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (`software/code.md` § System changes); NEVER build one without sign-off.
+   (WISDOM § System-change discipline); NEVER build one without sign-off.
    Apply a finding only if the result is simpler. Apply the rest serially, one
    context at a time, briefed from `brief.md`: `simplify` →
    `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.

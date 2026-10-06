@@ -105,7 +105,9 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
 4. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
    each nudge fires once.
-5. Emit "Editing/reading <file> — follow <skill> conventions."
+5. Emit "Editing/reading <file> — follow <skill> conventions.", plus
+   " Read ~/.claude/skills/software/code.md first." when the skill is in
+   `CODE_SKILLS`.
 Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### post_tool_nudge.sh (PostToolUse)

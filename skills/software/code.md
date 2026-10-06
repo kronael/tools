@@ -63,9 +63,6 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER stack `//`, `#`, `///` or `/** */` lines inside a function body — the
   ban is on the comment, not its length. A public-API doc comment MAY span
   lines when the caller's contract needs the room.
-- NEVER a comment about past state, a prior design or backwards compat — the
-  `writing` skill's no-history rule covers comments too; history lives in
-  `.diary/`.
 - NEVER a source line number or a diff-gutter number (`255 +`) in a comment —
   point to a file or function: `see line 200` → `see parse_header`.
 - NEVER a ticket number or issue ID in a comment.
@@ -89,8 +86,6 @@ your diff against every `##` heading here before calling an edit done.
   path beats ten.
 - ALWAYS choose the boring solution: debugging is twice as hard as writing, so
   write simpler than you are capable of, clarity over cleverness.
-- ALWAYS pick the construct that takes the least mental model when two are
-  equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
 - ALWAYS prefer a simple solution that is mostly right over a complex one that
   is fully correct — the simple one spreads and evolves, embedded complexity
   never leaves.
@@ -128,33 +123,15 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS keep a function value where the reader sees it created: passed as an
   argument (`sort.Slice`), adapted to the library's own interface
   (`http.HandlerFunc`), or assigned at one wiring site because the caller holds
-  a package function the callee must not import. Cost: arizuko, 2026-09-23 —
-  82 exported func fields in 14 files, and `Authorize` is a function in one
-  package, a method in a second and a func field in a third, so a grep for the
-  field answers about the wrong one.
+  a package function the callee must not import. Cost: once one name is a
+  function in one package, a method in a second and a func field in a third, a
+  grep for the field answers about the wrong one.
 
 ## System changes
 
-- **Fail loud, fail to the user.** ALWAYS surface an error on a user-facing
-  path to the user — thrown, non-2xx, delivered to the chat; logged but
-  invisible is still silent. NEVER swallow: `_ = err`, or
-  `if err == nil { use }` with no else → handle and surface.
-- **Retry ONLY transient errors** — remote/network calls and DB busy/locked.
-  ALWAYS throw at once on everything else (misconfig, missing data,
-  programming errors): NEVER a retry, a fallback or a best-effort continue past
-  a failed precondition.
-- **No duplication — amend the original.** ALWAYS grep for an existing
-  mechanism (guard, helper, table, log site, config) before adding one, and fix
-  or extend the ORIGINAL. NEVER a parallel second path — two paths drift. If
-  the original is wrong, fix it or call it out; NEVER route around it.
-- **Fix causes, not symptoms.** ALWAYS prefer the cause fix — the redesign
-  that makes the bad state impossible by construction (gate the precondition,
-  funnel to one renderer, guard at the boundary). A loud log is a symptom
-  patch.
-- **Redesigns need sign-off.** ALWAYS record a fix that is a redesign (new
-  contract, changed control flow, cross-cutting) in `BUGS.md` as a proposal
-  FIRST (`bugs` skill); the user signs off BEFORE you ship. Only symptom-level
-  loud-logging ships inline.
+- ALWAYS hold every change to WISDOM § System-change discipline: amend the
+  original, fail loud to the user, retry only the transient, fix the cause,
+  redesign only after sign-off.
 - **An external contract is the provider's published spec.** ALWAYS build and
   re-check a client of another team's service against the provider's
   integrator guide or API spec at its default head, fetched fresh before you
@@ -182,9 +159,6 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
   NEVER a file log handler or a log-file path passed through application code;
   the supervisor, container runtime, CI or top-level runner persists them.
-- ALWAYS implement artifact capture and compression in the top-level Python
-  runner when the whole orchestration stack is Python — NEVER require shell
-  redirection for it.
 
 ## Grug rules
 

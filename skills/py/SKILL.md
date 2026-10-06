@@ -118,3 +118,6 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 ## Subprocesses
 - `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leak)
 - Kill process groups: `os.killpg(os.getpgid(proc.pid), signal.SIGKILL)`
+- ALWAYS implement artifact capture and compression in the top-level Python
+  runner when the whole orchestration stack is Python — NEVER require shell
+  redirection for it

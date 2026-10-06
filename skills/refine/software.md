@@ -49,7 +49,7 @@ reads to pick the agent type.
 - ALWAYS grep the tree for the mechanism each new guard, helper, table, log
   site or config key duplicates — same verb, same table, same env var. A
   second path where the original could be extended is a finding
-  (§ System changes).
+  (WISDOM § System-change discipline).
 - ALWAYS check a fix that changes a contract or control flow across modules
   for its `BUGS.md` proposal; none is a finding, routed to `BUGS.md`, never
   applied.
@@ -60,7 +60,7 @@ reads to pick the agent type.
   with no else, `except …: pass` or log-and-continue, an empty `catch`,
   `.ok()`/`unwrap_or_default()`/`?? []` on a user-facing path, a fallback
   `None`/`[]`/`0` the caller proceeds on. Each must reach the user
-  (§ System changes).
+  (WISDOM § System-change discipline).
 - ALWAYS read every retry loop's body: anything but a network call or DB
   busy/locked inside it — a parse, a config read, a precondition — is a
   finding.

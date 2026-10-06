@@ -39,9 +39,10 @@ with its own maintenance.
 Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
-nudge, once per session+file. It also blocks true unsafe shell commands:
-`git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`, and
-recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
+nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
+adds "Read ~/.claude/skills/software/code.md first." It also blocks true
+unsafe shell commands: `git reset --hard`, broad `git add`, amend/no-verify
+commits, `rm -rf`, and recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
 gated by consent in `skills/global` and the settings `ask` rule, not by the
 hook.
 
