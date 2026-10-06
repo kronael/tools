@@ -6,7 +6,8 @@ when_to_use: editing .rs files or writing Rust code
 
 # Rust
 
-Requires `software/code.md` (naming, style, comments, design) and
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
 `software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 

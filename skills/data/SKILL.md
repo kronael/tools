@@ -9,8 +9,8 @@ when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data s
 A trading bot — exchange API, paper trading, order sizing, the bot state
 machine: read `trader.md` on top of this file.
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 ## Testing
 

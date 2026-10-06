@@ -10,9 +10,11 @@ A desktop OpenGL app (go-gl/gl + go-gl/glfw — window and render loop,
 HiDPI/resize, alloc-free present, a movable GPU seam, data-dense screen
 design): read `gl.md` on top of this file.
 
-Requires `software/code.md` (naming, style, comments, design), `software/strict-typing.md`
-(golangci-lint set), and `software/dynamic-analysis.md` (test-target checkers:
-`-race`, fuzzing, sanitizers). Below are Go-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
+`software/strict-typing.md` (golangci-lint set) and
+`software/dynamic-analysis.md` (test-target checkers: `-race`, fuzzing,
+sanitizers). Below are Go-specific additions.
 
 ## Toolchain — the edit loop
 

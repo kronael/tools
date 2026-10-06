@@ -6,8 +6,9 @@ when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun 
 
 # TypeScript Style
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are TypeScript-specific additions and deltas.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are TypeScript-specific
+additions and deltas.
 
 Read on demand, in this directory:
 - `node-cluster.md` — running one CPU-bound Node/NestJS service as N workers

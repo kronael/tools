@@ -7,8 +7,8 @@ user-invocable: false
 
 # htmx (server-rendered HTML)
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 State lives on the server; DOM is a projection. For React, use `tsx`.
 

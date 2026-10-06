@@ -6,8 +6,8 @@ when_to_use: editing .sh files or writing shell scripts
 
 # Bash Style
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are shell-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are shell-specific additions.
 
 ## Structure
 - ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines
