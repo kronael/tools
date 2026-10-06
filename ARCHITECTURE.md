@@ -11,6 +11,7 @@ skills/                     bundle — auto-activating skills (languages, workfl
 agents/                     bundle — specialized task agents
 hooks/                      bundle — lifecycle hook scripts
 output-styles/              bundle — response output style (caveman)
+commands/                   bundle — slash commands (caveman)
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
 codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
 codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
@@ -22,7 +23,8 @@ udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in
 
 ## Sync paths, one source
 
-The `skills/`, `agents/`, `hooks/` directories at repo root are the bundle.
+The `skills/`, `agents/`, `hooks/`, `output-styles/` and `commands/`
+directories at repo root are the bundle.
 Every sync path puts them into `~/.claude/`.
 
 **Claude plugin path** — Claude Code's marketplace clones this repo into its
@@ -80,7 +82,7 @@ them:
 
 A pure-plugin design would register skills/agents/hooks via
 `plugin.json` and skip the copy step. The hybrid design exists for
-two practical reasons that pure-plugin doesn't provide:
+three practical reasons that pure-plugin doesn't provide:
 
 **1. Live is a working copy, and its edits come home.** Three sides:
 **source** (this repo), **live** (`~/.claude/` on a host — the running
@@ -95,14 +97,15 @@ upstream, and live never assumes it matches upstream.
 following a procedure (`kronael/sync/SKILL.md`), not a blind `cp -r`. It
 merges live edits three-way, surfaces conflicts, keeps local paths and
 secrets out of the public repo (into `LOCAL.md`), asks before overwriting
-relaxed settings, carries the owner's installed-only files (overlays,
-private skills) through a keep-list, and never touches `settings.local.json`
-or `CLAUDE.local.md`. A pure-plugin update can't do any of that — it just
-replaces files.
+relaxed settings, carries the owner's private skills across by the keep-list
+rule (org overlays install as plugins, § Org overlays), and never touches
+`settings.local.json` or `CLAUDE.local.md`. A pure-plugin update can't do
+any of that — it just replaces files.
 
 **3. Nothing stale accumulates.** Each sync rebuilds the bundle from source
-plus the keep-list and moves the old bundle to `/tmp`, so a file the source
-renamed or dropped cannot keep loading next to its replacement.
+plus the installed-only paths the keep-list rule keeps, and moves the old
+bundle to `/tmp`, so a file the source renamed or dropped cannot keep
+loading next to its replacement.
 
 This is the basis of **evolvability and modularity** of the setup:
 the user's `~/.claude/` is a working surface, not a frozen artifact.
@@ -113,10 +116,10 @@ sync step provides the smart merge. Each layer does one thing.
 
 | Target | Strategy |
 |---|---|
-| `skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` | Live edits merge three-way into source first; then rebuilt from source plus the keep-list (`~/.claude/kronael-keep.txt`); the old copy moves to `/tmp` |
+| `skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` | Live edits merge three-way into source first; then rebuilt from source plus the installed-only paths that `kronael/sync/reference.md` § Keep-list keeps; the old copy moves to `/tmp` |
 | `~/.claude/CLAUDE.md` | Same, against the `skills/global/SKILL.md` body |
 | `~/.codex/AGENTS.md` | Merge the `codex/AGENTS.md` block (markers only) |
-| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the keys `README.md` § Settings names skip the ask) |
+| `~/.claude/settings.json` | Merge from `settings-recommended.json` (diff, ask; the always-apply keys of `kronael/sync/SKILL.md` step 5 skip the ask) |
 | `~/.claude/settings.local.json`, `CLAUDE.local.md` | NEVER touch |
 | `~/.claude/LOCAL.md` | Receives only the private hunks a merge keeps out of source |
 
@@ -132,7 +135,7 @@ which the OS clears on reboot.
 3. Loads ./CLAUDE.md (project conventions)
 4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills auto-activate by file extension or config file
-6. Agents invoked explicitly (`/refine`, `@improve`) or by delegation
+6. Agents launched by a skill, or explicitly (`@improve`)
 ```
 
 ## Components
@@ -141,7 +144,9 @@ which the OS clears on reboot.
 commands. The `global` skill becomes `~/.claude/CLAUDE.md`. Index,
 rationale, and workflow diagram: [`skills/README.md`](skills/README.md).
 
-**Agents** are task workers, mostly dispatched by slash-command wrappers.
+**Agents** are task workers that skills launch;
+[`skills/CLAUDE.md` § Agent definitions](skills/CLAUDE.md#agent-definitions)
+owns that rule.
 
 **Hooks** wire the lifecycle events above; the wiring is defined in
 `settings-recommended.json`. Per-hook rationale and data flow:
@@ -150,14 +155,34 @@ rationale, and workflow diagram: [`skills/README.md`](skills/README.md).
 
 ## Org overlays
 
-Org-specific skills live in separate repos layered on top of the base
-sync:
+Org-specific skills live in separate repos and install as Claude Code
+plugins. The org repo ships `.claude-plugin/marketplace.json`. ALWAYS add the
+marketplace from its git or GitHub source, NEVER from a local path:
 
 ```
-cp -r <org-repo>/skills/<org> ~/.claude/skills/
-echo 'skills/<org>' >> ~/.claude/kronael-keep.txt
+claude plugin marketplace add <owner>/<org-repo>
+claude plugin install <plugin>@<marketplace>
 ```
 
-A sync carries an overlay across only when the keep-list names it; an
-unlisted one is named in the sync report and moves to `/tmp` with the old
-bundle. Overlays never enter this repo without the owner's yes.
+Claude Code copies a plugin from a git or GitHub marketplace into
+`~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`. A plugin from a
+marketplace added by local path loads in place from the checkout, and a box
+that does not mount the checkout misses it. The sync never touches
+`~/.claude/plugins`, and both boxes mount it read-only, so the copied skills
+load on the host and in the boxes, with two limits:
+
+- `qemubox -U` mounts no host config and no plugins.
+- dockbox writes the box's `settings.json`, which holds `enabledPlugins`, once
+  when it creates the box. A box created before the install keeps the plugin
+  disabled until the box is recreated.
+
+Codex never loads a Claude plugin. It reads skills from `~/.agents/skills`,
+which the Codex bridge links to `~/.claude/skills`, and installs its own
+plugins (`AGENTS.md` § Codex plugin usage).
+
+A skill copied into `~/.claude/skills` survives a sync only by a keep-list
+line. A symlinked one is kept without a line, but a box resolves a skill link
+only when it also mounts the link's target.
+[The keep-list rule](kronael/sync/reference.md#keep-list-steps-0-1-3-4) in
+`kronael/sync/reference.md` owns the sync side. Overlays never enter this repo
+without the owner's yes.

@@ -160,6 +160,12 @@ the field answers about the wrong one.
   control flow, cross-cutting), RECORD it in `BUGS.md` as a proposal FIRST
   (`bugs` skill); the user signs off BEFORE you ship. Only symptom-level
   loud-logging ships inline.
+- **An external contract is the provider's published spec.** ALWAYS build and
+  re-check a client of another team's service against the provider's integrator
+  guide or API spec at its default head, fetched fresh before you merge or ship
+  — NEVER against an in-repo summary, a stub branch, or a parameter name you
+  assumed. ALWAYS check a formula derived from the spec against the spec's own
+  worked examples; a derivation can drop a term the examples carry.
 - ALWAYS build/test/lint every ~50 lines — errors cascade.
 
 ## Boring code

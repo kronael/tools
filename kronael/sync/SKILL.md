@@ -28,9 +28,9 @@ WISDOM § Git) and **merge origin** (`origin` → the repo's git line, `merge`).
   `gitCommit`, `gitDescribe`, `installedAt`) and `files`
   (`".claude/<path>": {source, source_sha256}`), the sha of each file as the
   last sync wrote it (`CLAUDE.md`: the wisdom body).
-- **keep-list** — `~/.claude/kronael-keep.txt`, the owner's list of
-  installed-only paths a sync carries over (`reference.md` § Keep-list). It
-  lives outside the bundle and NEVER enters the repo.
+- **keep-list** — `~/.claude/.keep`, the installed-only paths a sync carries
+  over (`reference.md` § Keep-list); a symlink directly in a bundle dir is kept
+  without a line. It lives outside the bundle and NEVER enters the repo.
 - **run dir** (`RUN`) — `${TMPDIR:-/tmp}/kronael-sync-<UTC stamp>/`: scratch,
   backups for steps 5-6, and `old/`, the moved-aside bundle.
 
@@ -80,7 +80,7 @@ the failure. Settings still confirm before applying.
    `M`: `same` (I = S), `stale` (I = M, or I is a committed source version: an
    older install), `edited` (S = M: only live changed), `both` (all three
    differ), `merged` (a `both` already in the repo), `no-base` (no `M`),
-   `kept`, `shadow`, `retired` (a name the bundle dropped), `only-live` (no
+   `kept`, `shadow`, `retired` (a dropped name, unedited), `only-live` (no
    source counterpart, not kept), `junk` (caches, a session's `.claude/`).
    Exit 1 = a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line; step 3 settles each.
    Completion criterion: the class counts and every decision line printed.
@@ -112,11 +112,12 @@ the failure. Settings still confirm before applying.
    only, on the owner's explicit yes — copy it into `SRC`), or **leave** (the
    default; it ends in `RUN/old`). NEVER put an installed-only path in the repo
    without that yes — it may be an org or private skill — and NEVER drop one
-   unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line.
-   Each `SYMLINK`: the owner keeps it (keep-list, under a bundle dir) or `mv`s
-   it into `RUN`. Each `UNRESOLVED` hook path MUST be kept or unwired first: a
-   missing hook script makes `python3` exit 2, which Claude Code treats as
-   blocking — every prompt and tool call in every session fails.
+   unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line,
+   or `mv`s a lineless kept symlink into `RUN`. Each `SYMLINK`: the owner makes
+   a root a real dir, keeps a nested one by a line, or `mv`s it into `RUN`.
+   Each `UNRESOLVED` hook path MUST be kept or unwired first: a missing hook
+   script makes `python3` exit 2, which Claude Code treats as blocking — every
+   prompt and tool call in every session fails.
    Completion criterion: rerun § Classify exits 0 with no `shadow` line, and
    every `only-live` line has an answer or the stated default.
 
@@ -153,10 +154,10 @@ the failure. Settings still confirm before applying.
      (`Bash(rm -rf /)*` matches nothing); verify the four after merging.
    - **Loosen-only** — NEVER tighten the owner's posture: never flip
      `sandbox.enabled` to true, narrow `sandbox.excludedCommands`, move
-     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow`.
-     Only the deny guard, `crossSessionInbound` and `isolatePeerMachines`
-     override. An installed `deny` the source lists under `ask`: remove the
-     `deny` and add the `ask` (deny evaluates first).
+     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow` or
+     `enabledPlugins` entry (add the recommended ones). Only the deny guard,
+     `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
+     replaces an installed `deny` of the same rule (deny evaluates first).
    - Rest of permissions, sandbox, env: show the diff, ask.
    - `diffSidebarOpen` `false` and `diffTool` `"terminal"` are global config,
      not settings keys: set them in `~/.claude.json`, keeping every other key;

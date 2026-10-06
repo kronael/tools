@@ -15,10 +15,11 @@ hook scripts.
 ### prompt_nudge.py (UserPromptSubmit)
 
 Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
-telling Claude to invoke the matching command or agent. That field is the one
+telling Claude to invoke the matching skill. That field is the one
 UserPromptSubmit output the model reads; `systemMessage` renders in the
-transcript for the user and never reaches the model. Routes are `AGENT_KEYWORDS` in
-the source. A prompt that starts with `/astra` or `/sol` routes to that skill;
+transcript for the user and never reaches the model. Routes are `SKILL_KEYWORDS` in
+the source. A prompt that starts with `/astra` or `/sol` routes to `/astra` (`/sol` is
+its Sol variant);
 `ask codex`, `ask astra`, `oracle` and `second opinion` route to `/astra`. All are suppressed inside Codex so it never nudges
 Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word

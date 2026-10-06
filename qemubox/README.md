@@ -107,7 +107,7 @@ VM references, keeping the `current` base.
 
 ## Build directories
 
-`node_modules`, `.next`, `.turbo` and `.cache` directories found under each
+`node_modules`, `.venv`, `.next`, `.turbo` and `.cache` directories found under each
 project become empty tmpfs mounts owned by the guest user. Discovery stops at
 depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.
@@ -128,8 +128,17 @@ Default host access includes:
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
    all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
-   message each other's Claude sessions. Guest edits reach the host, and absolute skill links
-   resolve because the guest has the host username, UID, GID and home path.
+   message each other's Claude sessions. Guest edits reach the host. The guest has the host
+   username, UID, GID and home path, so an absolute skill link resolves when its target is
+   mounted too.
+3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
+   when set on the host, reach each session's environment, as in dockbox.
+
+Every session variable — the agent tokens, `-g`'s `GH_TOKEN`/`GITHUB_TOKEN`, `-D`'s
+`DOCKER_HOST`, each `-e VAR` — travels over SSH stdin into a per-session file in the guest's
+`/dev/shm` (mode 0600, guest tmpfs outside every 9p mount). The session sources and deletes it
+before it starts the tool, so no value reaches an SSH command line, which every host user can
+read in `/proc`.
 
 Other home paths require an explicit mount or forwarding flag.
 `~/.gitconfig` and gpg **public** keyrings are staged read-only.
@@ -152,8 +161,9 @@ default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TO
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
 (or `--untrusted`) goes further — it injects **no** host config or credentials
-and forces the network off. Project dirs and explicit `-v` paths remain mounted,
-so they must not contain credentials you want to withhold. The agent can't authenticate with
+(the agent tokens and `GH_TOKEN`/`GITHUB_TOKEN`/`DOCKER_HOST` are dropped, even from
+a `.qemuboxrc` `-e`) and forces the network off. Project dirs and explicit `-v` paths
+remain mounted, so they must not contain credentials you want to withhold. The agent can't authenticate with
 no credentials, so `-U` is for `bash`/build/test, not for running the agent.
 
 ## Security posture
@@ -169,7 +179,8 @@ What qemubox gives you:
 What it does **not** give you — do **not** run genuinely hostile code here:
 
 - **Your real agent credentials are shared read-write.** Like dockbox, qemubox
-  shares your live `~/.claude` / `~/.codex` (tokens included).
+  shares your live `~/.claude` / `~/.codex` (tokens included) and the agent
+  token variables.
   Guest code can read, change and exfiltrate those tokens and config files.
 - **Outbound network is on by default.** Pass `-H` (egress kill-switch) to
   disable it, or `-U` for a credential-free, network-off inspection mode.

@@ -8,7 +8,8 @@ DISK="${QEMUBOX_DISK:-40G}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
-EPHEMERAL_DIRS=(node_modules .next .turbo .cache)
+EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
+agent_tokens=(CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY)
 
 name_override=""
 entrypoint="claude"
@@ -67,7 +68,7 @@ Options:
     -n name    Override VM name (default: qemubox-<project>)
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -x tool    Alias for -d, matching dockbox
-    -e VAR     Forward env var into the SSH command
+    -e VAR     Forward env var into the session
     -v path    Extra 9p mount at same path ro by default; path:rw for read-write
     -N         No project mount; run in VM home
     -H         Egress kill-switch: disable the guest's outbound network
@@ -78,7 +79,7 @@ Options:
     -D         Forward Docker socket over SSH
     -K         Forward gpg-agent (commit signing); off by default
     -S         Accepted for dockbox parity; guest user already has sudo
-    -g         Forward GH_TOKEN / GITHUB_TOKEN for this SSH command
+    -g         Forward GH_TOKEN / GITHUB_TOKEN into the session
     -G         Mount ~/.config/gcloud ro
     -P         Keep project build dirs on the host (--no-ephemeral)
     -T         Put build-dir overmounts on guest disk; /tmp stays tmpfs
@@ -694,7 +695,7 @@ sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/codex'
-    guest_note "$HOSTNAME" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
+    guest_note "$HOSTNAME" "$(box_dir "$name")/config/ephemeral" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
     ssh_stream_box "$name" 'set -e
 if [ -f /mnt/qemubox-home/.claude.json ]
 then
@@ -793,7 +794,9 @@ build_base() (
     mkdir -p "$ROOT/base"
     exec 8>"$ROOT/base/.lock"
     flock 8
-    build_args=()
+    # The same TZ as dockbox/Makefile, so both builds share the layer cache; the
+    # guest takes its zone from the host at boot, not from the image.
+    build_args=(--build-arg "TZ=$(date +%Z)")
     [ -z "$force" ] || build_args+=(--build-arg "AGENTS_CACHEBUST=$(date +%s)")
     "${docker_cmd[@]}" build --force-rm --target vm -t qemubox-vm \
         "${build_args[@]}" -f "$source_dir/dockbox/Dockerfile" "$source_dir"
@@ -1125,22 +1128,36 @@ rm_matches() {
 
 # -U injects nothing: neutralize every credential-forwarding flag before mounts
 # and forwards are assembled. assemble_mounts already skips the config mounts
-# under $untrusted; this also drops -A/-D/-K/-G/-g so they cannot smuggle a live
-# credential into an "untrusted" box. Operates on the parsing globals.
+# under $untrusted; this also drops -A/-D/-K/-G/-g and the agent tokens so they
+# cannot smuggle a live credential into an "untrusted" box. Operates on the
+# parsing globals.
 apply_untrusted() {
     dropped=""
     [ -n "$ssh_agent$docker_sock$gpg_forward$gcloud_creds" ] && dropped=1
     ssh_agent=""; docker_sock=""; docker_remote=""; gpg_forward=""; gcloud_creds=""
     kept=()
     for e in "${envs[@]}"; do
-        case "$e" in GH_TOKEN=*|GITHUB_TOKEN=*|DOCKER_HOST=*) dropped=1 ;; *) kept+=("$e") ;; esac
+        case " GH_TOKEN GITHUB_TOKEN DOCKER_HOST ${agent_tokens[*]} " in
+            *" ${e%%=*} "*) dropped=1 ;;
+            *) kept+=("$e") ;;
+        esac
     done
     envs=("${kept[@]}")
-    [ -n "$dropped" ] && warnings+=("-U: dropping credential-forwarding flags (-A/-D/-K/-G/-g); untrusted mode injects nothing")
+    [ -n "$dropped" ] && warnings+=("-U: dropping credential-forwarding flags (-A/-D/-K/-G/-g) and agent tokens; untrusted mode injects nothing")
     case "${entrypoint:-}" in
         claude|codex|haiku|sonnet|opus|fable|gpt|mini|spark)
             warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
     esac
+}
+
+# Env values reach the guest on stdin, never in ssh argv: every host user can
+# read /proc/<pid>/cmdline. /dev/shm is guest tmpfs, outside every 9p mount.
+send_envs() {
+    local e
+    for e in "${envs[@]}"
+    do
+        printf 'export %s=%q\n' "${e%%=*}" "${e#*=}"
+    done | ssh_plain_box "$name" "umask 077 && cat > $env_file"
 }
 
 assemble_mounts() {
@@ -1193,10 +1210,13 @@ assemble_mounts() {
 
 # Print the guest's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
 # Claude Code loads in every session, so the agent knows it is in a throwaway VM
-# and what survives it. $1 host name; reads the assembled mount_* arrays.
+# and what survives it. $1 host name, $2 the staged ephemeral list; reads the
+# assembled mount_* arrays.
 guest_note() {
+    local eph=()
     net=off
     [ -n "$network" ] && net=on
+    mapfile -d '' -t eph < "$2"
     cat <<EOF
 # Environment: qemubox sandbox
 
@@ -1212,6 +1232,18 @@ a wrong line here is a qemubox launcher bug.
 - The last session powers off the VM. Disk files survive re-entry; removing
   the box deletes its disk. Private tmpfs files, including Claude sessions
   and temporary build files, are lost at power-off.
+EOF
+    if [ "${eph[0]}" = tmpfs ] && [ "${#eph[@]}" -gt 1 ]
+    then
+        cat <<EOF
+- These dependency dirs are empty box-only mounts. ALWAYS install them here
+  before a build or test (\`uv sync\`, \`npm ci\`; \`sudo apt-get install\`
+  for a missing system package). NEVER report a check as unrunnable because
+  a dependency is missing.
+EOF
+        printf '  - %s\n' "${eph[@]:1}"
+    fi
+    cat <<EOF
 
 9p mounts (guest path, mode, host source):
 EOF
@@ -1289,10 +1321,17 @@ project_rc "$primary"
 [ "$entrypoint" = exec ] || resume_session
 name="$(box_name "${name_override:-${primary##*/}}")"
 
+for var in "${agent_tokens[@]}"
+do
+    [ -z "${!var:-}" ] || add_env "$var"
+done
 [ -n "$untrusted" ] && apply_untrusted
 
 [ -n "$gpg_forward" ] && detect_gpg
 enter_session
+env_file="/dev/shm/qemubox-env.$sid"
+envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target)
+send_envs
 
 for warning in "${warnings[@]}"; do
     note "$warning"
@@ -1304,19 +1343,13 @@ if [ -z "${no_copy:-}" ]; then
 fi
 
 remote=""
-envs+=("CARGO_TARGET_DIR=/tmp/cargo-target")
-for arg in CLAUDE_SANDBOX=qemubox "${envs[@]}" "${cmd[@]}" "${args[@]}"; do
+for arg in "${cmd[@]}" "${args[@]}"; do
     printf -v q "%q" "$arg"
     remote="$remote $q"
 done
 
 rc=0
-if [ -n "$workdir" ]
-then
-    remote="cd $(quote "$workdir") && exec env$remote"
-else
-    remote="exec env$remote"
-fi
+remote=". $env_file && rm -f $env_file${workdir:+ && cd $(quote "$workdir")} && exec$remote"
 note "running in qemubox-$name${workdir:+:$workdir}"
 session_tty
 ssh_box "$name" "${tty[@]}" "$remote" <&0 9>&- &

@@ -104,8 +104,9 @@ code extension and still carries every claim the reviewer will trust.
    unused code (grep first), conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
    (`software/code.md` § System changes); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest with serial
-   `Task(agent="improve")`, one context at a time, briefed from `brief.md`.
+   Apply a finding only if the result is simpler. Apply the rest serially, one
+   context at a time, briefed from `brief.md`: `simplify` →
+   `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.
@@ -118,9 +119,10 @@ code extension and still carries every claim the reviewer will trust.
    → every acceptance command in the diff has been run in this turn and its
    coverage checked against a second query.
 
-10. **Document and commit** — `Task(agent="readme")` with what changed, one line
-    per file; it reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where
-    the project keeps them, against what the code now does. ALWAYS push every
+10. **Document and commit** — `Agent(subagent_type="readme")` told to read the
+    `readme` skill's `sync.md`, with what changed, one line per file; it
+    reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where the project
+    keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
     number left standing in a second file is the next pass's false premise.
     Then final build and test, and `Skill(commit, "refa: Apply refinements")`
@@ -129,8 +131,9 @@ code extension and still carries every claim the reviewer will trust.
 
 11. **Close** — `git log --format='%an %s%n%b'` over the range: conventional
     subjects ≤72 characters, one logical change each, NO `Co-Authored-By`
-    trailer, detached HEAD. ALWAYS do this before any push — afterwards amend,
-    squash and force-push are all barred and the violation is permanent. Reply
+    trailer, detached HEAD. ALWAYS do this before any push: `--amend` and
+    force-push are NEVER allowed, a pushed commit is NEVER squashed (unpushed
+    ones only via `/squash`), and a pushed violation is permanent. Reply
     to each step-5 WON'T-FIX thread, and each FIX that step 8 deferred, with the
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
@@ -149,6 +152,21 @@ code extension and still carries every claim the reviewer will trust.
 
 Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
+
+## Change summary — the report that closes the run
+
+ALWAYS end with a system-effect analysis and a verification checklist, NEVER a
+list of edits:
+
+- Direct dependencies — what imports or calls the changed code.
+- Runtime behaviour — performance, error handling, side effects.
+- Configuration — new env vars, changed defaults, breaking changes.
+- Verified unaffected — the modules or services checked, and how.
+- Tests pass, build succeeds, linter clean — each run in this turn.
+- Assumptions or edge cases that still need attention.
+
+Shape: "Decorator change affects 4 services. Consumer worker retry logic
+separate (verified: uses different config path). All tests pass unmodified."
 
 ## Confessed defaults — hunt these first
 
@@ -192,8 +210,9 @@ where the gap shows.
   target exports; a bare invocation's errors belong to the invocation.
 - ALWAYS open the diff behind a subagent's report before acting on it, and
   NEVER report a sub as running without the `agentId` its launch returned.
-- ALWAYS delegate the edit to the improve agent; NEVER do the improvement work
-  in main context.
+- ALWAYS delegate the edit to a subagent carrying the `improve` skill; NEVER do
+  the improvement work in main context, and NEVER launch a sub through a
+  `claude` CLI call from Bash — the Agent tool only.
 - NEVER edit a file while a sub is reading it, and NEVER run two writing subs on
   one tree.
 - ALWAYS route a critique, plan or creative second opinion to `oracle` instead.

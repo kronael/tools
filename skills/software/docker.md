@@ -37,7 +37,7 @@ CMD ["--help"]
 
 - `--no-install-project` keeps layer 1 deps-only; the second `uv sync`
   in layer 2 installs the project (cheap because deps are already there).
-- ALWAYS ship `.dockerignore` excluding `.git`, `.diary`, `.ship`,
+- ALWAYS ship `.dockerignore` excluding `.git`, `.claude`, `.diary`,
   `__pycache__`, `tmp`, `docs`, `specs`, all `*.md` except `README.md`.
 - ALWAYS use `python:3.13-slim` (or pinned current); NEVER `python:latest`.
 

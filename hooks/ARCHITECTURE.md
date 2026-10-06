@@ -69,12 +69,12 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. In Claude only, route a prompt that starts with `/astra` or `/sol` to that
-   skill; route `ask codex`, `ask astra`, `oracle`, and `second opinion` to
-   `/astra`.
+4. In Claude only, route a prompt that starts with `/astra` or `/sol` to
+   `/astra` (`/sol` is its Sol variant); route `ask codex`, `ask astra`,
+   `oracle`, and `second opinion` to `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
-6. Tokenise prompt and exact-match words against `AGENT_KEYWORDS`. A trailing
+6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.
 7. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the
    first exact route as `info`.
@@ -84,7 +84,7 @@ model; `systemMessage` reaches only the user.
 been seen. An unwritable state dir falls back to silence,
 never a per-prompt nudge.
 
-**Routes:** `AGENT_KEYWORDS` dict in the source.
+**Routes:** `SKILL_KEYWORDS` dict in the source.
 Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 ### pretool_nudge.py (PreToolUse)
@@ -256,7 +256,7 @@ stdin:
 }
 
 stdout (prompt_nudge.py match):
-{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke @improve."}}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke /improve."}}
 ```
 
 ### Stop
@@ -289,7 +289,7 @@ always exits 0.
 
 ## Extension Points
 
-**Add a new keyword route** — edit `AGENT_KEYWORDS` in `prompt_nudge.py`.
+**Add a new keyword route** — edit `SKILL_KEYWORDS` in `prompt_nudge.py`.
 
 **Add a new stop nudge** — append to the `parts` list in `stop.py`. Keep
 checks cheap (no network, no LLM) and guard with a path/directory probe

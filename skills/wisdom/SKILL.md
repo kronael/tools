@@ -50,8 +50,10 @@ argument-hint: "<question>"   # optional — shown after /name
 
 ## Body patterns
 
-- **Mode-toggle** (fin/explore style): concise `## Behavior` block, no other sections.
-- **Agent-launcher** (visual style): single sentence: "Launch the @X agent (Task tool, subagent_type: X) to…"
+- **Mode-toggle** (fin/ans style): concise `## Behavior` block, no other sections.
+- **Self-contained** (visual/improve style): the body carries the full
+  instructions; a `## Where it runs` block names the agent to launch — rules
+  in `skills/CLAUDE.md` § Agent definitions.
 - **Runbook** (ship/merge/release style): numbered steps, each closing on a
   `Completion criterion:` line — an observable pass/fail condition, not "done
   when it looks right". Close with `## Review Checklist` restating the file's

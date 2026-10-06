@@ -11,8 +11,10 @@ repo CLAUDE.md links to this file.
   data `.md` files, read on demand. Current routers: `create/` (artifact
   generators), `software/` (engineering baseline + runbooks), `specs/` (spec
   workflow), `readme/` (documentation: sync, file topology, page shape),
-  `review/` (give/take a code review — see `review/SKILL.md`), `research/`
-  (research baseline).
+  `review/` (give/take a code review — see `review/SKILL.md`), `eval/`
+  (one evaluation lens per file, `all.md` runs every lens), `research/`
+  (research baseline), `writing/` (prose rules hot, `page.md` for how a
+  document or page is laid out).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -76,8 +78,10 @@ skills it replaces.
 - Bare verbs and tech names stay flat top-level.
 - A verb skill may route its own modes under its own name (`readme/`,
   `review/`).
-- `writing`, `humanize` = shared references cited by prose skills
-  (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
+- `writing` = the one owner of the prose and page rules (router, `page.md`
+  cold); `humanize` = the AI-tells catalogue it finishes with. Cited by prose
+  skills (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`);
+  every other skill, agent or file points there in one line, NEVER restates.
 
 ## Subagent effort defaults
 
@@ -94,6 +98,23 @@ skills it replaces.
   multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
+
+## Agent definitions
+
+- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`, `haiku`,
+  with no body — and thin skill agents whose body only loads the same-named
+  skill. `visual`, `readme`, `improve` (pins Sonnet 5.5 at high), `learn` and
+  `distill` are each launched from their skill's `## Where it runs`
+  (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
+  its agent serves only an explicit dispatch of a whole refine pass.
+  Knowledge lives in the skill that owns the concern, NEVER in an agent body.
+- This section owns the agents rule. ALWAYS point here in one line from any
+  other file; NEVER restate the list.
+- A skill that needs isolation or a model says so in its own body (`## Where
+  it runs`): ALWAYS its thin same-named agent where one fits, else
+  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
+  load the skill. NEVER write a content-bearing agent definition, and NEVER reduce
+  a skill body to one "launch agent X" line.
 
 ## Earning a rule's place
 

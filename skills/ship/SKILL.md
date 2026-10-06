@@ -25,21 +25,35 @@ Read the ONE file matching the current stage, then return here.
 | Current need | Read |
 |---|---|
 | owner questions on outcome, what to hammer, limits and destination, defaults for open preferences, decision points after intake | `intake.md` |
-| planner and worker brief templates, the `.ship/plan-NN-name.md` fields | `prompt.md` |
+| planner and worker brief templates, the `.claude/plans/plan-NN-name.md` fields | `prompt.md` |
 | resume after compaction, stalled workers, repair and review counters, cancellation, Workflow, /goal, /loop, ScheduleWakeup | `runtime.md` |
 | owner asked for the `ship` CLI as executor | `cli.md` |
 
 ## Work record
 
-Use the project's `.ship/` policy. Default: flat, gitignored scratch,
-`.ship/plan-NN-name.md`, with the next free zero-padded NN and a lowercase
-kebab name. Reuse the active change's record. Project layout overrides win.
-The plan holds the owner brief, acceptance checks, decisions and progress.
+Default: flat, gitignored scratch at `.claude/plans/plan-NN-name.md` — plan
+mode's directory — with the next free zero-padded NN and a lowercase kebab
+name. Reuse the active change's record where it is. Project layout overrides
+win. The plan holds the owner brief, acceptance checks, decisions and
+progress. The `eval` and `specs` critiques share the directory;
+a record carries its type as the filename prefix, and plan mode's own files
+carry none.
 
-ALWAYS keep a gitignored record in the MAIN tree's `.ship/` — the first
-entry of `git worktree list` — and address it by absolute path from every
+ALWAYS keep the record in the MAIN tree's `.claude/plans/` — the first entry
+of `git worktree list` — and address it by absolute path from every
 worktree, as `diary` does for a gitignored diary. A controller worktree's
 copy is invisible from the main tree, and `git worktree remove` deletes it.
+ALWAYS pin and ignore the directory before the first write: when
+`.claude/settings.json` lacks `plansDirectory`, add
+`"plansDirectory": ".claude/plans"` (create the file with that key alone);
+run `git check-ignore -v .claude/plans/x` and append the root-anchored line
+`/.claude/plans/` to `.gitignore` unless the printed source is a `.gitignore`
+inside the tree (a global exclude or `.git/info/exclude` protects one machine
+only, not a clone); commit the two alone. Unpinned, plan mode writes to
+`~/.claude/plans/`, which Claude Code sweeps after `cleanupPeriodDays`. A
+project that ignores all of `.claude/` needs no ignore line and keeps the
+setting in its machine-local `.claude/settings.json`, which still points plan
+mode at the directory.
 ALWAYS keep one work record for the change. NEVER add a second progress
 tree, saved review plans or a workflow-specific backlog.
 
@@ -115,7 +129,7 @@ result and next action in the work record after each accepted step.
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the
 affected remaining steps when code invalidates their premise. `runtime.md`
-owns bounded recovery. `later` and `bugs` park adjacent work.
+owns bounded recovery. `next` and `bugs` park adjacent work.
 
 Completion criterion: each implemented step has an inspected diff, passing
 gate evidence and a recorded disposition, and dependent steps never pass red.
@@ -130,9 +144,9 @@ committed work never becomes an empty uncommitted-diff review. `refine`
 owns quality lenses, docs, local commits and PR-thread intake.
 
 Run the owner-selected checks through the matching existing skills:
-`review` for an independent review, `red-eval` for hostile failure cases,
-`cto-eval` for operational risks, `design-eval` for UI craft and `13yo-eval`
-for first use. Load only lenses justified by the brief or a concrete
+`review` for an independent review, and the `eval` lenses — red for hostile
+failure cases, CTO for operational risks, design for UI craft and novice for
+first use. Load only lenses justified by the brief or a concrete
 unresolved concern. An explicit independent engine choice uses `astra` or
 `oracle`.
 
@@ -170,7 +184,7 @@ waiting for approval, and a blocked acceptance item. NEVER call a blocked
 or merely prepared destination shipped.
 
 Use `diary` for decisions and open items, `specs` for durable architecture,
-and `later` for owner-deferred follow-ups. Release notes belong to
+and `next` § Later for owner-deferred follow-ups. Release notes belong to
 `release`. Retain the plan while paused, blocked or waiting for delivery
 approval. On completion, distill durable content, then prune only named
 scratch files under the project's policy. Directory removal is the owner's.

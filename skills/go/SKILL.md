@@ -1,10 +1,14 @@
 ---
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
-when_to_use: editing .go files or writing Go code; gopls, gopls mcp, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup
+when_to_use: editing .go files or writing Go code; gopls, gopls mcp, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup; go-gl, glfw, OpenGL desktop window
 ---
 
 # Go
+
+A desktop OpenGL app (go-gl/gl + go-gl/glfw — window and render loop,
+HiDPI/resize, alloc-free present, a movable GPU seam, data-dense screen
+design): read `gl.md` on top of this file.
 
 Requires `software/code.md` (naming, style, comments, design), `software/strict-typing.md`
 (golangci-lint set), and `software/dynamic-analysis.md` (test-target checkers:

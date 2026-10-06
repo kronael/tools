@@ -18,23 +18,6 @@ State lives on the server; DOM is a projection. For React, use `tsx`.
 - CSS: plain CSS, Pico.css, or Tailwind via CDN — no PostCSS pipeline by default
 - NEVER reach for vite/webpack/JSX — if you find yourself wanting them, you're building React, use `tsx`
 
-## Core attributes
-
-| Attribute       | Use                                                    |
-|-----------------|--------------------------------------------------------|
-| `hx-get`        | GET, swap response                                     |
-| `hx-post`       | POST                                                   |
-| `hx-put` / `hx-patch` / `hx-delete` | Other HTTP verbs                   |
-| `hx-target`     | Selector to swap (default: this element)               |
-| `hx-swap`       | `innerHTML` (default), `outerHTML`, `beforeend`, `afterbegin`, `delete`, `none` |
-| `hx-trigger`    | Event (default: `click` on buttons, `change` on inputs, `submit` on forms) |
-| `hx-vals`       | Extra payload (`{...}` JSON or `js:...`)               |
-| `hx-include`    | Extra elements to include in payload                   |
-| `hx-push-url`   | Update browser URL on swap                             |
-| `hx-boost`      | Progressive-enhance `<a>` / `<form>`                   |
-| `hx-confirm`    | `confirm()` dialog before firing                       |
-| `hx-indicator`  | Loading spinner selector                               |
-
 ## Server
 - ALWAYS return HTML fragments, NEVER JSON for swap routes
 - ALWAYS detect `HX-Request: true` header — fragment if present, full page otherwise (every endpoint works as nav fallback)

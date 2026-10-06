@@ -29,12 +29,14 @@ section naming which file answers which question.
 - UPPERCASE at root: CLAUDE.md, README.md, ARCHITECTURE.md, SPEC.md, PLAN.md,
   TODO.md. CLAUDE.md under 200 lines: shocking patterns and project layout.
 - `specs/` for design docs (`specs/index.md` the master index), `docs/` for
-  project documentation, `.ship/` for shipping artifacts (flat, type in the
-  filename, ephemeral), `.diary/YYYYMMDD.md` for the shipping log. NO `todos/`,
-  NO `plans/`.
-- ALWAYS root-anchor the gitignore rules for local working dirs: `/.ship/`,
-  `/.diary/`, `/specs/`, `/BUGS.md`. The bare `.ship/` form matches at every
-  depth and swallows a real `src/specs/`.
+  project documentation, `.claude/plans/` — plan mode's directory — for plans
+  and shipping artifacts (flat, type in the filename, ephemeral; `ship` § Work
+  record owns the setting and the ignore step), `.diary/YYYYMMDD.md` for the
+  shipping log. NO `todos/`, NO `plans/` outside `.claude/`.
+- ALWAYS root-anchor the gitignore rules for local working dirs:
+  `/.claude/plans/`, `/.diary/`, `/specs/`, `/BUGS.md`. The bare `specs/` form
+  matches at every depth and swallows a real `src/specs/`; `/.claude/plans/`
+  keeps the committed `.claude/` files (settings, commands, skills) tracked.
 
 ## notes/ — the "why" layer
 

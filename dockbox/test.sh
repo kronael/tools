@@ -341,11 +341,13 @@ true_ "resume maps every nonalphanumeric path character" \
 # persist (no overmount for node_modules), claude gets no stray "--", and no
 # "ignoring" warning. The run without an rc proves the overmount is there to lose.
 proj="$tmp/proj"
-mkdir -p "$proj/node_modules"
+mkdir -p "$proj/node_modules" "$proj/server/.venv"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")
 true_  "a box without an rc overmounts node_modules" \
     'grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+true_  "a box without an rc overmounts a nested .venv" \
+    'grep -q -- "--tmpfs $proj/server/.venv:" <<< "$run"'
 echo "--no-ephemeral" > "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")
@@ -406,11 +408,21 @@ nout="$(sandbox_note myhost bridge \
 true_ "note names the sandbox"       '[[ "$nout" == *CLAUDE_SANDBOX=dockbox* ]]'
 true_ "note names the host"          '[[ "$nout" == *"host \`myhost\`"* ]]'
 true_ "note names the network"       '[[ "$nout" == *"Network: bridge"* ]]'
+true_ "note routes GitHub over HTTPS" '[[ "$nout" == *"credential.helper='"'"'!gh auth git-credential'"'"'"* ]]'
 true_ "note maps a box path to host" '[[ "$nout" == *"- /home/dockbox/.claude (rw) <- /h/.claude"* ]]'
 true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]]'
 true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'
 true_ "note lists volume and tmpfs as lost" \
     '[[ "$nout" == *"Lost at exit (tmpfs or volume): /p/node_modules /home/dockbox"* ]]'
+true_ "note lists a -T volume as an empty dependency dir" '[[ "$nout" == *"  - /p/node_modules"* ]]'
+true_ "note names the gh token -g brings" '[[ "$nout" == *"without \`-g\` has none"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw \
+    --tmpfs /p/.venv:rw,exec,mode=1777 --tmpfs /tmp:rw,exec,mode=1777)"
+true_ "note lists an empty dependency dir" \
+    '[[ "$nout" == *"empty box-only mounts."*"  - /p/.venv"$'"'"'\n'"'"'"- GitHub"* ]]'
+false_ "note omits a tmpfs that is no dependency dir" '[[ "$nout" == *"  - /tmp"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw --tmpfs /tmp:rw,exec,mode=1777)"
+false_ "note claims no empty dependency dir without one" '[[ "$nout" == *box-only* ]]'
 
 echo "dockbox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

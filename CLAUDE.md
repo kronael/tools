@@ -17,8 +17,8 @@ The **kronael toolkit** — three things in one repo:
    them. The tool inventory lives in `README.md` — when adding a tool, add
    its row there.
 2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`, `output-styles/`,
-   `settings-recommended.json`, `RECLAUDE.md`) distributed as a plugin and
-   deployed into a user's `~/.claude/` by a sync step.
+   `commands/`, `settings-recommended.json`, `RECLAUDE.md`) distributed as a
+   plugin and deployed into a user's `~/.claude/` by a sync step.
 3. **A thin Codex sync bridge** (`plugins/kronael/` plus
    `.agents/plugins/`) exposing one Codex skill that runs the same sync
    procedure without duplicating bundle assets.
@@ -51,11 +51,11 @@ make clean         # clean projects + sweep __pycache__
 
 ## Architecture: sync paths, one source
 
-`skills/`, `agents/`, `hooks/` at repo root **are** the bundle. The Claude
-plugin path (`/kronael:sync`, from a CWD clone that holds the assets, else
-`${CLAUDE_PLUGIN_ROOT}`) and the manual
-path (user opens Claude Code at the cloned root and says "sync") both put
-them into `~/.claude/`.
+`skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` at repo root
+**are** the bundle. The Claude plugin path (`/kronael:sync`, from a CWD clone
+that holds the assets, else `${CLAUDE_PLUGIN_ROOT}`) and the manual path
+(user opens Claude Code at the cloned root and says "sync") both put them
+into `~/.claude/`.
 
 Codex has a third, thin bridge path:
 `plugins/kronael/skills/kronael-sync/SKILL.md` reads the canonical sync and
@@ -79,12 +79,14 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   forked from upstream.
 - **Live edits merge into the repo first, then live is rebuilt** — a file
   edited in `~/.claude/` since the last sync merges three-way into the repo
-  BEFORE the swap; the bundle is then rebuilt from source plus the owner's
-  keep-list (`~/.claude/kronael-keep.txt`), and the old bundle moves to
-  `/tmp`. Nothing the source dropped survives a sync.
+  BEFORE the swap; the bundle is then rebuilt from source plus the
+  installed-only paths that `kronael/sync/reference.md` § Keep-list keeps,
+  and the old bundle moves to `/tmp`. Nothing the source dropped survives a
+  sync.
 - **NEVER `rm -rf`** into `~/.claude/` — sync moves the old bundle aside with
-  `mv`. Installed-only files (org overlays, private skills) come back only
-  through the keep-list and NEVER enter this repo without the owner's yes.
+  `mv`. Private skills come back only by that keep-list rule. Org overlays
+  install as plugins (`ARCHITECTURE.md#org-overlays`). NEVER let either
+  enter this repo without the owner's yes.
 - **NEVER touch** `settings.local.json` or `CLAUDE.local.md`; `LOCAL.md`
   receives only the private hunks a merge keeps out of the repo.
 - `skills/global/` becomes the wisdom file (→ `~/.claude/CLAUDE.md`),
@@ -97,8 +99,8 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   (`.rs`→`rs`, `Dockerfile`→`ops`) and provide workflow commands (`/commit`,
   `/ship`, `/refine`, `/diary`). Skills are NOT reliably auto-triggered —
   explicit dispatch (`/solve`) is the intended path. Index: `skills/README.md`.
-- **Agents** (`agents/*.md`) — task workers, mostly invoked via
-  slash-command wrappers.
+- **Agents** (`agents/*.md`) — task workers that skills launch;
+  `skills/CLAUDE.md` § Agent definitions owns that rule.
 - **Hooks** (`hooks/*.py`, `hooks/*.sh`) wire lifecycle events. Wiring is
   defined in `settings-recommended.json`; per-hook data flow in
   `hooks/ARCHITECTURE.md`.

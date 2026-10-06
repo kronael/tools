@@ -193,6 +193,13 @@ Automatic:
   live in each box's own `/tmp`, so a private registry means boxes and the
   host neither see nor message each other's sessions, and two boxes' low
   container PIDs cannot overwrite each other's records.
+- `~/.claude/plugins` -> `/home/dockbox/.claude/plugins` and the same host
+  path (ro) - installed plugins. `installed_plugins.json` records absolute
+  host paths.
+- `~/.claude/settings.json` -> a copy of the host file with the sandbox off
+  (ro), written once when the box is created. A plugin enabled on the host
+  after that stays disabled in the box until the box is recreated.
+- `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -248,7 +255,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
-2. **Overmount by default** (Node, Bun, framework caches): for any
+2. **Overmount by default** (Node, Bun, Python venvs, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
@@ -258,7 +265,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    Names overmounted by default:
 
    ```
-   node_modules  .next  .turbo  .cache
+   node_modules  .venv  .next  .turbo  .cache
    ```
 
    `dist` and `build` are not overmounted, so they land in the host
