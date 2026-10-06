@@ -92,7 +92,8 @@ Read on demand, in this directory:
 
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
-  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
+  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations),
+  `ts-bool-fn-prefix` (`software/code.md` § Naming).
 - Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
   existing project already runs, plus tsc. ast-grep only fills the
   kronael-specific gap; NEVER duplicate a Biome or eslint rule here.

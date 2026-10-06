@@ -42,3 +42,48 @@ rule:
         - pattern: spawn(async move { $$$ })
 message: NEVER anonymous spawn(async {…}) — name the coroutine as an async fn and spawn that. See skill:rs.
 note: 'source: skills/rs/SKILL.md — Async Spawn'
+---
+id: rs-bool-fn-prefix
+language: rust
+severity: warning
+ignores:
+    - '**/*_test.rs'
+    - '**/tests/**'
+rule:
+    kind: function_item
+    has:
+        field: return_type
+        kind: primitive_type
+        regex: ^bool$
+    not:
+        any:
+            - has:
+                  field: name
+                  regex: ^(is|has|can)_
+            - inside:
+                  kind: impl_item
+                  has:
+                      field: trait
+                      regex: .
+                  stopBy: end
+            - follows:
+                  kind: attribute_item
+                  regex: test
+                  stopBy:
+                      not:
+                          kind: attribute_item
+            - inside:
+                  kind: mod_item
+                  any:
+                      - has:
+                            field: name
+                            regex: ^tests$
+                      - follows:
+                            kind: attribute_item
+                            regex: cfg\(test\)
+                            stopBy:
+                                not:
+                                    kind: attribute_item
+                  stopBy: end
+message: NEVER a bool-returning fn without an is_/has_/can_ prefix — rename it, valid() → is_valid(). Trait impls and tests are exempt. See skill:rs.
+note: 'source: skills/software/code.md — Naming'

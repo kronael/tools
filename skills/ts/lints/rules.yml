@@ -17,3 +17,47 @@ rule:
         - pattern: '[...$A.slice($$$)]'
 message: NEVER spread a fresh array — filter/map/slice already copy; drop the spread. See skill:ts.
 note: 'source: skills/ts/SKILL.md — Array Operations'
+---
+id: ts-bool-fn-prefix
+language: typescript
+severity: warning
+ignores:
+    - '**/*.test.ts'
+    - '**/*.spec.ts'
+utils:
+    returns-boolean:
+        has:
+            field: return_type
+            has:
+                kind: predefined_type
+                regex: ^boolean$
+rule:
+    any:
+        - kind: function_declaration
+          matches: returns-boolean
+        - kind: method_definition
+          matches: returns-boolean
+          not:
+              any:
+                  - has:
+                        kind: override_modifier
+                  - inside:
+                        kind: class_declaration
+                        has:
+                            kind: class_heritage
+                            has:
+                                kind: implements_clause
+                        stopBy: end
+        - kind: variable_declarator
+          has:
+              field: value
+              any:
+                  - kind: arrow_function
+                  - kind: function_expression
+              matches: returns-boolean
+    not:
+        has:
+            field: name
+            regex: ^[#_]?(is|has|can)[A-Z]
+message: 'NEVER a : boolean function without an is/has/can prefix — rename it, valid() → isValid(). override and implements methods are exempt. See skill:ts.'
+note: 'source: skills/software/code.md — Naming'

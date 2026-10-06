@@ -30,3 +30,28 @@ rule:
     pattern: '@property'
 message: NEVER @property / @setter / __getattr__ (except mocks or adapting external APIs) — use a plain method. See skill:py.
 note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
+---
+id: py-bool-fn-prefix
+language: python
+severity: warning
+ignores:
+    - '**/test_*.py'
+    - '**/*_test.py'
+    - '**/conftest.py'
+rule:
+    kind: function_definition
+    has:
+        field: return_type
+        regex: ^bool$
+    not:
+        any:
+            - has:
+                  field: name
+                  regex: ^_*(is|has|can)_|^__\w+__$|^test
+            - inside:
+                  kind: decorated_definition
+                  has:
+                      kind: decorator
+                      regex: \boverride$
+message: NEVER a -> bool function without an is_/has_/can_ prefix — rename it, valid() → is_valid(). Dunders, @override and tests are exempt. See skill:py.
+note: 'source: skills/software/code.md — Naming'

@@ -179,8 +179,9 @@ tokio::spawn(fetch_and_process(client));
 
 ## Lints
 - ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
-  `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
-  duplicate a clippy lint here.
+  `rs-no-from-value-clone`, `rs-no-anon-spawn`, `rs-bool-fn-prefix`
+  (`software/code.md` § Naming). clippy owns the rest — NEVER duplicate a
+  clippy lint here.
 - `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
   carrying a `//` justification comment on the line directly above — NEVER
   `// SAFETY:` (reserved for `unsafe`); a plain reason comment is the sanctioned

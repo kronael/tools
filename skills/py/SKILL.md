@@ -95,8 +95,9 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
-  `py-no-lambda-default-factory`, `py-no-property`. ruff owns the rest — NEVER
-  duplicate a ruff rule here.
+  `py-no-lambda-default-factory`, `py-no-property`, `py-bool-fn-prefix`
+  (`software/code.md` § Naming). ruff owns the rest — NEVER duplicate a ruff
+  rule here.
 
 ## Build
 - uv for packages, pyright for types
