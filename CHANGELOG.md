@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [v0.4.20] — 20261006
+
+> kronael v0.4.20 — the ship program runs on fable
+>
+> The ship skill keeps planning specs on fable; when you choose the ship program, it launches on fable because its tasks run unread.
+>
+> • ship CLI — launch with MODEL=fable TIMEOUT_SCALE=3; no diff is read before the next task.
+> • ship -k — the validator is read-only and writes only ship's own state under .ship/.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship/cli.md`: a fable sub writes and re-verifies the specs; the ship program launches with `MODEL=fable TIMEOUT_SCALE=3`, since its worker takes the next task at once and WISDOM puts unread code generation on fable (the scale covers fable's ~215 s validator against the fixed 180 s).
+- `ship/cli.md`: `ship -k` runs a validator restricted to `Read`, `Glob` and `Grep`; it cannot touch the repo and writes only `.ship/` state and logs.
+
 ## [v0.4.19] — 20261006
 
 > kronael v0.4.19 — org skills install as plugins
