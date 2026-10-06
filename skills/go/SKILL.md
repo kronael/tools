@@ -97,9 +97,8 @@ It carries the goroutine-sizing rule and the single-sink I/O pattern.
   win.
 
 ## Naming
-- Write the full word for compound names: `rateLimiter` not `rl`, `group` not `g`, `upstream` not `up`
-- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`, `buf`, `err`, `ctx`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine too
-- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
+`software/code.md` § Naming owns names. Go additions:
+- Go's habit of abbreviating does not override it: `rateLimiter` not `rl`, `upstream` not `up`; `buf`, `err`, `ctx` are fine.
 - **Package names**: single word, lowercase, no underscores — Go convention
   (`httputil`, `strutil`, `filepath`, NOT `http_utils`, `string_utils`). Linters
   flag underscored package names. The `*_utils.*` project rule applies to FILES

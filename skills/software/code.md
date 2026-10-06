@@ -45,7 +45,9 @@ phrase: the verb is the action, the type it returns is the verb's object —
 `snapshots_with_resolved_withdraw(...)` that reads like the thing returned
 rather than the act. A small local or inline helper may instead take the noun of
 the type it returns, not a structure it builds internally or a nearby map.
-Either way, `is_`/`has_` for predicates, `to_`/`into_` for conversions. If an
+Either way, `is_`/`has_` for predicates, `to_`/`into_` for conversions. The verb MUST match the behavior — a
+`finish_task()` that cancels, or a `get_*()` that mutates, is a lie; rename the
+moment name and behavior diverge. If an
 existing name is genuinely wrong,
 change it everywhere — never coin a second name that competes with it. A
 rename is not licence to rewrite prose: the same word can be a variable in

@@ -29,11 +29,6 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
 
-## Naming
-- ALWAYS name an API-visible function or method (public, called across modules) as a verb: `get_programs()`, `build_index()`, `compute_pnl()` — NEVER a noun like `program_lookup` or `symbol_map`, which reads as data. A small local helper may take the noun of the type it returns — `software/code.md` § Naming owns this.
-- Predicates: `is_funded()`, `has_positions()`, `can_advance()`
-- The verb MUST match the behavior — a `finish_task()` that cancels, or a `get_*()` that mutates, is a lie. Rename the moment name and behavior diverge.
-
 ## Properties and accessor overrides
 - NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
 - They hide computation behind attribute access, break "no surprises" reads, and make grep useless
