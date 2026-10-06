@@ -357,6 +357,26 @@
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
   block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
 
+## ship
+
+- **SHIP-INTO-TOOLS-AS-STEP-RUNNER** (MED, design, proposed) — keep the ship
+  program, move it into this repo as `ship/` (`git subtree add --prefix=ship
+  https://github.com/kronael/ship e417572`, keeping its 114 commits) and make
+  it a runner of steps: each step has a role, a shell gate and a review mode
+  (pause or auto), and the spec planner becomes one producer of steps beside
+  the ship skill's plan file. Not a general workflow engine: Claude Code's
+  Workflow tool covers that inside a session; ship's niche is running outside
+  one, with state on disk across usage-limit outages. Order: (1) a usage
+  limit or a lost login exits with state kept (today 3 verifier failures
+  reach `mark_complete`, `ship/judge.py:381-389`); (2) a per-step shell gate
+  decides COMPLETED (the judge's verdict is discarded, `judge.py:98`); (3) a
+  `--step` pause so a sonnet run is read step by step (WORKER-NO-STEP-PAUSE
+  in kronael/ship); (4) a plan-file producer; (5) `-n 1` by default and
+  `depends_on` enforced, since workers share one cwd; then cost in the trace
+  and the move hygiene (ruff, CI template for Python 3.14, stale `--help`).
+  `skills/ship/cli.md` keeps `MODEL=fable` until (2) and (3) land. Waits for
+  the owner's sign-off. Recorded 2026-10-06.
+
 ## Ruled not a defect
 
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
