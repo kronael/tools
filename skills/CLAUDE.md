@@ -120,8 +120,8 @@ skills it replaces.
 
 - ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
   rules: a clean-room model (`wisdom/subtraction.md` § The clean room) writes
-  its defaults for the topic, and whatever it produces and follows unprompted
-  does not go in.
+  its defaults for the topic; only behavioural evidence (transcripts, diffs,
+  the owner's report) that a default holds keeps a rule out.
   Only drifts, unguessable local facts, workflows and deliberate harness
   overrides survive. The bundle-wide pass is `wisdom/subtraction.md`.
 

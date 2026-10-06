@@ -1,9 +1,9 @@
 # Bundle subtraction pass
 
-Runs `SKILL.md` § The subtraction test over the whole bundle: every rule a
-blank model already writes AND follows goes; drifts, local facts, workflows and
-harness overrides stay. Run it after a large consolidation, or when the owner
-says the rules are too many or not upheld.
+Runs `SKILL.md` § The subtraction test over the whole bundle: a rule goes only
+when behaviour shows the default already holds; drifts, local facts, workflows
+and harness overrides stay. Run it after a large consolidation, or when the
+owner says the rules are too many or not upheld.
 
 ## The clean room
 
@@ -55,20 +55,19 @@ skill — never a whole file of mixed concerns.
 
 ## Verdict per rule
 
-Build one table per file: rule, reproduced by prompt 1, followed by default per
-prompt 2, verdict.
+One table per file: rule, prompt 1, prompt 2, behavioural evidence, verdict.
+The clean room only nominates; a self-report NEVER proves compliance.
 
-- Reproduced and followed → CUT.
-- Reproduced but confessed broken in prompt 2 → KEEP, rewritten as the
-  ALWAYS/NEVER that names the trap.
-- Contradicted or absent → KEEP; overriding a prior is guidance's best use.
-- Local fact, workflow, or deliberate harness override → KEEP; label an
-  override in place so a later pass does not cut it.
+- CUT ONLY on behavioural evidence that the default holds: a search of real
+  transcripts or diffs showing it followed, or the owner's report.
+- Reproduced and not confessed, with no such evidence → KEEP.
+- Drift the owner observes → KEEP, always, whatever the clean room says.
+- Confessed broken, contradicted or absent → KEEP, as the ALWAYS/NEVER that
+  names the trap; overriding a prior is guidance's best use.
+- Local fact, workflow or harness override → KEEP, the override labelled.
 - Real engineering content that is not always needed → MOVE to the cold file
-  that owns it; NEVER delete it.
-
-Then cut every survivor the system prompt or the active output style already
-states.
+  that owns it; NEVER delete it. A survivor the system prompt or the active
+  output style already states → CUT.
 
 ## Apply
 

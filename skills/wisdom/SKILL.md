@@ -83,10 +83,10 @@ not judge that from memory; measure it.
    skills; NEVER an `Agent(...)` sub, which inherits CLAUDE.md and the skills.
 2. ALWAYS make it mark every rule it knows it drifts on as `[NEEDS TELLING]`
    with a one-clause why. That marking is the output; the rest is the control.
-3. Cut what it produced unprompted. KEEP only: `[NEEDS TELLING]` items, local
-   facts it cannot guess (paths, house conventions, tool and skill names),
-   workflows, and rules that deliberately OVERRIDE the harness — label those as
-   overrides in place so a later pass does not "simplify" one away.
+3. What it produced unprompted is a cut CANDIDATE; § Minimize sets the evidence
+   a cut needs. ALWAYS KEEP `[NEEDS TELLING]` items, local facts it cannot
+   guess (paths, house conventions, tool and skill names), workflows, and rules
+   that deliberately OVERRIDE the harness — labelled as overrides in place.
 4. ALWAYS cross-check survivors against the system prompt and the active output
    style, and cut what either already states.
 5. Real engineering content that is not always needed MOVES to the skill that
@@ -149,26 +149,25 @@ model that cannot see the rule, and compare.
 - Produced by neither → KEEP.
 
 **Reproduction measures knowledge, not compliance.** A model will write a rule
-out cleanly and then break it unprompted, so a reproduced rule is only free if
-the model also FOLLOWS it by default. ALWAYS settle a candidate cut with a
-second question to the clean room — ask the model to describe how it actually
-behaves on a task with no instructions, its real defaults including the wrong
-ones — and KEEP anything it confesses to violating. Models report writing
-comments that narrate the change, declaring a task done on a green test run,
-softening a partial result into language that reads complete, trusting a
-subagent's summary unchecked, and cleaning up adjacent code nobody asked about
-— every one of those is a rule they can also recite. A rule a model states and
-breaks belongs in the file, stressed, not cut.
+out cleanly and then break it unprompted. ALWAYS ask the clean room the second
+question too — how it actually behaves on a task with no instructions, its real
+defaults including the wrong ones — and KEEP anything it confesses to
+violating: comments that narrate the change, done declared on a green test run,
+a partial result worded as complete, a subagent's summary trusted unchecked.
 
-Empirically, almost nothing survives this test. Run across error handling,
-testing and comments, every rule that looked freely reproducible turned out to
-be one the models confess to breaking: logging-and-swallowing when the recovery
-is unclear, degrading gracefully where crashing is correct, inventing a second
-logging path without grepping for the first, over-mocking until the test proves
-nothing, reaching for the assertion when a test they broke is annoying, and
-commenting above almost every block where half just restate the code — "I know
-this and still do it on the first pass". EXPECT the cut list to come out nearly
-empty, and treat a long one as evidence the behaviour question was skipped.
+**A self-report NEVER proves compliance.** A rule the clean room recites and
+does not confess can still break in every session — it recites the `is_`/`has_`
+prefix and "clarity over cleverness", and sessions break both. ALWAYS CUT only
+on behavioural evidence: a search of real transcripts or diffs showing the
+default followed, or the owner's report. ALWAYS KEEP a drift the owner
+observes, whatever the clean room says, and stress it where code is checked —
+a lint, a `refine` hunt — rather than cut it.
+
+Empirically, almost nothing survives. Across error handling, testing and
+comments, every freely reproduced rule was one the models confess to breaking:
+swallowing an error whose recovery is unclear, degrading where crashing is
+correct, a second logging path, over-mocking, a comment above every block.
+EXPECT a nearly empty cut list; a long one means the evidence step was skipped.
 
 ALWAYS ask the behaviour question per candidate rule, not once for the whole
 sweep. One confession list answers the rules it happens to name and says
