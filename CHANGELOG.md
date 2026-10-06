@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.19] — 20261006
+
+> kronael v0.4.19 — org skills install as plugins
+>
+> Org-specific skills now install as Claude Code plugins, so they load in dockbox and qemubox, where a symlinked skill dangles.
+>
+> • Org overlays — add the org marketplace from its git source, then install its plugin.
+> • Boxes mount `~/.claude/plugins`, so a plugin's skills load in every box started after the install.
+> • sync — settings merge never drops an `enabledPlugins` entry you added.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ARCHITECTURE.md` § Org overlays: install an org skill set as a Claude Code plugin from a marketplace added by git source; a local-path marketplace loads in place from the checkout, so boxes miss it. Limits: a qemubox under `-U` mounts no plugins, and a dockbox created before the install keeps its creation-time `settings.json`. Codex installs the plugin separately.
+- `kronael/sync`: step 5 adds the recommended `enabledPlugins` entries and never drops one; the keep-list section points at § Org overlays.
+- dockbox README and `--help` list the `~/.claude/plugins` mount; `CLAUDE.md` and `ARCHITECTURE.md` route org overlays to plugins and private skills to the keep-list.
+
 ## [v0.4.18] — 20261006
 
 > kronael v0.4.18 — fewer skills, qemubox logs in
