@@ -86,7 +86,8 @@ the trailing slash so only the directory matches. It keeps the rest of
 addable, which a bare `.claude/` line does not.
 
 A project acquires both from the first skill that writes there. `ship` §
-Work record owns that step; `eval` and `skills/specs/useless.md` point at it rather than repeating it. A project that already ignores all of
+Work record owns that step; `eval` and `skills/specs/useless.md` point at
+it rather than repeating it. A project that already ignores all of
 `.claude/` gets no line and keeps the setting machine-local, which still
 points plan mode at the directory.
 
@@ -112,8 +113,9 @@ The bundle ships no project `AGENTS.md` template — only that global block
 and the pointer example in `plugins/kronael/skills/kronael-sync/SKILL.md`
 — so the rule Codex must not miss is stated in the block itself: the path,
 the ignore line and the reuse of the active change's record, with `ship` §
-Work record as the owner. The `astra` skill (and its Sol variant) launches Codex; Codex
-reads its own instruction chain, not the skill's, so it carries no copy.
+Work record as the owner. The `astra` skill (and its Sol variant)
+launches Codex; Codex reads its own instruction chain, not the skill's, so
+it carries no copy.
 
 ## The `ship` CLI
 

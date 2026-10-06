@@ -140,14 +140,16 @@ not security isolation.
 ## Polish before PR
 
 ```bash
-/refine                    # @improve + @readme + commit [refined]
+/refine                    # review by context, settle claims, commit
 /pr-draft                  # draft PR description
 rip feature                # push
 ```
 
-`/refine` validates build/test, delegates code improvement to
-`@improve` and docs to `@readme`, then commits. Never does
-improvement work itself — pure orchestration.
+`/refine` runs in the main thread. It builds and tests, cuts the
+change into contexts and sends one read-only subagent per context.
+It then checks every finding again itself. Subagents that load the
+`improve` skill apply the fixes, the `readme` agent updates the
+docs, and the pass commits `refa: Apply refinements`.
 
 ## End of session
 

@@ -15,8 +15,8 @@ Command-line utilities and Claude Code configuration.
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 
 Makefile tools (`udfix`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`):
-`cd <tool> && make install`. PEP 723 scripts (`tg-fetch`, `dc-fetch`):
-`uv run main.py`.
+`cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
+`dc-fetch`): `uv run main.py`.
 
 External tools used by the Claude Code config:
 
@@ -37,8 +37,10 @@ This runs [`kronael/sync/SKILL.md`](kronael/sync/SKILL.md), the single
 source of truth for the procedure; re-run it to update. Sync keeps your
 `~/.claude/` a working copy you can edit: the next sync merges those edits
 into your clone, then rebuilds `~/.claude/` from it, so files the source
-dropped never pile up there. Pure plugin updates would overwrite edits. Full
-rationale: [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--sync-step).
+dropped never pile up there. The rebuild keeps only the installed-only files
+that [the keep-list rule](kronael/sync/reference.md#keep-list-steps-0-1-3-4)
+names. Pure plugin updates would overwrite edits. Full rationale:
+[ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--sync-step).
 
 ## Codex sync bridge
 
@@ -134,7 +136,9 @@ Troubleshooting:
   [skills/README.md](skills/README.md).
 - **Agents** (`agents/`) — task workers (`@distill`, `@improve`, `@learn`,
   `@readme`, `@refine`, `@visual`; model-tier: `@haiku`, `@sonnet`, `@opus`,
-  `@fable`), mostly launched via slash commands.
+  `@fable`). Skills launch them;
+  [skills/CLAUDE.md § Agent definitions](skills/CLAUDE.md#agent-definitions)
+  owns that rule.
 - **Hooks** (`hooks/`) — lifecycle scripts: keyword nudging, `LOCAL.md`
   injection, rule re-injection across compaction, stop-time checks. Claude
   wiring lives in `settings-recommended.json`; Codex wiring lives in
@@ -159,6 +163,7 @@ skills/                     bundle copied to ~/.claude/skills/
 agents/                     bundle copied to ~/.claude/agents/
 hooks/                      bundle copied to ~/.claude/hooks/
 output-styles/              bundle copied to ~/.claude/output-styles/
+commands/                   bundle copied to ~/.claude/commands/
 codex-hooks.json            copied to ~/.codex/hooks.json for Codex hooks
 codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 settings-recommended.json   merged into ~/.claude/settings.json
