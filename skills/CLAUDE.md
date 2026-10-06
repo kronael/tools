@@ -119,9 +119,10 @@ skills it replaces.
 ## Earning a rule's place
 
 - ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
-  rules: a fresh sub writes its defaults for the topic, and whatever it produces
-  unprompted does not go in. Only drifts, unguessable local facts, workflows and
-  deliberate harness overrides survive.
+  rules: a clean-room model (`claude --safe-mode -p`) writes its defaults for
+  the topic, and whatever it produces and follows unprompted does not go in.
+  Only drifts, unguessable local facts, workflows and deliberate harness
+  overrides survive. The bundle-wide pass is `wisdom/subtraction.md`.
 
 ## Prompt examples and context
 

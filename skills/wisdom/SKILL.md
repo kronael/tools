@@ -77,10 +77,10 @@ argument-hint: "<question>"   # optional — shown after /name
 A rule earns its place only if a capable model does NOT already follow it. Do
 not judge that from memory; measure it.
 
-1. Task a FRESH sub (no inherited context) per topic group, at most 4 groups:
-   "write the guidelines you would follow by default for X, from your own
-   judgment". ALWAYS tell it not to read any CLAUDE.md/AGENTS.md/SKILL.md and to
-   ignore any it already holds — otherwise it paraphrases the thing under audit.
+1. Ask a clean-room model per topic group, at most 4 groups: "write the
+   guidelines you would follow by default for X, from your own judgment". The
+   clean room is `claude --safe-mode -p` from a scratch dir — NEVER an
+   `Agent(...)` sub, which inherits CLAUDE.md and paraphrases what is audited.
 2. ALWAYS make it mark every rule it knows it drifts on as `[NEEDS TELLING]`
    with a one-clause why. That marking is the output; the rest is the control.
 3. Cut what it produced unprompted. KEEP only: `[NEEDS TELLING]` items, local
@@ -93,8 +93,8 @@ not judge that from memory; measure it.
    owns it, loaded on demand, rather than being deleted. Check it is not already
    there.
 
-One sub cannot prove it isolated from context it already holds — run two groups
-and treat agreement between them as the evidence.
+Over the whole bundle, ALWAYS read `subtraction.md` in this directory: the
+clean-room setup, the file order and the per-rule verdict table.
 
 ## Router skills
 
