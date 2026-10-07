@@ -8,18 +8,20 @@ what a critique on file already refuted.
 ## Sections — this order; cut any with nothing true to say
 
 1. **Name + one sentence.** What it does, plain words, no metaphor. A reader
-   who stops here still knows what the thing is.
+   who stops here still knows what the thing is. The status line sits
+   directly under it, in the README's words (`sync.md` step 3).
 2. **The problem** — two or three sentences, stated as the reader's problem,
    never as the project's motivation.
 3. **How it works** — 3–5 numbered steps or one diagram. The only section
    allowed domain vocabulary, and it defines each term inline.
 4. **What is different** — comparison against real alternatives, named. A
    comparison against nobody reads as marketing.
-5. **Status and limits** — what works today, what does not, what is assumed —
+5. **Limits** — what works today, what does not, what is assumed —
    from the bug queue and open questions, not imagination. A page with no
    limits is not believed.
-6. **Numbers** — cost, effort, scale, latency. Only numbers a run, file, or
-   recorded estimate produced; NEVER invent one.
+6. **Numbers** — cost, effort, scale, latency; cost as the README states it,
+   formula plus one measured figure. Only numbers a run, file, or recorded
+   estimate produced; NEVER invent one.
 7. **Next step** — the one action a convinced reader takes, with the link. A
    negative critique verdict on file is named here, not hidden.
 
