@@ -22,6 +22,11 @@ are language-specific and live in cold-loaded companion files:
 - **`ts.md`** — TypeScript/JavaScript → Go seams (all-`number`-is-float64,
   int32 bitwise coercion, `Math.round` half-up, unseedable `Math.random`,
   object integer-key ordering, string-sort default, UTF-16 strings).
+- **`java.md`** — Java → Go seams (silent fixed-width `int` wrap, UTF-16
+  strings, boxed-vs-primitive equality, spec'd library algorithms to clone
+  bit-for-bit — `java.util.Random`'s LCG, TimSort, `String.hashCode`,
+  `Double.toString` — and the unspecified corners `HashMap` order, identity
+  `hashCode` and `Math.*` intrinsics that phase 0 must pin).
 
 ALWAYS load the companion for the source language before porting. To add a
 language, copy an existing companion's section schema (Type & numeric model /

@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+## [v0.4.21] — 20261007
+
+> kronael v0.4.21 — the skill lint catches dead files and leaked paths
+>
+> The skill lint now fails a commit that leaves a skill file unreachable or ships an absolute home path.
+>
+> • `make skills-frontmatter` — errors on an unreachable skill file, a leaked home path, or a token.
+> • Four files nothing could reach are named, including `port-to-go/java.md` at 1016 cold lines.
+> • Tests — no expectation computed by the code under test; run an artifact instead of grepping it.
+> • ship — a Gate carries its expected result; repairs stop when each fix moves the defect elsewhere.
+> • BUGS.md — three proposals for the holes the new lint still has.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/skill_frontmatter_lint.py`: two error-level checks. `skill-orphan` walks the chain of names out of `SKILL.md` and reports every `.md` under the skill that no chain reaches, exempting `CLAUDE.md` at any depth; `skill-local-path` and `skill-secret` report an absolute home path or a credential shape. An illustrative path takes a one-character account segment (`/home/u/app/x`) — `skills/CLAUDE.md` states the convention.
+- `port-to-go/java.md`, `refine/ts.md`, `refine/tsx.md` and `create/web/design-md/templates/starter.md` were unreachable; each owning `SKILL.md` now names it.
+- `software/testing.md` § What an assertion proves: never derive the expected value from the code under test, and assert an artifact's output rather than its source text.
+- `ship/runtime.md`: when each repair reveals a defect elsewhere the architecture is wrong — stop whatever the attempt count and route the redesign through Stage 3 sign-off. `ship/prompt.md`: the plan's `Gate` field and the worker brief both carry the expected result.
+- `review/take.md` § 2: name which findings are still unclear after re-verification and wait, since a partial reading misfixes the items you did understand.
+- `NOTICE`: credits obra/superpowers © 2025 Jesse Vincent (MIT) for the three adapted sections.
+- `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS` (pre-commit and CI lint nothing on a sibling-only commit), `SKILL-LINT-BASENAME-HIDES-ORPHANS` (a duplicate basename satisfies the check; three `README.md` files still ship unreached), `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` (the scan reads only `*.md` beside a `SKILL.md`) — all `proposed`, none built. Plus the earlier proposal to move `ship` into this repo as a step runner.
+
+## [v0.4.20] — 20261006
+
+> kronael v0.4.20 — the ship program runs on fable
+>
+> The ship skill keeps planning specs on fable; when you choose the ship program, it launches on fable because its tasks run unread.
+>
+> • ship CLI — launch with MODEL=fable TIMEOUT_SCALE=3; no diff is read before the next task.
+> • ship -k — the validator is read-only and writes only ship's own state under .ship/.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship/cli.md`: a fable sub writes and re-verifies the specs; the ship program launches with `MODEL=fable TIMEOUT_SCALE=3`, since its worker takes the next task at once and WISDOM puts unread code generation on fable (the scale covers fable's ~215 s validator against the fixed 180 s).
+- `ship/cli.md`: `ship -k` runs a validator restricted to `Read`, `Glob` and `Grep`; it cannot touch the repo and writes only `.ship/` state and logs.
+
 ## [v0.4.19] — 20261006
 
 > kronael v0.4.19 — org skills install as plugins

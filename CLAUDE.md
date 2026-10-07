@@ -147,10 +147,10 @@ All three are verifiable; ALWAYS verify rather than assume.
   from it — a dispatch row, or a reference in a file a dispatch row already
   named, as `create/` does. A file no such chain reaches is unreachable.
 
-`make skills-frontmatter` enforces the first three and MUST pass before a
-commit touching `skills/`. The fourth is a review check: a router's dispatch
-table is the only path to its data files, so compare the table against the
-directory whenever either changes.
+`make skills-frontmatter` enforces all four and MUST pass before a commit
+touching `skills/`. The fourth is an error: the lint walks the chain of names
+out of `SKILL.md` and reports every `.md` under the skill that no chain
+reaches. `CLAUDE.md` is exempt at any depth.
 
 **Both bridges work, proven by running them**
 

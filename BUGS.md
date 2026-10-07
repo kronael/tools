@@ -213,6 +213,53 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
+- **SKILL-LINT-GATE-SKIPS-SIBLING-EDITS** (MED, design) — proposed. The gate is
+  bypassed for exactly the commits it exists to catch. `.pre-commit-config.yaml:14`
+  sets `files: (^|/)SKILL\.md$`, and `skill_files()`
+  (`hooks/skill_frontmatter_lint.py:86-89`) keeps only paths named `SKILL.md`,
+  so a commit touching only a sibling `.md` — the files the orphan and leak
+  rules are about — lints nothing. `.github/workflows/lint.yml:22-23` runs
+  pre-commit over the PR's changed files under that same filter, and no workflow
+  or `make test` target runs `make skills-frontmatter` over the tree, so CI does
+  not cover it either. Widening the pre-commit pattern alone does not work: the
+  script's own path filter drops the file. **Proposal:** have the script accept
+  a sibling `.md` by linting the skill that owns it, and run the tree-wide
+  target in CI. Both change the script's input contract — needs sign-off; no
+  test — design.
+
+- **SKILL-LINT-BASENAME-HIDES-ORPHANS** (MED, design) — proposed. Duplicate
+  basenames hide real orphans. `names_doc`
+  (`hooks/skill_frontmatter_lint.py:276`) accepts a bare basename written
+  anywhere under the skill, so one file's name satisfies every file that shares
+  it: `public/reference.md` counts as a reference to `unused/reference.md`.
+  Three files ship unreached today — `skills/create/art/ascii-video/README.md`,
+  `skills/create/art/p5js/README.md` and `skills/create/video/manim/README.md`
+  — matched only by unrelated `README.md` mentions in
+  `skills/create/web.md:664-670,712,797,806`, which describe the `sketches/`
+  output tree. A blanket-strict path match is the wrong fix: it orphans 103
+  files under `skills/create/`, among them 49 legitimate bare rows at
+  `skills/create/web/popular-web-designs.md:122-200` and the genuine
+  intermediate-file reference at `skills/create/video/render.md:29`. So the fix
+  has to be duplicate-aware — accept a basename only while it is unique under
+  the skill, and demand a path form otherwise. A matcher contract change —
+  needs sign-off; no test — design.
+
+- **SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE** (MED, design) — proposed.
+  `check_leaks` (`hooks/skill_frontmatter_lint.py:310`) reads `*.md` under a
+  directory holding a `SKILL.md`, while the rule it cites (`CLAUDE.md:121`)
+  covers source. `skills/README.md` and `skills/CLAUDE.md` sit outside every
+  skill directory and are never scanned, and four tracked files carry an
+  absolute home path the pattern matches: `docs/astgrep/codex-critique.md`
+  (this host's own account, on most bullets), `evals/README.md:122`,
+  `research/anthropic-skills.md:72` and
+  `specs/2-hermes-skill-autoimprove.md:79-80`. The last three name another
+  author's account, and `evals/README.md:122` uses one as the example of what to
+  strip, so a wider root needs a per-file allowance with it. Nothing checks the
+  rule's third category at all: the finding message names org-specific refs,
+  and `LOCAL_PATH` and `SECRET` are the only patterns. **Proposal:** scan a tree
+  root instead of a skill root, with an opt-out marker for an illustrative path
+  — a new input contract for both leak rules; no test — design.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
@@ -365,6 +412,27 @@
   not the last in its `set -e` block asserts nothing: `qemubox/test.sh:162`
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
   block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
+
+## ship
+
+- **SHIP-INTO-TOOLS-AS-STEP-RUNNER** (MED, design, proposed) — keep the ship
+  program, move it into this repo as `ship/` (`git subtree add --prefix=ship
+  https://github.com/kronael/ship e417572`, keeping its 114 commits) and make
+  it a runner of steps: each step has a role, a shell gate and a review mode
+  (pause or auto), and the spec planner becomes one producer of steps beside
+  the ship skill's plan file. Ship's pipeline (validate, plan, run, judge,
+  replan, verify) is the owner's workflow model; Claude Code's Workflow tool
+  is a script per job inside one session and does not replace it. Ship runs
+  outside a session, with state on disk across usage-limit outages. Order: (1) a usage
+  limit or a lost login exits with state kept (today 3 verifier failures
+  reach `mark_complete`, `ship/judge.py:381-389`); (2) a per-step shell gate
+  decides COMPLETED (the judge's verdict is discarded, `judge.py:98`); (3) a
+  `--step` pause so a sonnet run is read step by step (WORKER-NO-STEP-PAUSE
+  in kronael/ship); (4) a plan-file producer; (5) `-n 1` by default and
+  `depends_on` enforced, since workers share one cwd; then cost in the trace
+  and the move hygiene (ruff, CI template for Python 3.14, stale `--help`).
+  `skills/ship/cli.md` keeps `MODEL=fable` until (2) and (3) land. Waits for
+  the owner's sign-off. Recorded 2026-10-06.
 
 ## Ruled not a defect
 
