@@ -8,6 +8,9 @@ sources it from a PR's comments (last section).
 
 - **Local** (default) — the findings the user points at: a `BUGS.md`, a report
   from `give`, or an inline list. If none is named, ask which.
+- ALWAYS clarify EVERY unclear item before implementing ANY one. Findings are
+  often related, so a partial reading produces a wrong fix to the items you
+  did understand. Name which items are clear and which are not, then wait.
 - **By ID** — a `give` report assigns stable IDs (`C1`/`I2`/`M3`); accept
   selectors like `all`, `C1`, `C1,I2`, or "the last one" and resolve them
   against that report before classifying.
