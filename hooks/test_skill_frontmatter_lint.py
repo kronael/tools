@@ -150,8 +150,10 @@ def test_longer_name_does_not_satisfy_its_suffix(tmp_path: Path) -> None:
 
 
 def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
+    """Claude Code loads a directory's CLAUDE.md itself, at any depth."""
     path = make(tmp_path, VALID)
     sibling(path, 'CLAUDE.md')
+    sibling(path, 'mode/CLAUDE.md')
     assert findings(path) == []
 
 

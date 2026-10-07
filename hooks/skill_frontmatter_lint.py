@@ -270,7 +270,7 @@ def check_router(path: Path) -> list[Finding]:
 
 
 def sibling_docs(root: Path) -> set[str]:
-    return {p.relative_to(root).as_posix() for p in root.rglob('*.md')} - PRELOADED
+    return {p.relative_to(root).as_posix() for p in root.rglob('*.md') if p.name not in PRELOADED}
 
 
 def names_doc(rel: str) -> re.Pattern[str]:
