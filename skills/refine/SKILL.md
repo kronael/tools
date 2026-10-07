@@ -65,7 +65,8 @@ code extension and still carries every claim the reviewer will trust.
    changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
    recurring contexts and what each one's sub must be handed; `ts.md` and
-   `tsx.md` carry the per-language lenses.
+   `tsx.md` carry the per-language lenses, `software.md` the `code.md` lens
+   every code context reads.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
 
