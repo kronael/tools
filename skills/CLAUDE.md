@@ -133,6 +133,9 @@ skills it replaces.
   future runs and spend context.
 - Move example galleries, research notes, and test cases to cold references;
   keep preloaded skills as decision surfaces.
+- ALWAYS give an illustrative absolute path a one-character account segment
+  (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
+  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`).
 
 ## Editing a router
 
