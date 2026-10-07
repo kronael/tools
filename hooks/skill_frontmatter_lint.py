@@ -59,6 +59,16 @@ LONG_SKILLS = frozenset({'ship'})
 # text at this many characters (its skillListingMaxDescChars default); a
 # keyword past the cap never reaches the model.
 LISTING_CAP = 1536
+# Claude Code preloads SKILL.md and loads a directory's CLAUDE.md on its own.
+# Every other sibling is cold until a chain of names reaches it.
+PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md'})
+# A home path naming a real account leaks the authoring machine. A one-character
+# account segment is this bundle's placeholder for an illustrative path
+# (`/home/u/app/x` teaches the project-slug transform), so it stays.
+LOCAL_PATH = re.compile(r'/(?:home|Users)/[A-Za-z0-9._-]{2,}/')
+SECRET = re.compile(
+    r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
+)
 
 
 class Severity(Enum):
@@ -259,6 +269,65 @@ def check_router(path: Path) -> list[Finding]:
     return []
 
 
+def sibling_docs(root: Path) -> set[str]:
+    return {p.relative_to(root).as_posix() for p in root.rglob('*.md')} - PRELOADED
+
+
+def names_doc(rel: str) -> re.Pattern[str]:
+    """Match a reference to `rel` by relative path or bare basename.
+
+    The lookbehind stops `contexts.md` from counting as a reference to `ts.md` —
+    a bare substring test reports a reached file that nothing names. It allows a
+    leading `/` so that `render/flavors/remotion.md`, written from an
+    intermediate file, still names `remotion.md`.
+    """
+    forms = {re.escape(rel), re.escape(Path(rel).name)}
+    return re.compile(rf'(?<![\w.-])(?:{"|".join(sorted(forms))})')
+
+
+def check_reachable(path: Path) -> list[Finding]:
+    root = path.parent
+    pending = sibling_docs(root)
+    frontier = [path]
+    while frontier and pending:
+        text = frontier.pop().read_text()
+        for rel in sorted(pending):
+            if names_doc(rel).search(text):
+                pending.discard(rel)
+                frontier.append(root / rel)
+    return [
+        Finding(
+            Severity.ERROR,
+            'skill-orphan',
+            f'{root / rel}: [skill-orphan] no chain of names from SKILL.md reaches it '
+            '— wisdom: only SKILL.md preloads, so an unnamed sibling is dead weight; '
+            'add a dispatch row or delete the file',
+        )
+        for rel in sorted(pending)
+    ]
+
+
+def check_leaks(path: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for doc in sorted(path.parent.rglob('*.md')):
+        for offset, line in enumerate(doc.read_text().splitlines(), start=1):
+            for rule, pattern, why in (
+                ('skill-secret', SECRET, 'a credential shape'),
+                ('skill-local-path', LOCAL_PATH, 'an absolute home path'),
+            ):
+                if pattern.search(line):
+                    findings.append(
+                        Finding(
+                            Severity.ERROR,
+                            rule,
+                            f'{doc}:{offset}: [{rule}] {why} — CLAUDE.md: NEVER ship local '
+                            'paths, org-specific refs or secrets; they belong in '
+                            '~/.claude/LOCAL.md',
+                        )
+                    )
+    return findings
+
+
 def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Finding]:
     body_line0 = text.count('\n', 0, text.rindex(body)) + 1 if body else 1
     return [
@@ -269,6 +338,8 @@ def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Find
         *check_should(path, body, body_line0),
         *check_length(path, body),
         *check_router(path),
+        *check_reachable(path),
+        *check_leaks(path),
     ]
 
 

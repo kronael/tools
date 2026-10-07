@@ -104,3 +104,68 @@ def test_nested_skill_md_warns(tmp_path: Path) -> None:
 def test_missing_notfor_warns(tmp_path: Path) -> None:
     text = VALID.replace(' NOT for real work (use other).', '')
     assert 'skill-notfor' in rules(findings(make(tmp_path, text)), Severity.WARN)
+
+
+def sibling(path: Path, rel: str, text: str = 'data\n') -> Path:
+    doc = path.parent / rel
+    doc.parent.mkdir(parents=True, exist_ok=True)
+    doc.write_text(text)
+    return doc
+
+
+def test_unnamed_sibling_is_an_orphan(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID)
+    sibling(path, 'lonely.md')
+    assert 'skill-orphan' in rules(findings(path), Severity.ERROR)
+    assert process(path, write=False) == 2
+
+
+def test_named_sibling_is_reachable(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- Read `lonely.md` for the rest.\n')
+    sibling(path, 'lonely.md')
+    assert findings(path) == []
+
+
+def test_reachability_chains_through_a_named_sibling(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- Read `index.md`.\n')
+    sibling(path, 'index.md', 'See `deep/leaf.md`.\n')
+    sibling(path, 'deep/leaf.md')
+    assert findings(path) == []
+
+
+def test_path_style_reference_names_the_basename(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- Read `flavors/remotion.md`.\n')
+    sibling(path, 'flavors/remotion.md')
+    assert findings(path) == []
+
+
+def test_longer_name_does_not_satisfy_its_suffix(tmp_path: Path) -> None:
+    """`contexts.md` must not count as a reference to `ts.md`."""
+    path = make(tmp_path, VALID + '\n- Read `contexts.md`.\n')
+    sibling(path, 'contexts.md')
+    sibling(path, 'ts.md')
+    messages = [f.message for f in findings(path) if f.rule == 'skill-orphan']
+    assert len(messages) == 1
+    assert 'ts.md' in messages[0]
+
+
+def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID)
+    sibling(path, 'CLAUDE.md')
+    assert findings(path) == []
+
+
+def test_absolute_home_path_fails(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- Run it in /home/onvos/app/tools.\n')
+    assert 'skill-local-path' in rules(findings(path), Severity.ERROR)
+
+
+def test_placeholder_home_path_passes(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- The slug of /home/u/app/x is -home-u-app-x.\n')
+    assert findings(path) == []
+
+
+def test_secret_in_a_sibling_fails(tmp_path: Path) -> None:
+    path = make(tmp_path, VALID + '\n- Read `creds.md`.\n')
+    sibling(path, 'creds.md', 'export TOKEN=sk-ant-oat01-abcdefgh\n')
+    assert 'skill-secret' in rules(findings(path), Severity.ERROR)
