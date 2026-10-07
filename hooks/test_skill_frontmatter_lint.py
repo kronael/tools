@@ -156,8 +156,21 @@ def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
 
 
 def test_absolute_home_path_fails(tmp_path: Path) -> None:
-    path = make(tmp_path, VALID + '\n- Run it in /home/onvos/app/tools.\n')
+    path = make(tmp_path, VALID + '\n- Run it in /home/devuser/src/tools.\n')
     assert 'skill-local-path' in rules(findings(path), Severity.ERROR)
+
+
+def test_hooks_tree_ships_no_home_path() -> None:
+    """hooks/ runs on other machines, so a literal home path here is the leak."""
+    home = str(Path.home())
+    tree = Path(__file__).parent
+    leaking = [
+        p.relative_to(tree).as_posix()
+        for pattern in ('**/*.py', '**/*.md', '**/*.sh')
+        for p in sorted(tree.glob(pattern))
+        if home in p.read_text()
+    ]
+    assert leaking == []
 
 
 def test_placeholder_home_path_passes(tmp_path: Path) -> None:
