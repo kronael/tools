@@ -75,7 +75,8 @@ PATH_TOKEN = re.compile(r'(?<![\w.-])[\w-][\w.-]*(?:/[\w.-]+)*\.md')
 # (`/home/u/app/x` teaches the project-slug transform), so it stays. So do
 # `/home/dockbox` and `/home/claude`: the HOME of this repo's own container
 # user (dockbox/README.md, CHANGELOG.md), which names no authoring machine.
-LOCAL_PATH = re.compile(r'/(?:home|Users)/(?!(?:dockbox|claude)\b)[A-Za-z0-9._-]{2,}')
+# Only the whole segment is exempt; `/home/dockbox-2` is somebody's account.
+LOCAL_PATH = re.compile(r'/(?:home|Users)/(?!(?:dockbox|claude)(?![\w.-]))[A-Za-z0-9._-]{2,}')
 SECRET = re.compile(
     r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
 )

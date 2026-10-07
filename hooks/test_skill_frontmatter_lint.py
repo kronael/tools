@@ -309,6 +309,14 @@ def test_container_home_is_not_a_leak(tmp_path: Path) -> None:
     assert check_leaks(doc) == []
 
 
+def test_container_account_prefix_is_not_the_exemption(tmp_path: Path) -> None:
+    """Only the whole segment is the container HOME; `dockbox-2` is another account."""
+    doc = tmp_path / 'README.md'
+    for leak in '/home/claude-user', '/home/claude.local', '/home/dockbox-2', '/home/dockbox.old':
+        doc.write_text(f'Work in {leak}/src.\n')
+        assert 'skill-local-path' in rules(check_leaks(doc), Severity.ERROR), leak
+
+
 def test_sibling_path_lints_its_owning_skill(tmp_path: Path) -> None:
     """A commit touching only `deep/leaf.md` still has to reach it from SKILL.md."""
     path = make(tmp_path, VALID)
