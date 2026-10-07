@@ -37,7 +37,14 @@ sight as "AI slop".
   measure stays ≤70ch per block.
 - ALWAYS let the content set a section's shape. NEVER one skeleton — intro,
   figure, caption, callout, evidence — stamped on every section.
-- ALWAYS make a nav label the heading it jumps to, word for word.
+- ALWAYS give a page one name everywhere it is listed — the sidebar or nav
+  entry, the index row and the page title or heading it jumps to match word
+  for word. ALWAYS state a rule on one page and link to it from the others;
+  NEVER restate it, the copies drift apart.
+- ALWAYS give a heading that another page or the README links to an explicit
+  short anchor — `## What it costs {#cost}` in VitePress, `id="cost"` in
+  HTML. NEVER let inbound links ride the generated slug, which changes
+  whenever the heading is reworded.
 - Craft, for a standalone document or explainer page: one self-contained file
   that renders from `file://`: inline CSS, inline SVG, no CDN, no external
   fonts, no build step. One font family, at most five font sizes, generous line
