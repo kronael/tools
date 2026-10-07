@@ -30,6 +30,9 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 - Paths inside `<mode>/<slug>.md` are prefixed with `<slug>/`
   (e.g. `p5js/references/core-api.md`); paths inside the subtree stay
   subtree-relative. Keep that invariant when editing.
+- A ported tree's own `README.md` stays at `<mode>/<slug>/README.md` and is
+  named from `<mode>/<slug>.md` by a `<slug>/README.md` row, like its
+  `references/`; the orphan lint reports it otherwise.
 - Ported files keep their frontmatter (author/license) — attribution;
   `../../NOTICE` points at it. Update NOTICE when adding/removing a port;
   its format and the header-retention rules are `../software/credits.md`.
