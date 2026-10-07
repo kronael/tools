@@ -39,8 +39,7 @@ sight as "AI slop".
   figure, caption, callout, evidence — stamped on every section.
 - ALWAYS give a page one name everywhere it is listed — the sidebar or nav
   entry, the index row and the page title or heading it jumps to match word
-  for word. ALWAYS state a rule on one page and link to it from the others;
-  NEVER restate it, the copies drift apart.
+  for word. A rule lives on one page (`readme/sync.md` § Rules).
 - ALWAYS give a heading that another page or the README links to an explicit
   short anchor — `## What it costs {#cost}` in VitePress, `id="cost"` in
   HTML. NEVER let inbound links ride the generated slug, which changes

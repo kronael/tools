@@ -31,8 +31,12 @@ it — ALWAYS keep the term and explain its meaning instead.
 - ALWAYS make a heading, a box or card header and a figure title state the most
   important fact under it as a short claim ("One program per deployment", "Only
   the owner can collect") — NEVER a generic label ("Overview", "Details",
-  "Notes"), a vague directive ("Change something") or an "X: Y" colon title
-  ("The program: one per deployment") (humanize #31).
+  "Notes"), a vague directive ("Change something"), an "X: Y" colon title
+  ("The program: one per deployment") or a bold lead-in label (humanize #31).
+  In a doc set with navigation, a heading may instead be the reader's
+  question ("What it costs", "Run it") when its first sentence answers it,
+  and pages of one repeated shape, such as every example page, reuse the
+  same section names.
 - ALWAYS introduce a program, account, role or term before the prose uses it —
   a plain definition at first use in a doc, its own box on a page — and ALWAYS
   use one name for it throughout; NEVER cycle synonyms (humanize #11).

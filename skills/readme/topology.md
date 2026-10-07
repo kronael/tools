@@ -1,10 +1,10 @@
 # Documentation topology
 
 Great docs aren't one long file — they're a small set of files, **each answering
-exactly one question**, cross-linked by a "how to read this" index. Mixing the
-questions ("what is it" tangled with "how is it built" tangled with "why not the
-simpler thing") is what makes docs unreadable. ALWAYS split by question first,
-write second.
+exactly one question**, cross-linked by a "how to read this" index, or with a
+docs site by its sidebar and the README hub below. Mixing the questions ("what
+is it" tangled with "how is it built" tangled with "why not the simpler thing")
+is what makes docs unreadable. ALWAYS split by question first, write second.
 
 This is the *which file* axis. For the order of sections *inside* one file —
 an integration guide or API-reference page an external reader works through
@@ -14,7 +14,7 @@ end to end — see `shape.md`.
 
 | File | The one question | Holds |
 |---|---|---|
-| `README.md` | What is this, why use it, how do I start | elevator pitch (line 2, one sentence), the status line under it while anything is unaudited or unreleased, plain-English glossary before any jargon, "How fast" (benched number + repro command + caveat) if perf matters, "Why this exists" (the gap), "What it costs" (formula plus one measured figure; both rules in `sync.md` step 3), "What it gives you" (bullet per capability — no removed/dead features), "Quick start" (runnable, links a real example), "Guarantees", "When NOT to use this", requirements/assumptions, lineage/acknowledgments, "How to read this" index |
+| `README.md` | What is this, why use it, how do I start | elevator pitch (line 2, one sentence), the link row and status line in the order `sync.md` step 3 sets, plain-English glossary before any jargon, "How fast" (benched number + repro command + caveat) if perf matters, "Why this exists" (the gap), "What it costs" (`sync.md` § Rules, a link to the Why page with a docs site), "What it gives you" (bullet per capability — no removed/dead features), "Quick start" (runnable, links a real example), "Guarantees", "When NOT to use this", requirements/assumptions, lineage/acknowledgments, "How to read this" index, or with a docs site the hub shape below |
 | `ARCHITECTURE.md` | How is it built internally | module/file table (one-line purpose each), ASCII data-flow/layout diagrams, algorithm walk-throughs, trust model + invariants, edge cases, "Architectural Decisions" (each names the *rejected* alternative and why) |
 | `notes/*.md` (or `WHY.md`) | Why this design, not a simpler one | one file per non-obvious decision, each **Problem → Fix → Cost-it-removes**, cited sources, a trade-off, no "measured" numbers (those live in README/ARCHITECTURE), a through-line paragraph naming the pattern across the fixes |
 | `compare/*.md` | How it stacks up vs named alternatives | one file per competitor, cited lineage, generous not dismissive |
@@ -30,12 +30,13 @@ give it the hub shape below.
 When a docs site exists, ALWAYS make the README its front door, NEVER a
 second copy of the site:
 
-- A link row directly under the pitch: documentation, getting started, how it
-  works, examples.
+- The link row and the status line, in the order `sync.md` step 3 sets, and
+  a link to the cost on the Why page.
 - Each capability bullet links to the guide page of the same title.
-- The one README example is a guide example, with a link to the guide page
-  that holds its imports, other languages and the code that runs it — NEVER
-  a README-only example nothing compiles.
+- The one README example comes from a compiled guide region (`sync.md`
+  § Rules) and links to the guide page that holds its imports, other
+  languages and the code that runs it — NEVER a README-only example nothing
+  compiles.
 - A closing "Repository layout" names each top directory. The link row plus
   "Repository layout" replace "How to read this".
 
@@ -46,16 +47,17 @@ into a sidebar. ALWAYS order it as the newcomer's questions arrive:
 
 | Group | Pages | What the pages must do |
 |---|---|---|
-| Start here | Why, Getting started, How it works | Why carries the status line, refutes the wrong reason to adopt and states the cost; How it works is one complete annotated example on one screen |
+| Start here | Why, Getting started, How it works | Why carries the status line, the cost and the wrong-reason refutation of § Anti-marketing discipline; How it works is one complete annotated example on one screen |
 | Capabilities | one page per thing the reader gets, titled by it ("Amounts read at run time"), NEVER by the mechanism | each opens with what the plain approach cannot do |
 | Build | one how-to page per task | guide shape, `shape.md` |
 | Examples | an index, then one page per example | `shape.md` § Example and recipe pages |
-| Security | trust model, security posture, failure modes | each failure mode states **What happens**, then **Recover** |
+| Security | trust model, security posture, failure modes | each failure mode says what happens, then how to recover |
 | Reference | one page per SDK language, then language, wire format, errors, glossary, limits, scope | glossary: one heading per term, so every term has an anchor; limits: every maximum in one place, naming the source file the values come from; scope: a table of Choice, Instead of, Why |
 
-ALWAYS keep contributor notes (plans, reviews, style notes) in `docs/` beside
-the pages and exclude them from the build (VitePress `srcExclude`) — NEVER
-publish them as reader pages.
+Contributor docs, such as style notes for page authors, may live in `docs/`
+beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
+NEVER published as reader pages. Plans, reviews and other work records NEVER
+go in `docs/`. They live in `.claude/plans/`, as § Repo layout (house) sets.
 
 ## Repo layout (house)
 
@@ -96,9 +98,11 @@ and ALWAYS cite the honest cross-process number next to the flattering microbenc
 With a docs build, ALWAYS generate counts and measured tables from the
 artifact that produces them — a build-time data loader reading the fixture
 (VitePress `*.data.ts`), or a script that rewrites the block between marker
-comments (`<!-- benchmark:name -->` to `<!-- /benchmark -->`). NEVER type such
-a number into a page. The dated `facts/` chain is the fallback for a repo
-without a docs build.
+comments (`<!-- benchmark:name -->` to `<!-- /benchmark -->`). NEVER type a
+count or a measured table into a page. A single measured figure from a tested
+run, such as a cost or a size, may be typed when the page names the test that
+produced it. The dated `facts/` chain is the fallback for a repo without a
+docs build.
 
 ## Anti-marketing discipline
 
@@ -115,9 +119,10 @@ High-quality docs read *earned*, not sold:
   the same result without the project ("Plain transaction?": Yes / Yes,
   weaker / No), with every value defined in a list ABOVE the table. NEVER a
   verdict the reader decodes by guessing.
-- The Why page names the obvious wrong reason to adopt and refutes it with a
-  number ("batching is not the reason: thirty transfers already fit in one
-  transaction"), before the real reason.
+- The why section, the Why page on a docs site, names the obvious wrong
+  reason to adopt and refutes it with a number ("many calls in one
+  transaction is not the reason: thirty transfers already fit in one"),
+  before the real reason.
 
 ## The failure mode this prevents
 

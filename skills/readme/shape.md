@@ -126,18 +126,21 @@ an on-page anchor list at the top.
 
 A page holding one complete, runnable example answers the reader's questions
 in the order they come — can I trust it, what does it cost, what does it do,
-what do I copy, how do I run it, what was proven. ALWAYS this order:
+what do I copy, how do I run it, what was proven. ALWAYS this order. Status
+and Cost are the two opening lines. The rest are headings, named the same on
+every example page:
 
-1. **Status** — where it ran (local simulator, devnet, mainnet) and where not.
-2. **Cost** — the measured figure from the tested run (`sync.md` step 3).
-3. **What it does** — one sentence, then each check the code makes, named by
+1. Status — where it ran (local simulator, devnet, mainnet) and where not.
+2. Cost — the measured figure from the tested run, naming the test
+   (`sync.md` § Rules).
+3. What it does — one sentence, then each check the code makes, named by
    the label it carries in the code (`swapPaysTheBorrower`), so an error
    message leads straight to the line.
-4. **Template** — the code to copy, from a compiled file (`sync.md` § Rules).
-5. **Run it** — the code that runs it.
-6. **What has been tested** — the test file, each failure case it runs and
-   the check it fails at, then a **Not tested** list. ALWAYS close on Not
-   tested; NEVER drop it — a gap left unstated reads as proven.
+4. Template — the code to copy, from a compiled file (`sync.md` § Rules).
+5. Run it — the code that runs it.
+6. What has been tested — the test file, each failure case it runs and the
+   check it fails at. ALWAYS list what is not tested whenever anything is;
+   NEVER leave a gap unstated: it reads as proven.
 
 ## Out of scope
 
@@ -145,8 +148,9 @@ Every guide and reference source sampled here is a REST or JSON-RPC
 single-resource or single-flow document; the example-page order comes from one
 SDK doc site. An SDK doc site's layout — guide groups, one reference page per
 language — is `topology.md` § A doc site splits into guide and reference.
-Webhook-driven APIs and GraphQL schemas were not sampled. NEVER extend these rules to those shapes unchecked —
-ALWAYS check a real example of that kind first.
+Webhook-driven APIs and GraphQL schemas were not sampled. NEVER extend these
+rules to those shapes unchecked — ALWAYS check a real example of that kind
+first.
 
 ---
 
