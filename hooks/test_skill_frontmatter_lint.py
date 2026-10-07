@@ -324,6 +324,13 @@ def test_sibling_path_lints_its_owning_skill(tmp_path: Path) -> None:
     assert skill_files([leaf]) == [path]
 
 
+def test_direct_sibling_lints_its_owning_skill(tmp_path: Path) -> None:
+    """`skills/create/web.md` sits beside SKILL.md, not under a subdirectory."""
+    path = make(tmp_path, VALID)
+    web = sibling(path, 'web.md')
+    assert skill_files([web]) == [path]
+
+
 def test_doc_without_an_owner_lints_no_skill(tmp_path: Path) -> None:
     doc = tmp_path / 'README.md'
     doc.write_text('notes\n')
