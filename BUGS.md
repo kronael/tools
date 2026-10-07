@@ -204,20 +204,6 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
-- **SKILL-LINT-GATE-SKIPS-SIBLING-EDITS** (MED, design) — proposed. The gate is
-  bypassed for exactly the commits it exists to catch. `.pre-commit-config.yaml:14`
-  sets `files: (^|/)SKILL\.md$`, and `skill_files()`
-  (`hooks/skill_frontmatter_lint.py:86-89`) keeps only paths named `SKILL.md`,
-  so a commit touching only a sibling `.md` — the files the orphan and leak
-  rules are about — lints nothing. `.github/workflows/lint.yml:22-23` runs
-  pre-commit over the PR's changed files under that same filter, and no workflow
-  or `make test` target runs `make skills-frontmatter` over the tree, so CI does
-  not cover it either. Widening the pre-commit pattern alone does not work: the
-  script's own path filter drops the file. **Proposal:** have the script accept
-  a sibling `.md` by linting the skill that owns it, and run the tree-wide
-  target in CI. Both change the script's input contract — needs sign-off; no
-  test — design.
-
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`

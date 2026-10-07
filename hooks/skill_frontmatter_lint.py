@@ -105,13 +105,29 @@ def visible_files(root: Path, pattern: str) -> list[Path]:
     return found
 
 
+def nearest_skill(directory: Path) -> Path | None:
+    """The SKILL.md that owns `directory`: the closest one at or above it,
+    looking no higher than the repository root.
+    """
+    for ancestor in directory, *directory.parents:
+        if (ancestor / 'SKILL.md').is_file():
+            return ancestor / 'SKILL.md'
+        if (ancestor / '.git').exists():
+            return None
+    return None
+
+
 def skill_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
-        if path.is_file() and path.name == 'SKILL.md':
-            files.append(path)
-        elif path.is_dir():
+        if path.is_dir():
             files.extend(visible_files(path, 'SKILL.md'))
+        elif path.name == 'SKILL.md':
+            files.append(path)
+        else:
+            owner = nearest_skill(path.parent)
+            if owner is not None:
+                files.append(owner)
     return sorted(set(files))
 
 
@@ -286,19 +302,17 @@ def check_length(path: Path, body: str) -> list[Finding]:
 
 
 def check_router(path: Path) -> list[Finding]:
-    for ancestor in path.parent.parents:
-        if (ancestor / 'SKILL.md').is_file():
-            return [
-                Finding(
-                    Severity.WARN,
-                    'skill-router',
-                    f'{path}: [skill-router] nested under {ancestor / "SKILL.md"} — wisdom: '
-                    'NEVER name a data file SKILL.md (it preloads); rename it (warn)',
-                )
-            ]
-        if (ancestor / '.git').exists():
-            break
-    return []
+    enclosing = nearest_skill(path.parent.parent)
+    if enclosing is None:
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-router',
+            f'{path}: [skill-router] nested under {enclosing} — wisdom: '
+            'NEVER name a data file SKILL.md (it preloads); rename it (warn)',
+        )
+    ]
 
 
 def sibling_docs(root: Path) -> set[str]:
@@ -434,6 +448,9 @@ def main() -> int:
     parser.add_argument('--write', action='store_true')
     parser.add_argument('--fail-on-write', action='store_true')
     args = parser.parse_args()
+    missing = [path for path in args.paths if not path.exists()]
+    if missing:
+        parser.error(f'no such file or directory: {", ".join(map(str, missing))}')
 
     status = 0
     for path in skill_files(args.paths):

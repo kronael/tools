@@ -22,3 +22,5 @@ jobs:
                   extra_args: >-
                       --from-ref ${{ github.event.pull_request.base.sha }}
                       --to-ref ${{ github.event.pull_request.head.sha }}
+            - run: pip install PyYAML
+            - run: make skills-frontmatter

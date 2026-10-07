@@ -148,7 +148,9 @@ All three are verifiable; ALWAYS verify rather than assume.
   named, as `create/` does. A file no such chain reaches is unreachable.
 
 `make skills-frontmatter` enforces all four and MUST pass before a commit
-touching `skills/`. The fourth is an error: the lint walks the chain of names
+touching `skills/`; pre-commit runs the same lint on every `.md` in a commit,
+linting the skill that owns a sibling, and CI runs the tree-wide target on
+every PR. The fourth is an error: the lint walks the chain of names
 out of `SKILL.md` and reports every `.md` under the skill that no chain
 reaches. A bare basename names a file only while it is unique under the
 skill; a duplicate needs a directory in front of it. `CLAUDE.md` is exempt

@@ -8,6 +8,7 @@ from skill_frontmatter_lint import check_leaks
 from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import parse_meta
 from skill_frontmatter_lint import process
+from skill_frontmatter_lint import skill_files
 
 VALID = """---
 name: demo
@@ -266,3 +267,22 @@ def test_container_home_is_not_a_leak(tmp_path: Path) -> None:
         '`~/.claude` -> `/home/dockbox/.claude` (rw); older images used /home/claude/.\n'
     )
     assert check_leaks(doc) == []
+
+
+def test_sibling_path_lints_its_owning_skill(tmp_path: Path) -> None:
+    """A commit touching only `deep/leaf.md` still has to reach it from SKILL.md."""
+    path = make(tmp_path, VALID)
+    leaf = sibling(path, 'deep/leaf.md')
+    assert skill_files([leaf]) == [path]
+
+
+def test_doc_without_an_owner_lints_no_skill(tmp_path: Path) -> None:
+    doc = tmp_path / 'README.md'
+    doc.write_text('notes\n')
+    assert skill_files([doc]) == []
+
+
+def test_missing_path_fails_loud(tmp_path: Path) -> None:
+    result = run_lint(tmp_path / 'nope.md')
+    assert result.returncode != 0
+    assert 'nope.md' in result.stderr
