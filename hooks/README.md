@@ -42,9 +42,9 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks true
 unsafe shell commands: `git reset --hard`, broad `git add`, amend/no-verify
-commits, `rm -rf`, and recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
-gated by consent in `skills/global` and the settings `ask` rule, not by the
-hook.
+commits, any recursive `rm` (`-r`, `-R`, `-rf`, `--recursive`), and recursive
+Codex execution inside Codex. `git push` is NOT blocked here — it is gated by
+consent in `skills/global` and the settings `ask` rule, not by the hook.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
