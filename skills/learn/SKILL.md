@@ -60,8 +60,8 @@ mistake on one language — a lint candidate.
   distinct sessions; a single session goes to `.diary/`.
 - NEVER lint judgment (whether a name fits, minimality, "boring code") — a
   false positive trains `--no-verify`. A mechanical shape is lintable, such as
-  a bool-returning function without an `is_`/`has_`/`can_` prefix. Only the
-  user promotes a lint to `error`.
+  a bool-returning function without an `is_`/`has_`/`can_`/`should_` prefix.
+  Only the user promotes a lint to `error`.
 - ALWAYS write a skill per `wisdom` (frontmatter keys, `NOT for`,
   ALWAYS/NEVER, length) and pass `make skills-frontmatter`; NEVER carry a
   second copy of those rules here.

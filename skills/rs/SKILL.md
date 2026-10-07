@@ -8,7 +8,7 @@ when_to_use: editing .rs files or writing Rust code
 
 ALWAYS Read `../software/code.md` before the first edit — it owns naming,
 comments, design and the boring-code rules. Also requires
-`software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
+`../software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 
 ## Imports
@@ -183,9 +183,9 @@ tokio::spawn(fetch_and_process(client));
   (`software/code.md` § Naming). clippy owns the rest — NEVER duplicate a
   clippy lint here.
 - `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
-  carrying a `//` justification comment on the line directly above — NEVER
-  `// SAFETY:` (reserved for `unsafe`); a plain reason comment is the sanctioned
-  form.
+  carrying a `//` reason on the line directly above — one of the in-body
+  comments `software/code.md` § Comments allows. NEVER `// SAFETY:` for it;
+  that marker is reserved for `unsafe`.
 
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)

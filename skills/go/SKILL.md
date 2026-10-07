@@ -12,8 +12,8 @@ design): read `gl.md` on top of this file.
 
 ALWAYS Read `../software/code.md` before the first edit — it owns naming,
 comments, design and the boring-code rules. Also requires
-`software/strict-typing.md` (golangci-lint set) and
-`software/dynamic-analysis.md` (test-target checkers: `-race`, fuzzing,
+`../software/strict-typing.md` (golangci-lint set) and
+`../software/dynamic-analysis.md` (test-target checkers: `-race`, fuzzing,
 sanitizers). Below are Go-specific additions.
 
 ## Toolchain — the edit loop
@@ -127,10 +127,12 @@ defer resp.Body.Close() //nolint:errcheck
 defer tx.Rollback(ctx) //nolint:errcheck
 ```
 
-**Inline `_ =` in HTTP handlers** — `w.Write` failure means client disconnected;
-response is already committed. One short inline comment is fine:
+**`_ =` in HTTP handlers** — `w.Write` failure means client disconnected;
+response is already committed. The reason goes on the line above, as for
+every suppression:
 ```go
-_, _ = w.Write([]byte(`{"status":"ok"}`)) // client disconnect; nothing to do
+// client disconnect; nothing to do
+_, _ = w.Write([]byte(`{"status":"ok"}`))
 ```
 
 NEVER write a suppression without a reason. The comment must answer WHY.
@@ -138,20 +140,6 @@ NEVER write a suppression without a reason. The comment must answer WHY.
 NEVER use a linter config exclusion for a specific symbol or call site — a reader
 has to look up the config. Config exclusions are for structural cases only:
 generated files, test path patterns, project-wide style choices (no-comment policy).
-
-## Comments
-
-- What to comment and how to phrase it: canonical in `software/code.md`
-  Comments section. This is the only Go-specific addition — placement.
-- ALWAYS put a comment on its own line ABOVE the code it describes; NEVER
-  trail it inline. Inline comments crowd the line, get truncated on wrap, and
-  drift as the code changes:
-  ```go
-  // body fully read into buffer above
-  _ = resp.Body.Close()
-  ```
-  not `_ = resp.Body.Close() // body fully read`. The one exception is the
-  handler one-liner noted above.
 
 ## Testing
 - Test files: `*_test.go` next to code

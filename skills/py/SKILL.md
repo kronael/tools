@@ -8,8 +8,9 @@ when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, 
 
 ALWAYS Read `../software/code.md` before the first edit — it owns naming,
 comments, design and the boring-code rules. Also requires
-`software/dynamic-analysis.md` (test-target checkers: `-X dev -W error`,
-hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas.
+`../software/dynamic-analysis.md` (test-target checkers:
+`-X dev -W error`, hypothesis, pytest-memray, TSan). Below are
+Python-specific additions and deltas.
 
 ## Verify before claiming
 - ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge.

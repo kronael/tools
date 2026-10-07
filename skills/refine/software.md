@@ -19,15 +19,18 @@ reads to pick the agent type.
   that writes, an `is_` that mutates, a `finish_` that cancels is a finding,
   and a `simplify` fix is the rename, never a comment explaining the verb.
 - ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
-  the changed files: each `<lang>-bool-fn-prefix` hit, a predicate not named
-  `is_`/`has_`/`can_`, is a finding fixed by the rename (§ Naming).
+  the changed files of a language that ships one — `rs`, `py`, `ts` (not
+  `.tsx`); NEVER for another, which has no rules file. Each
+  `<lang>-bool-fn-prefix` hit, a predicate not named
+  `is_`/`has_`/`can_`/`should_`, is a finding fixed by the rename (§ Naming).
 
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
   (`grep -nE '^\s*(//|#|--|/\*|\*)'`) — § Comments puts the whole file in
-  scope. Each one that is not a public-API doc comment or one of the three
-  named body exceptions is a finding.
+  scope. Each one that is not a public-API doc comment, one of the three
+  named body exceptions or a machine-read marker (a `// #region` anchor, a
+  lint or type pragma) is a finding.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
 - ALWAYS check the comment directly above a log, warn or error call — a
