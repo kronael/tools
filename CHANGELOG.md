@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+## [v0.4.22] — 20261007
+
+> kronael v0.4.22 — code rules you can scan, and lints that check them
+>
+> The code rules are now short ALWAYS/NEVER bullets, every code edit points at them, and a lint flags misnamed predicates.
+>
+> • code.md — rules as ALWAYS/NEVER bullets, most-broken first; the code-file nudge names it.
+> • Lints — Rust, Python and TypeScript flag a bool function without an is_/has_/can_/should_ prefix.
+> • Docs rules — status line first, stated cost, code from tested files, a guide-and-reference site.
+> • Codex reads the project's .claude/CLAUDE.md as well.
+> • Rule pruning — a clean room with no setup at all, and a rule is cut only on observed behaviour.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: every rule an ALWAYS/NEVER bullet, sections ordered by how often sessions break them; it owns naming, comments (machine-read markers such as `// #region` and lint pragmas are not comments), shutdown on SIGINT/SIGTERM and build cadence. `rs`, `py`, `go` and the other language skills keep only their additions and ALWAYS read `code.md` first; the pretool nudge names it for code skills.
+- Lints `rs-bool-fn-prefix`, `py-bool-fn-prefix`, `ts-bool-fn-prefix` (warnings): test code, trait and interface implementations, overrides, getters and dunders are exempt, each proven by a fixture. `lints/check.py` fails when ast-grep fails and requires the rule to fire in every block of a bad fixture. `refine/software.md` runs them and hunts what they cannot see.
+- `readme` and `writing`: README order (what, link row, status, why, how), one status line worded the same everywhere, cost as a formula with a worked figure, doc code from compiled regions, an example-page shape ending in what has been tested, a guide-and-reference site layout, the README as a hub, one name per page, explicit anchors. A reader-question heading is allowed in a doc set with navigation when its first sentence answers it.
+- `global`: rules `code.md` or the harness carry are dropped; "NEVER kill a process you did not start, not even to free a port".
+- `wisdom`: one clean room, `clean-room.sh` (empty home and config, no tools, no skills, pinned model), which proves isolation from the run's own transcript; `subtraction.md` runs the whole-bundle pass; a rule is cut only on behavioural evidence, never on a model's self-report.
+- `codex/AGENTS.md`: Codex reads the project's `.claude/CLAUDE.md`; its fallback file names never load that path.
+- Project names and a local path are gone from skill text; `should_` counts as a predicate prefix.
+
 ## [v0.4.21] — 20261007
 
 > kronael v0.4.21 — the skill lint catches dead files and leaked paths
