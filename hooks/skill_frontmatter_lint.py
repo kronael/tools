@@ -66,6 +66,10 @@ LISTING_CAP = 1536
 # Claude Code preloads SKILL.md and loads a directory's CLAUDE.md on its own.
 # Every other sibling is cold until a chain of names reaches it.
 PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md'})
+# A written `.md` path, whole: `flavors/manim.md` is one token, so it cannot
+# stand for a root `manim.md`. The lookbehind keeps `contexts.md` from yielding
+# `ts.md`; it admits `/` so a path still starts after `../` or `~/`.
+PATH_TOKEN = re.compile(r'(?<![\w.-])[\w-][\w.-]*(?:/[\w.-]+)*\.md')
 # A home path naming a real account leaks the authoring machine. A one-character
 # account segment is this bundle's placeholder for an illustrative path
 # (`/home/u/app/x` teaches the project-slug transform), so it stays. So do
@@ -329,22 +333,11 @@ def suffixes(rel: str) -> list[str]:
 def name_forms(docs: set[str]) -> dict[str, set[str]]:
     """Forms that name each doc: its path from the skill root, plus every
     shorter path suffix no other doc under the skill shares. A bare basename
-    therefore counts only while it is unique; once two files share one, each
-    needs a directory in front of it.
+    therefore counts only while it is unique; a doc whose every suffix is
+    shared is named by its full path alone.
     """
     counts = Counter(form for rel in docs for form in suffixes(rel))
     return {rel: {rel, *(form for form in suffixes(rel) if counts[form] == 1)} for rel in docs}
-
-
-def names_doc(forms: set[str]) -> re.Pattern[str]:
-    """Match any of `forms` at a filename boundary.
-
-    The lookbehind stops `contexts.md` from counting as a reference to `ts.md` —
-    a bare substring test reports a reached file that nothing names. It allows a
-    leading `/` so that `render/flavors/remotion.md`, written from an
-    intermediate file, still names `remotion.md`.
-    """
-    return re.compile(rf'(?<![\w.-])(?:{"|".join(re.escape(form) for form in sorted(forms))})')
 
 
 def check_reachable(path: Path) -> list[Finding]:
@@ -353,9 +346,9 @@ def check_reachable(path: Path) -> list[Finding]:
     forms = name_forms(pending)
     frontier = [path]
     while frontier and pending:
-        text = frontier.pop().read_text()
+        tokens = set(PATH_TOKEN.findall(frontier.pop().read_text()))
         for rel in sorted(pending):
-            if names_doc(forms[rel]).search(text):
+            if forms[rel] & tokens:
                 pending.discard(rel)
                 frontier.append(root / rel)
     return [

@@ -6,6 +6,7 @@ from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import check_body
 from skill_frontmatter_lint import check_leaks
 from skill_frontmatter_lint import frontmatter
+from skill_frontmatter_lint import name_forms
 from skill_frontmatter_lint import parse_meta
 from skill_frontmatter_lint import process
 from skill_frontmatter_lint import skill_files
@@ -222,6 +223,33 @@ def test_root_file_keeps_its_name_beside_a_deeper_namesake(tmp_path: Path) -> No
     sibling(path, 'render.md', 'Read `flavors/manim.md`.\n')
     sibling(path, 'render/flavors/manim.md')
     assert findings(path) == []
+
+
+def test_deeper_path_does_not_credit_a_shallower_namesake(tmp_path: Path) -> None:
+    """`flavors/manim.md` in `render.md` names `render/flavors/manim.md`, not the root `manim.md`."""
+    path = make(tmp_path, VALID + '\n- Read `render.md`.\n')
+    sibling(path, 'manim.md')
+    sibling(path, 'render.md', 'Read `flavors/manim.md`.\n')
+    sibling(path, 'render/flavors/manim.md')
+    messages = [f.message for f in findings(path) if f.rule == 'skill-orphan']
+    assert len(messages) == 1
+    assert messages[0].startswith(str(path.parent / 'manim.md'))
+
+
+def test_root_name_does_not_credit_its_deeper_namesake(tmp_path: Path) -> None:
+    """`README.md` is the root file's whole path; `deep/README.md` keeps needing its directory."""
+    path = make(tmp_path, VALID + '\n- Read `README.md`.\n')
+    sibling(path, 'README.md')
+    sibling(path, 'deep/README.md')
+    messages = [f.message for f in findings(path) if f.rule == 'skill-orphan']
+    assert len(messages) == 1
+    assert 'deep/README.md' in messages[0]
+
+
+def test_every_doc_keeps_its_own_path_as_a_form() -> None:
+    """Two docs sharing every suffix are each named by their full path alone."""
+    docs = {'a/x/README.md', 'b/x/README.md'}
+    assert name_forms(docs) == {rel: {rel} for rel in docs}
 
 
 def run_lint(*paths: Path) -> subprocess.CompletedProcess[str]:
