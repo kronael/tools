@@ -204,6 +204,42 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
+- **SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT** (MED, design) — proposed. The
+  pre-commit entry (`.pre-commit-config.yaml:11`) runs
+  `hooks/skill_frontmatter_lint.py --write --fail-on-write` over every staged
+  `.md`, and `skill_files()` maps a sibling to the `SKILL.md` that owns it, so
+  a commit that stages only `skills/x/data.md` can rewrite `skills/x/SKILL.md`,
+  a file it never staged. The run exits 1 and prints `fixed:`, so it is loud,
+  but the write lands in the working tree outside the commit. **Proposal:**
+  repair only the paths the caller named and report, never write, an owner
+  reached through a sibling. Changes the `--write` contract — needs sign-off;
+  no test — design.
+
+- **SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS** (LOW, design) — proposed.
+  Pre-commit hands the scan every staged `.md` (`files: \.md$`), so it reaches
+  the 21 tracked `.diary/*.md`, while `make skills-frontmatter` and CI walk the
+  tree through `visible_files()`, which skips hidden directories. No diary
+  file carries a home path today; the first one that quotes a `/home/<user>`
+  path blocks its commit while the tree target and CI stay green.
+  **Proposal:** one scope for both — the script drops hidden paths it is
+  handed, or the pre-commit pattern excludes them. Changes the scan's input
+  contract — needs sign-off; no test — design.
+
+- **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
+  `.github/templates/lint.yml.tmpl` passes
+  `--from-ref ${{ github.event.pull_request.base.sha || github.event.before }}`
+  and the matching `--to-ref` to pre-commit; on `workflow_dispatch` both are
+  empty, and `pre-commit run --from-ref --to-ref HEAD` exits 2 with "expected
+  one argument", so a manual run fails before any hook. **Fix:** drop
+  `extra_args` so every trigger runs `--all-files` — blocked by
+  PRE-COMMIT-ALL-FILES-RED — or drop the trigger.
+
+- **PRE-COMMIT-ALL-FILES-RED** (LOW, lint) — CONFIRMED 2026-10-07 at 5f9392a.
+  `pre-commit run --all-files` fails: ruff-format rewrites
+  `hooks/test_pretool_nudge.py` and `tw-fetch/mirror.py`, and ruff reports
+  `tw-fetch/mirror.py:90` UP041 and `:138` T201. CI runs pre-commit over the
+  diff only, so none of the three surfaces until a commit touches those files.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
@@ -404,3 +440,10 @@
   Claude Code and Codex both rewrite their token files on login refresh, so a
   ro or redacted token breaks auth inside the box. The README already says
   dockbox is not a boundary for hostile code.
+
+- **SKILL-LINT-NO-ORG-REF-CHECK** (LOW, coverage) — not a defect. `CLAUDE.md`
+  bans local paths, org-specific refs and secrets in source;
+  `hooks/skill_frontmatter_lint.py` checks the first and the last, and nothing
+  checks the second: a pattern for an org ref would have to name the org,
+  which is the string the rule exists to keep out of the repo. The rule stays
+  a review check.
