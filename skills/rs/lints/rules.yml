@@ -48,7 +48,19 @@ language: rust
 severity: warning
 ignores:
     - '**/*_test.rs'
+    - '**/tests.rs'
     - '**/tests/**'
+utils:
+    test-item:
+        follows:
+            kind: attribute_item
+            regex: ^#\[\s*((\w+::)*(test|rstest|test_case)\s*[(\]]|cfg\(\s*(all\(\s*)?test\b)
+            stopBy:
+                not:
+                    any:
+                        - kind: attribute_item
+                        - kind: line_comment
+                        - kind: block_comment
 rule:
     kind: function_item
     has:
@@ -60,30 +72,19 @@ rule:
             - has:
                   field: name
                   regex: ^(is|has|can|should)_
+            - matches: test-item
             - inside:
-                  kind: impl_item
-                  has:
-                      field: trait
-                      regex: .
                   stopBy: end
-            - follows:
-                  kind: attribute_item
-                  regex: test
-                  stopBy:
-                      not:
-                          kind: attribute_item
-            - inside:
-                  kind: mod_item
                   any:
-                      - has:
+                      - matches: test-item
+                      - kind: impl_item
+                        has:
+                            field: trait
+                            regex: .
+                      - kind: mod_item
+                        has:
                             field: name
-                            regex: ^tests$
-                      - follows:
-                            kind: attribute_item
-                            regex: cfg\(test\)
-                            stopBy:
-                                not:
-                                    kind: attribute_item
-                  stopBy: end
-message: NEVER a bool-returning fn without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Trait impls and tests are exempt. See skill:rs.
-note: 'source: skills/software/code.md — Naming'
+                            regex: ^tests?$
+message: 'NEVER a bool-returning fn without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Exempt: trait impls, #[test]/#[<crate>::test]/#[rstest]/#[test_case]
+    fns, anything under #[cfg(test)] or #[cfg(all(test, …))], mod test/tests, tests/ dirs, tests.rs and *_test.rs files. See skill:rs.'
+note: 'source: skills/software/code.md — Naming. #[cfg(any(test, …))] stays flagged: it also builds outside tests.'

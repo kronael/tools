@@ -22,43 +22,68 @@ id: ts-bool-fn-prefix
 language: typescript
 severity: warning
 ignores:
-    - '**/*.test.ts'
-    - '**/*.spec.ts'
+    - '**/*.{test,spec,e2e-spec}.{ts,mts,cts}'
+    - '**/*_test.{ts,mts,cts}'
+    - '**/{test,tests,__tests__}/**'
 utils:
     returns-boolean:
         has:
             field: return_type
-            has:
-                kind: predefined_type
-                regex: ^boolean$
+            any:
+                - regex: ^:\s*(boolean|Promise<\s*boolean\s*>)$
+                - kind: type_predicate_annotation
+    function-value:
+        has:
+            field: value
+            any:
+                - kind: arrow_function
+                - kind: function_expression
+            matches: returns-boolean
+    contract-member:
+        any:
+            - has:
+                  kind: override_modifier
+            - inside:
+                  kind: class_body
+                  inside:
+                      any:
+                          - kind: class_declaration
+                          - kind: abstract_class_declaration
+                          - kind: class
+                      has:
+                          kind: class_heritage
+                          has:
+                              kind: implements_clause
 rule:
     any:
         - kind: function_declaration
           matches: returns-boolean
+        - kind: variable_declarator
+          matches: function-value
+        - kind: pair
+          matches: function-value
         - kind: method_definition
           matches: returns-boolean
           not:
               any:
+                  - matches: contract-member
                   - has:
-                        kind: override_modifier
-                  - inside:
-                        kind: class_declaration
-                        has:
-                            kind: class_heritage
-                            has:
-                                kind: implements_clause
-                        stopBy: end
-        - kind: variable_declarator
-          has:
-              field: value
-              any:
-                  - kind: arrow_function
-                  - kind: function_expression
-              matches: returns-boolean
+                        regex: ^get$
+                        not:
+                            kind: property_identifier
+        - kind: public_field_definition
+          matches: function-value
+          not:
+              matches: contract-member
     not:
-        has:
-            field: name
-            regex: ^[#_]?(is|has|can|should)[A-Z]
-message: 'NEVER a : boolean function without an is/has/can/should prefix — rename it, valid() → isValid(). override and implements methods are exempt. See
-    skill:ts.'
-note: 'source: skills/software/code.md — Naming'
+        any:
+            - has:
+                  field: name
+                  regex: ^[#_]?(is|has|can|should)[A-Z]
+            - has:
+                  field: key
+                  regex: ^['"]?(is|has|can|should)[A-Z]
+message: 'NEVER a function returning boolean, Promise<boolean> or a type predicate without an is/has/can/should prefix — rename it, valid() → isValid().
+    One leading _ or # before the prefix is allowed. Exempt: getters, override members, members of a class with an implements clause, test files and test/tests/__tests__
+    dirs. See skill:ts.'
+note: 'source: skills/software/code.md — Naming. An implements clause exempts every member of its class, not only the interface members.'
