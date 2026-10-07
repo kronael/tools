@@ -103,7 +103,7 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
    `Dockerfile`/compose/workflows → `/ops`), then extension via
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
-4. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
+4. Dedupe per session+file via `~/.claude/tmp/extnudge/{sid}.txt` so
    each nudge fires once.
 5. Emit "Editing/reading <file> — follow <skill> conventions.", plus
    " Read ~/.claude/skills/software/code.md first." when the skill is in

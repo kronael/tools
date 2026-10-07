@@ -45,7 +45,7 @@ EXT_SKILLS = {
     '.j2': '/htmx',
     '.heex': '/htmx',
 }
-CODE_SKILLS = frozenset({'/go', '/rs', '/py', '/ts', '/tsx', '/sql', '/sh', '/htmx', '/mk'})
+CODE_SKILLS = frozenset({*EXT_SKILLS.values(), '/mk'})
 
 
 def skill_for(path: str) -> str | None:
