@@ -122,12 +122,31 @@ an on-page anchor list at the top.
   how it's placed — a header value repeats near the call it authorizes; a
   one-time account-setup step earns its own step.
 
+## Example and recipe pages
+
+A page holding one complete, runnable example answers the reader's questions
+in the order they come — can I trust it, what does it cost, what does it do,
+what do I copy, how do I run it, what was proven. ALWAYS this order:
+
+1. **Status** — where it ran (local simulator, devnet, mainnet) and where not.
+2. **Cost** — the measured figure from the tested run (`sync.md` step 3).
+3. **What it does** — one sentence, then each check the code makes, named by
+   the label it carries in the code (`swapPaysTheBorrower`), so an error
+   message leads straight to the line.
+4. **Template** — the code to copy, from a compiled file (`sync.md` § Rules).
+5. **Run it** — the code that runs it.
+6. **What has been tested** — the test file, each failure case it runs and
+   the check it fails at, then a **Not tested** list. ALWAYS close on Not
+   tested; NEVER drop it — a gap left unstated reads as proven.
+
 ## Out of scope
 
-Every source sampled here is a REST or JSON-RPC single-resource or single-flow
-document. Webhook-driven APIs, GraphQL schemas, and SDK-only docs with no
-dedicated reference page were not sampled. NEVER extend these rules to those
-shapes unchecked — ALWAYS check a real example of that kind first.
+Every guide and reference source sampled here is a REST or JSON-RPC
+single-resource or single-flow document; the example-page order comes from one
+SDK doc site. An SDK doc site's layout — guide groups, one reference page per
+language — is `topology.md` § Doc site. Webhook-driven APIs and GraphQL
+schemas were not sampled. NEVER extend these rules to those shapes unchecked —
+ALWAYS check a real example of that kind first.
 
 ---
 
@@ -138,4 +157,5 @@ reference); Plaid (Link overview, `linkTokenCreate`); Solana (`getBalance` RPC
 reference); GitHub REST (Issues endpoint); Cloudflare (DNS-record endpoint,
 get-started guide, concepts page); Mintlify's published API-documentation
 guidance; Google's developer documentation style guide; AWS's S3 `GetObject`
-reference.*
+reference. Example-page order and the doc-site layout: the ballista.sh VitePress
+source, read 2026-10-07.*
