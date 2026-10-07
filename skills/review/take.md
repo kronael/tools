@@ -8,9 +8,6 @@ sources it from a PR's comments (last section).
 
 - **Local** (default) — the findings the user points at: a `BUGS.md`, a report
   from `give`, or an inline list. If none is named, ask which.
-- ALWAYS clarify EVERY unclear item before implementing ANY one. Findings are
-  often related, so a partial reading produces a wrong fix to the items you
-  did understand. Name which items are clear and which are not, then wait.
 - **By ID** — a `give` report assigns stable IDs (`C1`/`I2`/`M3`); accept
   selectors like `all`, `C1`, `C1,I2`, or "the last one" and resolve them
   against that report before classifying.
@@ -21,6 +18,10 @@ sources it from a PR's comments (last section).
 ALWAYS re-verify each finding against the CURRENT code before classifying —
 it may be stale, already-fixed, or refuted outright. Never take a finding's
 claim on faith.
+
+ALWAYS name which items are still unclear after that and wait for answers
+before implementing any one — findings are often related, so a partial
+reading produces a wrong fix to the items you did understand.
 
 - **(a) actionable code bug** — a concrete fix the diff should carry
 - **(b) design / product decision** — reverses a product choice, changes scope,

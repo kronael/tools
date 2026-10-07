@@ -30,9 +30,9 @@ are [scope, exclusions, hammer cases, limits and destination].
 Read the plan for context, applicable CLAUDE.md and the matched domain
 skills. Own [paths]. [Other paths] are read-only context. Deliver this
 step's behavior and acceptance checks. Later steps are outside your task.
-Gate: [exact command]. Return changed paths, gate output, remaining issues,
-and any logical commits under the `commit` skill. Public actions belong to
-the main agent and their approval gates.
+Gate: [exact command] → [expected result]. Return changed paths, gate
+output, remaining issues, and any logical commits under the `commit` skill.
+Public actions belong to the main agent and their approval gates.
 
 ## Plan fields
 
