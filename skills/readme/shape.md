@@ -144,8 +144,8 @@ what do I copy, how do I run it, what was proven. ALWAYS this order:
 Every guide and reference source sampled here is a REST or JSON-RPC
 single-resource or single-flow document; the example-page order comes from one
 SDK doc site. An SDK doc site's layout — guide groups, one reference page per
-language — is `topology.md` § A doc site splits into guide and reference. Webhook-driven APIs and GraphQL
-schemas were not sampled. NEVER extend these rules to those shapes unchecked —
+language — is `topology.md` § A doc site splits into guide and reference.
+Webhook-driven APIs and GraphQL schemas were not sampled. NEVER extend these rules to those shapes unchecked —
 ALWAYS check a real example of that kind first.
 
 ---
