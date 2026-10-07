@@ -16,3 +16,10 @@ reads to pick the agent type.
 
 - Prose tells are the `humanize` catalogue. A page's structural tells — headers,
   boxes, layout, sources, links, diagrams, contrast — are `writing/page.md`.
+
+## One reader at a time `correctness`
+
+- ALWAYS read the doc set once per reader type, each working as that reader
+  would: newcomer, evaluator, one integrator per SDK language, auditor. A
+  product bug a reader hits goes to `BUGS.md` (`bugs` skill), NEVER into a
+  doc fix that writes around it.
