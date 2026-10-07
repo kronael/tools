@@ -140,7 +140,7 @@ slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
 | Failure | Rule violated |
 |---------|--------------|
 | Sub commits test without impl → broken HEAD | partial-commit check |
-| dashd auth guard committed without tests, security hole ships silently | ship-with-tests |
+| Auth guard committed without tests, security hole ships silently | ship-with-tests |
 | cherry-pick on worktree branch empties commit, HEAD slips | worktree-reconcile |
 | Two subs edit same file, one reverts the other | sequential-on-shared-tree |
 | Sub says "green", build actually broken | verify-the-artifact |

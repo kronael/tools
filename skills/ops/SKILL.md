@@ -39,7 +39,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 ## Process
 
-- NEVER `killall` — ALWAYS kill by PID
+- Killing processes: WISDOM § Shell
 - PID files for dev only
 - Graceful SIGINT/SIGTERM shutdown is the app's: `../software/code.md` § Design
 

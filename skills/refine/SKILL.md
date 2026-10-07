@@ -133,9 +133,9 @@ code extension and still carries every claim the reviewer will trust.
 
 11. **Close** — `git log --format='%an %s%n%b'` over the range: conventional
     subjects ≤72 characters, one logical change each, NO `Co-Authored-By`
-    trailer, detached HEAD. ALWAYS do this before any push: `--amend` and
-    force-push are NEVER allowed, a pushed commit is NEVER squashed (unpushed
-    ones only via `/squash`), and a pushed violation is permanent. Reply
+    trailer, detached HEAD. ALWAYS do this before any push — a pushed
+    violation is permanent, and WISDOM § Git bans amend, force-push and a
+    squash of a pushed commit. Reply
     to each step-5 WON'T-FIX thread, and each FIX that step 8 deferred, with the
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
