@@ -57,6 +57,16 @@
 - Harness code is reference usage - hold it to the same idiom bar as examples.
   A harness that misuses the API teaches the bug.
 
+## What an assertion proves
+
+- NEVER derive the expected value from the code under test or its helpers. A
+  mirror assertion (`expect(build(x)).toBe(build(x))`) passes whatever `build`
+  does — ALWAYS hand-write the literal or a checked fixture.
+- Asserting that a file CONTAINS a line proves only that the source is the
+  source. ALWAYS run the script, config or template against a controlled input
+  and assert its output, side effect or exit code. Prose for humans earns no
+  test.
+
 ## Pitfalls
 
 - ALWAYS prefer integration/e2e over mocks; unit tests mock external systems
