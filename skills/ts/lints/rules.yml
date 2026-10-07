@@ -58,6 +58,7 @@ rule:
     not:
         has:
             field: name
-            regex: ^[#_]?(is|has|can)[A-Z]
-message: 'NEVER a : boolean function without an is/has/can prefix — rename it, valid() → isValid(). override and implements methods are exempt. See skill:ts.'
+            regex: ^[#_]?(is|has|can|should)[A-Z]
+message: 'NEVER a : boolean function without an is/has/can/should prefix — rename it, valid() → isValid(). override and implements methods are exempt. See
+    skill:ts.'
 note: 'source: skills/software/code.md — Naming'

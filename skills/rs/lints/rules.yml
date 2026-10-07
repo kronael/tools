@@ -59,7 +59,7 @@ rule:
         any:
             - has:
                   field: name
-                  regex: ^(is|has|can)_
+                  regex: ^(is|has|can|should)_
             - inside:
                   kind: impl_item
                   has:
@@ -85,5 +85,5 @@ rule:
                                 not:
                                     kind: attribute_item
                   stopBy: end
-message: NEVER a bool-returning fn without an is_/has_/can_ prefix — rename it, valid() → is_valid(). Trait impls and tests are exempt. See skill:rs.
+message: NEVER a bool-returning fn without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Trait impls and tests are exempt. See skill:rs.
 note: 'source: skills/software/code.md — Naming'

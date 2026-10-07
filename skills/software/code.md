@@ -7,9 +7,9 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Naming
 
-- ALWAYS name a predicate `is_`/`has_`/`can_` and a conversion `to_`/`into_`:
-  `valid()` → `is_valid()`, camelCase `isValid()`. The `<lang>-bool-fn-prefix`
-  lint flags the miss.
+- ALWAYS name a predicate `is_`/`has_`/`can_`/`should_` and a conversion
+  `to_`/`into_`: `valid()` → `is_valid()`, camelCase `isValid()`. The
+  `<lang>-bool-fn-prefix` lint flags the miss.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.

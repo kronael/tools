@@ -47,11 +47,12 @@ rule:
         any:
             - has:
                   field: name
-                  regex: ^_*(is|has|can)_|^__\w+__$|^test
+                  regex: ^_*(is|has|can|should)_|^__\w+__$|^test
             - inside:
                   kind: decorated_definition
                   has:
                       kind: decorator
                       regex: \boverride$
-message: NEVER a -> bool function without an is_/has_/can_ prefix — rename it, valid() → is_valid(). Dunders, @override and tests are exempt. See skill:py.
+message: NEVER a -> bool function without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Dunders, @override and tests are exempt. See
+    skill:py.
 note: 'source: skills/software/code.md — Naming'
