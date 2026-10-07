@@ -244,6 +244,7 @@ Always iterate at `-ql`. Only render `-qh` for final output.
 | `manim/references/paper-explainer.md` | Turning research papers into animations — workflow, templates, domain patterns |
 | `manim/references/decorations.md` | SurroundingRectangle, Brace, arrows, DashedLine, Angle, annotation lifecycle |
 | `manim/references/production-quality.md` | Pre-code, pre-render, post-render checklists, spatial layout, color, tempo |
+| `manim/README.md` | Upstream README: what the skill does, use cases, prerequisites |
 
 ---
 

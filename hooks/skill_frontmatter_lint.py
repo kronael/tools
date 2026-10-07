@@ -14,6 +14,7 @@ import csv
 import json
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -273,26 +274,41 @@ def sibling_docs(root: Path) -> set[str]:
     return {p.relative_to(root).as_posix() for p in root.rglob('*.md') if p.name not in PRELOADED}
 
 
-def names_doc(rel: str) -> re.Pattern[str]:
-    """Match a reference to `rel` by relative path or bare basename.
+def suffixes(rel: str) -> list[str]:
+    parts = Path(rel).parts
+    return ['/'.join(parts[i:]) for i in range(len(parts))]
+
+
+def name_forms(docs: set[str]) -> dict[str, set[str]]:
+    """Forms that name each doc: its path from the skill root, plus every
+    shorter path suffix no other doc under the skill shares. A bare basename
+    therefore counts only while it is unique; once two files share one, each
+    needs a directory in front of it.
+    """
+    counts = Counter(form for rel in docs for form in suffixes(rel))
+    return {rel: {rel, *(form for form in suffixes(rel) if counts[form] == 1)} for rel in docs}
+
+
+def names_doc(forms: set[str]) -> re.Pattern[str]:
+    """Match any of `forms` at a filename boundary.
 
     The lookbehind stops `contexts.md` from counting as a reference to `ts.md` —
     a bare substring test reports a reached file that nothing names. It allows a
     leading `/` so that `render/flavors/remotion.md`, written from an
     intermediate file, still names `remotion.md`.
     """
-    forms = {re.escape(rel), re.escape(Path(rel).name)}
-    return re.compile(rf'(?<![\w.-])(?:{"|".join(sorted(forms))})')
+    return re.compile(rf'(?<![\w.-])(?:{"|".join(re.escape(form) for form in sorted(forms))})')
 
 
 def check_reachable(path: Path) -> list[Finding]:
     root = path.parent
     pending = sibling_docs(root)
+    forms = name_forms(pending)
     frontier = [path]
     while frontier and pending:
         text = frontier.pop().read_text()
         for rel in sorted(pending):
-            if names_doc(rel).search(text):
+            if names_doc(forms[rel]).search(text):
                 pending.discard(rel)
                 frontier.append(root / rel)
     return [
@@ -301,7 +317,8 @@ def check_reachable(path: Path) -> list[Finding]:
             'skill-orphan',
             f'{root / rel}: [skill-orphan] no chain of names from SKILL.md reaches it '
             '— wisdom: only SKILL.md preloads, so an unnamed sibling is dead weight; '
-            'add a dispatch row or delete the file',
+            'add a dispatch row (a path, when another file shares the basename) or '
+            'delete the file',
         )
         for rel in sorted(pending)
     ]

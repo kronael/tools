@@ -218,23 +218,6 @@
   target in CI. Both change the script's input contract — needs sign-off; no
   test — design.
 
-- **SKILL-LINT-BASENAME-HIDES-ORPHANS** (MED, design) — proposed. Duplicate
-  basenames hide real orphans. `names_doc`
-  (`hooks/skill_frontmatter_lint.py:276`) accepts a bare basename written
-  anywhere under the skill, so one file's name satisfies every file that shares
-  it: `public/reference.md` counts as a reference to `unused/reference.md`.
-  Three files ship unreached today — `skills/create/art/ascii-video/README.md`,
-  `skills/create/art/p5js/README.md` and `skills/create/video/manim/README.md`
-  — matched only by unrelated `README.md` mentions in
-  `skills/create/web.md:664-670,712,797,806`, which describe the `sketches/`
-  output tree. A blanket-strict path match is the wrong fix: it orphans 103
-  files under `skills/create/`, among them 49 legitimate bare rows at
-  `skills/create/web/popular-web-designs.md:122-200` and the genuine
-  intermediate-file reference at `skills/create/video/render.md:29`. So the fix
-  has to be duplicate-aware — accept a basename only while it is unique under
-  the skill, and demand a path form otherwise. A matcher contract change —
-  needs sign-off; no test — design.
-
 - **SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE** (MED, design) — proposed.
   `check_leaks` (`hooks/skill_frontmatter_lint.py:310`) reads `*.md` under a
   directory holding a `SKILL.md`, while the rule it cites (`CLAUDE.md:121`)

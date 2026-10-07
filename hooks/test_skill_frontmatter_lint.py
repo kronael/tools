@@ -192,3 +192,29 @@ def test_secret_in_a_sibling_fails(tmp_path: Path) -> None:
     path = make(tmp_path, VALID + '\n- Read `creds.md`.\n')
     sibling(path, 'creds.md', 'export TOKEN=sk-ant-oat01-abcdefgh\n')
     assert 'skill-secret' in rules(findings(path), Severity.ERROR)
+
+
+def test_duplicate_basename_needs_a_path_form(tmp_path: Path) -> None:
+    """One `README.md` mention cannot stand for two files of that name."""
+    path = make(tmp_path, VALID + '\n- Each mode ships a `README.md`.\n')
+    sibling(path, 'art/p5js/README.md')
+    sibling(path, 'video/manim/README.md')
+    messages = [f.message for f in findings(path) if f.rule == 'skill-orphan']
+    assert len(messages) == 2
+
+
+def test_duplicate_basename_reached_by_a_path_suffix(tmp_path: Path) -> None:
+    """A suffix with a directory in it is unique, so each file is reached."""
+    path = make(tmp_path, VALID + '\n- Read `p5js/README.md` and `manim/README.md`.\n')
+    sibling(path, 'art/p5js/README.md')
+    sibling(path, 'video/manim/README.md')
+    assert findings(path) == []
+
+
+def test_root_file_keeps_its_name_beside_a_deeper_namesake(tmp_path: Path) -> None:
+    """`manim.md` at the root and `render/flavors/manim.md` named from `render.md`."""
+    path = make(tmp_path, VALID + '\n- Read `manim.md` or `render.md`.\n')
+    sibling(path, 'manim.md')
+    sibling(path, 'render.md', 'Read `flavors/manim.md`.\n')
+    sibling(path, 'render/flavors/manim.md')
+    assert findings(path) == []
