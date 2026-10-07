@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [v0.4.22] — 20261007
+
+> kronael v0.4.22 — the skill lint stops exempting itself
+>
+> The skill lint no longer exempts the file that documents it, and now runs on the commits that change siblings.
+>
+> • The opt-out marker counts only on a line of its own, so quoting it documents it without disarming.
+> • A written path names one file: a reference to `flavors/manim.md` no longer credits root `manim.md`.
+> • Passing a sibling `.md` lints the skill that owns it; pre-commit and CI both reach it.
+> • The leak scan covers the tree; an account that only starts with the container's name is a leak.
+> • BUGS.md — three proposals built and removed, five open items recorded in their place.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/skill_frontmatter_lint.py`: reachability resolves the `.md` path tokens a document contains, then names a file by its path from the skill root or by a trailing part of that path no other file under the skill shares — so a bare basename counts only while it is unique. `names_doc` is gone; one resolution path replaces the per-candidate regex.
+- The `<!-- lint: allow skill-local-path -->` marker counts only on a line of its own. `skills/CLAUDE.md` quotes it in prose and was exempting itself; a planted home path in it now fails. A fenced block holding the marker alone on a line still disarms — nothing parses fences.
+- `LOCAL_PATH` exempts the container accounts `dockbox` and `claude` as whole segments only. An account that merely starts with one of those names belongs to somebody and now reports.
+- `skill_files()` maps a sibling `.md` to the `SKILL.md` that owns it, `.pre-commit-config.yaml` matches every `.md`, and the Lint workflow runs on push to master as well as on a pull request — it had never run, since this repo pushes straight to master.
+- `evals/README.md` teaches path-stripping with a placeholder account instead of a real former one, and needs no marker. `skills/create/CLAUDE.md` states where a ported tree's `README.md` is named from.
+- `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS`, `SKILL-LINT-BASENAME-HIDES-ORPHANS` and `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` are built and removed. Recorded in their place: `SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT`, `SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS`, `LINT-CI-DISPATCH-EMPTY-REFS`, `PRE-COMMIT-ALL-FILES-RED`, and `SKILL-LINT-NO-ORG-REF-CHECK` under Ruled not a defect.
+
 ## [v0.4.21] — 20261007
 
 > kronael v0.4.21 — the skill lint catches dead files and leaked paths
