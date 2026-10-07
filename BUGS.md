@@ -204,6 +204,53 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
+- **SKILL-LINT-GATE-SKIPS-SIBLING-EDITS** (MED, design) — proposed. The gate is
+  bypassed for exactly the commits it exists to catch. `.pre-commit-config.yaml:14`
+  sets `files: (^|/)SKILL\.md$`, and `skill_files()`
+  (`hooks/skill_frontmatter_lint.py:86-89`) keeps only paths named `SKILL.md`,
+  so a commit touching only a sibling `.md` — the files the orphan and leak
+  rules are about — lints nothing. `.github/workflows/lint.yml:22-23` runs
+  pre-commit over the PR's changed files under that same filter, and no workflow
+  or `make test` target runs `make skills-frontmatter` over the tree, so CI does
+  not cover it either. Widening the pre-commit pattern alone does not work: the
+  script's own path filter drops the file. **Proposal:** have the script accept
+  a sibling `.md` by linting the skill that owns it, and run the tree-wide
+  target in CI. Both change the script's input contract — needs sign-off; no
+  test — design.
+
+- **SKILL-LINT-BASENAME-HIDES-ORPHANS** (MED, design) — proposed. Duplicate
+  basenames hide real orphans. `names_doc`
+  (`hooks/skill_frontmatter_lint.py:276`) accepts a bare basename written
+  anywhere under the skill, so one file's name satisfies every file that shares
+  it: `public/reference.md` counts as a reference to `unused/reference.md`.
+  Three files ship unreached today — `skills/create/art/ascii-video/README.md`,
+  `skills/create/art/p5js/README.md` and `skills/create/video/manim/README.md`
+  — matched only by unrelated `README.md` mentions in
+  `skills/create/web.md:664-670,712,797,806`, which describe the `sketches/`
+  output tree. A blanket-strict path match is the wrong fix: it orphans 103
+  files under `skills/create/`, among them 49 legitimate bare rows at
+  `skills/create/web/popular-web-designs.md:122-200` and the genuine
+  intermediate-file reference at `skills/create/video/render.md:29`. So the fix
+  has to be duplicate-aware — accept a basename only while it is unique under
+  the skill, and demand a path form otherwise. A matcher contract change —
+  needs sign-off; no test — design.
+
+- **SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE** (MED, design) — proposed.
+  `check_leaks` (`hooks/skill_frontmatter_lint.py:310`) reads `*.md` under a
+  directory holding a `SKILL.md`, while the rule it cites (`CLAUDE.md:121`)
+  covers source. `skills/README.md` and `skills/CLAUDE.md` sit outside every
+  skill directory and are never scanned, and four tracked files carry an
+  absolute home path the pattern matches: `docs/astgrep/codex-critique.md`
+  (this host's own account, on most bullets), `evals/README.md:122`,
+  `research/anthropic-skills.md:72` and
+  `specs/2-hermes-skill-autoimprove.md:79-80`. The last three name another
+  author's account, and `evals/README.md:122` uses one as the example of what to
+  strip, so a wider root needs a per-file allowance with it. Nothing checks the
+  rule's third category at all: the finding message names org-specific refs,
+  and `LOCAL_PATH` and `SECRET` are the only patterns. **Proposal:** scan a tree
+  root instead of a skill root, with an opt-out marker for an illustrative path
+  — a new input contract for both leak rules; no test — design.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
