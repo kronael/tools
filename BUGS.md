@@ -218,22 +218,6 @@
   target in CI. Both change the script's input contract — needs sign-off; no
   test — design.
 
-- **SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE** (MED, design) — proposed.
-  `check_leaks` (`hooks/skill_frontmatter_lint.py:310`) reads `*.md` under a
-  directory holding a `SKILL.md`, while the rule it cites (`CLAUDE.md:121`)
-  covers source. `skills/README.md` and `skills/CLAUDE.md` sit outside every
-  skill directory and are never scanned, and four tracked files carry an
-  absolute home path the pattern matches: `docs/astgrep/codex-critique.md`
-  (this host's own account, on most bullets), `evals/README.md:122`,
-  `research/anthropic-skills.md:72` and
-  `specs/2-hermes-skill-autoimprove.md:79-80`. The last three name another
-  author's account, and `evals/README.md:122` uses one as the example of what to
-  strip, so a wider root needs a per-file allowance with it. Nothing checks the
-  rule's third category at all: the finding message names org-specific refs,
-  and `LOCAL_PATH` and `SECRET` are the only patterns. **Proposal:** scan a tree
-  root instead of a skill root, with an opt-out marker for an illustrative path
-  — a new input contract for both leak rules; no test — design.
-
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`

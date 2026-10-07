@@ -76,8 +76,8 @@ not a proposal — just "this turn looks interesting; come back to it later".
   "episode_id": "20260525-184523-abc123-001",
   "ts": "2026-05-25T18:45:23Z",
   "session_id": "abc123-...",
-  "jsonl_path": "/home/ondra/.claude/projects/-home-ondra-.../abc123.jsonl",
-  "cwd": "/home/ondra/wk/foo",
+  "jsonl_path": "/home/u/.claude/projects/-home-u-wk-foo/abc123.jsonl",
+  "cwd": "/home/u/wk/foo",
   "trigger": "user_correction",
   "signal": {
     "last_user_text_excerpt": "no don't add comments, the code is self-explanatory",

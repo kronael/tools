@@ -118,6 +118,8 @@ If you notice candidates that score implausibly well, suspect contamination firs
 
 When mining real sessions:
 
+<!-- lint: allow skill-local-path -->
+
 - **Paraphrase the user prompt.** Don't copy verbatim if it contains personal details.
 - **Strip identifying paths.** Replace `/home/ondra/wk/myproject/` with `/some/repo/` or a fake path that makes sense for the example.
 - **Edit diffs.** If the real diff includes proprietary code or secrets, replace with synthesized equivalents that exercise the same skill behavior.

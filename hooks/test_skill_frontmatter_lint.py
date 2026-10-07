@@ -1,7 +1,10 @@
+import subprocess
+import sys
 from pathlib import Path
 
 from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import check_body
+from skill_frontmatter_lint import check_leaks
 from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import parse_meta
 from skill_frontmatter_lint import process
@@ -167,7 +170,7 @@ def test_absolute_home_path_fails(tmp_path: Path) -> None:
     """A real account segment trips bare, with a tail, and on macOS alike."""
     for leak in '/home/devuser', '/home/devuser/src', '/Users/alice':
         path = make(tmp_path, VALID + f'\n- Run it in {leak}.\n')
-        assert 'skill-local-path' in rules(findings(path), Severity.ERROR), leak
+        assert 'skill-local-path' in rules(check_leaks(path), Severity.ERROR), leak
 
 
 def test_hooks_tree_ships_no_home_path() -> None:
@@ -185,13 +188,13 @@ def test_hooks_tree_ships_no_home_path() -> None:
 
 def test_placeholder_home_path_passes(tmp_path: Path) -> None:
     path = make(tmp_path, VALID + '\n- The slug of /home/u/app/x is -home-u-app-x.\n')
-    assert findings(path) == []
+    assert check_leaks(path) == []
 
 
 def test_secret_in_a_sibling_fails(tmp_path: Path) -> None:
     path = make(tmp_path, VALID + '\n- Read `creds.md`.\n')
-    sibling(path, 'creds.md', 'export TOKEN=sk-ant-oat01-abcdefgh\n')
-    assert 'skill-secret' in rules(findings(path), Severity.ERROR)
+    creds = sibling(path, 'creds.md', 'export TOKEN=sk-ant-oat01-abcdefgh\n')
+    assert 'skill-secret' in rules(check_leaks(creds), Severity.ERROR)
 
 
 def test_duplicate_basename_needs_a_path_form(tmp_path: Path) -> None:
@@ -218,3 +221,48 @@ def test_root_file_keeps_its_name_beside_a_deeper_namesake(tmp_path: Path) -> No
     sibling(path, 'render.md', 'Read `flavors/manim.md`.\n')
     sibling(path, 'render/flavors/manim.md')
     assert findings(path) == []
+
+
+def run_lint(*paths: Path) -> subprocess.CompletedProcess[str]:
+    script = Path(__file__).with_name('skill_frontmatter_lint.py')
+    return subprocess.run(
+        [sys.executable, str(script), *map(str, paths)], capture_output=True, text=True, check=False
+    )
+
+
+def test_leak_scan_reaches_a_doc_outside_any_skill(tmp_path: Path) -> None:
+    """CLAUDE.md bans local paths in source, not only under a SKILL.md."""
+    (tmp_path / 'README.md').write_text('Clone it into /home/devuser/src.\n')
+    result = run_lint(tmp_path)
+    assert result.returncode == 2, result
+    assert 'skill-local-path' in result.stderr
+
+
+def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
+    """Ignored state such as .claude/plans/ lives in hidden directories."""
+    plans = tmp_path / '.claude' / 'plans'
+    plans.mkdir(parents=True)
+    (plans / 'plan.md').write_text('Edit /home/devuser/src/x.py.\n')
+    assert run_lint(tmp_path).returncode == 0
+
+
+def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
+    """evals/README.md shows a real-looking path as the thing to strip."""
+    doc = tmp_path / 'README.md'
+    doc.write_text('<!-- lint: allow skill-local-path -->\nStrip /home/devuser/wk/.\n')
+    assert check_leaks(doc) == []
+
+
+def test_secret_has_no_opt_out(tmp_path: Path) -> None:
+    doc = tmp_path / 'README.md'
+    doc.write_text('<!-- lint: allow skill-local-path -->\nexport TOKEN=sk-ant-oat01-abcdefgh\n')
+    assert 'skill-secret' in rules(check_leaks(doc), Severity.ERROR)
+
+
+def test_container_home_is_not_a_leak(tmp_path: Path) -> None:
+    """dockbox pins its container HOME; that path names no authoring machine."""
+    doc = tmp_path / 'README.md'
+    doc.write_text(
+        '`~/.claude` -> `/home/dockbox/.claude` (rw); older images used /home/claude/.\n'
+    )
+    assert check_leaks(doc) == []

@@ -152,7 +152,8 @@ touching `skills/`. The fourth is an error: the lint walks the chain of names
 out of `SKILL.md` and reports every `.md` under the skill that no chain
 reaches. A bare basename names a file only while it is unique under the
 skill; a duplicate needs a directory in front of it. `CLAUDE.md` is exempt
-at any depth.
+at any depth. The same target scans every `.md` in the tree, hidden
+directories aside, for an absolute home path or a credential shape.
 
 **Both bridges work, proven by running them**
 

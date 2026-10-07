@@ -69,7 +69,7 @@ From [`skills/wisdom/SKILL.md`](../skills/wisdom/SKILL.md):
 
 We codified ALWAYS/NEVER caps as the house style. Anthropic's data suggests this is sub-optimal for generalization.
 
-The user's own [auto-memory](/home/ondra/.claude/projects/-home-ondra-wk-tools/memory/MEMORY.md) reinforces this preference:
+The user's own [auto-memory](~/.claude/projects/<slug>/memory/MEMORY.md) reinforces this preference:
 
 > feedback_should_not_allowed.md — Skill content: use ALWAYS/NEVER only — never SHOULD (too soft)
 

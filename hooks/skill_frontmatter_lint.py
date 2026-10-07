@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Lint SKILL.md: frontmatter YAML (autofix) plus wisdom-skill body rules.
+"""Lint SKILL.md: frontmatter YAML (autofix) plus wisdom-skill body rules, and
+scan every .md under the paths given for leaked home paths and secrets.
 
 Body rules are sourced verbatim from the `wisdom` skill (the skill-authoring
 spec). Each rule names itself and points back at wisdom so a failure teaches.
@@ -12,11 +13,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
+from fnmatch import fnmatch
 from pathlib import Path
 
 import yaml
@@ -65,11 +68,18 @@ LISTING_CAP = 1536
 PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md'})
 # A home path naming a real account leaks the authoring machine. A one-character
 # account segment is this bundle's placeholder for an illustrative path
-# (`/home/u/app/x` teaches the project-slug transform), so it stays.
-LOCAL_PATH = re.compile(r'/(?:home|Users)/[A-Za-z0-9._-]{2,}')
+# (`/home/u/app/x` teaches the project-slug transform), so it stays. So do
+# `/home/dockbox` and `/home/claude`: the HOME of this repo's own container
+# user (dockbox/README.md, CHANGELOG.md), which names no authoring machine.
+LOCAL_PATH = re.compile(r'/(?:home|Users)/(?!(?:dockbox|claude)\b)[A-Za-z0-9._-]{2,}')
 SECRET = re.compile(
     r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
 )
+# CLAUDE.md bans org-specific refs too. Nothing here checks them: a pattern
+# would have to name the org, which is the ref it exists to keep out.
+# A file whose point is a real-looking path (what to strip, where a slug comes
+# from) opts out of the path rule with this marker. Secrets have no opt-out.
+ALLOW_LOCAL_PATH = '<!-- lint: allow skill-local-path -->'
 
 
 class Severity(Enum):
@@ -84,14 +94,35 @@ class Finding:
     message: str
 
 
+def visible_files(root: Path, pattern: str) -> list[Path]:
+    """Files under `root` matching `pattern`, skipping hidden directories: they
+    hold ignored state such as `.claude/plans/` and the `.git` store, not source.
+    """
+    found: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+        found.extend(Path(dirpath) / name for name in filenames if fnmatch(name, pattern))
+    return found
+
+
 def skill_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
         if path.is_file() and path.name == 'SKILL.md':
             files.append(path)
         elif path.is_dir():
-            files.extend(path.glob('**/SKILL.md'))
+            files.extend(visible_files(path, 'SKILL.md'))
     return sorted(set(files))
+
+
+def leak_docs(paths: list[Path]) -> list[Path]:
+    docs: list[Path] = []
+    for path in paths:
+        if path.is_file() and path.suffix == '.md':
+            docs.append(path)
+        elif path.is_dir():
+            docs.extend(visible_files(path, '*.md'))
+    return sorted(set(docs))
 
 
 def frontmatter(text: str) -> tuple[str, str] | None:
@@ -324,24 +355,30 @@ def check_reachable(path: Path) -> list[Finding]:
     ]
 
 
-def check_leaks(path: Path) -> list[Finding]:
+def check_leaks(doc: Path) -> list[Finding]:
+    text = doc.read_text()
+    rules = [('skill-secret', SECRET, 'a credential shape')]
+    if ALLOW_LOCAL_PATH not in text:
+        rules.append(
+            (
+                'skill-local-path',
+                LOCAL_PATH,
+                'an absolute home path (an illustrative one takes a one-character '
+                f'account, or the file opts out with {ALLOW_LOCAL_PATH})',
+            )
+        )
     findings: list[Finding] = []
-    for doc in sorted(path.parent.rglob('*.md')):
-        for offset, line in enumerate(doc.read_text().splitlines(), start=1):
-            for rule, pattern, why in (
-                ('skill-secret', SECRET, 'a credential shape'),
-                ('skill-local-path', LOCAL_PATH, 'an absolute home path'),
-            ):
-                if pattern.search(line):
-                    findings.append(
-                        Finding(
-                            Severity.ERROR,
-                            rule,
-                            f'{doc}:{offset}: [{rule}] {why} — CLAUDE.md: NEVER ship local '
-                            'paths, org-specific refs or secrets; they belong in '
-                            '~/.claude/LOCAL.md',
-                        )
+    for offset, line in enumerate(text.splitlines(), start=1):
+        for rule, pattern, why in rules:
+            if pattern.search(line):
+                findings.append(
+                    Finding(
+                        Severity.ERROR,
+                        rule,
+                        f'{doc}:{offset}: [{rule}] {why} — CLAUDE.md: NEVER ship local '
+                        'paths or secrets; they belong in ~/.claude/LOCAL.md',
                     )
+                )
     return findings
 
 
@@ -356,7 +393,6 @@ def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Find
         *check_length(path, body),
         *check_router(path),
         *check_reachable(path),
-        *check_leaks(path),
     ]
 
 
@@ -405,6 +441,10 @@ def main() -> int:
         if result == 1 and args.write and not args.fail_on_write:
             result = 0
         status = max(status, result)
+    for doc in leak_docs(args.paths):
+        for finding in check_leaks(doc):
+            print(finding.message, file=sys.stderr)
+            status = max(status, 2)
     return status
 
 

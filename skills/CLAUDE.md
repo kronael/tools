@@ -135,7 +135,9 @@ skills it replaces.
   keep preloaded skills as decision surfaces.
 - ALWAYS give an illustrative absolute path a one-character account segment
   (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
-  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`).
+  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`). A file
+  whose point is the real-looking path — what to strip, where a slug comes
+  from — opts out with `<!-- lint: allow skill-local-path -->`.
 
 ## Editing a router
 
