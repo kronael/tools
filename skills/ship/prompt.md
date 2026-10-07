@@ -65,7 +65,7 @@ Spec: <path when one exists>
 Depends on: <steps>
 Owns: <paths>
 Accepts: <acceptance IDs and concrete cases>
-Gate: <exact command>
+Gate: <exact command> → <expected result>
 Status: <pending / running / verified / blocked / owner-deferred>
 Evidence: <commit or diff, gate result, behavior check>
 Attempts: <repair count, approach, evidence, review rounds>
