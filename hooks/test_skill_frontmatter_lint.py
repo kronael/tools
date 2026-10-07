@@ -156,8 +156,10 @@ def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
 
 
 def test_absolute_home_path_fails(tmp_path: Path) -> None:
-    path = make(tmp_path, VALID + '\n- Run it in /home/devuser/src/tools.\n')
-    assert 'skill-local-path' in rules(findings(path), Severity.ERROR)
+    """A real account segment trips bare, with a tail, and on macOS alike."""
+    for leak in '/home/devuser', '/home/devuser/src', '/Users/alice':
+        path = make(tmp_path, VALID + f'\n- Run it in {leak}.\n')
+        assert 'skill-local-path' in rules(findings(path), Severity.ERROR), leak
 
 
 def test_hooks_tree_ships_no_home_path() -> None:

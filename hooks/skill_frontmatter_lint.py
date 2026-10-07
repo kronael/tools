@@ -65,7 +65,7 @@ PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md'})
 # A home path naming a real account leaks the authoring machine. A one-character
 # account segment is this bundle's placeholder for an illustrative path
 # (`/home/u/app/x` teaches the project-slug transform), so it stays.
-LOCAL_PATH = re.compile(r'/(?:home|Users)/[A-Za-z0-9._-]{2,}/')
+LOCAL_PATH = re.compile(r'/(?:home|Users)/[A-Za-z0-9._-]{2,}')
 SECRET = re.compile(
     r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
 )
