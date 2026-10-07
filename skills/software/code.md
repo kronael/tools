@@ -9,7 +9,8 @@ your diff against every `##` heading here before calling an edit done.
 
 - ALWAYS name a predicate `is_`/`has_`/`can_`/`should_` and a conversion
   `to_`/`into_`: `valid()` → `is_valid()`, camelCase `isValid()`. The
-  `<lang>-bool-fn-prefix` lint flags the miss.
+  `<lang>-bool-fn-prefix` lint flags the miss in Rust, Python and TypeScript
+  (`.ts`, not `.tsx`); no lint covers any other language.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.
@@ -71,13 +72,20 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS confine comments inside a body to three narrow exceptions, each owned
   by the skill that states it and valid only on the construct it names: a
   test's scenario-to-outcome intro (`testing.md`), a `// SAFETY:` invariant on
-  an `unsafe` block (`rs`), the WHY on a deliberate error suppression (`go`).
-  NEVER anything else.
+  an `unsafe` block (`rs`), and the WHY on its own line above a deliberately
+  unhandled error — a Go error suppression (`go`), a Rust `.unwrap()` (`rs`).
+  NEVER anything else, and NEVER one trailing a code line.
+- NEVER count a machine-read marker as a comment: a `// #region <name>` doc
+  include anchor (`readme` skill) or a lint or type pragma (`//nolint:`,
+  `# noqa`, `# type: ignore`, `// @ts-expect-error`) is read by a tool, so it
+  stays.
 
 ## Boring code
 
 - ALWAYS choose the boring solution: debugging is twice as hard as writing, so
   write simpler than you are capable of, clarity over cleverness.
+- ALWAYS pick the construct that takes the least mental model when two are
+  equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
 - ALWAYS copy a thing two or three times before you abstract it. Every line is
   a liability, deletion lowers cost, and a premature abstraction freezes the
   wrong shape in place. ALWAYS design for replaceability.
@@ -113,6 +121,9 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
   state or inject dependencies — functions compose better and leak less.
 - ALWAYS validate input before it reaches persistence.
+- ALWAYS handle SIGINT and SIGTERM in anything long-running — a service,
+  daemon, worker or watch loop: stop taking new work, finish or cancel what is
+  in flight, flush, and exit.
 - NEVER a function-typed struct field: it is a jump, not an abstraction. The
   call site names the field, the value is a nameless literal another file
   assigned, and no other code can refer to it. Five-second test — from the call
