@@ -39,7 +39,7 @@ second copy of the site:
 - A closing "Repository layout" names each top directory. The link row plus
   "Repository layout" replace "How to read this".
 
-## Doc site: guide and reference
+## A doc site splits into guide and reference
 
 A built docs site (VitePress, mdBook, Docusaurus) turns the file split above
 into a sidebar. ALWAYS order it as the newcomer's questions arrive:
