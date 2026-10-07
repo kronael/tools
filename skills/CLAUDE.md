@@ -137,7 +137,8 @@ skills it replaces.
   (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
   and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`). A file
   whose point is the real-looking path — what to strip, where a slug comes
-  from — opts out with `<!-- lint: allow skill-local-path -->`.
+  from — opts out with `<!-- lint: allow skill-local-path -->` on a line of
+  its own.
 
 ## Editing a router
 

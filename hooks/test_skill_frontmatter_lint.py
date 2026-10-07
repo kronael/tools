@@ -254,6 +254,18 @@ def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
     assert check_leaks(doc) == []
 
 
+def test_marker_counts_only_on_a_line_of_its_own(tmp_path: Path) -> None:
+    """skills/CLAUDE.md documents the marker in prose; quoting it must not disarm the file."""
+    doc = tmp_path / 'README.md'
+    for smuggled in (
+        'Opt out with `<!-- lint: allow skill-local-path -->`.',
+        '> <!-- lint: allow skill-local-path -->',
+        'The <!-- lint: allow skill-local-path --> marker, mid-sentence.',
+    ):
+        doc.write_text(f'{smuggled}\nWork in /home/devuser/app/x.\n')
+        assert 'skill-local-path' in rules(check_leaks(doc), Severity.ERROR), smuggled
+
+
 def test_secret_has_no_opt_out(tmp_path: Path) -> None:
     doc = tmp_path / 'README.md'
     doc.write_text('<!-- lint: allow skill-local-path -->\nexport TOKEN=sk-ant-oat01-abcdefgh\n')

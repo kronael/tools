@@ -78,7 +78,9 @@ SECRET = re.compile(
 # CLAUDE.md bans org-specific refs too. Nothing here checks them: a pattern
 # would have to name the org, which is the ref it exists to keep out.
 # A file whose point is a real-looking path (what to strip, where a slug comes
-# from) opts out of the path rule with this marker. Secrets have no opt-out.
+# from) opts out of the path rule with this marker on a line of its own, so
+# quoting it in prose documents it without disarming the file. A fenced block
+# holding that line still disarms; nothing parses fences. Secrets have no opt-out.
 ALLOW_LOCAL_PATH = '<!-- lint: allow skill-local-path -->'
 
 
@@ -372,13 +374,13 @@ def check_reachable(path: Path) -> list[Finding]:
 def check_leaks(doc: Path) -> list[Finding]:
     text = doc.read_text()
     rules = [('skill-secret', SECRET, 'a credential shape')]
-    if ALLOW_LOCAL_PATH not in text:
+    if ALLOW_LOCAL_PATH not in text.splitlines():
         rules.append(
             (
                 'skill-local-path',
                 LOCAL_PATH,
                 'an absolute home path (an illustrative one takes a one-character '
-                f'account, or the file opts out with {ALLOW_LOCAL_PATH})',
+                f'account, or the file opts out with {ALLOW_LOCAL_PATH} on a line of its own)',
             )
         )
     findings: list[Finding] = []
