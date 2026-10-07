@@ -143,6 +143,13 @@
 
 ## Hooks
 
+- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-07.
+  `hooks/README.md` and `hooks/ARCHITECTURE.md` list fewer blocked commands
+  than `hooks/pretool_nudge.py:20-29` enforces: `git merge --squash`,
+  `git rebase -i`, branch creation (`checkout -b`/`switch -c`), `git worktree
+  add` without `--detach` and `killall` are blocked but undocumented.
+  **Fix:** list every pattern in the docs, or point them at the table.
+
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51
