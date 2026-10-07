@@ -74,11 +74,11 @@ Pass to the renderer with `--cards path/to/cards.json` (or `--text "line1" "line
 
 ```json
 [
-  {"text": "Project 1.0.0",           "pos": "top",    "size": 2.6, "color": [255,255,255],
+  {"text": "Project 1.0.0",              "pos": "top",    "size": 2.6, "color": [255,255,255],
    "appear": 0,  "fade_in": 1.5},
-  {"text": "Colony finds shortest path","pos": "bottom", "size": 1.5, "color": [200,200,200],
+  {"text": "Colony finds shortest path", "pos": "bottom", "size": 1.5, "color": [200,200,200],
    "appear": 0,  "fade_in": 1.5},
-  {"text": "Now 3x faster",            "pos": "mid",    "size": 2.2, "color": [255,200,50],
+  {"text": "Now 3x faster",              "pos": "mid",    "size": 2.2, "color": [255,200,50],
    "appear": 8,  "fade_in": 0.4, "hold": 4, "fade_out": 0.6}
 ]
 ```
