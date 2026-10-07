@@ -134,8 +134,14 @@ def test_reachability_chains_through_a_named_sibling(tmp_path: Path) -> None:
 
 
 def test_path_style_reference_names_the_basename(tmp_path: Path) -> None:
-    path = make(tmp_path, VALID + '\n- Read `flavors/remotion.md`.\n')
-    sibling(path, 'flavors/remotion.md')
+    """`render.md` writes the path from its own directory, not the skill root.
+
+    So `render/flavors/remotion.md` appears in no text and only the basename
+    form, preceded by a `/`, reaches the file.
+    """
+    path = make(tmp_path, VALID + '\n- Read `render.md`.\n')
+    sibling(path, 'render.md', 'Read `flavors/remotion.md`.\n')
+    sibling(path, 'render/flavors/remotion.md')
     assert findings(path) == []
 
 
