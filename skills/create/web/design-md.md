@@ -130,8 +130,9 @@ if the value type is valid. Unknown component properties produce a warning.
 1. **Ask the user** (or infer) the brand tone, accent color, and typography
    direction. If they provided a site, image, or vibe, translate it to the
    token shape above.
-2. **Write `DESIGN.md`** in their project root using `write_file`. Always
-   include `name:` and `colors:`; other sections optional but encouraged.
+2. **Write `DESIGN.md`** in their project root using `write_file`, starting
+   from `design-md/templates/starter.md`. Always include `name:` and
+   `colors:`; other sections optional but encouraged.
 3. **Use token references** (`{colors.primary}`) in the `components:` section
    instead of re-typing hex values. Keeps the palette single-source.
 4. **Lint it** (see below). Fix any broken references or WCAG failures
