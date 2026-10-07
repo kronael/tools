@@ -1,9 +1,9 @@
-# Bundle subtraction pass
+# Subtraction pass — the procedure
 
-Runs `SKILL.md` § The subtraction test over the whole bundle: a rule goes only
-when behaviour shows the default already holds; drifts, local facts, workflows
-and harness overrides stay. Run it after a large consolidation, or when the
-owner says the rules are too many or not upheld.
+How to measure a rule for `SKILL.md` § The subtraction test, which owns the
+verdict criteria. Run it over one rule before writing or trimming it, and over
+the whole bundle after a large consolidation or when the owner says the rules
+are too many or not upheld.
 
 ## The clean room
 
@@ -12,33 +12,59 @@ kind, no tools, no settings, no memory. Anything less lets the model read or
 paraphrase the rules under audit, and the test measures the bundle, not the
 model.
 
-- NEVER use an `Agent(...)` sub: it inherits `~/.claude/CLAUDE.md` and the
-  skill listing, and its tools can Read the skills.
-- NEVER rely on `--safe-mode` alone: it still lists Claude Code's built-in
-  skills, keeps tools, reads the real home and runs its default model.
-- ALWAYS run every prompt like this, with a fresh root per pass:
+- ALWAYS run every prompt through `clean-room.sh <model-id> <prompt-file>` in
+  this directory, one fresh room per run. NEVER measure with an `Agent(...)`
+  sub: it is handed `~/.claude/CLAUDE.md` and every applicable project
+  `CLAUDE.md` before its first token, so "do not read any files" removes
+  nothing and it paraphrases the rule back as its own. The tell is
+  specificity: a clean model gives the field default, a contaminated one
+  returns this repo's exact paths, counts and separators.
+- NEVER drop a flag from the script's `claude` line: without
+  `--disable-slash-commands` the run lists Claude Code's built-in skills, and
+  without `--safe-mode` it loads a CLAUDE.md from its working directory.
+- ALWAYS export `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` first — the
+  room's fresh `HOME` puts OAuth and the keychain out of reach. Read the
+  owner's token from their shell rc into the variable; NEVER print it.
+- ALWAYS pass a full model ID (`claude-opus-5-5`). An empty config falls back
+  to another model, and `claude` answers an alias or an unknown name from
+  whatever it resolves, which turns a two-model verdict into one model run
+  twice without failing.
+- ALWAYS trust a run only on its transcript, never on the model's report of
+  what it saw. After every run the script reads the transcripts under the
+  room's `CLAUDE_CONFIG_DIR` and exits non-zero unless they hold no
+  `skill_listing`, `instructions` (a loaded CLAUDE.md) or `nested_memory`
+  attachment, zero `tool_use` blocks, and the pinned model in every assistant
+  record; `clean-room.sh check <model-id> <room>` re-runs the check.
+- ALWAYS also send a probe through the same set-up, one this repo answers
+  unusually — "where do you put git worktrees, how do you name a new branch,
+  what line width do you code to" — and discard the whole run when
+  repo-specific detail comes back instead of the field default.
+- Rooms stay under `/var/tmp`; keep answers beside them as
+  `<room>/<topic>-<n>.md`, scratch, not the record.
 
-  ```sh
-  R=$(mktemp -d -p /var/tmp cleanroom-XXXX); mkdir -p "$R/hdir" "$R/cwd"
-  cd "$R/cwd" && env -i HOME="$R/hdir" CLAUDE_CONFIG_DIR="$R/hdir/.claude" \
-    PATH="/usr/bin:/bin:$(dirname "$(command -v claude)")" \
-    CLAUDE_CODE_OAUTH_TOKEN="$tok" \
-    claude --model <the model sessions use> --safe-mode \
-      --disable-slash-commands --tools "" -p "<prompt>"
-  ```
+## Prompts
 
-  `$tok` is the owner's login, read from their shell rc into a variable;
-  NEVER print it. Pin the model: an empty config falls back to another one.
-- ALWAYS prove the isolation from the run's own transcript, never from its
-  self-report: under `$R/hdir/.claude/projects/` no `skill_listing`,
-  `claudeMd` or `nested_memory` attachment, zero `tool_use` blocks, and the
-  pinned model in every assistant record.
-- Two prompts per topic, each a fresh run:
-  1. "Write the rules you follow by default when <topic>. Mark each rule you
-     know you drift on `[NEEDS TELLING]` with a one-clause why."
-  2. "Describe how you actually behave when <task> with no instructions: your
-     real defaults, the wrong ones included."
-- Keep both answers in `$R/<topic>-<n>.md`; they are scratch, not the record.
+- ALWAYS write each prompt to a file and pass its path — NEVER inline it in a
+  `-p "…"` argument: bash runs a backticked word inside double quotes as a
+  command, `[NEEDS TELLING]` included.
+- ALWAYS name the DOMAIN only ("error handling", "code comments") and let the
+  model decide what belongs in it. NEVER list sub-topics taken from our
+  headings: a "cover X, Y, Z" line is our table of contents, a model
+  completing it proves only that it can write to a spec, and the finding — a
+  rule it never thought to mention — can no longer show. NEVER quote or
+  paraphrase our text, and NEVER ask for a critique of ours. Before sending,
+  read the prompt back and strike any phrase you could locate in the file
+  being measured.
+- Two questions, each in a fresh room:
+  1. Knowledge, once per domain: "Write the rules you follow by default when
+     <domain>, from your own judgment. Mark each rule you know you drift on
+     `[NEEDS TELLING]` with a one-clause why."
+  2. Behaviour, once per candidate rule — each rule question 1 reproduced and
+     did not mark: "Describe how you actually behave when <the task the rule
+     governs> with no instructions: your real defaults, the wrong ones
+     included." Name the task, never the rule.
+- ALWAYS ask both questions of two models — one agreeing is a signal, two is a
+  verdict.
 
 ## Order — highest cost per rule first
 
@@ -50,30 +76,18 @@ model.
    `kronael/sync`): a workflow survives by definition; test only their
    free-standing prose rules.
 
-One topic per run, at most 4 runs in parallel. A topic is one section or one
-skill — never a whole file of mixed concerns.
+One domain per run, at most 4 runs in parallel. A domain is what one section
+or one skill governs — never a whole file of mixed concerns.
 
-## Verdict per rule
+## Findings
 
-One table per file: rule, prompt 1, prompt 2, behavioural evidence, verdict.
-The clean room only nominates; a self-report NEVER proves compliance.
-
-- CUT ONLY on behavioural evidence that the default holds: a search of real
-  transcripts or diffs showing it followed, or the owner's report.
-- Reproduced and not confessed, with no such evidence → KEEP.
-- Drift the owner observes → KEEP, always, whatever the clean room says.
-- Confessed broken, contradicted or absent → KEEP, as the ALWAYS/NEVER that
-  names the trap; overriding a prior is guidance's best use.
-- Local fact, workflow or harness override → KEEP, the override labelled.
-- Real engineering content that is not always needed → MOVE to the cold file
-  that owns it; NEVER delete it. A survivor the system prompt or the active
-  output style already states → CUT.
-
-## Apply
-
-- ALWAYS show the owner the table for a hot file (`global`, `code.md`) and
-  wait for sign-off before cutting; cold files follow the table directly.
+- One verdict table per file: rule, question 1 and question 2 per model,
+  behavioural evidence, verdict. ALWAYS record the tables as the diary
+  companion `.diary/YYYYMMDD-subtraction.md`, referenced from that day's log —
+  the next pass starts from it.
+- ALWAYS file a proposed cut to an always-loaded file (`global`, `code.md`) in
+  `BUGS.md` as a proposal naming which model produced what, and wait for the
+  owner's sign-off — NEVER cut one on sight, it changes every future session.
+  A cold file follows its table directly.
 - One commit per file or skill family; `make skills-frontmatter` exits 0;
   sync live (`kronael/sync`).
-- Record the tables as a diary companion, `.diary/YYYYMMDD-subtraction.md`,
-  referenced from that day's log — the next pass starts from it.

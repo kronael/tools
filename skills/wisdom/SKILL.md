@@ -74,27 +74,60 @@ argument-hint: "<question>"   # optional — shown after /name
 
 ## The subtraction test — ALWAYS run it before writing or trimming
 
-A rule earns its place only if a capable model does NOT already follow it. Do
-not judge that from memory; measure it.
+A rule in an always-loaded file costs every session; it earns that only when a
+capable model would not already behave that way. NEVER judge that from memory
+— measure it. `subtraction.md` in this directory owns the procedure: the clean
+room, the prompts, the file order, the verdict table and where findings go.
+ALWAYS read it before a measurement.
 
-1. Ask a clean-room model per topic group, at most 4 groups: "write the
-   guidelines you would follow by default for X, from your own judgment". The
-   clean room is `subtraction.md` § The clean room — empty home, no tools, no
-   skills; NEVER an `Agent(...)` sub, which inherits CLAUDE.md and the skills.
-2. ALWAYS make it mark every rule it knows it drifts on as `[NEEDS TELLING]`
-   with a one-clause why. That marking is the output; the rest is the control.
-3. What it produced unprompted is a cut CANDIDATE; § Minimize sets the evidence
-   a cut needs. ALWAYS KEEP `[NEEDS TELLING]` items, local facts it cannot
-   guess (paths, house conventions, tool and skill names), workflows, and rules
-   that deliberately OVERRIDE the harness — labelled as overrides in place.
-4. ALWAYS cross-check survivors against the system prompt and the active output
-   style, and cut what either already states.
-5. Real engineering content that is not always needed MOVES to the skill that
-   owns it, loaded on demand, rather than being deleted. Check it is not already
-   there.
+- Reproduced by the clean model → candidate CUT, not a verdict. See below.
+- Contradicted by it, or marked `[NEEDS TELLING]` → KEEP, highest value.
+  Overriding a strong prior is the one thing guidance can do that training
+  cannot.
+- Produced by neither → KEEP.
+- Local facts it cannot guess (paths, house conventions, tool and skill
+  names), workflows, and rules that deliberately OVERRIDE the harness → KEEP,
+  the override labelled in place. ALWAYS scope the test to normative content —
+  wisdom, style, judgment; a workflow runbook encodes a chosen procedure and is
+  not measurable this way.
+- A survivor the system prompt or the active output style already states → CUT.
+- Real engineering content that is not always needed → MOVE to the skill that
+  owns it, loaded on demand, after checking it is not already there; NEVER
+  delete it.
 
-Over the whole bundle, ALWAYS read `subtraction.md` in this directory: the
-clean-room setup, the file order and the per-rule verdict table.
+**Reproduction measures knowledge, not compliance.** A model will write a rule
+out cleanly and then break it unprompted. ALWAYS ask the clean room the
+behaviour question too — how it actually behaves on a task with no
+instructions, its real defaults including the wrong ones — and KEEP anything
+it confesses to violating: comments that narrate the change, done declared on
+a green test run, a partial result worded as complete, a subagent's summary
+trusted unchecked. ALWAYS ask it per candidate rule, NEVER once for the whole
+sweep: one confession list answers the rules it happens to name and says
+nothing about the rest, and treating it as global licence cuts rules no
+evidence ever covered.
+
+**A self-report NEVER proves compliance.** A rule the clean room recites and
+does not confess can still break in every session — it recites the `is_`/`has_`
+prefix and "clarity over cleverness", and sessions break both. ALWAYS CUT only
+on behavioural evidence: a search of real transcripts or diffs showing the
+default followed, or the owner's report. ALWAYS KEEP a drift the owner
+observes, whatever the clean room says, and stress it where code is checked —
+a lint, a `refine` hunt — rather than cut it.
+
+Empirically, almost nothing survives. Across error handling, testing and
+comments, every freely reproduced rule was one the models confess to breaking:
+swallowing an error whose recovery is unclear, degrading where crashing is
+correct, a second logging path, over-mocking, a comment above every block.
+EXPECT a nearly empty cut list; a long one means the evidence step was skipped.
+
+When the criterion changes mid-sweep — and it will, because each pass exposes
+how the last one was fooled — ALWAYS re-examine every cut already made under
+the old criterion, including the ones that still look right. Correcting only
+the convenient ones leaves the rest standing on reasoning you have abandoned.
+
+A check that has never failed has not been tested. ALWAYS run a probe you
+expect to FAIL before trusting one that passes — a clean room that cannot leak,
+a linter that cannot flag, and a broken one look identical from a green run.
 
 ## Router skills
 
@@ -135,85 +168,3 @@ clean-room setup, the file order and the per-rule verdict table.
 - This does NOT apply to this repo's own installed `~/.claude/CLAUDE.md`
   (the global wisdom file) — that file is always-loaded outside the
   per-project relevance gate, so the tag has nothing to cut through there.
-
-
-## Minimize — does a rule earn its context?
-
-A rule in an always-loaded file costs every session. It earns that only when
-the model would not already behave that way. Measure it: put the topic to a
-model that cannot see the rule, and compare.
-
-- Reproduced by the clean model → candidate CUT, not a verdict. See below.
-- Contradicted by it → KEEP, highest value. Overriding a strong prior is the
-  one thing guidance can do that training cannot.
-- Produced by neither → KEEP.
-
-**Reproduction measures knowledge, not compliance.** A model will write a rule
-out cleanly and then break it unprompted. ALWAYS ask the clean room the second
-question too — how it actually behaves on a task with no instructions, its real
-defaults including the wrong ones — and KEEP anything it confesses to
-violating: comments that narrate the change, done declared on a green test run,
-a partial result worded as complete, a subagent's summary trusted unchecked.
-
-**A self-report NEVER proves compliance.** A rule the clean room recites and
-does not confess can still break in every session — it recites the `is_`/`has_`
-prefix and "clarity over cleverness", and sessions break both. ALWAYS CUT only
-on behavioural evidence: a search of real transcripts or diffs showing the
-default followed, or the owner's report. ALWAYS KEEP a drift the owner
-observes, whatever the clean room says, and stress it where code is checked —
-a lint, a `refine` hunt — rather than cut it.
-
-Empirically, almost nothing survives. Across error handling, testing and
-comments, every freely reproduced rule was one the models confess to breaking:
-swallowing an error whose recovery is unclear, degrading where crashing is
-correct, a second logging path, over-mocking, a comment above every block.
-EXPECT a nearly empty cut list; a long one means the evidence step was skipped.
-
-ALWAYS ask the behaviour question per candidate rule, not once for the whole
-sweep. One confession list answers the rules it happens to name and says
-nothing about the rest; treating it as global licence cuts rules no evidence
-ever covered.
-
-When the criterion changes mid-sweep — and it will, because each pass exposes
-how the last one was fooled — ALWAYS re-examine every cut already made under
-the old criterion, including the ones that still look right. Correcting only
-the convenient ones leaves the rest standing on reasoning you have abandoned.
-
-A check that has never failed has not been tested. ALWAYS run a probe you
-expect to FAIL before trusting one that passes — a clean room that cannot leak,
-a linter that cannot flag, and a broken one look identical from a green run.
-
-ALWAYS scope this to normative content — wisdom, style, judgment. A workflow
-runbook encodes a chosen procedure and is not measurable this way.
-
-**NEVER measure with a subagent.** It is handed `~/.claude/CLAUDE.md` and every
-applicable project `CLAUDE.md` before its first token, so "do not read any
-files" removes nothing and it paraphrases the rule back as its own. The tell is
-specificity: a clean model gives the field default, a contaminated one returns
-this repo's exact paths, counts and separators.
-
-ALWAYS use `clean-room.sh <model> <prompt-file>` — a throwaway `HOME` so no
-wisdom file loads, an empty working directory so no project `CLAUDE.md` is
-discoverable. Export `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` first; a
-clean `HOME` puts OAuth and the keychain out of reach. ALWAYS run two models —
-one agreeing is a signal, two is a verdict.
-
-ALWAYS verify the room before trusting a run: ask a probe this repo answers
-unusually (branch naming, worktree placement, line width) and confirm the reply
-gives the field default. Discard the whole run when repo-specific detail comes
-back.
-
-ALWAYS check the model name yourself — `claude` warns on stderr about one it
-does not recognise and then answers from whatever it resolves instead, which
-turns a two-model verdict into one model run twice without failing.
-
-NEVER quote or paraphrase our text in the prompt — ask for the guidance itself,
-never for a critique of ours. This includes the list of sub-topics: a "cover X,
-Y, Z" line built from our own section headings is our table of contents, and a
-model completing it proves only that it can write to a spec. Name the DOMAIN
-alone and let the model decide what belongs in it; a rule it never thought to
-mention is the finding. Before sending, read the prompt back and strike any
-phrase you could locate in the file being measured.
-
-Findings go to `BUGS.md` as a proposal naming which model produced what. NEVER
-cut an always-loaded rule on sight — it changes every future session.
