@@ -20,12 +20,15 @@ ALWAYS report what was launched and continue on non-overlapping work.
   `fork_turns: "none"`. Otherwise, ALWAYS use the CLI route below.
 - For CLI workers, ALWAYS apply only `astra`'s Model and Auth checks from
   `../astra/SKILL.md`. ALWAYS use the shell tool's background mode.
-- Only in an externally isolated dockbox, ALWAYS add
+- ALWAYS set `-C` to the CLI worker's designated directory.
+- Outside dockbox, ALWAYS use `--sandbox read-only` for read-only workers
+  or `--sandbox workspace-write` for editing workers.
+- Only in an externally isolated dockbox, ALWAYS replace the sandbox option with
   `--dangerously-bypass-approvals-and-sandbox` per `astra` § Invoke.
-  Otherwise, ALWAYS use the plain ephemeral invocation:
+  The read-only invocation is:
 
 ```bash
-codex exec --ephemeral \
+codex exec --ephemeral --sandbox read-only -C "<worker directory>" \
   -m gpt-6.1-sol -c model_reasoning_effort="high" \
   "<self-contained brief>" </dev/null
 ```
