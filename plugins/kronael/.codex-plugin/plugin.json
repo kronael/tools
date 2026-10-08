@@ -1,6 +1,6 @@
 {
   "name": "kronael",
-  "version": "0.4.22",
+  "version": "0.4.23",
   "description": "Sync bridge for the Kronael Claude Code toolkit.",
   "author": {
     "name": "Ondrej Vostal"
