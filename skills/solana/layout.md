@@ -67,13 +67,19 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
 ### Where the test-module declarations go
 
-`rs` puts unit tests in `src/<module>_test.rs`, declared with
-`#[cfg(test)] mod <module>_test;`. In a multi-file program that declaration
-cannot sit in the module it tests: `mod price_test;` inside `src/price.rs`
-resolves to `src/price/price_test.rs` and fails with `E0583`. Declare them in
-`lib.rs` (or in the directory's `mod.rs`, where `mod deposit_accounts_test;`
-does resolve to a sibling file) and leave a one-line note saying why they are not
-next to their subject.
+Unit tests follow `rs`: `src/<module>_test.rs` beside its subject, declared at the top of the
+module it tests with `#[path]`, so the test module stays a child of its subject and reaches its
+private items:
+
+```rust
+#[cfg(test)]
+#[path = "price_test.rs"]
+mod price_test;
+```
+
+A bare `mod price_test;` inside `src/price.rs` resolves to `src/price/price_test.rs` and fails
+with `E0583`; the `#[path]` line is what makes the sibling file work. NEVER `<module>/tests.rs`,
+NEVER an inline `mod tests { ... }`, NEVER the declarations gathered in `lib.rs`.
 
 ### Module names
 
