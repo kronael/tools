@@ -119,7 +119,7 @@ Python-specific additions and deltas.
 ## Build
 - uv for packages, pyright for types
 - ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
-  `basic` default with a per-file `strict` list. A test file opts down with
+  `basic` default with a per-file `strict` list. Every test file opts down with
   `# pyright: basic` on its first line.
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
 - `make check`: ruff lint + format check (canonical CQ target)
@@ -134,7 +134,7 @@ Python-specific additions and deltas.
   attrs or a small fake class); NEVER make production code tolerate incomplete
   fakes
 - NEVER add production parameters solely to replace functions in tests — ALWAYS patch the symbol at its use site when a test needs substitution; keep dependency parameters for real production dependencies.
-- ALWAYS relax pyright for a test file when strict test typing is impractical (`# pyright: basic` at its top); NEVER weaken production annotations for fake convenience
+- Tests stay loose: `# pyright: basic`, and annotate a test only where it documents a contract — NEVER type-fit fixtures, fakes or test functions to strict; NEVER weaken production annotations for fake convenience
 
 ## Subprocesses
 - ALWAYS start one with `asyncio.create_subprocess_exec(..., start_new_session=True)`
