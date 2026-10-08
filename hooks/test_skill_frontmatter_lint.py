@@ -2,6 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import check_body
 from skill_frontmatter_lint import check_leaks
@@ -135,6 +136,17 @@ def test_reachability_chains_through_a_named_sibling(tmp_path: Path) -> None:
     path = make(tmp_path, VALID + '\n- Read `index.md`.\n')
     sibling(path, 'index.md', 'See `deep/leaf.md`.\n')
     sibling(path, 'deep/leaf.md')
+    assert findings(path) == []
+
+
+@pytest.mark.xfail(
+    reason='SKILL-LINT-PATH-TOKEN-SKIPS-SPACED-NAMES: PATH_TOKEN admits only [\\w.-] and / in a name',
+    strict=True,
+)
+@pytest.mark.parametrize('name', ['user guide.md', 'guide(v2).md'])
+def test_named_sibling_with_a_space_or_parens_is_reachable(tmp_path: Path, name: str) -> None:
+    path = make(tmp_path, VALID + f'\n- Read `{name}` for the rest.\n')
+    sibling(path, name)
     assert findings(path) == []
 
 
@@ -280,6 +292,19 @@ def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
     doc = tmp_path / 'README.md'
     doc.write_text('<!-- lint: allow skill-local-path -->\nStrip /home/devuser/wk/.\n')
     assert check_leaks(doc) == []
+
+
+@pytest.mark.xfail(
+    reason='SKILL-LINT-LOCAL-PATH-EXEMPTS-MACOS-ACCOUNTS: the container-HOME exemption covers /Users/',
+    strict=True,
+)
+@pytest.mark.parametrize('home', ['/Users/claude', '/Users/dockbox'])
+def test_leak_scan_flags_a_macos_account_named_like_the_container(
+    tmp_path: Path, home: str
+) -> None:
+    doc = tmp_path / 'README.md'
+    doc.write_text(f'Clone it into {home}/src.\n')
+    assert check_leaks(doc) != []
 
 
 def test_marker_counts_only_on_a_line_of_its_own(tmp_path: Path) -> None:

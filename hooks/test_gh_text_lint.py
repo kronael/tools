@@ -89,6 +89,14 @@ def test_lint_pr_draft_must_be_cut() -> None:
     assert longer
 
 
+@pytest.mark.xfail(
+    reason='GH-LINT-DISTILL-COUNTS-THE-TITLE: the ratio counts the title line the draft carries',
+    strict=True,
+)
+def test_lint_pr_draft_ratio_ignores_the_draft_title() -> None:
+    assert lint(Kind.PR, GOOD_PR, draft='fix: X\n\n' + GOOD_PR) != []
+
+
 TITLE_CASES = [
     ('fix(ansible): Deploy news-collector through the standard service list', None),
     ('x' * 73, 'title 73 chars, max 72'),

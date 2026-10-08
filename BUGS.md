@@ -163,12 +163,13 @@
 
 ## Hooks
 
-- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-07.
-  `hooks/README.md` and `hooks/ARCHITECTURE.md` list fewer blocked commands
-  than `hooks/pretool_nudge.py:20-29` enforces: `git merge --squash`,
-  `git rebase -i`, branch creation (`checkout -b`/`switch -c`), `git worktree
-  add` without `--detach` and `killall` are blocked but undocumented.
-  **Fix:** list every pattern in the docs, or point them at the table.
+- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-08 at
+  63ad23b. `hooks/README.md:43-48` and `hooks/ARCHITECTURE.md:115-118` list
+  fewer blocked commands than `hooks/pretool_nudge.py:23-40` enforces: the
+  `Co-Authored-By` trailer, `git merge --squash`, `git rebase -i`, branch
+  creation (`checkout -b`/`switch -c`), `git worktree add` without `--detach`
+  and `killall` are blocked but undocumented. **Fix:** list every pattern in
+  the docs, or point them at the table.
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
@@ -254,9 +255,14 @@
 - **SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS** (LOW, design) — proposed.
   Pre-commit hands the scan every staged `.md` (`files: \.md$`), so it reaches
   the 21 tracked `.diary/*.md`, while `make skills-frontmatter` and CI walk the
-  tree through `visible_files()`, which skips hidden directories. No diary
-  file carries a home path today; the first one that quotes a `/home/<user>`
-  path blocks its commit while the tree target and CI stay green.
+  tree through `visible_files()`, which skips hidden directories. The two
+  scopes disagree on a real file: `.diary/20261007.md` quotes an illustrative
+  home path with a two-segment account name at `:19` and `:99`, so `python3
+  hooks/skill_frontmatter_lint.py .diary/20261007.md` exits 2 with two
+  `skill-local-path` findings while the tree target passes; `/.diary/` is
+  gitignored, so pre-commit meets the file only when it is force-added, and a
+  tracked diary that quotes such a path blocks its commit while the tree
+  target and CI stay green.
   **Proposal:** one scope for both — the script drops hidden paths it is
   handed, or the pre-commit pattern excludes them. Changes the scan's input
   contract — needs sign-off; no test — design.
@@ -270,11 +276,11 @@
   `extra_args` so every trigger runs `--all-files` — blocked by
   PRE-COMMIT-ALL-FILES-RED — or drop the trigger.
 
-- **PRE-COMMIT-ALL-FILES-RED** (LOW, lint) — CONFIRMED 2026-10-07 at 5f9392a.
-  `pre-commit run --all-files` fails: ruff-format rewrites
-  `hooks/test_pretool_nudge.py` and `tw-fetch/mirror.py`, and ruff reports
-  `tw-fetch/mirror.py:90` UP041 and `:138` T201. CI runs pre-commit over the
-  diff only, so none of the three surfaces until a commit touches those files.
+- **PRE-COMMIT-ALL-FILES-RED** (LOW, lint) — CONFIRMED 2026-10-08 at 63ad23b.
+  `pre-commit run --all-files` fails on `tw-fetch/mirror.py` alone:
+  ruff-format rewrites it, and the pinned ruff 0.12.1 reports `:90` UP041 and
+  `:138` T201. CI runs pre-commit over the diff only, so neither surfaces
+  until a commit touches the file.
 
 - **GH-GATE-READS-DIRECT-GH-ONLY** (LOW, hooks) — CONFIRMED at HEAD
   2026-10-08. `hooks/gh_text_lint.py` `GH` matches a `gh` word at the head of
@@ -292,12 +298,76 @@
   match inside backticks. No test yet.
 
 - **PRETOOL-IMPORTS-OUTSIDE-SUPPRESS** (LOW, hooks) — CONFIRMED at HEAD
-  2026-10-08. `hooks/pretool_nudge.py:12` imports `gh_text_lint` at module
-  level, outside the `suppress(Exception)` around `main()`. An install that
-  lacks the file, or `python3 -I`, tracebacks on every tool call and no
+  2026-10-08. `hooks/pretool_nudge.py:16-17` imports `gh_text_lint` and
+  `lib.state` at module level, outside the `suppress(Exception)` around
+  `main()`. An install that lacks either file, or `python3 -I`, tracebacks on
+  every tool call and no
   unsafe-command block fires (exit 1, shown to the user, not blocking). Same
   shape as the `lib.state` imports in `local.py` and `memory_nudge.py`;
   `hooks/ARCHITECTURE.md` § lib states the install contract.
+
+- **GH-GATE-REGEX-SHELL-PARSE** (MED, design) — proposed, needs sign-off.
+  `hooks/gh_text_lint.py` reads the command with regexes (`GH`, `QUOTED`,
+  `BODY_TEXT`, `BODY_FILE`, `HEREDOC`, `JSON_BODY`), so its parse and bash's
+  disagree. Measured at 63ad23b. Posts unchecked: `gh pr edit 5 -b"…"` (the
+  attached flag; a required kind is refused as body-not-found instead),
+  `--body "…""…"` adjacent strings (only the first is read), `--body "🤖
+  $BODY"` (the shell expands it after the lint), `--input` JSON with
+  `{"body":""}` (empty bodies are skipped — the review-submit event needs it)
+  or a `body` key, `gh api -X PATCH …/pulls/1 -f "body=…"` (quoted key),
+  and `gh pr close`/`gh issue close --comment "…"` (not in `POSTS`). Refused
+  wrongly: `printf 'x; gh pr create --fill'` (a `;` inside quotes opens a
+  segment), `--body '🤖 Run $(make test)'` (single quotes never substitute),
+  `-F "per_page=5"` read as a body file (a quoted key fails the `[\w-]+=`
+  lookahead) — a GET `search/issues` whose query names `pulls/5` is allowed
+  on its own and becomes a false block the moment such a `-F` follows — and a
+  `<<\EOF` heredoc (`HEREDOC` accepts only `'`/`"` quoting) whose contents
+  are read as commands. **Options:** (a) split segments and tokenize each
+  with `shlex`, then read flags from tokens; (b) keep the regexes and add a
+  case per miss. **Default if nothing is decided:** (a). No test — design.
+
+- **PRETOOL-UNSAFE-SCAN-READS-QUOTED-TEXT** (LOW, design) — the maintainer's
+  call. `unsafe_command_reason` (`hooks/pretool_nudge.py:136-142`) runs
+  `UNSAFE_COMMAND_PATTERNS` over the whole command text, so a commit message
+  that names a blocked command is blocked as that command: `git commit -m
+  "docs: record the gh release create ask entry"` → `gh release create`, and
+  `git commit -m "docs: never killall by name"` → `killall` (measured at
+  63ad23b). Masking heredocs before the scan would let `bash <<EOF` through,
+  and the `Co-Authored-By` pattern (`:28`) must keep reading the message, so
+  the scope is a judgment call. Also `settings-recommended.json:23` keeps a
+  `Bash(gh release create*)` `ask` entry for a command the hook denies first
+  (`:33`), so that ask never fires. **Options:** (a) skip quoted text for the
+  patterns that name a bare command, and drop the dead ask entry; (b) leave
+  both — phrase commit messages around the words. **Default if nothing is
+  decided:** (b). No test — design.
+
+- **SKILL-LINT-PATH-TOKEN-SKIPS-SPACED-NAMES** (LOW, correctness) — CONFIRMED
+  at 63ad23b. `PATH_TOKEN` (`hooks/skill_frontmatter_lint.py:72`) admits only
+  `[\w.-]` and `/` in a written path, so a sibling named `user guide.md` or
+  `guide(v2).md` is named by no token, and `check_reachable` (`:344`) reports
+  it as a `skill-orphan` however SKILL.md spells it. Measured:
+  `hooks/test_skill_frontmatter_lint.py::test_named_sibling_with_a_space_or_parens_is_reachable`.
+  **Fix:** search the text for each doc's own name forms instead of
+  tokenizing the text.
+
+- **SKILL-LINT-LOCAL-PATH-EXEMPTS-MACOS-ACCOUNTS** (LOW, correctness) —
+  CONFIRMED at 63ad23b. `LOCAL_PATH` (`hooks/skill_frontmatter_lint.py:79`)
+  applies the `dockbox`/`claude` container-HOME exemption under `/Users/` as
+  well as `/home/`, so the macOS account paths `/Users/claude/x` and
+  `/Users/dockbox/x` pass the leak scan; the container HOME is only ever
+  under `/home/`. Measured:
+  `hooks/test_skill_frontmatter_lint.py::test_leak_scan_flags_a_macos_account_named_like_the_container`.
+  **Fix:** exempt the two names under `/home/` only.
+
+- **GH-LINT-DISTILL-COUNTS-THE-TITLE** (LOW, correctness) — CONFIRMED at
+  63ad23b. `lint` (`hooks/gh_text_lint.py:213`) flags `DISTILL cut nothing`
+  only when the body is at least as long as the whole draft, and pr-draft
+  step 2 writes the title into `tmp/pr-draft.md` above the body, so a body
+  the cut left untouched passes by the title's length:
+  `lint(Kind.PR, body, draft='fix: X\n\n' + body)` → `[]`. Measured:
+  `hooks/test_gh_text_lint.py::test_lint_pr_draft_ratio_ignores_the_draft_title`.
+  **Fix:** compare against the draft below its title line, or require a
+  real cut ratio (the `ok:` line already prints one).
 
 ## rig
 
