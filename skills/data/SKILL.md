@@ -78,7 +78,7 @@ comments, design and the boring-code rules.
 
 ## Pipeline (file-based stages)
 
-- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap via an injected dependency param (see the `py` skill), NEVER `monkeypatch`.
+- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — a test patches the symbol at its use site (see the `py` skill § Testing); a dependency param is for a real production dependency, NEVER a test seam.
 - Pipeline = stages of typed files. Each stage owns a directory. Stage N+1 reads stage N. Path = `{batch}/{key_path}/{date}.{pqt|jl}`. Day file = unit of work.
 - ALWAYS tidy at ingestion: one row/observation, one col/variable, one table/entity. NEVER re-clean downstream.
 - Raw is append-only. ALWAYS rebuild downstream from raw. NEVER UPDATE/DELETE raw.

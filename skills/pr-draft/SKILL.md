@@ -8,10 +8,11 @@ user-invocable: true
 # PR Description
 
 Run directly in main context (no subagent). Every PR body passes through this
-workflow: the PreToolUse hook refuses `gh pr create`, `gh pr edit` and a
-`gh api` PATCH of `pulls/<N>` whose body fails `gh_text_lint.py` (step 3), and
-refuses `--fill`, `--web` and a body file it cannot read, so a body written
-anywhere else does not post.
+workflow: the PreToolUse hook lints the body a direct `gh pr create`, `gh pr
+edit` or `gh api` PATCH of `pulls/<N>` carries, wherever it was written, and
+refuses one that fails `gh_text_lint.py` (step 3), `--fill`, `--web` and a
+body file it cannot read — a body that posts through a direct gh call has
+passed the lint.
 
 ## Workflow
 
