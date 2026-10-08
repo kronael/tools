@@ -305,6 +305,23 @@
 
 ## dockbox
 
+- **BOX-CODEX-DUPLICATE-MODEL-FLAG** (MED, config) — CONFIRMED 2026-10-08,
+  no test — config. `dockbox/dockbox:445,462` and
+  `qemubox/qemubox:1101,1341` prepend `-m` and forward the user's model flag.
+  An explicit `-m` or `--model` then prevents Codex from starting.
+  Reproduce with Codex 0.160.0:
+  `codex -m gpt-6.1-sol --model gpt-6-astra --version` exits 2 with
+  "the argument '--model <MODEL>' cannot be used multiple times".
+  **Fix:** inject the alias model only when the user supplies no model flag.
+
+- **DOCKBOX-EXPLICIT-CODEX-SKIPS-DEFAULTS** (MED, config) — CONFIRMED
+  2026-10-08, no test — config. `-d codex` and `-x codex` skip the alias
+  defaults at `dockbox/dockbox:435,445`; `:502` adds only the sandbox bypass.
+  Reproduce: compare `dockbox -d codex .` with `dockbox codex .`.
+  The explicit route omits `-m gpt-6.1-sol` and
+  `-c model_reasoning_effort=xhigh`, despite the equivalence claim at `:306`.
+  **Fix:** apply the alias defaults to the explicit Codex route.
+
 - **DOCKBOX-DEFAULTMODE-TOP-LEVEL** (LOW, config) — CONFIRMED 2026-10-06.
   The box settings override sets `d['defaultMode'] = 'bypassPermissions'`
   (`dockbox/dockbox:610`), a top-level key Claude Code does not read; the
