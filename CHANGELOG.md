@@ -1,21 +1,37 @@
 # Changelog
 
+## [v0.4.24] — 20261008
+
+> kronael v0.4.24 — Markdown reflow joins the tool hooks
+>
+> The rumdl pass is a branch of the existing tool hooks, with no hook, settings entry or Codex target of its own.
+>
+> • One hook less — post_tool_nudge.sh hands a .md write to pretool_nudge.py, which runs rumdl.
+> • Quieter — silent when rumdl ran; one line when it is missing, fails or times out.
+> • Narrower — only a Write or Edit of a .md in a repository whose root holds `.rumdl.toml`.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge.py` § `format_markdown`, fed by `post_tool_nudge.sh` on a PostToolUse payload that names a `.md`: a `Write`/`Edit`/`MultiEdit` is reflowed by the repository's `node_modules/.bin/rumdl`, else `rumdl` on PATH, run as `rumdl fmt` from the repository root (the nearest `.git`) when that root holds `.rumdl.toml`, so the config's `exclude` applies. Silent when rumdl ran — Claude Code reports a file a hook changed, and an Edit over a reflowed line fails instead of applying to stale text; one line when rumdl is missing, exits non-zero or times out, and a timed-out run gets the written bytes back. A repository without the config, a file outside any repository and a clone nested in an opted-in tree are never touched.
+- `hooks/md_format.py`, its `Write|Edit|MultiEdit` settings entry and its Codex `md_format` target are removed; the uvx fallback, `rumdl.toml` and `pyproject.toml` detection, leftover parsing and the re-read note go with them.
+- `software/code.md` § Layout and formatting: `exclude` patterns are written `.name/`; a root-anchored `/.*/` does not match a file named on the command line (rumdl 0.2.78).
+
 ## [v0.4.23] — 20261008
 
 > kronael v0.4.23 — Markdown wraps itself, Haiku leaves the workflows
 >
-> Agents stop hand-wrapping Markdown: the tool hook runs rumdl on each .md they write in an opted-in repo, and Haiku is batch-only.
+> Agents stop hand-wrapping Markdown: a hook runs rumdl on each .md they write in an opted-in repo, and Haiku is batch-only.
 >
-> • Markdown reflow — after a Write or Edit of a .md, rumdl rewraps it; tables, fences, links stay.
-> • Opt in per repo — root `.rumdl.toml` plus a pinned rumdl; `make fmt` wraps, `make lint` checks.
+> • md_format hook — each .md an agent writes is rewrapped; tables, fences and links stay.
+> • Opt in per repo — `.rumdl.toml` and a pinned rumdl; `make fmt` wraps, `make lint` checks.
 > • Agents — no haiku skill, agent or keyword; light work runs on sonnet or in the main thread.
 > • readme — topology.md defines the repo layout: one question per file, one numbers ledger.
 > • bugs, release — an owed decision carries options and a default; a CHANGELOG only if published.
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `pretool_nudge.py` § `format_markdown`, fed by `post_tool_nudge.sh` on a PostToolUse payload that names a `.md`: a `Write`/`Edit`/`MultiEdit` is reflowed by the repository's `node_modules/.bin/rumdl`, else `rumdl` on PATH, run as `rumdl fmt` from the repository root (the nearest `.git`) when that root holds `.rumdl.toml`, so the config's `exclude` applies. Silent when rumdl ran — Claude Code reports a file a hook changed, and an Edit over a reflowed line fails instead of applying to stale text; one line when rumdl is missing, exits non-zero or times out, and a timed-out run gets the written bytes back. A repository without the config, a file outside any repository and a clone nested in an opted-in tree are never touched. No separate hook, settings entry or Codex target.
-- `software/code.md` § Layout and formatting owns the rule — the config (`line-length = 100`, `reflow`, tables and fenced blocks exempt, `exclude` as `.name/` patterns: a root-anchored `/.*/` skips nothing for a file named on the command line), the pin, `make fmt` and `make lint`; `readme/topology.md` lists the lint gate.
+- `hooks/md_format.py` (PostToolUse on `Write|Edit|MultiEdit`; Codex `apply_patch`, every file it names): runs `rumdl fmt` on the written `.md` from its own directory when a directory up to the repository root holds `.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]`; the binary is the repo's `node_modules/.bin/rumdl`, else PATH, else `uvx rumdl@0.2.78`. It tells Claude to re-read a file it changed and reports what rumdl could not fix or a failed run. Never blocks; a repo with no config is never touched.
+- `software/code.md` § Layout and formatting owns the rule — the config (`line-length = 100`, `reflow`, tables and fenced blocks exempt), the pin, `make fmt` and `make lint`; `readme/topology.md` lists the lint gate.
 - rumdl was chosen over dprint, prettier and mdformat on a real doc set: those three pad table columns and refill every paragraph; rumdl reflows only lines over the width and leaves tables, fences, frontmatter, HTML and links as they are.
 - `solana/layout.md` agrees with `rs`: unit tests live in `src/<module>_test.rs`, declared beside their subject with `#[path]`.
 - `global` § Agents: Haiku is batch-only, never a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the main thread. `skills/haiku`, `agents/haiku.md` and the `haiku` nudge keyword are removed and `kronael/sync` retires the installed copies; `sonnet`, `opus`, `dispatch`, `skills/CLAUDE.md`, both READMEs and `scavenge/shapes.md` drop the tier. The `dockbox`/`qemubox` `haiku` aliases stay pending BUGS.md `BOX-HAIKU-ALIAS-VS-BATCH-ONLY`.
