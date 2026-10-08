@@ -62,10 +62,9 @@ Python-specific additions and deltas.
   `ASYNC240` plus a one-clause reason.
 - ALWAYS run long blocking work (unpacking a large archive) through the project's one
   shared `to_thread` helper — NEVER a per-module wrapper.
-- NEVER wrap `to_thread` in `create_task` + `shield` + re-await on `CancelledError` —
-  a thread cannot be cancelled, and `asyncio.run` joins it at exit anyway. ALWAYS
-  write its output through `.part` + `os.replace` so a cancel leaves only a file the
-  next run replaces; work that must stop on cancel ALWAYS runs as a subprocess.
+- ALWAYS write a thread's output through `.part` + `os.replace`, so a cancel leaves
+  only a file the next run replaces; work that must stop on cancel ALWAYS runs as a
+  subprocess — a thread cannot be cancelled.
 - ALWAYS have a retry helper take a plain backoff sequence and `iter()` it on each
   call (`@retry(BACKOFF, …)`) — NEVER make call sites pass `lambda: iter(...)`.
 
@@ -119,6 +118,9 @@ Python-specific additions and deltas.
 
 ## Build
 - uv for packages, pyright for types
+- ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
+  `basic` default with a per-file `strict` list. A test file opts down with
+  `# pyright: basic` on its first line.
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
 - `make check`: ruff lint + format check (canonical CQ target)
 - `make right`: pyright only (not in pre-commit)
@@ -132,7 +134,7 @@ Python-specific additions and deltas.
   attrs or a small fake class); NEVER make production code tolerate incomplete
   fakes
 - NEVER add production parameters solely to replace functions in tests — ALWAYS patch the symbol at its use site when a test needs substitution; keep dependency parameters for real production dependencies.
-- ALWAYS relax pyright for test paths when strict test typing is impractical (exclude tests from strict source check or use a separate relaxed test config); NEVER weaken production annotations for fake convenience
+- ALWAYS relax pyright for a test file when strict test typing is impractical (`# pyright: basic` at its top); NEVER weaken production annotations for fake convenience
 
 ## Subprocesses
 - ALWAYS start one with `asyncio.create_subprocess_exec(..., start_new_session=True)`
