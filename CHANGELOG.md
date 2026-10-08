@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.25] — 20261008
+
+> kronael v0.4.25 — Sol 6.1 workers and defaults
+>
+> Terra delegates coding work to GPT-6.1 Sol, and the Codex box launchers select the same model.
+>
+> • /terra — GPT-6.1 Sol at high effort, through a native Codex worker or the CLI.
+> • Box defaults — dockbox codex and qemubox codex use GPT-6.1 Sol at xhigh effort.
+> • Explicit Sol opinions — oracle selects GPT-6.1 Sol at high effort.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/terra` selects GPT-6.1 Sol/high through independent native workers or ephemeral CLI sessions.
+  CLI permissions follow the task. Editing workers use their own worktree.
+- `dockbox codex` and `qemubox codex` select GPT-6.1 Sol/xhigh.
+  Explicit Sol second opinions through `astra` and `oracle` select GPT-6.1 Sol/high.
+- Known box limits: duplicate model flags fail. Explicit dockbox Codex routes omit the defaults.
+  `BUGS.md` records both configuration defects.
+
 ## [v0.4.24] — 20261008
 
 > kronael v0.4.24 — Markdown reflow joins the tool hooks
