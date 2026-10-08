@@ -142,7 +142,10 @@ the failure. Settings still confirm before applying.
      `outputStyle` (else the style file never activates); `attribution.commit`
      `""` (unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER
      `attribution: false` — versions before v2.1.281 reject it and skip the
-     whole file); `bashEditDiffEnabled` `false` (unset, `auto` and
+     whole file); `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false`
+     (unset, every session's reminder asks for the `Generated with [Claude
+     Code]` footer and a session link, which WISDOM § Git bans);
+     `bashEditDiffEnabled` `false` (unset, `auto` and
      `bypassPermissions` modes diff the tree around every Bash command;
      `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it); `crossSessionInbound`
      `"refuse"` and `isolatePeerMachines` `true` (v2.1.224+; unset, delivery
