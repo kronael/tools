@@ -6,7 +6,7 @@
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
                                  ──> local.py        (LOCAL.md on first prompt)
 
-Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
+Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
 
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
@@ -97,7 +97,10 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 **Flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
    amend, hard reset, broad add, no-verify commits, `rm -rf`, and
-   recursive Codex execution inside Codex.
+   recursive Codex execution inside Codex. Then `gh_text_lint.command_reason`:
+   a `gh` command that posts a PR body, an issue body or a comment is blocked
+   when the body it carries fails the lint, cannot be read, or is required and
+   absent. The reason names the failing lines and the skill that owns the text.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -107,6 +110,21 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    each nudge fires once.
 5. Emit "Editing/reading <file> — follow <skill> conventions."
 Codex sees `<skill>` as `@py`, `@go`, etc.
+
+### gh_text_lint.py (library + CLI)
+
+**Input:** a text kind (`pr`, `issue`, `comment`) and the text, or a shell
+command plus its `cwd`.
+**Output:** `lint` returns `Problem(line, text)` records; `command_reason`
+returns the block reason for a posting command, or None; the CLI prints
+`<file>:<line>: <problem>` lines and exits 1, or `ok: <kind> <chars> chars`.
+
+The rules are WISDOM § Git and the Format section of the posting skill, kept
+to what a program can check. `read_bodies` finds the text a command posts in
+`--input` JSON (file or heredoc), `$(cat <path>)`, `--body-file`/`-F`, a
+heredoc, or the inline `--body`; a `$VAR` path or a command substitution is
+an OSError the gate reports. Imported by `pretool_nudge.py`; run by hand from
+`pr-draft` (with `--draft` and `--title`), `gh-issue` and `gh-comment`.
 
 ### post_tool_nudge.sh (PostToolUse)
 

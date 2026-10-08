@@ -45,6 +45,20 @@ recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
 gated by consent in `skills/global` and the settings `ask` rule, not by the
 hook.
 
+It also refuses a `gh` command that posts GitHub text whose body fails
+`gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`,
+`gh pr comment`, a `gh api` PATCH of `pulls/<N>` or `issues/<N>`, and a POST
+to `/reviews`, `/comments` or `/replies`. The body comes from `--body-file`,
+`$(cat <path>)`, a heredoc, `--input` JSON or the inline `--body`; a path it
+cannot read (a shell variable) and a required body that is absent (`--fill`,
+`--web`) are refused too. The lint is WISDOM § Git made checkable: a bare `🤖`
+as the last line and none of the harness footer, the `**TL;DR:**` lead, no
+header, table, rule, checkbox or code block past 6 lines in a PR body, the
+`🤖 ` prefix and 2-line cap on a comment, the size caps, marketing words. By
+hand: `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with
+`--draft` and `--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run
+it as their completion criterion.
+
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
 

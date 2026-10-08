@@ -168,6 +168,37 @@ def test_process_allows_safe_commands(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
 
+ROBOT = '\U0001f916'
+GOOD_PR = f'**TL;DR:** Deploys the collector through the service list.\n\n{ROBOT}\n'
+
+
+def test_process_refuses_a_pr_body_that_fails_the_github_text_lint(tmp_path) -> None:
+    (tmp_path / 'body.md').write_text(
+        f'## Summary\n\nStuff.\n\n{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)\n',
+        encoding='utf-8',
+    )
+    payload = {
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'gh pr create --title "fix: X" --body-file body.md'},
+        'cwd': str(tmp_path),
+    }
+    result = process(payload)
+    assert result is not None
+    assert result['decision'] == 'block'
+    assert 'banned attribution' in result['reason']
+    assert 'pr-draft' in result['reason']
+
+
+def test_process_allows_a_pr_body_that_passes_the_github_text_lint(tmp_path) -> None:
+    (tmp_path / 'body.md').write_text(GOOD_PR, encoding='utf-8')
+    payload = {
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'gh pr create --title "fix: X" --body-file body.md'},
+        'cwd': str(tmp_path),
+    }
+    assert process(payload) is None
+
+
 def test_process_blocks_recursive_codex_inside_codex() -> None:
     result = process(
         {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
@@ -177,7 +208,16 @@ def test_process_blocks_recursive_codex_inside_codex() -> None:
     assert 'recursive codex' in result['reason']
 
 
-@pytest.mark.parametrize('command', ['rm -r build', 'rm -R build', 'rm --recursive build', 'sudo rm -r /srv/x', 'echo done && rm -r tmp'])
+@pytest.mark.parametrize(
+    'command',
+    [
+        'rm -r build',
+        'rm -R build',
+        'rm --recursive build',
+        'sudo rm -r /srv/x',
+        'echo done && rm -r tmp',
+    ],
+)
 def test_process_blocks_recursive_removal_without_force(command: str) -> None:
     """Recursive removal deletes a tree with or without -f, so -r alone blocks."""
     result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
@@ -185,7 +225,9 @@ def test_process_blocks_recursive_removal_without_force(command: str) -> None:
     assert result['decision'] == 'block'
 
 
-@pytest.mark.parametrize('command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version'])
+@pytest.mark.parametrize(
+    'command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version']
+)
 def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
@@ -197,10 +239,13 @@ def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> 
     Routing blocks through that cache disarmed the ban after the first hit.
     """
     monkeypatch.setenv('HOME', str(tmp_path))
-    payload = json.dumps({
-        'tool_name': 'Bash', 'session_id': 'same-session',
-        'tool_input': {'command': 'rm -r build'},
-    })
+    payload = json.dumps(
+        {
+            'tool_name': 'Bash',
+            'session_id': 'same-session',
+            'tool_input': {'command': 'rm -r build'},
+        }
+    )
     for attempt in range(3):
         monkeypatch.setattr('sys.stdin', io.StringIO(payload))
         main()

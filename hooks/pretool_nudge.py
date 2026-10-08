@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PreToolUse hook: block unsafe commands and emit per-language file nudges.
+# PreToolUse hook: block unsafe commands and unlinted GitHub text, and emit per-language file nudges.
 # Production: silent-fail on any error except explicit unsafe-command blocks.
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import json
 import os
 import re
 import sys
+
+from gh_text_lint import command_reason
 
 TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit', 'apply_patch'})
 COMMAND_TOOLS = frozenset({'Bash', 'exec_command'})
@@ -128,6 +130,9 @@ def process(data: object) -> dict | None:
                 'decision': 'block',
                 'reason': f'block: unsafe command blocked ({reason}).',
             }
+        refused = command_reason(command, data.get('cwd'))
+        if refused:
+            return {'decision': 'block', 'reason': f'block: {refused}'}
         return None
 
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
