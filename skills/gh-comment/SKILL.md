@@ -1,6 +1,6 @@
 ---
 name: gh-comment
-description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff.
+description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
 when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status"
 user-invocable: false
 ---
@@ -49,7 +49,10 @@ reasoning that got you there.
    and rule-of-three phrasing. Speak in the `caveman` register: maximum
    signal per token, no preamble, no recap.
 3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape
-   checklist, before the sign-off questionnaire.
+   checklist, before the sign-off questionnaire, then
+   `python3 ~/.claude/hooks/gh_text_lint.py comment <file>` on each body until
+   it prints `ok:`. The PreToolUse hook runs the same lint on every body a
+   `gh pr comment`, a review POST or a reply carries and refuses one that fails.
 
 Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two
 findings or the evidence belongs in the report.

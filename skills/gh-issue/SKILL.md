@@ -1,6 +1,6 @@
 ---
 name: gh-issue
-description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. Derived from gh-comment.
+description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. Derived from gh-comment. NOT for a PR review comment (use gh-comment) or a PR description (use pr-draft).
 when_to_use: "filing a bug report or issue on a GitHub repo, often a different repo than the current one (e.g. an upstream dependency), file an issue, open an issue, report a bug upstream"
 user-invocable: true
 ---
@@ -32,9 +32,15 @@ If unsure which repo, ASK — do not guess a slug.
   Include a copy-pasteable repro (curl/command) when there is one. Keep it to
   what a maintainer needs to act; cut everything else.
 - Prefer real evidence (status codes, exact response bodies, versions) over prose.
-- ALWAYS end the body with a bare `🤖` line (WISDOM § Git).
+- ALWAYS write the body to `tmp/issue-body.md` and end it with a bare `🤖`
+  line (WISDOM § Git).
 - Then DISTILL and REVIEW-ON-WISDOM (WISDOM § Git), this section as the shape
-  checklist, before § 3.
+  checklist, and run `python3 ~/.claude/hooks/gh_text_lint.py issue
+  tmp/issue-body.md` until it prints `ok:` — the bare `🤖` last line, the
+  attribution ban, the 3,000-char cap. The PreToolUse hook runs the same lint
+  on `gh issue create` and refuses a body that fails or that it cannot read.
+  Completion criterion before § 3: the `ok:` line, and a `Review changed:`
+  line naming what the review changed.
 
 ## 3. Sign-off gate (MANDATORY)
 
@@ -48,12 +54,7 @@ draft is expected — re-show after edits.
 ```bash
 gh issue create --repo "$REPO" \
   --title "<title>" \
-  --body "$(cat <<'EOF'
-<body>
-
-🤖
-EOF
-)" \
+  --body-file tmp/issue-body.md \
   --label "<label>"   # optional; omit if unsure
 ```
 
