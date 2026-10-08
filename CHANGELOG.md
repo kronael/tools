@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [v0.4.23] — 20261008
+
+> kronael v0.4.23 — GitHub text is linted before it posts
+>
+> A PR body, issue or review comment that breaks WISDOM § Git is refused before it posts: a lint checks the text, the PreToolUse hook refuses the gh command, and the harness reminder asks for the bare robot.
+>
+> • `gh_text_lint.py` checks a PR body, an issue or a comment: the bare 🤖 last line, the TL;DR lead, no headers, tables or restated diffs, the size caps.
+> • `pretool_nudge.py` refuses `gh pr create`, the PATCH of a PR body, `gh issue create`, `gh pr review` and every comment POST whose body fails, cannot be read, or is missing — and `gh release create` outright.
+> • `pr-draft` writes the draft and the cut as two files and ends on the lint's ok line and a "Review changed:" line; `gh-comment` and `gh-issue` lint before their sign-off gates.
+> • `attribution.pr` is "🤖" and `sessionUrl` is false in the recommended settings, so the reminder states the rule instead of the banned footer.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/gh_text_lint.py`: `lint(kind, text, title, draft)` returns `Problem(line, text)` records; `command_reason(command, cwd)` finds the body a gh command posts (`--body-file`, `$(cat <path>)`, a heredoc, `--input` JSON, the inline `--body`) and returns the block reason, or the reason the body cannot be read. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'`; `issue` and `comment` kinds take a file alone.
+- `hooks/pretool_nudge.py` calls `command_reason` after the unsafe-command check, and `gh release create` joins that check's block list; `hooks/Makefile` runs `test_gh_text_lint.py`; `hooks/README.md` and `hooks/ARCHITECTURE.md` describe the gate.
+- `skills/pr-draft/SKILL.md`: steps 3 to 5 are DISTILL into `tmp/pr-body.md` with the lint's `ok:` line as the completion criterion, REVIEW-ON-WISDOM closed by a `Review changed:` line, then the fenced draft; the PATCH of an existing PR reads `tmp/pr-body.md` by a literal path. `skills/gh-comment/SKILL.md` and `skills/gh-issue/SKILL.md` run the lint before their sign-off gates and carry NOT-for clauses.
+- `settings-recommended.json` and `kronael/sync/SKILL.md` step 5: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` join the always-apply keys.
+
 ## [v0.4.22] — 20261007
 
 > kronael v0.4.22 — the skill lint stops exempting itself
