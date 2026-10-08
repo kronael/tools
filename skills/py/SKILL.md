@@ -57,6 +57,20 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg) — ALWAYS `async with`
 - ALWAYS return batches from data-fetch functions; use iterators when the caller controls scheduling or consumption.
+- NEVER send short local file I/O to a thread — `open`, `close`, `stat`, `exists`, a
+  small read, a chunk write: the handoff costs more than the I/O, and `aiofiles` is
+  the same thread pool. ALWAYS run it inline under `with open(...)`, silencing ruff
+  with `# noqa: ASYNC230` / `ASYNC240` plus one comment giving the reason — NEVER a
+  thread to quiet the linter.
+- Only long blocking work (unpacking a large archive) earns a thread — ALWAYS the
+  project's one shared `to_thread` helper, NEVER a per-module wrapper.
+- A thread cannot be cancelled: `Task.cancel()` stops only the asyncio side, and
+  `asyncio.run` joins the executor's threads at exit. NEVER wrap `to_thread` in
+  `create_task` + `shield` + re-await on `CancelledError` — ALWAYS write through
+  `.part` + `os.replace` so a cancel leaves only a file the next run replaces; work
+  that must really stop runs in a subprocess, which can be killed and reaped.
+- Retry/backoff: ALWAYS pass a plain sequence at the call site (`@retry(BACKOFF, …)`)
+  and let the helper call `iter()` on each call — NEVER `lambda: iter(...)`.
 
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
