@@ -240,13 +240,6 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
-- **PROMPT-NUDGE-TARGETS-UNTESTED** (LOW, traceability) — open (record only),
-  no test — traceability. `hooks/prompt_nudge.py` `AGENT_KEYWORDS` maps 51
-  keywords to `/skill` and `@agent` targets, and no test in
-  `hooks/test_prompt_nudge.py` resolves each target against `skills/` and
-  `agents/`, so a deleted skill leaves a dangling route until someone types
-  the word. **Fix:** one test that resolves every target against the tree.
-
 - **SKILL-LINT-GATE-SKIPS-SIBLING-EDITS** (MED, design) — proposed. The gate is
   bypassed for exactly the commits it exists to catch. `.pre-commit-config.yaml:14`
   sets `files: (^|/)SKILL\.md$`, and `skill_files()`
