@@ -96,9 +96,9 @@ the authoritative entry. The categories:
   memory, scaffolding, second opinions, codifying public best practice.
 - **Escalation** (`sonnet`, `terra`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
-  fire-and-forget at default model. Claude tiers use `agents/*.md` for model
-  and effort pins. `terra` pins the Codex model in its skill. Every other skill
-  carries its own instructions and names which subagent runs it.
+  fire-and-forget at default model. `terra` runs the Codex workhorse through
+  a native subagent or the CLI. Model and effort pins follow
+  [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
 - **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
   UX, hiring, or every lens at once) — judge a product, codebase, UI or
   engineer from a fixed perspective.

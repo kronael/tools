@@ -89,8 +89,7 @@ skills it replaces.
   them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
   xhigh. ALWAYS change an agent file and every skill that quotes it in one
   commit.
-- `terra` is the Codex-native workhorse at GPT-6.1 Sol high. It has no Claude
-  agent file; its skill selects a native Codex subagent or the Codex CLI.
+- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
 - `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
   mechanical edits too wide for the parent, and the steps of a written plan
   (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps

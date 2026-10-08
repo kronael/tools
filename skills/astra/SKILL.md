@@ -71,9 +71,10 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 ## Sol
 
 Sol is the same second opinion from `gpt-6.1-sol` (catalog description
-"Latest workhorse model for coding and everyday work"), at high effort. Use it only when the user
-explicitly asks for Sol; `oracle` routes to it only on such a request. Two
-differences from the Astra invocation: select `gpt-6.1-sol` in the catalog
+"Latest workhorse model for coding and everyday work"), at high effort.
+Use it only when the user explicitly asks for Sol; `oracle` routes to it only
+on such a request. Two differences from the Astra invocation: select
+`gpt-6.1-sol` in the catalog
 check and the command, and run `codex exec --ephemeral` instead of `resume
 --last`. `resume --last` picks the working directory's latest session, which is
 Astra's thread after an Astra call, and Sol must answer without having read
