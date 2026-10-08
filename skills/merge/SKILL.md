@@ -13,7 +13,7 @@ Resolve all merge conflicts in the working tree. Run directly in main context (n
 
 This section is "merge origin", a git operation. "Sync" in this bundle means
 only `kronael/sync`: files between `~/.claude/` and the bundle repo, no git
-history. Vendoring skills into another project is `sync-tools-skills`.
+history.
 
 1. `git fetch origin`, then size it against `origin/<default head>` (WISDOM
    § Git names the head):

@@ -1,6 +1,6 @@
 ---
 name: sync
-description: Sync the Kronael toolkit between this repo and ~/.claude on this host, first setup included, and bridge it into Codex. NOT for bringing the git line up to date with origin (use merge), pushing to origin (git push, gated), or vendoring skills into another project (use sync-tools-skills).
+description: Sync the Kronael toolkit between this repo and ~/.claude on this host, first setup included, and bridge it into Codex. NOT for bringing the git line up to date with origin (use merge), or pushing to origin (git push, gated).
 when_to_use: "sync kronael, sync kronael tools, sync (in this repo), /kronael:sync, install kronael, set up kronael, update kronael, ~/.claude out of date, stale or leftover skills in ~/.claude, bring ~/.claude edits back into the repo"
 ---
 
