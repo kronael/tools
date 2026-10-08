@@ -2,24 +2,108 @@
 
 ## [Unreleased]
 
-## [v0.4.18] — 20261005
-
-> kronael v0.4.18 — Haiku leaves the interactive workflows
->
-> Subagents and sessions run on Sonnet, Opus or Fable; Haiku is for batch jobs only, and the repo layout has one home.
->
-> • Agents — no haiku skill, agent or prompt keyword; light work runs on sonnet or in the main thread.
-> • readme — topology.md alone defines the repo layout: one question per file, one numbers ledger.
-> • bugs — an entry the owner must decide carries its options and a default; the queue never stalls.
-> • release — a CHANGELOG.md is created only for projects that publish versions.
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
 - `global` § Agents: Haiku is batch-only, never a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the main thread. `skills/haiku`, `agents/haiku.md` and the `haiku` nudge keyword are removed and `kronael/sync` retires the installed copies; `sonnet`, `opus`, `dispatch`, `skills/CLAUDE.md`, both READMEs and `scavenge/shapes.md` drop the tier. The `dockbox`/`qemubox` `haiku` aliases stay pending BUGS.md `BOX-HAIKU-ALIAS-VS-BATCH-ONLY`.
 - `readme/topology.md`: the house layout in one file — which file answers which question (README, PLAN, ARCHITECTURE, FEATURES, BUGS, the study page, `test/research/verified.md`, root and package CLAUDE.md), the README order, the numbers ledger, what `make lint` checks, what is tracked and what stays local. `agents/readme.md`, `finalize-crate`, `diary`, `wisdom`, `refine/brief.md`, `readme/shape.md`, the doc-naming hook and `global` § Documentation point to it.
 - `bugs`: an owed decision has status `needs sign-off` or `owner decision` and carries `**Options:**` and `**Default if nothing is decided:**`; a gate is one more clause (`blocks go-live`, `blocks publication`). `later` sends an owed decision to `bugs`.
 - `release`: CHANGELOG.md is created only when the project publishes versions to outside consumers; otherwise step 3.5 writes the release text from `git log <last>..HEAD`.
 - `sonnet`: `when_to_use` takes mapping and grep-and-report work and drops the find/replace and find-bugs phrases that race `astgrep` and `review`.
+
+## [v0.4.22] — 20261007
+
+> kronael v0.4.22 — code rules you can scan, and lints that check them
+>
+> The code rules are now short ALWAYS/NEVER bullets, every code edit points at them, and a lint flags misnamed predicates.
+>
+> • code.md — rules as ALWAYS/NEVER bullets, most-broken first; the code-file nudge names it.
+> • Lints — Rust, Python and TypeScript flag a bool function without an is_/has_/can_/should_ prefix.
+> • Docs rules — status line first, stated cost, code from tested files, a guide-and-reference site.
+> • Codex reads the project's .claude/CLAUDE.md as well.
+> • Rule pruning — a clean room with no setup at all, and a rule is cut only on observed behaviour.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: every rule an ALWAYS/NEVER bullet, sections ordered by how often sessions break them; it owns naming, comments (machine-read markers such as `// #region` and lint pragmas are not comments), shutdown on SIGINT/SIGTERM and build cadence. `rs`, `py`, `go` and the other language skills keep only their additions and ALWAYS read `code.md` first; the pretool nudge names it for code skills.
+- Lints `rs-bool-fn-prefix`, `py-bool-fn-prefix`, `ts-bool-fn-prefix` (warnings): test code, trait and interface implementations, overrides, getters and dunders are exempt, each proven by a fixture. `lints/check.py` fails when ast-grep fails and requires the rule to fire in every block of a bad fixture. `refine/software.md` runs them and hunts what they cannot see.
+- `readme` and `writing`: README order (what, link row, status, why, how), one status line worded the same everywhere, cost as a formula with a worked figure, doc code from compiled regions, an example-page shape ending in what has been tested, a guide-and-reference site layout, the README as a hub, one name per page, explicit anchors. A reader-question heading is allowed in a doc set with navigation when its first sentence answers it.
+- `global`: rules `code.md` or the harness carry are dropped; "NEVER kill a process you did not start, not even to free a port".
+- `wisdom`: one clean room, `clean-room.sh` (empty home and config, no tools, no skills, pinned model), which proves isolation from the run's own transcript; `subtraction.md` runs the whole-bundle pass; a rule is cut only on behavioural evidence, never on a model's self-report.
+- `codex/AGENTS.md`: Codex reads the project's `.claude/CLAUDE.md`; its fallback file names never load that path.
+- Project names and a local path are gone from skill text; `should_` counts as a predicate prefix.
+
+## [v0.4.21] — 20261007
+
+> kronael v0.4.21 — the skill lint catches dead files and leaked paths
+>
+> The skill lint now fails a commit that leaves a skill file unreachable or ships an absolute home path.
+>
+> • `make skills-frontmatter` — errors on an unreachable skill file, a leaked home path, or a token.
+> • Four files nothing could reach are named, including `port-to-go/java.md` at 1016 cold lines.
+> • Tests — no expectation computed by the code under test; run an artifact instead of grepping it.
+> • ship — a Gate carries its expected result; repairs stop when each fix moves the defect elsewhere.
+> • BUGS.md — three proposals for the holes the new lint still has.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/skill_frontmatter_lint.py`: two error-level checks. `skill-orphan` walks the chain of names out of `SKILL.md` and reports every `.md` under the skill that no chain reaches, exempting `CLAUDE.md` at any depth; `skill-local-path` and `skill-secret` report an absolute home path or a credential shape. An illustrative path takes a one-character account segment (`/home/u/app/x`) — `skills/CLAUDE.md` states the convention.
+- `port-to-go/java.md`, `refine/ts.md`, `refine/tsx.md` and `create/web/design-md/templates/starter.md` were unreachable; each owning `SKILL.md` now names it.
+- `software/testing.md` § What an assertion proves: never derive the expected value from the code under test, and assert an artifact's output rather than its source text.
+- `ship/runtime.md`: when each repair reveals a defect elsewhere the architecture is wrong — stop whatever the attempt count and route the redesign through Stage 3 sign-off. `ship/prompt.md`: the plan's `Gate` field and the worker brief both carry the expected result.
+- `review/take.md` § 2: name which findings are still unclear after re-verification and wait, since a partial reading misfixes the items you did understand.
+- `NOTICE`: credits obra/superpowers © 2025 Jesse Vincent (MIT) for the three adapted sections.
+- `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS` (pre-commit and CI lint nothing on a sibling-only commit), `SKILL-LINT-BASENAME-HIDES-ORPHANS` (a duplicate basename satisfies the check; three `README.md` files still ship unreached), `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` (the scan reads only `*.md` beside a `SKILL.md`) — all `proposed`, none built. Plus the earlier proposal to move `ship` into this repo as a step runner.
+
+## [v0.4.20] — 20261006
+
+> kronael v0.4.20 — the ship program runs on fable
+>
+> The ship skill keeps planning specs on fable; when you choose the ship program, it launches on fable because its tasks run unread.
+>
+> • ship CLI — launch with MODEL=fable TIMEOUT_SCALE=3; no diff is read before the next task.
+> • ship -k — the validator is read-only and writes only ship's own state under .ship/.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship/cli.md`: a fable sub writes and re-verifies the specs; the ship program launches with `MODEL=fable TIMEOUT_SCALE=3`, since its worker takes the next task at once and WISDOM puts unread code generation on fable (the scale covers fable's ~215 s validator against the fixed 180 s).
+- `ship/cli.md`: `ship -k` runs a validator restricted to `Read`, `Glob` and `Grep`; it cannot touch the repo and writes only `.ship/` state and logs.
+
+## [v0.4.19] — 20261006
+
+> kronael v0.4.19 — org skills install as plugins
+>
+> Org-specific skills now install as Claude Code plugins, so they load in dockbox and qemubox, where a symlinked skill dangles.
+>
+> • Org overlays — add the org marketplace from its git source, then install its plugin.
+> • Boxes mount `~/.claude/plugins`, so a plugin's skills load in every box started after the install.
+> • sync — settings merge never drops an `enabledPlugins` entry you added.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ARCHITECTURE.md` § Org overlays: install an org skill set as a Claude Code plugin from a marketplace added by git source; a local-path marketplace loads in place from the checkout, so boxes miss it. Limits: a qemubox under `-U` mounts no plugins, and a dockbox created before the install keeps its creation-time `settings.json`. Codex installs the plugin separately.
+- `kronael/sync`: step 5 adds the recommended `enabledPlugins` entries and never drops one; the keep-list section points at § Org overlays.
+- dockbox README and `--help` list the `~/.claude/plugins` mount; `CLAUDE.md` and `ARCHITECTURE.md` route org overlays to plugins and private skills to the keep-list.
+
+## [v0.4.18] — 20261006
+
+> kronael v0.4.18 — fewer skills, qemubox logs in
+>
+> The bundle drops from 88 to 69 skills, and Claude Code in a qemubox VM starts logged in with the host's account.
+>
+> • eval — one router holds the CEO, CTO, red, design, novice, hiring and all-lenses evaluations.
+> • Skill agents now load their skill, and nine small skills fold into their neighbours.
+> • qemubox — session variables and agent tokens reach the VM over ssh stdin, never a command line.
+> • sync — symlinked skills stay without a keep-list line, and edited retired skills are asked about.
+> • Boxes — each box gets its own `.venv` and gcc, and dockbox points the agent at GitHub over HTTPS.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `eval` router replaces `ceo-eval`, `cto-eval`, `red-eval`, `design-eval`, `13yo-eval`, `hiring-eval` and `eval-all`; `assess` folds its four extra roles in; `create-eval` is removed. Nudge words route to `/eval`.
+- Folded: `speed-demo` → `demo/speed.md`, `credits` → `software/credits.md`, `markdown-converter` + `media-ingest` → `ingest`, `sol` → `astra` § Sol, `finalize-crate` → `release/library.md`, `go-gl` → `go/gl.md`, `trader` → `data/trader.md`, `later` → `next` § Later. Dropped: `caveman` (the output style and command carry it), `explore`, `agent-browser` (`browse`). Every retired name is in the sync's `RETIRED` list.
+- `visual`, `readme`, `improve`, `refine`, `learn`, `distill` agents only load the same-named skill, and the skills launch them; `skills/CLAUDE.md` § Agent definitions owns the rule. The five `commands/` files their skills shadowed are removed. The prompt nudge routes to `/skill`, and a test proves every route names a bundled skill.
+- `writing` is a router whose `page.md` owns how a document or page reads and looks; `humanize` keeps its workflow and moves the catalogue to `patterns.md`.
+- `global` § Git: squashing unpushed commits through `/squash` is allowed; a pushed commit is never squashed. `commit` reads the repo's commit-msg gate first.
+- qemubox: `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY` join the session env when set. Every env value (`-e`, `-g`, the tokens) goes over ssh stdin into a per-session 0600 file in the guest's `/dev/shm`, which the session sources and deletes. `-U` drops the tokens, even from a project `.qemuboxrc`.
+- Boxes: a per-box `.venv` and gcc for sdists. The sandbox notes name the empty dependency dirs only when the box overmounts them, and the dockbox note gives the HTTPS form for GitHub (needs `-g`). The qemubox base build reuses dockbox's TZ argument and cache.
+- sync: a symlink directly under a bundle dir is kept without a line, and a deeper one is asked about. The keep-list file is `~/.claude/.keep`, and a leftover `kronael-keep.txt` stops the sync. A live-edited file under a retired name is asked about.
 
 ## [v0.4.17] — 20261005
 

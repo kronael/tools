@@ -1,13 +1,16 @@
 ---
 name: data
-description: Data collectors and ETL. NOT for one-shot fetches (use sh or py).
-when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data source"
+description: Data collectors, ETL and trading bots. NOT for one-shot fetches (use sh or py).
+when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data source, trading bot, exchange API, paper trading"
 ---
 
 # Collector/Data Collection
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+A trading bot — exchange API, paper trading, order sizing, the bot state
+machine: read `trader.md` on top of this file.
+
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 ## Testing
 

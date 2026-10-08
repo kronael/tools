@@ -69,12 +69,12 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. In Claude only, route a prompt that starts with `/astra` or `/sol` to that
-   skill; route `ask codex`, `ask astra`, `oracle`, and `second opinion` to
-   `/astra`.
+4. In Claude only, route a prompt that starts with `/astra` or `/sol` to
+   `/astra` (`/sol` is its Sol variant); route `ask codex`, `ask astra`,
+   `oracle`, and `second opinion` to `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
-6. Tokenise prompt and exact-match words against `AGENT_KEYWORDS`. A trailing
+6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.
 7. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the
    first exact route as `info`.
@@ -84,7 +84,7 @@ model; `systemMessage` reaches only the user.
 been seen. An unwritable state dir falls back to silence,
 never a per-prompt nudge.
 
-**Routes:** `AGENT_KEYWORDS` dict in the source.
+**Routes:** `SKILL_KEYWORDS` dict in the source.
 Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 ### pretool_nudge.py (PreToolUse)
@@ -96,16 +96,19 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 **Flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   amend, hard reset, broad add, no-verify commits, `rm -rf`, and
-   recursive Codex execution inside Codex.
+   amend, hard reset, broad add, no-verify commits, any recursive `rm`
+   (`-r`, `-R`, `-rf`, `--recursive`), and recursive Codex execution inside
+   Codex.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
    `Dockerfile`/compose/workflows → `/ops`), then extension via
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
-4. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
+4. Dedupe per session+file via `~/.claude/tmp/extnudge/{sid}.txt` so
    each nudge fires once.
-5. Emit "Editing/reading <file> — follow <skill> conventions."
+5. Emit "Editing/reading <file> — follow <skill> conventions.", plus
+   " Read ~/.claude/skills/software/code.md first." when the skill is in
+   `CODE_SKILLS`.
 Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### post_tool_nudge.sh (PostToolUse)
@@ -256,7 +259,7 @@ stdin:
 }
 
 stdout (prompt_nudge.py match):
-{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke @improve."}}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke /improve."}}
 ```
 
 ### Stop
@@ -289,7 +292,7 @@ always exits 0.
 
 ## Extension Points
 
-**Add a new keyword route** — edit `AGENT_KEYWORDS` in `prompt_nudge.py`.
+**Add a new keyword route** — edit `SKILL_KEYWORDS` in `prompt_nudge.py`.
 
 **Add a new stop nudge** — append to the `parts` list in `stop.py`. Keep
 checks cheap (no network, no LLM) and guard with a path/directory probe

@@ -43,6 +43,9 @@ SKILL_CASES = [
     ('app.service', '/ops'),
     ('cron.timer', '/ops'),
     ('proxy.socket', '/ops'),
+    ('SKILL.md', '/wisdom'),
+    ('/repo/CLAUDE.md', '/wisdom'),
+    ('AGENTS.md', '/wisdom'),
     ('foo.xyz', None),
     ('foo', None),
     ('README', None),
@@ -155,6 +158,17 @@ def test_process(payload: object, expected_skill: str | None) -> None:
         assert f'follow {expected_skill} conventions.' in context
 
 
+@pytest.mark.parametrize(('path', 'skill'), SKILL_CASES)
+def test_process_names_code_md_for_code_skills(path: str, skill: str | None) -> None:
+    result = process({'tool_name': 'Edit', 'tool_input': {'file_path': path}})
+    if skill is None:
+        assert result is None
+        return
+    context = result['hookSpecificOutput']['additionalContext']
+    named = 'software/code.md' in context
+    assert named == (skill not in ('/ops', '/wisdom'))
+
+
 @pytest.mark.parametrize('command', BLOCK_CASES)
 def test_process_blocks_unsafe_commands(command: str) -> None:
     result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
@@ -177,7 +191,16 @@ def test_process_blocks_recursive_codex_inside_codex() -> None:
     assert 'recursive codex' in result['reason']
 
 
-@pytest.mark.parametrize('command', ['rm -r build', 'rm -R build', 'rm --recursive build', 'sudo rm -r /srv/x', 'echo done && rm -r tmp'])
+@pytest.mark.parametrize(
+    'command',
+    [
+        'rm -r build',
+        'rm -R build',
+        'rm --recursive build',
+        'sudo rm -r /srv/x',
+        'echo done && rm -r tmp',
+    ],
+)
 def test_process_blocks_recursive_removal_without_force(command: str) -> None:
     """Recursive removal deletes a tree with or without -f, so -r alone blocks."""
     result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
@@ -185,7 +208,9 @@ def test_process_blocks_recursive_removal_without_force(command: str) -> None:
     assert result['decision'] == 'block'
 
 
-@pytest.mark.parametrize('command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version'])
+@pytest.mark.parametrize(
+    'command', ['rm -f stale.log', 'rm -i x', 'grep -r pat .', 'charm --version']
+)
 def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
@@ -197,10 +222,13 @@ def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> 
     Routing blocks through that cache disarmed the ban after the first hit.
     """
     monkeypatch.setenv('HOME', str(tmp_path))
-    payload = json.dumps({
-        'tool_name': 'Bash', 'session_id': 'same-session',
-        'tool_input': {'command': 'rm -r build'},
-    })
+    payload = json.dumps(
+        {
+            'tool_name': 'Bash',
+            'session_id': 'same-session',
+            'tool_input': {'command': 'rm -r build'},
+        }
+    )
     for attempt in range(3):
         monkeypatch.setattr('sys.stdin', io.StringIO(payload))
         main()

@@ -35,7 +35,7 @@ Default: flat, gitignored scratch at `.claude/plans/plan-NN-name.md` — plan
 mode's directory — with the next free zero-padded NN and a lowercase kebab
 name. Reuse the active change's record where it is. Project layout overrides
 win. The plan holds the owner brief, acceptance checks, decisions and
-progress. The `assess`, `eval-all` and `specs` critiques share the directory;
+progress. The `eval` and `specs` critiques share the directory;
 a record carries its type as the filename prefix, and plan mode's own files
 carry none.
 
@@ -129,7 +129,7 @@ result and next action in the work record after each accepted step.
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the
 affected remaining steps when code invalidates their premise. `runtime.md`
-owns bounded recovery. `later` and `bugs` park adjacent work.
+owns bounded recovery. `next` and `bugs` park adjacent work.
 
 Completion criterion: each implemented step has an inspected diff, passing
 gate evidence and a recorded disposition, and dependent steps never pass red.
@@ -144,9 +144,9 @@ committed work never becomes an empty uncommitted-diff review. `refine`
 owns quality lenses, docs, local commits and PR-thread intake.
 
 Run the owner-selected checks through the matching existing skills:
-`review` for an independent review, `red-eval` for hostile failure cases,
-`cto-eval` for operational risks, `design-eval` for UI craft and `13yo-eval`
-for first use. Load only lenses justified by the brief or a concrete
+`review` for an independent review, and the `eval` lenses — red for hostile
+failure cases, CTO for operational risks, design for UI craft and novice for
+first use. Load only lenses justified by the brief or a concrete
 unresolved concern. An explicit independent engine choice uses `astra` or
 `oracle`.
 
@@ -184,7 +184,7 @@ waiting for approval, and a blocked acceptance item. NEVER call a blocked
 or merely prepared destination shipped.
 
 Use `diary` for decisions and open items, `specs` for durable architecture,
-and `later` for owner-deferred follow-ups. Release notes belong to
+and `next` § Later for owner-deferred follow-ups. Release notes belong to
 `release`. Retain the plan while paused, blocked or waiting for delivery
 approval. On completion, distill durable content, then prune only named
 scratch files under the project's policy. Directory removal is the owner's.

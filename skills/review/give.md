@@ -14,6 +14,7 @@ Empty diff → say so and stop.
 Group files into ≤4 non-overlapping buckets by domain. Per bucket pick 3-5
 orthogonal lenses: correctness, simplicity, error handling, type safety, test
 coverage, security, performance, API contract, invariant/topology.
+ALWAYS hand a code bucket the `../refine/software.md` lenses (`code.md` hunts).
 
 **Invariant/topology lens** — topology/multiplicity/scope changes (one process
 split into many, a new scope-key on shared storage, a type gaining a collection
@@ -81,7 +82,8 @@ record the round in the diary — one line. Then stop.
 
 Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
 the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
-flagging; the `improve` agent that verifies and fixes runs on Sonnet 5.5).
+flagging; the fixes run on the `improve` agent, Sonnet 5.5 at high, for
+`simplify` work and on `opus` for `correctness` — `refine` step 8).
 ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
 
 ## GitHub PR (gh)

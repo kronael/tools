@@ -2,7 +2,7 @@
 
 The house layout, defined here and nowhere else — WISDOM and every other skill
 point to this file. A doc set is a few files, each answering ONE question, read
-in a stated order, with every behaviour tied to a test and every number to the
+in a stated order (with a docs site, by its sidebar and the README hub below), with every behaviour tied to a test and every number to the
 command that produced it. Section order inside one file: `shape.md`. The HTML
 page's craft: `page.md`. Prose: `writing`.
 
@@ -16,7 +16,7 @@ page's craft: `page.md`. Prose: `writing`.
 | `ARCHITECTURE.md` | Where does each piece live, and how does each flow run? |
 | `FEATURES.md` | What does it do today, and which test proves it? |
 | `BUGS.md` | What is open: defects, deliberate limits, decisions owed? Format: `bugs`. |
-| `TODO.md` | What is deferred and not yet a spec? Format: `later`. |
+| `TODO.md` | What is deferred and not yet a spec? Format: `next` § Later. |
 | `<pkg>/README.md` | How does a caller use this package? |
 | `test/research/README.md`, `test/research/<project>.md` | What else does this job, and how does this differ? |
 | `test/research/verified.md` | Where does each number in these documents come from? |
@@ -43,7 +43,8 @@ page's craft: `page.md`. Prose: `writing`.
 This order; cut a section with nothing true to say. Under 150 lines.
 
 1. The title, then what it is and who it is for, in one plain sentence.
-2. The link to the study page, naming what it answers.
+2. The link to the study page, naming what it answers; with a docs site, the
+   link row of `sync.md` step 3.
 3. Any status that changes whether to use it (unaudited, not for real funds).
 4. **The words** — each domain term defined before its first use.
 5. **What it gives you** — one bullet per capability that works today.
@@ -53,9 +54,46 @@ This order; cut a section with nothing true to say. Under 150 lines.
 8. **Commands** — every `make` target with a one-line comment.
 9. **How to read this**, last — a table of order, file and the question it
    answers, the study page first, `LICENSE`/`NOTICE` unnumbered.
+   With a docs site, the hub shape below replaces it.
 
+- ALWAYS state what adopting costs by `sync.md` § Rules; with a docs site the
+  README links to the Why page that states it.
 - NEVER put deployment (Dockerfile, CI, k8s, deploy steps) in the README —
   that belongs to the ops repo.
+
+## README as a docs-site hub
+
+When a docs site exists, ALWAYS make the README its front door, NEVER a
+second copy of the site:
+
+- The link row and the status line, in the order `sync.md` step 3 sets, and
+  a link to the cost on the Why page.
+- Each capability bullet links to the guide page of the same title.
+- The one README example comes from a compiled guide region (`sync.md`
+  § Rules) and links to the guide page that holds its imports, other
+  languages and the code that runs it — NEVER a README-only example nothing
+  compiles.
+- A closing "Repository layout" names each top directory. The link row plus
+  "Repository layout" replace "How to read this".
+
+## A doc site splits into guide and reference
+
+A built docs site (VitePress, mdBook, Docusaurus) turns the file split above
+into a sidebar. ALWAYS order it as the newcomer's questions arrive:
+
+| Group | Pages | What the pages must do |
+|---|---|---|
+| Start here | Why, Getting started, How it works | Why carries the status line, the cost and the wrong-reason refutation of § Keeping it; How it works is one complete annotated example on one screen |
+| Capabilities | one page per thing the reader gets, titled by it ("Amounts read at run time"), NEVER by the mechanism | each opens with what the plain approach cannot do |
+| Build | one how-to page per task | guide shape, `shape.md` |
+| Examples | an index, then one page per example | `shape.md` § Example and recipe pages |
+| Security | trust model, security posture, failure modes | each failure mode says what happens, then how to recover |
+| Reference | one page per SDK language, then language, wire format, errors, glossary, limits, scope | glossary: one heading per term, so every term has an anchor; limits: every maximum in one place, naming the source file the values come from; scope: a table of Choice, Instead of, Why |
+
+Contributor docs, such as style notes for page authors, may live in `docs/`
+beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
+NEVER published as reader pages. Plans, reviews and other work records NEVER
+go in `docs/`. They live in `.claude/plans/`, as § Tracked and local sets.
 
 ## PLAN.md and ARCHITECTURE.md
 
@@ -88,7 +126,15 @@ This order; cut a section with nothing true to say. Under 150 lines.
 - ALWAYS name, in the CLAUDE.md of the directory whose change moves a number,
   which ledger section that change re-runs (`test/CLAUDE.md`: a new test
   re-runs the test count).
-- A performance number is labelled and caveated per `finalize-crate` § 3b–3c.
+- A performance number is labelled and caveated per `release` → `library.md` § 3b–3c.
+- With a docs build, ALWAYS generate counts and measured tables from the
+  artifact that produces them — a build-time data loader reading the fixture
+  (VitePress `*.data.ts`), or a script that rewrites the block between marker
+  comments (`<!-- benchmark:name -->` to `<!-- /benchmark -->`). NEVER type a
+  count or a measured table into a page. A single measured figure from a tested
+  run, such as a cost or a size, may be typed when the page names the test that
+  produced it. A repo without a docs build keeps its measured figures in the
+  ledger.
 
 ## The study page
 
@@ -138,3 +184,11 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 - ALWAYS cite alternatives generously and accurately enough that their authors
   would not object; a superlative carries its ledger number; a roadmap item is
   never listed as a feature.
+- An examples index carries a verdict column saying whether the reader gets
+  the same result without the project ("Plain transaction?": Yes / Yes,
+  weaker / No), with every value defined in a list ABOVE the table. NEVER a
+  verdict the reader decodes by guessing.
+- The why section, the Why page on a docs site, names the obvious wrong
+  reason to adopt and refutes it with a number ("many calls in one
+  transaction is not the reason: thirty transfers already fit in one"),
+  before the real reason.

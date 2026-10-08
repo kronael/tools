@@ -6,10 +6,12 @@ when_to_use: writing or reviewing a Solana program, Anchor instruction, #[progra
 
 # Solana on-chain programs
 
-Requires the `rs` skill (Rust idiom) and `software/code.md`. Only what is
-specific to on-chain code is here. On-chain there is no `eyre` and no `tracing`:
-errors are one `#[error_code]` enum returned through Anchor's `Result` and
-checked with `require!` / `require_eq!` / `require_keys_eq!` / `err!`.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires the `rs` skill
+(Rust idiom). Only what is specific to on-chain code is here. On-chain there
+is no `eyre` and no `tracing`: errors are one `#[error_code]` enum returned
+through Anchor's `Result` and checked with `require!` / `require_eq!` /
+`require_keys_eq!` / `err!`.
 
 Read the sibling file that matches the work:
 

@@ -6,8 +6,8 @@ when_to_use: editing .sql files or writing SQL queries
 
 # SQL
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are SQL-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are SQL-specific additions.
 
 ## Style
 - No AS for column aliases: `MAX(rtime) max_rtime`

@@ -1,13 +1,14 @@
 ---
 name: demo
 description: Terminal demo GIF + MP4 recordings for READMEs and social (asciinema + agg + ffmpeg). NOT for general Makefile targets (use software) or GUI screenshots (use visual).
-when_to_use: "record a demo, make demo, demo gif, demo mp4, demo video, asciinema, agg, terminal recording for README or twitter"
+when_to_use: "record a demo, make demo, demo gif, demo mp4, demo video, asciinema, agg, terminal recording for README or twitter, benchmark demo gif, speed reveal, show off library speed, portrait gif"
 ---
 
 # Terminal demo recordings
 
-Part of the `create` creative-skill family — this skill owns terminal recordings
-and animated narrative shorts (see `cutout.md`).
+Part of the `create` creative-skill family — this skill owns terminal recordings,
+benchmark speed reveals (see `speed.md`) and animated narrative shorts (see
+`cutout.md`).
 
 Standard recipe: `asciinema` records a driven terminal session to a
 `.cast` file, `agg` renders that to a `.gif` committed under the repo
@@ -82,6 +83,13 @@ Reference implementation: `rig/Makefile`.
   request to that endpoint and its result. Filtering with `jq`, `grep`, or a
   small named helper is fine when the raw response is too large, but do not
   replace real endpoints with invented demo objects.
+
+## Speed reveal
+
+A library's REAL benchmark as a ~15-30 s portrait GIF — the bench running live,
+one headline, the honesty caveat on screen — is in `speed.md`; the `agg`,
+GIF-disposal, theme and palette failures behind its rules are in
+`speed/lessons.md`. ALWAYS read `speed.md` before recording a benchmark demo.
 
 ## Composed and narrative demos
 

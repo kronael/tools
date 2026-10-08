@@ -1,15 +1,14 @@
 ---
 name: squash
 description: Reorganize the UNPUSHED commits on a detached tip into a clean, logical, PR-review-friendly history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
-when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, reorganize commits, group related commits into one, collapse churn, drop an add-then-revert pair, combine incremental dependency bumps, rebase -i alternative, prepare branch for review, non-interactive rebase, rewrite local history"
+when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, collapse churn, rebase -i alternative"
 user-invocable: true
 ---
 
 # Squash
 
-The SANCTIONED exception to WISDOM's "NEVER squash commits" — like `/refine` and
-`/ship` committing by design. It applies ONLY to a **local, UNPUSHED** tip being
-prepared for PR review, on explicit user invocation. Nothing already on `origin/*`
+Reorganizes a **local, UNPUSHED** tip for PR review, on explicit user invocation —
+the one path WISDOM § Git allows a squash through. Nothing already on `origin/*`
 is ever rewritten. Method is a NON-INTERACTIVE rewrite via `reset --soft` — simpler
 and safer than `git rebase -i` (which needs a scripted `GIT_SEQUENCE_EDITOR`, per-commit
 message editors, and mid-rebase conflict handling): one reset, then re-commit in groups.

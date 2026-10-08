@@ -15,10 +15,11 @@ hook scripts.
 ### prompt_nudge.py (UserPromptSubmit)
 
 Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
-telling Claude to invoke the matching command or agent. That field is the one
+telling Claude to invoke the matching skill. That field is the one
 UserPromptSubmit output the model reads; `systemMessage` renders in the
-transcript for the user and never reaches the model. Routes are `AGENT_KEYWORDS` in
-the source. A prompt that starts with `/astra` or `/sol` routes to that skill;
+transcript for the user and never reaches the model. Routes are `SKILL_KEYWORDS` in
+the source. A prompt that starts with `/astra` or `/sol` routes to `/astra` (`/sol` is
+its Sol variant);
 `ask codex`, `ask astra`, `oracle` and `second opinion` route to `/astra`. All are suppressed inside Codex so it never nudges
 Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word
@@ -38,11 +39,12 @@ with its own maintenance.
 Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
-nudge, once per session+file. It also blocks true unsafe shell commands:
-`git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`, and
-recursive Codex execution inside Codex. `git push` is NOT blocked here — it is
-gated by consent in `skills/global` and the settings `ask` rule, not by the
-hook.
+nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
+adds "Read ~/.claude/skills/software/code.md first." It also blocks true
+unsafe shell commands: `git reset --hard`, broad `git add`, amend/no-verify
+commits, any recursive `rm` (`-r`, `-R`, `-rf`, `--recursive`), and recursive
+Codex execution inside Codex. `git push` is NOT blocked here — it is gated by
+consent in `skills/global` and the settings `ask` rule, not by the hook.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.

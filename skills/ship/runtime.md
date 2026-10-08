@@ -40,6 +40,12 @@ not rerunning the same deterministic failure. Escalate a `sonnet` step to
 transient failure under the owning skill's rules. Count all attempts in the
 work record.
 
+When each repair reveals a new defect somewhere else, that is a wrong
+architecture, not a failed hypothesis. ALWAYS stop at that signal, whatever
+the attempt count, and route the redesign through the Stage 3 sign-off rule
+instead of repairing again. Independent authorized steps continue while that
+sign-off waits.
+
 At an owner ceiling or the accepted repair or review limit, present
 evidence and the choice to extend effort, change scope, or defer the
 blocked item. NEVER reset a counter on resume or silently downgrade

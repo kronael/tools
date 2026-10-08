@@ -68,9 +68,9 @@ it is fitted → run configuration → results table → caveats. A first run wr
 "no prior" and NEVER drops the Lineage section. A run that leaves the prior
 conclusion standing says so in its verdict — NEVER re-run a comparison
 silently. ALWAYS ship one artifact per experiment — one image or one file —
-of two or three panels at most; chart mechanics belong to `data-reports` and
-`dataviz`. Every sentence derives from the summary frame or is scoped to what
-it measured; a number is never hand-copied into prose.
+of two or three panels at most; chart mechanics belong to `dataviz`. Every
+sentence derives from the summary frame or is scoped to what it measured; a
+number is never hand-copied into prose.
 
 ## Durable and scratch
 

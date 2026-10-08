@@ -13,7 +13,7 @@ tool inventory:
 1. **CLI tools** — one independent dir each. Adding a tool: own dir, own
    Makefile (or PEP 723 inline-deps script), entry in `README.md`.
 2. **Claude Code bundle** — `skills/`, `agents/`, `hooks/`, `output-styles/`,
-   `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
+   `commands/`, `settings-recommended.json`, `codex-hooks.json`, `RECLAUDE.md`,
    distributed via
    `.claude-plugin/` + `kronael/sync/`.
 3. **Codex sync bridge** — `plugins/kronael/` and
@@ -49,8 +49,9 @@ deltas.
   those installed skills to Codex through `~/.agents/skills`, and writes
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
   block from `codex/AGENTS.md` into global Codex guidance. That block tells
-  Codex to read `~/.claude/CLAUDE.md` and applicable project `CLAUDE.md` files
-  in addition to `AGENTS.md`, and to take its response style from the
+  Codex to read `~/.claude/CLAUDE.md`, applicable project `CLAUDE.md` files
+  and the project's `.claude/CLAUDE.md`, which Codex never loads itself, in
+  addition to `AGENTS.md`, and to take its response style from the
   installed `caveman` output style. The plugin cache still contains only the
   bridge skill.
 
@@ -183,4 +184,5 @@ not only full syncs. In a fresh Codex TUI session, the user must open
 - ONLY `git push` when the user asked in that message, and NEVER to
   `master`/`main` without a second approval naming the branch.
 - NEVER delete files in `~/.claude/` — a sync moves the old bundle to
-  `/tmp`, and installed-only files come back through the keep-list.
+  `/tmp`, and installed-only files come back by the rule in
+  `kronael/sync/reference.md` § Keep-list.

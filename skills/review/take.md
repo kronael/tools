@@ -19,6 +19,10 @@ ALWAYS re-verify each finding against the CURRENT code before classifying —
 it may be stale, already-fixed, or refuted outright. Never take a finding's
 claim on faith.
 
+ALWAYS name which items are still unclear after that and wait for answers
+before implementing any one — findings are often related, so a partial
+reading produces a wrong fix to the items you did understand.
+
 - **(a) actionable code bug** — a concrete fix the diff should carry
 - **(b) design / product decision** — reverses a product choice, changes scope,
   or is a judgement call

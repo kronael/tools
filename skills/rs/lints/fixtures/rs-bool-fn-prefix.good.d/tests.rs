@@ -1,0 +1,3 @@
+fn ready() -> bool {
+    true
+}

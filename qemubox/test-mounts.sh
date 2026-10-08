@@ -55,15 +55,15 @@ eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
 mkdir -p "$PROJ/node_modules/hidden/.cache" "$PROJ/.next" \
     "$PROJ/packages/a/.turbo" "$PROJ/packages/b/.cache" \
     "$PROJ/a/b/c/node_modules" "$PROJ/a/b/c/d/node_modules" \
-    "$PROJ/space dir/node_modules" "$PROJ/build"
+    "$PROJ/space dir/node_modules" "$PROJ/server/.venv" "$PROJ/build"
 dirs=("$PROJ"); no_copy=""; persist_builds=""; eph_no_tmpfs=""
 eph="$fixture/ephemeral"
 stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
 eq "default build mode" "${paths[0]}" tmpfs
-eq "find prunes matches and caps depth" "${#paths[@]}" 7
+eq "find prunes matches and caps depth" "${#paths[@]}" 8
 for path in node_modules .next packages/a/.turbo packages/b/.cache \
-    a/b/c/node_modules 'space dir/node_modules'; do
+    a/b/c/node_modules 'space dir/node_modules' server/.venv; do
     true_ "ephemeral: $path" 'printf "%s\n" "${paths[@]}" | grep -Fxq "$PROJ/$path"'
 done
 
@@ -73,7 +73,7 @@ eq "-P disables project overmounts" "${#paths[@]}" 1
 persist_builds=""; apply_flag T; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
 eq "-T chooses guest disk" "${paths[0]}" disk
-eq "-T keeps same build dirs" "${#paths[@]}" 7
+eq "-T keeps same build dirs" "${#paths[@]}" 8
 no_copy=1; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
 eq "-N skips project overmounts" "${#paths[@]}" 1

@@ -7,8 +7,8 @@ user-invocable: false
 
 # Make Style
 
-ALWAYS read the `software` baseline (`software/code.md`) first for shared naming,
-style, and design rules. Below are Make-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are Make-specific additions.
 
 ## Indirection has a much higher bar in Make than in code
 

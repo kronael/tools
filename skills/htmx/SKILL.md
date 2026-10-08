@@ -7,8 +7,8 @@ user-invocable: false
 
 # htmx (server-rendered HTML)
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 State lives on the server; DOM is a projection. For React, use `tsx`.
 
@@ -17,23 +17,6 @@ State lives on the server; DOM is a projection. For React, use `tsx`.
 - Server: any language (Go/Python/Rust/Bun/etc.); template engine renders HTML fragments
 - CSS: plain CSS, Pico.css, or Tailwind via CDN — no PostCSS pipeline by default
 - NEVER reach for vite/webpack/JSX — if you find yourself wanting them, you're building React, use `tsx`
-
-## Core attributes
-
-| Attribute       | Use                                                    |
-|-----------------|--------------------------------------------------------|
-| `hx-get`        | GET, swap response                                     |
-| `hx-post`       | POST                                                   |
-| `hx-put` / `hx-patch` / `hx-delete` | Other HTTP verbs                   |
-| `hx-target`     | Selector to swap (default: this element)               |
-| `hx-swap`       | `innerHTML` (default), `outerHTML`, `beforeend`, `afterbegin`, `delete`, `none` |
-| `hx-trigger`    | Event (default: `click` on buttons, `change` on inputs, `submit` on forms) |
-| `hx-vals`       | Extra payload (`{...}` JSON or `js:...`)               |
-| `hx-include`    | Extra elements to include in payload                   |
-| `hx-push-url`   | Update browser URL on swap                             |
-| `hx-boost`      | Progressive-enhance `<a>` / `<form>`                   |
-| `hx-confirm`    | `confirm()` dialog before firing                       |
-| `hx-indicator`  | Loading spinner selector                               |
 
 ## Server
 - ALWAYS return HTML fragments, NEVER JSON for swap routes

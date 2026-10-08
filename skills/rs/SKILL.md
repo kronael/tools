@@ -6,8 +6,9 @@ when_to_use: editing .rs files or writing Rust code
 
 # Rust
 
-Requires `software/code.md` (naming, style, comments, design) and
-`software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
+`../software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 
 ## Imports
@@ -29,11 +30,8 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
   imports make any file quick to reason about. Split a file that outgrows that.
 
 ## Naming
-- ALWAYS verb-based function names unless trivially a constructor
-  - `collect_tx_summaries()` not `tx_summaries()`; nouns ok for `new()`, `from_str()`
-- Function params: full names for multi-word concepts; short OK in closures (`v`, `k`, `n` in `.map(|v| ...)`)
-- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine
-- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
+`software/code.md` § Naming owns names. Rust additions:
+- Constructors (`new()`, `from_str()`) are nouns; every other API-visible function is a verb phrase.
 - Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
 ## Code Style
@@ -181,12 +179,13 @@ tokio::spawn(fetch_and_process(client));
 
 ## Lints
 - ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
-  `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
-  duplicate a clippy lint here.
+  `rs-no-from-value-clone`, `rs-no-anon-spawn`, `rs-bool-fn-prefix`
+  (`software/code.md` § Naming). clippy owns the rest — NEVER duplicate a
+  clippy lint here.
 - `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
-  carrying a `//` justification comment on the line directly above — NEVER
-  `// SAFETY:` (reserved for `unsafe`); a plain reason comment is the sanctioned
-  form.
+  carrying a `//` reason on the line directly above — one of the in-body
+  comments `software/code.md` § Comments allows. NEVER `// SAFETY:` for it;
+  that marker is reserved for `unsafe`.
 
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)

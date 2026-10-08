@@ -45,6 +45,7 @@ EXT_SKILLS = {
     '.j2': '/htmx',
     '.heex': '/htmx',
 }
+CODE_SKILLS = frozenset({*EXT_SKILLS.values(), '/mk'})
 
 
 def skill_for(path: str) -> str | None:
@@ -136,10 +137,11 @@ def process(data: object) -> dict | None:
     skill = skill_for(path)
     if not skill:
         return None
+    code = ' Read ~/.claude/skills/software/code.md first.' if skill in CODE_SKILLS else ''
     return {
         'hookSpecificOutput': {
             'hookEventName': 'PreToolUse',
-            'additionalContext': f'Editing/reading {os.path.basename(path)} — follow {skill} conventions.',
+            'additionalContext': f'Editing/reading {os.path.basename(path)} — follow {skill} conventions.{code}',
         },
     }
 

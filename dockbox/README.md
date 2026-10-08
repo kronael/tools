@@ -20,8 +20,7 @@ with a persistent disk — use [qemubox](../qemubox/) instead.
 ## Build
 
 ```bash
-make image              # builds the (UID-agnostic) image with host TZ
-make image TZ=EST       # custom timezone (default: host TZ or UTC)
+make image              # builds the (UID-agnostic) image; sessions run in UTC
 ```
 
 The image has no baked user. At runtime, dockbox passes your host UID/GID
@@ -193,6 +192,13 @@ Automatic:
   live in each box's own `/tmp`, so a private registry means boxes and the
   host neither see nor message each other's sessions, and two boxes' low
   container PIDs cannot overwrite each other's records.
+- `~/.claude/plugins` -> `/home/dockbox/.claude/plugins` and the same host
+  path (ro) - installed plugins. `installed_plugins.json` records absolute
+  host paths.
+- `~/.claude/settings.json` -> a copy of the host file with the sandbox off
+  (ro), written once when the box is created. A plugin enabled on the host
+  after that stays disabled in the box until the box is recreated.
+- `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -205,7 +211,6 @@ Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
   (commit signing; off by default)
 - `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
-- `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
@@ -248,7 +253,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
-2. **Overmount by default** (Node, Bun, framework caches): for any
+2. **Overmount by default** (Node, Bun, Python venvs, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
    workdir, finds every matching directory (recursive, pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
@@ -258,7 +263,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    Names overmounted by default:
 
    ```
-   node_modules  .next  .turbo  .cache
+   node_modules  .venv  .next  .turbo  .cache
    ```
 
    `dist` and `build` are not overmounted, so they land in the host

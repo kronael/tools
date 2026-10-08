@@ -140,23 +140,23 @@ slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
 | Failure | Rule violated |
 |---------|--------------|
 | Sub commits test without impl → broken HEAD | partial-commit check |
-| dashd auth guard committed without tests, security hole ships silently | ship-with-tests |
+| Auth guard committed without tests, security hole ships silently | ship-with-tests |
 | cherry-pick on worktree branch empties commit, HEAD slips | worktree-reconcile |
 | Two subs edit same file, one reverts the other | sequential-on-shared-tree |
 | Sub says "green", build actually broken | verify-the-artifact |
 | Parallel session's uncommitted edit captured by `git add -A` | explicit-file-list |
 | Audit finding accepted on its framing, direction was inverted | verify-a-finding-before-you-fix-it |
 
-Real incidents (arizuko, 2026-05-28 to 2026-06-05):
-- dashd auth guard scaffolded but NEVER applied to routes — existed unwired
-  for weeks; only caught by a full route audit, not by the original commit.
+Real incidents, one service project:
+- A dashboard auth guard was scaffolded but NEVER applied to routes — unwired
+  for weeks; only a full route audit caught it, not the original commit.
 - cherry-pick on worktree branches dropped reconciled bucket work off HEAD
   twice in one session; required `git reflog` recovery both times.
-- Rebuilding krons image without SECRETS_KEY in .env crash-looped gated;
-  a "deployed successfully" sub report masked the actual state until the
-  502s were noticed.
+- Rebuilding an image without a required secret in `.env` crash-looped the
+  gateway; a "deployed successfully" sub report masked the actual state until
+  the 502s were noticed.
 
-Real incidents (turbocharge, 2026-08-15 to 2026-08-19):
+Real incidents, one CLI project:
 - A commissioned CTO audit reported that a fix's ratio "reads backwards";
   re-deriving which side of the pair was baseline showed the number was
   right and only the prose sentence had the direction inverted — fixing the

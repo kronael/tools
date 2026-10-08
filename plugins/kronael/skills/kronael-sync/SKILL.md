@@ -121,7 +121,9 @@ table. NEVER leave `CLAUDE.md` under `[tui]` or `[tui.model_availability_nux]`
 If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
 fallback in the same directory. The installed global Kronael block in
 `~/.codex/AGENTS.md` therefore ALWAYS tells Codex to actively read applicable
-`CLAUDE.md` files in addition to loaded `AGENTS.md` files. For repositories
+`CLAUDE.md` files in addition to loaded `AGENTS.md` files. It also tells Codex
+to read the project's `.claude/CLAUDE.md`: fallback entries are matched as bare
+file names in each directory, so no entry reaches that path. For repositories
 shared without Kronael, ALSO add a short project `AGENTS.md` pointer.
 
 Example pointer:
