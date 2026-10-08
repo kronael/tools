@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
+when_to_use: editing .py files, writing Python; dataclasses, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
 ---
 
 # Python
@@ -33,6 +33,8 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - ALWAYS name functions and methods as verbs: `get_programs()`, `build_index()`, `compute_pnl()`
 - NEVER name a function as a noun: `program_lookup`, `symbol_map`, `client_index` — these read as data, not actions
 - Exception: boolean predicates — `is_funded()`, `has_positions()`, `can_advance()`
+- ALWAYS name current-time/date accessors `now()` and `today()`, never `get_now()` or `get_today()`.
+- ALWAYS name item-iteration helpers `iter_<items>`; preserve framework-required names.
 - The verb MUST match the behavior — a `finish_task()` that cancels, or a `get_*()` that mutates, is a lie. Rename the moment name and behavior diverge.
 
 ## Properties and accessor overrides
@@ -54,7 +56,7 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg) — ALWAYS `async with`
-- NEVER yield individual items; ALWAYS return batches
+- ALWAYS return batches from data-fetch functions; use iterators when the caller controls scheduling or consumption.
 
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
@@ -62,11 +64,11 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - ALWAYS dataclasses over Pydantic unless validation/coercion is needed
 
 ## Named Data Structures
-- ALWAYS a dataclass over bare tuples for return types (except trivial/test code)
+- ALWAYS use dataclasses for nontrivial heterogeneous records, including return values, parameter bundles and queued work items.
 - NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
-- ALWAYS `@dataclass(frozen=True)` by default for value/data types — immutability prevents aliasing bugs, makes instances hashable, and catches accidental mutation at runtime. Drop `frozen` only for types that are deliberately mutated in place (accumulators, stateful objects like `World`/`Client`)
+- ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
-- ALWAYS `@dataclass(frozen=True)` over a heterogeneous tuple used as a dict/map key — positional `key[2]` or `key[:4]` access is a smell; name the fields
+- ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
 - A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
 - NEVER `kw_only=True` / `InitVar` to dodge dataclass field-ordering — if every caller passes a value the default is dead, so make the field required
 - NEVER use tuple as a generic collection just because the values are not mutated — ALWAYS use `list` for ordinary sequences; reserve tuple for dict/set keys, deliberate immutability boundaries, varargs/returns where positional shape is the point, or small fixed heterogeneous records when a dataclass would be overkill.
@@ -117,7 +119,7 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - ALWAYS build properly shaped test doubles (`Mock` / `MagicMock` with explicit
   attrs or a small fake class); NEVER make production code tolerate incomplete
   fakes
-- NEVER monkeypatch module globals (`module.fn = stub`) for a test seam — ALWAYS inject the dep as a param (`get_cfg_fn: Callable[...] | None = None`) defaulting to the module fn (`get_cfg_fn or get_cfg`)
+- NEVER add production parameters solely to replace functions in tests — ALWAYS patch the symbol at its use site when a test needs substitution; keep dependency parameters for real production dependencies.
 - ALWAYS relax pyright for test paths when strict test typing is impractical (exclude tests from strict source check or use a separate relaxed test config); NEVER weaken production annotations for fake convenience
 
 ## Subprocesses
