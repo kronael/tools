@@ -1,7 +1,7 @@
 ---
 name: writing
 description: Router for how prose reads and how a document or page looks — copy rules for docs, UI strings and microcopy, plus the owner's page rules (headers as claims, boxes, layout, colour, sources, links). NOT for PR descriptions (use pr-draft), tweets (use tweet), diary entries (use diary), the AI-tells catalogue (use humanize), or which file a fact belongs in (use readme).
-when_to_use: "write a doc, doc prose, tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, make this page readable, simpler wording, 13yo style, rewrite this copy, explain a metric or formula in plain English; AI slop, fix the slop, card header, box title, figure title, accent stripe, colour legend, status pill on every line, all-caps labels, em-dash chain, wall of text, one narrow column, name the entity first, sources note, link text in brackets, full address, plain English, Simplified Technical English, ASD-STE100"
+when_to_use: "write a doc, doc prose, tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, make this page readable, simpler wording, 13yo style, rewrite this copy, explain a metric or formula in plain English; AI slop, fix the slop, card header, box title, figure title, accent stripe, colour legend, status pill on every line, all-caps labels, em-dash chain, wall of text, one narrow column, heading anchor, nav label, name the entity first, sources note, link text in brackets, full address, plain English, Simplified Technical English, ASD-STE100"
 ---
 
 # Writing — prose and page router
@@ -12,7 +12,7 @@ below. Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
-| how a document or page is laid out and reads — box and card headers, entities named before use, no stripes, legends, pills or all-caps labels, short lines in cards, a real layout, one sources note per section, bracketed link text, diagrams, contrast, the one-file craft (font, accent, dark mode), the render check | `page.md` |
+| how a document or page is laid out and reads — box and card headers, entities named before use, no stripes, legends, pills or all-caps labels, short lines in cards, a real layout, one name across sidebar, index and title, explicit short anchors on linked headings, one sources note per section, bracketed link text, diagrams, contrast, the one-file craft (font, accent, dark mode), the render check | `page.md` |
 
 The owner's name for a violation of any rule here is "AI slop"; "fix the slop"
 routes here. Prose tells with worked fixes are the `humanize` catalogue.
@@ -31,8 +31,12 @@ it — ALWAYS keep the term and explain its meaning instead.
 - ALWAYS make a heading, a box or card header and a figure title state the most
   important fact under it as a short claim ("One program per deployment", "Only
   the owner can collect") — NEVER a generic label ("Overview", "Details",
-  "Notes"), a vague directive ("Change something") or an "X: Y" colon title
-  ("The program: one per deployment") (humanize #31).
+  "Notes"), a vague directive ("Change something"), an "X: Y" colon title
+  ("The program: one per deployment") or a bold lead-in label (humanize #31).
+  In a doc set with navigation, a heading may instead be the reader's
+  question ("What it costs", "Run it") when its first sentence answers it,
+  and pages of one repeated shape, such as every example page, reuse the
+  same section names.
 - ALWAYS introduce a program, account, role or term before the prose uses it —
   a plain definition at first use in a doc, its own box on a page — and ALWAYS
   use one name for it throughout; NEVER cycle synonyms (humanize #11).

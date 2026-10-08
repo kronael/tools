@@ -220,10 +220,7 @@ ensure_box() {
             printf '%s:%s ' "$gid" "$gname"
         done
         printf '\n'
-        zone=$(readlink -f /etc/localtime)
-        zone=${zone#*/zoneinfo/}
-        [ -f "/usr/share/zoneinfo/$zone" ] || zone=$(cat /etc/timezone)
-        printf '%s\n' "$zone"
+        printf '%s\n' Etc/UTC
     } > "$dir/config/identity"
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
@@ -794,9 +791,7 @@ build_base() (
     mkdir -p "$ROOT/base"
     exec 8>"$ROOT/base/.lock"
     flock 8
-    # The same TZ as dockbox/Makefile, so both builds share the layer cache; the
-    # guest takes its zone from the host at boot, not from the image.
-    build_args=(--build-arg "TZ=$(date +%Z)")
+    build_args=()
     [ -z "$force" ] || build_args+=(--build-arg "AGENTS_CACHEBUST=$(date +%s)")
     "${docker_cmd[@]}" build --force-rm --target vm -t qemubox-vm \
         "${build_args[@]}" -f "$source_dir/dockbox/Dockerfile" "$source_dir"

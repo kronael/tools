@@ -2,44 +2,81 @@
 
 ## [Unreleased]
 
-## [v0.4.23] — 20261008
-
-> kronael v0.4.23 — GitHub text is linted before it posts
->
-> A PR body, issue or review comment that breaks WISDOM § Git is refused before it posts: a lint checks the text, the PreToolUse hook refuses the gh command, and the harness reminder asks for the bare robot.
->
-> • `gh_text_lint.py` checks a PR body, an issue or a comment: the bare 🤖 last line, the TL;DR lead, no headers, tables or restated diffs, the size caps.
-> • `pretool_nudge.py` refuses `gh pr create`, the PATCH of a PR body, `gh issue create`, `gh pr review` and every comment POST whose body fails, cannot be read, or is missing — and `gh release create` outright.
-> • `pr-draft` writes the draft and the cut as two files and ends on the lint's ok line and a "Review changed:" line; `gh-comment` and `gh-issue` lint before their sign-off gates.
-> • `attribution.pr` is "🤖" and `sessionUrl` is false in the recommended settings, so the reminder states the rule instead of the banned footer.
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
 - `hooks/gh_text_lint.py`: `lint(kind, text, title, draft)` returns `Problem(line, text)` records; `command_reason(command, cwd)` finds the body a gh command posts (`--body-file`, `$(cat <path>)`, a heredoc, `--input` JSON, the inline `--body`) and returns the block reason, or the reason the body cannot be read. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'`; `issue` and `comment` kinds take a file alone.
 - `hooks/pretool_nudge.py` calls `command_reason` after the unsafe-command check, and `gh release create` joins that check's block list; `hooks/Makefile` runs `test_gh_text_lint.py`; `hooks/README.md` and `hooks/ARCHITECTURE.md` describe the gate.
 - `skills/pr-draft/SKILL.md`: steps 3 to 5 are DISTILL into `tmp/pr-body.md` with the lint's `ok:` line as the completion criterion, REVIEW-ON-WISDOM closed by a `Review changed:` line, then the fenced draft; the PATCH of an existing PR reads `tmp/pr-body.md` by a literal path. `skills/gh-comment/SKILL.md` and `skills/gh-issue/SKILL.md` run the lint before their sign-off gates and carry NOT-for clauses.
 - `settings-recommended.json` and `kronael/sync/SKILL.md` step 5: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` join the always-apply keys.
-
-## [v0.4.22] — 20261007
-
-> kronael v0.4.22 — the skill lint stops exempting itself
->
-> The skill lint no longer exempts the file that documents it, and now runs on the commits that change siblings.
->
-> • The opt-out marker counts only on a line of its own, so quoting it documents it without disarming.
-> • A written path names one file: a reference to `flavors/manim.md` no longer credits root `manim.md`.
-> • Passing a sibling `.md` lints the skill that owns it; pre-commit and CI both reach it.
-> • The leak scan covers the tree; an account that only starts with the container's name is a leak.
-> • BUGS.md — three proposals built and removed, five open items recorded in their place.
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
-
 - `hooks/skill_frontmatter_lint.py`: reachability resolves the `.md` path tokens a document contains, then names a file by its path from the skill root or by a trailing part of that path no other file under the skill shares — so a bare basename counts only while it is unique. `names_doc` is gone; one resolution path replaces the per-candidate regex.
 - The `<!-- lint: allow skill-local-path -->` marker counts only on a line of its own. `skills/CLAUDE.md` quotes it in prose and was exempting itself; a planted home path in it now fails. A fenced block holding the marker alone on a line still disarms — nothing parses fences.
 - `LOCAL_PATH` exempts the container accounts `dockbox` and `claude` as whole segments only. An account that merely starts with one of those names belongs to somebody and now reports.
 - `skill_files()` maps a sibling `.md` to the `SKILL.md` that owns it, `.pre-commit-config.yaml` matches every `.md`, and the Lint workflow runs on push to master as well as on a pull request — it had never run, since this repo pushes straight to master.
 - `evals/README.md` teaches path-stripping with a placeholder account instead of a real former one, and needs no marker. `skills/create/CLAUDE.md` states where a ported tree's `README.md` is named from.
 - `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS`, `SKILL-LINT-BASENAME-HIDES-ORPHANS` and `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` are built and removed. Recorded in their place: `SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT`, `SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS`, `LINT-CI-DISPATCH-EMPTY-REFS`, `PRE-COMMIT-ALL-FILES-RED`, and `SKILL-LINT-NO-ORG-REF-CHECK` under Ruled not a defect.
+- `py`: `## Async` runs short local file I/O inline (`# noqa: ASYNC230`/`ASYNC240` with a reason), long blocking work through the project's one shared `to_thread` helper, never `create_task` + `shield` around it, writes through `.part` + `os.replace`, and has a retry helper `iter()` a plain backoff sequence.
+- `py`: `## Subprocesses` starts a child with `create_subprocess_exec(..., start_new_session=True)`, never stdlib `subprocess` from async code, and runs it inside the project's one async context manager that waits and reaps on exit and sends SIGTERM, then SIGKILL, to the group on an exception or a cancel.
+- `py`: dataclasses for heterogeneous records, work items and hashable keys; batches from data-fetch functions, iterators when the caller drives consumption; tests patch a symbol at its use site instead of adding a production parameter; `## Naming` keeps only the `now()`/`today()` and `iter_<items>` additions to `software/code.md` § Naming.
+
+## [v0.4.24] — 20261008
+
+> kronael v0.4.24 — Markdown reflow joins the tool hooks
+>
+> The rumdl pass is a branch of the existing tool hooks, with no hook, settings entry or Codex target of its own.
+>
+> • One hook less — post_tool_nudge.sh hands a .md write to pretool_nudge.py, which runs rumdl.
+> • Quieter — silent when rumdl ran; one line when it is missing, fails or times out.
+> • Narrower — only a Write or Edit of a .md in a repository whose root holds `.rumdl.toml`.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge.py` § `format_markdown`, fed by `post_tool_nudge.sh` on a PostToolUse payload that names a `.md`: a `Write`/`Edit`/`MultiEdit` is reflowed by the repository's `node_modules/.bin/rumdl`, else `rumdl` on PATH, run as `rumdl fmt` from the repository root (the nearest `.git`) when that root holds `.rumdl.toml`, so the config's `exclude` applies. Silent when rumdl ran — Claude Code reports a file a hook changed, and an Edit over a reflowed line fails instead of applying to stale text; one line when rumdl is missing, exits non-zero or times out, and a timed-out run gets the written bytes back. A repository without the config, a file outside any repository and a clone nested in an opted-in tree are never touched.
+- `hooks/md_format.py`, its `Write|Edit|MultiEdit` settings entry and its Codex `md_format` target are removed; the uvx fallback, `rumdl.toml` and `pyproject.toml` detection, leftover parsing and the re-read note go with them.
+- `software/code.md` § Layout and formatting: `exclude` patterns are written `.name/`; a root-anchored `/.*/` does not match a file named on the command line (rumdl 0.2.78).
+
+## [v0.4.23] — 20261008
+
+> kronael v0.4.23 — Markdown wraps itself, Haiku leaves the workflows
+>
+> Agents stop hand-wrapping Markdown: a hook runs rumdl on each .md they write in an opted-in repo, and Haiku is batch-only.
+>
+> • md_format hook — each .md an agent writes is rewrapped; tables, fences and links stay.
+> • Opt in per repo — `.rumdl.toml` and a pinned rumdl; `make fmt` wraps, `make lint` checks.
+> • Agents — no haiku skill, agent or keyword; light work runs on sonnet or in the main thread.
+> • readme — topology.md defines the repo layout: one question per file, one numbers ledger.
+> • bugs, release — an owed decision carries options and a default; a CHANGELOG only if published.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/md_format.py` (PostToolUse on `Write|Edit|MultiEdit`; Codex `apply_patch`, every file it names): runs `rumdl fmt` on the written `.md` from its own directory when a directory up to the repository root holds `.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]`; the binary is the repo's `node_modules/.bin/rumdl`, else PATH, else `uvx rumdl@0.2.78`. It tells Claude to re-read a file it changed and reports what rumdl could not fix or a failed run. Never blocks; a repo with no config is never touched.
+- `software/code.md` § Layout and formatting owns the rule — the config (`line-length = 100`, `reflow`, tables and fenced blocks exempt), the pin, `make fmt` and `make lint`; `readme/topology.md` lists the lint gate.
+- rumdl was chosen over dprint, prettier and mdformat on a real doc set: those three pad table columns and refill every paragraph; rumdl reflows only lines over the width and leaves tables, fences, frontmatter, HTML and links as they are.
+- `solana/layout.md` agrees with `rs`: unit tests live in `src/<module>_test.rs`, declared beside their subject with `#[path]`.
+- `global` § Agents: Haiku is batch-only, never a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the main thread. `skills/haiku`, `agents/haiku.md` and the `haiku` nudge keyword are removed and `kronael/sync` retires the installed copies; `sonnet`, `opus`, `dispatch`, `skills/CLAUDE.md`, both READMEs and `scavenge/shapes.md` drop the tier. The `dockbox`/`qemubox` `haiku` aliases stay pending BUGS.md `BOX-HAIKU-ALIAS-VS-BATCH-ONLY`.
+- `readme/topology.md`: the house layout in one file — which file answers which question (README, PLAN, ARCHITECTURE, FEATURES, BUGS, the study page, `test/research/verified.md`, root and package CLAUDE.md), the README order, the numbers ledger, what `make lint` checks, what is tracked and what stays local. `agents/readme.md`, `finalize-crate`, `diary`, `wisdom`, `refine/brief.md`, `readme/shape.md`, the doc-naming hook and `global` § Documentation point to it.
+- `bugs`: an owed decision has status `needs sign-off` or `owner decision` and carries `**Options:**` and `**Default if nothing is decided:**`; a gate is one more clause (`blocks go-live`, `blocks publication`). `next` § Later sends an owed decision to `bugs`.
+- `release`: CHANGELOG.md is created only when the project publishes versions to outside consumers; otherwise step 3.5 writes the release text from `git log <last>..HEAD`.
+- `sonnet`: `when_to_use` takes mapping and grep-and-report work and drops the find/replace and find-bugs phrases that race `astgrep` and `review`.
+
+## [v0.4.22] — 20261007
+
+> kronael v0.4.22 — code rules you can scan, and lints that check them
+>
+> The code rules are now short ALWAYS/NEVER bullets, every code edit points at them, and a lint flags misnamed predicates.
+>
+> • code.md — rules as ALWAYS/NEVER bullets, most-broken first; the code-file nudge names it.
+> • Lints — Rust, Python and TypeScript flag a bool function without an is_/has_/can_/should_ prefix.
+> • Docs rules — status line first, stated cost, code from tested files, a guide-and-reference site.
+> • Codex reads the project's .claude/CLAUDE.md as well.
+> • Rule pruning — a clean room with no setup at all, and a rule is cut only on observed behaviour.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: every rule an ALWAYS/NEVER bullet, sections ordered by how often sessions break them; it owns naming, comments (machine-read markers such as `// #region` and lint pragmas are not comments), shutdown on SIGINT/SIGTERM and build cadence. `rs`, `py`, `go` and the other language skills keep only their additions and ALWAYS read `code.md` first; the pretool nudge names it for code skills.
+- Lints `rs-bool-fn-prefix`, `py-bool-fn-prefix`, `ts-bool-fn-prefix` (warnings): test code, trait and interface implementations, overrides, getters and dunders are exempt, each proven by a fixture. `lints/check.py` fails when ast-grep fails and requires the rule to fire in every block of a bad fixture. `refine/software.md` runs them and hunts what they cannot see.
+- `readme` and `writing`: README order (what, link row, status, why, how), one status line worded the same everywhere, cost as a formula with a worked figure, doc code from compiled regions, an example-page shape ending in what has been tested, a guide-and-reference site layout, the README as a hub, one name per page, explicit anchors. A reader-question heading is allowed in a doc set with navigation when its first sentence answers it.
+- `global`: rules `code.md` or the harness carry are dropped; "NEVER kill a process you did not start, not even to free a port".
+- `wisdom`: one clean room, `clean-room.sh` (empty home and config, no tools, no skills, pinned model), which proves isolation from the run's own transcript; `subtraction.md` runs the whole-bundle pass; a rule is cut only on behavioural evidence, never on a model's self-report.
+- `codex/AGENTS.md`: Codex reads the project's `.claude/CLAUDE.md`; its fallback file names never load that path.
+- Project names and a local path are gone from skill text; `should_` counts as a predicate prefix.
 
 ## [v0.4.21] — 20261007
 

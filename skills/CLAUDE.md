@@ -87,21 +87,21 @@ skills it replaces.
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
   them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
-  xhigh, `haiku` = model only (Haiku 4.5 rejects `effort`). ALWAYS change an
-  agent file and every skill that quotes it in one commit.
-- `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
-  written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
-  plan steps that need judgment. `fable` takes unattended multi-file code,
-  `ship` plans, and security or deep audits.
-- `haiku` subagents are for cheap exploration, research, mapping, grep-style
-  surveys, and mechanical bounded edits. Escalate once the work requires
-  multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
+  xhigh. ALWAYS change an agent file and every skill that quotes it in one
+  commit.
+- `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
+  mechanical edits too wide for the parent, and the steps of a written plan
+  (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
+  that need judgment. `fable` takes unattended multi-file code, `ship` plans,
+  and security or deep audits.
+- No Haiku tier: Haiku is batch-only (`global` § Agents owns the rule) —
+  NEVER add an agent file, launcher skill or nudge keyword that pins it.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 
 ## Agent definitions
 
-- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`, `haiku`,
+- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`,
   with no body — and thin skill agents whose body only loads the same-named
   skill. `visual`, `readme`, `improve` (pins Sonnet 5.5 at high), `learn` and
   `distill` are each launched from their skill's `## Where it runs`
@@ -112,16 +112,13 @@ skills it replaces.
   other file; NEVER restate the list.
 - A skill that needs isolation or a model says so in its own body (`## Where
   it runs`): ALWAYS its thin same-named agent where one fits, else
-  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
+  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`) told to
   load the skill. NEVER write a content-bearing agent definition, and NEVER reduce
   a skill body to one "launch agent X" line.
 
 ## Earning a rule's place
 
-- ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
-  rules: a fresh sub writes its defaults for the topic, and whatever it produces
-  unprompted does not go in. Only drifts, unguessable local facts, workflows and
-  deliberate harness overrides survive.
+- ALWAYS run `wisdom` § The subtraction test before adding or trimming a rule.
 
 ## Prompt examples and context
 

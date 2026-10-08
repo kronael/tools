@@ -2,6 +2,15 @@
 
 ## Bundle
 
+- **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
+  `skills/recall-memories/recall.py` `read_records` (~250) opens every
+  transcript under `~/.claude/projects/` and lets a `PermissionError` escape:
+  one unreadable file kills every `results` search, scoped or `-a`. Here it is
+  `~/.claude/projects/-/399a5e4c-d151-43d2-8aeb-292ba1c6b8a1.jsonl`, in a
+  root-owned dir a session run as root from `/` left.
+  Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
+  Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
+
 - **SLUG-RULE-DROPS-DOTS** (LOW, docs) — CONFIRMED. `skills/solve/SKILL.md:26`
   and `skills/global/SKILL.md:14` say the transcript slug is the CWD with `/`
   replaced by `-`. Claude Code replaces every non-alphanumeric character:
@@ -71,6 +80,26 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
+- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
+  design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
+  sub, while `dockbox haiku` (`dockbox/dockbox:412`) and `qemubox haiku`
+  (`qemubox/qemubox:1104`) start an interactive Claude Code session on
+  `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
+  `qemubox/test-parity.sh:8` pin the alias in both. **Options:** (a) drop the
+  `haiku` alias from both launchers, their usage text, qemubox's README and
+  the two tests; (b) keep it as a typed model flag the rule does not govern —
+  the user picks it, no skill routes to it. **Default if nothing is
+  decided:** (b).
+
+- **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
+  test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
+  and `**Default if nothing is decided:**` on every entry whose status is
+  `needs sign-off`; the entries in this file with that status predate the
+  rule — none carries a default, and only `LINT-PACK-NOT-INSTALLABLE`
+  sketches options. **Options:** (a) backfill each entry when its subject is
+  next touched; (b) backfill them all in one pass; (c) grandfather them.
+  **Default if nothing is decided:** (a).
+
 - **SYNC-OLD-MANIFEST-KEYS** (LOW, correctness) — CONFIRMED 2026-10-05. A
   manifest the install step wrote keys `files` by bare path (`CLAUDE.md`,
   `skills/commit/SKILL.md`); § Classify and § Merge look up
@@ -133,6 +162,13 @@
   `kronael/sync/reference.md`; no test — docs.
 
 ## Hooks
+
+- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-07.
+  `hooks/README.md` and `hooks/ARCHITECTURE.md` list fewer blocked commands
+  than `hooks/pretool_nudge.py:20-29` enforces: `git merge --squash`,
+  `git rebase -i`, branch creation (`checkout -b`/`switch -c`), `git worktree
+  add` without `--detach` and `killall` are blocked but undocumented.
+  **Fix:** list every pattern in the docs, or point them at the table.
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
@@ -358,19 +394,6 @@
   `dockbox/dockbox:292` lists `fable` as "(max effort)", but the `fable` arm
   (`:443`) passes no `--effort`, so the session runs at the CLI default.
   `qemubox/qemubox:59` makes no such claim.
-
-- **BOX-TZ-BUILD-ARG-ABBREVIATION** (MED, config) — proposed, CONFIRMED at
-  HEAD 2026-10-06. `dockbox/Makefile:5` sets the `TZ` build arg to
-  `date +%Z`, and `qemubox/qemubox:799` copies it into the base build without
-  the `UTC` fallback. `dockbox/Dockerfile:3-4` turns it into `ENV TZ`. `%Z`
-  prints a DST-dependent abbreviation (`CEST`, then `CET`), so both layer
-  caches miss twice a year. `CEST` is no zone name: `TZ=CEST date +%z` prints
-  `+0000`, so a dockbox session clock runs in UTC labelled `CEST`, and the
-  `ENV TZ` overrides the `/etc/localtime` mount (`dockbox/dockbox:21`).
-  **Proposal:** drop the `TZ` build arg from both builds; the
-  `/etc/localtime` mount and the zone qemubox reads at boot
-  (`qemubox/qemubox:223`) carry it. A build change in two tools — needs
-  sign-off; no test — config.
 
 ## qemubox
 

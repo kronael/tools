@@ -14,10 +14,8 @@ STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/ca
 - Before sending: read ONLY your first and last line. If those two do not
   say what to DO and what HAPPENED, the middle is padding."""
 
-DOCS_RULES = """Documentation naming rules:
-- UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
+DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
 - Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ dir; plans/ only as .claude/plans/ (plan mode's directory, where ship records live)
-- Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
 COMMIT_RULES = """Commit rules:
@@ -52,7 +50,6 @@ SKILL_KEYWORDS = {
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',
-    'haiku': '/haiku',
     'humanize': '/humanize',
     'inline': '/gh-comment',
     'merge': '/merge',

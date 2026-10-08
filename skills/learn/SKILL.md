@@ -58,8 +58,10 @@ mistake on one language — a lint candidate.
   drafting anything.
 - NEVER promote one session to a skill or a lint — the same pattern in 2+
   distinct sessions; a single session goes to `.diary/`.
-- NEVER lint judgment (naming, minimality, "boring code") — a false positive
-  trains `--no-verify`. Only the user promotes a lint to `error`.
+- NEVER lint judgment (whether a name fits, minimality, "boring code") — a
+  false positive trains `--no-verify`. A mechanical shape is lintable, such as
+  a bool-returning function without an `is_`/`has_`/`can_`/`should_` prefix.
+  Only the user promotes a lint to `error`.
 - ALWAYS write a skill per `wisdom` (frontmatter keys, `NOT for`,
   ALWAYS/NEVER, length) and pass `make skills-frontmatter`; NEVER carry a
   second copy of those rules here.

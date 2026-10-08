@@ -60,7 +60,7 @@ mtime.
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second
-- `make` for build/lint/test/clean, debug builds, build/test/lint every ~50 lines
+- `make` for build/lint/test/clean, debug builds
 - NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build/temp
   path, and NEVER move a build between target directories — each switch costs a
   full rebuild and splits the cache across mounts. If the configured directory is
@@ -93,7 +93,6 @@ mtime.
   construction.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
   `BUGS.md` as a proposal FIRST and ships only after sign-off.
-- No abstraction until there are 2-3 real call sites.
 
 ## Git
 
@@ -129,9 +128,7 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
   AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
-- ONLY run `gh pr create`, `gh pr merge` or `gh repo create` when the user
-  asked for that action in that message — show the title and body first and
-  wait. NEVER `gh release create`: the annotated tag is the release. NEVER
+- NEVER `gh release create`: the annotated tag is the release. NEVER
   `gh pr review --approve` on the user's behalf.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
   new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
@@ -152,8 +149,8 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   ./tmp/out.log`. NEVER re-run a command to see another part of its output.
 - NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
   explicitly named files, or leave cleanup to the user.
-- NEVER `killall`/`pkill` by name — kill by PID. ALWAYS handle SIGINT/SIGTERM in
-  anything long-running.
+- NEVER kill a process you did not start, not even to free a port; kill your
+  own by PID.
 - NEVER hit an external API per request, and NEVER re-fetch what is already on
   disk — cache it, continue from last state.
 - NEVER use the `SendFeedback` tool, NEVER draft Claude Code product or model
@@ -162,16 +159,14 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 
 ## Documentation
 
-- Layout — UPPERCASE root files, `specs/`, `docs/`, `.diary/`, `.claude/plans/`
-  (only `plans/`), no `todos/`, root-anchored ignores: `readme` → `topology.md`.
+- ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
+  file or top-level dir. NEVER `todos/`; `plans/` only as `.claude/plans/`.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",
   backwards-compat framing, or a one-off backfill inside a permanent file. State
   what is true now and its genuine quirks; history lives in git and `.diary/`.
-- Comments earn their place only by saying what the code cannot: why a choice was
-  made, or what is surprising. NEVER restate the code or a name.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
   verbatim and NEVER re-litigate the wording, in review or in an eval report.
@@ -192,9 +187,9 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - ALWAYS run autonomous code generation — a sub writing a comprehensive or
   multi-file change that no parent reads before the work goes on — on
   `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
-  not tokens. Cheap models are for READ-ONLY fan-out. Bigger work: ALWAYS plan
-  in the main thread (an `/opus` sub from Sonnet or Haiku), then run each step
-  on a `sonnet` sub and read its diff before the next (`sonnet` § Plan, then
-  execute); a step read that way, here or in `ship`, is not autonomous.
+  not tokens. Haiku is batch-only, NEVER a sub — light work goes to `sonnet` or
+  the main thread. Bigger work: ALWAYS plan first, then one `sonnet` sub per
+  step, its diff read before the next (`sonnet` § Plan, then execute); a step
+  read that way, here or in `ship`, is not autonomous.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

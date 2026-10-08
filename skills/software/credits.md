@@ -27,7 +27,7 @@ the person directing the work.
 
 ## NOTICE file format
 
-Follow the arizuko pattern (see ~/wk/arizuko/NOTICE):
+Follow this pattern:
 
 ```
 <project> — by <author>

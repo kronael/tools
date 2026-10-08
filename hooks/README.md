@@ -1,8 +1,8 @@
 # Kronael Hooks
 
 Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
-unsafe-command blocks, and commit/diary stop checks. Scripts install to
-`~/.claude/hooks/`.
+unsafe-command blocks, Markdown formatting, and commit/diary stop checks.
+Scripts install to `~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
 its `hooks` block is merged into `~/.claude/settings.json` by the install
@@ -39,8 +39,10 @@ with its own maintenance.
 Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
-nudge, once per session+file. It also blocks true unsafe shell commands:
-`git reset --hard`, broad `git add`, amend/no-verify commits, `rm -rf`,
+nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
+adds "Read ~/.claude/skills/software/code.md first." It also blocks true
+unsafe shell commands: `git reset --hard`, broad `git add`, amend/no-verify
+commits, any recursive `rm` (`-r`, `-R`, `-rf`, `--recursive`),
 `gh release create`, and recursive Codex execution inside Codex. `git push` is
 NOT blocked here — it is gated by consent in `skills/global` and the settings
 `ask` rule, not by the hook.
@@ -67,12 +69,27 @@ completion criterion.
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
 
+On a PostToolUse payload (fed by `post_tool_nudge.sh`) it instead reflows the
+Markdown file a `Write`, `Edit` or `MultiEdit` touched: when the file's
+repository — the nearest `.git`, a worktree's `.git` file included — has a root
+`.rumdl.toml`, it runs the repository's `node_modules/.bin/rumdl`, else `rumdl`
+on PATH, as `rumdl fmt` from that root, so the config's `exclude` patterns
+apply. Silent when rumdl ran: Claude Code itself tells the agent a hook changed
+the file, and an Edit whose `old_string` spans a reflowed line fails instead of
+applying to stale text. One line when rumdl is missing, exits non-zero or
+times out, and a timed-out run leaves the file as the tool wrote it. A
+repository without `.rumdl.toml`, a file outside any repository and a clone
+nested in an opted-in tree are never touched; Codex's `apply_patch` is not a
+write it formats. `software/code.md` § Layout and formatting owns the rule a
+repository adopts.
+
 ### post_tool_nudge.sh (PostToolUse)
 
-Counts tool calls in the current repo's git dir; every 100 calls or 10
-minutes re-runs `stop.py`'s commit/diary check mid-session using the original
-hook payload.
-Non-blocking, always exits 0.
+Pipes a payload that names a `.md` file through `pretool_nudge.py` first (the
+Markdown reflow above); a note from it is the call's only output. Then counts
+tool calls in the current repo's git dir; every 100 calls or 10 minutes
+re-runs `stop.py`'s commit/diary check mid-session using the original hook
+payload. Non-blocking, always exits 0.
 
 ### codex_hook.py (Codex adapter)
 

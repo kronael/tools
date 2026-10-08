@@ -49,8 +49,9 @@ deltas.
   those installed skills to Codex through `~/.agents/skills`, and writes
   `~/.codex/hooks.json` for Codex lifecycle hooks. It also merges the marked
   block from `codex/AGENTS.md` into global Codex guidance. That block tells
-  Codex to read `~/.claude/CLAUDE.md` and applicable project `CLAUDE.md` files
-  in addition to `AGENTS.md`, and to take its response style from the
+  Codex to read `~/.claude/CLAUDE.md`, applicable project `CLAUDE.md` files
+  and the project's `.claude/CLAUDE.md`, which Codex never loads itself, in
+  addition to `AGENTS.md`, and to take its response style from the
   installed `caveman` output style. The plugin cache still contains only the
   bridge skill.
 

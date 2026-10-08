@@ -8,18 +8,20 @@ what a critique on file already refuted.
 ## Sections — this order; cut any with nothing true to say
 
 1. **Name + one sentence.** What it does, plain words, no metaphor. A reader
-   who stops here still knows what the thing is.
+   who stops here still knows what the thing is. The status line sits
+   directly under it, worded as `sync.md` step 3 requires.
 2. **The problem** — two or three sentences, stated as the reader's problem,
    never as the project's motivation.
 3. **How it works** — 3–5 numbered steps or one diagram. The only section
    allowed domain vocabulary, and it defines each term inline.
 4. **What is different** — comparison against real alternatives, named. A
    comparison against nobody reads as marketing.
-5. **Status and limits** — what works today, what does not, what is assumed —
+5. **Limits** — what works today, what does not, what is assumed —
    from the bug queue and open questions, not imagination. A page with no
    limits is not believed.
-6. **Numbers** — cost, effort, scale, latency. Only numbers a run, file, or
-   recorded estimate produced; NEVER invent one.
+6. **Numbers** — cost, effort, scale, latency, with cost stated by
+   `sync.md` § Rules. Only numbers a run, file, or recorded estimate
+   produced; NEVER invent one.
 7. **Next step** — the one action a convinced reader takes, with the link. A
    negative critique verdict on file is named here, not hidden.
 
@@ -35,6 +37,7 @@ what a critique on file already refuted.
 - ALWAYS reread the rendered page as a stranger before handing over: the
   first sentence says what it is, every claim is backed in its section's
   sources note (`writing/page.md` § Sources and links), a skeptic survives it.
-- NEVER publish through Claude Artifacts — ALWAYS write into the krons web
-  root (`CLAUDE.md` § Publishing) and hand back the public URL, unless the
-  request names a different destination; then write exactly there.
+- NEVER publish through Claude Artifacts — ALWAYS write into the web root
+  the owner's local setup names (`~/.claude/LOCAL.md`) and hand back the
+  public URL, unless the request names a different destination; then write
+  exactly there.

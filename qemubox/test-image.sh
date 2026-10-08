@@ -18,8 +18,7 @@ timezone_test() {
     regression_setup
     untrusted=""
     ensure_box timezone
-    zone=$(readlink -f /etc/localtime); zone=${zone#*/zoneinfo/}
-    [ "$(sed -n '6p' "$ROOT/timezone/config/identity")" = "$zone" ]
+    [ "$(sed -n '6p' "$ROOT/timezone/config/identity")" = Etc/UTC ]
     mkdir -p "$fixture/zone/etc" "$fixture/zone/run/qemubox/config"
     cp "$ROOT/timezone/config/identity" "$fixture/zone/run/qemubox/config/identity"
     sed '/^passwd_entry=/,$d' "$image_init" |
@@ -27,10 +26,10 @@ timezone_test() {
     modprobe() { :; }; mount() { :; }
     export -f modprobe mount
     bash "$fixture/zone-init"
-    [ "$(readlink "$fixture/zone/etc/localtime")" = "/usr/share/zoneinfo/$zone" ]
+    [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
     ! grep -q '^RUN for key in TZ ' "$here/../dockbox/Dockerfile"
 }
-regression "identity and init set host timezone without a UTC override" timezone_test
+regression "identity and init set the UTC time zone" timezone_test
 
 groups_test() {
     mkdir -p "$fixture/groups"

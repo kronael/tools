@@ -7,7 +7,9 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
                                  ──> local.py        (LOCAL.md on first prompt)
 
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
-          ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
+          ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
+                                                  pretool_nudge.py; periodic
+                                                  commit/diary nudge)
 
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
@@ -87,17 +89,33 @@ never a per-prompt nudge.
 **Routes:** `SKILL_KEYWORDS` dict in the source.
 Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
-### pretool_nudge.py (PreToolUse)
+### pretool_nudge.py (PreToolUse; PostToolUse via post_tool_nudge.sh)
 
 **Input:** JSON with `tool_name`, `tool_input` (`file_path`, `notebook_path`,
-`command`, `cmd`, or `apply_patch` patch text), `session_id`.
+`command`, `cmd`, or `apply_patch` patch text), `session_id`, and the event
+(`hook_event_name`, read via `lib/state.py`).
 **Output:** `{"decision": "block", "reason": "..."}`,
 `hookSpecificOutput.additionalContext`, or silent.
 
-**Flow:**
+**PostToolUse flow** (`format_markdown`):
+1. Not a `Write`/`Edit`/`MultiEdit` of an existing `.md` → silent.
+2. Walk up from the file to the first directory holding `.git` (a worktree's
+   `.git` file included); none, or no `.rumdl.toml` there → silent: the
+   repository did not opt in, and a nested clone never inherits a config.
+3. Run `<root>/node_modules/.bin/rumdl`, else `rumdl` on PATH, as
+   `rumdl fmt -- <path relative to root>` from the root, so the config's
+   `exclude` applies; `RUMDL_TIMEOUT_S` caps the run.
+4. Exit 0 → silent (Claude Code reports a file a hook changed, and an Edit
+   whose `old_string` spans a reflowed line fails rather than applying to stale
+   text). Non-zero exit → one line with rumdl's first output line; no binary,
+   a timeout or an OS error → one line, and a timed-out run gets the written
+   bytes back.
+
+**PreToolUse flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   amend, hard reset, broad add, no-verify commits, `rm -rf`, `gh release
-   create`, and recursive Codex execution inside Codex. Then
+   amend, hard reset, broad add, no-verify commits, any recursive `rm`
+   (`-r`, `-R`, `-rf`, `--recursive`), `gh release create`, and recursive
+   Codex execution inside Codex. Then
    `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
    PR body, an issue body or a comment is blocked when the body it carries
    fails the lint, cannot be read, or is required and absent. The reason names
@@ -107,9 +125,11 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
    `Dockerfile`/compose/workflows → `/ops`), then extension via
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
-4. Dedupe per session+file via `$TMPDIR/claude-extnudge/{sid}.txt` so
+4. Dedupe per session+file via `~/.claude/tmp/extnudge/{sid}.txt` so
    each nudge fires once.
-5. Emit "Editing/reading <file> — follow <skill> conventions."
+5. Emit "Editing/reading <file> — follow <skill> conventions.", plus
+   " Read ~/.claude/skills/software/code.md first." when the skill is in
+   `CODE_SKILLS`.
 Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### gh_text_lint.py (library + CLI)
@@ -137,12 +157,16 @@ run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 
 **Input:** original hook payload; state in the current repo's git dir
 (`post_tool_nudge`, ts + count).
-**Output:** `stop.py`'s advisory `hookSpecificOutput` every 100 tool calls or
-10 minutes, otherwise silent. Always exits 0 — never blocks a tool call.
+**Output:** `pretool_nudge.py`'s Markdown note when it has one, else
+`stop.py`'s advisory `hookSpecificOutput` every 100 tool calls or 10 minutes,
+otherwise silent. Always exits 0 — never blocks a tool call.
 
 **Flow:**
-1. Increment the call counter.
-2. At 100 calls or 600 s, reset state and pipe the original payload to
+1. A payload naming a `.md` file goes through `pretool_nudge.py` first; a note
+   from it is the call's whole output, since two JSON documents on stdout
+   parse as none.
+2. Increment the call counter.
+3. At 100 calls or 600 s, reset state and pipe the original payload to
    `stop.py` with `KRONAEL_HOOK_EVENT=PostToolUse`, so the commit/diary nudge
    also fires mid-session as advisory context.
 
@@ -310,7 +334,8 @@ Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and
 All Python hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError`
 and bail with exit 0 so a broken payload never blocks the session. File
 I/O errors are swallowed for the same reason. `post_tool_nudge.sh`
-always exits 0.
+always exits 0, and a rumdl run that fails or times out becomes a context note
+rather than an exit code.
 
 ## Extension Points
 

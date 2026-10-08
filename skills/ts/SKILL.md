@@ -6,8 +6,9 @@ when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun 
 
 # TypeScript Style
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are TypeScript-specific additions and deltas.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are TypeScript-specific
+additions and deltas.
 
 Read on demand, in this directory:
 - `node-cluster.md` — running one CPU-bound Node/NestJS service as N workers
@@ -91,7 +92,8 @@ Read on demand, in this directory:
 
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
-  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
+  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations),
+  `ts-bool-fn-prefix` (`software/code.md` § Naming).
 - Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
   existing project already runs, plus tsc. ast-grep only fills the
   kronael-specific gap; NEVER duplicate a Biome or eslint rule here.

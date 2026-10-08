@@ -1,6 +1,6 @@
 ---
 name: next
-description: /next — park a discovered bug or TODO without stopping, then keep working in the same turn; defer an owner's follow-up to TODO.md. NOT for bugs found during a deliberate code audit (use /bugs), NOT for diary entries (use /diary).
+description: /next — park a discovered bug or TODO without stopping, then keep working in the same turn; defer an owner's follow-up to TODO.md. NOT for bugs found during a deliberate code audit or a decision the owner owes (use /bugs), NOT for diary entries (use /diary).
 when_to_use: "park this, log this and keep going, don't fix now, note this and continue, do this next, add to TODO, defer this, note for later, later"
 user-invocable: true
 ---
@@ -39,6 +39,9 @@ emit the bullet inline and say none was found. A recurring or timed item
 (every, daily, weekly, scheduled, remind, cron) belongs in a scheduler — point
 at `/schedule`, NEVER auto-schedule. With no text given, ask "What do you want
 to defer?" and wait for one reply.
+
+A decision the owner owes is not a deferral: record it in `BUGS.md` with status
+`needs sign-off` or `owner decision`, per the `bugs` skill § Entry format.
 
 ## After recording
 

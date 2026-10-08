@@ -61,11 +61,12 @@ ARCHITECTURE.md. Everything else hangs off it.
 - Categorize into ≤ 9 buckets (e.g. "reliable UDP", "log-structured
   transports", "multicast", "zero-copy queues").
 - For each: one-line description, star count, last commit, license.
-- Minimum 20 entries. Store in `compare/niche.md`.
+- Minimum 20 entries. Store in `test/research/README.md`
+  (`readme` → `topology.md`).
 
 ### 2b — Serious competitors (deep)
 Identify the 3–6 most comparable projects (by use case, not just name).
-For each, write a dedicated `compare/<name>.md` covering:
+For each, write a dedicated `test/research/<project>.md` covering:
 - Architecture (how it solves the same problem)
 - Protocol / wire format (if applicable)
 - Performance claims (from their own docs or papers)
@@ -97,11 +98,8 @@ release, Criterion micro-bench)".
 - If warm vs cold cache matters, report both.
 
 ### 3d — Source-of-truth chain
-```
-bench run  →  facts/<topic>.md  →  README "How fast" table
-```
-Numbers in README are only changed by updating `facts/` first.
-Stale numbers are worse than no numbers.
+Every README number lives in the numbers ledger beside its bench command
+(`readme` → `topology.md` § Numbers) and changes only by re-running it.
 
 ### 3e — Competitor comparison bench
 Run at least one benchmark that directly compares our crate to a
@@ -119,16 +117,17 @@ documentation quality. Apply these principles:
 2. **No badges.** Clean header.
 3. **No marketing language.** "Wait-free" (checkable) yes;
    "blazingly fast" (uncheckable) no.
-4. **Honest performance section.** Numbers from `facts/`, labelled,
+4. **Honest performance section.** Numbers from the ledger, labelled,
    caveated. Link the bench command.
 5. **Cite alternatives generously.** 5-link subset in README body;
-   full survey in `compare/niche.md`.
+   full survey in `test/research/README.md`.
 6. **Acknowledge lineage.** 2–4 sentence origin story.
 7. **Minimum runtime version explicit**, and verified by running the suite
    on it. "Minimum supported rustc / node / python: X.Y.Z. Bumps = minor
    version bump."
 8. **Breaking-changes link.** → CHANGELOG.md.
-9. **Sections are short.** >3 paragraphs → move to ARCHITECTURE.md.
+9. **Sections are short.** >3 paragraphs → move to the file whose question
+   they answer (`readme` → `topology.md`).
 10. **No architecture diagram in README.** → ARCHITECTURE.md.
 11. **Standard license block** (MIT/Apache dual recommended).
 
@@ -150,7 +149,7 @@ If the library is intended as an extractable open-source project:
 ## 5 — Verification pass
 
 Before shipping:
-- [ ] Every number in README traceable to `facts/` or a named bench
+- [ ] Every number in README has its ledger section and command
 - [ ] No features in README that were removed from code
 - [ ] Quick-start examples compile — as code the build actually checks, not
       as prose in a fenced block nobody runs
@@ -172,10 +171,10 @@ When running this checklist against a specific crate, run these steps:
 
 ```
 0. Step 0: if extracting, decouple from the host, name it, settle ownership
-1. Read: README, ARCHITECTURE, CLAUDE.md punch list, compare/*, facts/*
+1. Read: README, ARCHITECTURE, CLAUDE.md punch list, test/research/*
 2. Step 1: write differentiator sentence, update README line 2
-3. Step 2a+b: survey competitors; update compare/niche.md; write missing compare/*.md
-4. Step 3: check facts/ freshness; run missing benches; update table
+3. Step 2a+b: survey competitors; update test/research/README.md; write missing test/research/*.md
+4. Step 3: re-run stale ledger commands; run missing benches; update table
 5. Step 4: apply rtrb principles; fix punch list items one by one
 6. Step 5: verification pass
 7. commit finalize: README, competition, benchmarks

@@ -92,10 +92,9 @@ the authoritative entry. The categories:
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `sync-tools-skills`, `astra`, `pi`) — triage, multi-pass
-  refinement, git flow, memory, scaffolding, second opinions, codifying
-  public best practice, vendoring this bundle's skills into another project.
-- **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
+  `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
+  memory, scaffolding, second opinions, codifying public best practice.
+- **Escalation** (`sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model. Their `agents/*.md` files are model and
   effort pins only; every other skill carries its own instructions and names
@@ -144,8 +143,8 @@ Side-channels (escalation, communication) fire at any stage.
                │
 ┌─ coding ─────▼──────────────┐
 │ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data                ├────────►│ haiku sonnet opus   │
-└──────────────┬──────────────┘         │ fable dispatch fin  │
+│ service data                ├────────►│ sonnet opus fable   │
+└──────────────┬──────────────┘         │ dispatch fin        │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review improve              │
@@ -180,7 +179,7 @@ patterns; `bugs` for the record-don't-fix queue.
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. `/haiku` → `/sonnet` → `/opus` → `/fable`
+**escalation** — route to the right model/mode from any stage. `/sonnet` → `/opus` → `/fable`
 for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
 
 ## Working with skills

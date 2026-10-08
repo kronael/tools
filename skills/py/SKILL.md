@@ -6,9 +6,11 @@ when_to_use: editing .py files, writing Python; dataclasses, heterogeneous recor
 
 # Python
 
-Requires `software/code.md` (naming, style, comments, design) and
-`software/dynamic-analysis.md` (test-target checkers: `-X dev -W error`,
-hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
+`../software/dynamic-analysis.md` (test-target checkers:
+`-X dev -W error`, hypothesis, pytest-memray, TSan). Below are
+Python-specific additions and deltas.
 
 ## Verify before claiming
 - ANY syntax or type question: run `python3 -c "import ast; ast.parse(...)"`, `uv run pyright`, or `ruff check` — NEVER speculate or hedge.
@@ -30,12 +32,9 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
 
 ## Naming
-- ALWAYS name functions and methods as verbs: `get_programs()`, `build_index()`, `compute_pnl()`
-- NEVER name a function as a noun: `program_lookup`, `symbol_map`, `client_index` — these read as data, not actions
-- Exception: boolean predicates — `is_funded()`, `has_positions()`, `can_advance()`
+`software/code.md` § Naming owns names. Python additions:
 - ALWAYS name current-time/date accessors `now()` and `today()`, never `get_now()` or `get_today()`.
 - ALWAYS name item-iteration helpers `iter_<items>`; preserve framework-required names.
-- The verb MUST match the behavior — a `finish_task()` that cancels, or a `get_*()` that mutates, is a lie. Rename the moment name and behavior diverge.
 
 ## Properties and accessor overrides
 - NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
@@ -114,8 +113,9 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
-  `py-no-lambda-default-factory`, `py-no-property`. ruff owns the rest — NEVER
-  duplicate a ruff rule here.
+  `py-no-lambda-default-factory`, `py-no-property`, `py-bool-fn-prefix`
+  (`software/code.md` § Naming). ruff owns the rest — NEVER duplicate a ruff
+  rule here.
 
 ## Build
 - uv for packages, pyright for types
@@ -142,3 +142,6 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
   process: a normal block exit waits for it and reaps it; an exception or a cancel
   sends SIGTERM to the group, waits a grace period, sends SIGKILL, and reaps. NEVER
   a hand-rolled `os.killpg` at a call site.
+- ALWAYS implement artifact capture and compression in the top-level Python
+  runner when the whole orchestration stack is Python — NEVER require shell
+  redirection for it

@@ -135,7 +135,7 @@ Troubleshooting:
   only ones that run locally are bundled. Index and rationale:
   [skills/README.md](skills/README.md).
 - **Agents** (`agents/`) — task workers (`@distill`, `@improve`, `@learn`,
-  `@readme`, `@refine`, `@visual`; model-tier: `@haiku`, `@sonnet`, `@opus`,
+  `@readme`, `@refine`, `@visual`; model-tier: `@sonnet`, `@opus`,
   `@fable`). Skills launch them;
   [skills/CLAUDE.md § Agent definitions](skills/CLAUDE.md#agent-definitions)
   owns that rule.

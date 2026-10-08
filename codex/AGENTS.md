@@ -4,6 +4,9 @@
 - ALWAYS read `~/.claude/CLAUDE.md` when it exists.
 - ALWAYS read every applicable `CLAUDE.md` from the project root to the current
   directory, even when `AGENTS.md` is loaded.
+- ALWAYS read the project's `.claude/CLAUDE.md` when it exists: Codex never
+  loads it, because `project_doc_fallback_filenames` entries are matched as
+  bare file names in each directory.
 - Before reading or editing a file, ALWAYS check from the project root through
   its directory for a closer `CLAUDE.md` and read it first.
 - NEVER choose between `AGENTS.md` and `CLAUDE.md`; apply both.

@@ -10,9 +10,11 @@ A desktop OpenGL app (go-gl/gl + go-gl/glfw — window and render loop,
 HiDPI/resize, alloc-free present, a movable GPU seam, data-dense screen
 design): read `gl.md` on top of this file.
 
-Requires `software/code.md` (naming, style, comments, design), `software/strict-typing.md`
-(golangci-lint set), and `software/dynamic-analysis.md` (test-target checkers:
-`-race`, fuzzing, sanitizers). Below are Go-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
+`../software/strict-typing.md` (golangci-lint set) and
+`../software/dynamic-analysis.md` (test-target checkers: `-race`, fuzzing,
+sanitizers). Below are Go-specific additions.
 
 ## Toolchain — the edit loop
 
@@ -97,9 +99,8 @@ It carries the goroutine-sizing rule and the single-sink I/O pattern.
   win.
 
 ## Naming
-- Write the full word for compound names: `rateLimiter` not `rl`, `group` not `g`, `upstream` not `up`
-- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`, `buf`, `err`, `ctx`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine too
-- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
+`software/code.md` § Naming owns names. Go additions:
+- Go's habit of abbreviating does not override it: `rateLimiter` not `rl`, `upstream` not `up`; `buf`, `err`, `ctx` are fine.
 - **Package names**: single word, lowercase, no underscores — Go convention
   (`httputil`, `strutil`, `filepath`, NOT `http_utils`, `string_utils`). Linters
   flag underscored package names. The `*_utils.*` project rule applies to FILES
@@ -126,10 +127,12 @@ defer resp.Body.Close() //nolint:errcheck
 defer tx.Rollback(ctx) //nolint:errcheck
 ```
 
-**Inline `_ =` in HTTP handlers** — `w.Write` failure means client disconnected;
-response is already committed. One short inline comment is fine:
+**`_ =` in HTTP handlers** — `w.Write` failure means client disconnected;
+response is already committed. The reason goes on the line above, as for
+every suppression:
 ```go
-_, _ = w.Write([]byte(`{"status":"ok"}`)) // client disconnect; nothing to do
+// client disconnect; nothing to do
+_, _ = w.Write([]byte(`{"status":"ok"}`))
 ```
 
 NEVER write a suppression without a reason. The comment must answer WHY.
@@ -137,20 +140,6 @@ NEVER write a suppression without a reason. The comment must answer WHY.
 NEVER use a linter config exclusion for a specific symbol or call site — a reader
 has to look up the config. Config exclusions are for structural cases only:
 generated files, test path patterns, project-wide style choices (no-comment policy).
-
-## Comments
-
-- What to comment and how to phrase it: canonical in `software/code.md`
-  Comments section. This is the only Go-specific addition — placement.
-- ALWAYS put a comment on its own line ABOVE the code it describes; NEVER
-  trail it inline. Inline comments crowd the line, get truncated on wrap, and
-  drift as the code changes:
-  ```go
-  // body fully read into buffer above
-  _ = resp.Body.Close()
-  ```
-  not `_ = resp.Body.Close() // body fully read`. The one exception is the
-  handler one-liner noted above.
 
 ## Testing
 - Test files: `*_test.go` next to code
