@@ -57,20 +57,18 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 ## Async
 - NEVER manually close async context managers (corrupts asyncpg) — ALWAYS `async with`
 - ALWAYS return batches from data-fetch functions; use iterators when the caller controls scheduling or consumption.
-- NEVER send short local file I/O to a thread — `open`, `close`, `stat`, `exists`, a
-  small read, a chunk write: the handoff costs more than the I/O, and `aiofiles` is
-  the same thread pool. ALWAYS run it inline under `with open(...)`, silencing ruff
-  with `# noqa: ASYNC230` / `ASYNC240` plus one comment giving the reason — NEVER a
-  thread to quiet the linter.
-- Only long blocking work (unpacking a large archive) earns a thread — ALWAYS the
-  project's one shared `to_thread` helper, NEVER a per-module wrapper.
-- A thread cannot be cancelled: `Task.cancel()` stops only the asyncio side, and
-  `asyncio.run` joins the executor's threads at exit. NEVER wrap `to_thread` in
-  `create_task` + `shield` + re-await on `CancelledError` — ALWAYS write through
-  `.part` + `os.replace` so a cancel leaves only a file the next run replaces; work
-  that must really stop runs in a subprocess, which can be killed and reaped.
-- Retry/backoff: ALWAYS pass a plain sequence at the call site (`@retry(BACKOFF, …)`)
-  and let the helper call `iter()` on each call — NEVER `lambda: iter(...)`.
+- NEVER send short local file I/O (`open`, `stat`, `exists`, a small read, a chunk
+  write) to a thread or `aiofiles`, which is the same thread pool — the handoff costs
+  more than the I/O. ALWAYS run it inline and silence ruff with `# noqa: ASYNC230` /
+  `ASYNC240` plus a one-clause reason.
+- ALWAYS run long blocking work (unpacking a large archive) through the project's one
+  shared `to_thread` helper — NEVER a per-module wrapper.
+- NEVER wrap `to_thread` in `create_task` + `shield` + re-await on `CancelledError` —
+  a thread cannot be cancelled, and `asyncio.run` joins it at exit anyway. ALWAYS
+  write its output through `.part` + `os.replace` so a cancel leaves only a file the
+  next run replaces; work that must stop on cancel ALWAYS runs as a subprocess.
+- ALWAYS have a retry helper take a plain backoff sequence and `iter()` it on each
+  call (`@retry(BACKOFF, …)`) — NEVER make call sites pass `lambda: iter(...)`.
 
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
@@ -137,5 +135,10 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - ALWAYS relax pyright for test paths when strict test typing is impractical (exclude tests from strict source check or use a separate relaxed test config); NEVER weaken production annotations for fake convenience
 
 ## Subprocesses
-- `start_new_session=True` on `create_subprocess_exec` (prevents Ctrl-C leak)
-- Kill process groups: `os.killpg(os.getpgid(proc.pid), signal.SIGKILL)`
+- ALWAYS start one with `asyncio.create_subprocess_exec(..., start_new_session=True)`
+  — NEVER the stdlib `subprocess` from async code, it blocks the loop. The new
+  session keeps Ctrl-C off the child and gives it a process group to signal.
+- ALWAYS run it inside the project's one async context manager that yields the
+  process: a normal block exit waits for it and reaps it; an exception or a cancel
+  sends SIGTERM to the group, waits a grace period, sends SIGKILL, and reaps. NEVER
+  a hand-rolled `os.killpg` at a call site.
