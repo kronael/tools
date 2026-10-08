@@ -156,7 +156,9 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
   READMEs and the page's visible text appears in the ledger. This proves
   membership, not meaning; a changed meaning re-runs the command;
 - the checker first refuses a planted fake citation and finds a planted real
-  test, so a parser that matches nothing cannot pass.
+  test, so a parser that matches nothing cannot pass;
+- every Markdown file is wrapped (`rumdl check .`; `software/code.md` § Layout
+  and formatting names the config and the hook that runs it on each write).
 
 ## CLAUDE.md files
 

@@ -17,6 +17,7 @@ TARGETS = {
     'prompt_nudge': ['python3', str(HOOKS_DIR / 'prompt_nudge.py')],
     'pretool_nudge': ['python3', str(HOOKS_DIR / 'pretool_nudge.py')],
     'post_tool_nudge': ['bash', str(HOOKS_DIR / 'post_tool_nudge.sh')],
+    'md_format': ['python3', str(HOOKS_DIR / 'md_format.py')],
     'reclaude': ['python3', str(HOOKS_DIR / 'reclaude.py')],
     'stop': ['python3', str(HOOKS_DIR / 'stop.py')],
 }

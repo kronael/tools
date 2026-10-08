@@ -8,6 +8,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
           ──> PostToolUse ──> post_tool_nudge.sh (periodic commit/diary nudge)
+                          ──> md_format.py      (rumdl fmt on a written .md)
 
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
@@ -123,6 +124,27 @@ Codex sees `<skill>` as `@py`, `@go`, etc.
 2. At 100 calls or 600 s, reset state and pipe the original payload to
    `stop.py` with `KRONAEL_HOOK_EVENT=PostToolUse`, so the commit/diary nudge
    also fires mid-session as advisory context.
+
+### md_format.py (PostToolUse)
+
+**Input:** `tool_name` and `tool_input.file_path` (Codex: the `apply_patch`
+patch header) of a write tool.
+**Output:** `hookSpecificOutput.additionalContext` when rumdl changed the file
+or left a finding, otherwise silent. Always exits 0 — the write already
+happened.
+
+**Flow:**
+1. Not a `Write`/`Edit`/`MultiEdit`/`apply_patch` on a `.md` file → silent.
+2. Walk up from the file's directory for `.rumdl.toml`, `rumdl.toml` or a
+   `pyproject.toml` with `[tool.rumdl]`; none → silent, the repo did not opt in.
+3. Pick the binary: the nearest `node_modules/.bin/rumdl` above the file (the
+   repo's pin, the same version `make lint` runs), else `rumdl` on PATH, else
+   `uvx rumdl@<pinned>`; none → a note naming the install step.
+4. Run `rumdl fmt <name>` with the file's directory as cwd, so rumdl's own
+   config discovery finds the same file step 2 did. Compare the bytes before
+   and after: changed → "Read it again before the next Edit"; findings rumdl
+   printed without `[fixed]` → "could not fix: …". `rumdl fmt` exits 0 either
+   way, so the output lines, not the exit code, carry the leftovers.
 
 ### local.py (UserPromptSubmit + PreCompact)
 
@@ -288,7 +310,8 @@ Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and
 All Python hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError`
 and bail with exit 0 so a broken payload never blocks the session. File
 I/O errors are swallowed for the same reason. `post_tool_nudge.sh`
-always exits 0.
+always exits 0, and `md_format.py` turns a failed or timed-out rumdl run into
+a context note rather than an exit code.
 
 ## Extension Points
 
