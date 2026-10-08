@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -267,7 +269,17 @@ def post_tool_payload(path: Path, tool_name: str = 'Write') -> dict:
 def test_format_markdown_runs_the_pin_from_the_root_and_stays_silent(tmp_path) -> None:
     doc = opted_in_repo(tmp_path, 'printf "%s|%s\\n" "$PWD" "$*" > "$3"\n')
     assert format_markdown(post_tool_payload(doc, 'Edit')) is None
-    assert doc.read_text() == f'{tmp_path}|fmt -- docs/a.md\n'
+    assert doc.read_text() == f'{os.path.realpath(tmp_path)}|fmt -- docs/a.md\n'
+
+
+@pytest.mark.skipif(shutil.which('rumdl') is None, reason='rumdl is not on PATH')
+def test_format_markdown_wraps_a_long_line_with_the_real_rumdl(tmp_path) -> None:
+    doc = opted_in_repo(tmp_path)
+    (tmp_path / 'node_modules' / '.bin' / 'rumdl').unlink()
+    assert format_markdown(post_tool_payload(doc)) is None
+    text = doc.read_text()
+    assert text.startswith('# Title\n\n')
+    assert max(len(line) for line in text.splitlines()) <= 100
 
 
 @pytest.mark.parametrize(
@@ -310,7 +322,7 @@ def test_format_markdown_reports_a_failed_rumdl_in_one_line(tmp_path) -> None:
 
 def test_format_markdown_puts_the_written_bytes_back_after_a_timeout(tmp_path, monkeypatch) -> None:
     doc = opted_in_repo(tmp_path, 'printf "half" > "$3"\nsleep 5\n')
-    monkeypatch.setattr('pretool_nudge.RUMDL_TIMEOUT_S', 0.3)
+    monkeypatch.setattr('pretool_nudge.RUMDL_TIMEOUT_S', 1.0)
     result = format_markdown(post_tool_payload(doc))
     assert result is not None
     assert result['hookSpecificOutput']['additionalContext'].startswith(
@@ -350,22 +362,41 @@ def test_main_routes_post_tool_use_to_the_formatter_only(tmp_path, monkeypatch, 
         assert ('follow /py conventions' in capsys.readouterr().out) is nudged, event
 
 
-def test_post_tool_nudge_feeds_a_markdown_write_through_the_installed_hook(tmp_path) -> None:
+def run_post_tool_nudge(tmp_path: Path, doc: Path) -> subprocess.CompletedProcess[str]:
     """The bash entry resolves ~/.claude/hooks, so a fake home links there."""
     home = tmp_path / 'home'
     (home / '.claude').mkdir(parents=True)
     (home / '.claude' / 'hooks').symlink_to(HOOKS_DIR)
-    repo = tmp_path / 'repo'
-    repo.mkdir()
-    doc = opted_in_repo(repo)
-    run = subprocess.run(
+    return subprocess.run(
         ['bash', str(HOOKS_DIR / 'post_tool_nudge.sh')],
         input=json.dumps(post_tool_payload(doc)),
         capture_output=True,
         text=True,
-        cwd=repo,
+        cwd=doc.parent,
         env={'HOME': str(home), 'PATH': '/usr/bin:/bin'},
         check=False,
     )
+
+
+def test_post_tool_nudge_feeds_a_markdown_write_through_the_installed_hook(tmp_path) -> None:
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    doc = opted_in_repo(repo)
+    run = run_post_tool_nudge(tmp_path, doc)
     assert (run.returncode, run.stdout, run.stderr) == (0, '', '')
     assert doc.read_text() == 'wrapped\n'
+
+
+def test_post_tool_nudge_prints_a_note_as_its_only_output(tmp_path) -> None:
+    repo = tmp_path / 'repo'
+    repo.mkdir()
+    doc = opted_in_repo(repo, 'echo "Config error: bad .rumdl.toml" >&2\nexit 2\n')
+    run = run_post_tool_nudge(tmp_path, doc)
+    assert (run.returncode, run.stderr) == (0, '')
+    assert json.loads(run.stdout) == {
+        'hookSpecificOutput': {
+            'hookEventName': 'PostToolUse',
+            'additionalContext': 'rumdl exited 2 on docs/a.md: Config error: bad .rumdl.toml',
+        },
+    }
+    assert doc.read_text() == LONG_LINE

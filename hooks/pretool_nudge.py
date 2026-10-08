@@ -16,7 +16,7 @@ import sys
 from lib.state import hook_event
 
 MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
-RUMDL_TIMEOUT_S = 10
+RUMDL_TIMEOUT_S = 5
 TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit', 'apply_patch'})
 COMMAND_TOOLS = frozenset({'Bash', 'exec_command'})
 UNSAFE_COMMAND_PATTERNS = (
@@ -203,8 +203,9 @@ def format_markdown(data: object) -> dict | None:
     if not isinstance(data, dict) or data.get('tool_name') not in MARKDOWN_TOOLS:
         return None
     path = extract_path(data)
-    if not path.lower().endswith('.md') or not os.path.isfile(path):
+    if not isinstance(path, str) or not path.lower().endswith('.md') or not os.path.isfile(path):
         return None
+    path = os.path.realpath(path)
     root = find_repo_root(path)
     if root is None or not os.path.isfile(os.path.join(root, '.rumdl.toml')):
         return None
