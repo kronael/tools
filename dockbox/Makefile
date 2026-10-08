@@ -2,7 +2,6 @@
 .PHONY: help image install seccomp test clean
 
 IMAGE := dockbox
-TZ := $(shell date +%Z 2>/dev/null || echo UTC)
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 PREFIX := $(HOME)/.local/bin
 SHARE := $(HOME)/.local/share/dockbox
@@ -19,7 +18,7 @@ test:
 	bash test.sh
 
 image:
-	$(SUDO) docker build --target dockbox --build-arg TZ=$(TZ) --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
+	$(SUDO) docker build --target dockbox --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
 
 install: image seccomp
 	install -m 755 dockbox $(PREFIX)/

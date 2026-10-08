@@ -18,7 +18,6 @@ MOUNTS=(
     "$HOME/.gitconfig:/home/dockbox/.gitconfig:ro"
     "$HOME/.dockbox_history:/home/dockbox/.zsh_history:rw"
     "$HOME/.codex:/home/dockbox/.codex:rw"
-    "/etc/localtime:/etc/localtime:ro"
 )
 
 dir_override=""

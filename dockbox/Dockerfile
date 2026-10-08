@@ -1,7 +1,6 @@
 FROM debian:forky AS dockbox
 
-ARG TZ=UTC
-ENV TZ="$TZ"
+ENV TZ=UTC
 
 ARG CLAUDE_CODE_VERSION=latest
 

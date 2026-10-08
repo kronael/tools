@@ -363,19 +363,6 @@
   (`:443`) passes no `--effort`, so the session runs at the CLI default.
   `qemubox/qemubox:59` makes no such claim.
 
-- **BOX-TZ-BUILD-ARG-ABBREVIATION** (MED, config) — proposed, CONFIRMED at
-  HEAD 2026-10-06. `dockbox/Makefile:5` sets the `TZ` build arg to
-  `date +%Z`, and `qemubox/qemubox:799` copies it into the base build without
-  the `UTC` fallback. `dockbox/Dockerfile:3-4` turns it into `ENV TZ`. `%Z`
-  prints a DST-dependent abbreviation (`CEST`, then `CET`), so both layer
-  caches miss twice a year. `CEST` is no zone name: `TZ=CEST date +%z` prints
-  `+0000`, so a dockbox session clock runs in UTC labelled `CEST`, and the
-  `ENV TZ` overrides the `/etc/localtime` mount (`dockbox/dockbox:21`).
-  **Proposal:** drop the `TZ` build arg from both builds; the
-  `/etc/localtime` mount and the zone qemubox reads at boot
-  (`qemubox/qemubox:223`) carry it. A build change in two tools — needs
-  sign-off; no test — config.
-
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.

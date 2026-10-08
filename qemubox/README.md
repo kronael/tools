@@ -204,7 +204,7 @@ the project slug maps every non-alphanumeric character to `-`.
 Codex defaults to `gpt-5.6-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
 
 Guest setup disables guest NTP and syncs the clock from the host before
-the first session of each boot. The guest also uses the host time zone.
+the first session of each boot. The guest runs in UTC.
 PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
 New mount parent directories belong to the user; existing parents keep their owner.
 

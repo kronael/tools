@@ -20,8 +20,7 @@ with a persistent disk — use [qemubox](../qemubox/) instead.
 ## Build
 
 ```bash
-make image              # builds the (UID-agnostic) image with host TZ
-make image TZ=EST       # custom timezone (default: host TZ or UTC)
+make image              # builds the (UID-agnostic) image; sessions run in UTC
 ```
 
 The image has no baked user. At runtime, dockbox passes your host UID/GID
@@ -212,7 +211,6 @@ Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
   (commit signing; off by default)
 - `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
-- `/etc/localtime` -> `/etc/localtime` (ro)
 - `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
