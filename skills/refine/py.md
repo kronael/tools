@@ -42,6 +42,9 @@ reads to pick the agent type.
   only for a non-obvious why.
 - NEVER an option or branch no caller uses. The change MUST shrink the source
   unless it adds a needed capability.
+- NEVER defensive generator plumbing: no `aclose()`, `aclosing` or
+  `try`/`finally` around a generator or iterator that holds no resource of its
+  own; exhaustion or `asyncio.run` shutdown finalizes it.
 
 ## Config `correctness`
 
