@@ -1,6 +1,6 @@
 ---
 name: astra
-description: "Ask the codex CLI on gpt-6-astra (or gpt-5.6-sol, the Sol variant) for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
+description: "Ask the codex CLI on gpt-6-astra (or gpt-6.1-sol, the Sol variant) for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
 when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
 user-invocable: true
 ---
@@ -70,10 +70,10 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Sol
 
-Sol is the same second opinion from `gpt-5.6-sol` (catalog description
-"Older generation workhorse model"), at high effort. Use it only when the user
+Sol is the same second opinion from `gpt-6.1-sol` (catalog description
+"Latest workhorse model for coding and everyday work"), at high effort. Use it only when the user
 explicitly asks for Sol; `oracle` routes to it only on such a request. Two
-differences from the Astra invocation: select `gpt-5.6-sol` in the catalog
+differences from the Astra invocation: select `gpt-6.1-sol` in the catalog
 check and the command, and run `codex exec --ephemeral` instead of `resume
 --last`. `resume --last` picks the working directory's latest session, which is
 Astra's thread after an Astra call, and Sol must answer without having read
@@ -81,13 +81,13 @@ Astra's prompt and answer.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-5.6-sol -c model_reasoning_effort="high" \
+  -m gpt-6.1-sol -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
 ## Model — fixed by the variant asked for
 
-- ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The request
+- ALWAYS pin `gpt-6-astra` for Astra and `gpt-6.1-sol` for Sol. The request
   names the variant; reading this runbook NEVER changes that choice.
 - ALWAYS confirm the selected slug exists with the check below before the
   call; exit 0 means present. NEVER pick the model by the configured default or by priority.

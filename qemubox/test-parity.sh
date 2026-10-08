@@ -1,6 +1,6 @@
 tool_cmd codex
 eq "codex default model and effort" "${cmd[*]}" \
-    'codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh'
+    'codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh'
 primary="$fixture/project.with.dots"
 slug="${primary//[\/.]/-}"
 mkdir -p "$HOME/.claude/projects/$slug"

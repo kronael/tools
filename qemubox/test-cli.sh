@@ -46,7 +46,7 @@ STUB
     export PATH="$STUB/bin:$PATH"
     printf '%s\n' '-n global' '-d codex' > "$HOME/.qemuboxrc"
     bash "$here/qemubox" -g -e MYSECRET -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
-    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh$' \
+    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh$' \
         "$STUB/command"
     (
         unset CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY GH_TOKEN MYSECRET
