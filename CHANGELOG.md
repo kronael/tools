@@ -1,22 +1,28 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.25] — 20261008
 
-- `hooks/gh_text_lint.py`: `lint(kind, text, title, draft)` returns `Problem(line, text)` records; `command_reason(command, cwd)` finds the body a gh command posts (`--body-file`, `$(cat <path>)`, a heredoc, `--input` JSON, the inline `--body`) and returns the block reason, or the reason the body cannot be read. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'`; `issue` and `comment` kinds take a file alone.
-- `hooks/pretool_nudge.py` calls `command_reason` after the unsafe-command check, and `gh release create` joins that check's block list; `hooks/Makefile` runs `test_gh_text_lint.py`; `hooks/README.md` and `hooks/ARCHITECTURE.md` describe the gate.
-- `skills/pr-draft/SKILL.md`: steps 3 to 5 are DISTILL into `tmp/pr-body.md` with the lint's `ok:` line as the completion criterion, REVIEW-ON-WISDOM closed by a `Review changed:` line, then the fenced draft; the PATCH of an existing PR reads `tmp/pr-body.md` by a literal path. `skills/gh-comment/SKILL.md` and `skills/gh-issue/SKILL.md` run the lint before their sign-off gates and carry NOT-for clauses.
-- `settings-recommended.json` and `kronael/sync/SKILL.md` step 5: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` join the always-apply keys.
-- `hooks/skill_frontmatter_lint.py`: reachability resolves the `.md` path tokens a document contains, then names a file by its path from the skill root or by a trailing part of that path no other file under the skill shares — so a bare basename counts only while it is unique. `names_doc` is gone; one resolution path replaces the per-candidate regex.
-- The `<!-- lint: allow skill-local-path -->` marker counts only on a line of its own. `skills/CLAUDE.md` quotes it in prose and was exempting itself; a planted home path in it now fails. A fenced block holding the marker alone on a line still disarms — nothing parses fences.
-- `LOCAL_PATH` exempts the container accounts `dockbox` and `claude` as whole segments only. An account that merely starts with one of those names belongs to somebody and now reports.
-- `skill_files()` maps a sibling `.md` to the `SKILL.md` that owns it, `.pre-commit-config.yaml` matches every `.md`, and the Lint workflow runs on push to master as well as on a pull request — it had never run, since this repo pushes straight to master.
-- `evals/README.md` teaches path-stripping with a placeholder account instead of a real former one, and needs no marker. `skills/create/CLAUDE.md` states where a ported tree's `README.md` is named from.
-- `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS`, `SKILL-LINT-BASENAME-HIDES-ORPHANS` and `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` are built and removed. Recorded in their place: `SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT`, `SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS`, `LINT-CI-DISPATCH-EMPTY-REFS`, `PRE-COMMIT-ALL-FILES-RED`, and `SKILL-LINT-NO-ORG-REF-CHECK` under Ruled not a defect.
-- `py`: `## Async` runs short local file I/O inline (`# noqa: ASYNC230`/`ASYNC240` with a reason) and long blocking work through the project's one shared `to_thread` helper, writes a thread's output through `.part` + `os.replace`, runs work that must stop on cancel as a subprocess, and has a retry helper `iter()` a plain backoff sequence.
-- `py`, `software/strict-typing.md`: one project-wide pyright `typeCheckingMode: "strict"`, never a `basic` default with a per-file `strict` list; a test file opts down with `# pyright: basic`.
-- `refine/py.md`: the Python refine lens, read only through refine step 4 — shared helpers over local copies, threads and subprocesses that end before their caller, data over lambdas at call sites, less source, one strict pyright mode.
-- `py`: `## Subprocesses` starts a child with `create_subprocess_exec(..., start_new_session=True)`, never stdlib `subprocess` from async code, and runs it inside the project's one async context manager that waits and reaps on exit and sends SIGTERM, then SIGKILL, to the group on an exception or a cancel.
-- `py`: dataclasses for heterogeneous records, work items and hashable keys; batches from data-fetch functions, iterators when the caller drives consumption; tests patch a symbol at its use site instead of adding a production parameter; `## Naming` keeps only the `now()`/`today()` and `iter_<items>` additions to `software/code.md` § Naming.
+> kronael v0.4.25 — GitHub text is linted before it posts
+>
+> PR bodies, issues and comments that break the Git rules are refused before posting; Python gains async, subprocess and typing rules.
+>
+> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
+> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
+> • Skill lint — the opt-out marker counts only on its own line; siblings and the tree are checked.
+> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
+> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
+> • refine — a Python lens, read only when a refine pass runs.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh_text_lint.py`, called by `pretool_nudge.py` after the unsafe-command check: refuses `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr comment`/`review`, issue comments and `gh api` posts on `pulls/<N>`, `issues/<N>`, reviews, comments and replies whose body fails the lint, cannot be read, or is required and absent; an exception in the gate refuses; a backslash-newline continuation is joined first and an escaped backtick is literal. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`. The GitHub release-create command joins the unsafe-command block list.
+- `pr-draft` DISTILLs into `tmp/pr-body.md` until the lint prints `ok:` and closes REVIEW-ON-WISDOM with a `Review changed:` line; `gh-comment` and `gh-issue` lint before their sign-off gates.
+- `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` are always-apply keys in `settings-recommended.json`, `kronael/sync` step 5 and `AGENTS.md`.
+- `skill_frontmatter_lint.py`: a written path names one file (a bare basename only while unique); the opt-out marker counts only on a line of its own; `dockbox` and `claude` are exempt as whole path segments only; a sibling `.md` lints its owning skill in pre-commit, and the Lint workflow runs on push to master.
+- `py`: short local file I/O inline (`# noqa: ASYNC230`/`ASYNC240` with a reason), long blocking work through the one shared `to_thread` helper, a thread's output through `.part` + `os.replace`, cancellable work as a subprocess, retry over a plain backoff sequence; subprocesses via `start_new_session=True` inside one reaping context manager, never a call-site `os.killpg`; dataclasses for records, work items and hashable keys; tests patch at the use site (`data` agrees); `datetime.now(UTC)` called directly, never a clock helper; `## Naming` keeps `iter_<items>` over `software/code.md`.
+- `py`, `software/strict-typing.md`: one project-wide `typeCheckingMode: "strict"`, never a `basic` default with a per-file `strict` list; a test file opts down with `# pyright: basic`.
+- `refine/py.md`: the Python refine lens — shared helpers over local copies, threads and subprocesses that end before their caller, data over lambdas, less source, one strict pyright mode.
+- `BUGS.md`: `GH-GATE-REGEX-SHELL-PARSE` (proposed), `PRETOOL-UNSAFE-SCAN-READS-QUOTED-TEXT`, `GH-LINT-DISTILL-COUNTS-THE-TITLE` and two skill-lint gaps recorded; three built skill-lint proposals removed.
 
 ## [v0.4.24] — 20261008
 
