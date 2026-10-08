@@ -58,18 +58,22 @@ Non-blocking, always exits 0.
 
 ### md_format.py (PostToolUse)
 
-Runs `rumdl fmt` on the Markdown file a `Write`, `Edit` or `MultiEdit`
-(Codex: `apply_patch`) touched, from the file's own directory, so the nearest
-`.rumdl.toml` applies. Silent unless an ancestor directory holds a rumdl config
-(`.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]` in `pyproject.toml`): a repo
-opts in by committing one, and a clone of someone else's repo is never
-rewrapped. The binary is the repo's own pin (`node_modules/.bin/rumdl`), else
-`rumdl` on PATH, else `uvx rumdl@<pinned>`; a configured repo with none of the
-three gets a note naming the install step. When the file changed, the hook
-emits `additionalContext` telling Claude to Read it again before the next
-Edit — the Edit tool refuses a file that changed since its last read — and
-reports what rumdl could not fix the same way. Never blocks, always exits 0.
-`software/code.md` § Layout and formatting owns the rule a repo adopts.
+Runs `rumdl fmt` on each Markdown file a `Write`, `Edit` or `MultiEdit`
+(Codex: every file an `apply_patch` names, a rename's destination included)
+touched, from the file's own directory, so the nearest `.rumdl.toml` applies.
+Silent unless a directory between the file and its repository root (the first
+`.git`) holds a rumdl config (`.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]` in
+`pyproject.toml`): a repo opts in by committing one, and a clone of someone
+else's repo is never rewrapped, not even one nested inside a configured tree.
+The binary is the repo's own pin (`node_modules/.bin/rumdl`), else `rumdl` on
+PATH, else `uvx rumdl@<pinned>`; a configured repo with none of the three gets
+a note naming the install step. The run forces rumdl's text output and no
+colour, the shape the hook parses. When the file changed, the hook emits
+`additionalContext` telling Claude to Read it again before the next Edit — the
+Edit tool refuses a file that changed since its last read — and reports what
+rumdl could not fix, or a non-zero rumdl exit, the same way. Never blocks,
+always exits 0. `software/code.md` § Layout and formatting owns the rule a
+repo adopts.
 
 ### codex_hook.py (Codex adapter)
 

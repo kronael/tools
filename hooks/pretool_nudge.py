@@ -82,20 +82,33 @@ def extract_path(data: object) -> str:
     return ti.get('file_path') or ti.get('notebook_path') or ''
 
 
-def extract_apply_patch_path(tool_input: dict) -> str:
+APPLY_PATCH_HEADERS = (
+    '*** Add File: ',
+    '*** Update File: ',
+    '*** Delete File: ',
+    '*** Move to: ',
+)
+
+
+def apply_patch_paths(tool_input: dict) -> list[str]:
+    """Pure: every path a Codex apply_patch names, in patch order, a rename's
+    destination included."""
     patch = tool_input.get('patch')
     if not isinstance(patch, str):
-        return ''
-    prefixes = (
-        '*** Add File: ',
-        '*** Update File: ',
-        '*** Delete File: ',
-    )
+        return []
+    paths: list[str] = []
     for line in patch.splitlines():
-        for prefix in prefixes:
+        for prefix in APPLY_PATCH_HEADERS:
             if line.startswith(prefix):
-                return line[len(prefix) :].strip()
-    return ''
+                path = line[len(prefix) :].strip()
+                if path and path not in paths:
+                    paths.append(path)
+    return paths
+
+
+def extract_apply_patch_path(tool_input: dict) -> str:
+    paths = apply_patch_paths(tool_input)
+    return paths[0] if paths else ''
 
 
 def extract_command(data: object) -> str:

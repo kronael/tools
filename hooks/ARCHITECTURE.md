@@ -127,24 +127,29 @@ Codex sees `<skill>` as `@py`, `@go`, etc.
 
 ### md_format.py (PostToolUse)
 
-**Input:** `tool_name` and `tool_input.file_path` (Codex: the `apply_patch`
-patch header) of a write tool.
+**Input:** `tool_name` and `tool_input.file_path` (Codex: every file header
+of the `apply_patch` patch, `Move to` included) of a write tool.
 **Output:** `hookSpecificOutput.additionalContext` when rumdl changed the file
 or left a finding, otherwise silent. Always exits 0 — the write already
 happened.
 
 **Flow:**
 1. Not a `Write`/`Edit`/`MultiEdit`/`apply_patch` on a `.md` file → silent.
-2. Walk up from the file's directory for `.rumdl.toml`, `rumdl.toml` or a
-   `pyproject.toml` with `[tool.rumdl]`; none → silent, the repo did not opt in.
+   Each `.md` a patch names takes steps 2-4 on its own.
+2. Walk up from the file's directory to its repository root (the first
+   directory holding `.git`, a worktree's `.git` file included) for
+   `.rumdl.toml`, `rumdl.toml` or a `pyproject.toml` with a `[tool.rumdl]` or
+   `[tool.rumdl.*]` table header at line start; none → silent, the repo did
+   not opt in. A path the tool deleted or moved away is skipped.
 3. Pick the binary: the nearest `node_modules/.bin/rumdl` above the file (the
    repo's pin, the same version `make lint` runs), else `rumdl` on PATH, else
    `uvx rumdl@<pinned>`; none → a note naming the install step.
-4. Run `rumdl fmt <name>` with the file's directory as cwd, so rumdl's own
-   config discovery finds the same file step 2 did. Compare the bytes before
+4. Run `rumdl --color never fmt -- <name>` with the file's directory as cwd,
+   so rumdl's own config discovery finds the same file step 2 did. Compare the bytes before
    and after: changed → "Read it again before the next Edit"; findings rumdl
-   printed without `[fixed]` → "could not fix: …". `rumdl fmt` exits 0 either
-   way, so the output lines, not the exit code, carry the leftovers.
+   printed without `[fixed]` → "could not fix: …"; a non-zero exit (a config
+   it cannot parse) → "exited N: <last output line>". `rumdl fmt` exits 0 with
+   leftovers, so the output lines, not the exit code, carry them.
 
 ### local.py (UserPromptSubmit + PreCompact)
 

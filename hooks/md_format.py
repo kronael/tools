@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# PostToolUse hook: run rumdl on the Markdown file a write tool touched.
-# Silent unless an ancestor directory holds a rumdl config, so only a repo that
-# opted in is rewrapped. Advisory only; the tool already ran.
+# PostToolUse hook: run rumdl on the Markdown files a write tool touched.
+# Silent unless the file's own repository holds a rumdl config, so only a repo
+# that opted in is rewrapped. Advisory only; the tool already ran.
 from __future__ import annotations
 
 import contextlib
@@ -14,34 +14,43 @@ import sys
 from collections.abc import Callable
 from collections.abc import Iterator
 
+from pretool_nudge import apply_patch_paths
 from pretool_nudge import extract_path
 
 # The fallback when neither the repo nor PATH has rumdl; a repo's own pin wins.
 RUMDL_VERSION = '0.2.78'
 WRITE_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit', 'apply_patch'})
 CONFIG_NAMES = ('.rumdl.toml', 'rumdl.toml')
+PYPROJECT_SECTION = re.compile(r'^\s*\[tool\.rumdl(?:\]|\.)', re.MULTILINE)
 TIMEOUT_S = 20
 # `rumdl fmt` exits 0 whether or not an issue remains; a leftover is a finding
-# line it did not mark fixed.
+# line it did not mark fixed. The line shape holds only for the text format,
+# which an environment or config setting can switch to JSON.
 FINDING = re.compile(r':\d+:\d+: \[MD\d+\] ')
+TEXT_OUTPUT = {'RUMDL_OUTPUT_FORMAT': 'text'}
 
 
-def markdown_path(data: object) -> str | None:
-    """Pure: the Markdown file a write tool touched, or None."""
+def markdown_paths(data: object) -> list[str]:
+    """Pure: the Markdown files a write tool touched, in tool order."""
     if not isinstance(data, dict) or data.get('tool_name') not in WRITE_TOOLS:
-        return None
-    path = extract_path(data)
-    if not path.lower().endswith(('.md', '.markdown')):
-        return None
-    return path
+        return []
+    tool_input = data.get('tool_input')
+    if data.get('tool_name') == 'apply_patch' and isinstance(tool_input, dict):
+        paths = apply_patch_paths(tool_input)
+    else:
+        paths = [extract_path(data)]
+    return [path for path in paths if path.lower().endswith(('.md', '.markdown'))]
 
 
 def ancestors(directory: str) -> Iterator[str]:
+    """Pure: the directory and its parents, ending at the repository root (the
+    first one holding `.git`), so a nested foreign clone never inherits a
+    config or a binary from the tree above it."""
     current = os.path.abspath(directory)
     while True:
         yield current
         parent = os.path.dirname(current)
-        if parent == current:
+        if parent == current or os.path.exists(os.path.join(current, '.git')):
             return
         current = parent
 
@@ -58,7 +67,7 @@ def find_config(directory: str) -> str | None:
             contextlib.suppress(OSError),
             open(pyproject, encoding='utf-8', errors='replace') as fh,
         ):
-            if '[tool.rumdl]' in fh.read():
+            if PYPROJECT_SECTION.search(fh.read()):
                 return pyproject
     return None
 
@@ -103,26 +112,35 @@ def format_file(
 ) -> str | None:
     """Side-effecting: `rumdl fmt` on the file from its own directory, so the
     nearest config applies. Returns the note for Claude, or None when nothing
-    changed and nothing is left."""
+    changed, nothing is left and rumdl exited 0."""
     directory, name = os.path.split(os.path.abspath(path))
     before = read_bytes(path)
+    notes = []
     try:
         result = run(
-            [*command, 'fmt', name],
+            [*command, '--color', 'never', 'fmt', '--', name],
             cwd=directory,
+            env={**os.environ, **TEXT_OUTPUT},
             capture_output=True,
-            text=True,
+            encoding='utf-8',
+            errors='replace',
             timeout=TIMEOUT_S,
         )
     except (OSError, subprocess.SubprocessError) as err:
-        return f'rumdl failed on {name}: {err}'
-    output = f'{result.stdout}{result.stderr}'
-    notes = []
+        result = None
+        notes.append(f'rumdl failed on {name}: {err}')
     if read_bytes(path) != before:
-        notes.append(f'rumdl reformatted {name}; Read it again before the next Edit.')
-    remaining = leftovers(output)
-    if remaining:
-        notes.append('rumdl could not fix: ' + ' | '.join(remaining[:5]))
+        notes.insert(0, f'rumdl reformatted {name}; Read it again before the next Edit.')
+    if result is not None:
+        output = f'{result.stdout}{result.stderr}'
+        remaining = leftovers(output)
+        if remaining:
+            notes.append('rumdl could not fix: ' + ' | '.join(remaining[:5]))
+        if result.returncode != 0:
+            last = next(
+                (line.strip() for line in reversed(output.splitlines()) if line.strip()), ''
+            )
+            notes.append(f'rumdl exited {result.returncode} on {name}: {last}')
     return ' '.join(notes) or None
 
 
@@ -137,25 +155,31 @@ def context(note: str) -> dict:
 
 def process(
     data: object,
-    config: Callable[[str], str | None] = find_config,
-    rumdl: Callable[[str], list[str] | None] = find_rumdl,
-    fmt: Callable[[str, list[str]], str | None] = format_file,
+    find_config_fn: Callable[[str], str | None] = find_config,
+    find_rumdl_fn: Callable[[str], list[str] | None] = find_rumdl,
+    format_fn: Callable[[str, list[str]], str | None] = format_file,
+    is_file_fn: Callable[[str], bool] = os.path.isfile,
 ) -> dict | None:
-    """Parsed hook JSON → hookSpecificOutput dict, or None for silent."""
-    path = markdown_path(data)
-    if path is None:
-        return None
-    directory = os.path.dirname(os.path.abspath(path))
-    if config(directory) is None:
-        return None
-    command = rumdl(directory)
-    if command is None:
-        return context(
-            f'{os.path.basename(path)} is under a rumdl config but no rumdl is installed:'
-            " install the repo's pin (`make prepare`) or `uv tool install rumdl`."
-        )
-    note = fmt(path, command)
-    return context(note) if note else None
+    """Parsed hook JSON → hookSpecificOutput dict, or None for silent. A path
+    the tool deleted or moved away is skipped."""
+    notes = []
+    for path in markdown_paths(data):
+        if not is_file_fn(path):
+            continue
+        directory = os.path.dirname(os.path.abspath(path))
+        if find_config_fn(directory) is None:
+            continue
+        command = find_rumdl_fn(directory)
+        if command is None:
+            notes.append(
+                f'{os.path.basename(path)} is under a rumdl config but no rumdl is installed:'
+                " install the repo's pin (`make prepare`) or `uv tool install rumdl`."
+            )
+            continue
+        note = format_fn(path, command)
+        if note:
+            notes.append(note)
+    return context(' '.join(notes)) if notes else None
 
 
 def main() -> None:
@@ -170,7 +194,8 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    # Hooks must never crash a tool call.
-    with contextlib.suppress(Exception):
+    try:
         main()
+    except Exception as err:
+        print(f'md_format: {err}', file=sys.stderr)
     sys.exit(0)
