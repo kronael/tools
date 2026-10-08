@@ -39,12 +39,6 @@
             "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse post_tool_nudge",
             "timeout": 10,
             "statusMessage": "Updating Kronael tool counters"
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse md_format",
-            "timeout": 30,
-            "statusMessage": "Formatting Markdown"
           }
         ]
       }

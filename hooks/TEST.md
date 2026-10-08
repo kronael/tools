@@ -108,20 +108,19 @@ rm -rf /tmp/stoptest
 
 ```
 
-## md_format.py — formats only an opted-in repo
+## post_tool_nudge.sh — reflows a Markdown write only in an opted-in repo
 
 ```bash
 cd "$(mktemp -d)" && git init -q . && printf '[MD013]\nline-length = 100\nreflow = true\n' > .rumdl.toml
-python3 -c 'print("word " * 40)' > a.md
-printf '{"tool_name":"Write","tool_input":{"file_path":"%s/a.md"}}' "$PWD" | python3 ~/.claude/hooks/md_format.py
+python3 -c 'print("# T\n\n" + "word " * 40)' > a.md
+printf '{"hook_event_name":"PostToolUse","tool_name":"Write","tool_input":{"file_path":"%s/a.md"}}' "$PWD" | bash ~/.claude/hooks/post_tool_nudge.sh
 wc -L a.md
 ```
 
-Expected: one JSON line whose `additionalContext` says `rumdl reformatted a.md;
-Read it again before the next Edit.` and then `rumdl could not fix: … [MD041]`
-(the file has no heading), and the longest line of `a.md` is now under 100
-columns. Without the `.rumdl.toml`, or for `a.py`, the hook prints
-nothing. Exit 0 in every case.
+Expected (with `rumdl` on PATH or in `node_modules/.bin`): no output, exit 0,
+and the longest line of `a.md` is now under 100 columns. Without rumdl the one
+output line says `rumdl is not installed; a.md was not reflowed.` Without the
+`.rumdl.toml`, or for `a.py`, the file is untouched and nothing is printed.
 
 ## Debugging a Failed Test
 

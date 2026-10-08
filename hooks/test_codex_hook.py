@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pytest
-from codex_hook import TARGETS
 from codex_hook import normalize
 from codex_hook import translate_output
 
@@ -111,24 +110,6 @@ def test_translate_output_rewrites_pretool_refs_for_codex(
     parsed = json.loads(output)
     context = parsed['hookSpecificOutput']['additionalContext']
     assert context == 'follow @py conventions.'
-
-
-def test_md_format_is_a_target_and_its_post_tool_context_passes_through() -> None:
-    assert TARGETS['md_format'] == [
-        'python3',
-        str(Path.home() / '.claude' / 'hooks' / 'md_format.py'),
-    ]
-    original = json.dumps(
-        {
-            'hookSpecificOutput': {
-                'hookEventName': 'PostToolUse',
-                'additionalContext': 'rumdl reformatted a.md; Read it again before the next Edit.',
-            },
-        }
-    )
-    assert json.loads(translate_output(original, 'PostToolUse', 'md_format')) == json.loads(
-        original
-    )
 
 
 def test_translate_output_leaves_stop_block_unchanged() -> None:

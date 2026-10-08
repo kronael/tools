@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # PreToolUse hook: block unsafe commands and emit per-language file nudges.
+# PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
+# its repository opted in with a root .rumdl.toml.
 # Production: silent-fail on any error except explicit unsafe-command blocks.
 from __future__ import annotations
 
@@ -7,8 +9,14 @@ import contextlib
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 
+from lib.state import hook_event
+
+MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
+RUMDL_TIMEOUT_S = 10
 TOOLS_OF_INTEREST = frozenset({'Read', 'Edit', 'Write', 'NotebookEdit', 'MultiEdit', 'apply_patch'})
 COMMAND_TOOLS = frozenset({'Bash', 'exec_command'})
 UNSAFE_COMMAND_PATTERNS = (
@@ -159,6 +167,74 @@ def process(data: object) -> dict | None:
     }
 
 
+def find_repo_root(path: str) -> str | None:
+    """Pure: the nearest directory above the file that holds `.git` (a
+    worktree's `.git` file included), or None outside a repository."""
+    directory = os.path.dirname(os.path.abspath(path))
+    while True:
+        if os.path.lexists(os.path.join(directory, '.git')):
+            return directory
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return None
+        directory = parent
+
+
+def find_rumdl(root: str) -> str | None:
+    """Side-effecting: the repository's pinned binary, else the one on PATH."""
+    pinned = os.path.join(root, 'node_modules', '.bin', 'rumdl')
+    if os.access(pinned, os.X_OK):
+        return pinned
+    return shutil.which('rumdl')
+
+
+def post_tool_context(text: str) -> dict:
+    return {
+        'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': text},
+    }
+
+
+def format_markdown(data: object) -> dict | None:
+    """Side-effecting: `rumdl fmt` on the `.md` a write tool touched, from its
+    repository root so the config's `exclude` applies, when that root holds
+    `.rumdl.toml`. Silent when rumdl ran: Claude Code itself reports a file a
+    hook changed. One line when rumdl is missing, fails or times out; a
+    timed-out run gets the bytes the tool wrote put back."""
+    if not isinstance(data, dict) or data.get('tool_name') not in MARKDOWN_TOOLS:
+        return None
+    path = extract_path(data)
+    if not path.lower().endswith('.md') or not os.path.isfile(path):
+        return None
+    root = find_repo_root(path)
+    if root is None or not os.path.isfile(os.path.join(root, '.rumdl.toml')):
+        return None
+    name = os.path.relpath(path, root)
+    rumdl = find_rumdl(root)
+    if rumdl is None:
+        return post_tool_context(f'rumdl is not installed; {name} was not reflowed.')
+    with open(path, 'rb') as fh:
+        written = fh.read()
+    try:
+        result = subprocess.run(
+            [rumdl, 'fmt', '--', name],
+            cwd=root,
+            capture_output=True,
+            encoding='utf-8',
+            errors='replace',
+            timeout=RUMDL_TIMEOUT_S,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as err:
+        with open(path, 'wb') as fh:
+            fh.write(written)
+        return post_tool_context(f'rumdl failed on {name}: {err}')
+    if result.returncode != 0:
+        lines = (result.stderr + result.stdout).strip().splitlines()
+        first = lines[0] if lines else ''
+        return post_tool_context(f'rumdl exited {result.returncode} on {name}: {first}')
+    return None
+
+
 def already_seen(cache_file: str, key: str) -> bool:
     """Side-effecting: True if key is in cache. Silent on OSError."""
     try:
@@ -178,6 +254,12 @@ def main() -> None:
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError, ValueError):
+        return
+    if isinstance(data, dict) and hook_event(data) == 'PostToolUse':
+        result = format_markdown(data)
+        if result:
+            with contextlib.suppress(OSError, ValueError):
+                print(json.dumps(result))
         return
     result = process(data)
     if not result:

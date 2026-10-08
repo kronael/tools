@@ -49,31 +49,27 @@ consent in `skills/global` and the settings `ask` rule, not by the hook.
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.
 
+On a PostToolUse payload (fed by `post_tool_nudge.sh`) it instead reflows the
+Markdown file a `Write`, `Edit` or `MultiEdit` touched: when the file's
+repository — the nearest `.git`, a worktree's `.git` file included — has a root
+`.rumdl.toml`, it runs the repository's `node_modules/.bin/rumdl`, else `rumdl`
+on PATH, as `rumdl fmt` from that root, so the config's `exclude` patterns
+apply. Silent when rumdl ran: Claude Code itself tells the agent a hook changed
+the file, and an Edit whose `old_string` spans a reflowed line fails instead of
+applying to stale text. One line when rumdl is missing, exits non-zero or
+times out, and a timed-out run leaves the file as the tool wrote it. A
+repository without `.rumdl.toml`, a file outside any repository and a clone
+nested in an opted-in tree are never touched; Codex's `apply_patch` is not a
+write it formats. `software/code.md` § Layout and formatting owns the rule a
+repository adopts.
+
 ### post_tool_nudge.sh (PostToolUse)
 
-Counts tool calls in the current repo's git dir; every 100 calls or 10
-minutes re-runs `stop.py`'s commit/diary check mid-session using the original
-hook payload.
-Non-blocking, always exits 0.
-
-### md_format.py (PostToolUse)
-
-Runs `rumdl fmt` on each Markdown file a `Write`, `Edit` or `MultiEdit`
-(Codex: every file an `apply_patch` names, a rename's destination included)
-touched, from the file's own directory, so the nearest `.rumdl.toml` applies.
-Silent unless a directory between the file and its repository root (the first
-`.git`) holds a rumdl config (`.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]` in
-`pyproject.toml`): a repo opts in by committing one, and a clone of someone
-else's repo is never rewrapped, not even one nested inside a configured tree.
-The binary is the repo's own pin (`node_modules/.bin/rumdl`), else `rumdl` on
-PATH, else `uvx rumdl@<pinned>`; a configured repo with none of the three gets
-a note naming the install step. The run forces rumdl's text output and no
-colour, the shape the hook parses. When the file changed, the hook emits
-`additionalContext` telling Claude to Read it again before the next Edit — the
-Edit tool refuses a file that changed since its last read — and reports what
-rumdl could not fix, or a non-zero rumdl exit, the same way. Never blocks,
-always exits 0. `software/code.md` § Layout and formatting owns the rule a
-repo adopts.
+Pipes a payload that names a `.md` file through `pretool_nudge.py` first (the
+Markdown reflow above); a note from it is the call's only output. Then counts
+tool calls in the current repo's git dir; every 100 calls or 10 minutes
+re-runs `stop.py`'s commit/diary check mid-session using the original hook
+payload. Non-blocking, always exits 0.
 
 ### codex_hook.py (Codex adapter)
 

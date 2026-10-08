@@ -75,16 +75,6 @@
             "timeout": 1000
           }
         ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/md_format.py",
-            "timeout": 30
-          }
-        ]
       }
     ],
     "Stop": [

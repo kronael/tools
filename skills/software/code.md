@@ -164,11 +164,12 @@ your diff against every `##` heading here before calling an edit done.
   for the rare line that genuinely hurts to wrap (a long URL, a table row).
 - ALWAYS let `rumdl` wrap Markdown, NEVER your hands: a repo opts in with a
   root `.rumdl.toml` (`[MD013] line-length = 100`, `reflow = true`, `tables`
-  and `code-blocks` false, worktrees and generated files excluded) and a pinned
-  `rumdl` (`bun add -d --exact rumdl`, or the PyPI package); `make fmt` runs
-  `rumdl fmt .`, `make lint` runs `rumdl check .`, and the `md_format` hook
-  runs it on every `.md` you write — when it says the file changed, Read it
-  again before the next Edit. A repo with no config is never rewrapped.
+  and `code-blocks` false; `exclude` names worktrees and generated files as
+  `.name/` patterns — a root-anchored `/.*/` skips nothing when one file is
+  named) and a pinned `rumdl` (`bun add -d --exact rumdl`, or the PyPI
+  package); `make fmt` runs `rumdl fmt .`, `make lint` runs `rumdl check .`,
+  and the PostToolUse hook runs it on every `.md` you write. A repo with no
+  config is never rewrapped.
 - ALWAYS one import per line — it keeps diffs clean.
 - ALWAYS name utility files `*_utils.*`.
 - ALWAYS run a script from a fixed working directory with simple relative
