@@ -157,8 +157,9 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
   membership, not meaning; a changed meaning re-runs the command;
 - the checker first refuses a planted fake citation and finds a planted real
   test, so a parser that matches nothing cannot pass;
-- every Markdown file is wrapped (`rumdl check .`; `software/code.md` § Layout
-  and formatting names the config and the hook that runs it on each write).
+- every Markdown file passes `rumdl check .` — wrapped at the width and clean
+  on the enabled rules (`software/code.md` § Layout and formatting names the
+  config and the hook that runs it on each write).
 
 ## CLAUDE.md files
 
@@ -186,6 +187,10 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 - ALWAYS cite alternatives generously and accurately enough that their authors
   would not object; a superlative carries its ledger number; a roadmap item is
   never listed as a feature.
+- ALWAYS give "What it does not give you" the length of the pitch — a limits
+  section shorter than the sell is a sell.
+- ALWAYS state assumptions and the trust model as flat bullets, NEVER buried in
+  prose.
 - An examples index carries a verdict column saying whether the reader gets
   the same result without the project ("Plain transaction?": Yes / Yes,
   weaker / No), with every value defined in a list ABOVE the table. NEVER a
