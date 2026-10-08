@@ -143,8 +143,9 @@ the failure. Settings still confirm before applying.
      `""` (unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER
      `attribution: false` — versions before v2.1.281 reject it and skip the
      whole file); `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false`
-     (unset, every session's reminder asks for the `Generated with [Claude
-     Code]` footer and a session link, which WISDOM § Git bans);
+     (unset, the reminder asks for the `Generated with [Claude Code]` footer,
+     and a web or Remote Control session adds a session link; WISDOM § Git
+     bans both);
      `bashEditDiffEnabled` `false` (unset, `auto` and
      `bypassPermissions` modes diff the tree around every Bash command;
      `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it); `crossSessionInbound`

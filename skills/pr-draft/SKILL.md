@@ -55,10 +55,10 @@ anywhere else does not post.
    and fix every line it names until it prints `ok:`. It checks the part of
    § Format a program can check: the `**TL;DR:**` lead; no header, table,
    rule or code block past 6 lines; no checkbox, "This PR", marketing word or
-   shortened hash; the size cap; the title length; a bare `🤖` as the last
-   line and none of the harness footer; and that the body is shorter than the
-   draft. Completion criterion: the `ok:` line, which carries the size and the
-   cut ratio.
+   shortened hash; the size cap; the title's length and its one outcome; a
+   bare `🤖` as the last line and none of the harness footer; and that the
+   body is shorter than the draft. Completion criterion: the `ok:` line, which
+   carries the size and the cut ratio.
 4. REVIEW-ON-WISDOM — the checks no program runs, over `tmp/pr-body.md`: every
    claim traced to a hunk of the diff or marked as an inference; no history
    framing; every wire-visible change under `Contract to confirm:`; every

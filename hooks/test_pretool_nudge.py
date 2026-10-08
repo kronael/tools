@@ -115,6 +115,7 @@ BLOCK_CASES = [
     'git checkout -b feature',
     'git switch -c feature',
     'git worktree add /repo/.wt origin/master',
+    'gh release create v1.0.0 --notes x',
     'killall node',
     'rm -rf tmp/build',
 ]

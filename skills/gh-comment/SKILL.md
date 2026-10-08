@@ -49,10 +49,7 @@ reasoning that got you there.
    and rule-of-three phrasing. Speak in the `caveman` register: maximum
    signal per token, no preamble, no recap.
 3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape
-   checklist, before the sign-off questionnaire, then
-   `python3 ~/.claude/hooks/gh_text_lint.py comment <file>` on each body until
-   it prints `ok:`. The PreToolUse hook runs the same lint on every body a
-   `gh pr comment`, a review POST or a reply carries and refuses one that fails.
+   checklist, then `gh_text_lint.py comment <file>` — the hook refuses what fails.
 
 Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two
 findings or the evidence belongs in the report.

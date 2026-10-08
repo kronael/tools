@@ -41,23 +41,23 @@ ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
 MAX_CHARS = {Kind.PR: 3000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
-MAX_COMMENT_LINES = 2
 MAX_FENCE_LINES = 6
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
-    'generated with',
+    'generated with claude',
+    'generated with [claude',
     'co-authored-by',
     'claude.com/claude-code',
     'claude.ai/',
     'noreply@anthropic.com',
 )
 MARKETING = re.compile(
-    r'\b(?:robust|seamless|powerful|comprehensive|leverag(?:e|es|ed)|streamlin(?:e|es|ed)|excited)\b',
+    r'\b(?:robust|seamless|powerful|comprehensive|leverag\w*|streamlin\w*|excited)\b',
     re.IGNORECASE,
 )
 THIS_PR = re.compile(r'\bthis (?:pr|pull request)\b', re.IGNORECASE)
-SHORTENED = re.compile(r'[0-9a-f]{4,}\.\.\.[0-9a-f]{2,}', re.IGNORECASE)
+SHORTENED = re.compile(r'\w{4,}\.\.\.\w{2,}')
 ELLIPSIS = '…'
 HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
@@ -65,34 +65,43 @@ TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
 
-# A gh invocation at the head of a command segment, with its text kind and
-# whether the command cannot do its job without a body.
-GH = r'(?:^|[;&|\n]|\$\()\s*(?:timeout\s+\S+\s+)?gh\s+'
+# A gh invocation at the head of a command segment, after any VAR=value
+# assignments and one wrapper (env, timeout, sudo ...) with its arguments.
+PREFIX = r'(?:\w+=\S*\s+)*(?:(?:env|command|exec|timeout|sudo|nice|nohup)\s+(?:\S+\s+)*?)?(?:\S*/)?'
+GH = r'(?:^|[;&|(\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*' + PREFIX + r'(?P<gh>gh\s+'
 API = GH + r'api\b[^\n|;&]*'
 POSTS = (
-    (re.compile(GH + r'pr\s+create\b'), Kind.PR, True),
-    (re.compile(GH + r'pr\s+edit\b'), Kind.PR, False),
-    (re.compile(GH + r'issue\s+create\b'), Kind.ISSUE, True),
-    (re.compile(GH + r'issue\s+edit\b'), Kind.ISSUE, False),
-    (re.compile(GH + r'(?:pr|issue)\s+comment\b'), Kind.COMMENT, True),
-    (re.compile(API + r'(?:/reviews|/comments|/replies)\b'), Kind.COMMENT, False),
-    (re.compile(API + r'\bpulls/\d+(?![\w/])'), Kind.PR, False),
-    (re.compile(API + r'\bissues/\d+(?![\w/])'), Kind.ISSUE, False),
+    (re.compile(GH + r'pr\s+create\b)'), Kind.PR, True),
+    (re.compile(GH + r'pr\s+edit\b)'), Kind.PR, False),
+    (re.compile(GH + r'issue\s+create\b)'), Kind.ISSUE, True),
+    (re.compile(GH + r'issue\s+edit\b)'), Kind.ISSUE, False),
+    (re.compile(GH + r'(?:pr|issue)\s+comment\b)'), Kind.COMMENT, True),
+    (re.compile(GH + r'pr\s+review\b)'), Kind.COMMENT, False),
+    (re.compile(API + r'(?:/reviews|/comments|/replies)\b)'), Kind.COMMENT, False),
+    (re.compile(API + r'\bpulls/\d+(?![\w/]))'), Kind.PR, False),
+    (re.compile(API + r'\bissues/\d+(?![\w/]))'), Kind.ISSUE, False),
 )
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?:\n|$)', re.DOTALL)
-JSON_BODY = re.compile(r'"body"\s*:\s*"((?:[^"\\]|\\.)*)"')
-INPUT = re.compile(r'--input[ =](\S+)')
-CAT_HEREDOC = re.compile(r'\$\(\s*cat\s*<<')
-CAT_FILE = re.compile(r'\$\(\s*cat\s+([^)\s]+)\s*\)')
-BODY_FILE = re.compile(r'(?:--body-file[ =]|(?<!\S)-F\s+(?!body=)|(?:-F|--field)\s+body=@)(\S+)')
-BODY_TEXT = re.compile(
-    r'(?:--body[ =]|(?<!\S)-b\s+|(?:-f|-F|--field|--raw-field)\s+body=)(["\'])(.*?)\1', re.DOTALL
+MARK = '\x00'
+MARKED = re.compile(f'{MARK}(\\d+){MARK}')
+CD = re.compile(r'(?:^|[;&|(\n]|\b(?:then|do)\s)\s*cd\s+([^\s;&|)]+)')
+QUOTED = r'(?:"((?:[^"\\]|\\.)*)"|\'([^\']*)\'|([^\s;&|)]+))'
+INPUT = re.compile(r'--input[ =]' + QUOTED)
+BODY_FILE = re.compile(
+    r'(?:--body-file[ =]|(?:-F|--field)\s+body=@|(?<!\S)-F\s+(?![\w-]+=))' + QUOTED
 )
-TITLE = re.compile(r'(?:--title[ =]|(?<!\S)-t\s+)(["\'])(.*?)\1', re.DOTALL)
+BODY_TEXT = re.compile(
+    r'(?:--body[ =]|(?<!\S)-b\s+|(?:-f|-F|--field|--raw-field)\s+body=)' + QUOTED
+)
+TITLE = re.compile(r'(?:--title[ =]|(?<!\S)-t\s+)' + QUOTED)
+CAT_FILE = re.compile(r'^\$\(\s*cat\s+' + QUOTED + r'\s*\)$')
+CAT_HEREDOC = re.compile(r'^\$\(\s*cat\s*<<')
+JSON_BODY = re.compile(r'"body"\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
 def split_prose(lines: list[str]) -> list[tuple[int, str]]:
-    out, fenced = [], False
+    out = []
+    fenced = False
     for n, line in enumerate(lines, 1):
         if FENCE.match(line):
             fenced = not fenced
@@ -102,7 +111,8 @@ def split_prose(lines: list[str]) -> list[tuple[int, str]]:
 
 
 def find_fences(lines: list[str]) -> list[tuple[int, int]]:
-    out, start = [], 0
+    out = []
+    start = 0
     for n, line in enumerate(lines, 1):
         if not FENCE.match(line):
             continue
@@ -111,6 +121,8 @@ def find_fences(lines: list[str]) -> list[tuple[int, int]]:
             start = 0
         else:
             start = n
+    if start:
+        out.append((start, len(lines) - start))
     return out
 
 
@@ -126,27 +138,15 @@ def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
         if ELLIPSIS in line or SHORTENED.search(line):
             problems.append(Problem(n, 'shortened address, hash or sentence: write it in full'))
         problems += [Problem(n, f'marketing word "{m.group()}"') for m in MARKETING.finditer(line)]
-        if THIS_PR.search(line):
-            problems.append(Problem(n, '"this PR": name what the change does instead'))
     if len(body) > MAX_CHARS[kind]:
         problems.append(Problem(0, f'{len(body)} chars, cap {MAX_CHARS[kind]}: cut, or link a doc'))
     return problems
 
 
-def lint_signed(lines: list[str]) -> list[Problem]:
-    problems = [
-        Problem(n, 'checkbox: no test plan or checklist')
-        for n, line in enumerate(lines, 1)
-        if CHECKBOX.match(line)
-    ]
-    if lines[-1].strip() != ROBOT:
-        problems.append(Problem(len(lines), f'last line must be a bare {ROBOT} and nothing else'))
-    problems += [
-        Problem(n, f'{ROBOT} belongs on the last line only')
-        for n, line in enumerate(lines[:-1], 1)
-        if ROBOT in line
-    ]
-    return problems
+def lint_last_line(lines: list[str]) -> list[Problem]:
+    if lines[-1].strip() == ROBOT:
+        return []
+    return [Problem(len(lines), f'last line must be a bare {ROBOT} and nothing else')]
 
 
 def lint_pr(lines: list[str]) -> list[Problem]:
@@ -154,6 +154,13 @@ def lint_pr(lines: list[str]) -> list[Problem]:
     first = next((line for line in lines if line.strip()), '')
     if not first.startswith(TLDR):
         problems.append(Problem(1, f'open with {TLDR} and the outcome, not a header or narrative'))
+    for n, line in enumerate(lines, 1):
+        if CHECKBOX.match(line):
+            problems.append(Problem(n, 'checkbox: no test plan or checklist'))
+        if THIS_PR.search(line):
+            problems.append(Problem(n, '"this PR": name what the change does instead'))
+        if ROBOT in line and n < len(lines):
+            problems.append(Problem(n, f'{ROBOT} belongs on the last line only'))
     for n, line in split_prose(lines):
         if HEADER.match(line):
             problems.append(
@@ -172,19 +179,10 @@ def lint_pr(lines: list[str]) -> list[Problem]:
 
 
 def lint_comment(lines: list[str]) -> list[Problem]:
-    problems = []
-    if not lines[0].startswith(ROBOT + ' '):
-        problems.append(Problem(1, f'comment must start with "{ROBOT} "'))
-    full = [n for n, line in enumerate(lines, 1) if line.strip()]
-    if len(full) > MAX_COMMENT_LINES:
-        problems.append(
-            Problem(
-                full[MAX_COMMENT_LINES],
-                f'{len(full)} lines, cap {MAX_COMMENT_LINES}: split the finding'
-                ' or keep the evidence for the report',
-            )
-        )
-    return problems
+    first = next((line for line in lines if line.strip()), '')
+    if first.startswith(ROBOT + ' '):
+        return []
+    return [Problem(1, f'comment must start with "{ROBOT} "')]
 
 
 def lint_title(title: str) -> list[Problem]:
@@ -204,7 +202,7 @@ def lint(
         return [Problem(0, 'empty body')]
     lines = body.split('\n')
     problems = lint_common(kind, lines, body)
-    problems += lint_comment(lines) if kind is Kind.COMMENT else lint_signed(lines)
+    problems += lint_comment(lines) if kind is Kind.COMMENT else lint_last_line(lines)
     if kind is Kind.PR:
         problems += lint_pr(lines)
         if draft is not None and len(body) >= len(draft.rstrip()):
@@ -218,44 +216,92 @@ def lint(
     return problems
 
 
+def mark_heredocs(command: str) -> tuple[str, list[str]]:
+    """The command with each heredoc's content replaced by a marker, and the contents."""
+    docs = []
+
+    def swap(m: re.Match) -> str:
+        docs.append(m.group(3))
+        head = m.group(0)[: m.start(3) - m.start()]
+        tail = m.group(0)[m.end(3) - m.start() :]
+        return f'{head}{MARK}{len(docs) - 1}{MARK}{tail}'
+
+    return HEREDOC.sub(swap, command), docs
+
+
+def quoted(m: re.Match) -> str:
+    """The value a QUOTED match captured, with double-quote escapes removed."""
+    if m.group(1) is not None:
+        return re.sub(r'\\(["\\$`])', r'\1', m.group(1))
+    return m.group(2) if m.group(2) is not None else m.group(3)
+
+
 def read_file(path: str, cwd: str) -> str:
-    """The file's text, or the reason it cannot be the body a hook checks."""
-    path = path.strip('"\'')
+    """The file's text, or an OSError saying why it cannot be the body a hook checks."""
     if re.search(r'[$`]', path):
         raise OSError(f'cannot read the body from {path}: pass a literal path')
     try:
         with open(os.path.join(cwd, path), encoding='utf-8') as fh:
             return fh.read()
-    except OSError as err:
-        raise OSError(f'cannot read the body file {path}: {err.strerror}') from err
+    except FileNotFoundError as err:
+        raise OSError(
+            f'cannot read the body file {path}: {err.strerror}; write it in its own call first'
+        ) from err
+    except (OSError, UnicodeDecodeError) as err:
+        raise OSError(f'cannot read the body file {path}: {err}') from err
 
 
 def json_bodies(text: str) -> list[str]:
-    return [json.loads(f'"{m}"') for m in JSON_BODY.findall(text) if m]
+    try:
+        return [json.loads(f'"{m}"') for m in JSON_BODY.findall(text) if m]
+    except json.JSONDecodeError as err:
+        raise OSError(f'cannot parse the JSON body: {err}') from err
 
 
-def read_bodies(command: str, cwd: str) -> list[str]:
-    """Every body text the command posts; OSError names a body it cannot read."""
-    doc = HEREDOC.search(command)
-    heredoc = doc.group(3) if doc else ''
-    given = INPUT.search(command)
+def heredoc_in(segment: str, docs: list[str]) -> str | None:
+    m = MARKED.search(segment)
+    return docs[int(m.group(1))] if m else None
+
+
+def read_bodies(segment: str, docs: list[str], cwd: str) -> list[str]:
+    """Every body text the segment posts; OSError names a body it cannot read."""
+    doc = heredoc_in(segment, docs)
+    given = INPUT.search(segment)
     if given:
-        text = heredoc if given.group(1) == '-' else read_file(given.group(1), cwd)
-        return json_bodies(text)
-    if CAT_HEREDOC.search(command):
-        return [heredoc]
-    cat = CAT_FILE.search(command)
-    if cat:
-        return [read_file(cat.group(1), cwd)]
-    named = BODY_FILE.search(command)
+        path = quoted(given)
+        if path != '-':
+            return json_bodies(read_file(path, cwd))
+        if doc is None:
+            raise OSError('--input - reads stdin the hook cannot see: pass a file or a heredoc')
+        return json_bodies(doc)
+    named = BODY_FILE.search(segment)
     if named:
-        return [heredoc if named.group(1) == '-' else read_file(named.group(1), cwd)]
-    inline = BODY_TEXT.search(command)
+        path = quoted(named)
+        if path != '-':
+            return [read_file(path, cwd)]
+        if doc is None:
+            raise OSError('--body-file - reads stdin the hook cannot see: pass a file or a heredoc')
+        return [doc]
+    inline = BODY_TEXT.search(segment)
     if not inline:
         return []
-    if re.search(r'\$\(|`', inline.group(2)):
+    text = quoted(inline)
+    if CAT_HEREDOC.match(text):
+        if doc is None:
+            raise OSError('the body heredoc was not found: pass a file or a complete heredoc')
+        return [doc]
+    cat = CAT_FILE.match(text)
+    if cat:
+        return [read_file(quoted(cat), cwd)]
+    if '$(' in text or (inline.lastindex == 1 and '`' in text):
         raise OSError('the body is built by a command substitution: pass a literal path')
-    return [inline.group(2)]
+    return [text]
+
+
+def effective_cwd(code: str, cwd: str) -> str:
+    for m in CD.finditer(code):
+        cwd = os.path.join(cwd, m.group(1))
+    return cwd
 
 
 def describe(problems: list[Problem]) -> str:
@@ -266,16 +312,20 @@ def describe(problems: list[Problem]) -> str:
     return shown + (f' (+{more} more)' if more > 0 else '')
 
 
-def command_reason(command: str, cwd: str | None = None) -> str | None:
-    """Why a gh command that posts text must not run, or None when it may."""
-    post = next(
-        ((kind, required) for pattern, kind, required in POSTS if pattern.search(command)), None
-    )
-    if post is None:
-        return None
-    kind, required = post
+def find_posts(code: str) -> list[tuple[int, Kind, bool]]:
+    """(position, kind, body required) per gh invocation that posts, in command order."""
+    hits = {}
+    for pattern, kind, required in POSTS:
+        for m in pattern.finditer(code):
+            hits.setdefault(m.start('gh'), (kind, required))
+    return [(at, *hits[at]) for at in sorted(hits)]
+
+
+def segment_reason(
+    segment: str, docs: list[str], cwd: str, kind: Kind, required: bool
+) -> str | None:
     try:
-        bodies = read_bodies(command, cwd or os.getcwd())
+        bodies = read_bodies(segment, docs, cwd)
     except OSError as err:
         return str(err)
     if not bodies:
@@ -285,14 +335,33 @@ def command_reason(command: str, cwd: str | None = None) -> str | None:
             f'{kind.value} body not found in the command: write it with the {SKILL[kind]} skill,'
             f' lint it, and pass --body-file <path>'
         )
-    title = TITLE.search(command)
+    title = TITLE.search(segment)
     for body in bodies:
-        problems = lint(kind, body, title.group(2) if title and kind is Kind.PR else None)
+        problems = lint(kind, body, quoted(title) if title and kind is Kind.PR else None)
         if problems:
             return (
                 f'GitHub {kind.value} text refused: {describe(problems)}. Fix it per the'
                 f' {SKILL[kind]} skill: python3 ~/.claude/hooks/gh_text_lint.py {kind.value} <file>'
             )
+    return None
+
+
+def command_reason(command: str, cwd: str | None = None) -> str | None:
+    """Why a gh command that posts text must not run, or None when it may."""
+    code, docs = mark_heredocs(command)
+    posts = find_posts(code)
+    ends = [at for at, _, _ in posts[1:]] + [len(code)]
+    for (at, kind, required), end in zip(posts, ends):
+        try:
+            reason = segment_reason(
+                code[at:end], docs, effective_cwd(code[:at], cwd or os.getcwd()), kind, required
+            )
+        except Exception as err:
+            return (
+                f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first'
+            )
+        if reason:
+            return reason
     return None
 
 

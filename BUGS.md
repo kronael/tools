@@ -240,6 +240,29 @@
   `tw-fetch/mirror.py:90` UP041 and `:138` T201. CI runs pre-commit over the
   diff only, so none of the three surfaces until a commit touches those files.
 
+- **GH-GATE-READS-DIRECT-GH-ONLY** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `hooks/gh_text_lint.py` `GH` matches a `gh` word at the head of
+  a command segment, after `VAR=value` assignments and one wrapper (`env`,
+  `timeout`, `sudo`, `command`, a path). `bash -c 'gh pr create ...'`,
+  `g=gh; $g pr create ...` and `xargs gh pr create` post without a check.
+  No proposal: each is a way around the gate an agent has to choose, and a
+  shell parser is the wrong size for a hook.
+
+- **GH-LINT-FLAGS-RANGES-AND-FLAG-NAMES** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `SHORTENED` in `hooks/gh_text_lint.py` reads a git range
+  `c98c2da...c1bcf64` as a shortened hash, and `MARKETING` reads the flag
+  name in "drop the `--robust` flag" as a marketing word, so a comment or
+  body naming either is refused with the wrong reason. **Proposal:** skip a
+  match inside backticks. No test yet.
+
+- **PRETOOL-IMPORTS-OUTSIDE-SUPPRESS** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `hooks/pretool_nudge.py:12` imports `gh_text_lint` at module
+  level, outside the `suppress(Exception)` around `main()`. An install that
+  lacks the file, or `python3 -I`, tracebacks on every tool call and no
+  unsafe-command block fires (exit 1, shown to the user, not blocking). Same
+  shape as the `lib.state` imports in `local.py` and `memory_nudge.py`;
+  `hooks/ARCHITECTURE.md` § lib states the install contract.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`

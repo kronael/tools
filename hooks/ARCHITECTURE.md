@@ -96,11 +96,12 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 **Flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   amend, hard reset, broad add, no-verify commits, `rm -rf`, and
-   recursive Codex execution inside Codex. Then `gh_text_lint.command_reason`:
-   a `gh` command that posts a PR body, an issue body or a comment is blocked
-   when the body it carries fails the lint, cannot be read, or is required and
-   absent. The reason names the failing lines and the skill that owns the text.
+   amend, hard reset, broad add, no-verify commits, `rm -rf`, `gh release
+   create`, and recursive Codex execution inside Codex. Then
+   `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
+   PR body, an issue body or a comment is blocked when the body it carries
+   fails the lint, cannot be read, or is required and absent. The reason names
+   the failing lines and the skill that owns the text.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -120,11 +121,17 @@ returns the block reason for a posting command, or None; the CLI prints
 `<file>:<line>: <problem>` lines and exits 1, or `ok: <kind> <chars> chars`.
 
 The rules are WISDOM § Git and the Format section of the posting skill, kept
-to what a program can check. `read_bodies` finds the text a command posts in
-`--input` JSON (file or heredoc), `$(cat <path>)`, `--body-file`/`-F`, a
-heredoc, or the inline `--body`; a `$VAR` path or a command substitution is
-an OSError the gate reports. Imported by `pretool_nudge.py`; run by hand from
-`pr-draft` (with `--draft` and `--title`), `gh-issue` and `gh-comment`.
+to what a program can check. `mark_heredocs` replaces each heredoc's content
+with a marker so it is never read as a command; `find_posts` locates every gh
+invocation that posts, and each one is checked over its own slice of the
+command with the `cd` calls before it applied to `cwd`. `read_bodies` finds
+the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
+`-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
+`$(cat <path>)`); a `$VAR` path, stdin, a missing or undecodable file,
+unparsable JSON or a command substitution is an OSError the gate reports, and
+any other exception becomes the block reason. Imported by `pretool_nudge.py`;
+run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
+`gh-comment`.
 
 ### post_tool_nudge.sh (PostToolUse)
 
