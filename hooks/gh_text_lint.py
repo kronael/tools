@@ -67,7 +67,11 @@ FENCE = re.compile(r'^\s*(?:```|~~~)')
 
 # A gh invocation at the head of a command segment, after any VAR=value
 # assignments and one wrapper (env, timeout, sudo ...) with its arguments.
-PREFIX = r'(?:\w+=\S*\s+)*(?:(?:env|command|exec|timeout|sudo|nice|nohup)\s+(?:\S+\s+)*?)?(?:\S*/)?'
+PREFIX = (
+    r'(?:\w+=\S*[ \t]+)*'
+    r'(?:(?:env|command|exec|timeout|sudo|nice|nohup)[ \t]+(?:\S+[ \t]+)*?)?'
+    r'(?:\S*/)?'
+)
 GH = r'(?:^|[;&|(\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*' + PREFIX + r'(?P<gh>gh\s+'
 API = GH + r'api\b[^\n|;&]*'
 POSTS = (
@@ -82,6 +86,7 @@ POSTS = (
     (re.compile(API + r'\bissues/\d+(?![\w/]))'), Kind.ISSUE, False),
 )
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?:\n|$)', re.DOTALL)
+CONTINUATION = re.compile(r'\\\n')
 MARK = '\x00'
 MARKED = re.compile(f'{MARK}(\\d+){MARK}')
 CD = re.compile(r'(?:^|[;&|(\n]|\b(?:then|do)\s)\s*cd\s+([^\s;&|)]+)')
@@ -293,7 +298,9 @@ def read_bodies(segment: str, docs: list[str], cwd: str) -> list[str]:
     cat = CAT_FILE.match(text)
     if cat:
         return [read_file(quoted(cat), cwd)]
-    if '$(' in text or (inline.lastindex == 1 and '`' in text):
+    raw = inline.group(1)
+    unescaped = text if raw is None else re.sub(r'\\.', '', raw)
+    if '$(' in unescaped or (raw is not None and '`' in unescaped):
         raise OSError('the body is built by a command substitution: pass a literal path')
     return [text]
 
@@ -348,20 +355,19 @@ def segment_reason(
 
 def command_reason(command: str, cwd: str | None = None) -> str | None:
     """Why a gh command that posts text must not run, or None when it may."""
-    code, docs = mark_heredocs(command)
-    posts = find_posts(code)
-    ends = [at for at, _, _ in posts[1:]] + [len(code)]
-    for (at, kind, required), end in zip(posts, ends):
-        try:
+    try:
+        code, docs = mark_heredocs(command)
+        code = CONTINUATION.sub('', code)
+        posts = find_posts(code)
+        ends = [at for at, _, _ in posts[1:]] + [len(code)]
+        for (at, kind, required), end in zip(posts, ends):
             reason = segment_reason(
                 code[at:end], docs, effective_cwd(code[:at], cwd or os.getcwd()), kind, required
             )
-        except Exception as err:
-            return (
-                f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first'
-            )
-        if reason:
-            return reason
+            if reason:
+                return reason
+    except Exception as err:
+        return f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first'
     return None
 
 

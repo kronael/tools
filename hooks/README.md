@@ -51,8 +51,9 @@ It also refuses a `gh` command that posts GitHub text whose body fails
 `gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr
 comment`, `gh issue comment`, `gh pr review`, and a `gh api` call on
 `pulls/<N>` or `issues/<N>` that carries a body or on `/reviews`, `/comments`
-or `/replies`. Each gh invocation in a call is checked, with its `cd` applied,
-and a heredoc's content is never read as a command. The body comes from
+or `/replies`. Each gh invocation in a call is checked, with its `cd` applied
+and its backslash-newline continuations joined, and a heredoc's content is
+never read as a command. The body comes from
 `--body-file`, `-F <file>`, `-F body=@<file>`, `--input` JSON, a heredoc, or
 the inline `--body` (literal or `$(cat <path>)`); a path it cannot read (a
 shell variable, a missing or undecodable file), stdin, unparsable JSON and a

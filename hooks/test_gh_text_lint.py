@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import gh_text_lint
 import pytest
 from gh_text_lint import Kind
@@ -155,6 +157,7 @@ ALLOWED = [
     "gh api graphql -F pr=176 -f query='query($pr:Int!){ repository { pullRequest(number:$pr) { id } } }'",
     f'gh pr comment 176 --body "{ROBOT} @reviewer Fixed the lease. Please re-review."',
     f"gh pr comment 1 --body '{ROBOT} Fix `x` here.'",
+    f'gh pr comment 1 --body "{ROBOT} Fix \\`x\\` here."',
     f'gh pr comment 1 --body "{ROBOT} ci.yml is generated with make workflows; edit the template."',
     f'gh pr comment 1 --body "{ROBOT} Deferred: this PR does not touch the lease."',
     f'gh issue comment 5 --body "{ROBOT} Repro on 3.11.\nFails on 3.12 too.\nLog attached."',
@@ -204,6 +207,8 @@ REFUSED = [
     ),
     (f'gh issue create --repo o/r --title "T" --body "Symptom.\n\n{FOOTER}"', 'banned attribution'),
     ('cd /x && gh pr comment 1 --body "$(python3 gen.py)"', 'command substitution'),
+    (f'gh pr comment 1 --body "{ROBOT} Fix `x` here."', 'command substitution'),
+    ('gh api --method PATCH \\\nrepos/o/r/pulls/1 -f body="bad"', 'last line must be a bare'),
 ]
 
 
@@ -225,13 +230,23 @@ def test_command_reason_names_the_skill_and_the_lint() -> None:
     assert 'gh_text_lint.py pr' in reason
 
 
-def test_command_reason_turns_a_gate_failure_into_a_refusal(monkeypatch) -> None:
+@pytest.mark.parametrize('step', ['mark_heredocs', 'find_posts', 'read_bodies'])
+def test_command_reason_turns_a_gate_failure_into_a_refusal(monkeypatch, step: str) -> None:
     """A lint that raises must refuse the post, never let the hook's suppress allow it."""
 
     def explode(*_args, **_kwargs):
         raise RuntimeError('boom')
 
-    monkeypatch.setattr(gh_text_lint, 'read_bodies', explode)
+    monkeypatch.setattr(gh_text_lint, step, explode)
     reason = command_reason('gh pr create --title t --body-file tmp/pr-body.md', '/')
     assert reason is not None
     assert 'gate failed' in reason
+
+
+def test_command_reason_keeps_the_wrapper_prefix_on_one_line() -> None:
+    """800 wrapped lines stay inside the hook's 500 ms budget: a wrapper's
+    arguments end at the newline instead of being retried across every line."""
+    command = '\n'.join(f'sudo systemctl restart svc-{n}' for n in range(800))
+    start = time.perf_counter()
+    assert command_reason(command, '/') is None
+    assert time.perf_counter() - start < 0.5

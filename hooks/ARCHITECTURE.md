@@ -142,7 +142,8 @@ returns the block reason for a posting command, or None; the CLI prints
 
 The rules are WISDOM § Git and the Format section of the posting skill, kept
 to what a program can check. `mark_heredocs` replaces each heredoc's content
-with a marker so it is never read as a command; `find_posts` locates every gh
+with a marker so it is never read as a command, backslash-newline
+continuations are joined, and `find_posts` locates every gh
 invocation that posts, and each one is checked over its own slice of the
 command with the `cd` calls before it applied to `cwd`. `read_bodies` finds
 the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
