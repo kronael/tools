@@ -33,7 +33,7 @@ Python-specific additions and deltas.
 
 ## Naming
 `software/code.md` § Naming owns names. Python additions:
-- ALWAYS name current-time/date accessors `now()` and `today()`, never `get_now()` or `get_today()`.
+- ALWAYS call `datetime.now(UTC)` and `.date()` directly — NEVER wrap them in a `now()`/`today()` helper, NEVER `utcnow()` (deprecated, naive).
 - ALWAYS name item-iteration helpers `iter_<items>`; preserve framework-required names.
 
 ## Properties and accessor overrides
