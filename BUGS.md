@@ -50,16 +50,15 @@
   the report. Keep approval gates in `gh-comment`. No new review mode,
   skill, saved plan or hook. No test — design.
 
-- **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
-  needs sign-off. Step 11 of `skills/refine/SKILL.md:144-145` runs
-  `git worktree remove --force` on each stale entry under
-  `.claude/worktrees/`. A single `--force` removes an unlocked entry even
-  when it holds another task's unreconciled work, which
-  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 11
-  apply the existing orphan test in `skills/commit/SKILL.md:75-82` —
-  remove only an entry superseded by HEAD whose lock pid is dead, and
-  surface unique work to the user. Rule text only, no enforcement
-  machinery. No test — design.
+- **COMMIT-ORPHAN-WORKTREE-TEST-CONTRADICTS-REFINE** (LOW, duplication) —
+  CONFIRMED at HEAD 2026-10-09. `skills/commit/SKILL.md:75-82` § Orphaned
+  worktrees removes an entry under `.claude/worktrees/` with `git worktree
+  remove --force` once it is "superseded + lock pid dead" — a path
+  `skills/worktree/SKILL.md:12-13` says never to create, and a test refine
+  step 11 (`skills/refine/SKILL.md:146-154`) rejects: a worktree goes only
+  when its HEAD is on a remote-tracking ref and its status is clean, never
+  by `--force` or a dead lock. Two removal rules drift. **Fix:** replace the
+  section with a one-line pointer at refine step 11. No test — duplication.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
