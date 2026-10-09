@@ -1,7 +1,7 @@
 ---
 name: wisdom
 description: Write or edit SKILL.md, CLAUDE.md, AGENTS.md. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
-when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, does this rule earn its context, cut what the model already knows, trim an always-loaded file"
+when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, writing ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, does this rule earn its context, cut what the model already knows, trim an always-loaded file, instruction tags, conditional instruction scoping"
 ---
 
 # Wisdom Skill
@@ -152,20 +152,38 @@ a linter that cannot flag, and a broken one look identical from a green run.
   and external systems are ARCHITECTURE.md's. ALWAYS cut re-explanation to a
   one-line pointer; keep only the invariants, gotchas and syntax an editor must
   not get wrong.
-- Put critical rules at the top or bottom — middle content is least reliably attended to.
-- ALWAYS wrap task-specific sections (testing conventions, API patterns, state
-  management, i18n) in `<important if="condition">…</important>` with one
-  narrow, single-trigger condition per block — Claude Code's own system
-  reminder tells the model project context "may or may not be relevant,"
-  and the tag overrides that framing so the block gets attention when its
-  condition actually matches, instead of being skimmed past by default.
-- NEVER wrap onboarding context relevant to 90%+ of tasks (project identity,
-  directory map, tech stack, the commands table) — leave those bare; gating
-  foundational context behind a narrow `if` starves it of attention on the
-  tasks that need it most.
-- NEVER give one `<important if>` block two unrelated trigger conditions —
-  split "testing + API conventions" into two blocks so a task matching only
-  one doesn't pull in the other's rules.
-- This does NOT apply to this repo's own installed `~/.claude/CLAUDE.md`
-  (the global wisdom file) — that file is always-loaded outside the
-  per-project relevance gate, so the tag has nothing to cut through there.
+- ALWAYS group related rules under clear Markdown headings and bullets.
+
+### Tags describe content; the harness controls loading
+
+- ALWAYS treat `<important if="condition">…</important>` as a local prompt
+  convention. The sources below do not document special priority, a parsed
+  `if` condition, or an override of a system reminder for this wrapper.
+- When XML helps separate content, ALWAYS choose consistent, descriptive
+  names: `<instructions>`, `<context>`, `<input>`, or `<examples>` containing
+  `<example>` blocks. Custom names such as `<testing_rules>` can replace or
+  complement `<important>` as semantic labels. They are not priority levels.
+- ALWAYS nest tags only to express a natural content hierarchy. NEVER infer
+  stronger authority from a tag name or nesting; ALWAYS state the rule itself.
+- For task-dependent guidance, ALWAYS state the condition in ordinary text:
+  "When editing tests, ...". This works inside a tag or under a Markdown
+  heading. An `if` attribute is a model-facing cue, not a documented loader.
+- ALWAYS keep one narrow trigger per task-specific block as a local convention.
+  NEVER combine unrelated triggers; ALWAYS split testing and API rules when
+  their conditions differ.
+- ALWAYS leave project identity, directory maps, the stack, and common commands
+  unconditional. ALWAYS keep global wisdom free of project task wrappers as a
+  local convention, not because global context has special XML semantics.
+- For glob-based conditional loading in Claude Code, ALWAYS use the documented
+  `.claude/rules/*.md` YAML `paths` mechanism. Matching file access loads those
+  rules; rules without `paths` load unconditionally. Nested `CLAUDE.md` files
+  also load on demand when Claude reads, writes, or edits files in their subtree.
+- ALWAYS distinguish loading from enforcement. Loaded instructions guide the
+  model; client settings or hooks enforce supported restrictions. NEVER present
+  XML as enforcement or context filtering; ALWAYS verify loading separately.
+  ALWAYS test claimed adherence or performance benefits on the target tasks.
+
+Sources: [Anthropic prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags)
+and [Academy XML lesson](https://academy.claude.com/courses/claude-with-amazon-bedrock/structure-with-xml-tags)
+support descriptive delimiters. [Claude Code memory](https://code.claude.com/docs/en/memory)
+documents Markdown organization, file loading, and enforcement limits.
