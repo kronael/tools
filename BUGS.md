@@ -5,9 +5,8 @@
 - **SWEEP-BUILTIN-WORKTREE-BYPASSES-POLICY** (LOW, docs) — CONFIRMED
   2026-10-09. `skills/sweep/SKILL.md:83,120` names the built-in
   `isolation: "worktree"` route. `skills/worktree/SKILL.md` bans that route
-  because it creates a local branch. The worktree skill also limits isolation
-  to separate PRs or explicit owner requests. **Fix:** make Sweep follow the
-  worktree skill's gate and detached checkout procedure. No test — docs.
+  because it creates a local branch. **Fix:** make Sweep follow the worktree
+  skill's detached checkout procedure. No test — docs.
 
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every

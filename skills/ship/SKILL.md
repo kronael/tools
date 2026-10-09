@@ -68,11 +68,11 @@ uses `continue`. Execution here stays within this change's accepted scope.
 
 Record the starting HEAD, worktree, owned paths and relevant baseline
 checks. Unrelated dirt or failures stay outside the change, and `bugs` owns
-their record. ALWAYS leave unrelated dirt untouched. ALWAYS follow
-`worktree` for checkout selection. ALWAYS commit this change's own uncommitted edits
-and untracked tests before implementation, or carry them into a permitted
-detached checkout. Record the checkout's identity and keep the pre-change HEAD
-as the review baseline.
+their record. With unrelated dirt, use `worktree` to select or create a
+clean detached controller checkout before implementation. ALWAYS commit
+this change's own uncommitted edits and untracked tests first, or carry
+them into that checkout, so only unrelated dirt stays behind. Record the
+checkout's identity and keep the pre-change HEAD as the review baseline.
 An edit-in-place restriction needs a decision. A failure that blocks
 acceptance becomes a decision if its repair exceeds the requested scope.
 For recovery, read `runtime.md`.

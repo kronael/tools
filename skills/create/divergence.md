@@ -18,7 +18,7 @@ skin-deep variation only. Force independence by:
 
 - **BANNING the shared assets.** Forbid reading the prior version's files,
   photos, renderer, recordings. Give each agent ONLY the locked upstream spec
-  (see levels) + the skills — nothing else.
+  (see levels) + the skills — nothing else. Isolate each in its own worktree.
 - **Seeding different inspiration** into each (below), so they start from
   different corners of the space.
 
@@ -65,10 +65,8 @@ it in.
 
 - NEVER ship one "best" version and call it exploration — that's polishing, not
   diverging.
-- NEVER let the 4 share mutable assets or outputs — ALWAYS keep each
-  candidate's files separate.
-- ALWAYS run candidate writers one at a time in the shared tree. Parallel
-  candidates require separate detached worktrees permitted by `worktree`.
+- NEVER let the 4 share mutable assets or a working tree — they'll collide and
+  converge. Worktree-isolate; asset-ban.
 - NEVER carry the artifact forward between levels when a text/graph extract
   would do — the extract is what keeps the next fan-out independent.
 - NEVER fan out the REFINE level — once a complete version is selected, polish
