@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.26] — 20261009
+
+> kronael v0.4.26 — Worktrees follow explicit choices
+>
+> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+>
+> • Default checkout — routine editing workers share one tree with one writer at a time.
+> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
+> • Shared resources — isolated workers still coordinate services, ports and caches.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Editing workers share a checkout by default. Separate PRs, owner requests and explicit skill opt-ins permit worktrees.
+- The one-writer rule includes the parent, workers and tools. Detached worktrees still share services, ports and caches.
+- Sweep's built-in worktree route conflicts with the detached checkout policy; `BUGS.md` records the limit.
+
 ## [v0.4.25] — 20261008
 
 > kronael v0.4.25 — Sol 6.1 workers and defaults
