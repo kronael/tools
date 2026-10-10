@@ -54,7 +54,7 @@
   CONFIRMED at HEAD 2026-10-09. `skills/commit/SKILL.md:75-82` § Orphaned
   worktrees removes an entry under `.claude/worktrees/` with `git worktree
   remove --force` once it is "superseded + lock pid dead" — a path
-  `skills/worktree/SKILL.md:12-13` says never to create, and a test refine
+  `skills/worktree/SKILL.md:13-14` says never to create, and a test refine
   step 11 (`skills/refine/SKILL.md:146-154`) rejects: a worktree goes only
   when its HEAD is on a remote-tracking ref and its status is clean, never
   by `--force` or a dead lock. Two removal rules drift. **Fix:** replace the
@@ -74,7 +74,7 @@
 - **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
   decision. `skills/refine/SKILL.md:146-154` removes every worktree after the
   first whose HEAD is on a remote-tracking ref and whose status is clean,
-  whoever made it; `skills/worktree/SKILL.md:55` says "NEVER remove another
+  whoever made it; `skills/worktree/SKILL.md:57` says "NEVER remove another
   task's worktree". A clean checkout at a pushed commit that another session
   is about to use goes under the first rule and is protected by the second.
   **Options:** (a) step 11 removes only worktrees this run created, listing
@@ -102,14 +102,16 @@
   and the detail goes to a `### Operator note`. **Default if nothing is
   decided:** (b). No test — docs.
 
-- **SWEEP-ISOLATION-WORKTREE-VS-WORKTREE-SKILL** (LOW, duplication) —
-  CONFIRMED at HEAD 2026-10-10. `skills/sweep/SKILL.md:82-83` says parallel
-  fixes are only safe "with isolated worktrees (Agent `isolation:
-  "worktree"`)"; `skills/worktree/SKILL.md:12` says "NEVER use
-  `isolation: "worktree"` — it creates a local branch". `sweep` also names
-  its read-only subs "Sonnet/Explore" at `:17` and `general-purpose` at `:25`.
-  **Fix:** point sweep at `worktree` § Creating a worktree by hand and name
+- **SWEEP-NAMES-TWO-READONLY-AGENT-TYPES** (LOW, duplication) — CONFIRMED
+  at HEAD 2026-10-10. `skills/sweep/SKILL.md:17` names its read-only subs
+  "Sonnet/Explore"; `:25` launches a `general-purpose` agent. **Fix:** name
   one agent type. No test — duplication.
+
+- **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
+  2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
+  (`.mjs`); `skills/browse/SKILL.md:96` has the agent write `tmp/debug.mjs`
+  and run it with `node`. **Fix:** a `tmp/debug.ts` run by `bun`, or scope the
+  ts rule to committed tooling. No test — duplication.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
