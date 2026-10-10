@@ -39,7 +39,7 @@ An explicitly requested voice wins over both.
   kernel") and let the reader draw the consequence.
 - NEVER a superlative or marketing word — the number and the consequence
   carry the impact, and an adjective marks the claim that is missing. The
-  word list is `humanize` § 4 and § 7.
+  word list is `humanize` → `patterns.md` § 4 and § 7.
 
 ## Hook
 

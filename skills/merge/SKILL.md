@@ -124,10 +124,7 @@ Detect the operation FIRST; it decides the finish command AND which side is "our
 
 ## 2. Find all conflicts
 
-```bash
-grep -rln "<<<<<<< HEAD" <project_dirs>/
-grep -n "<<<<<<\|=======\|>>>>>>>" <file>   # per-file
-```
+`git diff --name-only --diff-filter=U`, then `grep -n '^<<<<<<<\|^=======\|^>>>>>>>' <file>` per file.
 
 ## 3. Classify each conflict
 
@@ -191,7 +188,7 @@ Escape hatches (per replayed patch):
 - `git rebase --abort` / `cherry-pick --abort` / `git merge --abort` to bail
   entirely to the pre-op state. NEVER leave a half-finished rebase.
 
-If pre-commit reformats (merge only), retry once. NEVER `--amend` / `--no-verify`.
+If pre-commit reformats (merge only), retry once.
 
 ## Priority rule (when user says "prioritize HEAD / feature branch")
 

@@ -197,11 +197,4 @@ gh pr comment <PR> --body "🤖 @<reviewer> <verb + object>. Please re-review."
 - NEVER expect to append to a pending review — `POST /pulls/<PR>/reviews/<review_id>/comments`
   returns 404. ALWAYS `DELETE /pulls/<PR>/reviews/<review_id>` and re-POST the whole
   `comments[]`, then report the new review id and comment count
-- ALWAYS resolve a fixed thread with NO reply, only once the user's push has
-  landed; NEVER resolve one this pass did not address
-- ALWAYS reply to a won't-fix, deferred or refuted thread before resolving it —
-  it has no commit to point at
-- ALWAYS post ONE re-review request once the push has landed — a general
-  comment @-mentioning the reviewer, the round's most important fix as verb +
-  object in ≤4 words; NEVER a per-thread "fixed" reply
 - NEVER confuse a thread's GraphQL `id` (resolve) with a comment's REST `databaseId` (reply) — mixing them 404s
