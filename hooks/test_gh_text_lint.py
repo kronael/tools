@@ -10,17 +10,13 @@ from gh_text_lint import lint
 
 ROBOT = '\U0001f916'
 FOOTER = f'{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)'
-BULLET = '- One path: the role renders the unit; the playbook and deploy script go.'
-CLOSERS = (
-    'Contract to confirm: `collector.service` becomes `news-collector.service`.\n\n'
-    'Known, deferred: the unit is not restarted on a config change.\n\n'
-    '⚠️ Merge #1 first.'
-)
+CLOSE = 'Closes #12'
 GOOD_PR = (
-    '**TL;DR:** Deploys the collector on hel1v1 through the `service:` list.\n\n'
-    f'{BULLET}\n\n'
+    '**TL;DR:** Deploys the collector on hel1v1 through the `service:` list, so the playbook goes.\n\n'
+    f'{CLOSE}\n\n'
     f'{ROBOT}\n'
 )
+PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
 GOOD_ISSUE = f'`gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n\n{ROBOT}\n'
 GOOD_COMMENT = f'{ROBOT} \U0001f534 Charges `sold_lamports`, the retained piece.\nFix: use the sale leg here.\n'
 
@@ -36,37 +32,38 @@ LINT_CASES = [
     ),
     (Kind.PR, GOOD_PR.replace(ROBOT + '\n', 'Co-Authored-By: X <x@y>\n'), 'banned attribution'),
     (Kind.PR, GOOD_PR.replace(ROBOT + '\n', 'Done.\n'), f'last line must be a bare {ROBOT}'),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{ROBOT} {BULLET}'), 'belongs on the last line'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'{ROBOT} {CLOSE}'), 'belongs on the last line'),
     (Kind.PR, GOOD_PR.replace('**TL;DR:**', '## Summary\n\n'), 'open with **TL;DR:**'),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'## Ansible\n\n{BULLET}'), 'header'),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'---\n\n{BULLET}'), 'horizontal rule'),
-    (Kind.PR, GOOD_PR.replace(BULLET, '| a | b |\n|---|---|\n'), 'table'),
-    (Kind.PR, GOOD_PR.replace(BULLET, '- [ ] run the tests\n'), 'checkbox'),
-    (Kind.PR, GOOD_PR.replace(BULLET, 'The role renders the unit.'), 'paragraph after the lead'),
-    (Kind.PR, GOOD_PR.replace(BULLET, '1. Stop the service.'), 'paragraph after the lead'),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n  The unit file goes too.'), None),
-    (Kind.PR, GOOD_PR.replace('the `service:` list.', 'the\n`service:` list.'), None),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\n{CLOSERS}'), None),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\nCloses #12.'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'## Ansible\n\n{CLOSE}'), 'header'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), 'horizontal rule'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '| a | b |\n|---|---|\n'), 'table'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- [ ] run the tests\n'), 'checkbox'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, 'The role renders the unit.'), 'text after the lead'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '1. Stop the service.'), 'text after the lead'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- One path: the role renders the unit.'), 'bullet'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '* One path: the role renders the unit.'), 'bullet'),
     (
         Kind.PR,
-        GOOD_PR.replace(BULLET, f'{BULLET}\n\n**Known, deferred**: the lease is untested.'),
-        None,
+        GOOD_PR.replace(CLOSE, 'Known, deferred: the unit is not restarted.'),
+        'text after the lead',
     ),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\n![order panel](https://x.test/a.png)'), None),
     (
         Kind.PR,
-        GOOD_PR.replace(BULLET, f'{BULLET}\n\nKnown, deferred: a.\n\nKnown, deferred: b.'),
-        'second `Known, deferred` line',
+        GOOD_PR.replace(CLOSE, 'Contract to confirm: the unit is renamed.'),
+        'text after the lead',
     ),
-    (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 48), '241 chars in one line, max 240'),
-    (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 47), None),
-    (Kind.PR, GOOD_PR.replace(BULLET, '\n'.join(f'- Choice {k}: reason.' for k in range(5))), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '⚠️ Merge #1 first.'), 'text after the lead'),
     (
         Kind.PR,
-        GOOD_PR.replace(BULLET, '\n'.join(f'- Choice {k}: reason.' for k in range(6))),
-        '6 bullets, max 5',
+        GOOD_PR.replace(CLOSE, '![order panel](https://x.test/a.png)'),
+        'text after the lead',
     ),
+    (Kind.PR, GOOD_PR.replace(CLOSE, ''), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, 'Fixes #12\n\nCloses #13'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, 'Closes #12.'), None),
+    (Kind.PR, GOOD_PR.replace('the `service:` list', 'the\n`service:` list'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '```\nmake test\n```\n\n' + CLOSE), 'code block'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '~~~\nmake test\n~~~\n\n' + CLOSE), 'code block'),
     (Kind.PR, GOOD_PR.replace('Deploys', 'This PR deploys'), '"this PR"'),
     (Kind.PR, GOOD_PR.replace('Deploys', 'Robust deploys'), 'marketing word "Robust"'),
     (Kind.PR, GOOD_PR.replace('Deploys', 'Robustly deploys'), None),
@@ -78,26 +75,8 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace('hel1v1', 'commit deadbeef...cafe'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('hel1v1', 'vault 7xKXtg...gAsU'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('hel1v1', '0x12ab…'), 'write it in full'),
-    (
-        Kind.PR,
-        GOOD_PR.replace(BULLET, '```\n' + 'x\n' * 7 + f'```\n\n{BULLET}'),
-        'code blocks total 7 lines, max 6',
-    ),
-    (Kind.PR, GOOD_PR.replace(BULLET, '```\n' + 'x\n' * 6 + f'```\n\n{BULLET}'), None),
-    (
-        Kind.PR,
-        GOOD_PR.replace(
-            BULLET, '```\n' + 'x\n' * 4 + '```\n\n```\n' + 'x\n' * 4 + f'```\n\n{BULLET}'
-        ),
-        'code blocks total 8 lines, max 6',
-    ),
-    (Kind.PR, '**TL;DR:** x\n\n```\n' + 'y\n' * 7 + ROBOT, 'code blocks total 8 lines'),
-    (
-        Kind.PR,
-        GOOD_PR.replace(BULLET, f'```\n412 passed, 1 skipped\n```\n\n{BULLET}'),
-        'test or lint output in a code block',
-    ),
-    (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 200), 'chars, cap 1000'),
+    (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
+    (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', '- [x] 3.11\n- [ ] 3.12\n\nRepro:'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', f'The bot wrote "{ROBOT} nit: x".\n\nRepro:'), None),

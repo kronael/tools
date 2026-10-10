@@ -41,10 +41,7 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 1000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
-MAX_BULLETS = 5
-MAX_ELEMENT = 240
-MAX_FENCE_LINES = 6
+MAX_CHARS = {Kind.PR: 400, Kind.ISSUE: 3000, Kind.COMMENT: 240}
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
@@ -67,12 +64,7 @@ RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
 BULLET = re.compile(r'^\s*[-*+]\s')
-NAMED_CLOSER = re.compile(r'^\*{0,2}(Contract to confirm|Known,? deferred|⚠)', re.IGNORECASE)
-CLOSER = re.compile(
-    r'^\*{0,2}(?:Contract to confirm|Known,? deferred)\*{0,2}:|^⚠'
-    r'|^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+|^!\['
-)
-LOG_LINE = re.compile(r'\b(?:passed|failed)\b', re.IGNORECASE)
+CLOSER = re.compile(r'^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
 
 PREFIX = (
@@ -116,10 +108,6 @@ def split_prose(lines: list[str]) -> list[tuple[int, str]]:
     return [(n, line) for n, line, fenced in walk(lines) if not fenced]
 
 
-def fenced_lines(lines: list[str]) -> list[tuple[int, str]]:
-    return [(n, line) for n, line, fenced in walk(lines) if fenced]
-
-
 def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
     out = []
     fenced = False
@@ -133,8 +121,8 @@ def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
 
 @dataclass(frozen=True)
 class Element:
-    """One unit of a PR body: the lead, a bullet, a closer, the robot or a
-    stray paragraph, with its continuation lines joined."""
+    """One unit of a PR body: the lead, a closer, the robot, or a stray bullet
+    or paragraph, with its continuation lines joined."""
 
     line: int
     kind: str
@@ -163,22 +151,6 @@ def split_elements(prose: list[tuple[int, str]]) -> list[Element]:
         else:
             out.append(Element(n, 'paragraph', text))
         after_blank = False
-    return out
-
-
-def find_fences(lines: list[str]) -> list[tuple[int, int]]:
-    out = []
-    start = 0
-    for n, line in enumerate(lines, 1):
-        if not FENCE.match(line):
-            continue
-        if start:
-            out.append((start, n - start - 1))
-            start = 0
-        else:
-            start = n
-    if start:
-        out.append((start, len(lines) - start))
     return out
 
 
@@ -220,66 +192,36 @@ def lint_pr(lines: list[str]) -> list[Problem]:
     prose = []
     for n, line in split_prose(lines):
         if HEADER.match(line):
-            problems.append(Problem(n, 'header: a decision is a `- ` bullet, not a section'))
+            problems.append(Problem(n, 'header: the body is the TL;DR, no sections'))
         elif RULE.match(line):
             problems.append(Problem(n, 'horizontal rule'))
         elif TABLE.match(line):
-            problems.append(Problem(n, 'table: fold it into a bullet or link a doc'))
+            problems.append(Problem(n, 'table: cut it or fold it into the TL;DR'))
         else:
             prose.append((n, line))
-    problems += lint_elements(split_elements(prose))
-    fences = find_fences(lines)
-    total = sum(k for _, k in fences)
-    if total > MAX_FENCE_LINES:
+    fence = next((n for n, line in enumerate(lines, 1) if FENCE.match(line)), 0)
+    if fence:
         problems.append(
-            Problem(
-                fences[0][0],
-                f'code blocks total {total} lines, max {MAX_FENCE_LINES}: point at the file instead',
-            )
+            Problem(fence, 'code block: the diff shows code, the TL;DR says what it does')
         )
-    problems += [
-        Problem(n, 'test or lint output in a code block: cut it, CI shows it')
-        for n, line in fenced_lines(lines)
-        if LOG_LINE.search(line)
-    ]
-    return problems
+    return problems + lint_elements(split_elements(prose))
 
 
 def lint_elements(elements: list[Element]) -> list[Problem]:
     problems = []
-    bullets = [e for e in elements if e.kind == 'bullet']
-    if len(bullets) > MAX_BULLETS:
-        problems.append(
-            Problem(
-                bullets[MAX_BULLETS].line,
-                f'{len(bullets)} bullets, max {MAX_BULLETS}: one per decision a reader'
-                ' would not guess',
-            )
-        )
-    seen = set()
     for e in elements:
-        if e.kind == 'paragraph':
+        if e.kind == 'bullet':
+            problems.append(
+                Problem(e.line, 'bullet: the body is the TL;DR; fold the reason into it or cut it')
+            )
+        elif e.kind == 'paragraph':
             problems.append(
                 Problem(
                     e.line,
-                    'paragraph after the lead: a decision is a `- ` bullet; the rest is'
-                    ' `Contract to confirm:`, `Known, deferred:`, `⚠️` or cut',
+                    'text after the lead: one paragraph only, then `Closes #N` lines;'
+                    ' fold what matters into the TL;DR',
                 )
             )
-        if len(e.text) > MAX_ELEMENT:
-            problems.append(
-                Problem(
-                    e.line,
-                    f'{len(e.text)} chars in one line, max {MAX_ELEMENT}: one sentence or one'
-                    ' decision per line',
-                )
-            )
-        named = NAMED_CLOSER.match(e.text)
-        if named:
-            name = named.group(1).lower()
-            if name in seen:
-                problems.append(Problem(e.line, f'second `{named.group(1)}` line: one per closer'))
-            seen.add(name)
     return problems
 
 

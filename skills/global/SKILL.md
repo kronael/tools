@@ -137,7 +137,9 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   (drafted or posted), review comment, thread reply, issue, release notes —
   before showing it for approval. DISTILL: cut to the shortest text that still
   carries the claim and its reasoning, in the posting skill's shape and under
-  its cap; results, history and what the diff shows are cut first.
+  its cap; what the title, the diff or the commits show, results and history
+  are cut first. A PR body is its `**TL;DR:**` lead, any `Closes #N` and the
+  `🤖`, nothing else.
   REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
   and no other attribution, no marketing language, no history framing, addresses
   and signatures in full, the repo's title convention, every claim verified or

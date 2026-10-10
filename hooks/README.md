@@ -60,10 +60,9 @@ shell variable, a missing or undecodable file), stdin, unparsable JSON and a
 required body that is absent (`--fill`, `--web`) are refused too, and an
 exception inside the lint refuses rather than allows. The lint is WISDOM § Git
 made checkable: a bare `🤖` as the last line and none of the harness footer,
-the `**TL;DR:**` lead with no paragraph after it, at most 5 bullets, one line
-per closer, 240 chars per line, and no header, table, rule, checkbox, more
-than 6 lines of code blocks or test output in one in a PR body, the `🤖 `
-prefix and 240-char cap on a comment, the size caps (1,000 chars for a PR,
+the `**TL;DR:**` lead with nothing after it but `Closes #N` lines, and no
+bullet, header, table, rule, checkbox or code block in a PR body, the `🤖 `
+prefix and 240-char cap on a comment, the size caps (400 chars for a PR,
 3,000 for an issue), marketing words, shortened hashes. By hand: `python3
 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with `--draft` and
 `--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run it as their
