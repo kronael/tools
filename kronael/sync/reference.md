@@ -611,7 +611,9 @@ Run `which <tool>` first; skip if present and recent.
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
 | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
-| `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
+| `ast-grep` | `uv tool install --upgrade ast-grep-cli && rm -f ~/.local/bin/sg` — `--upgrade` because `ast-grep outline` needs a recent release (0.50 has it) | /astgrep |
+| `ruff` | `uv tool install ruff` | /py |
+| `serena` | `uv tool install -p 3.13 serena-agent && serena init`, then the config and registration below | /go /py /ts /rs |
 
 `pi` ships a `#!/usr/bin/env node` shebang but its TUI uses the `v` regex flag,
 which needs Node 20+. On an older system node every invocation dies with
@@ -626,6 +628,38 @@ set -euo pipefail
 exec "$HOME/.bun/bin/bun" "$HOME/.bun/install/global/node_modules/@mariozechner/pi-coding-agent/dist/cli.js" "$@"
 SH
 chmod +x ~/.local/bin/pi
+```
+
+**Serena** — an MCP server over the installed language servers that also
+edits: rename, symbol-body replace, safe delete (`software` skill, `lsp.md`,
+owns when to use it). After `serena init`, set three keys in
+`~/.serena/serena_config.yml`:
+
+- `project_serena_folder_location: "<home>/.serena/projects/$projectFolderName"`,
+  `<home>` written out as an absolute path. The default `$projectDir/.serena`
+  writes Serena's cache and `project.yml` into every repo it opens — agent
+  files NEVER live in a repo. Only `$projectDir` and `$projectFolderName`
+  expand, so two checkouts with one folder name share one project folder.
+- `web_dashboard_open_on_launch: false` — else every server start opens a
+  browser tab.
+- `excluded_tools: [onboarding, list_memories, read_memory, write_memory, edit_memory, rename_memory, delete_memory]`
+  — memory lives in Claude Code auto-memory and the diary; NEVER a second store.
+
+Register it at user scope for Claude Code, and as a stanza in
+`~/.codex/config.toml` for Codex. `--project-from-cwd` activates the nearest
+ancestor holding `.git` (or `.serena/project.yml`).
+
+```sh
+claude mcp add --scope user serena -- serena start-mcp-server --context claude-code --project-from-cwd
+claude mcp list    # must print: serena: ... - ✔ Connected
+codex mcp list     # must list serena as enabled
+```
+
+```toml
+[mcp_servers.serena]
+startup_timeout_sec = 15
+command = "serena"
+args = ["start-mcp-server", "--project-from-cwd", "--context=codex"]
 ```
 
 **Security audit** — ask separately (large, optional):
