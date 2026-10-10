@@ -1,7 +1,7 @@
 ---
 name: gh-comment
-description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
-when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status"
+description: Post inline review comments to a GitHub PR, reply to and resolve review threads. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
+when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status, pending review conflict, batch inline comments, comment on a line outside the diff, re-review request"
 user-invocable: false
 ---
 

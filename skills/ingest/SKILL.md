@@ -1,7 +1,7 @@
 ---
 name: ingest
-description: Ingest a local file or a URL — PDF, Office, HTML, EPub, images, audio, ZIP to Markdown via `uvx markitdown`; YouTube and most sites to transcript, audio, video or subtitles via `yt-dlp`/`ffmpeg`. NOT for authoring new prose (use writing), syncing project docs (use readme) or writing video scripts (use create).
-when_to_use: "convert to markdown, pdf to markdown, docx/pptx/xlsx to markdown, office to markdown, html to markdown, extract text from a pdf, read a pdf/docx/spreadsheet, OCR an image, transcribe audio, epub to markdown, markitdown, download a youtube video, download/rip audio from a video, mp3/opus from youtube, get the transcript of a video, youtube transcript, extract subtitles, list video formats, download a playlist, save a podcast episode, yt-dlp"
+description: Ingest a local file or a URL — documents to Markdown via `uvx markitdown`, media to transcript, audio or video via `yt-dlp`. NOT for authoring prose (use writing), syncing project docs (use readme) or writing video scripts (use create).
+when_to_use: "convert to markdown, pdf to markdown, zip archive to markdown, image to markdown, docx/pptx/xlsx to markdown, office to markdown, html to markdown, extract text from a pdf, read a pdf/docx/spreadsheet, OCR an image, transcribe audio, epub to markdown, markitdown, download a youtube video, download/rip audio from a video, mp3/opus from youtube, get the transcript of a video, youtube transcript, extract subtitles, list video formats, download a playlist, save a podcast episode, yt-dlp"
 user-invocable: false
 ---
 

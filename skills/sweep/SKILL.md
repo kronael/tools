@@ -1,6 +1,6 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase, then optionally fix it. Record-only by default (the `bugs` skill's Bug Triage Protocol) — filing each real instance in BUGS.md; the Fix and Verify phases run only when the owner asks for them. NOT for a single known bug (use /bugs), NOT for a targeted one-file change (use /improve), NOT for foreground/inline audits (use /dispatch directly).
+description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs), a one-file change (use /improve) or an inline audit (use /dispatch).
 when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
 user-invocable: true
 ---

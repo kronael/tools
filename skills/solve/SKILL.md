@@ -1,6 +1,6 @@
 ---
 name: solve
-description: Universal entry point — invoke BEFORE any domain skill. Classifies the request, recalls context, then picks the best-matching skill from every skill's frontmatter instead of the first fit. NOT for first-time skill authoring (use wisdom).
+description: Universal entry point — invoke BEFORE any domain skill to pick the best-matching skill from every skill's frontmatter. NOT for skill authoring (use wisdom).
 when_to_use: "which skill, what should I use, start of task, before acting, route this request, new task, first message, no skill matched"
 user-invocable: true
 ---

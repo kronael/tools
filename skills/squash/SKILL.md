@@ -1,6 +1,6 @@
 ---
 name: squash
-description: Reorganize the UNPUSHED commits on a detached tip into a clean, logical, PR-review-friendly history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
+description: Reorganize the UNPUSHED commits on a detached tip into a reviewable history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
 when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, collapse churn, rebase -i alternative"
 user-invocable: true
 ---
