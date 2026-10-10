@@ -2,6 +2,13 @@
 
 ## Bundle
 
+- **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
+  2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
+  `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
+  (Arch here) has no `hostname` binary: `command not found`, so the target
+  name comes out empty. `uname -n` prints the same short name everywhere.
+  **Fix:** use `uname -n` in step 2 and the template; no test — skill text.
+
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every
   transcript under `~/.claude/projects/` and lets a `PermissionError` escape:
@@ -381,21 +388,6 @@
   repair only the paths the caller named and report, never write, an owner
   reached through a sibling. Changes the `--write` contract — needs sign-off;
   no test — design.
-
-- **SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS** (LOW, design) — proposed.
-  Pre-commit hands the scan every staged `.md` (`files: \.md$`), so it reaches
-  the 21 tracked `.diary/*.md`, while `make skills-frontmatter` and CI walk the
-  tree through `visible_files()`, which skips hidden directories. The two
-  scopes disagree on a real file: `.diary/20261007.md` quotes an illustrative
-  home path with a two-segment account name at `:19` and `:99`, so `python3
-  hooks/skill_frontmatter_lint.py .diary/20261007.md` exits 2 with two
-  `skill-local-path` findings while the tree target passes; `/.diary/` is
-  gitignored, so pre-commit meets the file only when it is force-added, and a
-  tracked diary that quotes such a path blocks its commit while the tree
-  target and CI stay green.
-  **Proposal:** one scope for both — the script drops hidden paths it is
-  handed, or the pre-commit pattern excludes them. Changes the scan's input
-  contract — needs sign-off; no test — design.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes
