@@ -599,8 +599,10 @@
 
 - **SHIP-CLI-TRACE-LOG-IN-TREE** (LOW, ship) — RECORDED 2026-10-10. The
   `ship` CLI (kronael/ship) writes its trace log under the working
-  directory's `.ship/`, a path its code hard-codes apart from `DATA_DIR`
-  (per `specs/06-ship-record.md`; the CLI source is not on this host). With
+  directory's `.ship/`: `ship/claude_code.py:333` hard-codes
+  `.ship/log/trace.jl` apart from `DATA_DIR` and `LOG_DIR`
+  (f6b4859614e8cc33af347ec687994f17e28a96d7; `ship.log` and the lock follow
+  `DATA_DIR`, `config.py:165-166`). With
   `DATA_DIR` moved out of the tree (`skills/ship/cli.md`), that log is the
   one `.ship/` a repository still acquires. **Fix:** in kronael/ship, write
   the trace log under `DATA_DIR`; then drop `/.ship/` from this repository's
