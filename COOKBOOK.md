@@ -8,7 +8,8 @@ default — drop the clutter, make git do what you want.
 Local branches are the wrong default. They drift, accumulate, need
 tracking config, and pile up as stale refs. Detached HEAD is the
 honest state: you have a commit, the remote has a branch, push when
-ready. Reflog keeps everything for 90 days — no work is ever lost.
+ready. Reflog keeps everything for 30 days
+(`gc.reflogExpireUnreachable`) — no work is ever lost.
 
 Mental model: **you commit to a SHA, not a branch**. The branch is
 just a label that lives upstream.
@@ -78,8 +79,8 @@ Use `gco refs/heads/main` to detach at that local branch explicitly.
 
 ## Recover work after "I lost my commit"
 
-You didn't lose it. Detached HEAD commits stay in the reflog for 90
-days.
+You didn't lose it. Detached HEAD commits stay in the reflog for 30
+days (`gc.reflogExpireUnreachable`).
 
 ```bash
 git reflog            # find the SHA

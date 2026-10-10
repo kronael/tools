@@ -38,7 +38,7 @@ rir main            # fetch + rebase -i on origin/main
 rip feature         # push rebased HEAD to origin/feature
 ```
 
-Detached HEAD is safe: reflog keeps all commits for 90 days. If you
+Detached HEAD is safe: reflog keeps all commits for 30 days. If you
 lose track, `git reflog` finds everything. No local branches to
 maintain, no tracking to configure, no stale branches to clean up.
 

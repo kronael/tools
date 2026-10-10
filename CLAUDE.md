@@ -30,11 +30,14 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # every project in PROJECTS, then tests/drift_test.sh
+make test          # PROJECTS, tests/drift_test.sh, skills/recall-memories/test_recall.py
 make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
 make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
+make lints         # prove co-located ast-grep lint rules against fixtures
+make spec-lint     # lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)
+make skills-frontmatter-fix  # auto-fix loose SKILL.md YAML
 ```
 
 - **Hooks** (`hooks/`): `make -C hooks test` runs pytest over the explicit
@@ -51,24 +54,12 @@ make clean         # clean projects + sweep __pycache__
 
 ## Architecture: sync paths, one source
 
-`skills/`, `agents/`, `hooks/`, `output-styles/`, `commands/` at repo root
-**are** the bundle. The Claude plugin path (`/kronael:sync`, from a CWD clone
-that holds the assets, else `${CLAUDE_PLUGIN_ROOT}`) and the manual path
-(user opens Claude Code at the cloned root and says "sync") both put them
-into `~/.claude/`.
-
-Codex has a third, thin bridge path:
-`plugins/kronael/skills/kronael-sync/SKILL.md` reads the canonical sync and
-runs the manual path. NEVER duplicate the bundle under Codex-specific
-directories.
-
-`kronael/sync/SKILL.md` is the **single source of truth** for the procedure
-(the only plugin-exposed skill); its scripts, keep-list format and tool
-commands live in the sibling `kronael/sync/reference.md`. When you change
-sync behavior, change those files and keep `AGENTS.md` plus the Codex sync
-skill in step.
-Why the sync step exists at all:
-`ARCHITECTURE.md#why-hybrid-plugin--sync-step`.
+The sync paths (Claude plugin, manual, Codex bridge) and why a sync step
+exists: `ARCHITECTURE.md` § Sync paths, one source and § Why hybrid.
+`kronael/sync/SKILL.md` is the **single source of truth** for the procedure;
+its scripts live in `kronael/sync/reference.md`; when you change sync
+behavior, change those files and keep `AGENTS.md` plus the Codex sync skill
+in step. NEVER duplicate the bundle under Codex-specific directories.
 
 Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
 
@@ -114,8 +105,10 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   `skills/CLAUDE.md`. Only port skills that work **locally** — no paid APIs,
   no cloud accounts, no required external apps (local CLI/lib deps like
   ffmpeg, manim, pyfiglet are fine).
-- **Files under 200 lines** — overflow moves to linked sibling files loaded on
-  demand (router pattern), never a longer SKILL.md. Skill/CLAUDE content uses
+- **Under 200 lines**: `SKILL.md` bodies (`make skills-frontmatter` warns
+  past it), `CLAUDE.md` files and root docs. Overflow moves to linked sibling
+  files loaded on demand (router pattern), never a longer SKILL.md; a cold
+  sibling data file has no cap (`skills/CLAUDE.md` § Editing a router). Skill/CLAUDE content uses
   **ALWAYS/NEVER** statements and targets non-obvious patterns LLMs miss — not
   generic advice.
 - **NEVER put local paths, org-specific refs, or secrets in source.** Those
@@ -187,7 +180,4 @@ the wiring being right and the tool running are different claims.
 
 ## Docs map
 
-The full map is `README.md#documentation`. Most-used here:
-`kronael/sync/SKILL.md` (canonical sync), `ARCHITECTURE.md` (design
-rationale), `COOKBOOK.md` (git recipes), `skills/README.md` +
-`hooks/README.md` (bundle rationale by family).
+`README.md` § Documentation.

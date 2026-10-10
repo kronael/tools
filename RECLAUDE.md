@@ -11,7 +11,7 @@
 
 ## Scope
 - NEVER improve beyond what's asked
-- NEVER fix bugs found during a general check unless explicitly asked — log to `bugs.md`
+- NEVER fix bugs found during a general check unless explicitly asked — log to `BUGS.md`
 
 ## Writing
 - NEVER marketing prose, NEVER "this helps you…", NEVER past-state apologies

@@ -54,6 +54,10 @@ Built on (paths under skills/):
     © 2025 Jesse Vincent (MIT)
     https://github.com/obra/superpowers
 
+  ingest — adapted from steipete/agent-scripts
+    © 2026 Peter Steinberger (MIT)
+    https://github.com/steipete/agent-scripts
+
 Built on (other paths):
   output-styles/caveman.md — multi-turn / low-cognitive-load output
     patterns adapted from i-have-adhd © 2026 Ayoub Ghriss (@ayghri) (MIT)
