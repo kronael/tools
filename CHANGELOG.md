@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.4.30] — 20261010
+
+> kronael v0.4.30 — Diary out of repos, one owner per rule
+>
+> The diary moves to ~/.claude like ship records, and a full refine pass cuts repeated rules from the bundle.
+>
+> • diary — entries go to ~/.claude/projects/<slug>/diary/; no repo carries a .diary/ dir.
+> • Stop hook — checks the new diary path, keyed on the main tree's resolved path.
+> • recall — reads the home diary first, then a repo's older .diary/ when one exists.
+> • sync — the settings merge keeps your cleanupPeriodDays and your other hook events.
+> • Docs — each rule lives in one file, and the other files point at it.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `diary`: entries go to `~/.claude/projects/<slug>/diary/`, keyed on the resolved main tree.
+- No repo carries a `.diary/` dir or an ignore line for one; this repo's tracked diary is removed.
+- Stop hook: checks the new path; it stays silent outside git.
+- `recall-memories`: reads the home diary first, then a repo's `.diary/`, read-only.
+- `ship`: the record slug uses the resolved path; outside git, `pwd -P`.
+- Sync: the settings merge keeps `cleanupPeriodDays` and other hook events.
+- Codex plugin manifest declares the Unlicense.
+- Bundle docs: one owner file per rule; refine and topology overflow moved to sibling files.
+
 ## [v0.4.29] — 20261010
 
 > kronael v0.4.29 — Records out of repos, Bun tooling
