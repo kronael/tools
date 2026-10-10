@@ -222,50 +222,23 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    `git diff --stat` and re-stamp. A failed `git status` inside a repo
    appends its stderr instead, unthrottled — an unreadable tree is reported,
    never read as clean.
-4. Resolve the diary tree (`diary_trees`, below) and check for today's
-   `YYYYMMDD.md` (UTC) under its `.diary/`. Missing or >1h stale → append a
-   diary nudge on every Stop; no stamp throttles it. The directory need not
-   exist; a repo without one is nudged to start it.
+4. Resolve the diary file (`main_tree`, `diary_file`, below) and check for
+   today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
+   on every Stop; no stamp throttles it. The directory need not exist; a
+   repo without one is nudged to start it.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
 `<git-dir>/claude-commit-nudge` (commit nudge throttle).
 
-**Diary tree:** an ignored diary is never committed, so its one copy lives
-in the main worktree; any other is committed per branch and read in the
-current worktree. The check tests the dated file: a `.diary/` ignore rule
-matches the bare `.diary` only once the directory exists.
-
-```
-git_dir = rev-parse --absolute-git-dir
-common  = rev-parse --path-format=absolute --git-common-dir
-current = rev-parse --show-toplevel
-     │
-     v
-same realpath(git_dir, common)? ──yes──> main = current
-     │                               (plain repo, submodule,
-     │ no: linked worktree            --separate-git-dir repo)
-     v
-core.worktree in <common>/config? ──yes──> main = <common>/<value>
-     │                                     (worktree of a submodule)
-     │ no
-     v
-main = dirname(<common>)                   (worktree of a plain repo)
-
-check-ignore -q .diary/YYYYMMDD.md, run in current
-     │
-     ├── ignored ─────> <main>/.diary/YYYYMMDD.md
-     └── not ignored ──> <current>/.diary/YYYYMMDD.md
-```
-
-`dirname(<common>)` cannot be the general rule: a submodule's or a
-`--separate-git-dir` repo's common dir is a git dir stored elsewhere, so its
-parent is not their checkout. Git records no main tree for a
-linked worktree of a `--separate-git-dir` repo; there the last branch yields
-the git dir's parent, and an ignored diary is looked for beside the git dir.
-`../skills/diary/SKILL.md` § Where to write resolves `<main>` the same way;
-change both together.
+**Diary file:** `~/.claude/projects/<slug>/diary/YYYYMMDD.md`, never inside
+the repo. `<slug>` is the first entry of `git worktree list --porcelain`
+(the main tree) with every non-alphanumeric character replaced by `-`, so
+every worktree of a repo reads the same file. Git lists the git dir, not the
+checkout, for a submodule or a `--separate-git-dir` repo; the slug follows
+that path, and `../skills/diary/SKILL.md` § Where it lives names the same
+tree. Change both together. Outside a repo the hook checks nothing.
 
 ### memory_nudge.py (PreCompact + Stop)
 

@@ -133,13 +133,11 @@ Stop until today's entry exists and is under an hour old. When called from
 periodic `PostToolUse`, the same checks emit advisory
 `hookSpecificOutput.additionalContext` and never block a tool call.
 
-Today's entry is `.diary/YYYYMMDD.md` (UTC date). A worktree is one checkout
-of a repo; `git worktree add` makes linked ones beside the main checkout. An
-entry git ignores is read from the main worktree, its single uncommitted
-copy; any other from the current worktree, since a tracked diary is
-committed per branch. A plain repo, a submodule and a `--separate-git-dir`
-repo are their own main worktree (linked worktrees: ARCHITECTURE.md), and
-`../skills/diary/SKILL.md` § Where to write uses the same rule.
+Today's entry is `~/.claude/projects/<slug>/diary/YYYYMMDD.md` (UTC date),
+keyed on the repo's main worktree — the first entry of `git worktree list`,
+so every linked worktree reads the same file (rule: `../skills/diary/SKILL.md`
+§ Where it lives; detail: ARCHITECTURE.md). A diary inside the repo does not
+count.
 
 A `git status` that fails inside a repo blocks with its stderr — the tree is
 reported as unreadable rather than assumed clean.

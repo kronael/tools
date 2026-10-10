@@ -83,12 +83,11 @@ echo '{"prompt": "refine this"}' \
 ### stop.py
 
 ```bash
-# Clean tree, no diary dir → silent
+# Not a git repo → silent
 echo '{"cwd": "/tmp"}' | python3 ~/.claude/hooks/stop.py
 
-# Git repo with diary dir and no entry for today → warning, no file write
+# Git repo and no entry for today under ~/.claude/projects/<slug>/diary/ → warning, no file write
 d=$(mktemp -d)
-mkdir -p "$d/.diary"
 git -C "$d" init -q
 echo "{\"cwd\": \"$d\"}" | python3 ~/.claude/hooks/stop.py
 ```

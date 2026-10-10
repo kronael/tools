@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import UTC
@@ -7,7 +8,9 @@ from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
 
+import pytest
 from stop import emit
+from stop import project_slug
 
 HOOK = Path(__file__).with_name('stop.py')
 ENV = {
@@ -24,6 +27,45 @@ ENV.update(
 )
 
 
+@pytest.fixture(autouse=True)
+def home(tmp_path_factory, monkeypatch) -> Path:
+    """HOME for the hook and for the tests, so ~/.claude never reaches the real one."""
+    path = tmp_path_factory.mktemp('home')
+    monkeypatch.setitem(ENV, 'HOME', str(path))
+    return path
+
+
+def diary_path(home, tree):
+    """~/.claude/projects/<slug of the main tree>/diary/YYYYMMDD.md."""
+    slug = re.sub(r'[^A-Za-z0-9]', '-', str(Path(tree).resolve()))
+    day = datetime.now(tz=UTC).strftime('%Y%m%d')
+    return home / '.claude' / 'projects' / slug / 'diary' / f'{day}.md'
+
+
+def write_today_diary(home, tree):
+    path = diary_path(home, tree)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('# today\n')
+    return path
+
+
+def listed_main(tree):
+    """First entry of `git worktree list`: the tree the diary is keyed on.
+
+    Git lists the git dir, not the checkout, for a submodule or a
+    --separate-git-dir repo.
+    """
+    r = subprocess.run(
+        ['git', 'worktree', 'list', '--porcelain'],
+        cwd=tree,
+        env=ENV,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return r.stdout.split('\n', 1)[0].removeprefix('worktree ')
+
+
 def git(repo, *args):
     subprocess.run(['git', *args], cwd=repo, env=ENV, check=True, capture_output=True)
 
@@ -38,13 +80,10 @@ def commit(repo, name, text, subject, age_hours=0):
     )
 
 
-def make_repo(tmp_path):
+def make_repo(tmp_path, home):
     git(tmp_path, 'init', '-q')
-    (tmp_path / '.diary').mkdir()
-    today = datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
-    (tmp_path / today).write_text('# today\n')
-    git(tmp_path, 'add', today)
     commit(tmp_path, 'a.txt', 'one\n', 'feat: first', age_hours=2)
+    write_today_diary(home, tmp_path)
     return tmp_path
 
 
@@ -62,6 +101,11 @@ def run_hook(repo, env=None, **payload):
     assert r.returncode == 0, r.stderr
     assert r.stderr == ''
     return json.loads(r.stdout) if r.stdout else None
+
+
+def test_project_slug_replaces_every_non_alphanumeric() -> None:
+    assert project_slug('/home/u/app/x') == '-home-u-app-x'
+    assert project_slug('/home/u/my.app_2/.linked') == '-home-u-my-app-2--linked'
 
 
 def test_emit_keeps_stop_block(capsys) -> None:
@@ -93,8 +137,8 @@ def test_emit_post_tool_env_is_context(capsys, monkeypatch) -> None:
     assert output['hookSpecificOutput']['hookEventName'] == 'PostToolUse'
 
 
-def test_dirty_tree_blocks(tmp_path) -> None:
-    repo = make_repo(tmp_path)
+def test_dirty_tree_blocks(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
     (repo / 'a.txt').write_text('one\ntwo\n')
 
     out = run_hook(repo)
@@ -105,8 +149,8 @@ def test_dirty_tree_blocks(tmp_path) -> None:
     assert 'systemMessage' not in out
 
 
-def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path) -> None:
-    repo = make_repo(tmp_path)
+def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
     (repo / 'a.txt').write_text('one\ntwo\n')
     (repo / '.git' / 'index').write_text('corrupt')
 
@@ -118,18 +162,18 @@ def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path) -> None:
     assert 'systemMessage' not in out
 
 
-def test_ship_judging_role_is_silent(tmp_path) -> None:
-    repo = make_repo(tmp_path)
+def test_ship_judging_role_is_silent(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
     (repo / 'a.txt').write_text('one\ntwo\n')
-    diary = repo / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
+    diary = diary_path(home, repo)
     stale = (datetime.now(tz=UTC) - timedelta(hours=2)).timestamp()
     os.utime(diary, (stale, stale))
 
     assert run_hook(repo, env={'SHIP_ROLE': 'planner'}) is None
 
 
-def test_ship_worker_keeps_nudges(tmp_path) -> None:
-    repo = make_repo(tmp_path)
+def test_ship_worker_keeps_nudges(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
     (repo / 'a.txt').write_text('one\ntwo\n')
 
     out = run_hook(repo, env={'SHIP_ROLE': 'worker-w0'})
@@ -137,26 +181,26 @@ def test_ship_worker_keeps_nudges(tmp_path) -> None:
     assert 'Run /commit.' in out['reason']
 
 
-def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path) -> None:
-    repo = make_repo(tmp_path)
+def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
     assert run_hook(repo) is None
     assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
 
 
-def test_missing_diary_warns_without_writing_a_file(tmp_path) -> None:
+def test_missing_diary_warns_without_writing_a_file(tmp_path, home) -> None:
     git(tmp_path, 'init', '-q')
-    (tmp_path / '.diary').mkdir()
     commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
 
     out = run_hook(tmp_path)
 
     assert 'Run /diary.' in out['reason']
-    assert list((tmp_path / '.diary').iterdir()) == []
+    assert not diary_path(home, tmp_path).parent.exists()
+    assert not (tmp_path / '.diary').exists()
 
 
-def test_stale_diary_warns_without_touching_the_file(tmp_path) -> None:
-    repo = make_repo(tmp_path)
-    diary = repo / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')
+def test_stale_diary_warns_without_touching_the_file(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
+    diary = diary_path(home, repo)
     stale = (datetime.now(tz=UTC) - timedelta(hours=2)).timestamp()
     os.utime(diary, (stale, stale))
     before = diary.read_text()
@@ -167,24 +211,33 @@ def test_stale_diary_warns_without_touching_the_file(tmp_path) -> None:
     assert diary.read_text() == before
 
 
-def test_ignored_diary_in_main_tree_silences_linked_worktree(tmp_path) -> None:
+def test_diary_in_the_repo_does_not_count(tmp_path) -> None:
     git(tmp_path, 'init', '-q')
-    commit(tmp_path, '.gitignore', '/.diary/\n', 'chore: ignore diary')
-    linked = tmp_path / '.linked'
-    git(tmp_path, 'worktree', 'add', '-q', '--detach', str(linked))
+    commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
     (tmp_path / '.diary').mkdir()
     (tmp_path / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
 
-    assert run_hook(linked) is None
+    out = run_hook(tmp_path)
+
+    assert out['reason'].startswith('No diary entry for today')
 
 
-def test_tracked_diary_only_in_main_tree_blocks_linked_worktree(tmp_path) -> None:
+def test_main_tree_diary_silences_linked_worktree(tmp_path, home) -> None:
     git(tmp_path, 'init', '-q')
     commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
     linked = tmp_path / '.linked'
     git(tmp_path, 'worktree', 'add', '-q', '--detach', str(linked))
-    (tmp_path / '.diary').mkdir()
-    (tmp_path / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
+    write_today_diary(home, tmp_path)
+
+    assert run_hook(linked) is None
+
+
+def test_diary_keyed_on_a_linked_worktree_does_not_count(tmp_path, home) -> None:
+    git(tmp_path, 'init', '-q')
+    commit(tmp_path, 'a.txt', 'one\n', 'feat: first')
+    linked = tmp_path / '.linked'
+    git(tmp_path, 'worktree', 'add', '-q', '--detach', str(linked))
+    write_today_diary(home, linked)
 
     out = run_hook(linked)
 
@@ -193,16 +246,11 @@ def test_tracked_diary_only_in_main_tree_blocks_linked_worktree(tmp_path) -> Non
     assert 'Run /diary.' in out['reason']
 
 
-def write_today_diary(tree):
-    (tree / '.diary').mkdir(exist_ok=True)
-    (tree / datetime.now(tz=UTC).strftime('.diary/%Y%m%d.md')).write_text('# today\n')
-
-
 def make_submodule(tmp_path):
     origin = tmp_path / 'origin'
     origin.mkdir()
     git(origin, 'init', '-q')
-    commit(origin, '.gitignore', '/.diary/\n', 'chore: ignore diary')
+    commit(origin, 'a.txt', 'one\n', 'feat: first')
     super_repo = tmp_path / 'super'
     super_repo.mkdir()
     git(super_repo, 'init', '-q')
@@ -212,27 +260,27 @@ def make_submodule(tmp_path):
     return super_repo / 'sub'
 
 
-def test_ignored_diary_in_submodule_tree_is_silent(tmp_path) -> None:
+def test_diary_in_submodule_is_keyed_on_the_listed_main_tree(tmp_path, home) -> None:
     sub = make_submodule(tmp_path)
-    write_today_diary(sub)
+    write_today_diary(home, listed_main(sub))
 
     assert run_hook(sub) is None
 
 
-def test_ignored_diary_in_separate_git_dir_repo_is_silent(tmp_path) -> None:
+def test_diary_in_separate_git_dir_repo_is_keyed_on_the_listed_main_tree(tmp_path, home) -> None:
     work = tmp_path / 'work'
     work.mkdir()
     git(tmp_path, 'init', '-q', '--separate-git-dir', str(tmp_path / 'gitdir'), str(work))
-    commit(work, '.gitignore', '/.diary/\n', 'chore: ignore diary')
-    write_today_diary(work)
+    commit(work, 'a.txt', 'one\n', 'feat: first')
+    write_today_diary(home, listed_main(work))
 
     assert run_hook(work) is None
 
 
-def test_ignored_diary_in_submodule_main_tree_silences_its_linked_worktree(tmp_path) -> None:
+def test_diary_in_submodule_main_tree_silences_its_linked_worktree(tmp_path, home) -> None:
     sub = make_submodule(tmp_path)
     linked = tmp_path / '.linked'
     git(sub, 'worktree', 'add', '-q', '--detach', str(linked))
-    write_today_diary(sub)
+    write_today_diary(home, listed_main(sub))
 
     assert run_hook(linked) is None
