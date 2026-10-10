@@ -1,19 +1,6 @@
 # Changelog
 
-## [v0.4.25] — 20261008
-
-> kronael v0.4.25 — GitHub text is linted before it posts
->
-> PR bodies, issues and comments that break the Git rules are refused before posting; Python gains async, subprocess and typing rules.
->
-> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
-> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
-> • Skill lint — the opt-out marker counts only on its own line; siblings and the tree are checked.
-> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
-> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
-> • refine — a Python lens, read only when a refine pass runs.
->
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 - `gh_text_lint.py`, called by `pretool_nudge.py` after the unsafe-command check: refuses `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr comment`/`review`, issue comments and `gh api` posts on `pulls/<N>`, `issues/<N>`, reviews, comments and replies whose body fails the lint, cannot be read, or is required and absent; an exception in the gate refuses; a backslash-newline continuation is joined first and an escaped backtick is literal. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`. The GitHub release-create command joins the unsafe-command block list.
 - `pr-draft` DISTILLs into `tmp/pr-body.md` until the lint prints `ok:` and closes REVIEW-ON-WISDOM with a `Review changed:` line; `gh-comment` and `gh-issue` lint before their sign-off gates.
@@ -23,6 +10,25 @@
 - `py`, `software/strict-typing.md`: one project-wide `typeCheckingMode: "strict"`, never a `basic` default with a per-file `strict` list; a test file opts down with `# pyright: basic`.
 - `refine/py.md`: the Python refine lens — shared helpers over local copies, threads and subprocesses that end before their caller, data over lambdas, less source, one strict pyright mode.
 - `BUGS.md`: `GH-GATE-REGEX-SHELL-PARSE` (proposed), `PRETOOL-UNSAFE-SCAN-READS-QUOTED-TEXT`, `GH-LINT-DISTILL-COUNTS-THE-TITLE` and two skill-lint gaps recorded; three built skill-lint proposals removed.
+
+## [v0.4.25] — 20261008
+
+> kronael v0.4.25 — Sol 6.1 workers and defaults
+>
+> Terra delegates coding work to GPT-6.1 Sol, and the Codex box launchers select the same model.
+>
+> • /terra — GPT-6.1 Sol at high effort, through a native Codex worker or the CLI.
+> • Box defaults — dockbox codex and qemubox codex use GPT-6.1 Sol at xhigh effort.
+> • Explicit Sol opinions — oracle selects GPT-6.1 Sol at high effort.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/terra` selects GPT-6.1 Sol/high through independent native workers or ephemeral CLI sessions.
+  CLI permissions follow the task. Editing workers use their own worktree.
+- `dockbox codex` and `qemubox codex` select GPT-6.1 Sol/xhigh.
+  Explicit Sol second opinions through `astra` and `oracle` select GPT-6.1 Sol/high.
+- Known box limits: duplicate model flags fail. Explicit dockbox Codex routes omit the defaults.
+  `BUGS.md` records both configuration defects.
 
 ## [v0.4.24] — 20261008
 

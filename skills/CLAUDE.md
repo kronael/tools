@@ -89,6 +89,7 @@ skills it replaces.
   them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
   xhigh. ALWAYS change an agent file and every skill that quotes it in one
   commit.
+- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
 - `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
   mechanical edits too wide for the parent, and the steps of a written plan
   (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
@@ -108,6 +109,8 @@ skills it replaces.
   (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
   its agent serves only an explicit dispatch of a whole refine pass.
   Knowledge lives in the skill that owns the concern, NEVER in an agent body.
+- `terra` is the exception because it routes an OpenAI model. NEVER add an
+  `agents/terra.md`; Codex reads `skills/terra/SKILL.md` through the bridge.
 - This section owns the agents rule. ALWAYS point here in one line from any
   other file; NEVER restate the list.
 - A skill that needs isolation or a model says so in its own body (`## Where

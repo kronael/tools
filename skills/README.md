@@ -94,11 +94,11 @@ the authoritative entry. The categories:
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
   memory, scaffolding, second opinions, codifying public best practice.
-- **Escalation** (`sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
+- **Escalation** (`sonnet`, `terra`, `opus`, `fable`, `dispatch`, `fin`) — model
   routing and macro aliases. Each model tier has its own skill; `dispatch` is
-  fire-and-forget at default model. Their `agents/*.md` files are model and
-  effort pins only; every other skill carries its own instructions and names
-  which of these subs it runs in.
+  fire-and-forget at default model. `terra` runs the Codex workhorse through
+  a native subagent or the CLI. Model and effort pins follow
+  [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
 - **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
   UX, hiring, or every lens at once) — judge a product, codebase, UI or
   engineer from a fixed perspective.
@@ -143,8 +143,8 @@ Side-channels (escalation, communication) fire at any stage.
                │
 ┌─ coding ─────▼──────────────┐
 │ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data                ├────────►│ sonnet opus fable   │
-└──────────────┬──────────────┘         │ dispatch fin        │
+│ service data                ├────────►│ sonnet terra opus   │
+└──────────────┬──────────────┘         │ fable dispatch fin  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review improve              │
@@ -179,8 +179,10 @@ patterns; `bugs` for the record-don't-fix queue.
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. `/sonnet` → `/opus` → `/fable`
-for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
+**escalation** — route to the right model/mode from any stage. `/sonnet` →
+`/opus` → `/fable` increases the Claude tier. `/terra` selects the
+Codex workhorse. `/dispatch` uses the default model. `fin` runs without
+confirmation stops.
 
 ## Working with skills
 

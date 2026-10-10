@@ -52,7 +52,7 @@ Usage: qemubox [options] [tool] [dirs...] [tool-args...]
 Tools (first positional arg -- no leading dash):
     (default)       Claude Code, opus @ xhigh effort
     claude          Claude Code, opus (same as default)
-    codex           Codex -m gpt-5.6-sol @ xhigh
+    codex           Codex -m gpt-6.1-sol @ xhigh
     haiku           Claude Code --model claude-haiku-4-5-20251001
     sonnet          Claude Code --model claude-sonnet-5-5 --effort high
     opus            Claude Code --model claude-opus-5-5 --effort xhigh
@@ -1098,7 +1098,7 @@ resume_session() {
 tool_cmd() {
     case "$1" in
         claude) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;
-        codex) cmd=(codex -m gpt-5.6-sol -c model_reasoning_effort=xhigh) ;;
+        codex) cmd=(codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh) ;;
         haiku) cmd=(claude --model claude-haiku-4-5-20251001) ;;
         sonnet) cmd=(claude --model claude-sonnet-5-5 --effort high) ;;
         opus) cmd=(claude --model claude-opus-5-5 --effort xhigh) ;;

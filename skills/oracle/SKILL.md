@@ -49,7 +49,7 @@ Load the `astra` skill and follow its runbook. Use it for creative critique and
 explicit Codex or Astra requests. Keep the prompt adversarial and high-level; do not
 paste your full reasoning chain.
 
-For an explicit Sol opinion, ALWAYS run `astra` § Sol (`gpt-5.6-sol`,
+For an explicit Sol opinion, ALWAYS run `astra` § Sol (`gpt-6.1-sol`,
 ephemeral) under the same `astra` § Rules; NEVER answer a Sol request on the
 Astra model silently.
 
