@@ -74,7 +74,11 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 ## Codex Bridge
 
 Run `kronael/sync/reference.md` § Codex bridge from the discovered source
-root. A bridge-only request reads the same section.
+root. A bridge-only request reads the same section. The two steps that need
+no source run without one: the top-level key
+`project_doc_fallback_filenames = ["CLAUDE.md"]` in `~/.codex/config.toml`,
+and `ln -s ~/.claude/skills ~/.agents/skills` when `~/.agents/skills` is
+absent; anything else waits for the source root.
 
 ## Report
 

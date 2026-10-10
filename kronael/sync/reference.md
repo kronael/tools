@@ -477,6 +477,7 @@ jq -s '(.[0].permissions.deny // []) as $d
   | .[0].hooks = ((.[0].hooks // {}) + .[1].hooks)
   | .[0].cleanupPeriodDays = ([(.[0].cleanupPeriodDays // 0), .[1].cleanupPeriodDays] | max)
   | .[0].outputStyle = .[1].outputStyle
+  | .[0].attribution = ((.[0].attribution | objects) // {})
   | .[0].attribution.commit = .[1].attribution.commit
   | .[0].attribution.pr = .[1].attribution.pr
   | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
@@ -579,10 +580,10 @@ project `.codex/` config and enabled plugins — Kronael writes
   fi
   ```
 
-- Project `.claude/skills`: `mkdir -p .agents && ln -s ../.claude/skills
-  .agents/skills`, only when `.claude/skills` exists and `.agents/skills`
-  does not; an existing `.agents/skills` → ask: leave it, add per-skill
-  symlinks, or skip.
+- Project `.claude/skills`, run in the PROJECT's root, never in `SRC`:
+  `mkdir -p .agents && ln -s ../.claude/skills .agents/skills`, only when
+  `.claude/skills` exists and `.agents/skills` does not; an existing
+  `.agents/skills` → ask: leave it, add per-skill symlinks, or skip.
 - If pi is installed, symlink `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md`
   (skip if a real file exists).
 - Copy `codex-hooks.json` → `~/.codex/hooks.json`, after the Claude hook
