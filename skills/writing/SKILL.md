@@ -22,9 +22,8 @@ writing informational or technical prose. It owns the shared language rules;
 its chat budget does not apply to documents. For creative work, ALWAYS follow
 an explicitly requested voice or style.
 
-ALWAYS preserve technical names, code, and quotations. Explain technical terms
-when the audience needs them; NEVER change a precise term merely to simplify
-it — ALWAYS keep the term and explain its meaning instead.
+ALWAYS preserve technical names, code, and quotations; a needed technical
+term stays and gets explained — that Language section owns the rule.
 
 ## Rules
 

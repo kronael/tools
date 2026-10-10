@@ -85,9 +85,8 @@ the critique file untouched as audit trail.
 
 ### Step 5 — write the artifact
 
-Pick the shape skeleton below. Constraint: produced artifact stays
-< 200 lines. House style: terse, opinionated, ALWAYS/NEVER, no
-marketing prose, no emoji.
+Pick the shape skeleton below. Length, directive form and style per
+`wisdom` § SKILL.md body.
 
 **Critique checkpoint 2 (post-write).** Before declaring step 5 done,
 re-read and verify:
@@ -146,7 +145,6 @@ material.
 - ALWAYS cite the methodology doc from the artifact.
 - ALWAYS pick the shape by REUSE + INVOCATION pattern.
 - NEVER skip step 3 astra.
-- NEVER let the produced artifact exceed 200 lines.
 - NEVER name artifacts as workflow summaries. Use a short compound name
   that states the artifact's durable purpose: the object being evaluated,
   the lens being applied, or the recurring operation it performs. A good

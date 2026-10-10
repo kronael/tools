@@ -1,7 +1,6 @@
 # Shape skeletons — step 5 of `scavenge`
 
-Pick one. Keep the produced artifact < 200 lines. House style: terse,
-opinionated, ALWAYS/NEVER, no marketing prose, no emoji.
+Pick one. Length and style: `wisdom` § SKILL.md body.
 
 ## SKILL — `~/.claude/skills/<name>/SKILL.md`
 

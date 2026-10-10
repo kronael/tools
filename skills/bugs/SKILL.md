@@ -29,10 +29,8 @@ project already has.)
 
 ## Bug Triage Protocol — record, don't fix
 
-- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
-- NEVER fix bugs immediately just because you found them during a general check
-- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `BUGS.md` is the review queue — log it, move on, let the user prioritise
+WISDOM § Bug triage owns it: a bug found during any check is recorded here
+and fixed only when the user asks.
 
 ## When NOT to record
 
