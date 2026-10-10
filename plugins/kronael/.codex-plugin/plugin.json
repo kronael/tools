@@ -5,7 +5,7 @@
   "author": {
     "name": "Ondrej Vostal"
   },
-  "license": "MIT",
+  "license": "Unlicense",
   "keywords": ["codex", "claude-code", "skills", "hooks"],
   "skills": "./skills/",
   "interface": {
