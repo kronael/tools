@@ -8,6 +8,7 @@
 - `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
 - No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
 - `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
+- `code.md`: `is_`/`has_` predicates and `run_<command>` wrappers hold for shell functions too.
 
 ## [v0.4.26] — 20261010
 
