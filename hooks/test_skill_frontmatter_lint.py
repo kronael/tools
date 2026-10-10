@@ -280,10 +280,10 @@ def test_leak_scan_reaches_a_doc_outside_any_skill(tmp_path: Path) -> None:
 
 
 def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
-    """Ignored state such as .diary/ lives in hidden directories."""
-    diary = tmp_path / '.diary'
-    diary.mkdir()
-    (diary / '20261010.md').write_text('Edit /home/devuser/src/x.py.\n')
+    """Ignored state such as .cache/ lives in hidden directories."""
+    cache = tmp_path / '.cache'
+    cache.mkdir()
+    (cache / '20261010.md').write_text('Edit /home/devuser/src/x.py.\n')
     assert run_lint(tmp_path).returncode == 0
 
 

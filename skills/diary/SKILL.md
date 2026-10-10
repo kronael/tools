@@ -1,57 +1,30 @@
 ---
 name: diary
-description: "Write diary entries to .diary/YYYYMMDD.md (worktree-aware: tracked diary stays in the current worktree, gitignored diary goes to the main tree). Standalone reports, audits, and analyses go beside the daily log as .diary/YYYYMMDD-<name>.md. NOT for searching entries (use recall-memories)."
+description: "Write diary entries to ~/.claude/projects/<slug>/diary/YYYYMMDD.md, one dir per main tree, never inside a repo. Standalone reports, audits, and analyses go beside the daily log as YYYYMMDD-<name>.md. NOT for searching entries (use recall-memories)."
 when_to_use: "after a commit, bug fix, or key decision, log this decision"
 user-invocable: true
 ---
 
 # Diary
 
-File: `.diary/YYYYMMDD.md`, the UTC date the Stop hook checks. Append to today's
-entry; create if missing.
-A standalone document goes beside it as `.diary/YYYYMMDD-<name>.md` — see
-"Named companions" below.
+## Where it lives
 
-## Where to write (worktree-aware)
+Default: `~/.claude/projects/<slug>/diary/YYYYMMDD.md` — the **diary dir**,
+the UTC date the Stop hook checks. `<slug>` is the MAIN tree's absolute path
+(first entry of `git worktree list`) with every non-alphanumeric character
+replaced by `-`, the directory Claude Code keeps that tree's transcripts and
+`memory/` in: `/home/u/app/x` writes `~/.claude/projects/-home-u-app-x/diary/`.
+Outside git, the cwd path is the slug. `mkdir -p` the dir before the first
+write. Append to today's entry; create if missing.
 
-The target tree depends on whether `.diary/` is tracked by git. Resolve it
-BEFORE writing. Test the actual dated FILE path, not the bare `.diary` dir — a
-`.diary/` gitignore rule does NOT match `git check-ignore .diary` (no trailing
-slash) but DOES match `.diary/<file>`, so checking the dir gives a false "tracked":
+A standalone document goes beside it as `YYYYMMDD-<name>.md` — see "Named
+companions" below.
 
-```bash
-git -C "$(git rev-parse --show-toplevel)" check-ignore -q ".diary/$(date -u +%Y%m%d).md" \
-  && echo ignored || echo tracked
-```
-
-- **Tracked (not gitignored)** → write in the **current worktree** (`<toplevel>/.diary/`, toplevel =
-  `git rev-parse --show-toplevel`).
-  A tracked diary is committed on its branch, so each worktree records its own
-  work and the entry travels with that branch's commits.
-- **Gitignored / not part of git** → write to the **main worktree**, at
-  `<main>/.diary/`. An ignored diary is never committed, so keep one canonical
-  copy in the main tree instead of scattering ephemeral entries across
-  worktrees. Resolve `<main>` with this; it holds in a plain repo, a
-  submodule, a `--separate-git-dir` repo, and a linked worktree of a plain
-  repo or a submodule. Git records no main tree for a linked worktree of a
-  `--separate-git-dir` repo, so there the result is the git dir's parent:
-
-  ```bash
-  git_dir=$(git rev-parse --absolute-git-dir)
-  common=$(git rev-parse --path-format=absolute --git-common-dir)
-  if [[ "$git_dir" == "$common" ]]
-  then
-    main=$(git rev-parse --show-toplevel)
-  else
-    main=$(git config --file "$common/config" core.worktree || dirname "$common")
-    [[ "$main" == /* ]] || main=$(realpath -m "$common/$main")
-  fi
-  echo "$main"
-  ```
-
-- **Not a git repo** → fall back to `<cwd>/.diary/`.
-- Whether `.diary/` is tracked is the repo's `.gitignore`; a new repo ignores
-  it (`readme` → `topology.md`).
+This section is the one place the dir is named — every other skill points
+here. ALWAYS address the diary by absolute path from every worktree: the dir
+is keyed on the main tree, not on the worktree's cwd. NEVER put a diary in a
+repository: no `.diary/` directory, no ignore line for one — what an agent
+writes for itself lives under `~/.claude/`.
 
 ## Format
 
@@ -88,12 +61,12 @@ Update the summary on every diary write.
 
 ## Named companions
 
-`.diary/YYYYMMDD-<name>.md` — same directory, same tracked/ignored status, same
-date ordering as the daily log. Use it for a standalone durable artifact that
-does not belong inline in the day's running log: a report, an audit, a design
-analysis, a postmortem — a self-contained document a future reader will want
-to open on its own. The daily log `YYYYMMDD.md` stays the default and the place
-for the running narrative.
+`YYYYMMDD-<name>.md` — same directory and date ordering as the daily log. Use
+it for a standalone durable artifact that does not belong inline in the day's
+running log: a report, an audit, a design analysis, a postmortem — a
+self-contained document a future reader will want to open on its own. The
+daily log `YYYYMMDD.md` stays the default and the place for the running
+narrative.
 
 - `<name>`: short, kebab-case, says what the document is
   (`20260904-refactor-neutrality.md`)
@@ -101,8 +74,6 @@ for the running narrative.
   remains the index into the day
 - The `## HH:MM` / 250-char rules above scope the daily log; a companion is
   free-form prose in its own structure
-- "Where to write" above applies unchanged — resolve the tree with the dated
-  file, write the companion beside it
 
 ## When to write
 

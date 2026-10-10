@@ -40,6 +40,6 @@ of the files.
   mark what you could not verify as `unverified`. One fabricated hit voids
   the memo.
 - ALWAYS read the project's own record first — README, specs, `BUGS.md`,
-  `.diary/`. A strawman teardown is worthless.
+  the diary. A strawman teardown is worthless.
 - ALWAYS concede in one line where the project already answered an objection,
   then say why the answer is not enough. The memo must survive its author.

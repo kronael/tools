@@ -190,7 +190,12 @@ def make_claude(home):
             ),
             user(MID, [tool_result('toolu_skill', 'Launching skill: recall-memories')]),
             *bash(MID, 'toolu_tests', 'uvx pytest -q test_recall.py && make test', '17 passed'),
-            *bash(MID, 'toolu_diary', 'cat .diary/20260920.md', 'ran make test: green'),
+            *bash(
+                MID,
+                'toolu_diary',
+                'cat ~/.claude/projects/-work-repo/diary/20260920.md',
+                'ran make test: green',
+            ),
             *bash(
                 MID, 'toolu_memory', 'cat ~/.claude/projects/-work-repo/memory/m.md', 'make test'
             ),

@@ -16,7 +16,7 @@ this; use the raw paths below only when the helper cannot answer.
 | `~/.claude/projects/<slug>/memory/` | `MEMORY.md` index plus one file per memory |
 | `~/.claude/history.jsonl` | every typed prompt: `display`, `project`, `sessionId`, `timestamp` (ms); never swept |
 | `/tmp/claude-$(id -u)/<slug>/<session>/tasks/<id>.output` | background output; an agent's is a symlink to its subagent transcript, a shell command's is a plain file that a reboot deletes |
-| `<cwd>/.diary/YYYYMMDD.md` | the diary; `summary:` block in the frontmatter |
+| `~/.claude/projects/<main-slug>/diary/YYYYMMDD.md` | the diary, keyed on the main tree (`diary` § Where it lives); `summary:` block in the frontmatter |
 
 - Slug = the launch directory with EVERY non-alphanumeric character
   replaced by `-`: `/home/u/app/x/.wt/server` → `-home-u-app-x--wt-server`.

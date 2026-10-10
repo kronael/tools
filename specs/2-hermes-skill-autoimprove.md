@@ -198,7 +198,7 @@ Without an eval set, the rest is theater. Build this first.
 - Location: `evals/<skill>/<id>.json`
 - Schema: see [research/eval-sets.md](../research/eval-sets.md)
 - Initial size: 30 hand-curated examples across `commit`, `py`, `ts`, `tsx`, `rs`, `release`, `ship`, `wisdom`
-- Sources: real session transcripts (60%), synthetic from skill rules (30%), failure cases from `.diary/` and bug commits (10%)
+- Sources: real session transcripts (60%), synthetic from skill rules (30%), failure cases from the diary and bug commits (10%)
 - Scoring: outcome (0.5) + rubric (0.3) + cost (0.2)
 
 Add `evals/README.md` documenting the schema, contamination tradeoff, and how to add an example.

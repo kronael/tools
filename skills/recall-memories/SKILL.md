@@ -67,8 +67,9 @@ somewhere in one call or message.
 ## 2. Recover decisions and open items — in this order
 
 1. **Curated layer.** MEMORY.md is already loaded. Read the 2-3 newest
-   diary entries in full (`ls -t <root>/.diary/*.md | head -3`), grep
-   `<root>/.diary/*.md` and `~/.claude/projects/<slug>/memory/*.md` for
+   diary entries in full (`ls -t <diary>/*.md | head -3`, `<diary>` named
+   in `diary` § Where it lives), grep `<diary>/*.md` and
+   `~/.claude/projects/<slug>/memory/*.md` for
    the topic, and note the exact names they use — branches, PR numbers,
    file and report paths, hashes. Those are the search terms for step 2.
    Completion criterion: diary summary lines in hand and 2-4 search terms.
@@ -76,7 +77,7 @@ somewhere in one call or message.
    pass. A `[no transcript]` mark means only the prompt survived (deleted
    past `cleanupPeriodDays`, or recorded on another host). When the topic
    spans projects or hits are thin, rerun both with `-a` and grep
-   `~/.claude/projects/*/memory/*.md` and `~/*/*/.diary/*.md` in the same
+   `~/.claude/projects/*/memory/*.md` and `~/.claude/projects/*/diary/*.md` in the same
    pass — NEVER make the user re-ask to widen scope.
    Completion criterion: ranked session ids, or a stated empty result for
    both scopes after the widening in §1.

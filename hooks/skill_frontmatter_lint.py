@@ -103,7 +103,7 @@ class Finding:
 
 def visible_files(root: Path, pattern: str) -> list[Path]:
     """Files under `root` matching `pattern`, skipping hidden directories: they
-    hold ignored state such as `.diary/` and the `.git` store, not source.
+    hold ignored state such as `.cache/` and the `.git` store, not source.
     """
     found: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):

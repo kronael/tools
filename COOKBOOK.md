@@ -159,7 +159,7 @@ diary entry for today.
 
 ```bash
 /commit                    # cohesive type(scope): commit
-/diary                     # append `## HH:MM` to .diary/YYYYMMDD.md
+/diary                     # append `## HH:MM` to the day's diary file
 ```
 
 Commit and diary are local-only — no automatic push. `rip` is

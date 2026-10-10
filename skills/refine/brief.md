@@ -31,7 +31,7 @@ Done: <observable condition>.
 - ALWAYS demand the positive control beside any "there is no X": the same query
   returning a hit where one exists.
 - ALWAYS name the queries that lie here — the wrapped `grep` skips `.git` and
-  every gitignored path (`/.diary/`, `/specs/`) — use
+  every gitignored path (`/specs/`) — use
   `/usr/bin/grep` there, a failed fetch prints nothing, a bare identifier
   matches its prefixes, a grep over a projection cannot see a field you did not
   print.

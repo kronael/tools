@@ -12,7 +12,8 @@ known drifts. If a blank agent would do it anyway, it does not belong here.
 ## Continuity
 
 Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
-memory index `.../<slug>/memory/MEMORY.md`, diary `<cwd>/.diary/*.md`. Newest by
+memory index `.../<slug>/memory/MEMORY.md`, diary `.../<main-slug>/diary/*.md`
+(`diary` § Where it lives; keyed on the main tree, not the cwd). Newest by
 mtime.
 
 - ALWAYS read the 2-3 newest diary entries before answering — and on a new task
@@ -170,7 +171,7 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",
   backwards-compat framing, or a one-off backfill inside a permanent file. State
-  what is true now and its genuine quirks; history lives in git and `.diary/`.
+  what is true now and its genuine quirks; history lives in git and the diary.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
   verbatim and NEVER re-litigate the wording, in review or in an eval report.

@@ -35,7 +35,7 @@ The eval set is the single hardest piece of [`specs/2-hermes-skill-autoimprove.m
     {"criterion": "<...>", "weight": 0.2}
   ],
   "source": "<one of: real-session, synthetic, failure-case>",
-  "provenance": "<optional: session hash or .diary entry it came from>"
+  "provenance": "<optional: session hash or diary entry it came from>"
 }
 ```
 
@@ -129,9 +129,9 @@ Generate with a small script that walks each SKILL.md, extracts ALWAYS/NEVER lin
 
 ### 10% — failure cases
 
-The `.diary/` directory and bug commits surface places where the agent did the wrong thing. Each is a high-value example because it pins behavior the current skill **didn't** prevent.
+The diary (`~/.claude/projects/<slug>/diary/`) and bug commits surface places where the agent did the wrong thing. Each is a high-value example because it pins behavior the current skill **didn't** prevent.
 
-- Search `.diary/*.md` for "fix:", "bug:", "regressed", "should have"
+- Search the diary files for "fix:", "bug:", "regressed", "should have"
 - Search git log for commits with `[fix]` or `[refined]` prefix referencing a skill
 - For each, reconstruct the pre-failure state and define expected_outcome as the correct behavior the agent should have produced
 

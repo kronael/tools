@@ -182,7 +182,7 @@ looks like *without* the toolkit installed (left) and *with* it
 - **Memory recall** — bare Claude: "no access to previous sessions".
   With toolkit: `/recall-memories <topic>` surfaces the actual answer.
 - **Diary** — bare Claude: no record across sessions. With toolkit:
-  `.diary/YYYYMMDD.md` auto-prompted after significant work.
+  a daily diary entry auto-prompted after significant work.
 
 Each pair is one fenced code block, terminal-session style, two columns
 separated by a `│` divider. Each <8 lines. No A/B testing connotation —

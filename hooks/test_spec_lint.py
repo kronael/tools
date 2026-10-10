@@ -187,7 +187,5 @@ def test_skill_dir_named_specs_has_no_root(tmp_path: Path) -> None:
 
 
 def test_diary_date_placeholder_is_not_a_pointer(tmp_path: Path) -> None:
-    root = corpus(
-        tmp_path, spec=SPEC + '\nLogged to `.diary/YYYYMMDD.md` after significant work.\n'
-    )
+    root = corpus(tmp_path, spec=SPEC + '\nLogged to `diary/YYYYMMDD.md` after significant work.\n')
     assert check_corpus(root) == []

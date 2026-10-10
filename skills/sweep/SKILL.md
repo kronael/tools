@@ -33,7 +33,7 @@ is the search, not the file mechanics). Record only — never fix what it finds
 
 - `/sweep <description>` — audit for exactly that pattern, repo-wide.
 - `/sweep` with no argument — read the latest fix commit (`git log`) and the
-  newest `.diary/` entry to find the pattern class
+  newest diary entry to find the pattern class
   of what was just fixed, then sweep for other instances of that same class
   that the original fix didn't touch.
 

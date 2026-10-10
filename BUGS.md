@@ -102,7 +102,7 @@
   research (`research-social-meme.md:196-223`) states the outcome as it stands.
   The critique is the prior-version record the wisdom file bans in permanent
   content, kept as a cold provenance file nothing reads by accident. **Fix:**
-  the maintainer's call — keep it as attribution, or move it to `.diary/`;
+  the maintainer's call — keep it as attribution, or move it to the diary;
   no test — docs.
 
 - **DIAGRAMS-NO-SEQUENCE-SWIMLANE-STATE** (LOW, design) — open (record only).
@@ -264,7 +264,7 @@
   (`cfecd8c`, `0c16126`; WISDOM § Documentation wants them full);
   `skills/eval/novice.md:6-7,184-186` names its scavenge provenance and
   `oracle-critique.md` files that `scavenge:79` writes as
-  `astra-critique.md`. **Options:** (a) move the reports to `.diary/`; (b)
+  `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
 
 - **RECLAUDE-TMP-BAN-VS-SYNC-RUN-DIR** (LOW, docs) — owner decision, no test
@@ -342,7 +342,7 @@
   needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
-  `hooks/stop.py:171` suppresses the commit/diary block when `CLAUDE_EVAL` is
+  `hooks/stop.py:169` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:16`, which
   strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
   documents the clause — none in `Makefile`, `.github/`, `evals/`, or any

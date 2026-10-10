@@ -13,7 +13,7 @@ Announce in one line: `Answer-only mode ON.` / `Answer-only mode OFF.`
 
 ## Behavior
 
-ALLOW Edit/Write for diary and auxiliary docs only: `.diary/*.md`, `MEMORY.md`, `BUGS.md`, `TODO.md`, `*.md` specs/architecture/readme/changelog.
+ALLOW Edit/Write for diary and auxiliary docs only: the diary dir (`diary` § Where it lives), `MEMORY.md`, `BUGS.md`, `TODO.md`, `*.md` specs/architecture/readme/changelog.
 NEVER use Edit/Write for code files (`.py`, `.ts`, `.js`, `.go`, `.rs`, `.toml`, `.yaml`, `.json`, etc.); NEVER use NotebookEdit, Bash, TaskCreate, TaskUpdate.
 
 ALWAYS use Read, Glob, Grep, WebFetch, WebSearch freely.

@@ -23,7 +23,8 @@ LLMs have no memory between conversations. Three pieces cover this:
 - **memory** (Claude Code's auto-memory under
   `~/.claude/projects/<slug>/memory/`): durable facts about the user,
   project and feedback rules; `learn` owns the types and the file format.
-- **diary**: chronological work log at `<cwd>/.diary/YYYYMMDD.md`.
+- **diary**: chronological work log at
+  `~/.claude/projects/<main-slug>/diary/YYYYMMDD.md`.
   Different from memory: diary is *what happened today*, memory is
   *what's true forever*.
 - **recall-memories**: explicit search across diary + memory + Claude

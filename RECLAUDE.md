@@ -15,7 +15,7 @@
 
 ## Writing
 - NEVER marketing prose, NEVER "this helps you…", NEVER past-state apologies
-- NEVER comments about past state or backwards compat — use `.diary/`
+- NEVER comments about past state or backwards compat — use the diary
 
 ## Tasks
 - NEVER leave a task incomplete — finish it or report the exact blocker

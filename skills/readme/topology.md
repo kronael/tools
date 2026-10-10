@@ -34,7 +34,7 @@ page's craft: `page.md`. Prose: `writing`.
   under `~/.claude/` (`ship` § Work record).
 - NEVER create `CHANGELOG.md` unless the project publishes versions to outside
   consumers (crates.io, npm, PyPI, a plugin) — history lives in git and
-  `.diary/`. A repo that keeps one keeps it; `release` writes it.
+  the diary. A repo that keeps one keeps it; `release` writes it.
 - In a repo laid out otherwise, ALWAYS put a new fact where its question already
   lives — NEVER migrate the layout unasked.
 
@@ -154,10 +154,11 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 ## Tracked and local
 
 - Every file above is tracked, `BUGS.md` included — it is in the reading order.
-- Local, root-anchored in `.gitignore`: `/.diary/` (`diary`), `/specs/`,
-  `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every depth and
-  swallows a real `src/specs/`. A repo that already tracks `.diary/` or
-  `specs/` keeps tracking them.
+- Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
+  them — a bare `specs/` matches at every depth and swallows a real
+  `src/specs/`. A repo that already tracks `specs/` keeps tracking it.
+- A repo carries no diary: it lives under `~/.claude/` (`diary` § Where it
+  lives), so no `.diary/` directory and no ignore line for one.
 
 ## Keeping it
 

@@ -21,7 +21,7 @@ proposes new/updated skills, but hands the authoring off to wisdom.
 
 - ALWAYS turn a `/learn` proposal into well-formed SKILL.md here (frontmatter + ALWAYS/NEVER body), not a rough draft left in a transcript.
 - ALWAYS fold a surfaced pattern into the correct existing skill when one fits; author a new skill only when none does.
-- NEVER let a single-session story become a skill — record it in .diary/ (learn's 2+ rule); persist genuine patterns via /learn → wisdom.
+- NEVER let a single-session story become a skill — record it in the diary (learn's 2+ rule); persist genuine patterns via /learn → wisdom.
 
 ## SKILL.md frontmatter
 

@@ -21,7 +21,7 @@ when_to_use: "log this bug, open issues, what's broken, what's the queue, prune 
 Nothing else. It is NOT a log of audits, reviews, sessions or sweeps: no
 "Status — <date> — <what I checked>" blocks, no lead paragraphs describing a
 review pass, no counts of what was verified. That narrative belongs in
-`.diary/`. A reader opens `BUGS.md` to learn what is broken, not what someone
+the diary. A reader opens `BUGS.md` to learn what is broken, not what someone
 did.
 
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the

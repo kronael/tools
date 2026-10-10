@@ -22,8 +22,8 @@ If unsure, treat as new task.
 
 ## 2. Recall (new task only)
 
-- First task of the session: read the 2-3 newest `<cwd>/.diary/*.md` and
-  `~/.claude/projects/<slug>/memory/MEMORY.md` (slug = CWD with every non-alphanumeric character → `-`).
+- First task of the session: read the 2-3 newest diary entries (`diary` § Where it
+  lives) and `~/.claude/projects/<slug>/memory/MEMORY.md` (slug = CWD with every non-alphanumeric character → `-`).
 - The user references prior work, a name you do not recognize, or "what
   we decided": `/recall-memories <term>` — it greps the session
   transcripts. NEVER answer from diary + memory alone.
