@@ -138,8 +138,7 @@ material.
   there.
 - ALWAYS require durable intermediate artifacts from subagents.
   NEVER let a subagent put its only write at the end of a long run.
-- ALWAYS default to 1–2 subagents. 3+ only with explicit budget for
-  contention risk.
+- ALWAYS keep the fan-out inside WISDOM § Agents' per-type cap.
 - ALWAYS include a salvage rule in the produced artifact: if evidence
   captured but final write failed, run a writer-only recovery pass.
 - ALWAYS verify the methodology's ALWAYS / NEVER rules landed in the

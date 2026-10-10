@@ -81,9 +81,10 @@ code extension and still carries every claim the reviewer will trust.
    into the context that owns their path.
    → every unresolved thread carries a verdict and a reason.
 
-6. **Dispatch** — one read-only subagent per context, in parallel, each brief
-   written from `brief.md`; ALWAYS read that file before writing the first
-   brief. Launch each with `subagent_type` set by the context's heaviest tag:
+6. **Dispatch** — one read-only subagent per context, in parallel inside the
+   WISDOM § Agents cap, each brief written from `brief.md`; ALWAYS read that
+   file before writing the first brief. Launch each with `subagent_type` set by
+   the context's heaviest tag:
    `simplify` → `sonnet`, `correctness` → `opus` (`fable` under `/release`,
    `opus` when fable cannot run) — NEVER `model=`, which leaves the effort to
    the parent. A context whose lenses carry no tag (a document context) runs

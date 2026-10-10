@@ -136,8 +136,8 @@ For ≥5 screens, fan out via subagents using the `browse` skill
 (drives the `agent-browser` CLI via Bash — spell this out in the
 subagent prompt).
 
-- **Default 1–2 subagents.** 3+ only with explicit budget for
-  contention (usage caps hit fast in parallel).
+- **Fan-out stays inside WISDOM § Agents' per-type cap** (usage caps hit
+  fast in parallel).
 - Bucket related screens (Basic+Expert pair, detail panel with parent).
 - Each subagent OWNS its bucket exclusively.
 - **Subagents scaffold report files FIRST**, append per step.

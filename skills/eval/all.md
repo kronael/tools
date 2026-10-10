@@ -15,10 +15,10 @@ verdict, so a later session has the context instead of re-deriving it.
 1. Pick the applicable lenses. Skip `design.md` / `novice.md` / `hiring.md`
    when they don't fit; SAY which you skipped and why (don't silently drop
    coverage).
-2. Dispatch one subagent per lens — parallel is safe (all read-only). Each
-   loads the `eval` skill, reads its ONE lens file and returns: one-line
-   verdict (pass / fail / conditional), top-3 blockers, and the single
-   kill-shot.
+2. Dispatch one subagent per lens — parallel is safe (all read-only) inside
+   the WISDOM § Agents cap. Each loads the `eval` skill, reads its ONE lens
+   file and returns: one-line verdict (pass / fail / conditional), top-3
+   blockers, and the single kill-shot.
    Prompt shape: "Load the `eval` skill, read `<lens>.md` and run that lens on
    `<target>`. Save your full memo to
    `.claude/plans/critique-<lens>-<YYYYMMDD>.md`. Return verdict + top-3

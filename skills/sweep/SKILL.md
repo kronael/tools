@@ -15,7 +15,8 @@ prioritises rather than the sweep.
 ## Phase 1 — Sweep (read-only, parallel OK)
 
 Spawn read-only subs (Sonnet/Explore) to FIND issues. Group by concern; each
-sub owns one concern-bucket. Parallel is safe here — no shared writes.
+sub owns one concern-bucket. Parallel is safe here — no shared writes — inside
+the WISDOM § Agents cap.
 
 Output: a bucketed issue list with file + line citations. Do NOT fix during
 sweep — you will miss scope and interleave reads with writes.
