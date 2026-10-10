@@ -18,7 +18,7 @@ Network → look for `Authorization` header on any API request.
 
 ## Commands
 
-Single-file PEP 723 script. Both forms below auto-resolve `discum` + `click`.
+Single-file PEP 723 script. The commands below auto-resolve `discum` + `click`.
 
 ```sh
 uv run main.py channel <channel_id>            # one channel
@@ -38,7 +38,7 @@ Common flags:
 
 ```
 ./export/<guild_id>/<channel_name>_<id>.jsonl
-./export/<channel_id>/<channel_id>_<id>.jsonl   # for `channel` mode
+./export/<channel_id>_<channel_id>.jsonl   # for `channel` mode
 ```
 
 One raw Discord message JSON per line — no transformation, full API
@@ -52,7 +52,7 @@ Reads the existing JSONL, takes the last line's `id`, passes it as
 
 ## Discovery
 
-`guild --list` prints `id<TAB>name<TAB>kind[<TAB>parent]` for every
+`guild --list` prints `id<TAB>name<TAB>kind[<TAB>parent=<id>]` for every
 text channel, announcement channel, and active/archived public thread —
 useful for picking a subset before committing to a full guild dump.
 

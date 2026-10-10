@@ -288,7 +288,7 @@ Tools (first positional arg — no leading dash):
     haiku           Claude Code --model claude-haiku-4-5-20251001 (fast/cheap)
     sonnet          Claude Code --model claude-sonnet-5-5    (fast workhorse)
     opus            Claude Code --model claude-opus-5-5      (default; xhigh)
-    fable           Claude Code --model claude-fable-5-1   (max effort)
+    fable           Claude Code --model claude-fable-5-1
     gpt             Codex -m gpt-6-astra        (big)
     mini            Codex -m gpt-5.4-mini        (workhorse)
     spark           Codex -m gpt-5.3-codex-spark (fast/cheap)
