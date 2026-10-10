@@ -214,7 +214,7 @@
 
 - **README-ROUTER-CONTRADICTS-ITSELF** (LOW, docs) — owner decision, no test
   — docs. `skills/readme/sync.md:56` puts an "Architectural Decisions"
-  section in ARCHITECTURE; `skills/readme/topology.md:104` says NEVER
+  section in ARCHITECTURE; `skills/readme/topology.md:85` says NEVER
   record a decision there. `sync.md:24-48` and `topology.md:43-57` give two
   README section orders. `skills/release/library.md:115` wants README line 2
   "technical"; `sync.md:26-28` "a 13-year-old understands". **Options:**
@@ -242,7 +242,7 @@
   decision, no test — design. `skills/scavenge/SKILL.md:25-26,136-138`
   writes new skills and agents into `~/.claude/` (an install of this repo,
   WISDOM § Environment); `:66,79,178` put research and critiques under
-  `<cwd>/docs/<topic>/` (`skills/readme/topology.md:95-96` bans work records
+  `<cwd>/docs/<topic>/` (`skills/readme/shape.md:161-162` bans work records
   in `docs/`); `skills/scavenge/shapes.md:38-55` is a content-bearing agent
   skeleton (`skills/CLAUDE.md:119` forbids one). **Default if nothing is
   decided:** as written.
