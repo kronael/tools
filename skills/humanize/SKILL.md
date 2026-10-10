@@ -54,7 +54,7 @@ the draft and audit internal and return the result that task requests.
 
 ## Your task
 
-ALWAYS read `patterns.md` in this directory in full before the first edit — the 33 patterns, the voice section and the worked example live there; this file is the workflow only.
+ALWAYS read `patterns.md` in this directory in full before the first edit — the 34 patterns, the voice section and the worked example live there; this file is the workflow only.
 
 When given text to humanize:
 

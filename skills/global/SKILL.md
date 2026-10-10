@@ -11,7 +11,7 @@ known drifts. If a blank agent would do it anyway, it does not belong here.
 
 ## Continuity
 
-Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with `/` → `-`),
+Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
 memory index `.../<slug>/memory/MEMORY.md`, diary `<cwd>/.diary/*.md`. Newest by
 mtime.
 

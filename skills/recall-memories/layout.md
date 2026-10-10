@@ -83,5 +83,5 @@ grep -ail -- '<term>' "$S"/*/tool-results/*
 grep -ai -- '<term>' ~/.claude/history.jsonl | tail -20
 ```
 
-Read a hit with `python3 $R show <toolu_id>` or `digest <session>`, not by
+Read a hit with `python3 ~/.claude/skills/recall-memories/recall.py show <toolu_id>` or `digest <session>`, not by
 slicing the JSON line by hand.

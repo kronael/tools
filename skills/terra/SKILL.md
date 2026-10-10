@@ -1,6 +1,6 @@
 ---
 name: terra
-description: "/terra — GPT-6.1 Sol workhorse subagent. NOT for second opinions (use /astra) or design calls (use /opus)."
+description: "/terra — GPT-6.1 Sol workhorse subagent. NOT for second opinions (use /oracle) or design calls (use /opus)."
 when_to_use: "terra, GPT-6.1 Sol worker, Codex workhorse, delegate to Sol, cross-model implementation, cross-model investigation, cross-model pre-review, cross-model plan step"
 user-invocable: true
 ---

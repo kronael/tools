@@ -1,6 +1,6 @@
 ---
 name: gh-issue
-description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. Derived from gh-comment. NOT for a PR review comment (use gh-comment) or a PR description (use pr-draft).
+description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. NOT for a PR review comment (use gh-comment) or a PR description (use pr-draft).
 when_to_use: "filing a bug report or issue on a GitHub repo, often a different repo than the current one (e.g. an upstream dependency), file an issue, open an issue, report a bug upstream"
 user-invocable: true
 ---
@@ -19,7 +19,7 @@ the `owner/repo` explicitly; never assume the current repo.
 ```bash
 # current repo (only if the issue is about THIS project)
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-# otherwise the user names it, e.g. REPO=marinade-finance/waypoint
+# otherwise the user names it, e.g. REPO=<owner>/<repo>
 ```
 
 If unsure which repo, ASK — do not guess a slug.

@@ -39,8 +39,7 @@ argument-hint: "<question>"   # optional — shown after /name
 - NEVER invent a key — Claude Code reads `name`, `description`, `when_to_use`, `user-invocable`, `disable-model-invocation`, `argument-hint`, `arguments`, `allowed-tools`, `disallowed-tools`, `model`, `effort`, `shell`, `context`, `agent`, `background`, `paths`, `hooks`, `metadata`, `license`, `compatibility`; any other key (`arg:`) is silently ignored here and rejected by other Agent Skills consumers — lint: skill-keys (hard fail). Provenance goes under `metadata`.
 - ALWAYS keep `description` minimal — short summary + NOT clause only.
 - ALWAYS pack `when_to_use` with retrieval keywords: error messages, symptom words, tool/library names, synonyms.
-- The listing shows `description - when_to_use`, cut at 1,536 chars — lint: skill-budget (warn). A keyword past the cap never routes; ALWAYS put the key use case first.
-- The whole listing has a budget (1% of the context window). When it overflows, the skills with the least recent use drop to a bare name — a skill nobody invokes loses its description first. `/skill-doctor` shows cost and use per skill.
+- The listing shows `description - when_to_use`, cut at 1,536 chars, and the whole listing has a context budget — `skills/CLAUDE.md` § Flat skills vs router skills owns both. ALWAYS put the key use case first (lint: skill-budget, warn).
 - NEVER write description as workflow summary ("summarizes X via Y") — Claude shortcuts past skills whose description states the process.
 - ALWAYS add `NOT for <case> (use <other-skill>)` in `description` — disambiguates neighbors; lint: skill-notfor (warn).
 - NEVER write "This skill helps you…" or marketing prose.
@@ -131,18 +130,11 @@ a linter that cannot flag, and a broken one look identical from a green run.
 
 ## Router skills
 
-- Router = one `SKILL.md` (the only preloaded file) + sibling cold data `.md` files read on demand (`create/`, `software/`, `readme/`, `review/`).
-- ALWAYS make a router instead of N sibling skills when they share an audience and are rarely invoked — N preloaded descriptions collapse to 1.
-- Router body = explicit dispatch table mapping trigger keywords → data file; NEVER prose links alone.
-- Router frontmatter MUST carry every folded mode's retrieval keywords within the 1,536-char budget — `/solve` routes on them.
-- Light content lives flat (`<mode>.md`); heavy ported trees keep their subtree intact at `<mode>/<slug>/`.
-- NEVER name a data file `SKILL.md` — that is what makes it preload; lint: skill-router (warn).
-- Maintenance procedure: `skills/CLAUDE.md`.
+What a router is, when to make one, its dispatch table, file layout and the `SKILL.md` naming trap: `skills/CLAUDE.md` § Flat skills vs router skills, § Router anatomy, § Router invariants and § Editing a router.
 
 ## Installed copy vs source
 
-- `~/.claude/` is an install of the bundle source repo (path in `LOCAL.md`) —
-  ALWAYS sync a `~/.claude/` change back to it; NEVER let install and source drift.
+`~/.claude/` is an install of this repo: ALWAYS sync an edit there back to source (WISDOM § Environment).
 
 ## CLAUDE.md (project)
 

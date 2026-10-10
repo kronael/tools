@@ -44,13 +44,13 @@ A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailab
 `subagent_type="opus"`; NEVER skip this pass):
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
-   regression risks, and broken invariants. NEVER seed it with the sonnet
+   regression risks, and broken invariants. NEVER seed it with the step-3
    findings for this job; it approaches cold.
-2. **Reverify** — KEEP or DROP each sonnet finding with a one-line reason. KEEP
+2. **Reverify** — KEEP or DROP each step-3 finding with a one-line reason. KEEP
    only what is real, impactful, in changed code, and non-obvious to the author.
 
 Feed it the change goal and house rules. Final pool = its findings + the KEEPs.
-ALWAYS run this pass. ALWAYS trust its DROPs over the sonnet findings.
+ALWAYS run this pass. ALWAYS trust its DROPs over the step-3 findings.
 
 ## 5. Minimality
 

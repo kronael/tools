@@ -71,12 +71,4 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 - NEVER skip pre-commit hooks
 - NEVER commit if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes
-
-## Orphaned worktrees
-
-Only applies to Claude-managed worktrees under `.claude/worktrees/`. Never touch other worktrees.
-
-1. `git worktree list` — note its base commit.
-2. `git -C <wt> diff` — superseded by HEAD, or unique?
-3. Superseded + lock pid dead → remove: `git worktree unlock <wt> && git worktree remove --force <wt>` (detached worktree — no branch to delete)
-4. Holds unique work you did NOT create → surface to user, do NOT remove.
+- Worktrees — creation, reconciliation and removal — are the `worktree` skill's.

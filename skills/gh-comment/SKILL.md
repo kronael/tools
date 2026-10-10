@@ -47,7 +47,7 @@ reasoning that got you there.
    fix, then **de-slop** it: load the `humanize` skill and apply it. Cut em
    dashes, hedges, passive voice, "it is worth noting", significance padding
    and rule-of-three phrasing. Speak in the `caveman` register: maximum
-   signal per token, no preamble, no recap. Cap the result at 2 lines / 240
+   signal per token, no preamble, no recap. Cap the result at 240
    chars (the lint's cap); if it will not fit, the finding is two findings or
    the evidence belongs in the report.
 3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape

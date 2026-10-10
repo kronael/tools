@@ -1,7 +1,7 @@
 # Skills
 
 Auto-activating context for Claude Code. Each `<name>/SKILL.md` loads
-when its description matches the current task. Some are user-invocable
+on dispatch (`/solve`, `/<name>`) or on a description match. Some are user-invocable
 as slash commands (`/refine`, `/diary`, ...).
 
 ## Why these exist
@@ -20,10 +20,9 @@ Each skill in this directory addresses one of five problems:
 
 LLMs have no memory between conversations. Three pieces cover this:
 
-- **memory** (instruction-based, defined in `~/.claude/CLAUDE.md`):
-  durable facts about the user, project, feedback rules. Types:
-  `user`, `feedback`, `project`, `reference`. There is no separate
-  `facts` skill — memory subsumes it.
+- **memory** (Claude Code's auto-memory under
+  `~/.claude/projects/<slug>/memory/`): durable facts about the user,
+  project and feedback rules; `learn` owns the types and the file format.
 - **diary**: chronological work log at `<cwd>/.diary/YYYYMMDD.md`.
   Different from memory: diary is *what happened today*, memory is
   *what's true forever*.
@@ -41,14 +40,14 @@ comments, inconsistent naming, broken imports, stale doc counts.
 Refinement is a deliberate second pass that re-reads the rules with
 the diff visible.
 
-- **improve**: DO → CRITICIZE → EVALUATE → IMPROVE on changed code
+- **improve**: DO → CRITICIZE → EVALUATE → IMPROVE → VERIFY → REPEAT on changed code
 - **readme**: sync README/ARCHITECTURE/CHANGELOG with what shipped
 - **refine**: orchestrates both, validates build/test, commits `refa: …`
 
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
 
-## Shortcuts (fin, dispatch)
+## Shortcuts
 
 Macros for instructions you'd otherwise type out every time:
 
@@ -59,7 +58,7 @@ Macros for instructions you'd otherwise type out every time:
 - **continue**: "resume every interrupted/paused task; if none, confirm the session is clean, suggest /recall-memories, and present where to go next"
 - **sweep**: "dispatch a background audit for one bug category across the whole repo, filing each hit in BUGS.md"
 
-These don't add new behavior — they're aliases. The win is muscle
+Most add no behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
 
 ## Discovery nudging (hooks, not skills)
@@ -94,8 +93,8 @@ the authoritative entry. The categories:
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
   memory, scaffolding, second opinions, codifying public best practice.
-- **Escalation** (`sonnet`, `terra`, `opus`, `fable`, `dispatch`, `fin`) — model
-  routing and macro aliases. Each model tier has its own skill; `dispatch` is
+- **Escalation** (`sonnet`, `terra`, `opus`, `fable`, `oracle`, `dispatch`,
+  `fin`) — model routing and macro aliases. Each model tier has its own skill; `dispatch` is
   fire-and-forget at default model. `terra` runs the Codex workhorse through
   a native subagent or the CLI. Model and effort pins follow
   [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
@@ -120,10 +119,11 @@ the authoritative entry. The categories:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
 - **Shared references** (`writing`, `humanize`) —
   `writing` owns the prose rules and, in its cold `page.md`, how a document or
-  page is laid out; `humanize` is the AI-tells catalogue it finishes with; both
-  cited by `tweet`, `pr-draft`, `readme`, `diary`. The response style itself is
-  `../output-styles/caveman.md`, applied or reverted per session by
-  `../commands/caveman.md`.
+  page is laid out; `humanize` is the AI-tells catalogue it finishes with.
+  `writing` is cited by `create`, `diary`, `gh-issue`, `pr-draft`, `readme`,
+  `tweet` and `visual`; `humanize` by `create`, `gh-comment`, `tweet` and
+  `writing`. The response style itself is `../output-styles/caveman.md`,
+  applied or reverted per session by `../commands/caveman.md`.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -186,10 +186,5 @@ confirmation stops.
 
 ## Working with skills
 
-- Each `SKILL.md` has YAML frontmatter: `name`, `description` and
-  `when_to_use` required (lint hard-fails without them), `user-invocable`
-  optional
-- Every skill is a `/<name>` slash command by default; `user-invocable: false`
-  hides it from the `/` menu
-- Auto-activation matches `description` + `when_to_use` — make them specific
-- See `wisdom/SKILL.md` for the writing rules
+- Frontmatter, body and listing-budget rules: `wisdom/SKILL.md`.
+- `user-invocable: false` hides a skill from the `/` menu; Claude can still invoke it.

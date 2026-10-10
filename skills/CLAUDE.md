@@ -125,14 +125,15 @@ skills it replaces.
 
 ## Prompt examples and context
 
-- Treat examples as steering tokens, not neutral documentation.
-- Prefer explicit rules over examples when the rule can be stated directly.
-- Keep examples scarce, ordinary, and representative; label what property
-  should generalize.
-- Do not keep examples merely as history or proof of dogfooding. They prime
-  future runs and spend context.
-- Move example galleries, research notes, and test cases to cold references;
-  keep preloaded skills as decision surfaces.
+- ALWAYS treat examples as steering tokens, not neutral documentation.
+- ALWAYS prefer an explicit rule over an example when the rule can be stated
+  directly.
+- ALWAYS keep examples scarce, ordinary, and representative; label what
+  property should generalize.
+- NEVER keep an example merely as history or proof of dogfooding. It primes
+  future runs and spends context.
+- ALWAYS move example galleries, research notes, and test cases to cold
+  references; keep preloaded skills as decision surfaces.
 - ALWAYS give an illustrative absolute path a one-character account segment
   (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
   and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`). A file

@@ -8,7 +8,7 @@ user-invocable: true
 # /fix
 
 Single bug, single fix, single pass. The user shows something broken, usually
-a screenshot, and wants it gone. Run the four-step audit trail before editing.
+a screenshot, and wants it gone. Run the five-step audit trail before editing.
 
 ## Behavior
 

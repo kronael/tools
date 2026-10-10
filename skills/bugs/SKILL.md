@@ -114,8 +114,8 @@ existing ignored/skipped test and match it; never invent a second convention.
 - ALWAYS put the entry id in the skip/ignore reason next to the mechanism
   (`"<ENTRY-ID>: <mechanism>"`) — either side greps straight to the other.
 - NEVER let writing this test become writing the fix. The test asserts correct
-  behavior and stays red; producing it is recording, exactly the CLAUDE.md Bug
-  Triage Protocol's "record, don't fix" — the assertion, never the code that
+  behavior and stays red; producing it is recording, exactly WISDOM § Bug
+  triage's "record, don't fix" — the assertion, never the code that
   makes it pass.
 
 **Carve-out — no test required:** `docs`, `ops`, `config`, `design`,

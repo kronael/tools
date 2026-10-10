@@ -114,5 +114,5 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 - ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
 - NEVER rewrite a commit that any `origin/*` head holds — fetch first; the `BASE` floor and its STOP checks enforce this.
-- NEVER skip pre-commit hooks. Hooks do NOT fire in a worktree — run fmt/clippy/lint by hand there before committing.
+- NEVER skip pre-commit hooks.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.

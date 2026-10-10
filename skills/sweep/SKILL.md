@@ -32,8 +32,8 @@ is the search, not the file mechanics). Record only — never fix what it finds
 #### Category
 
 - `/sweep <description>` — audit for exactly that pattern, repo-wide.
-- `/sweep` with no argument — read the most recent `BUGS.md` "✅ FIXED"/
-  "Resolved" entries and the latest `.diary/` entry to find the pattern class
+- `/sweep` with no argument — read the latest fix commit (`git log`) and the
+  newest `.diary/` entry to find the pattern class
   of what was just fixed, then sweep for other instances of that same class
   that the original fix didn't touch.
 
@@ -66,8 +66,8 @@ When two adversarial subs disagree on a finding, a third check that MEASURES
 rather than asserts settles it, not a re-read of either sub's prose.
 
 Findings that check out get fixed (Phase 2) or, if fixing them is a
-redesign, filed to `BUGS.md` as a proposal needing owner sign-off (CLAUDE.md
-Bug Triage Protocol). Findings that don't check out get reported as dropped,
+redesign, filed to `BUGS.md` as a proposal needing owner sign-off (WISDOM
+§ Bug triage). Findings that don't check out get reported as dropped,
 with the reason — silence about a rejected finding reads as it having been
 missed rather than checked.
 
@@ -79,8 +79,9 @@ Spawn one opus sub per concern. Hard rules:
   dispatch lifecycle. If a "fix" spans concerns, split it.
 - **Sequential on the shared tree** — NEVER run two code-editing subs in
   parallel on the same checkout. They interleave: one reverts the other's
-  edits, mid-flight commits, half-edited files. Parallel is ONLY safe with
-  isolated worktrees (Agent `isolation: "worktree"`).
+  edits, mid-flight commits, half-edited files. Parallel is ONLY safe in
+  detached worktrees made by hand (`worktree` § Creating a worktree by hand);
+  NEVER `isolation: "worktree"`.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need
@@ -110,21 +111,12 @@ After verifying each sub's output:
 2. One commit per concern, through the `commit` skill — WISDOM § Git owns the
    staging, message and history rules.
 3. Watch for parallel hazard: if another session is editing the shared
-   tree (user mid-edit, another sub in flight), scope your `git add` to
-   YOUR files only. Verify `git diff --cached` before committing.
+   tree (user mid-edit, another sub in flight), commit your
+   files by path (`git commit -- <files>`, the `commit` skill).
 
 ## Worktree reconciliation
 
-Full isolation + reconciliation rules: `Skill(worktree)`.
-
-When a sub ran with `isolation: "worktree"`, bring its work back with:
-
-```bash
-git diff <fork-base> <sub-tip> -- <sub-owned-files> | git apply --3way
-```
-
-Do NOT `git cherry-pick` — on linked worktrees it silently empties and
-slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
+Bringing a worktree sub's commits back: `worktree` § Reconciling a worktree sub's commits into main.
 
 ## Hard rules (non-negotiable)
 

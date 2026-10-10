@@ -67,8 +67,7 @@ runs inline. A subagent that loaded this skill runs the pass itself.
 
 ## Rules
 
-- ALWAYS keep README under 150 lines, ARCHITECTURE under 300, CLAUDE.md under
-  200.
+- ALWAYS hold the line caps `topology.md` sets for README, ARCHITECTURE and CLAUDE.md.
 - NEVER duplicate content across files — ALWAYS reference the owning file.
 - ALWAYS state what adopting costs in fees, storage, compute and overhead
   per run, as a formula in the project's units that names every term, fixed

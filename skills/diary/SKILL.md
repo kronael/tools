@@ -82,7 +82,7 @@ Update the summary on every diary write.
 - NEVER delete resolved open items — ALWAYS append `- [resolved YYYY-MM-DD: <how>]` instead
 - ALWAYS log only decisions, bugs found/fixed, discoveries, open items
 - NEVER log routine operations (reading files, answering questions)
-- ALWAYS route preferences and recurring patterns to MEMORY.md, report to user verbatim
+- ALWAYS route preferences and recurring patterns to memory (`learn` owns the format), report to user verbatim
 - ALWAYS review MEMORY.md for stale entries when writing diary
 - ALWAYS apply the `writing` skill's copy rules — no preamble, plain verbs
 

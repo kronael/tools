@@ -16,8 +16,8 @@ the user to approve each item, so they ALWAYS run in the main thread.
 
 ## Sources
 
-- `~/.claude/projects/<slug>/*.jsonl` — per-project transcripts (slug = cwd
-  with `/` → `-`); reading recipe in `recall-memories` §1.
+- `~/.claude/projects/<slug>/*.jsonl` — per-project transcripts (slug = CWD
+  with every non-alphanumeric character → `-`); reading recipe in `recall-memories` §1.
 - `~/.claude/history.jsonl` — global prompt history.
 - `~/.claude/projects/<slug>/memory/` — existing memory files and the
   `MEMORY.md` index.

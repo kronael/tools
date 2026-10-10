@@ -54,8 +54,7 @@ NEVER say "everything is done" while an item is deferred or blocked. Say
 Before declaring done, run an **open-items pass**:
 
 1. **Re-read the most recent diary entry's open-items list.**
-   Anything tagged `[open <date>]` or in a "open items for
-   next session" list is a candidate.
+   Anything in the diary summary's open items is a candidate.
 2. **Scan your last 5 outputs in this conversation for**
    any of: "I'll … next", "still TBD", "pending", "next:",
    "next sprint", "queued", "leftover", "deferred". If you
