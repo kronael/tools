@@ -8,7 +8,7 @@ blocks, the nudge stamps and the stop checks. Malformed JSON, `local.py` and
 `reclaude.py` are reached only by the smoke tests below:
 
 ```bash
-uv run --with pytest --with pyyaml python -m pytest hooks -q
+make -C hooks test
 ```
 
 ## 1. JSON Error Handling (should NOT crash)
@@ -72,7 +72,7 @@ echo '{"prompt": "where were we"}'                | python3 ~/.claude/hooks/loca
 
 ## Hook-by-Hook Smoke
 
-## codex_hook.py
+### codex_hook.py
 
 ```bash
 echo '{"prompt": "refine this"}' \
@@ -80,35 +80,20 @@ echo '{"prompt": "refine this"}' \
   | grep -q "@refine" && echo "✓ PASS"
 ```
 
-## prompt_nudge.py
-
-```bash
-echo '{"prompt": "improve styling"}' | python3 ~/.claude/hooks/prompt_nudge.py
-echo '{"prompt": "save progress"}'   | python3 ~/.claude/hooks/prompt_nudge.py   # commit rules
-```
-
-## local.py
-
-```bash
-echo '{"prompt": "continue with implementation", "cwd": "/tmp"}' | python3 ~/.claude/hooks/local.py
-echo "{\"prompt\": \"don't continue\", \"cwd\": \"/tmp\"}"       | python3 ~/.claude/hooks/local.py  # silent
-```
-
-## stop.py
+### stop.py
 
 ```bash
 # Clean tree, no diary dir → silent
 echo '{"cwd": "/tmp"}' | python3 ~/.claude/hooks/stop.py
 
 # Git repo with diary dir and no entry for today → warning, no file write
-mkdir -p /tmp/stoptest/.diary
-git -C /tmp/stoptest init
-echo '{"cwd": "/tmp/stoptest"}' | python3 ~/.claude/hooks/stop.py
-rm -rf /tmp/stoptest
-
+d=$(mktemp -d)
+mkdir -p "$d/.diary"
+git -C "$d" init -q
+echo "{\"cwd\": \"$d\"}" | python3 ~/.claude/hooks/stop.py
 ```
 
-## post_tool_nudge.sh — reflows a Markdown write only in an opted-in repo
+### post_tool_nudge.sh — reflows a Markdown write only in an opted-in repo
 
 ```bash
 cd "$(mktemp -d)" && git init -q . && printf '[MD013]\nline-length = 100\nreflow = true\n' > .rumdl.toml

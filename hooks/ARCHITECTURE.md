@@ -30,9 +30,10 @@ first runs through `codex_hook.py`.
 `state.py` — per-session throttle stamp paths, the state root, and
 `hook_event(data)`, which reads the event key across all three spellings.
 
-`local.py`, `memory_nudge.py`, `prompt_nudge.py` and `reclaude.py` import it as
-`lib.state`, resolved from the hook script's own directory (`sys.path[0]`), so
-an install that omits the directory tracebacks on every prompt. `stop.py`
+`local.py`, `memory_nudge.py`, `prompt_nudge.py`, `pretool_nudge.py` and
+`reclaude.py` import it as `lib.state`, resolved from the hook script's own
+directory (`sys.path[0]`), so an install that omits the directory tracebacks
+on every prompt and every tool call. `stop.py`
 imports nothing from it: it carries its own `hook_event`, which checks
 `KRONAEL_HOOK_EVENT` before the three payload keys.
 
@@ -71,9 +72,8 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. In Claude only, route a prompt that starts with `/astra` or `/sol` to
-   `/astra` (`/sol` is its Sol variant); route `ask codex`, `ask astra`,
-   `oracle`, and `second opinion` to `/astra`.
+4. In Claude only, route a prompt that starts with `/astra`, and the phrases
+   `ask codex`, `ask astra`, `oracle`, and `second opinion`, to `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
 6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
@@ -112,10 +112,9 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    bytes back.
 
 **PreToolUse flow:**
-1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   amend, hard reset, broad add, no-verify commits, any recursive `rm`
-   (`-r`, `-R`, `-rf`, `--recursive`), `gh release create`, and recursive
-   Codex execution inside Codex. Then
+1. For shell tools (`Bash`, Codex `exec_command`), block the commands
+   `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names, and recursive Codex
+   execution inside Codex. Then
    `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
    PR body, an issue body or a comment is blocked when the body it carries
    fails the lint, cannot be read, or is required and absent. The reason names
@@ -292,51 +291,15 @@ State: the `memory-nudge-{start,done}-{session_id}` stamps in `~/.claude/state` 
 frequency than stop.py's recurring diary/commit nudges — at most once via
 PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
 
-## Data Flow
-
-### UserPromptSubmit
-
-```
-stdin:
-{
-  "prompt": "improve the error handling",
-  "hook_event": "UserPromptSubmit",
-  "session_id": "abc123",
-  "cwd": "/project"
-}
-
-stdout (prompt_nudge.py match):
-{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke /improve."}}
-```
-
-### Stop
-
-```
-stdin:
-{
-  "cwd": "/project"
-  // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
-}
-
-stdout (dirty tree + stale diary; commit guidance elided):
-{
-  "decision": "block",
-  "reason": "Uncommitted changes detected.\n<diff stat>\nCommit your work — ... Run /commit.\nRules: ...\nDiary not updated in over an hour (now 16:52 2026-10-01). Run /diary deliberately if there is work to record."
-}
-
-stdout (nothing to nudge, or a judging SHIP_ROLE): empty
-```
-
-Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and
-`Run @diary`.
-
 ## Error Handling
 
-All Python hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError`
-and bail with exit 0 so a broken payload never blocks the session. File
-I/O errors are swallowed for the same reason. `post_tool_nudge.sh`
-always exits 0, and a rumdl run that fails or times out becomes a context note
-rather than an exit code.
+`pretool_nudge.py` wraps `main()` in `suppress(Exception)` and exits 0. The
+other Python hooks catch `json.JSONDecodeError`, `EOFError` and `ValueError` on
+the payload and exit 0. `stop.py` lets an OS error escape: a `cwd` that does
+not exist raises `FileNotFoundError` from its first `git` call and exits 1,
+which Claude Code shows and does not treat as blocking. `post_tool_nudge.sh`
+always exits 0, and a rumdl run that fails or times out becomes a context
+note rather than an exit code.
 
 ## Extension Points
 
