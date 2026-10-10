@@ -60,6 +60,57 @@
   by `--force` or a dead lock. Two removal rules drift. **Fix:** replace the
   section with a one-line pointer at refine step 11. No test — duplication.
 
+- **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
+  `skills/global/SKILL.md:180-182` caps `sonnet`, `fable` and `opus` subagents
+  by `subagent_type`; the bundle also launches `general-purpose`
+  (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
+  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`) and the thin
+  skill agents — `improve` pins Sonnet 5.5 (`agents/improve.md:3`), the rest
+  inherit the parent's model — none of which the cap names. **Options:**
+  (a) count a sub under the model it runs on (`improve` as `sonnet`,
+  `general-purpose` as the parent's model); (b) count only the three named
+  types. **Default if nothing is decided:** (a). No test — design.
+
+- **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
+  decision. `skills/refine/SKILL.md:146-154` removes every worktree after the
+  first whose HEAD is on a remote-tracking ref and whose status is clean,
+  whoever made it; `skills/worktree/SKILL.md:55` says "NEVER remove another
+  task's worktree". A clean checkout at a pushed commit that another session
+  is about to use goes under the first rule and is protected by the second.
+  **Options:** (a) step 11 removes only worktrees this run created, listing
+  the rest; (b) `worktree` allows removing an integrated, clean worktree.
+  **Default if nothing is decided:** step 11 as written. No test — design.
+
+- **CODE-RUN-WRAPPER-VS-PREDICATE-PREFIX** (LOW, docs) — owner decision.
+  `skills/software/code.md:14-17` names a function wrapping one external
+  command `run_<command>`; `:10-13` names a predicate `is_`/`has_`/`can_`/
+  `should_`. A bool-returning wrapper (one around `git diff --quiet`) is
+  claimed by both and neither states precedence. The bundle's own wrappers
+  follow neither: `hooks/stop.py:19` `git_run()`, `hooks/pretool_nudge.py:202`
+  `format_markdown()`, `lints/check.py:59` `matches()`,
+  `skills/recall-memories/recall.py:899` `git()`. **Options:** (a) the
+  predicate prefix wins and the body says which command runs; (b)
+  `run_<command>` wins and returns the result, a predicate wraps it.
+  **Default if nothing is decided:** (a). No test — docs.
+
+- **RELEASE-FULL-DETAIL-VS-100-CHAR-BULLET** (LOW, docs) — owner decision.
+  `skills/release/SKILL.md:110-111` makes every Pass B bullet one sentence of
+  at most 100 characters; `:116-118` says to preserve security fixes, breaking
+  changes, env renames and schema migrations "at full detail (never trim)". A
+  breaking change whose migration needs two sentences cannot satisfy both.
+  **Options:** (a) the preserve list is exempt from the cap; (b) the cap holds
+  and the detail goes to a `### Operator note`. **Default if nothing is
+  decided:** (b). No test — docs.
+
+- **SWEEP-ISOLATION-WORKTREE-VS-WORKTREE-SKILL** (LOW, duplication) —
+  CONFIRMED at HEAD 2026-10-10. `skills/sweep/SKILL.md:82-83` says parallel
+  fixes are only safe "with isolated worktrees (Agent `isolation:
+  "worktree"`)"; `skills/worktree/SKILL.md:12` says "NEVER use
+  `isolation: "worktree"` — it creates a local branch". `sweep` also names
+  its read-only subs "Sonnet/Explore" at `:17` and `general-purpose` at `:25`.
+  **Fix:** point sweep at `worktree` § Creating a worktree by hand and name
+  one agent type. No test — duplication.
+
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
   file as a "Raw adversarial pass by codex-cli 0.144.4" over an earlier draft
