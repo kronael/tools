@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.27] — 20261010
+
+> kronael v0.4.27 — Worktrees follow explicit choices
+>
+> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+>
+> • Default checkout — routine editing workers share one tree with one writer at a time.
+> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
+> • Shared resources — isolated workers still coordinate services, ports and caches.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Routine editing workers use one shared checkout with one writer at a time.
+- Separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+- Worktrees still share services, ports and caches.
+
 ## [v0.4.26] — 20261010
 
 > kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
