@@ -6,8 +6,10 @@
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
   `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
   (Arch here) has no `hostname` binary: `command not found`, so the target
-  name comes out empty. `uname -n` prints the same short name everywhere.
-  **Fix:** use `uname -n` in step 2 and the template; no test — skill text.
+  name comes out empty, and step 3's `hostname -f` fails the same way.
+  `uname -n` prints the stored hostname, which may be a full domain name.
+  **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
+  test — skill text.
 
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every
@@ -49,11 +51,11 @@
   skill, saved plan or hook. No test — design.
 
 - **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
-  `skills/global/SKILL.md:180-182` caps `sonnet`, `fable` and `opus` subagents
+  `skills/global/SKILL.md:184-186` caps `sonnet`, `fable` and `opus` subagents
   by `subagent_type`; the bundle also launches `general-purpose`
   (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
   (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
-  `skills/recall-memories/SKILL.md:161`) and the thin
+  `skills/recall-memories/SKILL.md:165`) and the thin
   skill agents — `improve` pins Sonnet 5.5 (`agents/improve.md:3`), the rest
   inherit the parent's model — none of which the cap names. **Options:**
   (a) count a sub under the model it runs on (`improve` as `sonnet`,
@@ -75,7 +77,7 @@
   command `run_<command>`; `:10-13` names a predicate `is_`/`has_`/`can_`/
   `should_`. A bool-returning wrapper (one around `git diff --quiet`) is
   claimed by both and neither states precedence. The bundle's own wrappers
-  follow neither: `hooks/stop.py:19` `git_run()`, `hooks/pretool_nudge.py:202`
+  follow neither: `hooks/stop.py:20` `git_run()`, `hooks/pretool_nudge.py:202`
   `format_markdown()`, `lints/check.py:59` `matches()`,
   `skills/recall-memories/recall.py:899` `git()`. **Options:** (a) the
   predicate prefix wins and the body says which command runs; (b)
@@ -349,8 +351,8 @@
   needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
-  `hooks/stop.py:169` suppresses the commit/diary block when `CLAUDE_EVAL` is
-  set. Nothing sets it: its other hits are `hooks/test_stop.py:16`, which
+  `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
+  set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which
   strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
   documents the clause — none in `Makefile`, `.github/`, `evals/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
@@ -370,13 +372,25 @@
   **Default if nothing is decided:** (b). No test — design.
 
 - **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:81-89` defines its own `hook_event`: the same
+  2026-09-29. `hooks/stop.py:79-87` defines its own `hook_event`: the same
   three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:82-84`, set by `post_tool_nudge.sh:20`). `stop.py` imports
+  override (`:80-82`, set by `post_tool_nudge.sh:33`). `stop.py` imports
   nothing from `lib.state`, so a spelling added to one reader misses the
   other. **Fix:** import `hook_event` from `lib.state` and keep the override
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
+
+- **DIARY-SLUG-EDGES** (LOW, design) — proposed, no fix without the owner.
+  The diary slug (`hooks/stop.py:50-52`, `skills/diary/SKILL.md` § Where it
+  lives) and the ship record slug (`skills/ship/SKILL.md` § Work record)
+  differ from Claude Code's project dir in three cases: a submodule or
+  `--separate-git-dir` repo keys on its git dir, not the checkout; a path
+  over 200 characters, which Claude Code truncates and suffixes with a hash;
+  and a non-BMP character, one `-` against Claude Code's two. 0 of 156 dirs
+  under `~/.claude/projects` hit the last two. Hook and skills agree, so only
+  co-location with that tree's transcripts breaks. **Options:** (a) leave
+  it; (b) mirror Claude Code's truncation and UTF-16 replacement in the hook
+  and both skills. **Default if nothing is decided:** (a). No test — design.
 
 - **SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT** (MED, design) — proposed. The
   pre-commit entry (`.pre-commit-config.yaml:11`) runs
@@ -388,6 +402,26 @@
   repair only the paths the caller named and report, never write, an owner
   reached through a sibling. Changes the `--write` contract — needs sign-off;
   no test — design.
+
+- **SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS** (LOW, design) — proposed.
+  Pre-commit hands the scan every staged `.md` (`files: \.md$`,
+  `.pre-commit-config.yaml:14`), while `make skills-frontmatter` and CI walk
+  the tree through `visible_files()`, which skips hidden directories
+  (`hooks/skill_frontmatter_lint.py:110`). A tracked `.md` in a hidden dir is
+  scanned on commit and skipped by the tree target. Latent: no tracked `.md`
+  sits in a hidden dir. **Proposal:** one scope for both — the script drops
+  hidden paths it is handed, or the pre-commit pattern excludes them.
+  Changes the scan's input contract — needs sign-off; no test — design.
+
+- **SKILL-LINT-ORPHAN-WALKS-HIDDEN-DIRS** (LOW, correctness) — CONFIRMED at
+  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:326`)
+  collects a skill's docs with `rglob('*.md')`, hidden dirs included, while
+  `visible_files()` skips them for the tree walk. Pytest run from inside the
+  skill leaves an ignored `.pytest_cache/README.md` there, and `make
+  skills-frontmatter` and the pre-commit lint exit 2 on it as a
+  `skill-orphan`. Reproduce: `cd skills/recall-memories && uvx pytest -q
+  test_recall.py`, then `make skills-frontmatter`. **Fix:** skip hidden path
+  parts in `sibling_docs`, as `visible_files()` does. No test yet.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes
@@ -492,7 +526,7 @@
   max 20) where caveman has tiers (`:15`) and "no tables or headers" where
   caveman allows them for tabular content (`:26`); neither `hooks/README.md`
   nor `hooks/ARCHITECTURE.md` names it. `COMMIT_RULES` (`:21-27`),
-  `stop.py:124-132` and `local.py:11-16` `RULES` restate WISDOM § Git and
+  `stop.py:122-131` and `local.py:11-16` `RULES` restate WISDOM § Git and
   `code.md`. **Default if nothing is decided:** as written — the nudges are
   deliberate re-injection.
 
@@ -504,7 +538,7 @@
   maintainer's call — delete it with the ARCHITECTURE lines, or wire it.
 
 - **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-10, no
-  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:16` and
+  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:19` and
   read by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py:111`) and
   `KRONAEL_HOOK_STATE` (`lib/state.py:10`) appear in no doc. **Fix:** drop
   the first; name the other two in `hooks/ARCHITECTURE.md`.
