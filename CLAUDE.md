@@ -148,9 +148,16 @@ All three are verifiable; ALWAYS verify rather than assume.
   named, as `create/` does. A file no such chain reaches is unreachable.
 
 `make skills-frontmatter` enforces all four and MUST pass before a commit
-touching `skills/`. The fourth is an error: the lint walks the chain of names
-out of `SKILL.md` and reports every `.md` under the skill that no chain
-reaches. `CLAUDE.md` is exempt at any depth.
+touching `skills/`; pre-commit runs the same lint on every `.md` in a commit,
+linting the skill that owns a sibling, and CI runs the tree-wide target on
+every push to master and every PR against it. The fourth is an error: the lint walks
+the chain of names out of `SKILL.md` and reports every `.md` under the skill
+that no chain reaches. A written path names a file when it is the file's
+path from the skill root, or a trailing part of that path no other file
+under the skill shares — so a bare basename counts only while it is unique.
+`CLAUDE.md` is exempt at any depth. The same target scans every `.md` in the
+tree, hidden directories aside, for an absolute home path or a credential
+shape.
 
 **Both bridges work, proven by running them**
 

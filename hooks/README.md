@@ -42,9 +42,30 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks true
 unsafe shell commands: `git reset --hard`, broad `git add`, amend/no-verify
-commits, any recursive `rm` (`-r`, `-R`, `-rf`, `--recursive`), and recursive
-Codex execution inside Codex. `git push` is NOT blocked here — it is gated by
-consent in `skills/global` and the settings `ask` rule, not by the hook.
+commits, any recursive `rm` (`-r`, `-R`, `-rf`, `--recursive`),
+`gh release create`, and recursive Codex execution inside Codex. `git push` is
+NOT blocked here — it is gated by consent in `skills/global` and the settings
+`ask` rule, not by the hook.
+
+It also refuses a `gh` command that posts GitHub text whose body fails
+`gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr
+comment`, `gh issue comment`, `gh pr review`, and a `gh api` call on
+`pulls/<N>` or `issues/<N>` that carries a body or on `/reviews`, `/comments`
+or `/replies`. Each gh invocation in a call is checked, with its `cd` applied
+and its backslash-newline continuations joined, and a heredoc's content is
+never read as a command. The body comes from
+`--body-file`, `-F <file>`, `-F body=@<file>`, `--input` JSON, a heredoc, or
+the inline `--body` (literal or `$(cat <path>)`); a path it cannot read (a
+shell variable, a missing or undecodable file), stdin, unparsable JSON and a
+required body that is absent (`--fill`, `--web`) are refused too, and an
+exception inside the lint refuses rather than allows. The lint is WISDOM § Git
+made checkable: a bare `🤖` as the last line and none of the harness footer,
+the `**TL;DR:**` lead, no header, table, rule, checkbox or code block past 6
+lines in a PR body, the `🤖 ` prefix and 240-char cap on a comment, the size
+caps, marketing words, shortened hashes. By hand: `python3
+~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with `--draft` and
+`--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run it as their
+completion criterion.
 
 Claude wiring includes file tools and `Bash`. Codex wiring includes file tools,
 `apply_patch`, and `exec_command`.

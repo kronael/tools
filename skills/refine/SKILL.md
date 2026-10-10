@@ -64,8 +64,8 @@ code extension and still carries every claim the reviewer will trust.
    minimisation, a new path grown beside an old one the change should have
    changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
-   recurring contexts and what each one's sub must be handed; `ts.md` and
-   `tsx.md` carry the per-language lenses, `software.md` the `code.md` lens
+   recurring contexts and what each one's sub must be handed; `py.md`, `ts.md`
+   and `tsx.md` carry the per-language lenses, `software.md` the `code.md` lens
    every code context reads.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
@@ -143,14 +143,22 @@ code extension and still carries every claim the reviewer will trust.
     refspec, `git push origin <fix-sha>:refs/heads/<headRefName>`; resolve and
     request re-review through `gh-comment` once that push lands. A bot-authored
     thread resolves once replied (`gh-comment` § Resolve a thread). ONLY threads
-    addressed this pass. `git worktree remove --force` each stale Claude-managed
-    worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere. Then a
+    addressed this pass. Then the worktrees: one this run created goes by
+    `worktree` (reconciled, then removed). For the rest, `git fetch --all`;
+    an entry of `git worktree list` after the first (the main tree) is
+    integrated only when `git branch -r --contains <its HEAD>` prints a ref
+    AND `git -C <path> status --porcelain` prints nothing — `git worktree
+    remove <path>` those, then `git worktree prune`. Every other one is
+    unfinished work, this session's or another's: it stays, listed by path
+    and reason. NEVER `--force` past a refusal, and NEVER read age or a dead
+    lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
     from here and why, and each step-1 instruction's outcome. NEVER `git push`
     without the user's ask, and NEVER `gh pr merge`, `gh pr review` or
     `gh pr create`.
     → the verdict carries all four, every unfixed triaged thread is replied to
-    and every fixed one listed, and no stale `.claude/worktrees/` entry remains.
+    and every fixed one listed, and every worktree left is named with its
+    reason.
 
 Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.

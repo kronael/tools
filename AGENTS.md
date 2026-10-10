@@ -126,12 +126,15 @@ block into `~/.claude/CLAUDE.md`.
 
 **Merge settings** — if `~/.claude/settings.json` exists, splice the
 hooks block, `cleanupPeriodDays`, `outputStyle`, `attribution.commit`,
-`bashEditDiffEnabled`, `crossSessionInbound`, `isolatePeerMachines` and the
+`attribution.pr`, `attribution.sessionUrl`, `bashEditDiffEnabled`,
+`crossSessionInbound`, `isolatePeerMachines` and the
 four `Bash(rm …)` deny entries instead of overwriting (the event wiring is
 whatever `settings-recommended.json` says — don't restate it). These are
 always applied, never asked — the 30-day default silently deletes session
 transcripts at startup, an unset `attribution.commit` asks for a
-`Co-Authored-By` trailer on every commit, an unset `bashEditDiffEnabled`
+`Co-Authored-By` trailer on every commit, an unset `attribution.pr` asks for
+the `Generated with [Claude Code]` footer on every PR and an unset
+`attribution.sessionUrl` adds a session link, an unset `bashEditDiffEnabled`
 diffs the working tree around every Bash command in `auto` and
 `bypassPermissions` modes, an unset `crossSessionInbound` lets Claude Code decide per message
 by permission class, and the deny guard holds even when the rest of the permissions block is
@@ -142,6 +145,8 @@ jq -s '.[0].hooks = .[1].hooks
   | .[0].cleanupPeriodDays = .[1].cleanupPeriodDays
   | .[0].outputStyle = .[1].outputStyle
   | .[0].attribution.commit = .[1].attribution.commit
+  | .[0].attribution.pr = .[1].attribution.pr
+  | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
   | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
   | .[0].crossSessionInbound = .[1].crossSessionInbound
   | .[0].isolatePeerMachines = .[1].isolatePeerMachines

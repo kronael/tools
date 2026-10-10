@@ -1,6 +1,6 @@
 ---
 name: gh-comment
-description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff.
+description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
 when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status"
 user-invocable: false
 ---
@@ -47,12 +47,12 @@ reasoning that got you there.
    fix, then **de-slop** it: load the `humanize` skill and apply it. Cut em
    dashes, hedges, passive voice, "it is worth noting", significance padding
    and rule-of-three phrasing. Speak in the `caveman` register: maximum
-   signal per token, no preamble, no recap.
+   signal per token, no preamble, no recap. Cap the result at 2 lines / 240
+   chars (the lint's cap); if it will not fit, the finding is two findings or
+   the evidence belongs in the report.
 3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape
-   checklist, before the sign-off questionnaire.
-
-Cap the result at 2 lines / ~200 chars. If it will not fit, the finding is two
-findings or the evidence belongs in the report.
+   checklist, then run `python3 ~/.claude/hooks/gh_text_lint.py comment <file>`
+   until it prints `ok:` — the hook refuses what fails.
 
 - Lead with the defect — "Overflows at `u64::MAX`", NOT "I noticed this
   arithmetic could potentially..."

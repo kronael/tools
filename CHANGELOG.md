@@ -1,20 +1,33 @@
 # Changelog
 
-## [v0.4.26] — 20261009
+## [v0.4.26] — 20261010
 
-> kronael v0.4.26 — Worktrees follow explicit choices
+> kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
 >
-> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+> PR, issue and comment text is linted before it posts, Python gains async and typing rules, and subagents are capped per tier.
 >
-> • Default checkout — routine editing workers share one tree with one writer at a time.
-> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
-> • Shared resources — isolated workers still coordinate services, ports and caches.
+> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
+> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
+> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
+> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
+> • Agents — at most 3 sonnet, 1 fable and 2 opus subagents at once; only the owner lifts the cap.
+> • refine — a Python lens; a worktree is removed only once its HEAD is on a remote ref.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- Editing workers share a checkout by default. Separate PRs, owner requests and explicit skill opt-ins permit worktrees.
-- The one-writer rule includes the parent, workers and tools. Detached worktrees still share services, ports and caches.
-- Sweep's built-in worktree route conflicts with the detached checkout policy; `BUGS.md` records the limit.
+- `gh` PR, issue, comment and review posts whose body fails the WISDOM lint are refused.
+- `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>` lints a body by hand.
+- `pr-draft` distills until the lint prints `ok:`; `gh-comment` and `gh-issue` lint before posting.
+- Settings: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` always apply.
+- Skill lint: a sibling `.md` lints its owner; the opt-out marker counts only on its own line.
+- `py`: short file I/O inline, one shared `to_thread` helper, subprocesses reaped by one manager.
+- Typing: one project-wide pyright `strict`; a test file opts down with `# pyright: basic`.
+- `refine`: a Python lens; a worktree is removed only when its HEAD is on a remote ref and clean.
+- Agents: at most 3 `sonnet`, 1 `fable` and 2 `opus` subagents at once; only the owner lifts it.
+- `release`: a changelog bullet is one sentence, at most 100 characters, user-visible change only.
+- `software/code.md`: a function wrapping one external command is named `run_<command>`.
+- `wisdom`: XML tags are labels, not loaders; conditional loading is `.claude/rules/*.md` `paths`.
+- `BUGS.md`: a gh gate proposal, two gate gaps, four skill-lint gaps and five rule conflicts.
 
 ## [v0.4.25] — 20261008
 

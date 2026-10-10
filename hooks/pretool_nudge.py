@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# PreToolUse hook: block unsafe commands and emit per-language file nudges.
+# PreToolUse hook: block unsafe commands and unlinted GitHub text, and emit per-language file nudges.
 # PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
 # its repository opted in with a root .rumdl.toml.
-# Production: silent-fail on any error except explicit unsafe-command blocks.
+# Production: silent-fail on any error, except an unsafe command is blocked and the GitHub text gate refuses on its own error.
 from __future__ import annotations
 
 import contextlib
@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 
+from gh_text_lint import command_reason
 from lib.state import hook_event
 
 MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
@@ -29,6 +30,7 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)git\s+rebase\b[^\n;|&]*\s(?:-i|--interactive)\b', 'git rebase -i'),
     (r'(?<!\S)git\s+(?:checkout|switch)\b[^\n;|&]*\s-[bBcC]\b', 'git branch creation'),
     (r'(?<!\S)git\s+worktree\s+add\b(?![^\n;|&]*--detach)', 'git worktree add without --detach'),
+    (r'(?<!\S)gh\s+release\s+create\b', 'gh release create'),
     (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
     (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
@@ -150,6 +152,9 @@ def process(data: object) -> dict | None:
                 'decision': 'block',
                 'reason': f'block: unsafe command blocked ({reason}).',
             }
+        refused = command_reason(command, data.get('cwd'))
+        if refused:
+            return {'decision': 'block', 'reason': f'block: {refused}'}
         return None
 
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:

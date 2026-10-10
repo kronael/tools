@@ -77,8 +77,8 @@
   the failure names the missing behavior before writing code.
 - NEVER reshape production typing around tests/fakes - keep production types
   on production contracts.
-- ALWAYS relax type checks for test paths when strict test typing is
-  impractical; NEVER weaken production types.
+- Tests run with relaxed type checks and mostly without annotations; NEVER
+  spend effort typing tests to strict; NEVER weaken production types.
 - Test config objects match the target type exactly — omit unknown properties
   for type safety.
 - Test features, not fixes: a runtime failure → fix the code; add a test only

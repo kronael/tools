@@ -53,6 +53,11 @@ reportIgnoreCommentWithoutRule = "error"  # `# pyright: ignore` must name a rule
 - `enableTypeIgnoreComments = false` deletes the `# type: ignore` hatch outright;
   `reportIgnoreCommentWithoutRule` forces the surviving `# pyright: ignore` to
   name a rule, so a suppression can't be blanket.
+- ALWAYS one `typeCheckingMode` for the whole project (`"strict"` under stock
+  pyright), covering every source; NEVER a `basic` default with a per-file
+  `strict = [...]` list — a file missing from the list is silently unchecked. A
+  test file that cannot meet it opts down with `# pyright: basic` on its first
+  line.
 
 ### ruff — `pyproject.toml`
 

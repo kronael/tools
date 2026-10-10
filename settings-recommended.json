@@ -139,7 +139,9 @@
   "crossSessionInbound": "refuse",
   "isolatePeerMachines": true,
   "attribution": {
-    "commit": ""
+    "commit": "",
+    "pr": "🤖",
+    "sessionUrl": false
   },
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"

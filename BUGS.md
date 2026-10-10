@@ -2,12 +2,6 @@
 
 ## Bundle
 
-- **SWEEP-BUILTIN-WORKTREE-BYPASSES-POLICY** (LOW, docs) — CONFIRMED
-  2026-10-09. `skills/sweep/SKILL.md:83,120` names the built-in
-  `isolation: "worktree"` route. `skills/worktree/SKILL.md` bans that route
-  because it creates a local branch. **Fix:** make Sweep follow the worktree
-  skill's detached checkout procedure. No test — docs.
-
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every
   transcript under `~/.claude/projects/` and lets a `PermissionError` escape:
@@ -56,16 +50,66 @@
   the report. Keep approval gates in `gh-comment`. No new review mode,
   skill, saved plan or hook. No test — design.
 
-- **REFINE-CLEANUP-EXCEEDS-WORKTREE-OWNERSHIP** (MED, design) — proposed,
-  needs sign-off. Step 11 of `skills/refine/SKILL.md:144-145` runs
-  `git worktree remove --force` on each stale entry under
-  `.claude/worktrees/`. A single `--force` removes an unlocked entry even
-  when it holds another task's unreconciled work, which
-  `skills/worktree/SKILL.md:54-55` forbids. **Proposal:** make step 11
-  apply the existing orphan test in `skills/commit/SKILL.md:75-82` —
-  remove only an entry superseded by HEAD whose lock pid is dead, and
-  surface unique work to the user. Rule text only, no enforcement
-  machinery. No test — design.
+- **COMMIT-ORPHAN-WORKTREE-TEST-CONTRADICTS-REFINE** (LOW, duplication) —
+  CONFIRMED at HEAD 2026-10-09. `skills/commit/SKILL.md:75-82` § Orphaned
+  worktrees removes an entry under `.claude/worktrees/` with `git worktree
+  remove --force` once it is "superseded + lock pid dead" — a path
+  `skills/worktree/SKILL.md:12-13` says never to create, and a test refine
+  step 11 (`skills/refine/SKILL.md:146-154`) rejects: a worktree goes only
+  when its HEAD is on a remote-tracking ref and its status is clean, never
+  by `--force` or a dead lock. Two removal rules drift. **Fix:** replace the
+  section with a one-line pointer at refine step 11. No test — duplication.
+
+- **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
+  `skills/global/SKILL.md:180-182` caps `sonnet`, `fable` and `opus` subagents
+  by `subagent_type`; the bundle also launches `general-purpose`
+  (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
+  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`) and the thin
+  skill agents — `improve` pins Sonnet 5.5 (`agents/improve.md:3`), the rest
+  inherit the parent's model — none of which the cap names. **Options:**
+  (a) count a sub under the model it runs on (`improve` as `sonnet`,
+  `general-purpose` as the parent's model); (b) count only the three named
+  types. **Default if nothing is decided:** (a). No test — design.
+
+- **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
+  decision. `skills/refine/SKILL.md:146-154` removes every worktree after the
+  first whose HEAD is on a remote-tracking ref and whose status is clean,
+  whoever made it; `skills/worktree/SKILL.md:55` says "NEVER remove another
+  task's worktree". A clean checkout at a pushed commit that another session
+  is about to use goes under the first rule and is protected by the second.
+  **Options:** (a) step 11 removes only worktrees this run created, listing
+  the rest; (b) `worktree` allows removing an integrated, clean worktree.
+  **Default if nothing is decided:** step 11 as written. No test — design.
+
+- **CODE-RUN-WRAPPER-VS-PREDICATE-PREFIX** (LOW, docs) — owner decision.
+  `skills/software/code.md:14-17` names a function wrapping one external
+  command `run_<command>`; `:10-13` names a predicate `is_`/`has_`/`can_`/
+  `should_`. A bool-returning wrapper (one around `git diff --quiet`) is
+  claimed by both and neither states precedence. The bundle's own wrappers
+  follow neither: `hooks/stop.py:19` `git_run()`, `hooks/pretool_nudge.py:202`
+  `format_markdown()`, `lints/check.py:59` `matches()`,
+  `skills/recall-memories/recall.py:899` `git()`. **Options:** (a) the
+  predicate prefix wins and the body says which command runs; (b)
+  `run_<command>` wins and returns the result, a predicate wraps it.
+  **Default if nothing is decided:** (a). No test — docs.
+
+- **RELEASE-FULL-DETAIL-VS-100-CHAR-BULLET** (LOW, docs) — owner decision.
+  `skills/release/SKILL.md:110-111` makes every Pass B bullet one sentence of
+  at most 100 characters; `:116-118` says to preserve security fixes, breaking
+  changes, env renames and schema migrations "at full detail (never trim)". A
+  breaking change whose migration needs two sentences cannot satisfy both.
+  **Options:** (a) the preserve list is exempt from the cap; (b) the cap holds
+  and the detail goes to a `### Operator note`. **Default if nothing is
+  decided:** (b). No test — docs.
+
+- **SWEEP-ISOLATION-WORKTREE-VS-WORKTREE-SKILL** (LOW, duplication) —
+  CONFIRMED at HEAD 2026-10-10. `skills/sweep/SKILL.md:82-83` says parallel
+  fixes are only safe "with isolated worktrees (Agent `isolation:
+  "worktree"`)"; `skills/worktree/SKILL.md:12` says "NEVER use
+  `isolation: "worktree"` — it creates a local branch". `sweep` also names
+  its read-only subs "Sonnet/Explore" at `:17` and `general-purpose` at `:25`.
+  **Fix:** point sweep at `worktree` § Creating a worktree by hand and name
+  one agent type. No test — duplication.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
@@ -169,12 +213,13 @@
 
 ## Hooks
 
-- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-07.
-  `hooks/README.md` and `hooks/ARCHITECTURE.md` list fewer blocked commands
-  than `hooks/pretool_nudge.py:20-29` enforces: `git merge --squash`,
-  `git rebase -i`, branch creation (`checkout -b`/`switch -c`), `git worktree
-  add` without `--detach` and `killall` are blocked but undocumented.
-  **Fix:** list every pattern in the docs, or point them at the table.
+- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-08 at
+  63ad23b. `hooks/README.md:43-48` and `hooks/ARCHITECTURE.md:115-118` list
+  fewer blocked commands than `hooks/pretool_nudge.py:23-40` enforces: the
+  `Co-Authored-By` trailer, `git merge --squash`, `git rebase -i`, branch
+  creation (`checkout -b`/`switch -c`), `git worktree add` without `--detach`
+  and `killall` are blocked but undocumented. **Fix:** list every pattern in
+  the docs, or point them at the table.
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
@@ -246,52 +291,133 @@
   in `stop.py`, or fold the override into the shared reader; no test —
   duplication.
 
-- **SKILL-LINT-GATE-SKIPS-SIBLING-EDITS** (MED, design) — proposed. The gate is
-  bypassed for exactly the commits it exists to catch. `.pre-commit-config.yaml:14`
-  sets `files: (^|/)SKILL\.md$`, and `skill_files()`
-  (`hooks/skill_frontmatter_lint.py:86-89`) keeps only paths named `SKILL.md`,
-  so a commit touching only a sibling `.md` — the files the orphan and leak
-  rules are about — lints nothing. `.github/workflows/lint.yml:22-23` runs
-  pre-commit over the PR's changed files under that same filter, and no workflow
-  or `make test` target runs `make skills-frontmatter` over the tree, so CI does
-  not cover it either. Widening the pre-commit pattern alone does not work: the
-  script's own path filter drops the file. **Proposal:** have the script accept
-  a sibling `.md` by linting the skill that owns it, and run the tree-wide
-  target in CI. Both change the script's input contract — needs sign-off; no
-  test — design.
+- **SKILL-LINT-WRITE-LANDS-OUTSIDE-THE-COMMIT** (MED, design) — proposed. The
+  pre-commit entry (`.pre-commit-config.yaml:11`) runs
+  `hooks/skill_frontmatter_lint.py --write --fail-on-write` over every staged
+  `.md`, and `skill_files()` maps a sibling to the `SKILL.md` that owns it, so
+  a commit that stages only `skills/x/data.md` can rewrite `skills/x/SKILL.md`,
+  a file it never staged. The run exits 1 and prints `fixed:`, so it is loud,
+  but the write lands in the working tree outside the commit. **Proposal:**
+  repair only the paths the caller named and report, never write, an owner
+  reached through a sibling. Changes the `--write` contract — needs sign-off;
+  no test — design.
 
-- **SKILL-LINT-BASENAME-HIDES-ORPHANS** (MED, design) — proposed. Duplicate
-  basenames hide real orphans. `names_doc`
-  (`hooks/skill_frontmatter_lint.py:276`) accepts a bare basename written
-  anywhere under the skill, so one file's name satisfies every file that shares
-  it: `public/reference.md` counts as a reference to `unused/reference.md`.
-  Three files ship unreached today — `skills/create/art/ascii-video/README.md`,
-  `skills/create/art/p5js/README.md` and `skills/create/video/manim/README.md`
-  — matched only by unrelated `README.md` mentions in
-  `skills/create/web.md:664-670,712,797,806`, which describe the `sketches/`
-  output tree. A blanket-strict path match is the wrong fix: it orphans 103
-  files under `skills/create/`, among them 49 legitimate bare rows at
-  `skills/create/web/popular-web-designs.md:122-200` and the genuine
-  intermediate-file reference at `skills/create/video/render.md:29`. So the fix
-  has to be duplicate-aware — accept a basename only while it is unique under
-  the skill, and demand a path form otherwise. A matcher contract change —
-  needs sign-off; no test — design.
+- **SKILL-LINT-PRE-COMMIT-SCANS-HIDDEN-DIRS** (LOW, design) — proposed.
+  Pre-commit hands the scan every staged `.md` (`files: \.md$`), so it reaches
+  the 21 tracked `.diary/*.md`, while `make skills-frontmatter` and CI walk the
+  tree through `visible_files()`, which skips hidden directories. The two
+  scopes disagree on a real file: `.diary/20261007.md` quotes an illustrative
+  home path with a two-segment account name at `:19` and `:99`, so `python3
+  hooks/skill_frontmatter_lint.py .diary/20261007.md` exits 2 with two
+  `skill-local-path` findings while the tree target passes; `/.diary/` is
+  gitignored, so pre-commit meets the file only when it is force-added, and a
+  tracked diary that quotes such a path blocks its commit while the tree
+  target and CI stay green.
+  **Proposal:** one scope for both — the script drops hidden paths it is
+  handed, or the pre-commit pattern excludes them. Changes the scan's input
+  contract — needs sign-off; no test — design.
 
-- **SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE** (MED, design) — proposed.
-  `check_leaks` (`hooks/skill_frontmatter_lint.py:310`) reads `*.md` under a
-  directory holding a `SKILL.md`, while the rule it cites (`CLAUDE.md:121`)
-  covers source. `skills/README.md` and `skills/CLAUDE.md` sit outside every
-  skill directory and are never scanned, and four tracked files carry an
-  absolute home path the pattern matches: `docs/astgrep/codex-critique.md`
-  (this host's own account, on most bullets), `evals/README.md:122`,
-  `research/anthropic-skills.md:72` and
-  `specs/2-hermes-skill-autoimprove.md:79-80`. The last three name another
-  author's account, and `evals/README.md:122` uses one as the example of what to
-  strip, so a wider root needs a per-file allowance with it. Nothing checks the
-  rule's third category at all: the finding message names org-specific refs,
-  and `LOCAL_PATH` and `SECRET` are the only patterns. **Proposal:** scan a tree
-  root instead of a skill root, with an opt-out marker for an illustrative path
-  — a new input contract for both leak rules; no test — design.
+- **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
+  `.github/templates/lint.yml.tmpl` passes
+  `--from-ref ${{ github.event.pull_request.base.sha || github.event.before }}`
+  and the matching `--to-ref` to pre-commit; on `workflow_dispatch` both are
+  empty, and `pre-commit run --from-ref --to-ref HEAD` exits 2 with "expected
+  one argument", so a manual run fails before any hook. **Fix:** drop
+  `extra_args` so every trigger runs `--all-files` — blocked by
+  PRE-COMMIT-ALL-FILES-RED — or drop the trigger.
+
+- **PRE-COMMIT-ALL-FILES-RED** (LOW, lint) — CONFIRMED 2026-10-08 at 63ad23b.
+  `pre-commit run --all-files` fails on `tw-fetch/mirror.py` alone:
+  ruff-format rewrites it, and the pinned ruff 0.12.1 reports `:90` UP041 and
+  `:138` T201. CI runs pre-commit over the diff only, so neither surfaces
+  until a commit touches the file.
+
+- **GH-GATE-READS-DIRECT-GH-ONLY** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `hooks/gh_text_lint.py` `GH` matches a `gh` word at the head of
+  a command segment, after `VAR=value` assignments and one wrapper (`env`,
+  `timeout`, `sudo`, `command`, a path). `bash -c 'gh pr create ...'`,
+  `g=gh; $g pr create ...` and `xargs gh pr create` post without a check.
+  No proposal: each is a way around the gate an agent has to choose, and a
+  shell parser is the wrong size for a hook.
+
+- **GH-LINT-FLAGS-RANGES-AND-FLAG-NAMES** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `SHORTENED` in `hooks/gh_text_lint.py` reads a git range
+  `c98c2da...c1bcf64` as a shortened hash, and `MARKETING` reads the flag
+  name in "drop the `--robust` flag" as a marketing word, so a comment or
+  body naming either is refused with the wrong reason. **Proposal:** skip a
+  match inside backticks. No test yet.
+
+- **PRETOOL-IMPORTS-OUTSIDE-SUPPRESS** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-08. `hooks/pretool_nudge.py:16-17` imports `gh_text_lint` and
+  `lib.state` at module level, outside the `suppress(Exception)` around
+  `main()`. An install that lacks either file, or `python3 -I`, tracebacks on
+  every tool call and no
+  unsafe-command block fires (exit 1, shown to the user, not blocking). Same
+  shape as the `lib.state` imports in `local.py` and `memory_nudge.py`;
+  `hooks/ARCHITECTURE.md` § lib states the install contract.
+
+- **GH-GATE-REGEX-SHELL-PARSE** (MED, design) — proposed, needs sign-off.
+  `hooks/gh_text_lint.py` reads the command with regexes (`GH`, `QUOTED`,
+  `BODY_TEXT`, `BODY_FILE`, `HEREDOC`, `JSON_BODY`), so its parse and bash's
+  disagree. Measured at 63ad23b. Posts unchecked: `gh pr edit 5 -b"…"` (the
+  attached flag; a required kind is refused as body-not-found instead),
+  `--body "…""…"` adjacent strings (only the first is read), `--body "🤖
+  $BODY"` (the shell expands it after the lint), `--input` JSON with
+  `{"body":""}` (empty bodies are skipped — the review-submit event needs it)
+  or a `body` key, `gh api -X PATCH …/pulls/1 -f "body=…"` (quoted key),
+  and `gh pr close`/`gh issue close --comment "…"` (not in `POSTS`). Refused
+  wrongly: `printf 'x; gh pr create --fill'` (a `;` inside quotes opens a
+  segment), `--body '🤖 Run $(make test)'` (single quotes never substitute),
+  `-F "per_page=5"` read as a body file (a quoted key fails the `[\w-]+=`
+  lookahead) — a GET `search/issues` whose query names `pulls/5` is allowed
+  on its own and becomes a false block the moment such a `-F` follows — and a
+  `<<\EOF` heredoc (`HEREDOC` accepts only `'`/`"` quoting) whose contents
+  are read as commands. **Options:** (a) split segments and tokenize each
+  with `shlex`, then read flags from tokens; (b) keep the regexes and add a
+  case per miss. **Default if nothing is decided:** (a). No test — design.
+
+- **PRETOOL-UNSAFE-SCAN-READS-QUOTED-TEXT** (LOW, design) — the maintainer's
+  call. `unsafe_command_reason` (`hooks/pretool_nudge.py:136-142`) runs
+  `UNSAFE_COMMAND_PATTERNS` over the whole command text, so a commit message
+  that names a blocked command is blocked as that command: `git commit -m
+  "docs: record the gh release create ask entry"` → `gh release create`, and
+  `git commit -m "docs: never killall by name"` → `killall` (measured at
+  63ad23b). Masking heredocs before the scan would let `bash <<EOF` through,
+  and the `Co-Authored-By` pattern (`:28`) must keep reading the message, so
+  the scope is a judgment call. Also `settings-recommended.json:23` keeps a
+  `Bash(gh release create*)` `ask` entry for a command the hook denies first
+  (`:33`), so that ask never fires. **Options:** (a) skip quoted text for the
+  patterns that name a bare command, and drop the dead ask entry; (b) leave
+  both — phrase commit messages around the words. **Default if nothing is
+  decided:** (b). No test — design.
+
+- **SKILL-LINT-PATH-TOKEN-SKIPS-SPACED-NAMES** (LOW, correctness) — CONFIRMED
+  at 63ad23b. `PATH_TOKEN` (`hooks/skill_frontmatter_lint.py:72`) admits only
+  `[\w.-]` and `/` in a written path, so a sibling named `user guide.md` or
+  `guide(v2).md` is named by no token, and `check_reachable` (`:344`) reports
+  it as a `skill-orphan` however SKILL.md spells it. Measured:
+  `hooks/test_skill_frontmatter_lint.py::test_named_sibling_with_a_space_or_parens_is_reachable`.
+  **Fix:** search the text for each doc's own name forms instead of
+  tokenizing the text.
+
+- **SKILL-LINT-LOCAL-PATH-EXEMPTS-MACOS-ACCOUNTS** (LOW, correctness) —
+  CONFIRMED at 63ad23b. `LOCAL_PATH` (`hooks/skill_frontmatter_lint.py:79`)
+  applies the `dockbox`/`claude` container-HOME exemption under `/Users/` as
+  well as `/home/`, so the macOS account paths `/Users/claude/x` and
+  `/Users/dockbox/x` pass the leak scan; the container HOME is only ever
+  under `/home/`. Measured:
+  `hooks/test_skill_frontmatter_lint.py::test_leak_scan_flags_a_macos_account_named_like_the_container`.
+  **Fix:** exempt the two names under `/home/` only.
+
+- **GH-LINT-DISTILL-COUNTS-THE-TITLE** (LOW, correctness) — CONFIRMED at
+  63ad23b. `lint` (`hooks/gh_text_lint.py:213`) flags `DISTILL cut nothing`
+  only when the body is at least as long as the whole draft, and pr-draft
+  step 2 writes the title into `tmp/pr-draft.md` above the body, so a body
+  the cut left untouched passes by the title's length:
+  `lint(Kind.PR, body, draft='fix: X\n\n' + body)` → `[]`. Measured:
+  `hooks/test_gh_text_lint.py::test_lint_pr_draft_ratio_ignores_the_draft_title`.
+  **Fix:** compare against the draft below its title line, or require a
+  real cut ratio (the `ok:` line already prints one).
 
 ## rig
 
@@ -497,3 +623,10 @@
   Claude Code and Codex both rewrite their token files on login refresh, so a
   ro or redacted token breaks auth inside the box. The README already says
   dockbox is not a boundary for hostile code.
+
+- **SKILL-LINT-NO-ORG-REF-CHECK** (LOW, coverage) — not a defect. `CLAUDE.md`
+  bans local paths, org-specific refs and secrets in source;
+  `hooks/skill_frontmatter_lint.py` checks the first and the last, and nothing
+  checks the second: a pattern for an org ref would have to name the org,
+  which is the string the rule exists to keep out of the repo. The rule stays
+  a review check.
