@@ -100,7 +100,7 @@
 
 - **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
   2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
-  (`.mjs`); `skills/browse/SKILL.md:96` has the agent write `tmp/debug.mjs`
+  (`.mjs`); `skills/browse/debug.md:19` has the agent write `tmp/debug.mjs`
   and run it with `node`. **Fix:** a `tmp/debug.ts` run by `bun`, or scope the
   ts rule to committed tooling. No test — duplication.
 
@@ -212,7 +212,9 @@
   (`INFO subsystem: message`); health: `service:12` (`/health`, `/ready`)
   vs `observe.md:12` (`/.well-known/live`); Python: `py:19` 3.13+ vs
   `strict-typing.md:43` 3.12; aliasing: `py:93-94` allows `heapq_merge` on
-  a collision vs `code.md:26-28` NEVER rename. **Options:** one owner per
+  a collision vs `code.md:26-28` NEVER rename; prose wrap:
+  `skills/create/web/code-presentation.md:110` 90 chars vs `code.md:167` 100,
+  which `rumdl` reflows. **Options:** one owner per
   fact, the rest point. **Default if nothing is decided:** `code.md` and
   WISDOM win where they speak; the rest stays until picked.
 
@@ -281,6 +283,71 @@
   at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
   `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
   rule wins inside a sync; RECLAUDE scopes project work.
+
+- **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
+  test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
+  non-obvious why" where `skills/software/code.md:57-62` bans every in-body
+  comment and `skills/refine/software.md:29-38` already hunts by that ban, so
+  the Python lens licenses what the baseline refuses. **Options:** (a) cut
+  the clause, leaving `software.md` the one comment lens; (b) keep it as a
+  Python allowance and say so in `code.md`. **Default if nothing is
+  decided:** as written.
+
+- **CREATE-PORTED-HERMES-TOOL-NAMES** (LOW, docs) — CONFIRMED at HEAD
+  2026-10-11, no test — docs. Ported files under `skills/create/` name Hermes
+  tools this harness lacks — `write_file`, `read_file`, `patch`, `terminal`,
+  `browser_navigate`, `browser_vision` (`web.md:685-692,804-808`,
+  `web/popular-web-designs.md:44-47,85-86`, line 13 of all 54
+  `web/popular-web-designs/templates/*.md`, `diagram/excalidraw.md:32,36`,
+  `diagram/architecture-diagram.md:47`, `web/design-md.md:132`,
+  `art/pretext.md:156`; also `skills/humanize/SKILL.md:38,108`) — and a
+  `generative-widgets` skill (`popular-web-designs.md:42,85` and the
+  templates) the bundle does not ship. **Options:** (a) one line in
+  `create/SKILL.md` § Rules mapping the Hermes names to Read, Write, Edit,
+  Bash and the `browse` skill; (b) rewrite each ported file. **Default if
+  nothing is decided:** as written.
+
+- **CREATE-DEAD-POINTERS** (LOW, docs) — CONFIRMED at HEAD 2026-10-11, no
+  test — docs. House files: `skills/create/video/collage.md:28-30,69` name
+  `solve/demo/collage_fetch.py`, `cutout_lib.py`, `collage.assets.py`,
+  `collage.html`, `collage.build.sh` and `solve/demo/eval/{clipkit,judge,report}.py`;
+  `skills/create/divergence.md:43,55` name
+  `../../projects/*/schema/demo/germinal-v4.stage.md` and `tmp/inspiration.py`.
+  None exists in the repo (`find` over the tree) or in an install. Ported
+  files: `art/ascii-video/README.md:278` → `design-patterns.md` (absent; the
+  patterns are in `references/scenes.md`); `art/p5js/README.md:40`,
+  `art/p5js/scripts/setup.sh:3`, `video/manim/README.md:22` →
+  `skills/creative/...` (the upstream layout); `art/ascii-video.md:69` →
+  `composition.md § Adaptive Tonemap` (the heading is "The `tonemap()`
+  Function"); `art/pretext.md:39-40` names `ascii-art`, `ascii-video` and
+  `p5js` as skills (now `art.md`, `art/ascii-video.md`, `art/p5js.md`);
+  `video/render/examples/README.md:25` cites a Lottie row `video/render.md`
+  lacks. **Fix:** house files name the project that holds the implementation
+  or drop the pointer; the ported files are the owner's call per
+  `software/credits.md`.
+
+- **CREATE-PORTED-TREES-RESTATE-THEMSELVES** (LOW, duplication) — owner
+  decision, no test — duplication. Each ported mode file restates rules its
+  own `references/` and `README.md` carry. manim: monospace-only font in 4
+  files, opacity layering 1.0/0.4/0.15 in 4, `buff >= 0.5` in 5, raw-string
+  LaTeX in 4, `self.wait()` in 6, the timing table, palette, quality presets
+  and stitch command in 2-3 each. ascii-video: the ffmpeg `stderr=PIPE`
+  deadlock in 5, font cell height in 4, `tonemap()` in 6, and `README.md`
+  repeating the mode table, pipeline and catalogs. p5js: seeded randomness,
+  FES off, HSB, `fbm`, `createGraphics`, WebGL gotchas, key bindings,
+  `noLoop()` capture and fxhash each in the mode file and 1-3 references,
+  plus two SVG Export sections in `references/export-pipeline.md:330-361,491-519`
+  pinning `p5.js-svg` 1.5.1 and 1.6.0. pretext: real-prose, prepare-once and
+  pin-the-version each 2-3 times inside `art/pretext.md`. excalidraw: the
+  `label` warning in 4 places. design-md: the anatomy example against
+  `templates/starter.md`. popular-web-designs: the Hermes block at line 13 of
+  all 54 templates, and the three-mode decision table in `web.md:22-36`,
+  `popular-web-designs.md:27-35` and `design-md.md:34-37`. `web.md` against
+  itself: self-contained HTML 4 times, verification 3, "2-3 variants" at
+  `:644` against "at least three options" at `:326-346`. **Options:** (a)
+  keep — a reference file loads alone, so a restatement there is what its
+  reader sees; (b) cut the mode files to pointers. **Default if nothing is
+  decided:** (a).
 
 ## Codex bridge
 
@@ -422,6 +489,16 @@
   `skill-orphan`. Reproduce: `cd skills/recall-memories && uvx pytest -q
   test_recall.py`, then `make skills-frontmatter`. **Fix:** skip hidden path
   parts in `sibling_docs`, as `visible_files()` does. No test yet.
+
+- **SKILL-LINT-TARGET-WALKS-TMP** (LOW, config) — CONFIRMED 2026-10-11, no
+  test — config. `make skills-frontmatter` runs `skill_frontmatter_lint.py .`
+  and `visible_files()` skips only hidden dirs, so a `SKILL.md` under the
+  gitignored `tmp/` fails the tree target:
+  `tmp/maps-research/rw/ripwire-0.6.5-linux-x64/skills/ripwire-write-tests/SKILL.md`
+  (a research checkout) exits it 2 while
+  `python3 hooks/skill_frontmatter_lint.py skills` exits 0. Pre-commit lints
+  staged files only, so the commit gate is unaffected. **Fix:** lint the
+  bundle dirs instead of `.`, or drop the paths `git check-ignore` matches.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes
