@@ -77,10 +77,8 @@ Spawn one opus sub per concern. Hard rules:
 
 - **One concern per sub** — authz scope is not migrate enumeration is not
   dispatch lifecycle. If a "fix" spans concerns, split it.
-- **Sequential on the shared tree** — NEVER run two code-editing subs in
-  parallel on the same checkout. They interleave: one reverts the other's
-  edits, mid-flight commits, half-edited files. `Skill(worktree)` decides
-  when a sub gets its own detached worktree, and how.
+- **Sequential on the shared tree** — WISDOM § Agents; `Skill(worktree)`
+  decides when a sub gets its own detached worktree, and how.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need

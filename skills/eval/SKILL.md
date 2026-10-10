@@ -45,3 +45,9 @@ verdict.
 - ALWAYS keep one lens per report. A finding that belongs to another lens is
   named and routed there, never graded here.
 - NEVER recycle a prior critique — re-read the target fresh each run.
+- Findings are claims, not facts — the caller re-verifies load-bearing ones
+  before acting (`sweep` § Verify a finding before you fix it). A hostile
+  persona finds sharper defects but is not thereby more correct.
+- A CEO and a CTO eval of one target stay two reports, then one synthesis
+  pass: both lenses flagged it → top priority; one lens only → that domain's
+  work; they disagree → escalate to the owner.

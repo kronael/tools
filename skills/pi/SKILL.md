@@ -72,28 +72,13 @@ once and `/login`. ALWAYS report "pi isn't configured" and continue. NEVER crash
 
 ## Rules
 
-pi is a peer agent — it has tools and sees the repo. Give it the goal and entry
-points, then let it explore. NEVER pre-chew the answer or walk it through steps.
-For open-ended tasks give a high-level goal and let pi research it.
-
-### Adversarial framing
-
-Like any model, pi is sycophantic — confirming questions get confirming answers.
-
-- ALWAYS attack your own conclusion: "Find the flaw in X", "Why would this break?"
-- NEVER ask "is X correct?" / "does this look right?" — primes a yes.
-
-### Prompt contents
-
-- ALWAYS state the goal in one line ("Goal: <X>").
-- Targeted questions: hand it entry points (file paths, symbols, error output).
-- NEVER paste your reasoning chain or conclusions — biases the second opinion.
+pi is a peer agent with tools and repo access, as codex is: `astra` § Rules
+owns the briefing rules — goal and entry points, adversarial framing, no
+reasoning chain pasted in, every claim verified before acting — and they
+apply to pi unchanged.
 
 To restrict what pi can touch (read-only-ish review): `--tools read,grep,find,ls`
 or `--no-tools`. `-a/--approve` govern project file-trust, NOT tool gating.
-
-ALWAYS verify pi's claim against the codebase before acting. Discard with a
-one-line reason if wrong; cite when acting.
 
 ## Output
 
