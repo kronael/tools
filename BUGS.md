@@ -11,15 +11,6 @@
   Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
   Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
 
-- **SLUG-RULE-DROPS-DOTS** (LOW, docs) — CONFIRMED. `skills/solve/SKILL.md:26`
-  and `skills/global/SKILL.md:14` say the transcript slug is the CWD with `/`
-  replaced by `-`. Claude Code replaces every non-alphanumeric character:
-  `/home/u/app/x/.wt/server` is stored as
-  `~/.claude/projects/-home-u-app-x--wt-server`. Built that way, a
-  path through a worktree or any dotted directory names a directory that does
-  not exist, and the search reports no history. `skills/recall-memories/layout.md`
-  states the full rule; the two files still carry the short one.
-
 - **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED at
   HEAD 2026-10-06. `hooks/prompt_nudge.py` sends any prompt with
   the bare word `oracle` or `second opinion` to `/astra`
@@ -39,10 +30,10 @@
   design.
 
 - **REFINE-PUBLIC-REPLIES-EXCEED-LOCAL-SCOPE** (MED, design) — proposed,
-  needs sign-off. Step 5 of `skills/refine/SKILL.md:71-80` skips unless an
+  needs sign-off. Step 5 of `skills/refine/SKILL.md:73-82` skips unless an
   open PR whose head is an ancestor of HEAD exists, and step 11
-  (`:136-139`) already posts each reply through `gh-comment`'s sign-off gate.
-  The gap: while such a PR is open, step 11's completion line (`:150-151`)
+  (`:138-145`) already posts each reply through `gh-comment`'s sign-off gate.
+  The gap: while such a PR is open, step 11's completion line (`:159-161`)
   needs every unfixed triaged thread replied to, so refine cannot complete
   for a local-only delivery unless the owner approves or declines the
   replies. **Proposal:** let a reply the owner declined, or a delivery the
@@ -50,21 +41,12 @@
   the report. Keep approval gates in `gh-comment`. No new review mode,
   skill, saved plan or hook. No test — design.
 
-- **COMMIT-ORPHAN-WORKTREE-TEST-CONTRADICTS-REFINE** (LOW, duplication) —
-  CONFIRMED at HEAD 2026-10-09. `skills/commit/SKILL.md:75-82` § Orphaned
-  worktrees removes an entry under `.claude/worktrees/` with `git worktree
-  remove --force` once it is "superseded + lock pid dead" — a path
-  `skills/worktree/SKILL.md:12-13` says never to create, and a test refine
-  step 11 (`skills/refine/SKILL.md:146-154`) rejects: a worktree goes only
-  when its HEAD is on a remote-tracking ref and its status is clean, never
-  by `--force` or a dead lock. Two removal rules drift. **Fix:** replace the
-  section with a one-line pointer at refine step 11. No test — duplication.
-
 - **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
   `skills/global/SKILL.md:180-182` caps `sonnet`, `fable` and `opus` subagents
   by `subagent_type`; the bundle also launches `general-purpose`
   (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
-  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`) and the thin
+  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
+  `skills/recall-memories/SKILL.md:161`) and the thin
   skill agents — `improve` pins Sonnet 5.5 (`agents/improve.md:3`), the rest
   inherit the parent's model — none of which the cap names. **Options:**
   (a) count a sub under the model it runs on (`improve` as `sonnet`,
@@ -72,9 +54,9 @@
   types. **Default if nothing is decided:** (a). No test — design.
 
 - **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
-  decision. `skills/refine/SKILL.md:146-154` removes every worktree after the
+  decision. `skills/refine/SKILL.md:146-155` removes every worktree after the
   first whose HEAD is on a remote-tracking ref and whose status is clean,
-  whoever made it; `skills/worktree/SKILL.md:55` says "NEVER remove another
+  whoever made it; `skills/worktree/SKILL.md:57` says "NEVER remove another
   task's worktree". A clean checkout at a pushed commit that another session
   is about to use goes under the first rule and is protected by the second.
   **Options:** (a) step 11 removes only worktrees this run created, listing
@@ -101,15 +83,6 @@
   **Options:** (a) the preserve list is exempt from the cap; (b) the cap holds
   and the detail goes to a `### Operator note`. **Default if nothing is
   decided:** (b). No test — docs.
-
-- **SWEEP-ISOLATION-WORKTREE-VS-WORKTREE-SKILL** (LOW, duplication) —
-  CONFIRMED at HEAD 2026-10-10. `skills/sweep/SKILL.md:82-83` says parallel
-  fixes are only safe "with isolated worktrees (Agent `isolation:
-  "worktree"`)"; `skills/worktree/SKILL.md:12` says "NEVER use
-  `isolation: "worktree"` — it creates a local branch". `sweep` also names
-  its read-only subs "Sonnet/Explore" at `:17` and `general-purpose` at `:25`.
-  **Fix:** point sweep at `worktree` § Creating a worktree by hand and name
-  one agent type. No test — duplication.
 
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
@@ -194,32 +167,125 @@
   failure. **Fix:** rewrite the regexes and rubric lines to the
   `type(scope):` form; no test — docs.
 
-- **SWEEP-READS-PRUNED-FIXED-ENTRIES** (LOW, docs) — CONFIRMED at HEAD
-  2026-09-25. `/sweep` with no argument reads "the most recent `BUGS.md` ✅
-  FIXED/Resolved entries" (`skills/sweep/SKILL.md:35-36`), but
-  `skills/bugs/SKILL.md` § Pruning deletes an entry once its fix is
-  committed, so a queue kept by that skill has none to read. **Fix:** take
-  the fixed pattern from the latest fix commit (`git log`) and the diary;
-  no test — docs.
+- **LANG-SKILLS-RESTATE-COLD-RUNBOOKS** (LOW, duplication) — owner decision,
+  no test — duplication. Hot `SKILL.md` bodies restate rules a cold
+  `software/` runbook owns: `skills/py/SKILL.md:121-123,130,132-137`
+  (`strict-typing.md` one mode, `ci.md` `python -m pytest`, `testing.md`
+  fixtures and doubles), `skills/go/SKILL.md:38-39,42,147,151`
+  (`strict-typing.md` linters, `dynamic-analysis.md` `-race`, goleak,
+  govulncheck), `skills/rs/SKILL.md:74-76,85,137` (`testing.md`, `cli`,
+  `dynamic-analysis.md` miri). `skills/software/SKILL.md:29` says NEVER
+  duplicate the runbooks into language skills; the copies are what a session
+  sees without a dispatch. **Options:** (a) cut each to a pointer; (b) keep
+  the hot summaries and let `software/SKILL.md:29` allow a one-line summary.
+  **Default if nothing is decided:** (b).
+
+- **SKILLS-DISAGREE-ON-MAKE-TARGETS-AND-FORMATS** (LOW, docs) — owner
+  decision, no test — docs. Four canonical Make target sets:
+  `skills/software/ci.md:47-48` (prepare, build, test, right, image, clean),
+  `skills/mk/SKILL.md:71-78` (prepare, check, right, test, integration,
+  clean), `skills/ts/SKILL.md:120-121` (prepare, check, right, test), WISDOM
+  § House conventions (test, test-all, smoke); `ci.md:44` "NEVER add a
+  `lint` target" vs `ops:48`, `mk:76,86`, `py:125`, `ts:120`; `ci.md:50`
+  sets `PYTHONPATH` per target, `py:131` once. Log line:
+  `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:183`
+  (`INFO subsystem: message`); health: `service:12` (`/health`, `/ready`)
+  vs `observe.md:12` (`/.well-known/live`); Python: `py:19` 3.13+ vs
+  `strict-typing.md:43` 3.12; aliasing: `py:93-94` allows `heapq_merge` on
+  a collision vs `code.md:26-28` NEVER rename. **Options:** one owner per
+  fact, the rest point. **Default if nothing is decided:** `code.md` and
+  WISDOM win where they speak; the rest stays until picked.
+
+- **SKILLS-RETRY-LOOPS-VS-FAIL-LOUD** (LOW, design) — owner decision, no
+  test — design. `skills/rs/SKILL.md:101-122` prescribes a `main()` loop
+  that sleeps and restarts on any `Err`; `skills/service/SKILL.md:14` says
+  "use last available data when current unavailable"; `skills/data/SKILL.md:44`
+  "Retry with exponential backoff" — WISDOM § System-change discipline
+  retries ONLY the transient. **Options:** (a) scope each to transient
+  errors; (b) state the supervised-binary exception in `rs`. **Default if
+  nothing is decided:** (b).
+
+- **SOLANA-DEPS-VERSIONS-STALE** (LOW, docs) — CONFIRMED 2026-10-10, no test
+  — docs. `skills/solana/deps.md:12` calls anchor-lang 1.1.2 the newest
+  release and `:22` solana-pubkey 4.3.0; the crates index lists 1.2.1
+  (depending on `solana-pubkey` v3 and v4) and 4.4.0, and `:118-121` rests
+  on the 1.1.2 claim. `skills/solana/layout.md:123` is "verified at cargo
+  1.97.1". **Fix:** re-verify each pin against the index and the toolchain.
+
+- **README-ROUTER-CONTRADICTS-ITSELF** (LOW, docs) — owner decision, no test
+  — docs. `skills/readme/sync.md:56` puts an "Architectural Decisions"
+  section in ARCHITECTURE; `skills/readme/topology.md:104` says NEVER
+  record a decision there. `sync.md:24-48` and `topology.md:43-57` give two
+  README section orders. `skills/release/library.md:115` wants README line 2
+  "technical"; `sync.md:26-28` "a 13-year-old understands". **Options:**
+  (a) topology owns layout and order, sync points; (b) sync owns. **Default
+  if nothing is decided:** (a).
+
+- **RELEASE-TAG-COLLISION-RULES-CONFLICT** (LOW, docs) — owner decision, no
+  test — docs. `skills/release/SKILL.md:151-153` bumps past an existing tag,
+  `:154-157` deletes and re-tags it, and `skills/merge/SKILL.md:22-24` never
+  re-points a colliding tag. **Default if nothing is decided:** bump past —
+  re-pointing a pushed tag is the failure.
+
+- **SECOND-OPINION-ROUTING-SPLIT** (LOW, docs) — owner decision, no test —
+  docs. `skills/astra/SKILL.md:14-16` allows direct use only on request or
+  via `oracle`, but `skills/release/SKILL.md:34` and
+  `skills/scavenge/SKILL.md:56,75,132` call astra directly; `oracle` never
+  routes to `pi`; `astra`, `pi` and `oracle` share the triggers "second
+  opinion", "sanity check" and "disagreement after reasoning"
+  (`skills/wisdom/SKILL.md:48` forbids a shared primary trigger);
+  `skills/terra/SKILL.md:24-27` requires `--sandbox read-only` outside
+  dockbox while `astra:29,57` always bypasses the sandbox. **Default if
+  nothing is decided:** as written.
+
+- **SCAVENGE-OUTPUTS-CONTRADICT-BUNDLE-RULES** (LOW, design) — owner
+  decision, no test — design. `skills/scavenge/SKILL.md:25-26,136-138`
+  writes new skills and agents into `~/.claude/` (an install of this repo,
+  WISDOM § Environment); `:66,79,178` put research and critiques under
+  `<cwd>/docs/<topic>/` (`skills/readme/topology.md:95-96` bans work records
+  in `docs/`); `skills/scavenge/shapes.md:38-55` is a content-bearing agent
+  skeleton (`skills/CLAUDE.md:119` forbids one). **Default if nothing is
+  decided:** as written.
+
+- **EVAL-DOGFOOD-REPORTS-ARE-WORK-RECORDS** (LOW, docs) — owner decision, no
+  test — docs. `skills/eval/design/dogfood-glass.md:16,110-114` and
+  `dogfood-term.md:113-116` carry dated outcomes and shortened hashes
+  (`cfecd8c`, `0c16126`; WISDOM § Documentation wants them full);
+  `skills/eval/novice.md:6-7,184-186` names its scavenge provenance and
+  `oracle-critique.md` files that `scavenge:79` writes as
+  `astra-critique.md`. **Options:** (a) move the reports to `.diary/`; (b)
+  genericise; (c) keep. **Default if nothing is decided:** (c).
+
+- **RECLAUDE-TMP-BAN-VS-SYNC-RUN-DIR** (LOW, docs) — owner decision, no test
+  — docs. `RECLAUDE.md:4` "NEVER use `/tmp` — ALWAYS `./tmp`" is re-injected
+  at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
+  `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
+  rule wins inside a sync; RECLAUDE scopes project work.
 
 ## Codex bridge
 
-- **SYNC-BRIDGE-OVER-LINE-CAP** (LOW, docs) — CONFIRMED at HEAD 2026-10-06.
-  `plugins/kronael/skills/kronael-sync/SKILL.md` is 244 lines against the
-  repo's 200-line rule (`CLAUDE.md:116`, `skills/wisdom/SKILL.md:67`), and
-  the canonical `kronael/sync/SKILL.md` is 209. **Fix:** cut the bridge to
-  its Codex-only deltas, and move detail from both to
-  `kronael/sync/reference.md`; no test — docs.
+- **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
+  docs. Codex's own skill instructions say a user names a skill "with
+  `$SkillName` or plain text" (the `codex` 0.162.0 binary's prompt text),
+  and `plugins/kronael/.codex-plugin/plugin.json` `defaultPrompt` uses
+  `$kronael-sync`; the bundle writes `@skill-name` everywhere else
+  (`README.md`, `AGENTS.md`, `ARCHITECTURE.md`, `kronael/sync/reference.md`
+  § Codex bridge, `hooks/README.md`, `hooks/ARCHITECTURE.md`) and
+  `hooks/codex_hook.py:124` rewrites `/skill` to `@skill`. Both forms loaded
+  the `refine` skill in an ephemeral Codex session on 2026-10-10, so `@` works
+  through the plain-text path. **Options:** (a) switch the docs, the rewrite
+  and `hooks/test_codex_hook.py:91` to `$`; (b) keep `@`. **Default if nothing
+  is decided:** (b).
+
+- **CODEX-PRECOMPACT-ENTRIES-NO-OP** (LOW, config) — owner decision, no test
+  — config. `codex-hooks.json:58-74` wires `local` and `reclaude` on Codex
+  `PreCompact`, but `hooks/codex_hook.py:155-162` returns nothing for any
+  non-block PreCompact output, so both entries spawn a process whose output is
+  discarded; the only effect left is `local.py`'s `local-{sid}` stamp.
+  **Options:** (a) drop the two entries; (b) keep them for when the adapter
+  can carry context. **Default if nothing is decided:** (b).
 
 ## Hooks
-
-- **HOOKS-DOCS-BLOCK-LIST-SHORT** (LOW, docs) — CONFIRMED 2026-10-08 at
-  63ad23b. `hooks/README.md:43-48` and `hooks/ARCHITECTURE.md:115-118` list
-  fewer blocked commands than `hooks/pretool_nudge.py:23-40` enforces: the
-  `Co-Authored-By` trailer, `git merge --squash`, `git rebase -i`, branch
-  creation (`checkout -b`/`switch -c`), `git worktree add` without `--detach`
-  and `killall` are blocked but undocumented. **Fix:** list every pattern in
-  the docs, or point them at the table.
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
@@ -267,20 +333,23 @@
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:171` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:16`, which
-  strips it from the test env, and `hooks/ARCHITECTURE.md:159,164`, which
+  strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
   documents the clause — none in `Makefile`, `.github/`, `evals/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
   get the block messages injected into their transcripts. **Fix:** one line
   either way — set it in the eval runner, or delete the clause — but which
   one is a scope call; no test — config.
 
-- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off.
-  `hooks/lib/state.py:30` names four stamps per session — `local-`
-  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:153`),
-  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:110-118`)
-  — and no hook deletes one or expires a session id, so `~/.claude/state`
-  gains up to four files per session. Harmless in bytes; the question is
-  whether stamps should self-prune on write past N days; no test — design.
+- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
+  stamps per session are named at their call sites — `local-`
+  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:150`),
+  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:105-113`)
+  — plus a second per-session store `pretool_nudge.py:285-292` keeps at
+  `~/.claude/tmp/extnudge/{sid}.txt`, and no hook deletes one or expires a
+  session id, so `~/.claude/state` gains up to four files per session.
+  Harmless in bytes; the question is whether stamps should self-prune on
+  write past N days. **Options:** (a) prune on write past N days; (b) leave.
+  **Default if nothing is decided:** (b). No test — design.
 
 - **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
   2026-09-29. `hooks/stop.py:81-89` defines its own `hook_event`: the same
@@ -323,14 +392,8 @@
   and the matching `--to-ref` to pre-commit; on `workflow_dispatch` both are
   empty, and `pre-commit run --from-ref --to-ref HEAD` exits 2 with "expected
   one argument", so a manual run fails before any hook. **Fix:** drop
-  `extra_args` so every trigger runs `--all-files` — blocked by
-  PRE-COMMIT-ALL-FILES-RED — or drop the trigger.
-
-- **PRE-COMMIT-ALL-FILES-RED** (LOW, lint) — CONFIRMED 2026-10-08 at 63ad23b.
-  `pre-commit run --all-files` fails on `tw-fetch/mirror.py` alone:
-  ruff-format rewrites it, and the pinned ruff 0.12.1 reports `:90` UP041 and
-  `:138` T201. CI runs pre-commit over the diff only, so neither surfaces
-  until a commit touches the file.
+  `extra_args` so every trigger runs `--all-files` (`pre-commit run
+  --all-files` passes at HEAD 2026-10-10), or drop the trigger.
 
 - **GH-GATE-READS-DIRECT-GH-ONLY** (LOW, hooks) — CONFIRMED at HEAD
   2026-10-08. `hooks/gh_text_lint.py` `GH` matches a `gh` word at the head of
@@ -419,12 +482,64 @@
   **Fix:** compare against the draft below its title line, or require a
   real cut ratio (the `ok:` line already prints one).
 
+- **STYLE-RULES-NUDGE-RESTATES-CAVEMAN** (LOW, duplication) — owner
+  decision, no test — duplication. `hooks/prompt_nudge.py:9-15`
+  `STYLE_RULES` is emitted on every prompt (`:204`, meta prompts too,
+  `:190`) and restates `output-styles/caveman.md` with one line cap (~17,
+  max 20) where caveman has tiers (`:15`) and "no tables or headers" where
+  caveman allows them for tabular content (`:26`); neither `hooks/README.md`
+  nor `hooks/ARCHITECTURE.md` names it. `COMMIT_RULES` (`:21-27`),
+  `stop.py:124-132` and `local.py:11-16` `RULES` restate WISDOM § Git and
+  `code.md`. **Default if nothing is decided:** as written — the nudges are
+  deliberate re-injection.
+
+- **RECLAUDE-KEYWORD-PATH-UNWIRED** (LOW, dead code) — CONFIRMED 2026-10-10.
+  `hooks/reclaude.py:33-41` carries a continue/recap keyword path (the same
+  two regexes as `local.py:61-62`); the wiring runs the hook on PreCompact
+  only (`settings-recommended.json`, `codex-hooks.json`), no test names the
+  path, and `hooks/ARCHITECTURE.md` says it is unwired. **Fix:** the
+  maintainer's call — delete it with the ARCHITECTURE lines, or wire it.
+
+- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-10, no
+  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:16` and
+  read by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py:111`) and
+  `KRONAEL_HOOK_STATE` (`lib/state.py:10`) appear in no doc. **Fix:** drop
+  the first; name the other two in `hooks/ARCHITECTURE.md`.
+
+- **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
+  CONFIRMED 2026-10-10, no test — config. No workflow runs
+  `skills/recall-memories/test_recall.py`, `make lints` or `make spec-lint`
+  (`grep -rn recall .github` is empty); `test-hooks.yml` triggers on
+  `hooks/**` only while `hooks/test_prompt_nudge.py:40,48` reads
+  `skills/*/SKILL.md`, so a push touching only `skills/` skips it. **Fix:**
+  add the three to `lint.yml.tmpl` and `skills/**` to the hooks path filter.
+
+- **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
+  — config. `agents/distill.md:4`, `agents/refine.md:4` and
+  `agents/visual.md:4` list the `Task` tool and `settings-recommended.json:4`
+  allows `Task(*)`; Claude Code renamed it to `Agent` in 2.1.63 and keeps
+  `Task` as an alias. **Default if nothing is decided:** keep `Task` until
+  the alias goes.
+
+- **SETTINGS-ALLOW-GIT-BRANCH** (LOW, config) — owner decision, no test —
+  config. `settings-recommended.json:10` allows `Bash(git branch*)` while
+  WISDOM § Git bans `git branch <name>`; `unsafe_command_reason` returns
+  None for `git branch foo`, `git push --force`, `git push -f` and `git
+  clean -fd`. Four keys (`alwaysThinkingEnabled`,
+  `skipDangerousModePermissionPrompt`, `promptSuggestionEnabled`,
+  `spinnerTipsEnabled`) fall under step 5's diff-and-ask with no rule naming
+  them. Policy over enforcement is the house rule. **Default if nothing is
+  decided:** as written.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
-  still plays the removed `riq` section; `rig/demo/run.ts` no longer has it.
+  still plays the removed `riq` section; `rig/demo/run.ts` no longer has it,
+  and `run.ts:252` still says the reflog keeps commits 90 days (30 for an
+  unreachable entry, `gc.reflogExpireUnreachable`; `rig/README.md` says 30).
   `make -C rig demo` needs `asciinema` and `agg`, which this host lacks.
-  **Fix:** re-record with `make -C rig demo` on a host that has both.
+  **Fix:** fix the line, then re-record with `make -C rig demo` on a host
+  that has both.
 
 - **RIG-PUSH-BYPASSES-ASK-RULE** (MED, config) — open (record only). The
   `Bash(git push*)` ask rule (`settings-recommended.json:18`) matches the
@@ -434,6 +549,19 @@
   allow rule that admits them pushes with no ask gate left. **Fix:** an ask
   rule for the rig push forms; which forms, and whether to gate them at all,
   is the maintainer's call.
+
+- **RIG-HELP-EXITS-1** (LOW, ux) — CONFIRMED 2026-10-10. `rig/rig:267`
+  routes `-h|--help|help` to `usage()`, which ends in `exit 1` (`:237`), so
+  `rig --help` fails in a pipeline. **Fix:** exit 0 on an explicit help
+  request.
+
+- **RIG-MAKEFILE-STALE-NAME-CLEANUP** (LOW, dead code) — owner decision.
+  `rig/Makefile:7-12` removes retired `gt*`/`gb`/`gpo` symlinks under
+  `~/.local/bin` and `~/bin`; `cmd_install` (`rig/rig:193-204`, proven by
+  `rig/test.sh:162-168`) already removes every stray symlink to `rig` in the
+  install dir, so only the `~/bin` line and non-symlink entries do anything.
+  **Default if nothing is decided:** keep until a host without the old names
+  is confirmed.
 
 ## dockbox
 
@@ -456,15 +584,10 @@
 
 - **DOCKBOX-DEFAULTMODE-TOP-LEVEL** (LOW, config) — CONFIRMED 2026-10-06.
   The box settings override sets `d['defaultMode'] = 'bypassPermissions'`
-  (`dockbox/dockbox:610`), a top-level key Claude Code does not read; the
+  (`dockbox/dockbox:609`), a top-level key Claude Code does not read; the
   setting is `permissions.defaultMode`. No effect today: the image's `claude`
   wrapper passes `--dangerously-skip-permissions` (`dockbox/Dockerfile:167`).
   **Fix:** set `permissions.defaultMode`, or drop the line.
-- **DOCKBOX-README-OPTIN-MOUNTS** (LOW, docs) — CONFIRMED 2026-10-06.
-  `dockbox/README.md` § Mounts lists `~/.dockbox_history` and `/etc/localtime`
-  under Opt-in (`:214-215`), but both are in the `MOUNTS` array
-  (`dockbox/dockbox:13-22`) and mount on every start. **Fix:** move them to
-  Automatic.
 
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
@@ -518,19 +641,23 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:442,490` and `qemubox/qemubox:1105,1109` launch the
+  `dockbox/dockbox:443,491` and `qemubox/qemubox:1105,1109` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:286,291`, `qemubox:53,58`, `qemubox/README.md:63`) and
+  (`dockbox:290`, `qemubox:53,58`, `qemubox/README.md:63`) and
   `dockbox/test.sh:357,366` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
   launchers to `high` (scripts, help, READMEs, test) or state the box's own
   reason for xhigh. Owner's call.
 
-- **DOCKBOX-FABLE-HELP-CLAIMS-MAX-EFFORT** (LOW, docs) — CONFIRMED.
-  `dockbox/dockbox:292` lists `fable` as "(max effort)", but the `fable` arm
-  (`:443`) passes no `--effort`, so the session runs at the CLI default.
-  `qemubox/qemubox:59` makes no such claim.
+- **DOCKBOX-HELP-OMITS-X-AND-IMAGE-PACKAGES-UNUSED** (LOW, docs) — CONFIRMED
+  2026-10-10, no test — docs. `dockbox/dockbox:430` accepts `-x` and
+  `README.md:69` documents it, but the `--help` Options list (`:304-317`)
+  shows only `-d`. `dockbox/Dockerfile:20` installs `iptables ipset iproute2
+  dnsutils aggregate`, which no script in the repo uses (`grep -rnw` over
+  dockbox, qemubox and the docs finds nothing); the egress lockdown they
+  served was rejected. **Fix:** add the `-x` help line; the packages are the
+  owner's call.
 
 ## qemubox
 
@@ -575,6 +702,55 @@
   not the last in its `set -e` block asserts nothing: `qemubox/test.sh:162`
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
   block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
+
+- **QEMUBOX-UNDOCUMENTED-ALIASES-AND-ENV** (LOW, docs) — CONFIRMED
+  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1261`),
+  `-f`/`rebuild` (`:1266`) and `QEMUBOX_QEMU` (`:10`) appear in neither the
+  usage text nor `qemubox/README.md`. **Fix:** document them or drop them.
+
+## bhctl
+
+- **BHCTL-HELP-NEEDS-PAIRED-DEVICE** (LOW, ux) — CONFIRMED 2026-10-10. The
+  MAC lookup (`bhctl/bhctl:33-36`) runs before the `case` at `:52`, so
+  `bhctl -h` with no paired headphones prints "no paired headphones" and
+  exits 1; the README says `-h` prints help. **Fix:** parse `-h` before the
+  lookup.
+- **BHCTL-LDAC-LABEL-HARDCODED** (LOW, ux) — CONFIRMED 2026-10-10.
+  `bhctl/bhctl:62` prints `hifi (LDAC)` for any `a2dp*` profile; the README
+  § Limits says the codec is not chosen here, so an AAC link is labelled
+  LDAC. **Fix:** print the profile, not a codec.
+
+## Root Makefile
+
+- **ROOT-MAKE-CLEAN-UNINSTALLS** (LOW, docs) — CONFIRMED 2026-10-10, no
+  test — docs. Root `make clean` runs each project's `clean`; `bhctl`,
+  `qemubox` and `rig` delete their installed binaries (and rig's symlinks),
+  `dockbox` also runs `docker rmi dockbox`; `udfix` and `gloww` only clean
+  the build. `CLAUDE.md` § Commands and the READMEs do not say so. **Fix:**
+  say it in `CLAUDE.md` § Commands.
+
+## Fetchers (dc-fetch, tg-fetch, tw-fetch)
+
+- **DC-FETCH-LIMIT-WRITES-WHOLE-BATCH** (LOW, correctness) — CONFIRMED
+  2026-10-10. `dc-fetch/main.py:44-51` loops `while total < limit`, always
+  requests 100 and writes the whole batch, so `-l 10` writes up to 100
+  messages; `README.md` says `-l` stops after N messages total. **Fix:**
+  request `min(100, limit - total)` or truncate the batch.
+- **TG-FETCH-NO-FLUSH** (LOW, correctness) — CONFIRMED 2026-10-10.
+  `tg-fetch/README.md:53` says every message is flushed before the next is
+  fetched; `tg-fetch/main.py:103-108` writes to a block-buffered
+  `open(p, 'a')` with no `flush()` (`tw-fetch/main.py:136` and
+  `dc-fetch/main.py:52` do), so a kill loses the buffered tail. **Fix:**
+  `f.flush()` after the write.
+- **TW-FETCH-DUPLICATED-SCROLL-LOOP** (LOW, duplication) — CONFIRMED
+  2026-10-10. `tw-fetch/main.py:192-212` (`collect_round`) and `:286-306`
+  (`user`) are the same 21-line scroll-parse-append loop, differing only in
+  `range(30)`/`range(200)` and `stale >= 3`/`>= 5`. **Fix:** one helper with
+  the two bounds as parameters.
+- **TG-FETCH-DUPLICATED-MAIN** (LOW, duplication) — CONFIRMED 2026-10-10.
+  `tg-fetch/main.py:118-139` and `tg-fetch/users.py:63-84` (`run`, `main`,
+  the `__main__` guard) differ only in two strings. **Fix:** one entrypoint
+  in `main.py`, imported by `users.py`.
 
 ## ship
 
