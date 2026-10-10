@@ -6,10 +6,8 @@ when_to_use: editing .sh files or writing shell scripts
 
 # Bash Style
 
-ALWAYS Read `../software/code.md` before the first edit — it owns naming
-(`is_`/`has_` predicates, `run_<command>` wrappers and verb-matches-behaviour
-hold for shell functions too), comments, design and the boring-code rules.
-Below are shell-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — naming, comments,
+design and the boring-code rules live there. Below are shell-specific additions.
 
 ## Structure
 - ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines
