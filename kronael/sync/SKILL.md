@@ -134,28 +134,9 @@ the failure. Settings still confirm before applying.
    `same` and `kept`; manifest `gitCommit` = `git -C "$SRC" rev-parse HEAD`.
 
 5. **Merge settings.** Copy `settings.json` and `~/.claude.json` into `RUN`
-   first. Merge `settings-recommended.json` into `~/.claude/settings.json`:
-   - **Hooks block** — replace each event it names with the recommended
-     wiring (`~/.claude/hooks/*.py`).
-   - ALWAYS apply, never ask: `cleanupPeriodDays` (raise to the recommended
-     value, never lower — the 30-day default deletes transcripts at startup);
-     `outputStyle` (else the style file never activates); `attribution.commit`
-     `""` (unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER
-     `attribution: false` — versions before v2.1.281 reject it and skip the
-     whole file); `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false`
-     (unset, the reminder asks for the `Generated with [Claude Code]` footer,
-     and a web or Remote Control session adds a session link; WISDOM § Git
-     bans both);
-     `bashEditDiffEnabled` `false` (unset, `auto` and
-     `bypassPermissions` modes diff the tree around every Bash command;
-     `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it); `crossSessionInbound`
-     `"refuse"` and `isolatePeerMachines` `true` (v2.1.224+; unset, delivery
-     between sessions follows their permission class — `SendMessage` stays
-     allowed, it is also the subagent channel).
-   - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
-     `Bash(rm -fr*)`, `Bash(rm --recursive*)`: ALWAYS all four, even when the
-     rest of permissions is declined. NEVER put the glob outside the parens
-     (`Bash(rm -rf /)*` matches nothing); verify the four after merging.
+   first. Apply `reference.md` § Settings — the always-apply keys, the
+   recursive-removal deny guard and the `~/.claude.json` diff keys, never
+   asked. Then merge the rest of `settings-recommended.json`:
    - **Loosen-only** — NEVER tighten the owner's posture: never flip
      `sandbox.enabled` to true, narrow `sandbox.excludedCommands`, move
      `permissions.defaultMode` off `bypassPermissions`, or drop an `allow` or
@@ -163,9 +144,6 @@ the failure. Settings still confirm before applying.
      `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
      replaces an installed `deny` of the same rule (deny evaluates first).
    - Rest of permissions, sandbox, env: show the diff, ask.
-   - `diffSidebarOpen` `false` and `diffTool` `"terminal"` are global config,
-     not settings keys: set them in `~/.claude.json`, keeping every other key;
-     they apply on the next start.
    Completion criterion: reading `settings.json` back shows every
    always-apply key at its value and the four deny entries paren-closed.
 

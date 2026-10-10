@@ -6,8 +6,8 @@ when_to_use: "@kronael-sync, sync kronael from codex, set up kronael in codex, b
 
 # Kronael Sync
 
-ALWAYS sync the existing Claude Code bundle from the marketplace source
-snapshot. NEVER copy or port the bundle into the Codex plugin directory.
+ALWAYS sync the existing Claude Code bundle from the Source Root below.
+NEVER copy or port the bundle into the Codex plugin directory.
 
 The installed Codex plugin contains only this sync skill. It does NOT
 contain the Kronael Claude skills. Codex sees those skills only through the
@@ -40,20 +40,12 @@ For sync requests, find the source root by checking, in order:
    - `$CODEX_HOME/.tmp/marketplaces/*`
    - `~/.codex/.tmp/marketplaces/*`
 
-The source root is the first directory where all of these exist:
+The source root is the first directory that holds the asset list of
+`kronael/sync/SKILL.md` step 0 plus `kronael/sync/SKILL.md` and
+`kronael/sync/reference.md`.
 
-- `kronael/sync/SKILL.md`
-- `kronael/sync/reference.md`
-- `skills/`
-- `agents/`
-- `hooks/`
-- `codex-hooks.json`
-- `settings-recommended.json`
-- `RECLAUDE.md`
-- `codex/AGENTS.md`
-
-NEVER use the installed plugin cache as the bundle source unless it contains
-all files above; normal plugin installs cache only this bridge skill.
+NEVER use the installed plugin cache as the bundle source unless it holds
+all of them; normal plugin installs cache only this bridge skill.
 
 If no source root is found, ask the user to run
 `codex plugin marketplace add kronael/tools` or
@@ -70,166 +62,19 @@ simple `~/.agents/skills -> ~/.claude/skills` symlink case.
 ## Sync
 
 1. Read `kronael/sync/SKILL.md` completely, plus the
-   `kronael/sync/reference.md` it points to (scripts, keep-list, Codex
-   bridge, tool commands).
-2. Follow them as the source of truth.
-3. Treat the discovered source root as the canonical sync source. NEVER run
-   `/kronael:sync`; that is a Claude Code slash command.
-4. Execute the canonical sync's steps exactly as written there — the
-   first-sync questionnaire, classify, merge live edits into the repo,
-   installed-only decisions, swap, settings, Codex bridge, external tools,
-   CLI tools (rig/udfix/dockbox — the marketplace snapshot carries their
-   source dirs), opted-in first-sync server memory, report. A marketplace snapshot is not the owner's clone:
-   when `~/.claude/` holds live edits, the sync stops before the swap and
-   asks for a run from the clone. Present the questionnaire inline as numbered options. NEVER
-   restate or fork those steps here; that file is the only source of truth and
-   copies drift.
-5. After a successful sync from Codex, run the global guidance, installed
-   skills, and hooks bridges below. This is part of the Codex sync path.
+   `kronael/sync/reference.md` it points to, and follow them as the source of
+   truth from the discovered source root. NEVER run `/kronael:sync`; that is a
+   Claude Code slash command.
+2. Present the first-sync questionnaire inline as numbered options. NEVER
+   restate or fork the canonical steps here; that file is the only source of
+   truth and copies drift.
+3. After a successful sync from Codex, run the Codex Bridge below. This is
+   part of the Codex sync path.
 
 ## Codex Bridge
 
-Use these steps when the user asks Codex to use Claude global/project guidance
-or installed skills. Bridge skills with symlinks, never copies; global
-guidance is a real file.
-
-### Global CLAUDE.md
-
-Codex loads global instructions from `~/.codex/AGENTS.override.md`, or from
-`~/.codex/AGENTS.md` when no override exists. It does not discover
-`~/.claude/CLAUDE.md` globally. `~/.codex/AGENTS.md` is therefore a real file
-holding the managed Kronael block, which tells Codex to read
-`~/.claude/CLAUDE.md`. Apply the merge in canonical sync step 6. ALWAYS
-back up the target first and preserve content outside the markers. NEVER report
-the global bridge complete without checking that the managed block is present.
-
-### Project CLAUDE.md
-
-To make Claude-only projects work in Codex, add `CLAUDE.md` as a fallback
-instruction filename in `~/.codex/config.toml`:
-
-```toml
-project_doc_fallback_filenames = ["CLAUDE.md"]
-```
-
-ALWAYS keep this as a top-level TOML key: insert it before the first `[table]`
-header, or append `CLAUDE.md` to the existing top-level fallback array. NEVER
-hand-append it after the current table header; in TOML that makes it part of the
-table. NEVER leave `CLAUDE.md` under `[tui]` or `[tui.model_availability_nux]`
-— move it to the top-level key.
-
-If a project already has `AGENTS.md`, Codex will not also load `CLAUDE.md` as a
-fallback in the same directory. The installed global Kronael block in
-`~/.codex/AGENTS.md` therefore ALWAYS tells Codex to actively read applicable
-`CLAUDE.md` files in addition to loaded `AGENTS.md` files. It also tells Codex
-to read the project's `.claude/CLAUDE.md`: fallback entries are matched as bare
-file names in each directory, so no entry reaches that path. For repositories
-shared without Kronael, ALSO add a short project `AGENTS.md` pointer.
-
-Example pointer:
-
-```md
-# AGENTS.md
-
-Read `CLAUDE.md` first. Those are project conventions for every coding agent,
-not Claude-specific behavior.
-```
-
-### Global installed skills
-
-Codex scans `.agents/skills` and `~/.agents/skills`, not `.claude/skills` or
-`~/.codex/skills`.
-
-For global Kronael skills installed by this workflow, bridge with:
-
-```sh
-mkdir -p ~/.agents
-ln -s ~/.claude/skills ~/.agents/skills
-```
-
-Run this automatically after a successful Codex sync. It is fast:
-
-- If `~/.agents/skills` already symlinks to `~/.claude/skills`, report
-  "already bridged".
-- If `~/.agents/skills` is missing and `~/.claude/skills` exists, create the
-  symlink.
-- If `~/.agents/skills` is a directory, add individual symlinks for each
-  installed Kronael skill where the destination name is missing.
-- If `~/.agents/skills` is a symlink elsewhere, ask whether to replace, leave
-  it, or skip.
-- If an individual destination already exists and is not the same symlink,
-  leave it alone and report the conflict count.
-- If an individual symlink there points into `~/.claude/skills/` and no
-  longer resolves, `rm` it — the source dropped that skill.
-
-NEVER copy the skill tree into `~/.codex/skills`. Codex's user skill location
-is `~/.agents/skills`; symlinking preserves one editable installed copy,
-including scripts and references.
-
-Use the discovered source root to decide which installed skills are
-source-owned: every `skills/*/` except `skills/global/`. Do not symlink
-installed-only overlays from `~/.claude/skills`.
-
-Protocol:
-
-```sh
-mkdir -p "$HOME/.agents"
-
-if [ -L "$HOME/.agents/skills" ] &&
-   [ "$(readlink -f "$HOME/.agents/skills")" = "$(readlink -f "$HOME/.claude/skills")" ]; then
-  echo "already bridged"
-elif [ ! -e "$HOME/.agents/skills" ]; then
-  ln -s "$HOME/.claude/skills" "$HOME/.agents/skills"
-elif [ -d "$HOME/.agents/skills" ]; then
-  for d in "$SOURCE_ROOT"/skills/*/; do
-    name="$(basename "$d")"
-    [ "$name" = "global" ] && continue
-    [ -e "$HOME/.claude/skills/$name" ] || continue
-    [ -e "$HOME/.agents/skills/$name" ] && continue
-    ln -s "$HOME/.claude/skills/$name" "$HOME/.agents/skills/$name"
-  done
-else
-  echo "conflict: ~/.agents/skills exists but is not a directory or symlink"
-fi
-```
-
-### Codex hooks
-
-Codex supports native lifecycle hooks from `~/.codex/hooks.json`,
-`~/.codex/config.toml`, project `.codex/` config, and enabled plugins.
-Kronael uses `~/.codex/hooks.json` as the user-level target.
-
-After the Claude hook scripts are copied, install Codex hook wiring:
-
-```sh
-mkdir -p "$HOME/.codex"
-cp "$SOURCE_ROOT/codex-hooks.json" "$HOME/.codex/hooks.json"
-```
-
-This config calls `~/.claude/hooks/codex_hook.py`, which normalizes Codex hook
-payloads and delegates to the installed Kronael hooks. The wrapper also rewrites
-Kronael nudge references from `/skill` to `@skill` and suppresses Claude-style
-context-only output for Codex `PreCompact`, where Codex only accepts block
-decisions. Do not point Codex directly at the Claude hook scripts unless the
-wrapper is removed intentionally.
-
-Codex requires changed command hooks to be reviewed and trusted. After a sync,
-report that the user must open `/hooks` in a fresh Codex TUI session and trust
-the Kronael hooks. Use `--dangerously-bypass-hook-trust` only for automation or
-verification that already vets the source.
-
-### Project .claude/skills
-
-For a project that stores Claude skills under `.claude/skills`, bridge with:
-
-```sh
-mkdir -p .agents
-ln -s ../.claude/skills .agents/skills
-```
-
-Use this only when `.claude/skills` exists and `.agents/skills` does not. If
-`.agents/skills` already exists, ask whether to leave it alone, add individual
-symlinks, or skip the bridge.
+Run `kronael/sync/reference.md` § Codex bridge from the discovered source
+root. A bridge-only request reads the same section.
 
 ## Report
 

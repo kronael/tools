@@ -450,7 +450,61 @@ only when the rollback fails (`ROLLBACK FAILED`, exit 2, naming the paths
 still swapped) or the run is killed; step 0 handles both. The loop blocks
 SIGINT, SIGTERM and SIGHUP, so a signal cannot stop it halfway.
 
+## Settings (step 5)
+
+The always-apply set — written on every sync, never asked, even when the
+rest of permissions is declined. Every other key falls under the
+loosen-only rule and the diff-and-ask of `SKILL.md` step 5.
+
+| Key | Value | Why |
+|-----|-------|-----|
+| `hooks` | each event `settings-recommended.json` names, replaced; other events stay | the wiring of `~/.claude/hooks/*.py` |
+| `cleanupPeriodDays` | the recommended value, raised, NEVER lowered | the 30-day default deletes transcripts at startup |
+| `outputStyle` | `"caveman"` | else the style file never activates |
+| `attribution.commit` | `""` | unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER `attribution: false` — versions before v2.1.281 reject it and skip the whole file |
+| `attribution.pr` | `"🤖"` | unset, the reminder asks for the `Generated with [Claude Code]` footer, which WISDOM § Git bans |
+| `attribution.sessionUrl` | `false` | unset, a web or Remote Control session adds a session link, which WISDOM § Git bans |
+| `bashEditDiffEnabled` | `false` | unset, `auto` and `bypassPermissions` modes diff the tree around every Bash command; `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it |
+| `crossSessionInbound`, `isolatePeerMachines` | `"refuse"`, `true` | v2.1.224+; unset, delivery between sessions follows their permission class — `SendMessage` stays allowed, it is also the subagent channel |
+| `permissions.deny` | `Bash(rm -r*)`, `Bash(rm -R*)`, `Bash(rm -fr*)`, `Bash(rm --recursive*)` added | the recursive-removal guard; NEVER put the glob outside the parens — `Bash(rm -rf /)*` matches nothing |
+
+Apply the set (an absent `settings.json` starts as `{}`):
+
+```sh
+S=~/.claude/settings.json
+[ -e "$S" ] || echo '{}' > "$S"
+jq -s '(.[0].permissions.deny // []) as $d
+  | .[0].hooks = ((.[0].hooks // {}) + .[1].hooks)
+  | .[0].cleanupPeriodDays = ([(.[0].cleanupPeriodDays // 0), .[1].cleanupPeriodDays] | max)
+  | .[0].outputStyle = .[1].outputStyle
+  | .[0].attribution.commit = .[1].attribution.commit
+  | .[0].attribution.pr = .[1].attribution.pr
+  | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
+  | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].crossSessionInbound = .[1].crossSessionInbound
+  | .[0].isolatePeerMachines = .[1].isolatePeerMachines
+  | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
+  | .[0]' "$S" "$SRC/settings-recommended.json" > "$S.new" && mv "$S.new" "$S"
+```
+
+`diffSidebarOpen` and `diffTool` are global config, not settings keys, so
+`settings-recommended.json` cannot carry them. Pin both in `~/.claude.json`,
+keeping every other key; they apply on the next Claude Code start:
+
+```sh
+jq '.diffSidebarOpen = false | .diffTool = "terminal"' ~/.claude.json > ~/.claude.json.new \
+  && mv ~/.claude.json.new ~/.claude.json
+```
+
 ## Codex bridge (step 6)
+
+Run from the source root (`SRC`); a bridge-only request runs the same
+section. What Codex reads: global guidance from `~/.codex/AGENTS.override.md`,
+else `~/.codex/AGENTS.md`, never `~/.claude/CLAUDE.md`; skills from
+`.agents/skills` and `~/.agents/skills`, never `.claude/skills` or
+`~/.codex/skills`; hooks from `~/.codex/hooks.json`, `~/.codex/config.toml`,
+project `.codex/` config and enabled plugins — Kronael writes
+`~/.codex/hooks.json`. Bridge skills with symlinks, NEVER copies.
 
 - Global guidance: `~/.codex/AGENTS.md` is a REAL file holding the marked
   block from `codex/AGENTS.md`, which tells Codex to read
@@ -460,17 +514,84 @@ SIGINT, SIGTERM and SIGHUP, so a signal cannot stop it halfway.
   Kronael block, else append it; NEVER overwrite content outside the markers.
   An existing `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict,
   show and ask. NEVER rely on project fallback names for global guidance.
-- `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
-  contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
-- Symlink `~/.agents/skills` → `~/.claude/skills`. Per-skill symlinks only if
-  it is already a directory; there, `rm` each per-skill symlink that no
-  longer resolves (`find ~/.agents/skills -maxdepth 1 -xtype l` lists them).
-  If pi is installed, symlink `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md`
+- `~/.codex/config.toml`: ensure the top-level key
+  `project_doc_fallback_filenames = ["CLAUDE.md"]`, so Claude-only projects
+  load in Codex. Insert it before the first `[table]` header, or append
+  `CLAUDE.md` to an existing top-level array. NEVER append it after a table
+  header — TOML then makes it part of that table — and move a `CLAUDE.md`
+  entry found under `[tui]` or `[tui.model_availability_nux]` to the
+  top-level key.
+- Project `AGENTS.md`: Codex loads one instruction file per directory, so a
+  project with `AGENTS.md` never gets its `CLAUDE.md` as a fallback, and no
+  fallback entry reaches `.claude/CLAUDE.md`. The Kronael block covers both
+  where Kronael is installed; a repo shared without it carries a pointer:
+
+  ```md
+  # AGENTS.md
+
+  Read `CLAUDE.md` first. Those are project conventions for every coding agent,
+  not Claude-specific behavior.
+  ```
+
+- `~/.agents/skills`, checked as a symlink before anything else:
+  - a symlink to `~/.claude/skills` → already bridged;
+  - any other symlink, dangling included → conflict: report it and stop; the
+    owner chooses replace, leave or skip;
+  - missing → symlink it to `~/.claude/skills`;
+  - a real directory → `rm` each dangling per-skill symlink whose target is
+    under `~/.claude/skills/` (the source dropped that skill), then link each
+    missing source-owned skill — every `$SRC/skills/*/` except `global`,
+    never an installed-only overlay; a name already taken by something else
+    is reported and left alone;
+  - anything else → conflict.
+
+  ```sh
+  A="$HOME/.agents/skills" C="$HOME/.claude/skills"
+  mkdir -p "$HOME/.agents"
+  if [ -L "$A" ]; then
+    if [ "$(readlink -m "$A")" = "$(readlink -m "$C")" ]; then
+      echo "already bridged"
+    else
+      echo "conflict: $A -> $(readlink "$A"); ask: replace, leave or skip"; exit 1
+    fi
+  elif [ ! -e "$A" ]; then
+    ln -s "$C" "$A" && echo "linked $A -> $C"
+  elif [ -d "$A" ]; then
+    for l in "$A"/*; do
+      [ -L "$l" ] && [ ! -e "$l" ] || continue
+      case "$(readlink -m "$l")" in
+        "$(readlink -m "$C")"/*) rm "$l" && echo "removed dangling $l" ;;
+      esac
+    done
+    for d in "$SRC"/skills/*/; do
+      name="$(basename "$d")"
+      [ "$name" = global ] || [ ! -e "$C/$name" ] && continue
+      if [ "$(readlink -m "$A/$name")" = "$(readlink -m "$C/$name")" ]; then
+        continue
+      elif [ -e "$A/$name" ] || [ -L "$A/$name" ]; then
+        echo "conflict: $A/$name exists"
+      else
+        ln -s "$C/$name" "$A/$name" && echo "linked $name"
+      fi
+    done
+  else
+    echo "conflict: $A is neither a directory nor a symlink"; exit 1
+  fi
+  ```
+
+- Project `.claude/skills`: `mkdir -p .agents && ln -s ../.claude/skills
+  .agents/skills`, only when `.claude/skills` exists and `.agents/skills`
+  does not; an existing `.agents/skills` → ask: leave it, add per-skill
+  symlinks, or skip.
+- If pi is installed, symlink `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md`
   (skip if a real file exists).
-- Copy `codex-hooks.json` → `~/.codex/hooks.json`. It wires Codex's lifecycle
-  events into `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads
-  before delegating to the Kronael hooks (and drops context-only output for
-  Codex `PreCompact`, which only accepts block decisions).
+- Copy `codex-hooks.json` → `~/.codex/hooks.json`, after the Claude hook
+  scripts are in place. It wires Codex's lifecycle events into
+  `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads before
+  delegating to the Kronael hooks, rewrites their `/skill` nudges to
+  `@skill`, and drops context-only output for Codex `PreCompact`, which only
+  accepts block decisions. NEVER point Codex at the Claude hook scripts
+  directly.
 - Tell the user to open `/hooks` in the next Codex TUI session and trust the
   changed hooks. One-shot verify only: `--dangerously-bypass-hook-trust`.
 
