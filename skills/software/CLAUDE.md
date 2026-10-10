@@ -16,7 +16,7 @@ rules + a pointer table. Convention: `../CLAUDE.md`.
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/biome/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 | `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
-| `lsp.md` | a language server that will not start: install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats |
+| `lsp.md` | which tool renames, finds references or replaces across files (`LSP` tool vs Serena); a language server that will not start: install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats |
 | `js-perf.md` | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs |
 | `money.md` | exact arithmetic for money/token amounts: why never float (incl. the decode step), the integer → fixed-point → wide-integer → arbitrary-precision ladder, deriving the overflow bound, round once at the edge, checked add, the tests that catch it |
 | `refactor-stack.md` | re-shipping an unreviewable branch as a stack: test layer first, dividing criterion, four passes, mutation proof, deletion oracles, diffstat split, long runs, merging the base forward, evidence per branch, landing a native GitHub stack (merge-async) |

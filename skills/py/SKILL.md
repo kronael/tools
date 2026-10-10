@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI
+when_to_use: editing .py files, writing Python; dataclasses, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
 ---
 
 # Python
@@ -109,6 +109,24 @@ Python-specific additions and deltas.
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code
+
+## Refactor tools
+- ALWAYS rename with Serena `rename_symbol` — NEVER grep-and-edit
+  (`software` skill, `lsp.md`).
+- ALWAYS take a rewrite ruff has a rule for through ruff: `ruff check
+  --select <rule> --fix --diff`, then without `--diff` — NEVER hand-edit
+  each site (`UP006` turns `List[int]` into `list[int]`).
+- ALWAYS update every import and use after moving an object with LibCST —
+  NEVER by hand. `--no-format` skips its default formatter, black; `-u3`
+  prints a diff instead of writing:
+  `uv run --with libcst python -m libcst.tool codemod --no-format -u3
+  rename.RenameCommand --old_name pkg.old.f --new_name pkg.new.f .` — it
+  rewrites the users, not the definition you moved.
+- ALWAYS a LibCST codemod for a structural change no rule covers (add an
+  argument at every call, change a signature): a `VisitorBasedCodemodCommand`
+  in a module outside the repo, run as `PYTHONPATH=<dir> uv run --with libcst
+  python -m libcst.tool codemod -x --no-format <module>.<Class> <paths>`. It
+  keeps comments and whitespace; `ruff format` after.
 
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,

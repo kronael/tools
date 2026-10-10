@@ -1,11 +1,36 @@
 # Language servers and code-intelligence MCP
 
-Two independent mechanisms. ALWAYS set up both — they answer different questions.
+Three independent mechanisms. ALWAYS set up all three — they answer different
+questions.
 
 | Mechanism | Surfaces as | Coverage |
 |---|---|---|
-| LSP plugin | `LSP` tool (hover, goToDefinition, findReferences, callHierarchy) | go, rust, python, typescript |
-| MCP server | `go_*` tools (diagnostics, package API, symbol refs, vulncheck) | Go only — no other language ships one |
+| LSP plugin | `LSP` tool (hover, goToDefinition, findReferences, goToImplementation, callHierarchy) — read-only, no rename | go, rust, python, typescript |
+| gopls MCP | `go_*` tools (diagnostics, package API, symbol refs, rename diff, vulncheck) | Go only |
+| Serena MCP | symbol tools that edit: `rename_symbol`, `replace_symbol_body`, `insert_after_symbol`, `safe_delete_symbol`, plus `find_referencing_symbols`, `find_implementations` | every language server it wraps — go, rust, python, typescript among them |
+
+## Which tool changes code
+
+The language tools (gopls, ts-morph, LibCST, `go fix`) live in each language
+skill; listings and comment edits in `astgrep`.
+
+- ALWAYS rename a symbol with Serena `rename_symbol` (Go: the `go` skill's
+  `gopls rename`) — NEVER grep-and-edit. It follows the language server, so
+  `module.name` access from other files renames too.
+- `rename_symbol` writes at once; it has no dry run. ALWAYS start it on a
+  clean tree and read `git diff` after.
+- ALWAYS find a symbol's callers (`LSP` findReferences or Serena
+  `find_referencing_symbols`) and an interface's implementers
+  (goToImplementation or `find_implementations`) before changing a
+  signature — NEVER grep for them.
+- Serena cannot move a file or inline a function: those tools need its
+  JetBrains backend. ALWAYS take the language skill's tool for a move.
+- One text change across many files that is no symbol (a config key, a log
+  string): ALWAYS Serena `replace_in_files` with `dry_run` first — NEVER a
+  blind `sed -i`.
+
+Serena install, config and registration: `kronael/sync/reference.md`
+§ External tool commands.
 
 ## The rule that bites
 

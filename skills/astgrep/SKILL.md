@@ -1,7 +1,7 @@
 ---
 name: astgrep
 description: Structural code search and rewrite with ast-grep (tree-sitter AST patterns). NOT for type-aware refactors (use the LSP/language skill) or literal search (use ripgrep). NOT for SQL — no built-in grammar.
-when_to_use: ast-grep, structural search, structural find/replace, codemod, batch refactor by pattern, rewrite a call pattern across the repo, find all usages structurally, sgconfig, YAML lint rule, match by AST node kind
+when_to_use: ast-grep, structural search, structural find/replace, codemod, batch refactor by pattern, rewrite a call pattern across the repo, find all usages structurally, outline, list a file's symbols, rewrite comments or docstrings, sgconfig, YAML lint rule, match by AST node kind
 user-invocable: true
 ---
 
@@ -44,6 +44,15 @@ ast-grep scan -r rule.yml --globs '!**/vendor/**' .
 Useful flags: `-i` interactive confirm, `-U/--update-all` apply all,
 `--json[=stream]` machine output, `--debug-query[=ast]` show how a pattern
 parsed (reach for this the moment a pattern "should match but doesn't").
+
+## Outline — list symbols before reading
+
+- ALWAYS `ast-grep outline <file>` before reading a whole source file —
+  signatures plus member names, about a thirteenth of the bytes (a 20.6 kB TS
+  file → 1.5 kB). NEVER Read a large file only to learn what it defines.
+- On a directory it prints exported names only; ALWAYS add
+  `--items structure` to see private symbols, `--view signatures` for line
+  numbers, `--json=compact` for a script.
 
 ## Pattern syntax
 
@@ -98,6 +107,25 @@ fix: ''
 - Composite: `all`, `any`, `not`, `matches` (reference a `utils` rule).
 - `constraints` (per meta-var sub-rules), `transform` (derive vars before
   `fix`), `rewriters` (recursive sub-rewrites).
+
+Comments and docstrings — ALWAYS rewrite them with a `kind: comment` rule,
+NEVER `sed`, which also rewrites the same text inside strings:
+
+```yaml
+id: retag-todo
+language: python
+rule: { pattern: $C, kind: comment, regex: 'TODO\(old\)' }
+transform:
+  NEW: { replace: { source: $C, replace: 'TODO\(old\)', by: 'TODO(new)' } }
+fix: $NEW
+```
+
+- `transform` needs the node captured — keep `pattern: $C` beside `kind`.
+- Rust has no `comment` kind: `any: [{kind: line_comment}, {kind: block_comment}]`
+  (doc comments included). Go, TS, Python use `comment`.
+- A Python docstring is `kind: string` with `inside: { kind:
+  expression_statement, inside: { kind: block, inside: { kind:
+  function_definition } } }`.
 
 Project config `sgconfig.yml`: `ruleDirs`, `utilDirs`, `testConfigs`,
 `languageGlobs`, `customLanguages`. `scan` discovers rules from `ruleDirs`.
