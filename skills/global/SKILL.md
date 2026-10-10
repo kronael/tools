@@ -161,7 +161,8 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 ## Documentation
 
 - ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
-  file or top-level dir. NEVER `todos/`; `plans/` only as `.claude/plans/`.
+  file or top-level dir. NEVER `todos/` or `plans/`: plans and work records
+  live under `~/.claude/` (`ship` § Work record), never in a repo.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used

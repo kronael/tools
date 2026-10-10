@@ -40,7 +40,9 @@ The scale is measured: fable's validator needs about 215 s against the fixed
 `ship -k <spec>` runs only the spec validator, which proves the
 login and the spec. The validator gets only `Read`, `Glob` and `Grep`
 (`--tools` restricts even under `bypassPermissions`), so it cannot touch
-the repo; it writes only ship's own state and logs under `.ship/`.
+the repo; it writes only ship's own state under `DATA_DIR` and its trace
+log, which the CLI hard-codes under the working directory's `.ship/`
+(`BUGS.md` SHIP-CLI-TRACE-LOG-IN-TREE).
 
 If the CLI is absent, report the requirement. Installation is a separate
 owner choice. NEVER install its bundled skill over the toolkit's `ship`.
@@ -49,9 +51,10 @@ ALWAYS keep this skill as the owner-facing controller.
 ## Supply the accepted work
 
 ALWAYS pass exactly one `.md` path — the work record or its cited spec.
-With none or several, the CLI keeps its state in its own data directory
-(`DATA_DIR`; its README names the default) and wipes that directory at
-start, so NEVER point `DATA_DIR` at `.claude/plans/`. Ensure the file
+With none or several, the CLI keeps its state in `DATA_DIR` and wipes that
+directory at start. ALWAYS launch it with `DATA_DIR=<record dir>/cli`
+(`SKILL.md` § Work record names the record dir): its default `.ship` lands
+in the tree, and the record dir itself would be wiped. Ensure the file
 carries concrete deliverables, owned paths, acceptance checks, gates,
 exclusions and worker boundaries.
 

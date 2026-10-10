@@ -2,155 +2,102 @@
 status: shipped
 ---
 
-# Ship record in plan mode's directory
+# Ship record under the global Claude directory
 
 The shipping work record — the `ship` plan, the `eval` and `specs`
-critiques, and any other typed scratch file a skill writes while
-delivering a change — lives at `<main tree>/.claude/plans/`: the directory
-Claude Code's plan mode writes to once `<main tree>/.claude/settings.json`
-sets `"plansDirectory": ".claude/plans"`. Flat, kept out of git by a
-root-anchored `/.claude/plans/` line in the project's `.gitignore`.
+critiques, and any other typed scratch file a skill writes while delivering
+a change — lives at `~/.claude/projects/<slug>/ship/`, beside the project's
+transcripts and `memory/`. Plan mode's own plans stay in Claude Code's
+default `~/.claude/plans/`. A repository carries none of it: no
+`plansDirectory` setting, no `.claude/plans/` or `.ship/` directory, no
+ignore line.
 
 ## Problem
 
-Claude Code already writes plans: plan mode keeps one file per session in a
-directory the `plansDirectory` setting names
-(code.claude.com/docs/en/settings-reference#plansdirectory). A separate
-directory for the shipping record — `.ship/`, or a bespoke subdirectory of
-`.claude/` — is a second place for plans under another name: one more
-convention a reader of the checkout has to learn, one more ignore line, and
-the plan-mode plan and the ship plan for the same change in two directories.
-The record belongs where plan mode writes.
+A record kept inside the repository needs machinery in every repository: a
+committed `.claude/settings.json` pinning `plansDirectory`, a root-anchored
+`/.claude/plans/` ignore line, and a `.ship/` the CLI leaves behind — three
+artifacts per clone that exist for the agent, not the project, and that
+every new repository has to acquire before its first record. The owner's
+rule: plans and ship records live in the global Claude directory, never in
+a repo.
 
 ## Location
 
-`<main tree>/.claude/plans/<type>-<name>.md`. A record carries its type as
-the filename prefix: `plan-NN-name.md`, `critique-<role>-<date>.md`,
-`critique-useless-<date>.md`, `eval-all-<date>.md`. Plan mode names its own
-files after the session slug — `<slug>.md`, `<slug>.workshop.md` and
-`<slug>-agent-<id>.md`, the slug a generated string of lowercase words and
-digits joined by hyphens (`getPlanSlug` in the binary) — so a reader tells
-the two apart by the type prefix.
+`~/.claude/projects/<slug>/ship/<type>-<name>.md`. A record carries its
+type as the filename prefix: `plan-NN-name.md`, `critique-<role>-<date>.md`,
+`critique-useless-<date>.md`, `eval-all-<date>.md`.
 
-- Project-local, not `~/.claude/plans/`, because the retention sweep deletes
-  the default directory and leaves a project-local one alone. The docs scope
-  the "Cleaned up automatically" table to paths under `~/.claude/` and list
-  `plans/` there (code.claude.com/docs/en/claude-directory). In Claude Code
-  2.1.289 the plan-directory resolver resolves `plansDirectory` against the
-  project root (`path.resolve`) when the setting is present (rejecting a path
-  outside the root with `plansDirectory must be within project root`), while
-  the sweep walks `join(configDir, "plans")` — `~/.claude/plans` — and never
-  the resolved directory. Observed on that version with a throwaway `HOME`: a
-  60-day-old file in `~/.claude/plans/` was deleted with its directory by the
-  background housekeeping that runs after the session's first prompt; a
-  60-day-old file in the project's `.claude/plans/`, with `plansDirectory`
-  set, stayed.
-- Main tree, not the current worktree: the first entry of `git worktree
-  list`, addressed by absolute path from every worktree. A linked worktree
-  is a fresh checkout that `git worktree remove` deletes, and a gitignored
-  file in it is invisible from the main tree. `diary` keeps a gitignored
-  diary in the same main tree. From a worktree at
-  `<root>/.wt1` of a repository at `<root>`, the record is
-  `<root>/.claude/plans/plan-03-foo.md`.
-- The setting lives in the committed `<main tree>/.claude/settings.json`, so
-  every clone's plan mode writes into the same directory; `settings.local.json` is personal
-  and never touched. A project that already pins `plansDirectory` elsewhere
-  keeps its record there — the setting is the rule, not this name.
-- A reader of the checkout finds plans and shipping scratch in one place,
-  where agent state already lives.
+- `<slug>` is the MAIN tree's absolute path with every non-alphanumeric
+  character replaced by `-` — the directory Claude Code already keeps the
+  project's transcripts and `memory/` in, for sessions in a linked worktree
+  too (on this host a session in `/home/u/app/x/.wt` writes under
+  `~/.claude/projects/-home-u-app-x/`). `skills/ship/SKILL.md` § Work record
+  is the one place that names the dir; every other skill points at it.
+- Addressed by absolute path from every worktree: the dir is keyed on the
+  main tree, and `git worktree remove` deletes whatever a worktree holds.
+- Plan mode: with `plansDirectory` unset, Claude Code writes plans to
+  `~/.claude/plans` (code.claude.com/docs/en/settings-reference#plansdirectory:
+  "unset, so Claude Code uses `~/.claude/plans`"). Nothing to configure.
+- Retention: `cleanupPeriodDays` governs the transcript sweep; `kronael/sync`
+  step 5 sets it to 3650000 on every synced host. The docs list `plans/`
+  among the swept application data and `memory/` as kept beside the
+  transcripts (code.claude.com/docs/en/claude-directory); whether the sweep
+  walks a `ship/` sibling is not documented and was not measured.
 
 ### Rejected
 
-- `~/.claude/plans/` as it comes — swept after `cleanupPeriodDays` (30 days
-  by default), outside the repository, invisible from a container or a second
-  machine.
-- A bespoke `.claude/` subdirectory (`ship/`) — collides with nothing, but it
-  is a second plans directory beside plan mode's, and the house layout had to
-  ban `plans/` by name to keep the two apart.
-- `.plans/`, `.ship/` — no part of Claude Code reads or writes them.
-- `plansDirectory` in the user-level `settings-recommended.json` — the
-  setting resolves against each project root, so plan mode would create an
-  untracked `.claude/plans/` in every project with no ignore line, and a
-  clone on a machine without the bundle would still write to
-  `~/.claude/plans/`. The project setting travels with the clone.
-- `~/.claude/projects/<project>/` — outside the repository, and Claude Code
-  owns its layout and sweeps the transcripts beside it.
+- `<main tree>/.claude/plans/` pinned by `plansDirectory` — survives the
+  sweep and sits beside the checkout, but costs a settings file, an ignore
+  line and a `.claude/plans/` in every repository.
+- `~/.claude/plans/` for the ship record — plan mode names its own files by
+  a generated session slug in the same flat directory, and the sweep lists
+  it.
+- `.ship/`, `.plans/` in the tree — no part of Claude Code reads them, and
+  they are repository artifacts for the agent's benefit.
 - The session scratchpad — purged with the OS temp directory and unknown to
-  the next session; the record has to outlive both.
-
-## Gitignore and the setting
-
-The rule is `/.claude/plans/`: root-anchored per the house layout rule, with
-the trailing slash so only the directory matches. It keeps the rest of
-`.claude/` — `settings.json`, `commands/`, `skills/`, `agents/`, `rules/` —
-addable, which a bare `.claude/` line does not.
-
-A project acquires both from the first skill that writes there. `ship` §
-Work record owns that step; `eval` and `skills/specs/useless.md` point at
-it rather than repeating it. A project that already ignores all of
-`.claude/` gets no line and keeps the setting machine-local, which still
-points plan mode at the directory.
-
-Rejected: a global git exclude, which is what Claude Code does for
-`settings.local.json`, protects one machine and lets a fresh clone commit
-the record; a hook or the `ship` CLI is machinery `skills/ship/runtime.md`
-forbids, and not every record is written through either.
+  the next session.
 
 ## Codex
 
-Codex builds its instruction chain from `~/.codex/AGENTS.override.md` or
-`~/.codex/AGENTS.md`, then, from the project root down to the working
-directory, one file per directory: `AGENTS.override.md`, `AGENTS.md`, then
-the `project_doc_fallback_filenames` list (`CLAUDE.md` here, set by the
-Codex bridge in `kronael/sync/reference.md`), concatenated root-down
-(developers.openai.com/codex/guides/agents-md). The bundle's Kronael block
-(`codex/AGENTS.md`, merged into `~/.codex/AGENTS.md` by `kronael/sync` step
-6) also tells Codex to read `~/.claude/CLAUDE.md`, whose layout line names
-the directory, and the `ship` skill reaches Codex through
-`~/.agents/skills`.
-
-The bundle ships no project `AGENTS.md` template — only that global block
-and the pointer example in `plugins/kronael/skills/kronael-sync/SKILL.md`
-— so the rule Codex must not miss is stated in the block itself: the path,
-the ignore line and the reuse of the active change's record, with `ship` §
-Work record as the owner. The `astra` skill (and its Sol variant)
-launches Codex; Codex reads its own instruction chain, not the skill's, so
-it carries no copy.
+The Kronael block (`codex/AGENTS.md`, merged into `~/.codex/AGENTS.md` by
+`kronael/sync` step 6) states the NEVER half — no plan machinery in a
+repository — and points at `ship` § Work record for the dir; the `ship`
+skill reaches Codex through `~/.agents/skills`.
 
 ## The `ship` CLI
 
-The CLI (kronael/ship, checked out at `~/app/refs/ship`) keeps its own
-state — `tasks.json`, `work.json`, a lock and logs — in `DATA_DIR`,
-default `.ship` (its `config.py`), and wipes that directory on a fresh start
-and whenever its state is stale or the spec changed (`_wipe_state` in its
-`__main__.py`). That state is the CLI's, not the work record, and a
-directory the CLI wipes cannot hold the record; its trace file goes to a
-hard-coded log path under the working directory's `.ship`, not under
-`DATA_DIR`. `skills/ship/cli.md` names the CLI's directory as the CLI's own
-and forbids pointing `DATA_DIR` at `.claude/plans/`. The CLI needs no change
-for this spec.
+The CLI (kronael/ship) keeps `tasks.json`, `work.json`, a lock and logs in
+`DATA_DIR`, default `.ship` under the working directory, and wipes that
+directory on a fresh start. `skills/ship/cli.md` launches it with
+`DATA_DIR=<record dir>/cli`, so the wipe never reaches the record and no
+`.ship/` is created for state. Its trace log is hard-coded under the working
+directory's `.ship/` and lands in the tree until the CLI changes —
+`BUGS.md` SHIP-CLI-TRACE-LOG-IN-TREE.
 
 ## Transition
 
-Nothing in the bundle reads any other record directory. A change whose
-record already exists is reused where it is: `ship` Stage 1 recovers the
-record from the diary, the transcript and the owner's words, which carry its
-path, and a record is never relocated mid-change because a running session
-addresses it by absolute path. Existing record directories outside
-`.claude/plans/` are the owner's to move or delete. This repository's own
-`.gitignore` ignores `.claude/` whole and keeps `/.ship/` for as long as that
-directory exists.
+A change whose record already exists is reused where it is; a record is
+never relocated mid-change. The owner moves settled records: `plan-*`,
+`critique-*` and `eval-all-*` files from a repository's `.claude/plans/` or
+`.ship/` into `~/.claude/projects/<slug>/ship/`, plan mode's slug-named
+files into `~/.claude/plans/`, then drops the `plansDirectory` key and the
+`/.claude/plans/` ignore line. Repositories with a tracked
+`.claude/settings.json` carrying `plansDirectory` are their owners' to
+change. This repository's `.gitignore` keeps `/.ship/` while the CLI's trace
+log lands there.
 
 ## Code pointers
 
-- `skills/ship/SKILL.md` § Work record — the location, the main-tree rule,
-  the setting and the ignore check; the one place the rule lives.
-- `skills/ship/cli.md` — the CLI's directory is not the record's.
-- `skills/eval/SKILL.md`, `skills/eval/all.md`, `skills/specs/useless.md` —
-  critiques written into the same directory.
+- `skills/ship/SKILL.md` § Work record — the dir, the slug, the main-tree
+  rule and the NEVER list; the one place the dir is named.
+- `skills/ship/cli.md` — `DATA_DIR` placement; the CLI's directory is not
+  the record's.
+- `skills/eval/SKILL.md`, `skills/eval/all.md`,
+  `skills/eval/ceo/demo-audit.md`, `skills/eval/cto/code-audit.md`,
+  `skills/specs/useless.md` — critiques written into the record dir.
 - `skills/readme/topology.md` — the house layout and the root-anchored
   ignore list; `skills/global/SKILL.md` § Documentation carries the one-line
-  form that `~/.claude/CLAUDE.md` is generated from.
-- `codex/AGENTS.md` — the Kronael block's statement of the directory for
-  Codex.
-- `skills/software/docker.md` — `.dockerignore` excludes `.claude` whole.
+  form that `~/.claude/CLAUDE.md` is generated from; `hooks/prompt_nudge.py`
+  `DOCS_RULES` is the hook's copy of it.
+- `codex/AGENTS.md` — the Kronael block's statement for Codex.

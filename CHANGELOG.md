@@ -3,8 +3,11 @@
 ## [Unreleased]
 
 - `pr-draft`: a body is the `**TL;DR:**` lead, at most 5 one-line decision bullets, closers, `🤖`.
-- GitHub gate: a PR body over 1,000 chars, with a paragraph after the lead or over 5 bullets is refused.
-- WISDOM § Git: DISTILL keeps the claim and its reasoning in the skill's shape; the cap is a ceiling.
+- GitHub gate: a PR body over 1,000 chars, a paragraph after the lead or over 5 bullets is refused.
+- WISDOM § Git: DISTILL keeps the claim and its reasoning; the posting skill's cap is a ceiling.
+- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
+- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
+- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
 
 ## [v0.4.26] — 20261010
 
