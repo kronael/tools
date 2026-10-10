@@ -134,7 +134,7 @@ What a router is, when to make one, its dispatch table, file layout and the `SKI
 
 ## Installed copy vs source
 
-`~/.claude/` is an install of this repo: ALWAYS sync an edit there back to source (WISDOM § Environment).
+`~/.claude/` is an install of the bundle source repo (path in `LOCAL.md`): ALWAYS sync an edit there back to source (WISDOM § Environment).
 
 ## CLAUDE.md (project)
 
