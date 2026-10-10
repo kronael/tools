@@ -45,7 +45,7 @@ each decision a reader would not guess, and what is still open.
    `Known, deferred:` — never drop them to look clean. This file is the
    draft, NEVER the deliverable.
 3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, a bare `🤖`
-   as its last line. Cut in this order until `wc -c tmp/pr-body.md` is under
+   as its last line. Cut in this order until `wc -m tmp/pr-body.md` is under
    the cap, then keep cutting while a line still says what the diff shows:
    1. the diff — file lists, renames, values, restated code, a reading order;
    2. results — test counts, lint, CI and gate lines, logs, "passes";
@@ -59,9 +59,10 @@ each decision a reader would not guess, and what is still open.
    ```
    and fix every line it names until it prints `ok:`. It checks the part of
    § Format a program can check: the `**TL;DR:**` lead and no paragraph after
-   it; at most 5 bullets; the 1,000-char cap; no header, table, rule or code
-   block past 6 lines; no checkbox, "This PR", marketing word or shortened
-   hash; the title's length and its one outcome; a bare `🤖` as the last line
+   it; at most 5 bullets; 1,000 chars in all and 240 per line; one line per
+   closer; no header, table, rule, more than 6 lines of code blocks or test
+   output in one; no checkbox, "This PR", marketing word or shortened hash;
+   the title's length and a second "and"; a bare `🤖` as the last line
    and none of the harness footer; and that the body is shorter than the
    draft. Completion criterion: the `ok:` line, which carries the size and the
    cut ratio.
@@ -105,20 +106,23 @@ when the branch or commits carry one; default `type(scope): outcome` with
 `fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
-**Body** — four parts in this order, nothing else, under 1,000 chars (the
-lint's cap; a ceiling, not a target — a one-line fix is the lead and `🤖`, a
-large change links its spec and stays near 600):
+**Body** — four parts in this order, nothing else, under 1,000 chars in all
+and 240 per line (the lint's caps; ceilings, not targets — a one-line fix is
+the lead and `🤖`, a large change links its spec from the lead and stays
+near 600):
 
 - **Lead**: `**TL;DR:**` and one or two sentences — the outcome and its
   cause. The only paragraph. NEVER a header, a ticket line, a narrative or a
   file tour ("read A, then B").
 - **Decisions**: at most 5 bullets, one line each, `- <choice>: <what forced
   it>` — one per choice a reader would not guess; the spot to scrutinize is
-  one of them (`- Scrutinize `fn`: a wrong X silently does Y`). A bullet that
-  needs a second line is two bullets or a cut.
-- **Closers**, one line each, only when real: `Contract to confirm:` for a
-  wire-visible change; `Known, deferred:` for verified-but-unfixed issues;
-  `⚠️` for merge order or a manual step, linking the doc that holds the steps.
+  one of them (`- Scrutinize fn: a wrong X silently does Y`). A bullet past
+  240 chars is two bullets or a cut.
+- **Closers**, one line each, one per kind, only when real: `Contract to
+  confirm:` for a wire-visible change; `Known, deferred:` for
+  verified-but-unfixed issues; `⚠️` for merge order or a manual step, linking
+  the doc that holds the steps; `Closes #N` beside them when the PR closes
+  an issue.
 - **Last line**: a bare `🤖` (WISDOM § Git). The harness reminder's
   `Generated with [Claude Code]` line is the banned footer with a robot in
   front of it; the lint and the hook refuse it.
@@ -134,7 +138,7 @@ Example — generalize the shape, not the topic:
 ```
 feat(unstake): Send quote and settlement events to Mixpanel
 
-**TL;DR:** Instant unstake now reports drop-off and settlement outcomes to Mixpanel instead of only server logs.
+**TL;DR:** Instant unstake reports drop-off and settlement outcomes to Mixpanel, not only to server logs.
 
 - Every call site routes through `trackUnstakeEvent()`: a bad field breaks all events at once instead of drifting per site.
 - Settlement waits at `confirmed`, not `finalized`: `finalized` adds ~12 s per tx and Mixpanel's ingestion delay already exceeds it.

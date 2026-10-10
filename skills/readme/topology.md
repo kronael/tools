@@ -175,9 +175,8 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 - Every file above is tracked, `BUGS.md` included — it is in the reading order.
 - Local, root-anchored in `.gitignore`: `/.diary/` (`diary`), `/specs/`,
   `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every depth and
-  swallows a real `src/specs/`. No plan or work-record directory lives in the
-  tree, so none needs a line (`ship` § Work record). A repo that already
-  tracks `.diary/` or `specs/` keeps tracking them.
+  swallows a real `src/specs/`. A repo that already tracks `.diary/` or
+  `specs/` keeps tracking them.
 
 ## Keeping it
 

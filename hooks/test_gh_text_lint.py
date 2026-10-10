@@ -44,8 +44,23 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace(BULLET, '- [ ] run the tests\n'), 'checkbox'),
     (Kind.PR, GOOD_PR.replace(BULLET, 'The role renders the unit.'), 'paragraph after the lead'),
     (Kind.PR, GOOD_PR.replace(BULLET, '1. Stop the service.'), 'paragraph after the lead'),
-    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n  The unit file goes too.'), 'paragraph after'),
+    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n  The unit file goes too.'), None),
+    (Kind.PR, GOOD_PR.replace('the `service:` list.', 'the\n`service:` list.'), None),
     (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\n{CLOSERS}'), None),
+    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\nCloses #12.'), None),
+    (
+        Kind.PR,
+        GOOD_PR.replace(BULLET, f'{BULLET}\n\n**Known, deferred**: the lease is untested.'),
+        None,
+    ),
+    (Kind.PR, GOOD_PR.replace(BULLET, f'{BULLET}\n\n![order panel](https://x.test/a.png)'), None),
+    (
+        Kind.PR,
+        GOOD_PR.replace(BULLET, f'{BULLET}\n\nKnown, deferred: a.\n\nKnown, deferred: b.'),
+        'second `Known, deferred` line',
+    ),
+    (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 48), '241 chars in one line, max 240'),
+    (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 47), None),
     (Kind.PR, GOOD_PR.replace(BULLET, '\n'.join(f'- Choice {k}: reason.' for k in range(5))), None),
     (
         Kind.PR,
@@ -66,10 +81,22 @@ LINT_CASES = [
     (
         Kind.PR,
         GOOD_PR.replace(BULLET, '```\n' + 'x\n' * 7 + f'```\n\n{BULLET}'),
-        '7-line code block',
+        'code blocks total 7 lines, max 6',
     ),
     (Kind.PR, GOOD_PR.replace(BULLET, '```\n' + 'x\n' * 6 + f'```\n\n{BULLET}'), None),
-    (Kind.PR, '**TL;DR:** x\n\n```\n' + 'y\n' * 7 + ROBOT, '8-line code block'),
+    (
+        Kind.PR,
+        GOOD_PR.replace(
+            BULLET, '```\n' + 'x\n' * 4 + '```\n\n```\n' + 'x\n' * 4 + f'```\n\n{BULLET}'
+        ),
+        'code blocks total 8 lines, max 6',
+    ),
+    (Kind.PR, '**TL;DR:** x\n\n```\n' + 'y\n' * 7 + ROBOT, 'code blocks total 8 lines'),
+    (
+        Kind.PR,
+        GOOD_PR.replace(BULLET, f'```\n412 passed, 1 skipped\n```\n\n{BULLET}'),
+        'test or lint output in a code block',
+    ),
     (Kind.PR, GOOD_PR.replace(BULLET, '- ' + 'word ' * 200), 'chars, cap 1000'),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', '- [x] 3.11\n- [ ] 3.12\n\nRepro:'), None),

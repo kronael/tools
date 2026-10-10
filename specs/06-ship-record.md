@@ -29,11 +29,11 @@ type as the filename prefix: `plan-NN-name.md`, `critique-<role>-<date>.md`,
 `critique-useless-<date>.md`, `eval-all-<date>.md`.
 
 - `<slug>` is the MAIN tree's absolute path with every non-alphanumeric
-  character replaced by `-` — the directory Claude Code already keeps the
-  project's transcripts and `memory/` in, for sessions in a linked worktree
-  too (on this host a session in `/home/u/app/x/.wt` writes under
-  `~/.claude/projects/-home-u-app-x/`). `skills/ship/SKILL.md` § Work record
-  is the one place that names the dir; every other skill points at it.
+  character replaced by `-` — the directory Claude Code keeps that tree's
+  transcripts and `memory/` in. A session started in a linked worktree gets
+  its own transcript directory under the worktree's path; the record dir is
+  keyed on the main tree regardless. `skills/ship/SKILL.md` § Work record is
+  the one place that names the dir; every other skill points at it.
 - Addressed by absolute path from every worktree: the dir is keyed on the
   main tree, and `git worktree remove` deletes whatever a worktree holds.
 - Plan mode: with `plansDirectory` unset, Claude Code writes plans to
@@ -68,11 +68,14 @@ skill reaches Codex through `~/.agents/skills`.
 ## The `ship` CLI
 
 The CLI (kronael/ship) keeps `tasks.json`, `work.json`, a lock and logs in
-`DATA_DIR`, default `.ship` under the working directory, and wipes that
-directory on a fresh start. `skills/ship/cli.md` launches it with
-`DATA_DIR=<record dir>/cli`, so the wipe never reaches the record and no
-`.ship/` is created for state. Its trace log is hard-coded under the working
-directory's `.ship/` and lands in the tree until the CLI changes —
+`DATA_DIR`, default `.ship/<spec slug>` under the working directory
+(`config.py:165`, `__main__.py:326`), and wipes it on `-f`, on stale state
+and on a changed spec (`__main__.py:364-445`); `DATA_DIR` replaces the
+per-spec subdirectory. `skills/ship/cli.md` launches it with
+`DATA_DIR=<record dir>/cli/<plan name>`, so a wipe reaches neither the
+record nor another change's state and no `.ship/` is created for state. Its
+trace log is hard-coded under the working directory's `.ship/`
+(`claude_code.py:333`) and lands in the tree until the CLI changes —
 `BUGS.md` SHIP-CLI-TRACE-LOG-IN-TREE.
 
 ## Transition

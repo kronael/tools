@@ -32,10 +32,11 @@ Read the ONE file matching the current stage, then return here.
 ## Work record
 
 Default: `~/.claude/projects/<slug>/ship/plan-NN-name.md` — the **record
-dir**, beside the project's transcripts and `memory/`. `<slug>` is the MAIN
-tree's absolute path (first entry of `git worktree list`) with every
-non-alphanumeric character replaced by `-`: `/home/u/app/x` records in
-`~/.claude/projects/-home-u-app-x/ship/`. NN is the next free zero-padded
+dir**. `<slug>` is the MAIN tree's absolute path (first entry of `git
+worktree list`) with every non-alphanumeric character replaced by `-`, the
+directory Claude Code keeps that tree's transcripts and `memory/` in:
+`/home/u/app/x` records in `~/.claude/projects/-home-u-app-x/ship/`. NN is
+the next free zero-padded
 number, the name lowercase kebab; `mkdir -p` the dir before the first write.
 Reuse the active change's record where it is. The plan holds the owner
 brief, acceptance checks, decisions and progress. The `eval` and `specs`
@@ -44,8 +45,8 @@ This section is the one place the dir is named — every other skill points
 here.
 
 ALWAYS address the record by absolute path from every worktree — the dir is
-keyed on the main tree, and `git worktree remove` deletes whatever a
-worktree holds. Plan mode's own plans stay in Claude Code's default
+keyed on the main tree, not on the worktree's cwd. Plan mode's own plans
+stay in Claude Code's default
 `~/.claude/plans/`. NEVER put plan machinery in a repository: no
 `plansDirectory` setting, no `.claude/plans/`, `.ship/` or `plans/`
 directory, no ignore line for one — what an agent writes for itself lives

@@ -51,10 +51,12 @@ ALWAYS keep this skill as the owner-facing controller.
 ## Supply the accepted work
 
 ALWAYS pass exactly one `.md` path — the work record or its cited spec.
-With none or several, the CLI keeps its state in `DATA_DIR` and wipes that
-directory at start. ALWAYS launch it with `DATA_DIR=<record dir>/cli`
-(`SKILL.md` § Work record names the record dir): its default `.ship` lands
-in the tree, and the record dir itself would be wiped. Ensure the file
+The CLI keeps its state in `DATA_DIR`, default `.ship/<spec slug>` under the
+working directory, and wipes it on `-f`, on stale state and on a changed
+spec. ALWAYS launch it with `DATA_DIR=<record dir>/cli/<plan name>`
+(`SKILL.md` § Work record names the record dir): the default lands in the
+tree, one shared dir lets a wipe for one change erase another, and the
+record dir itself must never be `DATA_DIR`. Ensure the file
 carries concrete deliverables, owned paths, acceptance checks, gates,
 exclusions and worker boundaries.
 

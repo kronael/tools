@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 - `pr-draft`: a body is the `**TL;DR:**` lead, at most 5 one-line decision bullets, closers, `🤖`.
-- GitHub gate: a PR body over 1,000 chars, a paragraph after the lead or over 5 bullets is refused.
+- GitHub gate: a PR body over 1,000 chars, a 241-char line, a paragraph after the lead or a sixth bullet is refused.
 - WISDOM § Git: DISTILL keeps the claim and its reasoning; the posting skill's cap is a ceiling.
 - `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
 - No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
