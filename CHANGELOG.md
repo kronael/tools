@@ -19,25 +19,19 @@
 
 ## [v0.4.27] — 20261010
 
-> kronael v0.4.27 — short PR bodies, records out of repos
+> kronael v0.4.27 — Worktrees follow explicit choices
 >
-> PR bodies are capped at 1,000 chars in one fixed shape, and plans and ship records leave the repository for ~/.claude.
+> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
 >
-> • pr-draft — a body is the TL;DR lead, at most five one-line decision bullets, closers and 🤖.
-> • GitHub gate — a body over 1,000 chars, a 241-char line, a stray paragraph or a sixth bullet fails.
-> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
-> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
-> • code.md — is_/has_ predicates and run_<command> wrappers hold for shell functions too.
+> • Default checkout — routine editing workers share one tree with one writer at a time.
+> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
+> • Shared resources — isolated workers still coordinate services, ports and caches.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `pr-draft`: a body is the `**TL;DR:**` lead, at most 5 one-line decision bullets, closers, `🤖`.
-- GitHub gate: a PR body over 1,000 chars, a 241-char line, a paragraph after the lead or a sixth bullet is refused.
-- WISDOM § Git: DISTILL keeps the claim and its reasoning; the posting skill's cap is a ceiling.
-- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
-- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
-- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
-- `code.md`: `is_`/`has_` predicates and `run_<command>` wrappers hold for shell functions too.
+- Routine editing workers use one shared checkout with one writer at a time.
+- Separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+- Worktrees still share services, ports and caches.
 
 ## [v0.4.26] — 20261010
 
