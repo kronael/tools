@@ -19,8 +19,7 @@ Once-per-session state lives in ~/.claude/state, keyed by session_id alone
 session changes directory.
 
 No LLM call. Never blocks. Emits additionalContext (Stop) or systemMessage
-(PreCompact, matching the local.py/reclaude.py idiom already proven to
-survive compaction in this codebase).
+(the idiom local.py/reclaude.py use on PreCompact).
 """
 
 import contextlib
@@ -32,10 +31,8 @@ import time
 from lib.state import hook_event
 from lib.state import session_state
 
-SESSION_THRESHOLD = 1800  # 30 min wall-clock — one path to the Stop fallback.
-STOP_COUNT_THRESHOLD = 3  # ...or this many Stops, whichever comes first, so a
-# short (sub-30-min) but multi-turn session still gets one memory nudge.
-# PreCompact is unconditional and independent of both.
+SESSION_THRESHOLD = 1800
+STOP_COUNT_THRESHOLD = 3
 
 NUDGE_TEXT = (
     'Session memory check: before this context is lost, evaluate the '
@@ -44,7 +41,7 @@ NUDGE_TEXT = (
     'reference pointers. Save qualifying items via the auto-memory '
     'mechanism (frontmatter name/description/metadata.type: '
     'user/feedback/project/reference, indexed in MEMORY.md), or run '
-    '/learn for a fuller extraction pass — /learn now covers both '
+    '/learn for a fuller extraction pass — /learn covers both '
     'session-memory evaluation and skill/pattern extraction. Skip if '
     'nothing qualifies; do not force it.'
 )
@@ -105,8 +102,6 @@ def main():
 
     if event == 'PreCompact':
         emit_precompact()
-        # Suppress the later Stop fallback — this session already got a
-        # memory nudge at the natural (compaction) moment.
         touch_done(session_state('memory-nudge-done', session_id))
         sys.exit(0)
 
@@ -122,8 +117,6 @@ def main():
         now = time.time()
         started, count = read_start(start_file)
         if started is None:
-            # First Stop of the session — record it and wait; too early to
-            # judge what's worth saving.
             write_start(start_file, now, 1)
             sys.exit(0)
 

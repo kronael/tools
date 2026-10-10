@@ -218,7 +218,6 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
                         'nothing — format.md: index.md is the master table of the files present',
                     )
                 )
-                continue
         cells = row_cells(line)
         if len(cells) < 3 or not LINK.search(cells[0]):
             continue
