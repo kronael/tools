@@ -196,6 +196,7 @@ def make_claude(home):
                 'cat ~/.claude/projects/-work-repo/diary/20260920.md',
                 'ran make test: green',
             ),
+            *bash(MID, 'toolu_repo_diary', 'cat .diary/20260919.md', 'ran make test: red'),
             *bash(
                 MID, 'toolu_memory', 'cat ~/.claude/projects/-work-repo/memory/m.md', 'make test'
             ),
@@ -421,6 +422,7 @@ def test_recall_calls_are_left_out_not_the_session(run, monkeypatch):
     assert 'toolu_recall' not in out
     assert 'toolu_skill' not in out
     assert 'toolu_diary' not in out
+    assert 'toolu_repo_diary' not in out
     assert 'toolu_memory' not in out
 
 

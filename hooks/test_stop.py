@@ -106,6 +106,7 @@ def run_hook(repo, env=None, **payload):
 def test_project_slug_replaces_every_non_alphanumeric() -> None:
     assert project_slug('/home/u/app/x') == '-home-u-app-x'
     assert project_slug('/home/u/my.app_2/.linked') == '-home-u-my-app-2--linked'
+    assert project_slug('/home/U/App.x_1') == '-home-U-App-x-1'
 
 
 def test_emit_keeps_stop_block(capsys) -> None:
@@ -179,6 +180,10 @@ def test_ship_worker_keeps_nudges(tmp_path, home) -> None:
     out = run_hook(repo, env={'SHIP_ROLE': 'worker-w0'})
 
     assert 'Run /commit.' in out['reason']
+
+
+def test_outside_a_git_repo_is_silent(tmp_path) -> None:
+    assert run_hook(tmp_path) is None
 
 
 def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path, home) -> None:

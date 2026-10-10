@@ -39,18 +39,12 @@ def git_path(cwd, name):
     return None if gd is None else os.path.join(gd, name)
 
 
-def rev_parse(cwd, *args):
-    r = git_run(cwd, 'git', 'rev-parse', *args)
-    return r.stdout.strip() if r.returncode == 0 else None
-
-
 def main_tree(cwd):
     """The main worktree: first entry of `git worktree list`, or None outside a repo."""
-    r = git_run(cwd, 'git', 'worktree', 'list', '--porcelain')
+    r = git_run(cwd, 'git', 'worktree', 'list', '--porcelain', '-z')
     if r.returncode != 0:
         return None
-    first = r.stdout.split('\n', 1)[0]
-    return first.removeprefix('worktree ') if first.startswith('worktree ') else None
+    return r.stdout.split('\0', 1)[0].removeprefix('worktree ')
 
 
 def project_slug(path):

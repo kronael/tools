@@ -23,7 +23,7 @@ CMD_ARGS_RE = re.compile(r'<command-args>(.*?)</command-args>', re.DOTALL)
 CD_RE = re.compile(r'(?:^|[;&|(]|\bthen|\bdo)\s*cd\s+([^\s;&|)]+)')
 GIT_C_RE = re.compile(r'\bgit\s+-C\s+([^\s;&|)]+)')
 RECALL_RE = re.compile(
-    r'(?<![\w.-])recall\.py\b|\.claude/projects/|/history\.jsonl|\.codex/sessions'
+    r'(?<![\w.-])recall\.py\b|\.claude/projects/|(?<![\w-])\.diary/|/history\.jsonl|\.codex/sessions'
 )
 AGENT_ID_RE = re.compile(r'a[0-9a-f]{16}')
 UUID_RE = re.compile(r'[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}')
