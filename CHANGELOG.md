@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.4.29] — 20261010
+
+> kronael v0.4.29 — Records out of repos, Bun tooling
+>
+> Ship records and plans live under ~/.claude, and JavaScript-family tooling is TypeScript run by Bun.
+>
+> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
+> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
+> • ts — tooling scripts are TypeScript on Bun; shared checkers live in one global tools project.
+> • sweep — worktree isolation and reconciliation follow the worktree skill.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
+- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
+- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
+- `ts`: JavaScript-family tooling is TypeScript run by Bun; no `.js`/`.mjs`/`.cjs` tooling.
+- `ts`: reusable checkers stay in the global tools project with project-local config.
+- `sweep`: parallel fixes and their reconciliation defer to the `worktree` skill.
+- Merge: origin's v0.4.26 and v0.4.27 join this line; the v0.4.27 section is origin's.
+
 ## [v0.4.28] — 20261010
 
 > kronael v0.4.28 — PR bodies are a TL;DR
