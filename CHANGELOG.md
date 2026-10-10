@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.27] — 20261010
+
+> kronael v0.4.27 — short PR bodies, records out of repos
+>
+> PR bodies are capped at 1,000 chars in one fixed shape, and plans and ship records leave the repository for ~/.claude.
+>
+> • pr-draft — a body is the TL;DR lead, at most five one-line decision bullets, closers and 🤖.
+> • GitHub gate — a body over 1,000 chars, a 241-char line, a stray paragraph or a sixth bullet fails.
+> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
+> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
+> • code.md — is_/has_ predicates and run_<command> wrappers hold for shell functions too.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
 - `pr-draft`: a body is the `**TL;DR:**` lead, at most 5 one-line decision bullets, closers, `🤖`.
 - GitHub gate: a PR body over 1,000 chars, a 241-char line, a paragraph after the lead or a sixth bullet is refused.
