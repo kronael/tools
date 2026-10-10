@@ -24,9 +24,9 @@ import aiohttp
 
 log = logging.getLogger(__name__)
 
-MIRROR = "https://api.fxtwitter.com"
-STATUS_PATH = re.compile(r"status(?:es)?/(\d+)")
-BARE_ID = re.compile(r"^\d+$")
+MIRROR = 'https://api.fxtwitter.com'
+STATUS_PATH = re.compile(r'status(?:es)?/(\d+)')
+BARE_ID = re.compile(r'^\d+$')
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -55,21 +55,21 @@ def parse_post_id(ref: str) -> str:
         return match.group(1)
     if BARE_ID.match(ref.strip()):
         return ref.strip()
-    raise ValueError(f"no post id in {ref!r}")
+    raise ValueError(f'no post id in {ref!r}')
 
 
 def build_post(payload: dict) -> Post:
-    tweet = payload["tweet"]
+    tweet = payload['tweet']
     return Post(
-        id=str(tweet["id"]),
-        author=tweet.get("author", {}).get("screen_name", ""),
-        created_at=tweet.get("created_at", ""),
-        text=tweet.get("text", ""),
-        likes=tweet.get("likes", 0),
-        retweets=tweet.get("retweets", 0),
-        replies=tweet.get("replies", 0),
-        views=tweet.get("views") or 0,
-        url=tweet.get("url", ""),
+        id=str(tweet['id']),
+        author=tweet.get('author', {}).get('screen_name', ''),
+        created_at=tweet.get('created_at', ''),
+        text=tweet.get('text', ''),
+        likes=tweet.get('likes', 0),
+        retweets=tweet.get('retweets', 0),
+        replies=tweet.get('replies', 0),
+        views=tweet.get('views') or 0,
+        url=tweet.get('url', ''),
     )
 
 
@@ -79,26 +79,26 @@ async def fetch_post(session: aiohttp.ClientSession, ref: str) -> Post | Failure
     except ValueError as exc:
         return Failure(ref=ref, reason=str(exc))
 
-    url = f"{MIRROR}/i/status/{post_id}"
+    url = f'{MIRROR}/i/status/{post_id}'
     try:
         async with session.get(url) as response:
             if response.status != 200:
-                return Failure(ref=ref, reason=f"http {response.status}")
+                return Failure(ref=ref, reason=f'http {response.status}')
             payload = await response.json(content_type=None)
     except aiohttp.ClientError as exc:
-        return Failure(ref=ref, reason=f"{type(exc).__name__}: {exc}")
-    except asyncio.TimeoutError:
-        return Failure(ref=ref, reason="timeout")
+        return Failure(ref=ref, reason=f'{type(exc).__name__}: {exc}')
+    except TimeoutError:
+        return Failure(ref=ref, reason='timeout')
 
-    if payload.get("code") != 200 or "tweet" not in payload:
-        return Failure(ref=ref, reason=payload.get("message", "no post in reply"))
+    if payload.get('code') != 200 or 'tweet' not in payload:
+        return Failure(ref=ref, reason=payload.get('message', 'no post in reply'))
     return build_post(payload)
 
 
 async def fetch_all(refs: list[str], timeout_s: float) -> list[Post | Failure]:
     timeout = aiohttp.ClientTimeout(total=timeout_s)
-    # trust_env picks up HTTPS_PROXY; the sloth container reaches the mirror
-    # only through its squid proxy.
+    # trust_env picks up HTTPS_PROXY for a box that reaches the mirror only
+    # through a proxy.
     async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
         return list(await asyncio.gather(*(fetch_post(session, ref) for ref in refs)))
 
@@ -111,20 +111,20 @@ def read_refs(args: argparse.Namespace) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("refs", nargs="*", help="post urls or ids; omit to read stdin")
-    parser.add_argument("--timeout", type=float, default=20.0, help="seconds per request")
-    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument('refs', nargs='*', help='post urls or ids; omit to read stdin')
+    parser.add_argument('--timeout', type=float, default=20.0, help='seconds per request')
+    parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
 
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(levelname)s %(message)s",
+        format='%(levelname)s %(message)s',
         stream=sys.stderr,
     )
 
     refs = read_refs(args)
     if not refs:
-        log.error("no post references given")
+        log.error('no post references given')
         return 2
 
     results = asyncio.run(fetch_all(refs, args.timeout))
@@ -133,14 +133,14 @@ def main() -> int:
     for result in results:
         if isinstance(result, Failure):
             failures += 1
-            log.error("%s: %s", result.ref, result.reason)
+            log.error('%s: %s', result.ref, result.reason)
             continue
-        print(json.dumps(dataclasses.asdict(result), ensure_ascii=False))
+        print(json.dumps(dataclasses.asdict(result), ensure_ascii=False))  # noqa: T201
 
     if failures:
-        log.error("%d of %d references failed", failures, len(results))
+        log.error('%d of %d references failed', failures, len(results))
     return 1 if failures == len(results) else 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())
