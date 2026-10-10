@@ -14,7 +14,7 @@ another's edits, reviewers reading half-edited files.
 - NEVER run more than one code-editing subagent on the shared main tree at
   once — ALWAYS run them sequentially, or give each its own worktree.
 - NEVER worktree-isolate a READ-ONLY sub (review / verify / research) — ALWAYS
-  let those share the tree, and parallelize them freely.
+  let those share the tree, and parallelize them.
 - A worktree-isolated sub shares nothing — ALWAYS parallelize those too; the
   one-writer rule binds only the SHARED tree.
 - A trivial single-file edit MAY stay on the shared tree — ALWAYS first confirm

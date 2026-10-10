@@ -112,7 +112,6 @@ version, CHANGELOG and tag.
      internal-only file paths (migration numbers and
      `Spec: specs/X.md` pointers stay).
    - Collapse synonymous bullets across sections.
-   - Cut multi-sentence "why" paragraphs.
    - If total body bullets ≤ 5, collapse to a single un-headed list.
    - Preserve at full detail (never trim): security fixes, breaking
      changes, env-var renames, schema migrations, anything the

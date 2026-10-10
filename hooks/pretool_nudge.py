@@ -2,7 +2,7 @@
 # PreToolUse hook: block unsafe commands and unlinted GitHub text, and emit per-language file nudges.
 # PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
 # its repository opted in with a root .rumdl.toml.
-# Production: silent-fail on any error except explicit unsafe-command blocks.
+# Production: silent-fail on any error, except an unsafe command is blocked and the GitHub text gate refuses on its own error.
 from __future__ import annotations
 
 import contextlib
