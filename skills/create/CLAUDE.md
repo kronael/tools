@@ -12,13 +12,18 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 | `web.md` | Claude Design process/taste + § Sketch (2-3 throwaway variants) | create-claude-design, create-sketch |
 | `web/design-md.md` + `web/design-md/` | Google DESIGN.md token specs | create-design-md |
 | `web/popular-web-designs.md` + `web/popular-web-designs/templates/` | 54 brand design systems | create-popular-web-designs |
+| `web/code-presentation.md` | reveal.js code-talk slides from a feature-work doc | house |
 | `video.md` | short-form video script writing | create-video-script |
 | `video/render.md` + `video/render/{flavors,examples}/` | script→mp4 engine index | create-video-render |
 | `video/manim.md` + `video/manim/` | Manim CE pipeline | create-manim-video |
+| `video/collage.md` | collage motion from real material, judged by an external critic: memes, promo loops | house |
 | `art.md` | static ASCII art (pyfiglet, cowsay, boxes) | create-ascii-art |
+| `art/logo.md` | logo, emblem, badge, favicon design method | house |
 | `art/ascii-video.md` + `art/ascii-video/` | ASCII video pipeline | create-ascii-video |
 | `art/p5js.md` + `art/p5js/` | p5.js generative art pipeline | create-p5js |
 | `art/pretext.md` + `art/pretext/` | pretext text-layout demos | create-pretext |
+| `social.md` | social image for the X feed: meme PNG, looping GIF, code-shot explainer | house |
+| `divergence.md` | divergence funnel: 4 independent versions per stage, select, iterate | house |
 | `diagram/excalidraw.md` + `diagram/excalidraw/` | Excalidraw JSON diagrams | create-excalidraw |
 | `diagram/architecture-diagram.md` + `diagram/architecture-diagram/` | dark SVG infra diagrams | create-architecture-diagram |
 

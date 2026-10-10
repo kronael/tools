@@ -22,8 +22,6 @@
   DB, real handler, tmpdir I/O). Mock ONLY what you cannot run — paid or
   third-party APIs, clocks, randomness, cloud SDKs. NEVER mock your own modules
   to keep a unit test tidy; that tests the mocks.
-- Unit tests next to the code (`*_test.go`, `test_*.py`); integration tests in a
-  dedicated top-level `tests/`.
 - Test features, not fixes: a runtime failure means fix the code — add a test
   only where the feature itself lacks coverage.
 - Test config objects match the target type exactly; omit unknown properties
@@ -69,8 +67,7 @@
 
 ## Pitfalls
 
-- ALWAYS prefer integration/e2e over mocks; unit tests mock external systems
-  only. Remove real API/database tests from unit test suites.
+- Remove real API/database tests from unit test suites.
 - Use shared fixture modules (`conftest.py`, `common/mod.rs`) for common setup.
 - Return `Result<()>` or the language equivalent for clean error propagation.
 - A test that fails from import/typo/fixture errors proves nothing - confirm
@@ -79,7 +76,3 @@
   on production contracts.
 - Tests run with relaxed type checks and mostly without annotations; NEVER
   spend effort typing tests to strict; NEVER weaken production types.
-- Test config objects match the target type exactly — omit unknown properties
-  for type safety.
-- Test features, not fixes: a runtime failure → fix the code; add a test only
-  when the feature lacks coverage.

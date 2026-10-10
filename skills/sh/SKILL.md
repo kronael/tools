@@ -39,7 +39,7 @@ comments, design and the boring-code rules. Below are shell-specific additions.
 ## Fallback Patterns
 ```bash
 SEED="/preferred/path"
-[ -d "$SEED" ] || SEED="fallback/path"
+[[ -d "$SEED" ]] || SEED="fallback/path"
 ```
 
 ## Heredocs

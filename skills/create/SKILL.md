@@ -43,7 +43,7 @@ a renderer that walks it: a node is `{parent, transform/props}`, children
 inherit the parent's transform, motion is a keyframe track sampled per
 property — NEVER per-frame `if` branches. Compose the graph (and its tracks)
 as consts BEFORE writing the renderer. Canonical worked example:
-`demo/cutout.md` § Rig it (parts hierarchy + motion paths + renderer).
+the `demo` skill's `cutout.md` § Rig it (parts hierarchy + motion paths + renderer).
 
 ## Quality gate
 

@@ -57,9 +57,6 @@ sanitizers). Below are Go-specific additions.
 
 ## Concurrency
 
-- Single goroutine owns all state: direct access, no locks, deterministic order
-- Fails fast on conflicts instead of retrying with mutexes
-
 ALWAYS read `concurrency.md` before writing or reviewing anything that starts
 a goroutine, and before putting a write syscall on a latency-sensitive path.
 It carries the goroutine-sizing rule and the single-sink I/O pattern.

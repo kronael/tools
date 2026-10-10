@@ -63,9 +63,9 @@ $(TOOL_A): ; $(call DOWNLOAD,https://...,abc...,...)
 
 ## Tool downloads
 
-- Always pin SHA256 alongside URL.
+- ALWAYS pin SHA256 alongside URL.
 - Verify with `sha256sum -c --quiet` before extracting.
-- Use a file target (e.g. `.hooks/kustomize`), never `.PHONY`. Make's file-mtime
+- Use a file target (e.g. `.hooks/kustomize`), NEVER `.PHONY`. Make's file-mtime
   cache then naturally skips re-downloads.
 
 ## Canonical phony targets
@@ -84,7 +84,7 @@ CI pipelines call these targets by name — keep them consistent across componen
 ## .PHONY
 
 - For non-file targets only: `help`, `lint`, `test`, `install`, `clean`, etc.
-- Never `.PHONY` a target that produces a file on disk. It defeats caching.
+- NEVER `.PHONY` a target that produces a file on disk. It defeats caching.
 
 ## help target
 
