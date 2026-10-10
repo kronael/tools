@@ -30,7 +30,8 @@ skill; listings and comment edits in `astgrep`.
   blind `sed -i`.
 
 Serena install, config and registration: `kronael/sync/reference.md`
-§ External tool commands.
+§ External tool commands in the bundle source repo (`~/.claude/LOCAL.md`
+names its path; an installed `~/.claude/` carries no `kronael/` directory).
 
 ## The rule that bites
 

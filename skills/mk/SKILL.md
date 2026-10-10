@@ -104,10 +104,3 @@ help:
 
 Double quotes in `@echo "..."` are correct Make syntax — do NOT convert them
 to single quotes (yamlfmt single-quote convention applies only to `.yml` files).
-
-## Recipe shell escaping
-
-- `$$` to escape `$` for the shell. `$$(mktemp)` becomes `$(mktemp)` in shell.
-- `\` line continuations with `;` between commands. Each unjoined line runs in its
-  own shell — variables don't carry across.
-- `@` prefix suppresses echo. Use sparingly; usually you want to see what ran.

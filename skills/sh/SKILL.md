@@ -36,16 +36,6 @@ design and the boring-code rules live there. Below are shell-specific additions.
 - `trap 'cleanup' INT TERM` for graceful shutdown
 - `wait` after backgrounding
 
-## Fallback Patterns
-```bash
-SEED="/preferred/path"
-[[ -d "$SEED" ]] || SEED="fallback/path"
-```
-
-## Heredocs
-- `cat <<EOF` for multi-line output
-- `<<'EOF'` for no expansion
-
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
