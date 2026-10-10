@@ -12,9 +12,8 @@ known drifts. If a blank agent would do it anyway, it does not belong here.
 ## Continuity
 
 Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
-memory index `.../<slug>/memory/MEMORY.md`, diary `.../<main-slug>/diary/*.md`
-(`diary` § Where it lives; keyed on the main tree, not the cwd). Newest by
-mtime.
+memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it
+lives. Newest by mtime.
 
 - ALWAYS read the 2-3 newest diary entries before answering — and on a new task
   too, not only at session start (`/recall-memories <topic>`). MEMORY.md arrives

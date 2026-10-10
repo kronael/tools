@@ -157,8 +157,7 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 - Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
   them — a bare `specs/` matches at every depth and swallows a real
   `src/specs/`. A repo that already tracks `specs/` keeps tracking it.
-- A repo carries no diary: it lives under `~/.claude/` (`diary` § Where it
-  lives), so no `.diary/` directory and no ignore line for one.
+- A repo carries no diary (`diary` § Where it lives).
 
 ## Keeping it
 

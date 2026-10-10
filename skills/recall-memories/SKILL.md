@@ -69,16 +69,19 @@ somewhere in one call or message.
 1. **Curated layer.** MEMORY.md is already loaded. Read the 2-3 newest
    diary entries in full (`ls -t <diary>/*.md | head -3`, `<diary>` named
    in `diary` § Where it lives), grep `<diary>/*.md` and
-   `~/.claude/projects/<slug>/memory/*.md` for
-   the topic, and note the exact names they use — branches, PR numbers,
-   file and report paths, hashes. Those are the search terms for step 2.
+   `~/.claude/projects/<slug>/memory/*.md` for the topic, then read and grep
+   `<repo root>/.diary/` the same way when it exists — a repo's older or
+   still-tracked diary, read-only. Note the exact names they use — branches,
+   PR numbers, file and report paths, hashes. Those are the search terms
+   for step 2.
    Completion criterion: diary summary lines in hand and 2-4 search terms.
 2. **Locate.** Run `prompts` and `sessions` with those terms in the same
    pass. A `[no transcript]` mark means only the prompt survived (deleted
    past `cleanupPeriodDays`, or recorded on another host). When the topic
    spans projects or hits are thin, rerun both with `-a` and grep
-   `~/.claude/projects/*/memory/*.md` and `~/.claude/projects/*/diary/*.md` in the same
-   pass — NEVER make the user re-ask to widen scope.
+   `~/.claude/projects/*/memory/*.md`, `~/.claude/projects/*/diary/*.md` and
+   `~/*/*/.diary/*.md` in the same pass — NEVER make the user re-ask to
+   widen scope.
    Completion criterion: ranked session ids, or a stated empty result for
    both scopes after the widening in §1.
 3. **Digest the newest 2-3 hit sessions** with `digest <id>`, Codex ids

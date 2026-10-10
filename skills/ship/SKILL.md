@@ -32,11 +32,10 @@ Read the ONE file matching the current stage, then return here.
 ## Work record
 
 Default: `~/.claude/projects/<slug>/ship/plan-NN-name.md` — the **record
-dir**. `<slug>` is the MAIN tree's absolute path (first entry of `git
-worktree list`) with every non-alphanumeric character replaced by `-`, the
-directory Claude Code keeps that tree's transcripts and `memory/` in:
-`/home/u/app/x` records in `~/.claude/projects/-home-u-app-x/ship/`. NN is
-the next free zero-padded
+dir**. `<slug>` is the MAIN tree's resolved path (first entry of `git
+worktree list`; outside git `pwd -P`, NEVER `$PWD`) with every
+non-alphanumeric character replaced by `-`: `/home/u/app/x` records in
+`~/.claude/projects/-home-u-app-x/ship/`. NN is the next free zero-padded
 number, the name lowercase kebab; `mkdir -p` the dir before the first write.
 Reuse the active change's record where it is. The plan holds the owner
 brief, acceptance checks, decisions and progress. The `eval` and `specs`

@@ -162,7 +162,7 @@ diary entry for today.
 /diary                     # append `## HH:MM` to the day's diary file
 ```
 
-Commit and diary are local-only — no automatic push. `rip` is
+Commits are local-only — no automatic push. `rip` is
 explicit, always.
 
 ## Bash shortcuts

@@ -9,22 +9,25 @@ user-invocable: true
 
 ## Where it lives
 
-Default: `~/.claude/projects/<slug>/diary/YYYYMMDD.md` — the **diary dir**,
-the UTC date the Stop hook checks. `<slug>` is the MAIN tree's absolute path
-(first entry of `git worktree list`) with every non-alphanumeric character
-replaced by `-`, the directory Claude Code keeps that tree's transcripts and
-`memory/` in: `/home/u/app/x` writes `~/.claude/projects/-home-u-app-x/diary/`.
-Outside git, the cwd path is the slug. `mkdir -p` the dir before the first
-write. Append to today's entry; create if missing.
+`~/.claude/projects/<slug>/diary/YYYYMMDD.md` — the **diary dir**, the UTC
+date the Stop hook checks. `<slug>` is the MAIN tree's resolved path with
+every non-alphanumeric character replaced by `-`: `/home/u/app/x` writes
+`~/.claude/projects/-home-u-app-x/diary/`. The first entry of `git worktree
+list` is that path, symlinks resolved; outside git use `pwd -P`, NEVER
+`$PWD`. A submodule or a `--separate-git-dir` repo lists its git dir first,
+so its diary keys on the git dir. Every route into the repo — a symlink, a
+subdirectory, a linked worktree — shares this one diary, while Claude Code
+may keep that session's transcripts under another slug. `mkdir -p` the dir
+before the first write. Append to today's entry; create if missing.
 
 A standalone document goes beside it as `YYYYMMDD-<name>.md` — see "Named
 companions" below.
 
-This section is the one place the dir is named — every other skill points
-here. ALWAYS address the diary by absolute path from every worktree: the dir
-is keyed on the main tree, not on the worktree's cwd. NEVER put a diary in a
-repository: no `.diary/` directory, no ignore line for one — what an agent
-writes for itself lives under `~/.claude/`.
+This section owns the dir — every other file points here. ALWAYS address
+the diary by absolute path from every worktree: the dir is keyed on the main
+tree, not on the worktree's cwd. NEVER put a diary in a repository: no
+`.diary/` directory, no ignore line for one — what an agent writes for itself
+lives under `~/.claude/`.
 
 ## Format
 
