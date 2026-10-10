@@ -20,6 +20,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
+from dataclasses import replace
 from enum import Enum
 
 
@@ -40,8 +41,7 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 3000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
-MAX_FENCE_LINES = 6
+MAX_CHARS = {Kind.PR: 400, Kind.ISSUE: 3000, Kind.COMMENT: 240}
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
@@ -63,10 +63,10 @@ HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
+BULLET = re.compile(r'^\s*[-*+]\s')
+CLOSER = re.compile(r'^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
 
-# A gh invocation at the head of a command segment, after any VAR=value
-# assignments and one wrapper (env, timeout, sudo ...) with its arguments.
 PREFIX = (
     r'(?:\w+=\S*[ \t]+)*'
     r'(?:(?:env|command|exec|timeout|sudo|nice|nohup)[ \t]+(?:\S+[ \t]+)*?)?'
@@ -105,29 +105,52 @@ JSON_BODY = re.compile(r'"body"\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
 def split_prose(lines: list[str]) -> list[tuple[int, str]]:
+    return [(n, line) for n, line, fenced in walk(lines) if not fenced]
+
+
+def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
     out = []
     fenced = False
     for n, line in enumerate(lines, 1):
         if FENCE.match(line):
             fenced = not fenced
-        elif not fenced:
-            out.append((n, line))
+        else:
+            out.append((n, line, fenced))
     return out
 
 
-def find_fences(lines: list[str]) -> list[tuple[int, int]]:
-    out = []
-    start = 0
-    for n, line in enumerate(lines, 1):
-        if not FENCE.match(line):
+@dataclass(frozen=True)
+class Element:
+    """One unit of a PR body: the lead, a closer, the robot, or a stray bullet
+    or paragraph, with its continuation lines joined."""
+
+    line: int
+    kind: str
+    text: str
+
+
+def split_elements(prose: list[tuple[int, str]]) -> list[Element]:
+    out: list[Element] = []
+    after_blank = True
+    for n, line in prose:
+        text = line.strip()
+        if not text:
+            after_blank = True
             continue
-        if start:
-            out.append((start, n - start - 1))
-            start = 0
+        starts = BULLET.match(line) or CLOSER.match(line) or text == ROBOT
+        if out and not after_blank and not starts:
+            out[-1] = replace(out[-1], text=f'{out[-1].text} {text}')
+        elif text == ROBOT:
+            out.append(Element(n, 'robot', text))
+        elif BULLET.match(line):
+            out.append(Element(n, 'bullet', text))
+        elif CLOSER.match(line):
+            out.append(Element(n, 'closer', text))
+        elif not out:
+            out.append(Element(n, 'lead', text))
         else:
-            start = n
-    if start:
-        out.append((start, len(lines) - start))
+            out.append(Element(n, 'paragraph', text))
+        after_blank = False
     return out
 
 
@@ -166,20 +189,39 @@ def lint_pr(lines: list[str]) -> list[Problem]:
             problems.append(Problem(n, '"this PR": name what the change does instead'))
         if ROBOT in line and n < len(lines):
             problems.append(Problem(n, f'{ROBOT} belongs on the last line only'))
+    prose = []
     for n, line in split_prose(lines):
         if HEADER.match(line):
-            problems.append(
-                Problem(n, 'header: one paragraph per concern, opened by a bold lead-in')
-            )
-        if RULE.match(line):
+            problems.append(Problem(n, 'header: the body is the TL;DR, no sections'))
+        elif RULE.match(line):
             problems.append(Problem(n, 'horizontal rule'))
-        if TABLE.match(line):
-            problems.append(Problem(n, 'table: fold it into prose or link a doc'))
-    problems += [
-        Problem(n, f'{k}-line code block restates the diff: point at the file instead')
-        for n, k in find_fences(lines)
-        if k > MAX_FENCE_LINES
-    ]
+        elif TABLE.match(line):
+            problems.append(Problem(n, 'table: cut it or fold it into the TL;DR'))
+        else:
+            prose.append((n, line))
+    fence = next((n for n, line in enumerate(lines, 1) if FENCE.match(line)), 0)
+    if fence:
+        problems.append(
+            Problem(fence, 'code block: the diff shows code, the TL;DR says what it does')
+        )
+    return problems + lint_elements(split_elements(prose))
+
+
+def lint_elements(elements: list[Element]) -> list[Problem]:
+    problems = []
+    for e in elements:
+        if e.kind == 'bullet':
+            problems.append(
+                Problem(e.line, 'bullet: the body is the TL;DR; fold the reason into it or cut it')
+            )
+        elif e.kind == 'paragraph':
+            problems.append(
+                Problem(
+                    e.line,
+                    'text after the lead: one paragraph only, then `Closes #N` lines;'
+                    ' fold what matters into the TL;DR',
+                )
+            )
     return problems
 
 

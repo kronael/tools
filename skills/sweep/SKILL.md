@@ -79,9 +79,8 @@ Spawn one opus sub per concern. Hard rules:
   dispatch lifecycle. If a "fix" spans concerns, split it.
 - **Sequential on the shared tree** — NEVER run two code-editing subs in
   parallel on the same checkout. They interleave: one reverts the other's
-  edits, mid-flight commits, half-edited files. Parallel is ONLY safe in
-  detached worktrees made by hand (`worktree` § Creating a worktree by hand);
-  NEVER `isolation: "worktree"`.
+  edits, mid-flight commits, half-edited files. `Skill(worktree)` decides
+  when a sub gets its own detached worktree, and how.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need
@@ -116,7 +115,8 @@ After verifying each sub's output:
 
 ## Worktree reconciliation
 
-Bringing a worktree sub's commits back: `worktree` § Reconciling a worktree sub's commits into main.
+ALWAYS bring a worktree sub's work back by `Skill(worktree)` § Reconciling a
+worktree sub's commits into main. NEVER `git cherry-pick` it.
 
 ## Hard rules (non-negotiable)
 

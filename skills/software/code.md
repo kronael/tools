@@ -9,10 +9,10 @@ your diff against every `##` heading here before calling an edit done.
 
 - ALWAYS name a predicate `is_`/`has_`/`can_`/`should_` and a conversion
   `to_`/`into_`: `valid()` → `is_valid()`, camelCase `isValid()`. The
-  `<lang>-bool-fn-prefix` lint flags the miss in Rust, Python and TypeScript
-  (`.ts`, not `.tsx`); no lint covers any other language.
+  `<lang>-bool-fn-prefix` lint flags a miss where it exists; the rule stands
+  without it.
 - ALWAYS name a function that wraps one external command `run_<command>`,
-  after the program it runs, as `run_process` is the generic form: a helper
+  after the program it runs; `run_process` is the generic form: a helper
   around `xz` is `run_xz()`, NEVER `compress()` or `store_file()`. The name
   says a subprocess starts; an effect name hides it.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers

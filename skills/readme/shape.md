@@ -159,7 +159,7 @@ into a sidebar. ALWAYS order it as the newcomer's questions arrive:
 Contributor docs, such as style notes for page authors, may live in `docs/`
 beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
 NEVER published as reader pages. Plans, reviews and other work records NEVER
-go in `docs/`. They live in `.claude/plans/`, as `topology.md` § Tracked and local.
+go in `docs/`. They live under `~/.claude/` (`ship` § Work record).
 
 ## Out of scope
 

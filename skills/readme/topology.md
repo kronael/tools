@@ -30,8 +30,8 @@ page's craft: `page.md`. Prose: `writing`.
 - ALWAYS add a file only once its question has an answer the README cannot hold
   in one section — NEVER an empty stub. Root docs are UPPERCASE.
 - NEVER create `todos/`, `notes/`, `facts/`, `compare/` or `WHY.md` — each
-  one's content has a row above. `plans/` exists only as `.claude/plans/`
-  (§ Tracked and local).
+  one's content has a row above. NEVER `plans/`: plans and work records live
+  under `~/.claude/` (`ship` § Work record).
 - NEVER create `CHANGELOG.md` unless the project publishes versions to outside
   consumers (crates.io, npm, PyPI, a plugin) — history lives in git and
   `.diary/`. A repo that keeps one keeps it; `release` writes it.
@@ -154,12 +154,10 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 ## Tracked and local
 
 - Every file above is tracked, `BUGS.md` included — it is in the reading order.
-- Local, root-anchored in `.gitignore`: `/.claude/plans/` (`ship` § Work record
-  owns the setting and the ignore step), `/.diary/` (`diary`), `/specs/`,
+- Local, root-anchored in `.gitignore`: `/.diary/` (`diary`), `/specs/`,
   `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every depth and
-  swallows a real `src/specs/`, and `/.claude/plans/` keeps the committed
-  `.claude/` files (settings, commands, skills) tracked. A repo that already
-  tracks `.diary/` or `specs/` keeps tracking them.
+  swallows a real `src/specs/`. A repo that already tracks `.diary/` or
+  `specs/` keeps tracking them.
 
 ## Keeping it
 

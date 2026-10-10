@@ -7,8 +7,8 @@ blend them: "give me the full picture" is `eval`.
 
 ## Memo
 
-Write `.claude/plans/critique-useless-<YYYYMMDD>.md` — `ship` § Work record owns
-the directory and its ignore rule. Each step below is one section, in this
+Write `critique-useless-<YYYYMMDD>.md` in the record dir — `ship` § Work record
+names it. Each step below is one section, in this
 order. Findings inside a section rank worst-first.
 
 1. **Verdict** — one line: `don't build`, `build only if <condition>`, or

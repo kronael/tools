@@ -64,7 +64,7 @@ spec sync update reality or wishes?
 
 ## Output
 
-`.claude/plans/critique-cto-<YYYYMMDD>.md` with claims, attack scenarios,
+`critique-cto-<YYYYMMDD>.md` in the record dir (`ship` § Work record) with claims, attack scenarios,
 grade, sprint spot-checks, and one-sentence call.
 
 ## Anti-patterns

@@ -1,5 +1,43 @@
 # Changelog
 
+## [v0.4.29] — 20261010
+
+> kronael v0.4.29 — Records out of repos, Bun tooling
+>
+> Ship records and plans live under ~/.claude, and JavaScript-family tooling is TypeScript run by Bun.
+>
+> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
+> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
+> • ts — tooling scripts are TypeScript on Bun; shared checkers live in one global tools project.
+> • sweep — worktree isolation and reconciliation follow the worktree skill.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
+- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
+- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
+- `ts`: JavaScript-family tooling is TypeScript run by Bun; no `.js`/`.mjs`/`.cjs` tooling.
+- `ts`: reusable checkers stay in the global tools project with project-local config.
+- `sweep`: parallel fixes and their reconciliation defer to the `worktree` skill.
+- Merge: origin's v0.4.26 and v0.4.27 join this line; the v0.4.27 section is origin's.
+
+## [v0.4.28] — 20261010
+
+> kronael v0.4.28 — PR bodies are a TL;DR
+>
+> A PR body is now a TL;DR of one to three sentences, with no bullets, and the naming rules no longer list languages.
+>
+> • pr-draft — a body is the TL;DR lead, `Closes #N` lines and 🤖; nothing the title or diff shows.
+> • GitHub gate — a body over 400 chars, a bullet, a second paragraph or a code block fails.
+> • code.md — naming rules stated for all code; the sh skill points there.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pr-draft`: a body is the `**TL;DR:**` lead, optional `Closes`/`Fixes #N` lines and `🤖`.
+- GitHub gate: a PR body over 400 chars, a bullet, text after the lead or a code block is refused.
+- WISDOM § Git: DISTILL names the TL;DR as the whole PR body.
+- `code.md`: the `is_`/`has_` and `run_<command>` rules name no language; `sh` only points at `code.md`.
+
 ## [v0.4.27] — 20261010
 
 > kronael v0.4.27 — Worktrees follow explicit choices

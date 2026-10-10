@@ -84,6 +84,17 @@
   and the detail goes to a `### Operator note`. **Default if nothing is
   decided:** (b). No test — docs.
 
+- **SWEEP-NAMES-TWO-READONLY-AGENT-TYPES** (LOW, duplication) — CONFIRMED
+  at HEAD 2026-10-10. `skills/sweep/SKILL.md:17` names its read-only subs
+  "Sonnet/Explore"; `:25` launches a `general-purpose` agent. **Fix:** name
+  one agent type. No test — duplication.
+
+- **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
+  2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
+  (`.mjs`); `skills/browse/SKILL.md:96` has the agent write `tmp/debug.mjs`
+  and run it with `node`. **Fix:** a `tmp/debug.ts` run by `bun`, or scope the
+  ts rule to committed tooling. No test — duplication.
+
 - **SOCIAL-REFS-NARRATE-HISTORY** (LOW, docs) — CONFIRMED at HEAD
   2026-10-06. `skills/create/social/references/codex-critique.md:3` frames the
   file as a "Raw adversarial pass by codex-cli 0.144.4" over an earlier draft
@@ -772,6 +783,17 @@
   and the move hygiene (ruff, CI template for Python 3.14, stale `--help`).
   `skills/ship/cli.md` keeps `MODEL=fable` until (2) and (3) land. Waits for
   the owner's sign-off. Recorded 2026-10-06.
+
+- **SHIP-CLI-TRACE-LOG-IN-TREE** (LOW, ship) — RECORDED 2026-10-10. The
+  `ship` CLI (kronael/ship) writes its trace log under the working
+  directory's `.ship/`: `ship/claude_code.py:333` hard-codes
+  `.ship/log/trace.jl` apart from `DATA_DIR` and `LOG_DIR`
+  (f6b4859614e8cc33af347ec687994f17e28a96d7; `ship.log` and the lock follow
+  `DATA_DIR`, `config.py:165-166`). With
+  `DATA_DIR` moved out of the tree (`skills/ship/cli.md`), that log is the
+  one `.ship/` a repository still acquires. **Fix:** in kronael/ship, write
+  the trace log under `DATA_DIR`; then drop `/.ship/` from this repository's
+  `.gitignore`. Waits for the owner.
 
 ## Ruled not a defect
 

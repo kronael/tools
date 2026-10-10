@@ -22,4 +22,4 @@ ALWAYS load the `writing` skill before drafting or editing prose in any mode.
 Audience decides the file: `sync.md`, `topology.md`, `shape.md` and `page.md`
 write for someone who will use or change the code, `onepager.md` writes for
 someone deciding whether to care at all. NEVER let a onepager claim what the project's own `BUGS.md` or
-`.claude/plans/critique-*.md` contradicts.
+the record dir's `critique-*.md` (`ship` § Work record) contradicts.

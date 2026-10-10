@@ -1,7 +1,7 @@
 ---
 name: ts
 description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
+when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
 ---
 
 # TypeScript Style
@@ -18,6 +18,10 @@ Read on demand, in this directory:
   megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
   profiling, and when to stop.
 ## Runtime and packages
+- ALWAYS write JavaScript-family tooling in TypeScript and run it with Bun.
+  NEVER author plain JavaScript tooling (`.js`, `.mjs`, `.cjs`).
+- ALWAYS keep reusable checkers in the global tools project with project-local
+  configuration. NEVER copy shared tooling into each application.
 - ALWAYS the newest Bun as package manager, in every JS/TS project: `bun
   install`, `bun.lock` committed, `bunx` for one-offs. NEVER a second
   lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) beside it
