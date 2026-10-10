@@ -40,7 +40,8 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 3000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_CHARS = {Kind.PR: 1000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_BULLETS = 5
 MAX_FENCE_LINES = 6
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
@@ -63,10 +64,10 @@ HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
+BULLET = re.compile(r'^\s*[-*+]\s')
+CLOSER = re.compile(r'^\*{0,2}(?:Contract to confirm|Known,? deferred):|^⚠')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
 
-# A gh invocation at the head of a command segment, after any VAR=value
-# assignments and one wrapper (env, timeout, sudo ...) with its arguments.
 PREFIX = (
     r'(?:\w+=\S*[ \t]+)*'
     r'(?:(?:env|command|exec|timeout|sudo|nice|nohup)[ \t]+(?:\S+[ \t]+)*?)?'
@@ -154,6 +155,12 @@ def lint_last_line(lines: list[str]) -> list[Problem]:
     return [Problem(len(lines), f'last line must be a bare {ROBOT} and nothing else')]
 
 
+def is_paragraph(n: int, line: str, lead: int) -> bool:
+    if n <= lead or not line.strip() or line.strip() == ROBOT:
+        return False
+    return not (BULLET.match(line) or CLOSER.match(line))
+
+
 def lint_pr(lines: list[str]) -> list[Problem]:
     problems = []
     first = next((line for line in lines if line.strip()), '')
@@ -166,15 +173,32 @@ def lint_pr(lines: list[str]) -> list[Problem]:
             problems.append(Problem(n, '"this PR": name what the change does instead'))
         if ROBOT in line and n < len(lines):
             problems.append(Problem(n, f'{ROBOT} belongs on the last line only'))
-    for n, line in split_prose(lines):
-        if HEADER.match(line):
-            problems.append(
-                Problem(n, 'header: one paragraph per concern, opened by a bold lead-in')
+    prose = split_prose(lines)
+    lead = next((n for n, line in prose if line.strip()), 0)
+    bullets = [n for n, line in prose if BULLET.match(line)]
+    if len(bullets) > MAX_BULLETS:
+        problems.append(
+            Problem(
+                bullets[MAX_BULLETS],
+                f'{len(bullets)} bullets, max {MAX_BULLETS}: one per decision a reader'
+                ' would not guess',
             )
-        if RULE.match(line):
+        )
+    for n, line in prose:
+        if HEADER.match(line):
+            problems.append(Problem(n, 'header: a decision is a `- ` bullet, not a section'))
+        elif RULE.match(line):
             problems.append(Problem(n, 'horizontal rule'))
-        if TABLE.match(line):
-            problems.append(Problem(n, 'table: fold it into prose or link a doc'))
+        elif TABLE.match(line):
+            problems.append(Problem(n, 'table: fold it into a bullet or link a doc'))
+        elif is_paragraph(n, line, lead):
+            problems.append(
+                Problem(
+                    n,
+                    'paragraph after the lead: a decision is a `- ` bullet; the rest is'
+                    ' `Contract to confirm:`, `Known, deferred:`, `⚠️` or cut',
+                )
+            )
     problems += [
         Problem(n, f'{k}-line code block restates the diff: point at the file instead')
         for n, k in find_fences(lines)

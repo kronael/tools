@@ -131,13 +131,14 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - NEVER `gh release create`: the annotated tag is the release. NEVER
   `gh pr review --approve` on the user's behalf.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
-  new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
+  new or rewritten, with `/pr-draft` — NEVER freehand; its shape and cap, REST
   PATCH path and `🤖` marker are the contract.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body
   (drafted or posted), review comment, thread reply, issue, release notes —
   before showing it for approval. DISTILL: cut to the shortest text that still
-  carries the claim, the reasoning and the evidence, inside the posting skill's
-  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
+  carries the claim and its reasoning, in the posting skill's shape and under
+  its cap — a ceiling, never a target; results, history and what the diff
+  shows go first. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
   and no other attribution, no marketing language, no history framing, addresses
   and signatures in full, the repo's title convention, every claim verified or
   marked as an inference, and the posting skill's own Format section. Done =

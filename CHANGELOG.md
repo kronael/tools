@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- `pr-draft`: a body is the `**TL;DR:**` lead, at most 5 one-line decision bullets, closers, `🤖`.
+- GitHub gate: a PR body over 1,000 chars, with a paragraph after the lead or over 5 bullets is refused.
+- WISDOM § Git: DISTILL keeps the claim and its reasoning in the skill's shape; the cap is a ceiling.
+
 ## [v0.4.26] — 20261010
 
 > kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
