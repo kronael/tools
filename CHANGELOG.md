@@ -1,15 +1,33 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.26] — 20261010
 
-- `gh_text_lint.py`, called by `pretool_nudge.py` after the unsafe-command check: refuses `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr comment`/`review`, issue comments and `gh api` posts on `pulls/<N>`, `issues/<N>`, reviews, comments and replies whose body fails the lint, cannot be read, or is required and absent; an exception in the gate refuses; a backslash-newline continuation is joined first and an escaped backtick is literal. CLI: `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`. The GitHub release-create command joins the unsafe-command block list.
-- `pr-draft` DISTILLs into `tmp/pr-body.md` until the lint prints `ok:` and closes REVIEW-ON-WISDOM with a `Review changed:` line; `gh-comment` and `gh-issue` lint before their sign-off gates.
-- `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` are always-apply keys in `settings-recommended.json`, `kronael/sync` step 5 and `AGENTS.md`.
-- `skill_frontmatter_lint.py`: a written path names one file (a bare basename only while unique); the opt-out marker counts only on a line of its own; `dockbox` and `claude` are exempt as whole path segments only; a sibling `.md` lints its owning skill in pre-commit, and the Lint workflow runs on push to master.
-- `py`: short local file I/O inline (`# noqa: ASYNC230`/`ASYNC240` with a reason), long blocking work through the one shared `to_thread` helper, a thread's output through `.part` + `os.replace`, cancellable work as a subprocess, retry over a plain backoff sequence; subprocesses via `start_new_session=True` inside one reaping context manager, never a call-site `os.killpg`; dataclasses for records, work items and hashable keys; tests patch at the use site (`data` agrees); `datetime.now(UTC)` called directly, never a clock helper; `## Naming` keeps `iter_<items>` over `software/code.md`.
-- `py`, `software/strict-typing.md`: one project-wide `typeCheckingMode: "strict"`, never a `basic` default with a per-file `strict` list; a test file opts down with `# pyright: basic`.
-- `refine/py.md`: the Python refine lens — shared helpers over local copies, threads and subprocesses that end before their caller, data over lambdas, less source, one strict pyright mode.
-- `BUGS.md`: `GH-GATE-REGEX-SHELL-PARSE` (proposed), `PRETOOL-UNSAFE-SCAN-READS-QUOTED-TEXT`, `GH-LINT-DISTILL-COUNTS-THE-TITLE` and two skill-lint gaps recorded; three built skill-lint proposals removed.
+> kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
+>
+> PR, issue and comment text is linted before it posts, Python gains async and typing rules, and subagents are capped per tier.
+>
+> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
+> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
+> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
+> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
+> • Agents — at most 3 sonnet, 1 fable and 2 opus subagents at once; only the owner lifts the cap.
+> • refine — a Python lens; a worktree is removed only once its HEAD is on a remote ref.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh` PR, issue, comment and review posts whose body fails the WISDOM lint are refused.
+- `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>` lints a body by hand.
+- `pr-draft` distills until the lint prints `ok:`; `gh-comment` and `gh-issue` lint before posting.
+- Settings: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` always apply.
+- Skill lint: a sibling `.md` lints its owner; the opt-out marker counts only on its own line.
+- `py`: short file I/O inline, one shared `to_thread` helper, subprocesses reaped by one manager.
+- Typing: one project-wide pyright `strict`; a test file opts down with `# pyright: basic`.
+- `refine`: a Python lens; a worktree is removed only when its HEAD is on a remote ref and clean.
+- Agents: at most 3 `sonnet`, 1 `fable` and 2 `opus` subagents at once; only the owner lifts it.
+- `release`: a changelog bullet is one sentence, at most 100 characters, user-visible change only.
+- `software/code.md`: a function wrapping one external command is named `run_<command>`.
+- `wisdom`: XML tags are labels, not loaders; conditional loading is `.claude/rules/*.md` `paths`.
+- `BUGS.md`: a gh gate proposal, two gate gaps, four skill-lint gaps and five rule conflicts.
 
 ## [v0.4.25] — 20261008
 
