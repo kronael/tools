@@ -26,7 +26,7 @@ Beyond `brief.md`'s four blocks, a context's brief names:
 - **its command family** — the one that settles claims here, named explicitly,
   so the sub does not reach for grep by reflex
 - **its lenses** — for a code context, the `<skill>.md` files in this directory
-  and the **Confessed defaults**; for the document set, the `readme.md` lens and
+  and `defaults.md`; for the document set, the `readme.md` lens and
   the `claims.md` sections that apply; for the rest, those `claims.md` sections
 
 ## The recurring ones

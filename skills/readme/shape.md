@@ -142,12 +142,31 @@ every example page:
    check it fails at. ALWAYS list what is not tested whenever anything is;
    NEVER leave a gap unstated: it reads as proven.
 
+## A doc site splits into guide and reference
+
+A built docs site (VitePress, mdBook, Docusaurus) turns the file split in `topology.md` § Files
+into a sidebar. ALWAYS order it as the newcomer's questions arrive:
+
+| Group | Pages | What the pages must do |
+|---|---|---|
+| Start here | Why, Getting started, How it works | Why carries the status line, the cost and the wrong-reason refutation of `topology.md` § Keeping it; How it works is one complete annotated example on one screen |
+| Capabilities | one page per thing the reader gets, titled by it ("Amounts read at run time"), NEVER by the mechanism | each opens with what the plain approach cannot do |
+| Build | one how-to page per task | guide shape, § The two shapes that recur |
+| Examples | an index, then one page per example | § Example and recipe pages |
+| Security | trust model, security posture, failure modes | each failure mode says what happens, then how to recover |
+| Reference | one page per SDK language, then language, wire format, errors, glossary, limits, scope | glossary: one heading per term, so every term has an anchor; limits: every maximum in one place, naming the source file the values come from; scope: a table of Choice, Instead of, Why |
+
+Contributor docs, such as style notes for page authors, may live in `docs/`
+beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
+NEVER published as reader pages. Plans, reviews and other work records NEVER
+go in `docs/`. They live in `.claude/plans/`, as `topology.md` § Tracked and local.
+
 ## Out of scope
 
 Every guide and reference source sampled here is a REST or JSON-RPC
 single-resource or single-flow document; the example-page order comes from one
 SDK doc site. An SDK doc site's layout — guide groups, one reference page per
-language — is `topology.md` § A doc site splits into guide and reference.
+language — is § A doc site splits into guide and reference above.
 Webhook-driven APIs and GraphQL schemas were not sampled. NEVER extend these
 rules to those shapes unchecked — ALWAYS check a real example of that kind
 first.

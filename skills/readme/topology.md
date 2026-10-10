@@ -76,25 +76,6 @@ second copy of the site:
 - A closing "Repository layout" names each top directory. The link row plus
   "Repository layout" replace "How to read this".
 
-## A doc site splits into guide and reference
-
-A built docs site (VitePress, mdBook, Docusaurus) turns the file split above
-into a sidebar. ALWAYS order it as the newcomer's questions arrive:
-
-| Group | Pages | What the pages must do |
-|---|---|---|
-| Start here | Why, Getting started, How it works | Why carries the status line, the cost and the wrong-reason refutation of § Keeping it; How it works is one complete annotated example on one screen |
-| Capabilities | one page per thing the reader gets, titled by it ("Amounts read at run time"), NEVER by the mechanism | each opens with what the plain approach cannot do |
-| Build | one how-to page per task | guide shape, `shape.md` |
-| Examples | an index, then one page per example | `shape.md` § Example and recipe pages |
-| Security | trust model, security posture, failure modes | each failure mode says what happens, then how to recover |
-| Reference | one page per SDK language, then language, wire format, errors, glossary, limits, scope | glossary: one heading per term, so every term has an anchor; limits: every maximum in one place, naming the source file the values come from; scope: a table of Choice, Instead of, Why |
-
-Contributor docs, such as style notes for page authors, may live in `docs/`
-beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
-NEVER published as reader pages. Plans, reviews and other work records NEVER
-go in `docs/`. They live in `.claude/plans/`, as § Tracked and local sets.
-
 ## PLAN.md and ARCHITECTURE.md
 
 - PLAN.md holds the purpose and boundaries (which package owns what), the

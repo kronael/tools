@@ -60,7 +60,7 @@ code extension and still carries every claim the reviewer will trust.
    live WISDOM that govern it — NEVER a frozen checklist. A validation gate a
    lens names that the test target misses (a typecheck) runs once the lens is
    read, and again at step 10. ALWAYS seed the correctness lenses from
-   **Confessed defaults**. Tag each lens `simplify` (reuse, dead code,
+   `defaults.md`. Tag each lens `simplify` (reuse, dead code,
    minimisation, a new path grown beside an old one the change should have
    changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
@@ -155,50 +155,13 @@ code extension and still carries every claim the reviewer will trust.
     verdict: what was settled, what was corrected, what could not be settled
     from here and why, and each step-1 instruction's outcome. NEVER `git push`
     without the user's ask, and NEVER `gh pr merge`, `gh pr review` or
-    `gh pr create`.
+    `gh pr create`. The closing report follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.
 
 Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
-
-## Change summary — the report that closes the run
-
-ALWAYS end with a system-effect analysis and a verification checklist, NEVER a
-list of edits:
-
-- Direct dependencies — what imports or calls the changed code.
-- Runtime behaviour — performance, error handling, side effects.
-- Configuration — new env vars, changed defaults, breaking changes.
-- Verified unaffected — the modules or services checked, and how.
-- Tests pass, build succeeds, linter clean — each run in this turn.
-- Assumptions or edge cases that still need attention.
-
-Shape: "Decorator change affects 4 services. Consumer worker retry logic
-separate (verified: uses different config path). All tests pass unmodified."
-
-## Confessed defaults — hunt these first
-
-Asked in isolation, models name these as their own defaults while being able to
-recite the rule against each. Knowing a rule and following it differ; this is
-where the gap shows.
-
-- **Errors** — a broad catch that logs and continues; a fallback `None`/`[]`/`0`
-  letting callers proceed on bad data; graceful degradation where crashing is
-  cheaper than corrupted output; a guard on a path the caller already
-  guarantees; a second logging or helper path because the first was never
-  grepped for.
-- **Scope** — adjacent code tidied unasked; the reported instance patched while
-  sibling cases that fail the same way are left.
-- **Tests** — mocks stacked until the test proves nothing; the assertion edited
-  when a broken test is annoying; a guessed test command reported green.
-- **Comments** — a comment above almost every block, half restating the code;
-  docstrings added reflexively to a repo that has none; verbose names where the
-  repo is terse.
-- **Reporting** — done declared on a green run without exercising the path; a
-  partial result softened into language that reads complete; a subagent's
-  summary repeated without opening its diff.
 
 ## Review Checklist
 
