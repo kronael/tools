@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.28] — 20261010
+
+> kronael v0.4.28 — PR bodies are a TL;DR
+>
+> A PR body is now a TL;DR of one to three sentences, with no bullets, and the naming rules no longer list languages.
+>
+> • pr-draft — a body is the TL;DR lead, `Closes #N` lines and 🤖; nothing the title or diff shows.
+> • GitHub gate — a body over 400 chars, a bullet, a second paragraph or a code block fails.
+> • code.md — naming rules stated for all code; the sh skill points there.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pr-draft`: a body is the `**TL;DR:**` lead, optional `Closes`/`Fixes #N` lines and `🤖`.
+- GitHub gate: a PR body over 400 chars, a bullet, text after the lead or a code block is refused.
+- WISDOM § Git: DISTILL names the TL;DR as the whole PR body.
+- `code.md`: the `is_`/`has_` and `run_<command>` rules name no language; `sh` only points at `code.md`.
+
 ## [v0.4.27] — 20261010
 
 > kronael v0.4.27 — short PR bodies, records out of repos
