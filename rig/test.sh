@@ -148,6 +148,36 @@ gib|branch --all
 gitsu|status
 EOF
 
+# ghpush derives the HTTPS URL from the SSH remote and never touches it; -n and
+# -u contact nothing, so a GitHub-shaped URL on a local repo is enough.
+git init -q "$tmp/gh"
+git -C "$tmp/gh" remote add origin git@github.com:owner/repo.git
+ghpush_(){ (cd "$tmp/gh" && ghpush "$@"); }
+helper="-c credential.helper= -c credential.helper=\\!gh\\ auth\\ git-credential push https://github.com/owner/repo.git"
+true_ 'ghpush -u prints the HTTPS URL of an SSH origin' \
+    '[[ $(ghpush_ -u) == https://github.com/owner/repo.git ]]'
+for url in ssh://git@github.com/owner/repo.git https://github.com/owner/repo git@github.com:owner/repo; do
+    git -C "$tmp/gh" remote set-url origin "$url"
+    true_ "ghpush -u normalizes $url" '[[ $(ghpush_ -u) == https://github.com/owner/repo.git ]]'
+done
+git -C "$tmp/gh" remote set-url origin git@github.com:owner/repo.git
+true_ 'ghpush -n prints the one-off HTTPS push through the gh credential helper' \
+    '[[ $(ghpush_ -n abc123:refs/heads/x v1:refs/tags/v1) == "git $helper abc123:refs/heads/x v1:refs/tags/v1 " ]]'
+true_ 'ghpush leaves the remote URL alone' \
+    '[[ $(git -C "$tmp/gh" remote get-url origin) == git@github.com:owner/repo.git ]]'
+for bad in "-f abc:refs/heads/x" "--force-with-lease abc:refs/heads/x" "--tags abc:refs/heads/x" \
+           "--delete abc:refs/heads/x" "+abc:refs/heads/x" "abc:x" "master" ""; do
+    : > "$RIG_LOG"
+    # shellcheck disable=SC2086
+    ghpush_ -n $bad >"$tmp/out" 2>&1
+    rc=$?
+    true_ "ghpush refuses '$bad' before git pushes" \
+        '[[ $rc == 1 ]] && grep -q "^error:" "$tmp/out" && ! grep -q "^-c " "$RIG_LOG"'
+done
+git -C "$tmp/gh" remote set-url origin "$tmp/origin"
+false_ 'ghpush refuses a non-GitHub origin' 'ghpush_ -u >"$tmp/out" 2>&1'
+true_  'ghpush names the non-GitHub origin' 'grep -q "not a GitHub remote" "$tmp/out"'
+
 mkdir "$tmp/install"
 cp "$rig" "$tmp/install/rig"
 chmod +x "$tmp/install/rig"

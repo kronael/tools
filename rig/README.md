@@ -49,6 +49,7 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig checkout` / `rig co` | `rco` | Fetch + detached checkout of a ref, tag, hash or origin branch pattern |
 | `rig gco` | `gco` | Detached checkout without fetch; `gco [ref] -- paths` restores files |
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
+| `rig ghpush` | `ghpush` | Push stated refspecs to origin's GitHub repo over HTTPS with the `gh` token; the remote stays SSH |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
 
@@ -139,6 +140,33 @@ walking first-parent ancestry until it finds a commit with a remote ref.
 Stops at merge commits (ambiguous parentage) and falls back to fzf
 selection when detection fails.
 
+### Push with the gh token (ghpush)
+
+```bash
+ghpush <sha>:refs/heads/20260101_topic   # one-off HTTPS push, remote URL untouched
+ghpush v1.2.3:refs/tags/v1.2.3           # a tag, the same way
+ghpush -n <sha>:refs/heads/x             # print the git command
+git fetch "$(ghpush -u)" <refspec>       # read over HTTPS the same way
+```
+
+The human pushes over SSH with `rip`. An agent session often has no SSH
+agent (`Permission denied (publickey)`) while `gh auth status` shows a
+token, so `ghpush` runs
+
+```
+git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
+    push https://github.com/<owner>/<repo>.git <refspec>...
+```
+
+with owner and repo read from `origin` (`git@github.com:`, `ssh://` or
+`https://` forms). It never rewrites `remote.origin.url` and never stores
+the token: clones, remotes and worktrees stay SSH. Each refspec is
+`<src>:refs/heads/<branch>` or `<tag>:refs/tags/<tag>`; a `+` refspec,
+`-f`, `--force-with-lease`, `--tags`, `--all`, `--mirror` and deletes are
+refused. A token without the `workflow` scope cannot push a change under
+`.github/workflows` — GitHub refuses the push; report it rather than
+working around it.
+
 ### Rebase (rir)
 
 ```bash
@@ -162,7 +190,7 @@ rim ?             # Interactive branch selection
 Single busybox-style script. `rig aliases` lists every installed symlink,
 including `rco`, `gco`, `rip`, `rir`, `rim`, and the git aliases above.
 They dispatch via `basename $0`. Checkout, rebase, and merge share a
-`cmd_branch_op` helper; push has its own handler. Checkout (`rco`), rebase,
+`cmd_branch_op` helper; push has its own handler, and `ghpush` another. Checkout (`rco`), rebase,
 and merge fetch by default; `-z` suppresses fetch. `gco` never fetches.
 `rig install` owns the symlink list; `make install` delegates to it.
 
