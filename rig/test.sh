@@ -153,7 +153,8 @@ EOF
 git init -q "$tmp/gh"
 git -C "$tmp/gh" remote add origin git@github.com:owner/repo.git
 ghpush_(){ (cd "$tmp/gh" && ghpush "$@"); }
-helper="-c credential.helper= -c credential.helper=\\!gh\\ auth\\ git-credential push https://github.com/owner/repo.git"
+helper="-c credential.helper= -c credential.helper=\\!gh\\ auth\\ git-credential"
+gh_url=https://github.com/owner/repo.git
 true_ 'ghpush -u prints the HTTPS URL of an SSH origin' \
     '[[ $(ghpush_ -u) == https://github.com/owner/repo.git ]]'
 for url in ssh://git@github.com/owner/repo.git https://github.com/owner/repo git@github.com:owner/repo; do
@@ -162,21 +163,32 @@ for url in ssh://git@github.com/owner/repo.git https://github.com/owner/repo git
 done
 git -C "$tmp/gh" remote set-url origin git@github.com:owner/repo.git
 true_ 'ghpush -n prints the one-off HTTPS push through the gh credential helper' \
-    '[[ $(ghpush_ -n abc123:refs/heads/x v1:refs/tags/v1) == "git $helper abc123:refs/heads/x v1:refs/tags/v1 " ]]'
+    '[[ $(ghpush_ -n abc123:refs/heads/x v1:refs/tags/v1) == "git $helper push --no-follow-tags $gh_url abc123:refs/heads/x v1:refs/tags/v1 " ]]'
 true_ 'ghpush leaves the remote URL alone' \
     '[[ $(git -C "$tmp/gh" remote get-url origin) == git@github.com:owner/repo.git ]]'
+ghfetch_(){ (cd "$tmp/gh" && ghfetch "$@"); }
+true_ 'ghfetch -n prints the same one-off HTTPS fetch' \
+    '[[ $(ghfetch_ -n master "+refs/heads/*:refs/remotes/origin/*") == "git $helper fetch $gh_url master +refs/heads/\\*:refs/remotes/origin/\\* " ]]'
+true_ 'ghfetch -n needs no refspec' '[[ $(ghfetch_ -n) == "git $helper fetch $gh_url " ]]'
+# A refusal happens before any git call: under RIG_STUB the stub logs every
+# git invocation, so an accepted refspec would leave a line in the log.
 for bad in "-f abc:refs/heads/x" "--force-with-lease abc:refs/heads/x" "--tags abc:refs/heads/x" \
-           "--delete abc:refs/heads/x" "+abc:refs/heads/x" "abc:x" "master" ""; do
+           "--delete abc:refs/heads/x" "+abc:refs/heads/x" ":refs/heads/x" \
+           "refs/heads/*:refs/heads/*" "abc:x" "master" ""; do
     : > "$RIG_LOG"
     # shellcheck disable=SC2086
-    ghpush_ -n $bad >"$tmp/out" 2>&1
+    RIG_STUB=1 ghpush_ $bad >"$tmp/out" 2>&1
     rc=$?
-    true_ "ghpush refuses '$bad' before git pushes" \
-        '[[ $rc == 1 ]] && grep -q "^error:" "$tmp/out" && ! grep -q "^-c " "$RIG_LOG"'
+    true_ "ghpush refuses '$bad' before git runs" \
+        '[[ $rc == 1 && ! -s "$RIG_LOG" ]] && grep -q "^error:" "$tmp/out"'
 done
-git -C "$tmp/gh" remote set-url origin "$tmp/origin"
+git -C "$tmp/gh" remote set-url origin "https://user:secret@github.com/owner/repo.git"
+true_ 'ghpush -u accepts a tokened https origin and drops the token' \
+    '[[ $(ghpush_ -u) == https://github.com/owner/repo.git ]]'
+git -C "$tmp/gh" remote set-url origin "https://user:secret@example.test/owner/repo.git"
 false_ 'ghpush refuses a non-GitHub origin' 'ghpush_ -u >"$tmp/out" 2>&1'
-true_  'ghpush names the non-GitHub origin' 'grep -q "not a GitHub remote" "$tmp/out"'
+true_  'ghpush names the non-GitHub origin without its userinfo' \
+    'grep -q "not a GitHub remote: https://example.test/owner/repo.git" "$tmp/out"'
 
 mkdir "$tmp/install"
 cp "$rig" "$tmp/install/rig"

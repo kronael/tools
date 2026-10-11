@@ -166,6 +166,29 @@ def test_tbd_inside_fence_is_ignored(tmp_path: Path) -> None:
     assert check_corpus(root) == []
 
 
+def test_todo_as_a_file_name_or_a_lowercase_word_passes(tmp_path: Path) -> None:
+    root = corpus(
+        tmp_path, spec=SPEC + '\nDeferred items go to `TODO.md`; the todo-list renders.\n'
+    )
+    assert check_corpus(root) == []
+
+
+def test_nested_fence_does_not_hide_prose(tmp_path: Path) -> None:
+    nested = '\n````md\n```\nquoted\n```\n````\n\nRotation interval: TBD.\n'
+    root = corpus(tmp_path, spec=SPEC + nested)
+    assert 'spec-tbd' in rules(root, Severity.ERROR)
+
+
+def test_corpus_under_a_generated_dir_name_is_checked(tmp_path: Path) -> None:
+    root = corpus(tmp_path / 'build' / 'app', spec=SPEC + '\nRotation interval: TBD.\n')
+    assert 'spec-tbd' in rules(root, Severity.ERROR)
+
+
+def test_status_with_a_yaml_comment_passes(tmp_path: Path) -> None:
+    root = corpus(tmp_path, spec=SPEC.replace('status: shipped', 'status: shipped  # landed'))
+    assert check_corpus(root) == []
+
+
 def test_future_tense_warns(tmp_path: Path) -> None:
     root = corpus(tmp_path, spec=SPEC + '\nWe will move the check into the router.\n')
     assert 'spec-future-tense' in rules(root, Severity.WARN)
@@ -306,6 +329,29 @@ def test_phase_index_status_mismatch_fails(tmp_path: Path) -> None:
     assert 'spec-status' in rules(root, Severity.ERROR)
 
 
+def test_phase_row_in_a_three_column_root_index_passes(tmp_path: Path) -> None:
+    index = '| Phase | Specs | Note |\n|---|---|---|\n| [Phase 1](1/index.md) | 1 spec | x |\n'
+    root = corpus(tmp_path, index=index, name='1/2-webhooks.md')
+    (root / '1' / 'index.md').write_text(INDEX.replace('01-auth.md', '2-webhooks.md'))
+    assert check_corpus(root) == []
+
+
+def test_root_relative_and_encoded_links_resolve(tmp_path: Path) -> None:
+    root = component_corpus(
+        tmp_path, SPEC + '\nSee [shared](/lib/shared.py) and [notes](notes%20v2.md "Notes").\n'
+    )
+    (root / 'notes v2.md').write_text(SPEC.replace('shipped', 'reference'))
+    index = INDEX + '| [notes v2.md](notes%20v2.md) | reference | Notes |\n'
+    (root / 'index.md').write_text(index)
+    found = check_corpus(root)
+    assert [item.rule for item in found] == ['spec-naming']
+
+
+def test_titled_dangling_link_fails(tmp_path: Path) -> None:
+    root = corpus(tmp_path, spec=SPEC + '\nSee [the loader](02-loader.md "Loader").\n')
+    assert 'spec-link' in rules(root, Severity.ERROR)
+
+
 def test_unlinked_phase_index_does_not_count(tmp_path: Path) -> None:
     root = corpus(tmp_path, index='# Specs\n', name='1/2-webhooks.md')
     (root / '1' / 'index.md').write_text(INDEX.replace('01-auth.md', '2-webhooks.md'))
@@ -402,10 +448,13 @@ def test_checklist_item_warns(tmp_path: Path) -> None:
 
 
 def test_pointer_past_the_end_warns(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'src/config.py:40-52'))
-    found = [item for item in check_corpus(root) if item.rule == 'spec-pointer']
-    assert len(found) == 1
-    assert 'past the end of the file (3 lines)' in found[0].message
+    for anchor in 'src/config.py:40-52', 'src/config.py:2-999', 'src/config.py:0':
+        root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', anchor))
+        found = [item for item in check_corpus(root) if item.rule == 'spec-pointer']
+        assert len(found) == 1, anchor
+        assert 'past the end of the file (3 lines)' in found[0].message
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'src/config.py:1-3'))
+    assert check_corpus(root) == []
 
 
 def test_shipped_spec_without_a_file_name_warns(tmp_path: Path) -> None:

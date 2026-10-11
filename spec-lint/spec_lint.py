@@ -23,6 +23,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from urllib.parse import unquote
 
 STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
 OPEN_STATUSES = frozenset({'draft', 'reference'})
@@ -34,10 +35,11 @@ PHASE_DEPTH = 2
 LONG = 500
 TOO_LONG = 1000
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
-STATUS = re.compile(r'^status:\s*(.*?)\s*$', re.MULTILINE)
-LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)\)')
+STATUS = re.compile(r'^status:\s*([^#]*?)\s*(?:#.*)?$', re.MULTILINE)
+LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
 SCHEME = re.compile(r'^[a-z][a-z0-9+.-]*:')
-TBD = re.compile(r'\bTBD\b|\bTODO\b|implement later', re.IGNORECASE)
+FENCE = re.compile(r'^\s*(`{3,}|~{3,})')
+TBD = re.compile(r'\bTBD\b|\bTODO\b|(?i:implement later)')
 FUTURE = re.compile(r"\bwe will\b|\bwe'll\b|\bwill be\b", re.IGNORECASE)
 HISTORY = re.compile(
     r'\bno longer\b|\bformerly\b|\brenamed from\b|\bused to be\b|\bas before\b'
@@ -56,7 +58,7 @@ WORDING = (
     ),
 )
 OPTIONS = re.compile(
-    r'^#{1,6}\s+(?:(?i:options?|alternatives?|variants?)\b'
+    r'^#{1,6}\s+(?:(?i:alternatives?|variants?)\b'
     r'|.*\b(?:Option|Alternative|Approach|Variant) [A-Z0-9]\b)'
 )
 OPEN_QUESTIONS = re.compile(
@@ -65,7 +67,7 @@ OPEN_QUESTIONS = re.compile(
 CHECKLIST = re.compile(r'^\s*[-*+] \[[ xX]\] ')
 CREATE_TABLE = re.compile(r'\bcreate table (?:if not exists )?([a-z_][a-z0-9_.]*)', re.IGNORECASE)
 TICKED = re.compile(r'`([^`\n]+)`')
-AT_LINE = re.compile(r':(\d+)(?:-\d+)?$')
+AT_LINE = re.compile(r':(\d+)(?:-(\d+))?$')
 SUFFIX = re.compile(r'\.[a-z][a-z0-9+]{0,9}$')
 NOT_IN_PATH = frozenset(' \t*?{}<>$|"\'()[]=,;!`')
 PLACEHOLDER = re.compile(r'(?:^|/)(?:YYYYMMDD|NN)(?:[-_.]|$)')
@@ -107,7 +109,8 @@ rules (format.md owns the wording):
                        over 500 lines                                   warn
   spec-tbd             TBD, TODO, implement later                      error
   spec-future-tense    we will, we'll, will be                         warn
-  spec-history         no longer, formerly, renamed from, used to be    warn
+  spec-history         no longer, formerly, renamed from, used to be,   warn
+                       as before, backward compatibility
   spec-wording         harness; marketing words                        warn
   spec-options         a heading laying out options or alternatives    warn
   spec-open-questions  an open-questions heading outside draft         warn
@@ -195,7 +198,7 @@ def spec_files(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.glob('**/*.md')
-        if path.name not in NOT_SPECS and not SKIP_DIRS & set(path.parts)
+        if path.name not in NOT_SPECS and not SKIP_DIRS & set(path.relative_to(root).parts)
     )
 
 
@@ -225,12 +228,16 @@ def split_fences(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]
     """
     outside: list[tuple[int, str]] = []
     inside: list[tuple[int, str]] = []
-    fenced = False
+    opened = ''
     for number, line in enumerate(text.splitlines(), start=1):
-        if line.lstrip().startswith(('```', '~~~')):
-            fenced = not fenced
+        fence = FENCE.match(line)
+        if fence and not opened:
+            opened = fence.group(1)
             continue
-        (inside if fenced else outside).append((number, line))
+        if fence and fence.group(1)[0] == opened[0] and len(fence.group(1)) >= len(opened):
+            opened = ''
+            continue
+        (inside if opened else outside).append((number, line))
     return outside, inside
 
 
@@ -253,7 +260,14 @@ def link_target(target: str) -> str | None:
         return None
     if set(target) & set('<>{}$'):
         return None
-    return target.split('#')[0]
+    return unquote(target.split('#')[0])
+
+
+def link_file(named: str, beside: Path, repo: Path) -> Path:
+    """The file a link names: from the repo root when it starts with `/`, as
+    GitHub reads it, else beside the linking file.
+    """
+    return repo / named.lstrip('/') if named.startswith('/') else beside / named
 
 
 def pointer_path(token: str) -> str | None:
@@ -412,28 +426,35 @@ def check_length(path: Path, text: str) -> list[Finding]:
     return []
 
 
-def phase_indexes(root: Path, index: Path) -> list[Path]:
+def linked_files(line: str, beside: Path, repo: Path) -> list[tuple[str, Path]]:
+    """Each file link on the line with the file it names; URLs, anchors and
+    scheme references are left out.
+    """
+    found: list[tuple[str, Path]] = []
+    for target in LINK.findall(line):
+        named = link_target(target)
+        if named is not None:
+            found.append((target, link_file(named, beside, repo)))
+    return found
+
+
+def phase_indexes(index: Path, repo: Path) -> list[Path]:
     """The `<phase>/index.md` files the root index links."""
     found: list[Path] = []
     for _, line in prose(index.read_text()):
-        for target in LINK.findall(line):
-            named = link_target(target)
-            if named is None:
-                continue
-            candidate = root / named
+        for _, candidate in linked_files(line, index.parent, repo):
             if candidate.name == 'index.md' and candidate.is_file() and candidate != index:
                 found.append(candidate)
     return found
 
 
-def check_one_index(index: Path, specs: set[Path]) -> tuple[list[Finding], set[Path]]:
+def check_one_index(index: Path, specs: set[Path], repo: Path) -> tuple[list[Finding], set[Path]]:
     """Dangling links and Status cells in one index; the specs it lists."""
     findings: list[Finding] = []
     linked: set[Path] = set()
     for number, line in prose(index.read_text()):
-        for target in LINK.findall(line):
-            named = link_target(target)
-            if named is not None and not (index.parent / named).exists():
+        for target, named in linked_files(line, index.parent, repo):
+            if not named.exists():
                 message = (
                     f'link {target!r} resolves to nothing — format.md: index.md is the '
                     'master table of the files present'
@@ -442,31 +463,30 @@ def check_one_index(index: Path, specs: set[Path]) -> tuple[list[Finding], set[P
                     finding(Severity.ERROR, 'spec-index-dangling', index, number, message)
                 )
         cells = row_cells(line)
-        if len(cells) < 3 or not LINK.search(cells[0]):
+        if len(cells) < 3:
             continue
+        rows = [named.resolve() for _, named in linked_files(cells[0], index.parent, repo)]
+        spec = next((row for row in rows if row in specs), None)
+        if spec is None:
+            continue
+        linked.add(spec)
         if cells[1] not in STATUSES:
             message = (
                 f'index Status cell {cells[1]!r} is not one of {", ".join(STATUSES)} '
                 '— format.md: the Status column carries the lifecycle value, not prose'
             )
             findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
-        for target in LINK.findall(cells[0]):
-            named = link_target(target)
-            resolved = (index.parent / named).resolve() if named else None
-            if resolved not in specs:
-                continue
-            linked.add(resolved)
-            status = status_of(resolved.read_text())
-            if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
-                message = (
-                    f'index Status {cells[1]!r} differs from {resolved.name} status '
-                    f'{status!r} — format.md: update Status on ship'
-                )
-                findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
+        status = status_of(spec.read_text())
+        if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
+            message = (
+                f'index Status {cells[1]!r} differs from {spec.name} status '
+                f'{status!r} — format.md: update Status on ship'
+            )
+            findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
     return findings, linked
 
 
-def check_index(root: Path, files: list[Path]) -> list[Finding]:
+def check_index(root: Path, files: list[Path], repo: Path) -> list[Finding]:
     """Every spec has a row in `specs/index.md`, or in a `<phase>/index.md`
     the root index links.
     """
@@ -479,8 +499,8 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
     specs = {path.resolve() for path in files}
     findings: list[Finding] = []
     linked: set[Path] = set()
-    for each in [index, *phase_indexes(root, index)]:
-        found, rows = check_one_index(each, specs)
+    for each in [index, *phase_indexes(index, repo)]:
+        found, rows = check_one_index(each, specs, repo)
         findings.extend(found)
         linked |= rows
     for path in files:
@@ -494,13 +514,12 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
     return findings
 
 
-def check_links(path: Path, text: str) -> list[Finding]:
+def check_links(path: Path, text: str, repo: Path) -> list[Finding]:
     """Every link in the body resolves; a link quoted in inline code is an example."""
     findings: list[Finding] = []
     for number, line in prose(text):
-        for target in LINK.findall(TICKED.sub('', line)):
-            named = link_target(target)
-            if named is None or (path.parent / named).exists():
+        for target, named in linked_files(TICKED.sub('', line), path.parent, repo):
+            if named.exists():
                 continue
             message = (
                 f'link {target!r} resolves to nothing — format.md self-review: a moved or '
@@ -514,21 +533,22 @@ def check_prose(path: Path, text: str) -> list[Finding]:
     status = status_of(text)
     findings: list[Finding] = []
     for number, line in prose(text):
-        undecided = TBD.search(line)
+        bare = TICKED.sub('', line)
+        undecided = TBD.search(bare)
         if undecided is not None:
             message = (
                 f'{undecided.group(0)!r} — format.md: NEVER use "TBD" / "TODO" / '
                 '"implement later" — decide now or omit'
             )
             findings.append(finding(Severity.ERROR, 'spec-tbd', path, number, message))
-        planned = FUTURE.search(line)
+        planned = FUTURE.search(bare)
         if planned is not None:
             message = (
                 f'{planned.group(0)!r} — format.md: NEVER write future-tense plans; '
                 'specs describe state, not work (warn)'
             )
             findings.append(finding(Severity.WARN, 'spec-future-tense', path, number, message))
-        history = HISTORY.search(line)
+        history = HISTORY.search(bare)
         if history is not None:
             message = (
                 f'{history.group(0)!r} — format.md: a spec states what is; history lives '
@@ -536,7 +556,7 @@ def check_prose(path: Path, text: str) -> list[Finding]:
             )
             findings.append(finding(Severity.WARN, 'spec-history', path, number, message))
         for pattern, hint in WORDING:
-            word = pattern.search(line)
+            word = pattern.search(bare)
             if word is not None:
                 message = f'{word.group(0)!r} — format.md: {hint} (warn)'
                 findings.append(finding(Severity.WARN, 'spec-wording', path, number, message))
@@ -601,7 +621,9 @@ def past_end(token: str, target: Path) -> str | None:
     if at is None or not target.is_file():
         return None
     lines = line_count(target)
-    if int(at.group(1)) <= lines:
+    first = int(at.group(1))
+    last = int(at.group(2) or first)
+    if 1 <= first <= last <= lines:
         return None
     return f'`{token}` points past the end of the file ({lines} lines) — re-anchor it (warn)'
 
@@ -632,7 +654,8 @@ def check_corpus(root: Path) -> list[Finding]:
     files = spec_files(root)
     if not files and not (root / 'index.md').is_file():
         return []
-    findings = check_index(root, files)
+    repo = repo_root(root.absolute().parent)
+    findings = check_index(root, files, repo)
     findings.extend(check_numbers(files))
     findings.extend(check_tables(files))
     for path in files:
@@ -640,7 +663,7 @@ def check_corpus(root: Path) -> list[Finding]:
         findings.extend(check_naming(root, path))
         findings.extend(check_status(path, text))
         findings.extend(check_length(path, text))
-        findings.extend(check_links(path, text))
+        findings.extend(check_links(path, text, repo))
         findings.extend(check_prose(path, text))
         findings.extend(check_pointers(root, path, text))
     return findings

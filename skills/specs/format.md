@@ -75,7 +75,8 @@ master table links it. Lint: spec-index-row, spec-index-dangling, spec-status
   that no longer resolves, matches several files or points past the end of
   its file is stale — lint: spec-pointer (warn); a `partial` or `shipped`
   spec with no pointer at all — lint: spec-no-pointer (warn)
-- **Stubs are good**: file path + one sentence of WHY
+- **Stubs are good**: file path + one sentence of WHY; a link to another
+  spec or file resolves — lint: spec-link (hard fail)
 - **Tables with `file:line` anchors over prose** — a spec over 500 lines is
   prose; lint: spec-length (warn; hard fail over 1000)
 - **One owner**: each table, contract and term has one owning spec the others

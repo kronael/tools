@@ -20,7 +20,7 @@ the access and the scope the answer needs.
   held eleven on an unmerged branch nine commits old. `git fetch origin`, then
   `git ls-tree -r origin/<branch>`, `git branch -r` and `git remote -v` in the
   directory whose name you are trusting; where the SSH origin refuses,
-  `git fetch "$(ghpush -u)" <branch>` (WISDOM § Git) and read `FETCH_HEAD`.
+  `ghfetch <branch>` (WISDOM § Git) and read `FETCH_HEAD`.
 - **A thing is missing where you looked, not where it is kept.** Config in
   `cfg/`, data on the deployment host, a running service behind `sudo`.
 - **`2>/dev/null` destroys the falsifier.** Every probe that carried a status

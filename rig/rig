@@ -186,10 +186,11 @@ github_https_url(){
         echo "error: no origin remote" >&2; return 1
     }
     case "$url" in
-        git@github.com:*)       path=${url#git@github.com:} ;;
-        ssh://git@github.com/*) path=${url#ssh://git@github.com/} ;;
-        https://github.com/*)   path=${url#https://github.com/} ;;
-        *) echo "error: origin is not a GitHub remote: $url" >&2; return 1 ;;
+        git@github.com:*)        path=${url#git@github.com:} ;;
+        ssh://git@github.com/*)  path=${url#ssh://git@github.com/} ;;
+        https://github.com/*)    path=${url#https://github.com/} ;;
+        https://*@github.com/*)  path=${url#https://*@github.com/} ;;
+        *) echo "error: origin is not a GitHub remote: ${url/\/\/*@/\/\/}" >&2; return 1 ;;
     esac
     path=${path%/}
     echo "https://github.com/${path%.git}.git"
@@ -197,15 +198,19 @@ github_https_url(){
 
 GHPUSH_HELP="Usage: ghpush [-n] <src>:refs/heads/<branch>|<tag>:refs/tags/<tag> ...
        ghpush -u
-Push the stated refspecs to origin's GitHub repository over HTTPS with the gh
-token, leaving the remote URL (SSH for the human) untouched. -n prints the git
-command, -u prints the HTTPS URL (git fetch \"\$(ghpush -u)\" <refspec> reads
-the same way). Force in any form, --tags, --all, --mirror and deletes are
-refused; a token without the workflow scope cannot push .github/workflows
-changes — report that refusal, never work around it."
+       ghfetch [-n] [refspec ...]
+Push (or fetch) the stated refspecs to origin's GitHub repository over HTTPS
+with the gh token, leaving the remote URL (SSH for the human) untouched. -n
+prints the git command, -u prints the HTTPS URL. ghpush refuses force in any
+form, --tags, --all, --mirror, deletes and wildcards; a token without the
+workflow scope cannot push .github/workflows changes — report that refusal,
+never work around it."
 
+# ghpush pushes, ghfetch fetches: the same URL and credential helper, so an
+# agent with no SSH agent reads and writes GitHub through the gh token.
 cmd_ghpush(){
-    local dryrun= url_only= refspecs=() url
+    local op=$1; shift
+    local dryrun= url_only= refspecs=() url spec
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -n) dryrun=1 ;;
@@ -218,20 +223,23 @@ cmd_ghpush(){
         esac
         shift
     done
+    if [[ $op == push && ! $url_only ]]; then
+        [[ ${#refspecs[@]} -gt 0 ]] || {
+            echo "error: a refspec is required: ghpush <sha>:refs/heads/<branch>" >&2; exit 1
+        }
+        for spec in "${refspecs[@]}"; do
+            [[ "$spec" == +* || "$spec" == :* || "$spec" == *\** || "$spec" != *:refs/* ]] && {
+                echo "error: $spec: a refspec is <src>:refs/heads/<branch> or <tag>:refs/tags/<tag>: no +force, delete or wildcard" >&2
+                exit 1
+            }
+        done
+    fi
     url=$(github_https_url) || exit 1
     [[ $url_only ]] && { echo "$url"; return; }
-    [[ ${#refspecs[@]} -gt 0 ]] || {
-        echo "error: a refspec is required: ghpush <sha>:refs/heads/<branch>" >&2; exit 1
-    }
-    local spec
-    for spec in "${refspecs[@]}"; do
-        [[ "$spec" == +* || "$spec" != *:refs/* ]] && {
-            echo "error: $spec: a refspec is <src>:refs/heads/<branch> or <tag>:refs/tags/<tag>, never +forced" >&2
-            exit 1
-        }
-    done
+    local flags=()
+    [[ $op == push ]] && flags=(--no-follow-tags)
     local cmd=(git -c credential.helper= -c 'credential.helper=!gh auth git-credential'
-               push "$url" "${refspecs[@]}")
+               "$op" "${flags[@]}" "$url" "${refspecs[@]}")
     if [[ $dryrun ]]; then
         printf '%q ' "${cmd[@]}"; printf '\n'
     else
@@ -239,7 +247,7 @@ cmd_ghpush(){
     fi
 }
 
-symlinks=(rco rip rir rim ghpush gl gis gig gitg gp gpc gpa gw
+symlinks=(rco rip rir rim ghpush ghfetch gl gis gig gitg gp gpc gpa gw
           gif gifs gss gsp gsl grec grea gres gco gib gitsu)
 
 cmd_install(){
@@ -270,6 +278,7 @@ rig - ripgit: git tools
   rig co [ref|pattern] Fetch + detached checkout (rco)
   rig p [branch]     Push to origin (rip)
   rig ghpush <refspec>  Push over HTTPS with the gh token, remote untouched (ghpush)
+  rig ghfetch [refspec] Fetch the same way (ghfetch)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
   rig install        Create symlinks
@@ -302,7 +311,8 @@ dispatch(){
         co|checkout|rco) shift; cmd_branch_op checkout "$@" ;;
         gco)            shift; cmd_branch_op gco "$@" ;;
         p|push|rip)      shift; cmd_push "$@" ;;
-        ghpush)          shift; cmd_ghpush "$@" ;;
+        ghpush)          shift; cmd_ghpush push "$@" ;;
+        ghfetch)         shift; cmd_ghpush fetch "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
         gl)   shift; git --no-pager log --oneline -20 "$@" ;;
