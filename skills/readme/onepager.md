@@ -12,8 +12,8 @@ what a critique on file already refuted.
    directly under it, worded as `sync.md` step 3 requires.
 2. **The problem** — two or three sentences, stated as the reader's problem,
    never as the project's motivation, each one a problem the record shows is
-   real; the before and after lead. NEVER a letter from engineers to
-   engineers.
+   real. ALWAYS lead with the reader's cost today and the change the project
+   makes; NEVER write it as engineers talking to engineers.
 3. **How it works** — 3–5 numbered steps or one diagram. The only section
    allowed domain vocabulary, and it defines each term inline.
 4. **What is different** — comparison against real alternatives, named. A
