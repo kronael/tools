@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.25] — 20261011
+
+> kronael v0.4.25 — pages that come out finished
+>
+> The writing skill now carries the rules a page owner used to type as corrections, plus a checklist run before handover.
+>
+> • Word budget — a study page stays at most 5,500 visible words, counted once across widths.
+> • Layout — text fills its box, rows align, one fact appears once, every term is glossed.
+> • Figures — one per flow, faithful to the code and test, refusals show the attempt.
+> • Checklist — 15 items before handover; the mechanical ones become keeper checks in `make lint`.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
+- `readme/page.md`: section order, CEO/CTO/novice lenses, decide section; `readme/topology.md` points keeper checks at `make lint`; `readme/onepager.md` problem section states the reader's cost and the change.
+
 ## [v0.4.24] — 20261008
 
 > kronael v0.4.24 — Markdown reflow joins the tool hooks
