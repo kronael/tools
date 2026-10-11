@@ -53,7 +53,10 @@ rect larger than 1x1 (screen-reader-only text is skipped).
 | First lines align across a row | spread of the first text-line tops in the row | > 8px |
 | No lone box | a grid whose last row holds one framed item under a row of ≥ 2 of the same width | any |
 | A drawn box is sized to its text | SVG `rect` holding text or boxes: empty height below the content ÷ rect height, when taller than 2.5 lines | > 45% |
-| Labels clear of lines, edges, arrowheads | every path/line sampled every 3px in screen space and every `rect` perimeter, hit against SVG text rects (a label with its own backing shape is exempt); a `marker-end` end point inside a label; text outside its `<svg>` | any |
+| Labels clear of lines, edges, arrowheads | every path/line sampled every 3px in screen space, hit against SVG text rects grown by the clearance (a label with its own backing shape is exempt); every `rect` perimeter hit against the text rects themselves; a `marker-end` end point inside a label; text outside its `<svg>` | a line within 6px of a label; a box edge crossing a label; any arrowhead under a label or text outside its figure |
+| A connector is short and direct | a stroked path with an arrow marker, sampled every 3px: turns over 30° between steps, adjacent turning steps merged into one corner | > 1 corner (the accepted figures draw every connector as one straight segment) |
+| A connector keeps clear of boxes it does not join | the same samples against every leaf box (a `rect` holding text and no other `rect`) the connector neither starts nor ends on | ≥ 20px of the path inside the box, or within 12px of its edge |
+| The key sits at the first figure of its kind | figures grouped by kind, the tag and classes of the first child that is not a heading, caption, paragraph or key; when a later figure of a kind carries a key, the first one must carry a key, follow a page-level key (one outside every figure), or name in its own words every keyed mark it draws (an element carrying a swatch's own classes, those not shared with another swatch of that key) | any |
 | No text overlaps | pairwise intersection of text line boxes and SVG text rects of unrelated elements | > 2px both ways |
 | Phone reflow | the overflow, clip and label checks at 375; which wide/narrow variants are visible | any |
 | Body text size | `body` size and the median of paragraphs ≥ 80 characters, outside figures and notes | < 16px |
@@ -78,6 +81,13 @@ Calibration record for the thresholds above: the accepted pages run 12–15
 HTML font sizes, captions and notes to 119–154 characters and body prose to
 86–140, carry one hero at 40% right-empty, one code map column 52% empty and
 address lines at 11.0px; every looser number in the table exists for one of
-those. Two owner complaints have no metric and stay a reading task: the
+those. Their one drawn architecture figure keeps every label at least 9px
+from a line but sets band headers 4px inside a box edge, which is why the
+clearance applies to lines and not to edges; a bar chart that names its
+series in each bar's own label carries no key, which is why own words
+exempt a first figure. The owner saw the two flaws the first table missed
+by eye: a connector routed around the figure's edge in three bends with its
+label block touching it, and a worked example drawn without the key its
+later siblings carry. Two owner complaints have no metric and stay a reading task: the
 colours under a figure against the shared palette, and whether a figure says
 which is which.
