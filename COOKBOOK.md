@@ -22,7 +22,8 @@ hidden dir inside the repo root (WISDOM § Git, installed as
 
 The `rig` recipes below are the human's hand tool. An agent follows
 WISDOM § Git: no force-push, no squash of a pushed commit, and a push only
-when asked, by SHA.
+when asked, by SHA, through `ghpush` — the `gh` token over HTTPS, with the
+SSH remote left as it is ([rig/README.md](rig/README.md)).
 
 ## Start work on a feature
 
@@ -167,8 +168,8 @@ explicit, always.
 
 ## Bash shortcuts
 
-`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, and the
-git aliases (`gif`, `gib`, and others); `rig aliases` lists them all.
+`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, `ghpush`, and
+the git aliases (`gif`, `gib`, and others); `rig aliases` lists them all.
 Add the install directory to PATH.
 
 ```bash

@@ -140,7 +140,7 @@ code extension and still carries every claim the reviewer will trust.
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
     here: list each with its thread id and fix SHA, and show the PR's own head
-    refspec, `git push origin <fix-sha>:refs/heads/<headRefName>`; resolve and
+    refspec, `ghpush <fix-sha>:refs/heads/<headRefName>`; resolve and
     request re-review through `gh-comment` once that push lands. A bot-authored
     thread resolves once replied (`gh-comment` § Resolve a thread). ONLY threads
     addressed this pass. Then the worktrees: one this run created goes by

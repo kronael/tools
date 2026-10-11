@@ -119,11 +119,15 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   `git status`'s "up to date" without a fetch — it compares with the last one.
 - Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
   dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
-- ONLY `git push` when the user asked for a push in that message — NEVER on your
-  own initiative or as the silent tail of a commit, sync, release or ship
-  workflow; those end at the local commit or tag. ALWAYS state the exact remote
-  and refspec first and push only that, by SHA (`git push origin
-  <sha>:refs/heads/YYYYMMDD_<tag>`). NEVER `--force` or `--force-with-lease`.
+- ONLY push when the user asked for a push in that message — NEVER on your own
+  initiative or as the silent tail of a commit, sync, release or ship workflow;
+  those end at the local commit or tag. ALWAYS state the exact refspec first and
+  push only that, by SHA, with `ghpush <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
+  a one-off HTTPS push through the `gh` token, the SSH remote left to the human
+  — NEVER rewrite `remote.origin.url` or store the token, and NEVER `--force` in
+  any form. A token without the `workflow` scope cannot push a change under
+  `.github/workflows`: report GitHub's refusal, NEVER work around it. Where the
+  SSH origin refuses a fetch, `git fetch "$(ghpush -u)" <refspec>` reads it.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<default head>` needs a SECOND explicit approval naming it, given

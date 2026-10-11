@@ -164,7 +164,7 @@ with no reply and no fix reads as dismissed unread. A bot-authored one resolves
 once replied; a human-authored one stays open for its reviewer. ALWAYS resolve
 a fixed thread with no reply, human or bot, and only once the push carrying
 the fix has landed (`git merge-base --is-ancestor <fix-sha> <headRefOid>`).
-ALWAYS show `git push origin <fix-sha>:refs/heads/<headRefName>` (the PR's head);
+ALWAYS show `ghpush <fix-sha>:refs/heads/<headRefName>` (the PR's head);
 NEVER push without the user's ask (WISDOM § Git). ALWAYS refresh `headRefOid`
 after the push before checking ancestry; NEVER resolve a thread this pass did not address.
 

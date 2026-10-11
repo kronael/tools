@@ -16,6 +16,7 @@
     ],
     "ask": [
       "Bash(git push*)",
+      "Bash(ghpush*)",
       "Bash(git pull*)",
       "Bash(rsync *)",
       "Bash(gh pr create*)",
