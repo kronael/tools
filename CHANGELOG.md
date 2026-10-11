@@ -1,5 +1,31 @@
 # Changelog
 
+## [v0.4.31] — 20261011
+
+> kronael v0.4.31 — spec-lint on PATH, pushes through the gh token
+>
+> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
+>
+> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
+> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
+> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
+> • WISDOM § Git — agents push through ghpush; without the workflow scope they report the refusal.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
+- `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
+- `spec-lint`: a `<phase>/index.md` the root index links carries rows; `specs/CLAUDE.md` is no spec.
+- `spec-lint`: new rules spec-link, spec-table-owner, spec-length, spec-history, spec-wording.
+- `spec-lint`: new rules spec-options, spec-open-questions, spec-checklist, spec-no-pointer.
+- `spec-lint`: spec-naming fails a shared number; spec-pointer warns past the end of a file.
+- `spec-lint`: exit 0 clean, 1 errors, 2 bad path; findings on stdout; `--help` lists every rule.
+- `specs`: format.md adds definition first, one decision, one owner per table, proposed vs existing.
+- `specs`: format.md adds numbers stamped with their commit, a refactor Contract, no history words.
+- `rig`: `ghpush` pushes stated refspecs to origin's GitHub repo over HTTPS with the gh token.
+- `rig`: `ghfetch <refspec>` fetches the same way when the SSH origin refuses; `ghpush -u` prints the URL.
+- WISDOM § Git: agents push and fetch through `ghpush`; `settings-recommended.json` asks for it.
+
 ## [v0.4.30] — 20261010
 
 > kronael v0.4.30 — Diary out of repos, one owner per rule
