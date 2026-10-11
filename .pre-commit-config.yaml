@@ -15,10 +15,9 @@ repos:
             pass_filenames: true
 
           - id: spec-lint
-            name: lint specs/ (naming, status, index rows, code pointers)
-            entry: python hooks/spec_lint.py
-            language: python
-            additional_dependencies: [PyYAML]
+            name: lint specs/ (naming, status, index rows, links, wording, code pointers)
+            entry: spec-lint/spec_lint.py
+            language: script
             files: (^|/)specs/.*\.md$
             pass_filenames: true
 
