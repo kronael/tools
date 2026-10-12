@@ -24,6 +24,7 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 | `art/pretext.md` + `art/pretext/` | pretext text-layout demos | create-pretext |
 | `social.md` | social image for the X feed: meme PNG, looping GIF, code-shot explainer | house |
 | `divergence.md` | divergence funnel: 4 independent versions per stage, select, iterate | house |
+| `form.md` | measurable form checks for a finished HTML page: layout, type, contrast, figures, headless at two widths | house |
 | `diagram/excalidraw.md` + `diagram/excalidraw/` | Excalidraw JSON diagrams | create-excalidraw |
 | `diagram/architecture-diagram.md` + `diagram/architecture-diagram/` | dark SVG infra diagrams | create-architecture-diagram |
 

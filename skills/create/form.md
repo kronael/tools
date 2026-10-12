@@ -45,7 +45,7 @@ rect larger than 1x1 (screen-reader-only text is skipped).
 
 | Rule | Metric | Fails when |
 |---|---|---|
-| Nothing clipped or off screen | `scrollWidth` vs `innerWidth`; any rect outside the viewport; for `overflow: visible` the element's own text lines past its border box, for hidden/auto `scrollWidth - clientWidth` | > 1px |
+| Nothing clipped or off screen | `scrollWidth` vs `innerWidth`; any rect left of 0 or right of `innerWidth`; for `overflow: visible` the element's own text lines past its border box, for hidden/auto `scrollWidth - clientWidth` | > 1px |
 | Text fills its box | in a framed prose box ≥ 300px wide (border or background, holding p/ul/dl/h3), widest line ÷ content width | < 60% |
 | A section fills its width | per top-level section, 32px strips: mean share of the width right of the rightmost painted rect | > 25% (hero > 45%) at 1440 |
 | The content uses the screen | main width ÷ viewport width at 1440 | < 80% |
@@ -62,7 +62,7 @@ rect larger than 1x1 (screen-reader-only text is skipped).
 | Phone reflow | the overflow, clip and label checks at 375; which wide/narrow variants are visible | any |
 | Body text size | `body` size and the median of paragraphs ≥ 80 characters, outside figures and notes | < 16px |
 | Secondary text size | smallest li/dd/dt/p outside figures | < 13px |
-| Smallest text | smallest rendered size, SVG text scaled by viewBox ÷ rendered width | < 11px |
+| Smallest text | smallest rendered size, SVG text scaled by rendered width ÷ viewBox width | < 11px |
 | One family | distinct first family names over all text | > 2 (sans + mono) |
 | Few sizes | distinct HTML sizes in 0.5px buckets | > 16 fails; ≤ 5 is the target (watch) |
 | Line length | widest line ÷ mean character width of the element's font | > 160 characters |
