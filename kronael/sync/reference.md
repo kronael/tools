@@ -523,11 +523,10 @@ project `.codex/` config and enabled plugins — Kronael writes
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
 - Projects: the fallback key covers a project that keeps its instructions in
-  `CLAUDE.md`, as `wisdom` § CLAUDE.md (project) requires. Codex loads one
+  `CLAUDE.md`. Codex loads one
   instruction file per directory, so a project with `AGENTS.md` never gets its
   `CLAUDE.md` as a fallback, and no fallback entry reaches
-  `.claude/CLAUDE.md`; the Kronael block covers both. NEVER write a project
-  `AGENTS.md`.
+  `.claude/CLAUDE.md`; the Kronael block covers both.
 
 - `~/.agents/skills`, checked as a symlink before anything else:
   - a symlink to `~/.claude/skills` → already bridged;

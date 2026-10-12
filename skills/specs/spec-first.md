@@ -1,10 +1,12 @@
 # Spec-first changes
 
-The spec is the source of truth while its change is in flight; code conforms. Every non-trivial change starts here. A shipped spec is deleted (`format.md` § When the change ships), so for shipped code the state lives in the docs `readme` → `topology.md` names.
+A spec in flight (`planned`, `partial`) governs the code it names. A shipped
+spec governs nothing; the docs hold the state.
 
-- ALWAYS find the governing spec BEFORE editing code — `specs/index.md`, or grep `specs/` for the topic; none found → read the docs for the current state.
-- ALWAYS reconcile code↔spec: when they disagree, the divergence IS the bug — fix both in one pass, never just the code.
-- When the design is unspecced, ALWAYS draft the MINIMAL spec edit in the same change; code that adds an unspecced structure is incomplete.
-- ALWAYS read neighboring specs first; NEVER contradict them — keep cross-references and status consistent.
-- NEVER drift a spec unless the drift makes the code more minimal/orthogonal/simpler.
-- ALWAYS leave code more minimal, orthogonal, and simpler than before — "it works" is not "done".
+- ALWAYS check `specs/index.md` for an in-flight spec on the topic BEFORE
+  editing code.
+- ALWAYS treat a code↔spec disagreement as the bug — fix both in one pass,
+  NEVER just the code.
+- ALWAYS write the minimal spec first when a change adds a structure no spec
+  covers; the code without it is incomplete.
+- NEVER contradict a neighbouring in-flight spec — ALWAYS read them first.

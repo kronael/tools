@@ -14,7 +14,7 @@ where its shape is defined. Paths are relative to this directory.
 | If you need | Read |
 |---|---|
 | the case AGAINST building it at all — prior-art sweep, residue after subtracting it, cost vs payoff, one `don't build` / `build if` verdict in the record dir's `critique-useless-*.md` | `useless.md` |
-| to create or update a spec file — `status:` lifecycle values, `NN-topic.md` numbering, `index.md` row, what belongs in the body and what never does, where its content goes when the change ships, deleting or renaming a spec | `format.md` |
+| to create, update, ship or delete a spec — status, numbering, index row, body, one-way links | `format.md` |
 | to change code a spec governs — find the governing spec, reconcile code↔spec drift, spec an unspecced design in the same pass | `spec-first.md` |
 
 Order of the workflow: `useless.md` gates whether a spec is worth writing,

@@ -138,19 +138,14 @@ What a router is, when to make one, its dispatch table, file layout and the `SKI
 
 ## CLAUDE.md (project)
 
-- Project-specific only — skills carry general knowledge; where each CLAUDE.md
-  sits (root, one per package) is `readme` → `topology.md`.
+- Project-specific only — skills carry general knowledge. Where each sits — one
+  per directory, `CLAUDE.md` or `AGENTS.md` plus the `@AGENTS.md` shim, subtree
+  rules in the subtree — is `readme` → `topology.md` § Instruction files.
 - NEVER repeat what README/ARCHITECTURE/docs say — architecture, state machines
   and external systems are ARCHITECTURE.md's. ALWAYS cut re-explanation to a
   one-line pointer; keep only the invariants, gotchas and syntax an editor must
   not get wrong.
 - ALWAYS group related rules under clear Markdown headings and bullets.
-- ALWAYS keep agent instructions in CLAUDE.md files only — NEVER an AGENTS.md
-  beside or instead of one; Codex reads CLAUDE.md through
-  `project_doc_fallback_filenames` in `~/.codex/config.toml`, which the
-  Kronael sync sets. The one exception is the toolkit's Codex bridge: its repo
-  root `AGENTS.md`, `codex/AGENTS.md` and the block sync writes into
-  `~/.codex/AGENTS.md`.
 
 - XML wrappers such as `<important if="…">`, descriptive tag names and the
   `.claude/rules/*.md` `paths` loader — what each does and does not do:

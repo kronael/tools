@@ -50,16 +50,9 @@ runs inline. A subagent that loaded this skill runs the pass itself.
    k8s manifests, deploy steps; the README says how to RUN it, deploy detail
    goes to the ops/infra repo.
 4. **ARCHITECTURE** — the audience is a senior engineer who has to change this
-   code: depth, not breadth. NEVER re-explain what the project is; that is the
-   README's job. Sections: Overview, Components (table, one-line purpose per
-   file), Data Flow, State Management, External Systems, Invariants,
-   Architectural Decisions — ALWAYS name the alternative each decision rejected
-   and why. Diagrams are mandatory, not decoration: at minimum a component
-   diagram and a data-flow diagram for the primary write path and the primary
-   read path. A structure that exists only as prose is undocumented; a sequence
-   whose order matters is drawn in order. ASCII diagrams follow the `diagrams`
-   skill — Unicode box-drawing piped through `udfix`; NEVER hand-draw junction
-   chars (┬ ┴ ├ ┤ ┼).
+   code: depth, not breadth. Its contents, one diagram per concept and the WHY
+   beside each structure: `topology.md` § PLAN.md and ARCHITECTURE.md; draw
+   with `diagrams`.
 5. **Verify claims against code** — NEVER trust existing doc text. ALWAYS grep
    every referenced function, variable, constant, test name and path to confirm
    it exists and behaves as described, and check every cited result against
