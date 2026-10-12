@@ -23,23 +23,25 @@ tour and call it a map.
 |---|---|
 | What is in this repo | `ripwire <dir> --tree` (each file's top symbols), then `ripwire <dir> --max-tokens=3000` (ranked signatures with resolved callees) |
 | Which code a task touches | `ripwire <dir> --for="<the task in plain words>"` |
-| One symbol's body | `--expand=<file>:<name>` (body plus the signatures it calls); `--outline=<file>:<name>` (control-flow skeleton) |
+| One symbol's body | `--expand=<file>:<name>` (body plus the signatures it calls); `--outline=<file>:<name> --top-k=0` (control-flow skeleton; without `--top-k=0` the ranked top-200 map follows it) |
 | Who calls it | `--callers=<file>:<name>` |
 | Every use — reads, imports, trait or interface dispatch | `--uses=<name>` |
 | What breaks if it changes | `--impact=<file>:<name>` (the blast radius, split into tested and untested) |
 | God files and import cycles | `--deps` |
 
-- ALWAYS take the `next=` attribute a result ends with — it is the pasteable
-  follow-up call.
+- ALWAYS take the `next=` attribute when present — `--callers`, `--impact`
+  and `--for` end with one; it is the pasteable follow-up call.
 - ALWAYS qualify a name that more than one file defines as `<file>:<name>`. A
-  bare common name merges every definition (`Open` in a Go repo: 30 defs, 50
-  callers); the not-found error lists the defining files.
+  bare common name merges every definition: in a Go repo `--callers=Close`
+  gave 5 defs and 218 callers, `--callers=store/store.go:Close` 172. The
+  not-found error lists the defining files.
 - NEVER read `count="0"` from `--callers` on a trait or interface method as
   "unused". ripwire declines a call it cannot bind to one definition
   (`declined_calls=`), so dispatch through a trait reads as no callers: 0
   callers and 10 uses for one Rust trait method. ALWAYS run `--uses` there, or
   the LSP tool's findReferences and goToImplementation.
-- `--max-tokens` shapes the default map only; `--for` ignores it.
+- `--max-tokens` shapes the default map and `--for --detail=N`; plain `--for`
+  ignores it.
 - `--json` mirrors the XML keys for the map, `--for`, `--callers`,
   `--callees` and `--impact`; `--tree` has no JSON form.
 - NEVER treat a map as the reference set for a rename or signature change —
@@ -53,8 +55,8 @@ tracked path.
 
 | Picture | Command |
 |---|---|
-| Module (directory) dependency flowchart, any language | `ripwire <dir> --mermaid > tmp/modules.mmd` — Mermaid text; show it inline, or hand it to `show-me` |
-| Interactive call graph the owner opens in a browser | `ripwire <dir> --html=tmp/callgraph.html`, colour with `--color-by=community`, `complexity`, `churn` or `tested` |
+| Module (directory) flowchart, any language | `ripwire <dir> --mermaid > tmp/modules.mmd` — Mermaid text; an edge is 3 or more inter-module calls, not imports (file imports: `--deps`); show it inline, or hand it to `show-me` |
+| Interactive call graph the owner opens in a browser | `ripwire <dir> --html=tmp/callgraph.html`, colour with `--color-by=lang`, `community`, `cx` (complexity), `churn` or `tested` |
 | Go package graph | `go run github.com/loov/goda@v0.10.1 graph -short ./... \| dot -Tsvg -o tmp/packages.svg` |
 | Python import graph | `uvx pydeps <pkg> --noshow --show-dot --no-output > tmp/imports.dot`, then `dot -Tsvg` |
 
@@ -64,5 +66,6 @@ tracked path.
 - NEVER install mermaid-cli to render — it pulls in Chromium. ALWAYS render
   DOT with the installed `dot` and leave Mermaid as text.
 - NEVER dependency-cruiser or madge for a TypeScript graph — without a
-  per-repo config the first cruises zero modules, and the second draws edges
-  into `dist/*.d.ts`. ALWAYS `ripwire --mermaid` instead.
+  per-repo config the first refuses to run and with `--no-config` crawls
+  `node_modules` and `dist`, and the second draws edges into `dist/*.d.ts`.
+  ALWAYS `ripwire --deps` for TypeScript imports instead.

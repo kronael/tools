@@ -3,7 +3,7 @@
 ## Diagnosing Failures
 
 - Capture once (WISDOM § Shell), then read the file:
-  `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
+  `mkdir -p tmp && make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
 - For complex failures, delegate to a subagent with the log file path.
 
 ## Naming

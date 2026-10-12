@@ -41,8 +41,9 @@ python3 ~/.claude/skills/serena/call.py rename_symbol \
   ALWAYS `rg -nw '<old name>'` after it, rename each leftover in gated code
   by hand, and `cargo check --features <feature>` for each gate it touched.
 - **Go** — `gopls rename` (`go` skill), which shows the diff before it writes.
-- **TypeScript** — ts-morph `rename()` (`ts` skill). NEVER Serena: in a pnpm
-  monorepo it renamed 3 of 25 references and reported success.
+- **TypeScript** — ts-morph `rename()` (`ts` skill). NEVER Serena: run
+  through `call.py`, a cold start, it renamed only the declaration — 1 of 26
+  sites — and reported success.
 
 ## Rules
 
@@ -51,6 +52,6 @@ python3 ~/.claude/skills/serena/call.py rename_symbol \
 - NEVER take "Successfully renamed" as proof — Serena says it after a
   partial rename too (Rust and TypeScript above). ALWAYS read `git diff` and
   run the type check and the tests before the rename counts as done.
-- NEVER grep-and-edit a rename that a language above covers — `sed -w` on a
-  Python rename passed the tests and silently renamed a dict key of the same
+- NEVER grep-and-edit a rename that a language above covers — a word-boundary
+  `sed` rename in Python passed the tests and silently renamed a dict key of the same
   name.

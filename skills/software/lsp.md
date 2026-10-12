@@ -19,8 +19,9 @@ skill; listings and comment edits in `astgrep`.
   `module.name` access from other files renames too.
 - ALWAYS find a symbol's callers (`LSP` findReferences) and an interface's
   implementers (goToImplementation) before changing a signature — NEVER grep
-  for them. On Python and Go, Serena's `find_referencing_symbols` returned
-  the same set at 3-6 times the bytes.
+  for them. In Go, ALWAYS the `go` skill's `go_symbol_references` instead.
+  Serena's `find_referencing_symbols` returned the same set at 3-7 times the
+  bytes (Python 7.4x, Go 3.1x).
 - One text change across many files that is no symbol (a config key, a log
   string): ALWAYS list every hit with `rg -n` before the edit and read `git
   diff` after — NEVER a blind `sed -i`.

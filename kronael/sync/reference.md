@@ -678,23 +678,16 @@ RIPWIRE_NO_ACTIVATE=1 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https
 ```
 
 - Installs `ripwire` to `~/.local/bin` and touches no agent config.
-- Without `RIPWIRE_NO_ACTIVATE=1` it also symlinks its 17 `ripwire-*` skills
-  into `~/.claude/skills` and activates for Codex when it finds `~/.codex` or
+- Without `RIPWIRE_NO_ACTIVATE=1` it also symlinks 16 of its 17 `ripwire-*`
+  skills into `~/.claude/skills` (`ripwire-opt-remarks` stays staged unless
+  `--contributor`) and activates for Codex when it finds `~/.codex` or
   `~/.agents`. Each adds an always-on listing entry that `codemap` already
   covers. As symlinks they survive a sync without a keep-list line.
 - Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
   armed they log only a local hashed routing meter, never prompt/command/path
   text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
-- MCP (optional second interface — CLI + skills already work without it). Use
-  ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
-  and never edits any config — you run it:
-  - Claude Code: `ripwire wrap claude` → `claude mcp add ripwire -- ripwire --mcp`
-    (append `--scope user` for all projects; writes `mcpServers` into
-    `~/.claude.json`, NOT `settings.json`). NEVER put `mcpServers` in
-    `settings-recommended.json`.
-  - Codex: `ripwire wrap codex` → a `[mcp_servers.ripwire]` stanza for
-    `~/.codex/config.toml` (CLI-first; MCP restricted to audit/health verbs).
-  - `ripwire wrap --all` detects every installed agent and emits each config.
+- NEVER register ripwire as an MCP server — ALWAYS let `codemap` run the
+  CLI on demand.
 
 ## CLI tools (step 8)
 

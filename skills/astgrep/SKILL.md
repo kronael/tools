@@ -125,9 +125,18 @@ fix: $NEW
 - `transform` needs the node captured — keep `pattern: $C` beside `kind`.
 - Rust has no `comment` kind: `any: [{kind: line_comment}, {kind: block_comment}]`
   (doc comments included). Go, TS, Python use `comment`.
-- A Python docstring is `kind: string` with `inside: { kind:
-  expression_statement, inside: { kind: block, inside: { kind:
-  function_definition } } }`.
+- A Python docstring — module, class or function, and no later string
+  statement:
+  ```yaml
+  rule:
+    kind: string
+    inside:
+      kind: expression_statement
+      nthChild: 1
+      any:
+        - inside: { kind: module }
+        - inside: { kind: block, inside: { any: [{ kind: function_definition }, { kind: class_definition }] } }
+  ```
 
 Project config `sgconfig.yml`: `ruleDirs`, `utilDirs`, `testConfigs`,
 `languageGlobs`, `customLanguages`. `scan` discovers rules from `ruleDirs`.

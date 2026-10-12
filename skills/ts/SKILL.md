@@ -119,10 +119,12 @@ Read on demand, in this directory:
   p.getSourceFileOrThrow("/home/u/app/src/a.ts").move("lib/a.ts")
   for (const f of p.getSourceFiles())
     if (!f.isSaved())
-      console.log(f.getFilePath())
+      console.log(`// ${f.getFilePath()}\n${f.getFullText()}`)
   ```
-  Read the changed files it prints, then append `await p.save()` and run it
-  again.
+  A relative target resolves from the moved file's own directory:
+  `src/a.ts` with `move("lib/a.ts")` lands at `src/lib/a.ts`. Read the
+  rewritten text it prints — the files on disk still hold the old text —
+  then append `await p.save()` and run it again.
 
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
