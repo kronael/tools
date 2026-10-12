@@ -474,14 +474,14 @@
   Pre-commit hands the scan every staged `.md` (`files: \.md$`,
   `.pre-commit-config.yaml:14`), while `make skills-frontmatter` and CI walk
   the tree through `visible_files()`, which skips hidden directories
-  (`hooks/skill_frontmatter_lint.py:132`). A tracked `.md` in a hidden dir is
+  (`hooks/skill_frontmatter_lint.py:142`). A tracked `.md` in a hidden dir is
   scanned on commit and skipped by the tree target. Latent: no tracked `.md`
   sits in a hidden dir. **Proposal:** one scope for both — the script drops
   hidden paths it is handed, or the pre-commit pattern excludes them.
   Changes the scan's input contract — needs sign-off; no test — design.
 
 - **SKILL-LINT-ORPHAN-WALKS-HIDDEN-DIRS** (LOW, correctness) — CONFIRMED at
-  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:349`)
+  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:363`)
   collects a skill's docs with `rglob('*.md')`, hidden dirs included, while
   `visible_files()` skips them for the tree walk. Pytest run from inside the
   skill leaves an ignored `.pytest_cache/README.md` there, and `make
