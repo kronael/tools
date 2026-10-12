@@ -10,7 +10,7 @@ user-invocable: true
 Runs `pi -p` as a subprocess for a one-shot second opinion. `pi` is the Pi
 coding agent (badlogic/earendil, `pi.dev`) — same shape as codex: one binary,
 agent loop, its own tools (read/bash/edit/write). Methodology + citations:
-`docs/pi/research-pi.md`.
+`docs/pi/research-pi.md` in the bundle source repo.
 
 Why alongside `/astra`: pi answers from a **different model** than this Claude
 harness (its default here is `codex-serve/gpt-5.5`; configurable to

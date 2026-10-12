@@ -9,7 +9,9 @@ user-invocable: true
 
 Search and rewrite code by its tree-sitter AST, not text. A pattern is real
 code with meta-variables; matches respect nesting and skip strings/comments.
-Methodology + citations: `docs/astgrep/research-astgrep.md`.
+Methodology + citations: the bundle source repo's `docs/astgrep/research-astgrep.md`
+and `docs/astgrep/codex-critique.md` (empirical breakage); upstream docs at
+ast-grep.github.io.
 
 ALWAYS invoke the binary as `ast-grep`. NEVER rely on `sg` — it collides with
 shadow-utils' `/usr/bin/sg`; `uv tool upgrade ast-grep-cli` recreates the shim.
@@ -71,7 +73,7 @@ return), or match by `kind:` directly.
 ## Rewrite safety — the iron rules
 
 A bare `run -p/-r` **over-matches by construction**. Codex-verified failures
-(see `docs/astgrep/codex-critique.md`):
+(`codex-critique.md`, cited above):
 
 - `console.log($$$) -> ''` wrecks expressions: `() => console.log(a)` becomes
   `() => `. Delete log *statements* only via a scan rule with
@@ -145,8 +147,3 @@ strict→loose: `cst`, `smart`, `ast`, `relaxed`, `signature`, `template`.
 - Trusting auto-detect on JSX — pass `-l tsx` explicitly.
 - Skipping the formatter pass — leaves mis-indented output.
 - Claiming SQL works — it needs a custom grammar build first.
-
-## Reference
-
-`docs/astgrep/research-astgrep.md` (cited methodology),
-`docs/astgrep/codex-critique.md` (empirical breakage), ast-grep.github.io.

@@ -67,7 +67,7 @@ demo: demo/demo.mp4
 players (and Twitter) reject odd dimensions or non-4:2:0 chroma. Commit
 both `demo.gif` (README embed) and `demo.mp4` (social upload).
 
-Reference implementation: `rig/Makefile`.
+Reference implementation: `rig/Makefile` in the bundle source repo.
 
 - ALWAYS drive the recording from a checked-in script (`demo/run.ts`,
   `demo/script`), never manual typing — reproducible and re-runnable.
