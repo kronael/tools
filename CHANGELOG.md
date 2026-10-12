@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.33] — 20261012
+
+> kronael v0.4.33 — reviews wait for the owner, worktrees can go
+>
+> A PR review now stays pending until the owner types SUBMIT REVIEW, and a finished worktree can be removed after two checks.
+>
+> • Review gate — a review submit needs `SUBMIT REVIEW` in the user's newest message.
+> • Worktrees — `git worktree remove --force` runs once HEAD is kept and changes are shown.
+> • dockbox — manim builds, renders `MathTex` and starts without a bytecode recompile.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh-comment`, `review`: a posted review stays PENDING; § Submit runs only on `SUBMIT REVIEW`.
+- Hooks: `gh pr review`, `/reviews/<id>/events` and a `/reviews` POST with `event` need it.
+- Hooks: a payload without `transcript_path` (Codex) refuses the submit; the user submits by hand.
+- `worktree` § Removing a worktree and WISDOM § Shell: the one lift of the recursive-removal ban.
+- dockbox: `texlive-latex-extra`, cairo/pango headers; manim and serena compile bytecode at build.
+
 ## [v0.4.32] — 20261012
 
 > kronael v0.4.32 — pages that come out finished
