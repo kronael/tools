@@ -19,7 +19,7 @@ Paths are relative to this directory.
 | to make a running service legible: log format, Prometheus metrics, SLO burn-rate alerts, the error-handling hierarchy | `observe.md` |
 | to hand someone a Python tool: PEP 723 single-file scripts run by uvx, when a package layout is needed instead | `uvx-tools.md` |
 | lint/type config a future edit cannot loosen — exact strict flags per language (py basedpyright+ruff, ts biome or eslint, go golangci-lint) and the holes config cannot close | `strict-typing.md` |
-| which tool renames a symbol, finds callers or implementers, or replaces text across files (`LSP` tool vs Serena MCP); a language server that will not start — install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats | `lsp.md` |
+| which tool renames a symbol, finds callers or implementers, or replaces text across files (`LSP` tool vs the `serena` skill); a language server that will not start — install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats | `lsp.md` |
 | to catch bugs no type checker sees, wired as make targets: race detector, ASan/TSan/MSan/LSan, Miri, fuzzing, leak and property testing (go, rust, py) | `dynamic-analysis.md` |
 | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs | `js-perf.md` |
 | exact arithmetic for money/token amounts: integer vs fixed-point vs arbitrary precision, deriving the overflow bound, round-once-at-the-edge, checked add | `money.md` |

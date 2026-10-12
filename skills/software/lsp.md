@@ -1,37 +1,29 @@
 # Language servers and code-intelligence MCP
 
-Three independent mechanisms. ALWAYS set up all three — they answer different
-questions.
+Three independent mechanisms that answer different questions. ALWAYS set up
+the first two; Serena never runs as a server.
 
 | Mechanism | Surfaces as | Coverage |
 |---|---|---|
 | LSP plugin | `LSP` tool (hover, goToDefinition, findReferences, goToImplementation, callHierarchy) — read-only, no rename | go, rust, python, typescript |
 | gopls MCP | `go_*` tools (diagnostics, package API, symbol refs, rename diff, vulncheck) | Go only |
-| Serena MCP | symbol tools that edit: `rename_symbol`, `replace_symbol_body`, `insert_after_symbol`, `safe_delete_symbol`, plus `find_referencing_symbols`, `find_implementations` | every language server it wraps — go, rust, python, typescript among them |
+| Serena, one call at a time | the `serena` skill's `call.py rename_symbol` — a rename that follows the language server's references | the languages its table names |
 
 ## Which tool changes code
 
 The language tools (gopls, ts-morph, LibCST, `go fix`) live in each language
 skill; listings and comment edits in `astgrep`.
 
-- ALWAYS rename a symbol with Serena `rename_symbol` (Go: the `go` skill's
-  `gopls rename`) — NEVER grep-and-edit. It follows the language server, so
+- ALWAYS rename a symbol with the tool the `serena` skill's language table
+  names — NEVER grep-and-edit. It follows the language server, so
   `module.name` access from other files renames too.
-- `rename_symbol` writes at once; it has no dry run. ALWAYS start it on a
-  clean tree and read `git diff` after.
-- ALWAYS find a symbol's callers (`LSP` findReferences or Serena
-  `find_referencing_symbols`) and an interface's implementers
-  (goToImplementation or `find_implementations`) before changing a
-  signature — NEVER grep for them.
-- Serena cannot move a file or inline a function: those tools need its
-  JetBrains backend. ALWAYS take the language skill's tool for a move.
+- ALWAYS find a symbol's callers (`LSP` findReferences) and an interface's
+  implementers (goToImplementation) before changing a signature — NEVER grep
+  for them. On Python and Go, Serena's `find_referencing_symbols` returned
+  the same set at 3-6 times the bytes.
 - One text change across many files that is no symbol (a config key, a log
-  string): ALWAYS Serena `replace_in_files` with `dry_run` first — NEVER a
-  blind `sed -i`.
-
-Serena install, config and registration: `kronael/sync/reference.md`
-§ External tool commands in the bundle source repo (`~/.claude/LOCAL.md`
-names its path; an installed `~/.claude/` carries no `kronael/` directory).
+  string): ALWAYS list every hit with `rg -n` before the edit and read `git
+  diff` after — NEVER a blind `sed -i`.
 
 ## The rule that bites
 

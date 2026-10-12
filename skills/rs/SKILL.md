@@ -188,8 +188,8 @@ tokio::spawn(fetch_and_process(client));
   that marker is reserved for `unsafe`.
 
 ## Refactor tools
-- ALWAYS rename with Serena `rename_symbol` (it drives rust-analyzer) —
-  NEVER grep-and-edit (`software` skill, `lsp.md`).
+- ALWAYS rename with the `serena` skill, then its check for code behind a
+  disabled cargo feature — NEVER grep-and-edit.
 - NEVER `rust-analyzer ssr` — it rewrites files in place with no preview.
   ALWAYS a scoped `ast-grep scan` rule instead (`astgrep` skill).
 

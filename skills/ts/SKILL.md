@@ -95,8 +95,19 @@ Read on demand, in this directory:
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
 ## Refactor tools
-- ALWAYS rename with Serena `rename_symbol` — NEVER grep-and-edit
-  (`software` skill, `lsp.md`).
+- ALWAYS rename with ts-morph `rename()`, which runs the TypeScript language
+  service — NEVER grep-and-edit, and NEVER Serena. Same script shape as the
+  move below: `getFunctionOrThrow("old").rename("new")` on the declaring file.
+- In a monorepo whose packages import each other through `dist/*.d.ts`,
+  ALWAYS load every package's tsconfig into one `Project`
+  (`addSourceFilesFromTsConfig`) and set in-memory `compilerOptions.paths`
+  from each workspace package name to its `src/index.ts`. Without it the
+  rename stops at the declaring package: 3 of 25 references in one pnpm
+  monorepo.
+- ALWAYS check a monorepo rename by rebuilding the declaring package
+  (`tsc --build --force packages/<pkg>`), then `tsc --noEmit -p` on every
+  package that uses it — NEVER `pnpm -r build`: its stale incremental state
+  exits 0 on a broken rename.
 - ALWAYS move a file with ts-morph, which rewrites every import of it —
   NEVER by hand, and NEVER jscodeshift for a rename or move: it sees syntax,
   not symbols. Write the script in a scratch dir with no `node_modules`

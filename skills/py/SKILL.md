@@ -111,8 +111,7 @@ Python-specific additions and deltas.
 - NEVER create `__init__.py` unless it contains actual code
 
 ## Refactor tools
-- ALWAYS rename with Serena `rename_symbol` — NEVER grep-and-edit
-  (`software` skill, `lsp.md`).
+- ALWAYS rename with the `serena` skill — NEVER grep-and-edit.
 - ALWAYS take a rewrite ruff has a rule for through ruff: `ruff check
   --select <rule> --fix --diff`, then without `--diff` — NEVER hand-edit
   each site (`UP006` turns `List[int]` into `list[int]`).
