@@ -2,7 +2,7 @@
 
 A consolidated writeup of what we learned designing an auto-improvement loop for an LLM coding agent's skill library. Three iterations of the spec, four research papers, two horror stories, one published critique of a competing system. The conclusion is unambiguous: **the LLM cannot maintain its own skill library without an external evaluator, and "the LLM rates its own work" is not an external evaluator**.
 
-This document is the merged form of the research notes in [`research/`](.) and the spec in [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md). Read this when you want the full picture; read the per-topic files when you want a single source in depth.
+This document is the merged form of the research notes in [`research/`](.) and the auto-improvement design spec. Read this when you want the full picture; read the per-topic files when you want a single source in depth.
 
 ---
 
@@ -393,7 +393,6 @@ tools/refine-skill.py            # proposer driver
 tools/eval-skill.py              # evaluator driver
 candidates/                      # proposal artifacts (gitignored)
 research/*.md                    # the sources behind the design
-specs/2-hermes-skill-autoimprove.md   # the current spec
 ```
 
 Makefile targets:

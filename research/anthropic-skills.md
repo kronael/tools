@@ -160,4 +160,3 @@ The eval-loop A/B is the right way to resolve this. The structural agreements (f
 
 - [`research/library-drift.md`](library-drift.md) — why eval-loop measurement beats a-priori format preference
 - [`research/dspy-miprov2.md`](dspy-miprov2.md) — the variant-scoring pattern this recommendation borrows from
-- [`specs/2-hermes-skill-autoimprove.md#open-questions`](../specs/2-hermes-skill-autoimprove.md#open-questions) — open question 4 references this conflict directly

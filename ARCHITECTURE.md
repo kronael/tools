@@ -24,7 +24,6 @@ docs/                       research notes behind individual skills
 evals/                      eval examples for the skill auto-improvement loop
 lints/                      fixture harness for the ast-grep lint rules (make lints)
 research/                   research behind the skill auto-improvement design
-specs/                      design specs, indexed in specs/index.md
 tests/                      repo-level tests (qemubox/dockbox alias drift)
 .github/                    CI workflows, generated from .github/templates/
 sgconfig.yml                ast-grep config listing the skill lint rule dirs

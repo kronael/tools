@@ -1,6 +1,6 @@
 # Evals
 
-Eval examples for the skill auto-improvement loop ([`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md)). One JSON file per example; one subdirectory per skill.
+Eval examples for the skill auto-improvement loop. One JSON file per example; one subdirectory per skill.
 
 Design and schema rationale: [`research/eval-sets.md`](../research/eval-sets.md). Read that first — this README is the operational guide.
 
@@ -135,4 +135,3 @@ When mining real sessions:
 
 - [`research/eval-sets.md`](../research/eval-sets.md) — full design rationale
 - [`research/library-drift.md`](../research/library-drift.md) — why the eval set exists at all
-- [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md) — the loop this set feeds

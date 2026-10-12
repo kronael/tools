@@ -1,6 +1,6 @@
 # Research Hub
 
-Notes, paper summaries, and source links that informed the **skill auto-improvement design** in [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md).
+Notes, paper summaries, and source links that informed the **skill auto-improvement design**.
 
 Each file is a single topic. Drop new findings into their own file rather than expanding an existing one. Keep files between 150-400 lines so a future reader can pull just the brief they need.
 
@@ -53,7 +53,7 @@ Spec v1 lives in git history; do not resurrect.
 
 ### v3 — offline bundle eval loop (current)
 
-**Idea**: forget runtime mutation entirely. Build an **offline eval loop** that proposes edits to `skills/*/SKILL.md` in this repo, scores each against an eval set, and lands accepted edits as PRs. The model is DSPy MIPROv2 adapted to markdown skill files. See [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md).
+**Idea**: forget runtime mutation entirely. Build an **offline eval loop** that proposes edits to `skills/*/SKILL.md` in this repo, scores each against an eval set, and lands accepted edits as PRs. The model is DSPy MIPROv2 adapted to markdown skill files. See the auto-improvement design.
 
 **Why this works**:
 
@@ -77,4 +77,3 @@ The three open questions in the spec — [eval contamination](eval-sets.md#conta
 - Cite the source URL on first mention. Add a footnote-style block at the bottom if you cite many.
 - One claim per bullet. If you can't link a claim to a quote or measurement, qualify it ("probably", "anecdotally").
 - Keep each file under ~400 lines. If it's longer, split it.
-- Link out to the spec section a finding bears on — `specs/2-hermes-skill-autoimprove.md#stage-3-evaluator` etc.

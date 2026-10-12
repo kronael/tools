@@ -1,6 +1,6 @@
 # Eval-set construction — schema, sources, contamination
 
-The eval set is the single hardest piece of [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md). Everything else (proposer, evaluator, gating) is mechanical once you have one. Without it, [Library Drift](library-drift.md) shows the loop regresses to baseline.
+The eval set is the single hardest piece of the auto-improvement design. Everything else (proposer, evaluator, gating) is mechanical once you have one. Without it, [Library Drift](library-drift.md) shows the loop regresses to baseline.
 
 ## Sources
 
@@ -167,7 +167,7 @@ This is the **contamination problem**. HELM and SWE-bench both call it out as th
 
 **Current position**: Phase 1 accepts contamination explicitly. We measure proposer behavior on the in-tree set; if we see suspicious patterns (proposer-output text quoting eval examples verbatim, candidates that score implausibly well), we move to Phase 2.
 
-The contamination is acceptable in Phase 1 because the loop is **bounded by PR review**. Even if the agent gimmes the eval, the maintainer sees the diff and can reject. The contamination risk grows when (and only when) we move toward auto-merge — which we explicitly never do (see [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md#what-we-do-not-build)).
+The contamination is acceptable in Phase 1 because the loop is **bounded by PR review**. Even if the agent gimmes the eval, the maintainer sees the diff and can reject. The contamination risk grows when (and only when) we move toward auto-merge — which we explicitly never do (see the auto-improvement design).
 
 ## Action items (current state)
 

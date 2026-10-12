@@ -108,7 +108,6 @@ Troubleshooting:
 | [kronael/sync/SKILL.md](kronael/sync/SKILL.md) | Sync procedure (all paths) |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [BUGS.md](BUGS.md) | Open issues |
-| [specs/index.md](specs/index.md) | Design specs and their status |
 | [research/README.md](research/README.md) | Research behind the skill auto-improvement design |
 | [evals/README.md](evals/README.md) | Eval examples for the skill auto-improvement loop |
 | [docs/](docs/) | Research notes behind individual skills |

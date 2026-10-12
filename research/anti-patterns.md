@@ -30,7 +30,7 @@ This is the exact mechanism [Library Drift](library-drift.md) measured: self-eva
 
 - **The evaluator is separate from the proposer.** Different prompt, ideally different model. The proposer produces candidate diffs; the evaluator scores them against the eval set. Self-assessment is structurally impossible.
 - **The skill store is git.** Customizations are commits. Even if the proposer suggests overwriting a customization, the diff is visible in the PR, and the maintainer can reject.
-- **Human review gate.** Settings-recommended.json puts `gh pr merge*` behind an ask rule, so every merge prompts the human. No auto-merge under any condition. See [`specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review`](../specs/2-hermes-skill-autoimprove.md#stage-4-pr--human-review).
+- **Human review gate.** Settings-recommended.json puts `gh pr merge*` behind an ask rule, so every merge prompts the human. No auto-merge under any condition. See the auto-improvement design.
 
 ## 2. Hermes issue #18373: no dry-run before auto-archival
 
@@ -90,7 +90,7 @@ Several missing guardrails, all in the same family:
 - **Visible cost log.** Each candidate dir has `cost.txt`. The maintainer sees aggregate spend per run.
 - **Refuse if previous run was unbounded.** The cost ledger persists; if a prior run didn't report a final cost, the next run refuses to start until manually cleared.
 
-These mitigations are listed in [`multi-agent-horror.md`](multi-agent-horror.md). The deeper lesson is in [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md#stage-2-proposer): bound every loop with both a cost cap and an iteration cap; never trust the agent to stop itself.
+These mitigations are listed in [`multi-agent-horror.md`](multi-agent-horror.md). The deeper lesson: bound every loop with both a cost cap and an iteration cap; never trust the agent to stop itself.
 
 ## 5. Reflexion's repetitive self-criticism (per-turn variant)
 
@@ -169,4 +169,3 @@ These are real limitations. None of them undo the v3 architecture; they're place
 - [`research/library-drift.md`](library-drift.md) — the empirical mechanism behind most of these failures
 - [`research/multi-agent-horror.md`](multi-agent-horror.md) — deeper notes on the $47k incident
 - [`research/competing-systems.md`](competing-systems.md) — which systems each story implicates
-- [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md) — the design that incorporates these defenses

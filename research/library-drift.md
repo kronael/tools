@@ -20,7 +20,7 @@ Both arms started from identical baseline agents on identical task distributions
 
 **+0.0pp is not a measurement error.** It means letting an LLM maintain its own skill library — under the setups the paper tested — is empirically equivalent to having no skill library at all. The edits the LLM made cancelled out on net: some helped, some hurt, the average came back to baseline.
 
-This is the load-bearing number for our spec. See [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md#why-this-instead-of-v1v2): "any system that lets an LLM commit edits to its own skill library without an external evaluator regresses to the baseline."
+This is the load-bearing number for our spec. See the auto-improvement design: "any system that lets an LLM commit edits to its own skill library without an external evaluator regresses to the baseline."
 
 ## What "library drift" means in the paper
 
@@ -81,7 +81,7 @@ The implication: the field knows about these failure modes individually but hasn
 
 ## Direct implications for our SKILL.md eval loop
 
-Mapping the paper's findings onto [`specs/2-hermes-skill-autoimprove.md`](../specs/2-hermes-skill-autoimprove.md):
+Mapping the paper's findings onto the auto-improvement design:
 
 | paper finding | v3 mechanism |
 |---|---|
