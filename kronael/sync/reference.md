@@ -662,7 +662,7 @@ touches it. After `serena init`, set three keys in
 
 | Tool | Command | Skills |
 |------|---------|--------|
-| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended dvisvgm`), output needs `ffmpeg` | /create (manim) |
+| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm`; the template needs `standalone.cls`), output needs `ffmpeg` | /create (manim) |
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 ## ripwire — deterministic codebase maps for agents (step 7)

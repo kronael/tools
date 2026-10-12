@@ -264,19 +264,21 @@ RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/d
 # SERENA_HOME keeps Serena's config, logs and per-project caches out of every
 # repo and out of $HOME, which changes with the runtime user. manim's pycairo
 # and manimpango build from source against the cairo and pango headers, with
-# clang: gcc lands only in the tail. ripwire is the release binary only,
+# clang: gcc lands only in the tail; its LaTeX template needs standalone.cls
+# (texlive-latex-extra). Bytecode compiles at build, so a fresh box neither
+# recompiles nor prints pydub's SyntaxWarnings. ripwire is the release binary only,
 # checked against its published sha256.
 ARG RIPWIRE_VERSION=0.6.5
 ENV UV_PYTHON_INSTALL_DIR=/opt/dev-tools/uv/python \
     SERENA_HOME=/opt/dev-tools/serena
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    graphviz ffmpeg texlive-latex-base texlive-latex-recommended dvisvgm \
+    graphviz ffmpeg texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm \
     libcairo2-dev libpango1.0-dev \
   && apt-get clean && rm -f /var/lib/apt/lists/*_* \
   && uv tool install ast-grep-cli && rm -f /opt/dev-tools/uv/bin/sg \
   && uv tool install ruff \
-  && uv tool install -p 3.13 serena-agent \
-  && CC=clang uv tool install -p 3.13 manim \
+  && UV_COMPILE_BYTECODE=1 uv tool install -p 3.13 serena-agent \
+  && CC=clang UV_COMPILE_BYTECODE=1 uv tool install -p 3.13 manim \
   && serena init \
   && sed -i \
     -e 's|^web_dashboard: .*|web_dashboard: false|' \
