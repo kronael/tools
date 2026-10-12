@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.35] — 20261013
+
+> kronael v0.4.35 — qemubox waits before power-off, weekly use on screen
+>
+> A qemubox VM now stays up 20 minutes after its last session, and the status line shows weekly plan use in whole percent.
+>
+> • `qemubox stop <name>` — powers a VM off; `-f` skips the guest shutdown wait, `-a` stops all.
+> • Idle stop — the VM powers off after `QEMUBOX_LINGER` seconds (default 1200) with no session.
+> • Status line — model, context, 5-hour and weekly limits, each in whole percent.
+> • AGENTS.md — Claude Code loads it beside CLAUDE.md; a directory may keep AGENTS.md canonical.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox: `stop <name|glob>... [-f|-a]`; each wait step prints a line before it waits.
+- qemubox: `QEMUBOX_LINGER` (seconds, default 1200, `0` powers off at once); log in the box's `idle.log`.
+- Settings: `statusLine` runs `hooks/statusline.py`; `pluginConfigs` loads AGENTS.md beside CLAUDE.md.
+- `readme`, `wisdom`: one instruction file per directory, `CLAUDE.md` or `AGENTS.md` with a `@AGENTS.md` shim.
+- `specs`: no doc or code links a spec; a shipped spec MAY be deleted once the docs hold its state.
+- Removed from the repo: `specs/`, `research/`, `evals/` and the spec-lint pre-commit hook.
+
 ## [v0.4.34] — 20261012
 
 > kronael v0.4.34 — temporary boxes and new Claude sessions
