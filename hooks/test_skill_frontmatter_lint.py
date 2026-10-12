@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from skill_frontmatter_lint import LOCAL_PATH
 from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import check_body
 from skill_frontmatter_lint import check_leaks
@@ -190,6 +191,8 @@ def test_absolute_home_path_fails(tmp_path: Path) -> None:
 def test_hooks_tree_ships_no_home_path() -> None:
     """hooks/ runs on other machines, so a literal home path here is the leak."""
     home = str(Path.home())
+    if not LOCAL_PATH.search(home):
+        pytest.skip(f'{home} is a container HOME the lint exempts')
     tree = Path(__file__).parent
     leaking = [
         p.relative_to(tree).as_posix()
