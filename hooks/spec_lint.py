@@ -22,7 +22,7 @@ from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import parse_meta
 
-STATUSES = ('draft', 'experiment', 'planned', 'partial', 'reference')
+STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
 NUMBERED = re.compile(r'^(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
 FLAT_PAD = 2
 PHASE_DEPTH = 2

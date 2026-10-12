@@ -49,13 +49,13 @@ def test_unknown_status_fails(tmp_path: Path) -> None:
     assert report(root) == 2
 
 
-def test_shipped_status_fails(tmp_path: Path) -> None:
+def test_shipped_status_passes(tmp_path: Path) -> None:
     root = corpus(
         tmp_path,
         index=INDEX.replace('| planned |', '| shipped |'),
         spec=SPEC.replace('planned', 'shipped'),
     )
-    assert 'spec-status' in rules(root, Severity.ERROR)
+    assert 'spec-status' not in rules(root, Severity.ERROR)
 
 
 def test_missing_frontmatter_fails(tmp_path: Path) -> None:
