@@ -165,9 +165,9 @@ missing_deps() {
 # exact plain "qemubox: ..." text so logs and greps are unchanged.
 note() {
     if [ -t 2 ]; then
-        printf '\033[1;36m>>> qemubox:\033[0m %s\n' "$*" >&2
+        printf '\033[1;36m>>> qemubox:\033[0m %s\n' "$*" >&2 || :
     else
-        printf 'qemubox: %s\n' "$*" >&2
+        printf 'qemubox: %s\n' "$*" >&2 || :
     fi
 }
 

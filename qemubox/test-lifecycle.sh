@@ -184,6 +184,26 @@ true_ "detached check logs its decision" \
 
 (
     set -e
+    ROOT="$fixture/leave-nostderr"
+    name=vm; sid=123; session_pid=""; locked=""
+    LINGER=1
+    mkdir -p "$ROOT/vm"
+    running() { return 0; }
+    ssh_plain_box() { :; }
+    session_markers() { :; }
+    stop_box() { touch "$fixture/nostderr-stopped"; }
+    leave_session
+) 2>/dev/full
+for ((i = 0; i < 300; i++))
+do
+    [ ! -f "$fixture/nostderr-stopped" ] || break
+    sleep 0.01
+done
+true_ "last session with a dead stderr still arms the idle stop" \
+    '[ -f "$fixture/nostderr-stopped" ]'
+
+(
+    set -e
     ROOT="$fixture/readiness"
     name=vm; mkdir -p "$ROOT/vm"
     echo 'serial failure evidence' > "$ROOT/vm/serial.log"
