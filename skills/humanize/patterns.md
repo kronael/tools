@@ -482,21 +482,21 @@ Same family, same treatment: "that's it", "and that's all there is to it",
 **Problem:** AI reaches for the semicolon to pack related facts into one line; a person writing to be read makes each fact its own sentence or a real list.
 
 **Before:**
-> The owner queues the exit; the manager fills it through Squads; the owner collects the tokens once the fill is recorded.
+> The owner queues the exit; the manager fills it through the multisig; the owner collects the tokens once the fill is recorded.
 
 **After:**
-> The owner queues the exit. The manager fills it through Squads. Once the fill is recorded, the owner collects the tokens.
+> The owner queues the exit. The manager fills it through the multisig. Once the fill is recorded, the owner collects the tokens.
 
 **Fix:** split at every semicolon. Keep one only where the two halves genuinely cannot stand apart.
 
 
 ### 33. Symbols Standing in for Words
 
-**Signs to watch:** "+" for "and", "/" for "or", "→" for "then", "&" in titles, labels, captions and diagram boxes — "Liquid tokens + mSOL collateral", "Vault flags + NAV/AUM breaker".
+**Signs to watch:** "+" for "and", "/" for "or", "→" for "then", "&" in titles, labels, captions and diagram boxes — "Cash + bond collateral", "Fund flags + NAV breaker".
 
 **Problem:** AI compresses a label the way a slide does; a reader hears the symbol as a gap and has to supply the word. Paths, units and code keep their symbols.
 
-**Fix:** write the word: "Liquid tokens and mSOL collateral".
+**Fix:** write the word: "Cash and bond collateral".
 
 
 ## Full Example

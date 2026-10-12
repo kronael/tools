@@ -49,7 +49,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
   #[test]                                          // in the program crate
   fn state_crate_names_this_program() {
-      assert_eq!(crate::ID, limit_program_state::ID);
+      assert_eq!(crate::ID, market_program_state::ID);
   }
   ```
 
@@ -58,7 +58,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
   must forward into the state crate:
 
   ```toml
-  idl-build = ["anchor-lang/idl-build", "limit-program-state/idl-build"]  # program
+  idl-build = ["anchor-lang/idl-build", "market-program-state/idl-build"]  # program
   idl-build = ["anchor-lang/idl-build"]                                   # state
   ```
 
@@ -104,8 +104,8 @@ struct that owns the arrays and carries `as_seeds()`.
 Name the program crate for what it does, then keep five names in sync: the
 package name, the `[lib] name`, the `#[program]` module, the `Anchor.toml`
 `[programs.*]` key, and the built `.so`. Cargo derives the lib target from the
-package name with dashes turned to underscores (`limit-program` →
-`limit_program`), and the artifact filename is the lib name — so a rename that
+package name with dashes turned to underscores (`market-program` →
+`market_program`), and the artifact filename is the lib name — so a rename that
 misses one of the five still builds, and silently deploys under the old name.
 
 ## Cargo profiles: declare only what is not already the default

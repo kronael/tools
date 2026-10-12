@@ -49,7 +49,7 @@ If you can't name the anchor, stop and find it before designing.
   canvas (a feed thumbnail is ~500px wide), contrast ≥ 4.5:1 for essential
   text. **Thumbnail test:** view the PNG at ~500px / squint — is the one idea
   obvious in ~1s? If not, cut and enlarge (never shrink type to fit — see Rules).
-- Match the project's palette if it has one (krons/kronael → dark mono, bg
+- Match the project's palette if it has one (kronael → dark mono, bg
   `#0a0e1a`, blue `#60a5fa`, amber `#fbbf24`, mono font).
 - Keep the SELLING off the image (no feature list / CTA / marketing) — that's
   what reads as an ad. A small footer with the project name + a short URL

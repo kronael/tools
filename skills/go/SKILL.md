@@ -81,8 +81,8 @@ It carries the goroutine-sizing rule and the single-sink I/O pattern.
 - Shared domain types go in `core/` (or equivalent); adapters convert at entry
 - DTOs (request/response bodies, MCP params) are defined adjacent to their
   handler — not in a global `types/` package unless ≥3 packages share them
-- One canonical parse path per format: if cron parsing lives in `timed/`, ipc
-  must import that function, not reimplement it
+- One canonical parse path per format: if cron parsing lives in `sched/`, the API
+  package must import that function, not reimplement it
 
 ## Variadic parameters
 

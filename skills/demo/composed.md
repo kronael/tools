@@ -45,7 +45,7 @@ then render):
   `tmp/<name>_frames/` (a per-demo dir — two concurrent captures sharing
   `tmp/frames` clobber each other), then ffmpeg palettegen/paletteuse → gif.
 - **Mix media, keep the real parts real.** Compose stills/animation with a real
-  asciinema cast of the product running (the "germinal" pattern). The terminal is
+  asciinema cast of the product running. The terminal is
   ALWAYS the real cast; narrative beats are best as real sourced imagery (meme,
   photo) over hand-drawn Canvas. ffmpeg-concat all segments at ONE canvas size
   (record the cast at that size) so the terminal never scales/letterboxes.

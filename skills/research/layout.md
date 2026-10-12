@@ -5,12 +5,12 @@ The shape shared by every research tree, whatever the domain. A project
 
 ## Names
 
-A strategy directory is named for what it does — `funding_carry`,
+A strategy directory is named for what it does — `mean_reversion`,
 `long_only` — never for a serial number and never for a date. A number says
 nothing about the idea and collides with whatever else the run log numbers; a
 date on the directory breaks the import and lies once the strategy is rerun.
 The date belongs on the run's tag, which names the report
-(`20260922_funding_carry`): a strategy is rerun, a report is one run.
+(`20260922_mean_reversion`): a strategy is rerun, a report is one run.
 
 ## The seam
 

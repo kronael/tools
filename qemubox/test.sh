@@ -52,8 +52,8 @@ eq "box_name default" "$(box_name)" "default"
 
 false_ "rm empty pattern matches nothing"    'rm_matches anything ""'
 true_  "rm '\''*'\'' matches all"                 'rm_matches anything "*"'
-true_  "rm exact match"                      'rm_matches staking-rewards staking-rewards'
-false_ "rm exact does not substring-match"   'rm_matches staking-rewards-facade staking-rewards'
+true_  "rm exact match"                      'rm_matches web-api web-api'
+false_ "rm exact does not substring-match"   'rm_matches web-api-facade web-api'
 true_  "rm glob star"                        'rm_matches repo-1 "repo-*"'
 false_ "rm glob non-match"                   'rm_matches other "repo-*"'
 

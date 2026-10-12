@@ -1503,7 +1503,7 @@ file answers to that name.
 
 - `qemubox`: prebuilt base image — `build-base` (run once by `make install`, non-fatal without KVM/network) bakes the guest apt layer into `provisioned.qcow2` via a throwaway `.build` box; new boxes overlay it and skip first-boot apt.
 - `qemubox`: ref-counted lifecycle — a per-session marker in `/run/qemubox/sess` (dropped right after boot, before provisioning); the VM is torn down when the last session exits, concurrent sessions keep it up. `stop_box` escalates poweroff→SIGTERM→SIGKILL (90s systemd wait) so a wedged VM is killed not orphaned, and `remove_box` never deletes a live VM's disk.
-- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm staking-rewards` also removed `staking-rewards-facade`).
+- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm web-api` also removed `web-api-facade`).
 - `qemubox`: provisioning/guest output streams behind a dim `>` gutter, distinct from the `>>>` script voice; both ASCII, TTY-guarded (plain text when piped).
 - `qemubox` + `dockbox`: rewritten READMEs with an ELI13 section and an honest security-posture statement — the tools confine host-filesystem blast radius and give a disposable env, but inject real agent credentials and leave outbound network on, so they are not a boundary against hostile code. Tracked hardening (network kill-switch, gpg opt-in, `--untrusted` mode, behavioral tests) is in `BUGS.md`.
 

@@ -13,10 +13,9 @@ agent loop, its own tools (read/bash/edit/write). Methodology + citations:
 `docs/pi/research-pi.md` in the bundle source repo.
 
 Why alongside `/astra`: pi answers from a **different model** than this Claude
-harness (its default here is `codex-serve/gpt-5.5`; configurable to
-Gemini/GPT/Claude), so it's a real second opinion. Use it to cross-check Astra
-or when you want a non-Claude view. NEVER use a raw `Agent(...)` for a second
-opinion — use this skill or `/astra`.
+harness (configurable to Gemini/GPT/Claude), so it's a real second opinion.
+Use it to cross-check Astra or when you want a non-Claude view. NEVER use a raw
+`Agent(...)` for a second opinion — use this skill or `/astra`.
 
 ## Invoke
 
@@ -47,7 +46,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 ## Model — newest available, high effort
 
 - Discover with `pi --list-models`; it prints the providers/models the current
-  auth can reach (here: `claude-serve` haiku/sonnet + a `codex-serve` gpt model).
+  auth can reach.
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
   strongest configured model. Add `--thinking high` (or `xhigh`) for max reasoning.
@@ -62,7 +61,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 pi has NO non-interactive `login status` (unlike codex). Two working paths:
 
 - **Subscription login** — cached in `~/.pi/agent/settings.json` (Claude Pro /
-  ChatGPT Plus / Copilot via `codex-serve`/`claude-serve`). Presence of that
+  ChatGPT Plus / Copilot, directly or through a local proxy). Presence of that
   file = probably logged in; confirm only via an actual `-p` call.
 - **BYOK env var** — `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`,
   etc., or `--api-key <key>` per run.

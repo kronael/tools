@@ -322,12 +322,8 @@
   nothing is decided:** as written.
 
 - **CREATE-DEAD-POINTERS** (LOW, docs) — CONFIRMED at HEAD 2026-10-11, no
-  test — docs. House files: `skills/create/video/collage.md:28-30,69` name
-  `solve/demo/collage_fetch.py`, `cutout_lib.py`, `collage.assets.py`,
-  `collage.html`, `collage.build.sh` and `solve/demo/eval/{clipkit,judge,report}.py`;
-  `skills/create/divergence.md:43,55` name
-  `../../projects/*/schema/demo/germinal-v4.stage.md` and `tmp/inspiration.py`.
-  None exists in the repo (`find` over the tree) or in an install. Ported
+  test — docs. House file: `skills/create/divergence.md:54` names `tmp/inspiration.py`,
+  which exists neither in the repo (`find` over the tree) nor in an install. Ported
   files: `art/ascii-video/README.md:278` → `design-patterns.md` (absent; the
   patterns are in `references/scenes.md`); `art/p5js/README.md:40`,
   `art/p5js/scripts/setup.sh:3`, `video/manim/README.md:22` →
@@ -336,8 +332,8 @@
   Function"); `art/pretext.md:39-40` names `ascii-art`, `ascii-video` and
   `p5js` as skills (now `art.md`, `art/ascii-video.md`, `art/p5js.md`);
   `video/render/examples/README.md:25` cites a Lottie row `video/render.md`
-  lacks. **Fix:** house files name the project that holds the implementation
-  or drop the pointer; the ported files are the owner's call per
+  lacks. **Fix:** the house file names the project that holds the implementation
+  or drops the pointer; the ported files are the owner's call per
   `software/credits.md`.
 
 - **CREATE-PORTED-TREES-RESTATE-THEMSELVES** (LOW, duplication) — owner

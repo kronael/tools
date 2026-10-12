@@ -73,7 +73,7 @@ reasoning that got you there.
   exactly what cuts that clause
 
 ```
-🤖 🔴 Charges `sold_lamports`, the RETAINED piece, so it liquidates the wrong account.
+🤖 🔴 Charges `sold_qty`, the RETAINED piece, so it liquidates the wrong account.
 Fix: use the sale leg's lamports here.
 ```
 

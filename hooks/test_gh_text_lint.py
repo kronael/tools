@@ -15,13 +15,15 @@ ROBOT = '\U0001f916'
 FOOTER = f'{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)'
 CLOSE = 'Closes #12'
 GOOD_PR = (
-    '**TL;DR:** Deploys the collector on hel1v1 through the `service:` list, so the playbook goes.\n\n'
+    '**TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
     f'{CLOSE}\n\n'
     f'{ROBOT}\n'
 )
 PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
 GOOD_ISSUE = f'`gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n\n{ROBOT}\n'
-GOOD_COMMENT = f'{ROBOT} \U0001f534 Charges `sold_lamports`, the retained piece.\nFix: use the sale leg here.\n'
+GOOD_COMMENT = (
+    f'{ROBOT} \U0001f534 Charges `sold_qty`, the retained piece.\nFix: use the sale leg here.\n'
+)
 
 LINT_CASES = [
     (Kind.PR, GOOD_PR, None),
@@ -75,9 +77,9 @@ LINT_CASES = [
         GOOD_PR.replace('Deploys', 'Leveraging the cache, deploys'),
         'marketing word "Leveraging"',
     ),
-    (Kind.PR, GOOD_PR.replace('hel1v1', 'commit deadbeef...cafe'), 'write it in full'),
-    (Kind.PR, GOOD_PR.replace('hel1v1', 'vault 7xKXtg...gAsU'), 'write it in full'),
-    (Kind.PR, GOOD_PR.replace('hel1v1', '0x12ab…'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', 'commit deadbeef...cafe'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', 'vault 7xKXtg...gAsU'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', '0x12ab…'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
@@ -119,7 +121,7 @@ def test_lint_pr_draft_ratio_ignores_the_draft_title() -> None:
 
 
 TITLE_CASES = [
-    ('fix(ansible): Deploy news-collector through the standard service list', None),
+    ('fix(ansible): Deploy price-feed through the standard service list', None),
     ('x' * 73, 'title 73 chars, max 72'),
     ('feat: Add A and B and C', 'title lists changes'),
 ]

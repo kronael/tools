@@ -4,7 +4,7 @@
 
 - Containers MUST have `./main` or `python -m main`
 - Entrypoint: `[[ -x ./main ]] && exec ./main $args $cfg || exec python -m main $args $cfg`
-- Service names: underscores (`funding_report`), image names: dashes (`funding-report`)
+- Service names: underscores (`price_feed`), image names: dashes (`price-feed`)
 - `--network=host` (no port mapping), config: `/cfg/<server>/<service>.toml`
 - Volumes: `/srv/spool/<name>` (persistent), `/srv/run/<name>` (runtime)
 
