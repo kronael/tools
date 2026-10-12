@@ -248,8 +248,9 @@ Build artifacts are an attack surface, not state to persist. Two layers
 keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
-   caches and toolchains live in the image, not your project. dockbox
+   `RUSTUP_HOME`, `UV_TOOL_DIR`, `UV_PYTHON_INSTALL_DIR` and `SERENA_HOME`
+   to `/opt/dev-tools/...`, so tool caches, toolchains and Serena's
+   per-project state live in the image, not your project. dockbox
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
