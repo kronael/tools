@@ -136,28 +136,54 @@ done
 
 (
     set -e
-    ROOT="$fixture/linger"
+    ROOT="$fixture/token"
     mkdir -p "$ROOT/vm"
-    LINGER=600
-    running() { return 0; }
-    session_markers() { :; }
-    touch -d '15 minutes ago' "$ROOT/vm/idle"
-    should_stop_idle vm
-    touch "$ROOT/vm/idle"
-    if should_stop_idle vm; then exit 1; fi
-    touch -d '15 minutes ago' "$ROOT/vm/idle"
-    session_markers() { echo 456; }
-    if should_stop_idle vm; then exit 1; fi
-    session_markers() { return 1; }
-    if should_stop_idle vm; then exit 1; fi
-    session_markers() { :; }
-    running() { return 1; }
-    if should_stop_idle vm; then exit 1; fi
-    running() { return 0; }
-    rm "$ROOT/vm/idle"
-    if should_stop_idle vm; then exit 1; fi
-) > "$fixture/linger.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/linger.log"; bad "idle stop: old stamp, no markers, running VM"; }
+    if has_idle_token vm mine; then exit 1; fi
+    echo mine > "$ROOT/vm/idle"
+    has_idle_token vm mine
+    if has_idle_token vm newer; then exit 1; fi
+) > "$fixture/token.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/token.log"; bad "idle stamp holds one token"; }
+
+for scen in superseded retry busy stale down
+do
+    (
+        ROOT="$fixture/linger-$scen"
+        mkdir -p "$ROOT/vm"
+        echo mine > "$ROOT/vm/idle"
+        LINGER=1
+        sleep() { command sleep 0.05; }
+        running() { return 0; }
+        session_markers() { :; }
+        stop_box() { touch "$fixture/linger-$scen-stopped"; }
+        case "$scen" in
+            superseded) echo newer > "$ROOT/vm/idle" ;;
+            retry|busy)
+                session_markers() {
+                    [ -e "$ROOT/retried" ] || { touch "$ROOT/retried"; return 1; }
+                    [ "$scen" = retry ] || echo 456
+                } ;;
+            stale)
+                touch -d '5 hours ago' "$ROOT/vm/idle"
+                session_markers() { return 1; } ;;
+            down) running() { return 1; } ;;
+        esac
+        stop_after_linger vm mine
+        echo "rc=$?"
+    ) > "$fixture/linger-$scen.log" 2>&1
+done
+false_ "superseded check leaves the VM" '[ -e "$fixture/linger-superseded-stopped" ]'
+true_ "superseded check says so" \
+    'grep -q "stamped idle again" "$fixture/linger-superseded.log"'
+true_ "failed count retries, then powers off" '[ -e "$fixture/linger-retry-stopped" ]'
+true_ "retry is logged" 'grep -q "retrying in 1s" "$fixture/linger-retry.log"'
+false_ "busy after a retry leaves the VM" '[ -e "$fixture/linger-busy-stopped" ]'
+true_ "busy is logged" 'grep -q "is busy; leaving it" "$fixture/linger-busy.log"'
+false_ "count failing 4h after the last exit gives up" \
+    '[ -e "$fixture/linger-stale-stopped" ]'
+true_ "giving up is logged" 'grep -q "giving up" "$fixture/linger-stale.log"'
+eq "giving up returns 1" "$(tail -1 "$fixture/linger-stale.log")" "rc=1"
+false_ "stopped VM is left alone" '[ -e "$fixture/linger-down-stopped" ]'
 
 (
     ROOT="$fixture/leave-linger"
@@ -171,7 +197,7 @@ done
     leave_session
 ) 2> "$fixture/leave-linger.err"
 false_ "last session lingers instead of stopping at once" '[ -f "$fixture/linger-stopped" ]'
-true_ "last session stamps idle" '[ -f "$fixture/leave-linger/vm/idle" ]'
+true_ "last session stamps idle with a token" '[ -s "$fixture/leave-linger/vm/idle" ]'
 true_ "exit announces the linger" 'grep -q "powers off after 1s" "$fixture/leave-linger.err"'
 for ((i = 0; i < 300; i++))
 do

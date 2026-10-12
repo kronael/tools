@@ -314,35 +314,53 @@ session_markers() {
     done
 }
 
-should_stop_idle() {
-    local idle markers
-    running "$1" || return 1
-    idle=$(stat -c %Y "$(box_dir "$1")/idle" 2>/dev/null) || return 1
-    [ $(( $(date +%s) - idle )) -ge "$LINGER" ] || return 1
-    markers=$(session_markers "$1") || return 1
-    [ -z "$markers" ]
+has_idle_token() {
+    [ "$(cat "$(box_dir "$1")/idle" 2>/dev/null)" = "$2" ]
 }
 
 stop_after_linger() {
+    local name="$1" token="$2" idle markers
     trap '' HUP
-    sleep "$LINGER"
-    lock_box "$1" || return 1
-    if should_stop_idle "$1"
-    then
-        note "no session for ${LINGER}s; powering off qemubox-$1, keeping disk"
-        stop_box "$1" || return 1
-    else
-        note "qemubox-$1 is busy, stopped or stamped idle again; leaving it"
-    fi
-    unlock_box
+    while :
+    do
+        sleep "$LINGER"
+        lock_box "$name" || return 1
+        if ! running "$name" || ! has_idle_token "$name" "$token"
+        then
+            note "qemubox-$name is stopped or stamped idle again; leaving it"
+            unlock_box
+            return 0
+        fi
+        idle=$(stat -c %Y "$(box_dir "$name")/idle")
+        if markers=$(session_markers "$name")
+        then
+            if [ -n "$markers" ]
+            then
+                note "qemubox-$name is busy; leaving it"
+            else
+                note "no session for ${LINGER}s; powering off qemubox-$name, keeping disk"
+                stop_box "$name" || return 1
+            fi
+            unlock_box
+            return 0
+        fi
+        unlock_box
+        if [ $(( $(date +%s) - idle )) -ge $((4 * 3600)) ]
+        then
+            note "cannot count sessions 4h after the last exit; giving up on qemubox-$name"
+            return 1
+        fi
+        note "cannot count sessions; retrying in ${LINGER}s"
+    done
 }
 
 linger_box() {
-    local dir
+    local dir token
     dir="$(box_dir "$1")"
-    touch "$dir/idle"
+    token="$$.$(date +%s%N)"
+    printf '%s\n' "$token" > "$dir/idle"
     note "last session exited; qemubox-$1 powers off after ${LINGER}s idle"
-    (stop_after_linger "$1") </dev/null >>"$dir/idle.log" 2>&1 9>&- &
+    (stop_after_linger "$1" "$token") </dev/null >>"$dir/idle.log" 2>&1 9>&- &
 }
 
 leave_session() {

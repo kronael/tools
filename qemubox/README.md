@@ -91,8 +91,11 @@ A box starts on first use. When the **last** session exits (counted by
 session markers) the VM stays up for `QEMUBOX_LINGER` seconds (default 1200,
 twenty minutes), so the next launch joins it without a boot. A detached check
 then takes the VM lock and powers it off, provided no session is running and
-none has exited since; each last-session exit restarts the wait, and the
-check logs to `idle.log` in the box's state dir. `QEMUBOX_LINGER=0` powers
+none has exited since: each last-session exit writes a fresh token into the
+box's `idle` stamp and starts its own check, and only the check whose token
+the stamp still holds acts. A check that cannot count sessions retries every
+`QEMUBOX_LINGER` seconds until four hours after the last exit, then gives up.
+The check logs to `idle.log` in the box's state dir. `QEMUBOX_LINGER=0` powers
 off as the last session exits. The disk stays on the host; the next launch
 boots that disk and keeps files in the guest home. `qemubox rm` deletes it.
 A missing recorded base image refuses launch with a `qemubox rm` hint.
