@@ -27,6 +27,17 @@
   rather than widening the type.
 - An environment failure (missing binary, no docker, no credential) is a
   reported blocker. NEVER skip, `xfail`, or stub the dependency to get green.
+
+## Which tests to run
+
+- ALWAYS choose the focused tests before the edit — the test beside each file
+  you change and the FEATURES.md row's test for the behaviour you change
+  (`readme` → `topology.md`). Run those on every iteration and the full
+  `make test` tier once before the commit — NEVER the whole suite per edit.
+- NEVER report a green focused run as done — ALWAYS name what it did not run:
+  the full tier, integration, build. A focused run is evidence for the next
+  iteration, not for the commit.
+
 ## Descriptions
 
 - A test module's doc-comment and a test's intro name BOTH the SCENARIO and
@@ -49,6 +60,8 @@
 
 - NEVER let a gate run unbounded work - ALWAYS wrap it in a deadline
   (`timeout N cargo bench`).
+- ALWAYS print each check's duration in a check target — a slow check is then
+  seen and fixed, not waited on.
 - NEVER write a busy-wait without a deadline or a recovery pump. A flaky hang
   is worse than a flaky fail because silence reads as progress.
 - Harness code is reference usage - hold it to the same idiom bar as examples.

@@ -14,7 +14,7 @@ Paths are relative to this directory.
 | the language-agnostic baseline every language skill sits on: naming, layout, comments policy, design and abstraction limits, system-change discipline, boring-code and grug rules | `code.md` |
 | a Dockerfile: Python+uv two-layer deps/source split, m4-generated monorepo images, what `.dockerignore` must exclude | `docker.md` |
 | the Makefile every Python+uv repo gets — `prepare`/`build`/`test`/`right`/`image`/`clean` targets and what CI calls | `ci.md` |
-| to write or fix tests: naming, reading a failure down to its cause, testcontainers, the unit/smoke/e2e boundary, hangs and gates | `testing.md` |
+| to write or fix tests: naming, reading a failure down to its cause, which tests to run per edit and what a focused run proves, testcontainers, the unit/smoke/e2e boundary, hangs, gates and check durations | `testing.md` |
 | to deploy a service: the Ansible docker-service role, per-deployable subdir layout | `deploy.md` |
 | to make a running service legible: log format, Prometheus metrics, SLO burn-rate alerts, the error-handling hierarchy | `observe.md` |
 | to hand someone a Python tool: PEP 723 single-file scripts run by uvx, when a package layout is needed instead | `uvx-tools.md` |
