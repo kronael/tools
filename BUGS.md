@@ -204,10 +204,10 @@
   decision, no test — docs. Four canonical Make target sets:
   `skills/software/ci.md:47-48` (prepare, build, test, right, image, clean),
   `skills/mk/SKILL.md:71-78` (prepare, check, right, test, integration,
-  clean), `skills/ts/SKILL.md:120-121` (prepare, check, right, test), WISDOM
+  clean), `skills/ts/SKILL.md:156-157` (prepare, check, right, test), WISDOM
   § House conventions (test, test-all, smoke); `ci.md:44` "NEVER add a
-  `lint` target" vs `ops:48`, `mk:76,86`, `py:125`, `ts:120`; `ci.md:50`
-  sets `PYTHONPATH` per target, `py:131` once. Log line:
+  `lint` target" vs `ops:47`, `mk:76,86`, `py:142`, `ts:156`; `ci.md:50`
+  sets `PYTHONPATH` per target, `py:148` once. Log line:
   `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:183`
   (`INFO subsystem: message`); health: `service:12` (`/health`, `/ready`)
   vs `observe.md:12` (`/.well-known/live`); Python: `py:19` 3.13+ vs
@@ -286,9 +286,10 @@
 
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
   test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
-  non-obvious why" where `skills/software/code.md:57-62` bans every in-body
-  comment and `skills/refine/software.md:29-38` already hunts by that ban, so
-  the Python lens licenses what the baseline refuses. **Options:** (a) cut
+  non-obvious why" — a general why comment that none of the three in-body
+  exceptions in `skills/software/code.md:76-81` covers, while
+  `skills/refine/software.md:29-38` hunts every comment outside them, so the
+  Python lens licenses what the baseline refuses. **Options:** (a) cut
   the clause, leaving `software.md` the one comment lens; (b) keep it as a
   Python allowance and say so in `code.md`. **Default if nothing is
   decided:** as written.
@@ -298,9 +299,10 @@
   tools this harness lacks — `write_file`, `read_file`, `patch`, `terminal`,
   `browser_navigate`, `browser_vision` (`web.md:685-692,804-808`,
   `web/popular-web-designs.md:44-47,85-86`, line 13 of all 54
-  `web/popular-web-designs/templates/*.md`, `diagram/excalidraw.md:32,36`,
-  `diagram/architecture-diagram.md:47`, `web/design-md.md:132`,
-  `art/pretext.md:156`; also `skills/humanize/SKILL.md:38,108`) — and a
+  `web/popular-web-designs/templates/*.md`, `diagram/excalidraw.md:31-32,36`,
+  `diagram/architecture-diagram.md:47`, `web/design-md.md:133`,
+  `art/pretext.md:156`, `art.md:226` (`terminal`); also
+  `skills/humanize/SKILL.md:38,94,108`) — and a
   `generative-widgets` skill (`popular-web-designs.md:42,85` and the
   templates) the bundle does not ship. **Options:** (a) one line in
   `create/SKILL.md` § Rules mapping the Hermes names to Read, Write, Edit,
@@ -344,7 +346,7 @@
   all 54 templates, and the three-mode decision table in `web.md:22-36`,
   `popular-web-designs.md:27-35` and `design-md.md:34-37`. `web.md` against
   itself: self-contained HTML 4 times, verification 3, "2-3 variants" at
-  `:644` against "at least three options" at `:326-346`. **Options:** (a)
+  `:646` against "at least three options" at `:326-346`. **Options:** (a)
   keep — a reference file loads alone, so a restatement there is what its
   reader sees; (b) cut the mode files to pointers. **Default if nothing is
   decided:** (a).
@@ -474,21 +476,23 @@
   Pre-commit hands the scan every staged `.md` (`files: \.md$`,
   `.pre-commit-config.yaml:14`), while `make skills-frontmatter` and CI walk
   the tree through `visible_files()`, which skips hidden directories
-  (`hooks/skill_frontmatter_lint.py:142`). A tracked `.md` in a hidden dir is
+  (`hooks/skill_frontmatter_lint.py:145`). A tracked `.md` in a hidden dir is
   scanned on commit and skipped by the tree target. Latent: no tracked `.md`
   sits in a hidden dir. **Proposal:** one scope for both — the script drops
   hidden paths it is handed, or the pre-commit pattern excludes them.
   Changes the scan's input contract — needs sign-off; no test — design.
 
 - **SKILL-LINT-ORPHAN-WALKS-HIDDEN-DIRS** (LOW, correctness) — CONFIRMED at
-  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:363`)
-  collects a skill's docs with `rglob('*.md')`, hidden dirs included, while
-  `visible_files()` skips them for the tree walk. Pytest run from inside the
-  skill leaves an ignored `.pytest_cache/README.md` there, and `make
-  skills-frontmatter` and the pre-commit lint exit 2 on it as a
-  `skill-orphan`. Reproduce: `cd skills/recall-memories && uvx pytest -q
-  test_recall.py`, then `make skills-frontmatter`. **Fix:** skip hidden path
-  parts in `sibling_docs`, as `visible_files()` does. No test yet.
+  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:365`)
+  collects a skill's docs with `rglob('*.md')`, hidden dirs and git-ignored
+  paths included, while `visible_files()` skips both for the tree walk
+  (`:145,150`). Pytest run from inside the skill leaves an ignored
+  `.pytest_cache/README.md` there, and `make skills-frontmatter` and the
+  pre-commit lint exit 2 on it as a `skill-orphan`; an ignored
+  `skills/<x>/tmp/notes.md` fails the same way. Reproduce: `cd
+  skills/recall-memories && uvx pytest -q test_recall.py`, then `make
+  skills-frontmatter`. **Fix:** skip hidden path parts and git-ignored paths
+  in `sibling_docs`, as `visible_files()` does. No test yet.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes
