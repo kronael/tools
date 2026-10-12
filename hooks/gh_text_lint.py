@@ -3,7 +3,8 @@
 
 WISDOM § Git and the posting skill's Format section are the rules; this is
 the part of them a program can check. pretool_nudge.py calls `command_reason`
-to refuse a `gh` command whose body fails.
+to refuse a `gh` command whose body fails, and a review submit the newest
+message the user typed did not ask for with the words SUBMIT REVIEW.
 
     python3 gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'
     python3 gh_text_lint.py issue tmp/issue-body.md
@@ -82,8 +83,25 @@ POSTS = (
     (re.compile(GH + r'(?:pr|issue)\s+comment\b)'), Kind.COMMENT, True),
     (re.compile(GH + r'pr\s+review\b)'), Kind.COMMENT, False),
     (re.compile(API + r'(?:/reviews|/comments|/replies)\b)'), Kind.COMMENT, False),
+    (re.compile(API + r'\bsubmitPullRequestReview\b)'), Kind.COMMENT, False),
     (re.compile(API + r'\bpulls/\d+(?![\w/]))'), Kind.PR, False),
     (re.compile(API + r'\bissues/\d+(?![\w/]))'), Kind.ISSUE, False),
+)
+SUBMIT_ASK = 'SUBMIT REVIEW'
+ARGS = r'[^\n|;&]*'
+SUBMITS = (
+    re.compile(r'^gh\s+pr\s+review\b'),
+    re.compile(r'^gh\s+api\b' + ARGS + r'/reviews/[^/\s]+/events\b'),
+    re.compile(r'^gh\s+api\b' + ARGS + r'\bsubmitPullRequestReview\b'),
+)
+REVIEWS = re.compile(r'^gh\s+api\b' + ARGS + r'/reviews(?![\w/])')
+EVENT_FLAG = re.compile(r'(?:-f|-F|--field|--raw-field)[ =]["\']?event=')
+USER = b'"user"'
+TOOL_RESULT = b'"content":[{"type":"tool_result"'
+SUBMIT_REFUSED = (
+    f'review submit refused: the newest message the user typed does not say {SUBMIT_ASK}.'
+    ' A submitted review cannot be taken back: leave it PENDING, report its id and ask'
+    f' the user to say {SUBMIT_ASK} (gh-comment § Submit)'
 )
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?:\n|$)', re.DOTALL)
 CONTINUATION = re.compile(r'\\\n')
@@ -310,17 +328,26 @@ def heredoc_in(segment: str, docs: list[str]) -> str | None:
     return docs[int(m.group(1))] if m else None
 
 
+def input_json(segment: str, docs: list[str], cwd: str) -> str | None:
+    """The JSON text `--input` passes, from its file or heredoc; None without it."""
+    given = INPUT.search(segment)
+    if not given:
+        return None
+    path = quoted(given)
+    if path != '-':
+        return read_file(path, cwd)
+    doc = heredoc_in(segment, docs)
+    if doc is None:
+        raise OSError('--input - reads stdin the hook cannot see: pass a file or a heredoc')
+    return doc
+
+
 def read_bodies(segment: str, docs: list[str], cwd: str) -> list[str]:
     """Every body text the segment posts; OSError names a body it cannot read."""
     doc = heredoc_in(segment, docs)
-    given = INPUT.search(segment)
-    if given:
-        path = quoted(given)
-        if path != '-':
-            return json_bodies(read_file(path, cwd))
-        if doc is None:
-            raise OSError('--input - reads stdin the hook cannot see: pass a file or a heredoc')
-        return json_bodies(doc)
+    given = input_json(segment, docs, cwd)
+    if given is not None:
+        return json_bodies(given)
     named = BODY_FILE.search(segment)
     if named:
         path = quoted(named)
@@ -353,6 +380,87 @@ def effective_cwd(code: str, cwd: str) -> str:
     return cwd
 
 
+def has_event(text: str) -> bool:
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as err:
+        raise OSError(f'cannot parse the JSON body: {err}') from err
+    return isinstance(data, dict) and 'event' in data
+
+
+def is_submit(segment: str, docs: list[str], cwd: str) -> bool:
+    """Whether the gh invocation submits a review: `gh pr review`, the
+    `/reviews/<id>/events` call, a `/reviews` POST carrying `event`, or the
+    submitPullRequestReview mutation. A pending post carries no `event`."""
+    if any(p.match(segment) for p in SUBMITS):
+        return True
+    if not REVIEWS.match(segment):
+        return False
+    if EVENT_FLAG.search(segment):
+        return True
+    text = input_json(segment, docs, cwd)
+    return text is not None and has_event(text)
+
+
+def iter_lines_reversed(path: str, chunk: int = 1 << 16):
+    with open(path, 'rb') as fh:
+        fh.seek(0, os.SEEK_END)
+        pos = fh.tell()
+        tail = b''
+        while pos > 0:
+            step = min(chunk, pos)
+            pos -= step
+            fh.seek(pos)
+            lines = (fh.read(step) + tail).split(b'\n')
+            tail = lines[0]
+            yield from reversed(lines[1:])
+        yield tail
+
+
+def prompt_text(line: bytes) -> str | None:
+    """The text of a transcript record the user typed, else None: a tool
+    result, hook feedback (isMeta), a subagent's thread (isSidechain) and a
+    task notification (origin.kind) are not the user's words."""
+    if USER not in line or TOOL_RESULT in line:
+        return None
+    try:
+        record = json.loads(line)
+    except ValueError:
+        return None
+    if not isinstance(record, dict) or record.get('type') != 'user':
+        return None
+    if record.get('isMeta') or record.get('isSidechain'):
+        return None
+    origin = record.get('origin')
+    if isinstance(origin, dict) and origin.get('kind') != 'human':
+        return None
+    message = record.get('message')
+    content = message.get('content') if isinstance(message, dict) else None
+    if isinstance(content, str):
+        return content
+    if not isinstance(content, list):
+        return None
+    blocks = [b for b in content if isinstance(b, dict)]
+    if any(b.get('type') == 'tool_result' for b in blocks):
+        return None
+    return '\n'.join(str(b.get('text', '')) for b in blocks if b.get('type') == 'text')
+
+
+def latest_prompt(transcript_path: str | None) -> str:
+    """The newest message the user typed, read from the end of the session
+    transcript; '' when there is none or the transcript cannot be read."""
+    if not transcript_path:
+        return ''
+    try:
+        for line in iter_lines_reversed(transcript_path):
+            text = prompt_text(line)
+            if text is not None:
+                return text
+    except OSError:
+        return ''
+    return ''
+
+
 def describe(problems: list[Problem]) -> str:
     shown = '; '.join(
         f'L{p.line} {p.text}' if p.line else p.text for p in problems[:SHOWN_PROBLEMS]
@@ -371,9 +479,16 @@ def find_posts(code: str) -> list[tuple[int, Kind, bool]]:
 
 
 def segment_reason(
-    segment: str, docs: list[str], cwd: str, kind: Kind, required: bool
+    segment: str,
+    docs: list[str],
+    cwd: str,
+    kind: Kind,
+    required: bool,
+    transcript_path: str | None = None,
 ) -> str | None:
     try:
+        if is_submit(segment, docs, cwd) and SUBMIT_ASK not in latest_prompt(transcript_path):
+            return SUBMIT_REFUSED
         bodies = read_bodies(segment, docs, cwd)
     except OSError as err:
         return str(err)
@@ -395,8 +510,12 @@ def segment_reason(
     return None
 
 
-def command_reason(command: str, cwd: str | None = None) -> str | None:
-    """Why a gh command that posts text must not run, or None when it may."""
+def command_reason(
+    command: str, cwd: str | None = None, transcript_path: str | None = None
+) -> str | None:
+    """Why a gh command that posts text must not run, or None when it may: a
+    body that fails the lint, or a review submit the newest message the user
+    typed (in the transcript at `transcript_path`) did not ask for."""
     try:
         code, docs = mark_heredocs(command)
         code = CONTINUATION.sub('', code)
@@ -404,7 +523,12 @@ def command_reason(command: str, cwd: str | None = None) -> str | None:
         ends = [at for at, _, _ in posts[1:]] + [len(code)]
         for (at, kind, required), end in zip(posts, ends):
             reason = segment_reason(
-                code[at:end], docs, effective_cwd(code[:at], cwd or os.getcwd()), kind, required
+                code[at:end],
+                docs,
+                effective_cwd(code[:at], cwd or os.getcwd()),
+                kind,
+                required,
+                transcript_path,
             )
             if reason:
                 return reason

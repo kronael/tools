@@ -92,6 +92,19 @@ git -C "$d" init -q
 echo "{\"cwd\": \"$d\"}" | python3 ~/.claude/hooks/stop.py
 ```
 
+### pretool_nudge.py — a review submit needs SUBMIT REVIEW in the user's newest message
+
+```bash
+t=$(mktemp)
+printf '%s\n' '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"yes, go"}}' > "$t"
+printf '{"tool_name":"Bash","transcript_path":"%s","tool_input":{"command":"gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT"}}' "$t" | python3 ~/.claude/hooks/pretool_nudge.py
+printf '%s\n' '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"SUBMIT REVIEW"}}' >> "$t"
+printf '{"tool_name":"Bash","transcript_path":"%s","tool_input":{"command":"gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT"}}' "$t" | python3 ~/.claude/hooks/pretool_nudge.py
+```
+
+Expected: the first call prints a `block` with `review submit refused`, the
+second prints nothing.
+
 ### post_tool_nudge.sh — reflows a Markdown write only in an opted-in repo
 
 ```bash

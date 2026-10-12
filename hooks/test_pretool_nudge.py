@@ -222,6 +222,24 @@ def test_process_allows_a_pr_body_that_passes_the_github_text_lint(tmp_path) -> 
     assert process(payload) is None
 
 
+def test_process_refuses_a_review_submit_the_user_did_not_ask_for(tmp_path) -> None:
+    transcript = tmp_path / 'transcript.jsonl'
+    payload = {
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT'},
+        'cwd': str(tmp_path),
+        'transcript_path': str(transcript),
+    }
+    record = '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"%s"}}\n'
+    transcript.write_text(record % 'yes. please also verify the lease', encoding='utf-8')
+    result = process(payload)
+    assert result is not None
+    assert result['decision'] == 'block'
+    assert 'review submit refused' in result['reason']
+    transcript.write_text(record % 'SUBMIT REVIEW', encoding='utf-8')
+    assert process(payload) is None
+
+
 def test_process_blocks_recursive_codex_inside_codex() -> None:
     result = process(
         {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
