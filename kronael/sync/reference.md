@@ -684,23 +684,22 @@ args = ["start-mcp-server", "--project-from-cwd", "--context=codex"]
 Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
 agent a ranked, deterministic call-graph map of a repo — relevant symbols,
 callers, change-risk, tests to run — instead of blind grepping. Offline C++
-binary: no API key, no embeddings, no daemon, no network calls. Install the
-prebuilt binary (the installer verifies a mandatory sha256 and prompts for
-consent):
+binary: no API key, no embeddings, no daemon, no network calls. The `codemap`
+skill is its entry point. Install the prebuilt binary only (the installer
+verifies a mandatory sha256 and prompts for consent):
 
 ```sh
-RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+RIPWIRE_NO_ACTIVATE=1 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
 ```
 
-- Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
-  skills into `~/.claude/skills` — namespaced, so they never collide with
-  kronael skills. As symlinks they survive every sync without a keep-list
-  line. It also detects `~/.codex`/`~/.agents` and activates for
-  Codex.
+- Installs `ripwire` to `~/.local/bin` and touches no agent config.
+- Without `RIPWIRE_NO_ACTIVATE=1` it also symlinks its 17 `ripwire-*` skills
+  into `~/.claude/skills` and activates for Codex when it finds `~/.codex` or
+  `~/.agents`. Each adds an always-on listing entry that `codemap` already
+  covers. As symlinks they survive a sync without a keep-list line.
 - Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
   armed they log only a local hashed routing meter, never prompt/command/path
   text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
-- `RIPWIRE_NO_ACTIVATE=1` installs the binary only, touching no agent config.
 - MCP (optional second interface — CLI + skills already work without it). Use
   ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
   and never edits any config — you run it:
