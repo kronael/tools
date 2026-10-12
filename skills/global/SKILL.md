@@ -150,7 +150,8 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - Tee once, read the file: `<cmd> 2>&1 | tee ./tmp/out.log && tail -20
   ./tmp/out.log`. NEVER re-run a command to see another part of its output.
 - NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
-  explicitly named files, or leave cleanup to the user.
+  explicitly named files, or leave cleanup to the user. One lift: `git worktree
+  remove --force` after the checks in `worktree` § Removing a worktree.
 - NEVER kill a process you did not start, not even to free a port; kill your
   own by PID.
 - NEVER hit an external API per request, and NEVER re-fetch what is already on
