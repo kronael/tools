@@ -1,6 +1,6 @@
 # Shape skeletons — step 5 of `scavenge`
 
-Pick one. Length and style: `wisdom` § SKILL.md body.
+Pick one. Length and style: `wisdom` § SKILL.md body; no emoji.
 
 ## SKILL — `~/.claude/skills/<name>/SKILL.md`
 

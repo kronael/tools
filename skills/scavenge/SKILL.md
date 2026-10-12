@@ -86,7 +86,7 @@ the critique file untouched as audit trail.
 ### Step 5 — write the artifact
 
 Pick the shape skeleton below. Length, directive form and style per
-`wisdom` § SKILL.md body.
+`wisdom` § SKILL.md body; no emoji.
 
 **Critique checkpoint 2 (post-write).** Before declaring step 5 done,
 re-read and verify:
