@@ -52,5 +52,5 @@ there; lint: spec-status (hard fail).
 ## Before commit
 
 ALWAYS run `python3 ~/.claude/hooks/spec_lint.py specs` from the repo root. It
-checks everything above except one judgement: the spec says WHY and WHERE,
-never HOW.
+checks everything above except two judgements: the spec says WHY and WHERE,
+never HOW, and no doc or code links a spec.

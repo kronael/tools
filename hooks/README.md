@@ -16,7 +16,7 @@ model, context use, and the 5-hour and weekly limits in whole percent.
 `skill_frontmatter_lint.py` and `spec_lint.py` also live in `hooks/` and run
 on demand, not from a lifecycle event: the first from `make skills-frontmatter`
 and pre-commit, the second from `make spec-lint SPECS=<dir>` or by hand in a
-project before a spec commit (`../skills/specs/format.md` § Self-review before
+project before a spec commit (`../skills/specs/format.md` § Before
 commit).
 
 ## The hooks
