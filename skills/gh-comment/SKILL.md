@@ -74,7 +74,7 @@ reasoning that got you there.
 
 ```
 🤖 🔴 Charges `sold_qty`, the RETAINED piece, so it liquidates the wrong account.
-Fix: use the sale leg's lamports here.
+Fix: use the sale leg here.
 ```
 
 ## Batch inline post

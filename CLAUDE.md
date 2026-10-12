@@ -184,8 +184,9 @@ the wiring being right and the tool running are different claims.
 - ALWAYS bump `plugins/kronael/.codex-plugin/plugin.json` `version` too. Codex
   caches plugins by version, so a stale version keeps serving the old bridge
   skill.
-- ALWAYS run the leak scan before tagging; a hit blocks the tag. Grep `git
-  diff <last tag>..HEAD` and `git log <last tag>..HEAD --format=%B` for each
+- ALWAYS run the leak scan before tagging; a hit on an ADDED line (`^+` in
+  `git diff <last tag>..HEAD`) or in `git log <last tag>..HEAD --format=%B`
+  blocks the tag — a removed line is the fix, not a leak. Grep both for each
   name in `~/.claude/LOCAL.md` § Private names, then read both for specifics no
   list predicts: a host, domain, metric, palette, incident or person.
 - ALWAYS list every approach extracted or distilled from private work — a
