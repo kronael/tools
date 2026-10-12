@@ -45,6 +45,7 @@ ignore = [
 "**/main.py"   = ["T20"]                   # CLI entry points print status to stdout
 "tg-fetch/*.py" = ["T20"]                  # tg-fetch contains CLI entry-point scripts
 "skills/recall-memories/*.py" = ["T20", "S603", "S607"]  # CLI prints results, runs git
+"skills/serena/*.py" = ["T20", "S603", "S607"]  # CLI prints the reply, runs git and serena
 
 [lint.isort]
 force-single-line = true

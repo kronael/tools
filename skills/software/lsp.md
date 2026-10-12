@@ -1,11 +1,30 @@
 # Language servers and code-intelligence MCP
 
-Two independent mechanisms. ALWAYS set up both — they answer different questions.
+Three independent mechanisms that answer different questions. ALWAYS set up
+the first two; Serena never runs as a server.
 
 | Mechanism | Surfaces as | Coverage |
 |---|---|---|
-| LSP plugin | `LSP` tool (hover, goToDefinition, findReferences, callHierarchy) | go, rust, python, typescript |
-| MCP server | `go_*` tools (diagnostics, package API, symbol refs, vulncheck) | Go only — no other language ships one |
+| LSP plugin | `LSP` tool (hover, goToDefinition, findReferences, goToImplementation, callHierarchy) — read-only, no rename | go, rust, python, typescript |
+| gopls MCP | `go_*` tools (diagnostics, package API, symbol refs, rename diff, vulncheck) | Go only |
+| Serena, one call at a time | the `serena` skill's `call.py rename_symbol` — a rename that follows the language server's references | the languages its table names |
+
+## Which tool changes code
+
+The language tools (gopls, ts-morph, LibCST, `go fix`) live in each language
+skill; listings and comment edits in `astgrep`.
+
+- ALWAYS rename a symbol with the tool the `serena` skill's language table
+  names — NEVER grep-and-edit. It follows the language server, so
+  `module.name` access from other files renames too.
+- ALWAYS find a symbol's callers (`LSP` findReferences) and an interface's
+  implementers (goToImplementation) before changing a signature — NEVER grep
+  for them. In Go, ALWAYS the `go` skill's `go_symbol_references` instead.
+  Serena's `find_referencing_symbols` returned the same set at 3-7 times the
+  bytes (Python 7.4x, Go 3.1x).
+- One text change across many files that is no symbol (a config key, a log
+  string): ALWAYS list every hit with `rg -n` before the edit and read `git
+  diff` after — NEVER a blind `sed -i`.
 
 ## The rule that bites
 

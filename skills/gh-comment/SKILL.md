@@ -1,7 +1,7 @@
 ---
 name: gh-comment
-description: Post inline review comments to a GitHub PR, and reply to / resolve existing review threads. Handles pending review conflicts, batch inline comments, thread fetch/reply/resolve, and fallback general comments for lines outside the diff. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
-when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status"
+description: Post inline review comments to a GitHub PR, reply to and resolve review threads. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
+when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status, pending review conflict, batch inline comments, comment on a line outside the diff, re-review request"
 user-invocable: false
 ---
 
@@ -197,11 +197,4 @@ gh pr comment <PR> --body "🤖 @<reviewer> <verb + object>. Please re-review."
 - NEVER expect to append to a pending review — `POST /pulls/<PR>/reviews/<review_id>/comments`
   returns 404. ALWAYS `DELETE /pulls/<PR>/reviews/<review_id>` and re-POST the whole
   `comments[]`, then report the new review id and comment count
-- ALWAYS resolve a fixed thread with NO reply, only once the user's push has
-  landed; NEVER resolve one this pass did not address
-- ALWAYS reply to a won't-fix, deferred or refuted thread before resolving it —
-  it has no commit to point at
-- ALWAYS post ONE re-review request once the push has landed — a general
-  comment @-mentioning the reviewer, the round's most important fix as verb +
-  object in ≤4 words; NEVER a per-thread "fixed" reply
 - NEVER confuse a thread's GraphQL `id` (resolve) with a comment's REST `databaseId` (reply) — mixing them 404s

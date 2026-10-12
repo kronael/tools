@@ -14,7 +14,7 @@ Draw with Unicode box-drawing chars, pipe through `udfix` to correct junctions:
 echo '<diagram>' | udfix
 ```
 
-`udfix` is at `udfix/` in this repo — install with `make install`.
+`udfix` ships in the bundle source repo (`udfix/`, `make install`).
 
 ## Characters
 

@@ -287,6 +287,32 @@ def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
     assert run_lint(tmp_path).returncode == 0
 
 
+def test_git_ignored_directories_are_not_scanned(tmp_path: Path) -> None:
+    """A research checkout under the ignored tmp/ is scratch, not the bundle."""
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('tmp/\n/notes.md\n')
+    scratch = tmp_path / 'tmp' / 'checkout'
+    scratch.mkdir(parents=True)
+    make(scratch, '---\nname: other\n---\n\nNo keys.\n')
+    (scratch / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    kept = make(tmp_path, VALID)
+    (tmp_path / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    assert skill_files([tmp_path]) == [kept]
+    assert run_lint(tmp_path).returncode == 0
+
+
+def test_root_inside_an_ignored_directory_is_scanned(tmp_path: Path) -> None:
+    """Naming a path under the ignored tmp/ lints it rather than crashing git."""
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('tmp/\n')
+    scratch = tmp_path / 'tmp' / 'checkout'
+    scratch.mkdir(parents=True)
+    (scratch / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    result = run_lint(scratch)
+    assert result.returncode == 2, result
+    assert 'skill-local-path' in result.stderr
+
+
 def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
     """evals/README.md shows a real-looking path as the thing to strip."""
     doc = tmp_path / 'README.md'

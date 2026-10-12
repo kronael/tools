@@ -36,17 +36,7 @@ design and the boring-code rules live there. Below are shell-specific additions.
 - `trap 'cleanup' INT TERM` for graceful shutdown
 - `wait` after backgrounding
 
-## Fallback Patterns
-```bash
-SEED="/preferred/path"
-[[ -d "$SEED" ]] || SEED="fallback/path"
-```
-
-## Heredocs
-- `cat <<EOF` for multi-line output
-- `<<'EOF'` for no expansion
-
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
-- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per the `ops` skill.
+- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per WISDOM § Environment.

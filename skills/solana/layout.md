@@ -67,19 +67,9 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
 ### Where the test-module declarations go
 
-Unit tests follow `rs`: `src/<module>_test.rs` beside its subject, declared at the top of the
-module it tests with `#[path]`, so the test module stays a child of its subject and reaches its
-private items:
-
-```rust
-#[cfg(test)]
-#[path = "price_test.rs"]
-mod price_test;
-```
-
-A bare `mod price_test;` inside `src/price.rs` resolves to `src/price/price_test.rs` and fails
-with `E0583`; the `#[path]` line is what makes the sibling file work. NEVER `<module>/tests.rs`,
-NEVER an inline `mod tests { ... }`, NEVER the declarations gathered in `lib.rs`.
+Unit tests follow `rs` § Testing: `src/<module>_test.rs` beside its subject,
+declared at the top of the module it tests with `#[path]`. That section owns
+the rule.
 
 ### Module names
 

@@ -5,22 +5,9 @@ rules + a pointer table. Convention: `../CLAUDE.md`.
 
 ## What lives where
 
-| File | Holds |
-|---|---|
-| `code.md` | language-agnostic code baseline: naming, layout, design, boring-code, grug — the base every language skill reads first (its ALWAYS Read line) |
-| `docker.md` | Python+uv two-layer Dockerfile, m4 monorepo Dockerfile generation |
-| `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
-| `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
-| `observe.md` | logging format, monitoring, alerting, error-handling hierarchy |
-| `testing.md` | test naming, diagnosing a failure from captured output, testcontainers, the smoke/e2e boundary, hangs |
-| `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
-| `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/biome/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
-| `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
-| `lsp.md` | a language server that will not start: install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats |
-| `js-perf.md` | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs |
-| `money.md` | exact arithmetic for money/token amounts: why never float (incl. the decode step), the integer → fixed-point → wide-integer → arbitrary-precision ladder, deriving the overflow bound, round once at the edge, checked add, the tests that catch it |
-| `refactor-stack.md` | re-shipping an unreviewable branch as a stack: test layer first, dividing criterion, four passes, mutation proof, deletion oracles, diffstat split, long runs, merging the base forward, evidence per branch, landing a native GitHub stack (merge-async) |
-| `credits.md` | attribution and licensing for ported or adapted work: the `NOTICE` file format, per-file header and LICENSE retention, the attribution chain through an intermediary, license compatibility |
+The dispatch table in `SKILL.md` is the one index of these files — it names
+each runbook and what it holds. `code.md` is the base every language skill
+reads first (its ALWAYS Read line).
 
 ## Editing rules
 

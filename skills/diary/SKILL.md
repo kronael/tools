@@ -1,7 +1,7 @@
 ---
 name: diary
-description: "Write diary entries to ~/.claude/projects/<slug>/diary/YYYYMMDD.md, one dir per main tree, never inside a repo. Standalone reports, audits, and analyses go beside the daily log as YYYYMMDD-<name>.md. NOT for searching entries (use recall-memories)."
-when_to_use: "after a commit, bug fix, or key decision, log this decision"
+description: "Write diary entries under ~/.claude/projects/<slug>/diary/, one dir per main tree, never inside a repo. NOT for searching entries (use recall-memories)."
+when_to_use: "after a commit, bug fix, or key decision, log this decision, standalone report, audit, analysis, postmortem, named companion file"
 user-invocable: true
 ---
 

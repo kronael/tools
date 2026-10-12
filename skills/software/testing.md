@@ -2,8 +2,8 @@
 
 ## Diagnosing Failures
 
-- NEVER re-run tests to analyze output; capture once:
-  `make test 2>&1 | tee test.log && tail -8 test.log && grep "FAILED\|failed" test.log`
+- Capture once (WISDOM § Shell), then read the file:
+  `mkdir -p tmp && make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log && grep "FAILED\|failed" ./tmp/test.log`
 - For complex failures, delegate to a subagent with the log file path.
 
 ## Naming
@@ -11,8 +11,7 @@
 - **unit**: fast, no external deps (<5s)
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
-- `make test`: unit (<5s); `make test-all`: unit + integration (what CI runs);
-  `make smoke`: production data
+- The `make test` / `test-all` / `smoke` tiers: WISDOM § House conventions.
 - Unit tests live next to the code (`*_test.go`, `test_*.py`); integration
   tests in a dedicated `tests/` directory
 

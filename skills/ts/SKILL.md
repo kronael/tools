@@ -1,7 +1,7 @@
 ---
 name: ts
 description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
+when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino; rename, move a file, ts-morph, codemod
 ---
 
 # TypeScript Style
@@ -93,6 +93,38 @@ Read on demand, in this directory:
 - ALWAYS validate external I/O with class-validator when practical
 - NEVER trust external APIs/user input with `as Type`
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
+
+## Refactor tools
+- ALWAYS rename with ts-morph `rename()`, which runs the TypeScript language
+  service — NEVER grep-and-edit, and NEVER Serena. Same script shape as the
+  move below: `getFunctionOrThrow("old").rename("new")` on the declaring file.
+- In a monorepo whose packages import each other through `dist/*.d.ts`,
+  ALWAYS load every package's tsconfig into one `Project`
+  (`addSourceFilesFromTsConfig`) and set in-memory `compilerOptions.paths`
+  from each workspace package name to its `src/index.ts`. Without it the
+  rename stops at the declaring package: 3 of 25 references in one pnpm
+  monorepo.
+- ALWAYS check a monorepo rename by rebuilding the declaring package
+  (`tsc --build --force packages/<pkg>`), then `tsc --noEmit -p` on every
+  package that uses it — NEVER `pnpm -r build`: its stale incremental state
+  exits 0 on a broken rename.
+- ALWAYS move a file with ts-morph, which rewrites every import of it —
+  NEVER by hand, and NEVER jscodeshift for a rename or move: it sees syntax,
+  not symbols. Write the script in a scratch dir with no `node_modules`
+  above it, where `bun <script>.ts` auto-installs ts-morph — NEVER add it to
+  the project's `package.json` for a one-off:
+  ```ts
+  import { Project } from "ts-morph"
+  const p = new Project({ tsConfigFilePath: "/home/u/app/tsconfig.json" })
+  p.getSourceFileOrThrow("/home/u/app/src/a.ts").move("lib/a.ts")
+  for (const f of p.getSourceFiles())
+    if (!f.isSaved())
+      console.log(`// ${f.getFilePath()}\n${f.getFullText()}`)
+  ```
+  A relative target resolves from the moved file's own directory:
+  `src/a.ts` with `move("lib/a.ts")` lands at `src/lib/a.ts`. Read the
+  rewritten text it prints — the files on disk still hold the old text —
+  then append `await p.save()` and run it again.
 
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:

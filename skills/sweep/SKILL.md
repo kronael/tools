@@ -1,6 +1,6 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase, then optionally fix it. Record-only by default (the `bugs` skill's Bug Triage Protocol) — filing each real instance in BUGS.md; the Fix and Verify phases run only when the owner asks for them. NOT for a single known bug (use /bugs), NOT for a targeted one-file change (use /improve), NOT for foreground/inline audits (use /dispatch directly).
+description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs), a one-file change (use /improve) or an inline audit (use /dispatch).
 when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
 user-invocable: true
 ---
@@ -27,7 +27,7 @@ launch shape as `/dispatch`) a background agent that audits the **entire**
 codebase for one problem CATEGORY and files each real instance as its own
 `BUGS.md` entry, per `/bugs`'s format/ID rules (read that skill first — sweep
 is the search, not the file mechanics). Record only — never fix what it finds
-(the `bugs` skill's Bug Triage Protocol).
+(WISDOM § Bug triage).
 
 #### Category
 
@@ -77,10 +77,9 @@ Spawn one opus sub per concern. Hard rules:
 
 - **One concern per sub** — authz scope is not migrate enumeration is not
   dispatch lifecycle. If a "fix" spans concerns, split it.
-- **Sequential on the shared tree** — NEVER run two code-editing subs in
-  parallel on the same checkout. They interleave: one reverts the other's
-  edits, mid-flight commits, half-edited files. `Skill(worktree)` decides
-  when a sub gets its own detached worktree, and how.
+- **Sequential on the shared tree** — NEVER run writing subs in parallel
+  on a shared tree (WISDOM § Agents); `Skill(worktree)` decides when a sub
+  gets its own detached worktree, and how.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need

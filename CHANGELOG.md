@@ -2,22 +2,24 @@
 
 ## [v0.4.31] — 20261012
 
-> kronael v0.4.31 — pages that come out finished
+> kronael v0.4.31 — Code maps and language-server renames on demand
 >
-> The writing and readme skills now carry the page rules an owner used to type by hand, plus a trial form audit.
+> Two new skills map a codebase and rename symbols through the language server, and both run only when called.
 >
-> • Writing — a 15-item handover checklist; the mechanical items become keeper checks in `make lint`.
-> • Pages — answer first, then how the parts fit, limits before flow detail, the decide section last.
-> • Lenses — a study page runs the CEO, CTO and novice reads before handover.
-> • Form audit (trial) — a headless browser measures layout, type, contrast and figures at two widths.
+> • codemap — ripwire overview, task lookup, callers, blast radius, and graphs drawn from the code.
+> • serena — one-shot Python and Rust rename, plus a check for code behind disabled cargo features.
+> • Renames — each language names its tool: serena, gopls rename, or ts-morph with workspace paths.
+> • Skills — one file owns each rule; long reference moved to files read on demand.
+> • Lint — the skill lint skips git-ignored paths, so scratch checkouts no longer fail it.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, a conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
-- `readme/page.md`: what a study page holds and in what order — the answer first, how the parts fit, limits before flow detail, each flow its own block, the decide section last — plus the CEO, CTO and novice lenses before handover.
-- `readme/onepager.md`: the problem section leads with the reader's cost today and the change the project makes.
-- `readme/topology.md`: the `writing/page.md` keeper items wire into `make lint`; the study page carries an update rule.
-- `create/form.md`: a trial form audit — a headless browser measures layout, type, contrast and figures at 1440 and 375, light and dark — reached by a `create` dispatch row.
+- `codemap`: ripwire maps, `--for`, callers, uses, impact, Mermaid and HTML call graphs; goda, pydeps.
+- `serena`: `call.py` runs Serena for one call over stdio; it is never an MCP server.
+- Renames: Python and Rust through `serena`, Go through `gopls rename`, TypeScript through ts-morph.
+- Install: ripwire is binary-only and never an MCP server; Serena sets `web_dashboard: false`.
+- Skills: repeated rules point at one owner; port-to-go, browse and wisdom overflow moved to siblings.
+- `make skills-frontmatter`: skips git-ignored paths and no longer crashes on a root inside one.
 
 ## [v0.4.30] — 20261010
 

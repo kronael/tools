@@ -15,6 +15,7 @@ import csv
 import json
 import os
 import re
+import subprocess
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -101,14 +102,53 @@ class Finding:
     message: str
 
 
+def run_git_ls_files(root: Path) -> set[Path]:
+    absolute = root.absolute()
+    ancestors = absolute, *absolute.parents
+    top = next((ancestor for ancestor in ancestors if (ancestor / '.git').exists()), None)
+    if top is None:
+        return set()
+    listing = subprocess.run(
+        [
+            'git',
+            '-C',
+            str(top),
+            'ls-files',
+            '-z',
+            '--others',
+            '--ignored',
+            '--exclude-standard',
+            '--directory',
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    ignored: set[Path] = set()
+    for entry in listing.stdout.split('\0'):
+        path = top / entry.rstrip('/')
+        if entry and path.is_relative_to(absolute):
+            ignored.add(root / path.relative_to(absolute))
+    return ignored
+
+
 def visible_files(root: Path, pattern: str) -> list[Path]:
-    """Files under `root` matching `pattern`, skipping hidden directories: they
-    hold ignored state such as `.cache/` and the `.git` store, not source.
+    """Files under `root` matching `pattern`, skipping hidden directories and
+    what git ignores: they hold state such as `.cache/`, the `.git` store and
+    `tmp/` scratch, not source.
     """
+    ignored = run_git_ls_files(root)
     found: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
-        found.extend(Path(dirpath) / name for name in filenames if fnmatch(name, pattern))
+        directory = Path(dirpath)
+        dirnames[:] = [
+            d for d in dirnames if not d.startswith('.') and directory / d not in ignored
+        ]
+        found.extend(
+            directory / name
+            for name in filenames
+            if fnmatch(name, pattern) and directory / name not in ignored
+        )
     return found
 
 
@@ -197,7 +237,7 @@ def fix_frontmatter(text: str) -> str:
 
 def check_keys(path: Path, meta: dict | None) -> list[Finding]:
     if meta is None:
-        return []  # unparseable YAML — the frontmatter check owns that failure
+        return []
     findings: list[Finding] = []
     missing = [key for key in REQUIRED_KEYS if not str(meta.get(key, '')).strip()]
     if missing:
@@ -424,13 +464,12 @@ def process(path: Path, write: bool) -> int:
         text = f'---\n{fixed}---\n\n{body}'
         path.write_text(text)
         print(f'fixed: {path}')
-        meta, status = fixed, 1
+        meta = fixed
+        status = 1
     elif error is not None:
         print(f'needs fix: {path} ({error})')
         status = 1
 
-    # A repaired file still has to conform; fixing the YAML says nothing about
-    # the name, the keys or the listing budget.
     for finding in check_body(path, text, parse_meta(meta), body):
         print(finding.message, file=sys.stderr)
         if finding.severity is Severity.ERROR:

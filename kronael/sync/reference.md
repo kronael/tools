@@ -611,7 +611,9 @@ Run `which <tool>` first; skip if present and recent.
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
 | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
-| `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
+| `ast-grep` | `uv tool install --upgrade ast-grep-cli && rm -f ~/.local/bin/sg` — `--upgrade` because `ast-grep outline` needs a recent release (0.50 has it) | /astgrep |
+| `ruff` | `uv tool install ruff` | /py |
+| `serena` | `uv tool install -p 3.13 serena-agent && serena init`, then the config below | /serena |
 
 `pi` ships a `#!/usr/bin/env node` shebang but its TUI uses the `v` regex flag,
 which needs Node 20+. On an older system node every invocation dies with
@@ -628,6 +630,23 @@ SH
 chmod +x ~/.local/bin/pi
 ```
 
+**Serena** — an MCP server over the installed language servers that also
+edits. The `serena` skill runs it one-shot over stdio for a rename; NEVER
+register it with `claude mcp add` or in `~/.codex/config.toml` — a
+registered server loads its tool list and manual into every session that
+touches it. After `serena init`, set three keys in
+`~/.serena/serena_config.yml`:
+
+- `project_serena_folder_location: "<home>/.serena/projects/$projectFolderName"`,
+  `<home>` written out as an absolute path. The default `$projectDir/.serena`
+  writes Serena's cache and `project.yml` into every repo it opens — agent
+  files NEVER live in a repo. Only `$projectDir` and `$projectFolderName`
+  expand, so two checkouts with one folder name share one project folder.
+- `web_dashboard: false` — else every one-shot start also starts a web
+  dashboard server and opens a browser tab for it.
+- `excluded_tools: [onboarding, list_memories, read_memory, write_memory, edit_memory, rename_memory, delete_memory]`
+  — memory lives in Claude Code auto-memory and the diary; NEVER a second store.
+
 **Security audit** — ask separately (large, optional):
 
 | Tool | Command | Skills |
@@ -643,6 +662,7 @@ chmod +x ~/.local/bin/pi
 
 | Tool | Command | Skills |
 |------|---------|--------|
+| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended dvisvgm`), output needs `ffmpeg` | /create (manim) |
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 ## ripwire — deterministic codebase maps for agents (step 7)
@@ -650,33 +670,27 @@ chmod +x ~/.local/bin/pi
 Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
 agent a ranked, deterministic call-graph map of a repo — relevant symbols,
 callers, change-risk, tests to run — instead of blind grepping. Offline C++
-binary: no API key, no embeddings, no daemon, no network calls. Install the
-prebuilt binary (the installer verifies a mandatory sha256 and prompts for
-consent):
+binary: no API key, no embeddings, no daemon, no network calls. The `codemap`
+skill is its entry point. Install the prebuilt binary only, at the version
+`codemap` was verified on (the installer verifies a mandatory sha256; its
+`y/N` prompt reads nothing under Claude Code's `!`, so `RIPWIRE_INSTALL_YES=1`
+stands in for it — running the command is the consent):
 
 ```sh
-RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+RIPWIRE_NO_ACTIVATE=1 RIPWIRE_INSTALL_YES=1 RIPWIRE_VERSION=v0.6.5 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
 ```
 
-- Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
-  skills into `~/.claude/skills` — namespaced, so they never collide with
-  kronael skills. As symlinks they survive every sync without a keep-list
-  line. It also detects `~/.codex`/`~/.agents` and activates for
-  Codex.
+- Installs `ripwire` to `~/.local/bin` and touches no agent config.
+- Without `RIPWIRE_NO_ACTIVATE=1` it also symlinks 16 of its 17 `ripwire-*`
+  skills into `~/.claude/skills` (`ripwire-opt-remarks` stays staged unless
+  `--contributor`) and activates for Codex when it finds `~/.codex` or
+  `~/.agents`. Each adds an always-on listing entry that `codemap` already
+  covers. As symlinks they survive a sync without a keep-list line.
 - Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
   armed they log only a local hashed routing meter, never prompt/command/path
   text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
-- `RIPWIRE_NO_ACTIVATE=1` installs the binary only, touching no agent config.
-- MCP (optional second interface — CLI + skills already work without it). Use
-  ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
-  and never edits any config — you run it:
-  - Claude Code: `ripwire wrap claude` → `claude mcp add ripwire -- ripwire --mcp`
-    (append `--scope user` for all projects; writes `mcpServers` into
-    `~/.claude.json`, NOT `settings.json`). NEVER put `mcpServers` in
-    `settings-recommended.json`.
-  - Codex: `ripwire wrap codex` → a `[mcp_servers.ripwire]` stanza for
-    `~/.codex/config.toml` (CLI-first; MCP restricted to audit/health verbs).
-  - `ripwire wrap --all` detects every installed agent and emits each config.
+- NEVER register ripwire as an MCP server — ALWAYS let `codemap` run the
+  CLI on demand.
 
 ## CLI tools (step 8)
 

@@ -153,14 +153,7 @@ immersion the theme built.
   not just `0..N`) and let the real proof sit between them in the compose
   script. This guarantees the closer matches the opener's grade/grain/shadow
   exactly, because it *is* the opener's asset pipeline, not a re-creation of it.
-- **A themed medium can still spell out words without breaking its rules.**
-  You don't need a photo of text to stay "in medium" — construct letters the
-  same way you'd construct any non-photographic paper piece already in the
-  rig (a flat-color cut shape + the same dark ink-edge stroke + the same
-  drop-shadow direction as everything else): render bold glyphs, colorize,
-  ink-edge the WHOLE word as one silhouette (one rim around the word, not one
-  rim per letter — six separately-inked letters read as stickers, not a sign).
-  Tying the wordmark's colors to another beat's palette (e.g. the same
-  value-ramp hex stops the terminal's tiles use) makes the payoff rhyme with
-  the proof beat instead of needing a tagline to explain the connection.
+- **A themed medium can still spell out words without breaking its rules** —
+  the wordmark is one more cut-paper piece built in the rig: `cutout.md`
+  § The closer stays in the same paper world.
 

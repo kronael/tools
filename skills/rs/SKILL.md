@@ -1,7 +1,7 @@
 ---
 name: rs
 description: Rust development. NOT for non-Rust code (use go, py, ts, tsx, or sh).
-when_to_use: editing .rs files or writing Rust code
+when_to_use: editing .rs files or writing Rust code; rename a Rust symbol, rust-analyzer ssr
 ---
 
 # Rust
@@ -186,6 +186,12 @@ tokio::spawn(fetch_and_process(client));
   carrying a `//` reason on the line directly above — one of the in-body
   comments `software/code.md` § Comments allows. NEVER `// SAFETY:` for it;
   that marker is reserved for `unsafe`.
+
+## Refactor tools
+- ALWAYS rename with the `serena` skill, then its check for code behind a
+  disabled cargo feature — NEVER grep-and-edit.
+- NEVER `rust-analyzer ssr` — it rewrites files in place with no preview.
+  ALWAYS a scoped `ast-grep scan` rule instead (`astgrep` skill).
 
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)
