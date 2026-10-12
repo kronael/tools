@@ -97,6 +97,8 @@ A spec is for the change, not for the state it leaves behind.
   path AND its handle (`spec 4/6`, `4/6`) first; a path-only grep misses the
   handle. ALWAYS re-point every citation in the same change to the file that
   now holds the fact, as a path, so no link text is left pointing at nothing.
+- NEVER count a `CHANGELOG.md` entry as a citation: entries are history, so
+  one naming the spec neither blocks the delete nor gets re-pointed.
 
 ## Self-review before commit
 
