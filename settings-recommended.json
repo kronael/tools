@@ -147,5 +147,12 @@
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   },
   "outputStyle": "caveman",
-  "cleanupPeriodDays": 3650000
+  "cleanupPeriodDays": 3650000,
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  }
 }
