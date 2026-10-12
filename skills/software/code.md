@@ -73,6 +73,9 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER a source line number or a diff-gutter number (`255 +`) in a comment —
   point to a file or function: `see line 200` → `see parse_header`.
 - NEVER a ticket number or issue ID in a comment.
+- NEVER cite a spec or doc by handle (`spec 4/6`) — ALWAYS by its
+  repo-relative path (`specs/4/6-agents.md`). A path breaks loud in a link
+  check when the file moves; a handle rots silently.
 - ALWAYS confine comments inside a body to three narrow exceptions, each owned
   by the skill that states it and valid only on the construct it names: a
   test's scenario-to-outcome intro (`testing.md`), a `// SAFETY:` invariant on

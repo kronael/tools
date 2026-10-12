@@ -178,11 +178,13 @@ findings and remaining decisions. Distinguish verified local delivery,
 waiting for approval, and a blocked acceptance item. NEVER call a blocked
 or merely prepared destination shipped.
 
-Use `diary` for decisions and open items, `specs` for durable architecture,
-and `next` § Later for owner-deferred follow-ups. Release notes belong to
-`release`. Retain the plan while paused, blocked or waiting for delivery
-approval. On completion, distill durable content, then prune only named
-scratch files under the project's policy. Directory removal is the owner's.
+Use `diary` for decisions and open items, `readme` for the shipped state in
+ARCHITECTURE.md and README.md (the spec folds into them and goes: `specs` →
+`format.md`), and `next` § Later for owner-deferred follow-ups. Release
+notes belong to `release`. Retain the plan while paused, blocked or waiting
+for delivery approval. On completion, distill durable content, then prune
+only named scratch files under the project's policy. Directory removal is
+the owner's.
 
 Completion criterion: the owner can see what landed and what remains, and
 unfinished work has an exact resume point.

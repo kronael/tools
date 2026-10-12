@@ -17,6 +17,7 @@ page's craft: `page.md`. Prose: `writing`.
 | `FEATURES.md` | What does it do today, and which test proves it? |
 | `BUGS.md` | What is open: defects, deliberate limits, decisions owed? Format: `bugs`. |
 | `TODO.md` | What is deferred and not yet a spec? Format: `next` § Later. |
+| `specs/<NN>-<topic>.md` | What change is in flight, and why? Deleted when it ships; what stays true moves to the rows above. Format: `specs`. |
 | `<pkg>/README.md` | How does a caller use this package? |
 | `test/research/README.md`, `test/research/<project>.md` | What else does this job, and how does this differ? |
 | `test/research/verified.md` | Where does each number in these documents come from? |
@@ -131,6 +132,7 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 
 - every FEATURES.md row's test exists at its path, and every `untested` id
   exists in `BUGS.md`;
+- every path the ARCHITECTURE.md repository map names exists;
 - every page claim's link carries `data-evidence="path::exact test name"` or
   `data-evidence="BUGS.md::<BUG-ID>"`, checked the same way;
 - every number of two or more digits in the README, FEATURES.md, the package
@@ -140,9 +142,10 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
   test, so a parser that matches nothing cannot pass;
 - every item `writing/page.md` § Before handing over marks `keeper`, each
   with its planted failure and a stated pass condition;
-- every Markdown file passes `rumdl check .` — wrapped at the width and clean
-  on the enabled rules (`software/code.md` § Layout and formatting names the
-  config and the hook that runs it on each write).
+- every Markdown file passes `rumdl check .` — wrapped at the width, every
+  relative link resolving (MD057) and clean on the enabled rules
+  (`software/code.md` § Layout and formatting names the config and the hook
+  that runs it on each write).
 
 ## CLAUDE.md files
 
@@ -155,7 +158,8 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 
 ## Tracked and local
 
-- Every file above is tracked, `BUGS.md` included — it is in the reading order.
+- Every file above but `specs/` is tracked, `BUGS.md` included — it is in the
+  reading order.
 - Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
   them — a bare `specs/` matches at every depth and swallows a real
   `src/specs/`. A repo that already tracks `specs/` keeps tracking it.
