@@ -805,7 +805,7 @@
   has tested it here, because this box has no `/dev/kvm` access.
 
 - **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
-  `qemubox -n x -E exec sudo poweroff` ends with ssh's
+  `qemubox -n x -T exec sudo poweroff` ends with ssh's
   "kex_exchange_identification: Connection reset by peer" and
   `qemubox:326` "cannot remove session marker; keeping qemubox-x running",
   while `qemubox status x` already reports `process=stopped`. `running` at

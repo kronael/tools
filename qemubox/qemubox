@@ -9,7 +9,7 @@ GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
-EPH_WORKDIR=/tmp/work
+TMP_WORKDIR=/tmp/work
 agent_tokens=(CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY)
 
 name_override=""
@@ -22,7 +22,7 @@ docker_sock=""
 docker_remote=""
 persist_builds=""
 eph_no_tmpfs=""
-eph_session=""
+tmp_session=""
 new_session=""
 gcloud_creds=""
 gpg_forward=""
@@ -72,7 +72,7 @@ Options:
     -x tool    Alias for -d, matching dockbox
     -e VAR     Forward env var into the session
     -v path    Extra 9p mount at same path ro by default; path:rw for read-write
-    -E         Ephemeral session: mount no project dir, start in $EPH_WORKDIR
+    -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
                (guest tmpfs, lost at power-off); VM name tmp unless -n;
                implies -N
     -N         New Claude session: skip the resume picker
@@ -87,7 +87,7 @@ Options:
     -g         Forward GH_TOKEN / GITHUB_TOKEN into the session
     -G         Mount ~/.config/gcloud ro
     -P         Keep project build dirs on the host (--no-ephemeral)
-    -T         Put build-dir overmounts on guest disk; /tmp stays tmpfs
+    -B         Put build-dir overmounts on guest disk; /tmp stays tmpfs
 
 Examples:
     qemubox
@@ -96,7 +96,7 @@ Examples:
     qemubox codex ~/src/repo
     qemubox bash
     qemubox -n mybox bash
-    qemubox -E bash
+    qemubox -T bash
     qemubox cargo test ~/src/repo
     qemubox -H cargo test ~/src/repo
     qemubox -v ~/src/lib ~/src/repo
@@ -115,7 +115,7 @@ Environment: QEMUBOX_MEM=16384 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
-        Project files cannot set -A/-D/-K/-S/-E/-n/-d/-x.
+        Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
 Lifecycle: last session powers off; disk survives until rm.
 Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
        Reclaim unreferenced bases except current.
@@ -1039,7 +1039,7 @@ apply_flag() {
                 *:rw) extra_modes+=(rw) ;;
                 *) extra_modes+=(ro) ;;
             esac ;;
-        E) eph_session=1 ;;
+        T) tmp_session=1 ;;
         N) new_session=1 ;;
         H) network="" ;;
         U) untrusted=1; network="" ;;
@@ -1055,7 +1055,7 @@ apply_flag() {
         K) gpg_forward=1 ;;
         S) warnings+=("-S ignored: qemubox guest user already has passwordless sudo") ;;
         P) persist_builds=1 ;;
-        T) eph_no_tmpfs=1 ;;
+        B) eph_no_tmpfs=1 ;;
         g)
             [ -n "${GH_TOKEN:-}" ] && envs+=("GH_TOKEN=$GH_TOKEN")
             [ -n "${GITHUB_TOKEN:-}" ] && envs+=("GITHUB_TOKEN=$GITHUB_TOKEN") ;;
@@ -1079,10 +1079,10 @@ read_rc() {
 project_rc() {
     read_rc "$1/.qemuboxrc"
     OPTIND=1
-    while getopts ":n:d:x:e:v:HKUADgGPTSEN" opt "${rc_tokens[@]}"
+    while getopts ":n:d:x:e:v:HKUADgGPBTSN" opt "${rc_tokens[@]}"
     do
         case "$opt" in
-            A|D|K|S|E|n|d|x)
+            A|D|K|S|T|n|d|x)
                 echo "qemubox: ignoring -$opt in project .qemuboxrc (use ~/.qemuboxrc)" >&2 ;;
             *) apply_flag "$opt" "${OPTARG:-}" ;;
         esac
@@ -1231,10 +1231,10 @@ a wrong line here is a qemubox launcher bug.
   the box deletes its disk. Private tmpfs files, including Claude sessions
   and temporary build files, are lost at power-off.
 EOF
-    if [ -n "$eph_session" ]
+    if [ -n "$tmp_session" ]
     then
         cat <<EOF
-- No project dir is mounted. The working dir $EPH_WORKDIR is guest tmpfs: its
+- No project dir is mounted. The working dir $TMP_WORKDIR is guest tmpfs: its
   files are lost at power-off.
 EOF
     fi
@@ -1294,7 +1294,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:d:x:e:v:HKUADgGPTSEN" opt; do
+while getopts ":n:d:x:e:v:HKUADgGPBTSN" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -1320,13 +1320,13 @@ for arg in "$@"; do
     esac
 done
 
-if [ -n "$eph_session" ]
+if [ -n "$tmp_session" ]
 then
     [ "${#dirs[@]}" -eq 0 ] || {
-        echo "qemubox: -E mounts no project dir; use -v for a host path" >&2
+        echo "qemubox: -T mounts no project dir; use -v for a host path" >&2
         exit 2
     }
-    primary="$EPH_WORKDIR"
+    primary="$TMP_WORKDIR"
     name_override="${name_override:-tmp}"
     new_session=1
 else
@@ -1354,7 +1354,7 @@ for warning in "${warnings[@]}"; do
 done
 
 cd_workdir="cd $(quote "$primary")"
-[ -z "$eph_session" ] || cd_workdir="mkdir -p $(quote "$primary") && $cd_workdir"
+[ -z "$tmp_session" ] || cd_workdir="mkdir -p $(quote "$primary") && $cd_workdir"
 
 remote=""
 for arg in "${cmd[@]}" "${args[@]}"; do

@@ -29,13 +29,13 @@ eq "missing rc is empty" "${#rc_tokens[@]}" 0
     set -e
     name_override=original; entrypoint=claude
     ssh_agent=""; docker_sock=""; gpg_forward=""; warnings=()
-    persist_builds=""; eph_no_tmpfs=""; eph_session=""; new_session=""
-    printf '%s\n' '-A -D -K -S -E -n attacker -d bash -x codex -P -T -N' > "$PROJ/.qemuboxrc"
+    persist_builds=""; eph_no_tmpfs=""; tmp_session=""; new_session=""
+    printf '%s\n' '-A -D -K -S -T -n attacker -d bash -x codex -P -B -N' > "$PROJ/.qemuboxrc"
     project_rc "$PROJ"
     [ "$name_override" = original ] && [ "$entrypoint" = claude ]
     [ -z "$ssh_agent$docker_sock$gpg_forward" ]
     [ "$persist_builds$eph_no_tmpfs$new_session" = 111 ]
-    [ -z "$eph_session" ]
+    [ -z "$tmp_session" ]
     [ "${#warnings[@]}" = 0 ]
 ) > "$fixture/project-rc.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/project-rc.log"; bad "project rc safe subset"; }

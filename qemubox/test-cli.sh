@@ -60,9 +60,9 @@ STUB
     )
     if grep -q -- ' -t ' "$STUB/ssh.log"; then exit 1; fi
     [ "$(ls "$STUB/sess")" = $$ ]
-    bash "$here/qemubox" -E -n cli exec true </dev/null > "$STUB/output" 2>&1
+    bash "$here/qemubox" -T -n cli exec true </dev/null > "$STUB/output" 2>&1
     grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && mkdir -p /tmp/work && cd /tmp/work && exec codex ' "$STUB/command"
-    if bash "$here/qemubox" -E -n cli exec true "$PROJ" </dev/null > "$STUB/output" 2>&1; then
+    if bash "$here/qemubox" -T -n cli exec true "$PROJ" </dev/null > "$STUB/output" 2>&1; then
         exit 1
     else
         [ "$?" = 2 ]
@@ -70,7 +70,7 @@ STUB
     grep -q 'use -v' "$STUB/output"
     mkdir -p "$HOME/.claude/projects/-tmp-work"
     touch "$HOME/.claude/projects/-tmp-work/session.jsonl"
-    bash "$here/qemubox" -E -n cli -x claude </dev/null > "$STUB/output" 2>&1
+    bash "$here/qemubox" -T -n cli -x claude </dev/null > "$STUB/output" 2>&1
     grep -qE '&& cd /tmp/work && exec claude --model ' "$STUB/command"
     rm "$HOME/.claude/projects/-tmp-work/session.jsonl"
     rmdir "$HOME/.claude/projects/-tmp-work"

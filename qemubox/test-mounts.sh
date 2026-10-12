@@ -47,7 +47,7 @@ eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
 eq   "untrusted: no history"          "$(mount_mode /mnt/qemubox-history)" ""
 
 run_assemble 'dirs=()'
-eq "-E: project not mounted" "$(mount_mode "$PROJ")" ""
+eq "-T: project not mounted" "$(mount_mode "$PROJ")" ""
 
 run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
 eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
@@ -70,13 +70,13 @@ done
 apply_flag P; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
 eq "-P disables project overmounts" "${#paths[@]}" 1
-persist_builds=""; apply_flag T; stage_ephemeral "$eph"
+persist_builds=""; apply_flag B; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
-eq "-T chooses guest disk" "${paths[0]}" disk
-eq "-T keeps same build dirs" "${#paths[@]}" 8
+eq "-B chooses guest disk" "${paths[0]}" disk
+eq "-B keeps same build dirs" "${#paths[@]}" 8
 dirs=(); stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
-eq "-E stages no project overmount" "${#paths[@]}" 1
+eq "-T stages no project overmount" "${#paths[@]}" 1
 dirs=("$PROJ"); eph_no_tmpfs=""
 exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find stops launch"
 

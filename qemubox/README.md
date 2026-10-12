@@ -56,7 +56,7 @@ qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
 qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
-qemubox -E bash            # scratch VM: no project mount, works in /tmp/work
+qemubox -T bash            # scratch VM: no project mount, works in /tmp/work
 qemubox -N                 # new Claude session, no resume picker
 ```
 
@@ -66,10 +66,10 @@ Claude models, `codex` / `gpt` / `mini` / `spark` for Codex, `bash` / `zsh` for
 a login shell, or any binary in the VM. `exec <cmd>` passes every later argument
 through untouched. The default VM name is the project dir basename; `-n name` gives a separate box.
 
-`-E` starts an ephemeral session: qemubox mounts no project dir, and the
+`-T` starts a temporary session: qemubox mounts no project dir, and the
 session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
 The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
-dir argument is an error, and `-E` implies `-N`.
+dir argument is an error, and `-T` implies `-N`.
 
 Management:
 
@@ -119,7 +119,7 @@ depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.
 
 `-P` / `--no-ephemeral` keeps project build directories on the host.
-`-T` mounts directories backed by the guest disk, keyed by canonical path.
+`-B` mounts directories backed by the guest disk, keyed by canonical path.
 Both modes keep `/tmp` and `/tmp/cargo-target` on tmpfs, with
 `CARGO_TARGET_DIR=/tmp/cargo-target` in each session. Guest disk build data
 survives boots until removal; tmpfs data disappears at shutdown. A failed mount stops launch.
@@ -130,7 +130,7 @@ Default host access includes:
 
 1. **Your project dir(s)** — 9p-mounted at their real host paths, read-write,
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
-   read-write one. `-E` mounts no project dir.
+   read-write one. `-T` mounts no project dir.
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
    all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
@@ -200,7 +200,7 @@ What it does **not** give you — do **not** run genuinely hostile code here:
 `~/.qemuboxrc` supplies default flags, one per line, with blank lines and
 `#` comments ignored. Command-line flags override these defaults.
 The project `.qemuboxrc` applies its safe flags after command-line parsing,
-as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-E`, `-n`, `-d` and `-x`.
+as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and `-x`.
 Files contain whitespace-separated tokens, never shell code. Project rc files
 are masked read-only inside the guest.
 
