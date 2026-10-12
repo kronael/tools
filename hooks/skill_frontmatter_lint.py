@@ -15,6 +15,7 @@ import csv
 import json
 import os
 import re
+import subprocess
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -101,14 +102,51 @@ class Finding:
     message: str
 
 
+def git_ignored(root: Path) -> set[Path]:
+    probe = subprocess.run(
+        ['git', '-C', str(root), 'rev-parse', '--is-inside-work-tree'],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        return set()
+    listing = subprocess.run(
+        [
+            'git',
+            '-C',
+            str(root),
+            'ls-files',
+            '-z',
+            '--others',
+            '--ignored',
+            '--exclude-standard',
+            '--directory',
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return {root / entry.rstrip('/') for entry in listing.stdout.split('\0') if entry}
+
+
 def visible_files(root: Path, pattern: str) -> list[Path]:
-    """Files under `root` matching `pattern`, skipping hidden directories: they
-    hold ignored state such as `.cache/` and the `.git` store, not source.
+    """Files under `root` matching `pattern`, skipping hidden directories and
+    what git ignores: they hold state such as `.cache/`, the `.git` store and
+    `tmp/` scratch, not source.
     """
+    ignored = git_ignored(root)
     found: list[Path] = []
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
-        found.extend(Path(dirpath) / name for name in filenames if fnmatch(name, pattern))
+        directory = Path(dirpath)
+        dirnames[:] = [
+            d for d in dirnames if not d.startswith('.') and directory / d not in ignored
+        ]
+        found.extend(
+            directory / name
+            for name in filenames
+            if fnmatch(name, pattern) and directory / name not in ignored
+        )
     return found
 
 

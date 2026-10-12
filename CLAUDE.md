@@ -149,7 +149,7 @@ that no chain reaches. A written path names a file when it is the file's
 path from the skill root, or a trailing part of that path no other file
 under the skill shares — so a bare basename counts only while it is unique.
 `CLAUDE.md` is exempt at any depth. The same target scans every `.md` in the
-tree, hidden directories aside, for an absolute home path or a credential
+tree, hidden and git-ignored directories aside, for an absolute home path or a credential
 shape.
 
 **Both bridges work, proven by running them**

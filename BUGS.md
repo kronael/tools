@@ -474,14 +474,14 @@
   Pre-commit hands the scan every staged `.md` (`files: \.md$`,
   `.pre-commit-config.yaml:14`), while `make skills-frontmatter` and CI walk
   the tree through `visible_files()`, which skips hidden directories
-  (`hooks/skill_frontmatter_lint.py:110`). A tracked `.md` in a hidden dir is
+  (`hooks/skill_frontmatter_lint.py:132`). A tracked `.md` in a hidden dir is
   scanned on commit and skipped by the tree target. Latent: no tracked `.md`
   sits in a hidden dir. **Proposal:** one scope for both — the script drops
   hidden paths it is handed, or the pre-commit pattern excludes them.
   Changes the scan's input contract — needs sign-off; no test — design.
 
 - **SKILL-LINT-ORPHAN-WALKS-HIDDEN-DIRS** (LOW, correctness) — CONFIRMED at
-  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:326`)
+  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:349`)
   collects a skill's docs with `rglob('*.md')`, hidden dirs included, while
   `visible_files()` skips them for the tree walk. Pytest run from inside the
   skill leaves an ignored `.pytest_cache/README.md` there, and `make
@@ -489,16 +489,6 @@
   `skill-orphan`. Reproduce: `cd skills/recall-memories && uvx pytest -q
   test_recall.py`, then `make skills-frontmatter`. **Fix:** skip hidden path
   parts in `sibling_docs`, as `visible_files()` does. No test yet.
-
-- **SKILL-LINT-TARGET-WALKS-TMP** (LOW, config) — CONFIRMED 2026-10-11, no
-  test — config. `make skills-frontmatter` runs `skill_frontmatter_lint.py .`
-  and `visible_files()` skips only hidden dirs, so a `SKILL.md` under the
-  gitignored `tmp/` fails the tree target:
-  `tmp/maps-research/rw/ripwire-0.6.5-linux-x64/skills/ripwire-write-tests/SKILL.md`
-  (a research checkout) exits it 2 while
-  `python3 hooks/skill_frontmatter_lint.py skills` exits 0. Pre-commit lints
-  staged files only, so the commit gate is unaffected. **Fix:** lint the
-  bundle dirs instead of `.`, or drop the paths `git check-ignore` matches.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes

@@ -287,6 +287,19 @@ def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
     assert run_lint(tmp_path).returncode == 0
 
 
+def test_git_ignored_directories_are_not_scanned(tmp_path: Path) -> None:
+    """A research checkout under the ignored tmp/ is scratch, not the bundle."""
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('tmp/\n')
+    scratch = tmp_path / 'tmp' / 'checkout'
+    scratch.mkdir(parents=True)
+    make(scratch, '---\nname: other\n---\n\nNo keys.\n')
+    (scratch / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    kept = make(tmp_path, VALID)
+    assert skill_files([tmp_path]) == [kept]
+    assert run_lint(tmp_path).returncode == 0
+
+
 def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
     """evals/README.md shows a real-looking path as the thing to strip."""
     doc = tmp_path / 'README.md'
