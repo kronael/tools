@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.32] — 20261012
+
+> kronael v0.4.32 — pages that come out finished
+>
+> The writing and readme skills now carry the page rules an owner used to type by hand, plus a trial form audit.
+>
+> • Writing — a 15-item handover checklist; the mechanical items become keeper checks in `make lint`.
+> • Pages — answer first, then how the parts fit, limits before flow detail, the decide section last.
+> • Lenses — a study page runs the CEO, CTO and novice reads before handover.
+> • Form audit (trial) — a headless browser measures layout, type, contrast and figures at two widths.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, a conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
+- `readme/page.md`: what a study page holds and in what order — the answer first, how the parts fit, limits before flow detail, each flow its own block, the decide section last — plus the CEO, CTO and novice lenses before handover.
+- `readme/onepager.md`: the problem section leads with the reader's cost today and the change the project makes.
+- `readme/topology.md`: the `writing/page.md` keeper items wire into `make lint`; the study page carries an update rule.
+- `create/form.md`: a trial form audit — a headless browser measures layout, type, contrast and figures at 1440 and 375, light and dark — reached by a `create` dispatch row.
+
 ## [v0.4.31] — 20261012
 
 > kronael v0.4.31 — Code maps and language-server renames on demand

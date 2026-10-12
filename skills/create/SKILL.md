@@ -1,7 +1,7 @@
 ---
 name: create
 description: Router for creative artifact generation — CVs, web pages, explainers, videos, generative art, diagrams. NOT for code implementation (use language skills), Unicode box diagrams in docs (use diagrams) or de-AI-ing prose (use humanize).
-when_to_use: "interactive explainer, HTML explanation, narrated explainer, 3b1b, meme, promo loop, cutout collage, animate real photos, CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, X image, timeline image, code-shot explainer"
+when_to_use: "interactive explainer, HTML explanation, narrated explainer, 3b1b, meme, promo loop, cutout collage, animate real photos, CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, X image, timeline image, code-shot explainer, form audit, layout lint, page form checks, clipped text, empty card bottom, contrast check"
 user-invocable: true
 ---
 
@@ -35,6 +35,7 @@ the subtree files it references (`<mode>/<slug>/references/...`, `scripts/`,
 | hand-drawn-style diagram JSON for excalidraw.com | `diagram/excalidraw.md` |
 | dark-themed SVG architecture/cloud/infra diagram as HTML | `diagram/architecture-diagram.md` |
 | explore a creative space: 4 independent versions per stage, select, iterate | `divergence.md` |
+| form audit of a finished page: measurable layout, type, contrast and figure checks, headless at two widths | `form.md` |
 
 ## Principle
 

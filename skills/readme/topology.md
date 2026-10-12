@@ -138,6 +138,8 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
   membership, not meaning; a changed meaning re-runs the command;
 - the checker first refuses a planted fake citation and finds a planted real
   test, so a parser that matches nothing cannot pass;
+- every item `writing/page.md` § Before handing over marks `keeper`, each
+  with its planted failure and a stated pass condition;
 - every Markdown file passes `rumdl check .` — wrapped at the width and clean
   on the enabled rules (`software/code.md` § Layout and formatting names the
   config and the hook that runs it on each write).
