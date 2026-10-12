@@ -522,17 +522,12 @@ project `.codex/` config and enabled plugins — Kronael writes
   header — TOML then makes it part of that table — and move a `CLAUDE.md`
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
-- Project `AGENTS.md`: Codex loads one instruction file per directory, so a
-  project with `AGENTS.md` never gets its `CLAUDE.md` as a fallback, and no
-  fallback entry reaches `.claude/CLAUDE.md`. The Kronael block covers both
-  where Kronael is installed; a repo shared without it carries a pointer:
-
-  ```md
-  # AGENTS.md
-
-  Read `CLAUDE.md` first. Those are project conventions for every coding agent,
-  not Claude-specific behavior.
-  ```
+- Projects: the fallback key covers a project that keeps its instructions in
+  `CLAUDE.md`, as `wisdom` § CLAUDE.md (project) requires. Codex loads one
+  instruction file per directory, so a project with `AGENTS.md` never gets its
+  `CLAUDE.md` as a fallback, and no fallback entry reaches
+  `.claude/CLAUDE.md`; the Kronael block covers both. NEVER write a project
+  `AGENTS.md`.
 
 - `~/.agents/skills`, checked as a symlink before anything else:
   - a symlink to `~/.claude/skills` → already bridged;

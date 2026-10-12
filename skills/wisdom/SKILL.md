@@ -147,7 +147,10 @@ What a router is, when to make one, its dispatch table, file layout and the `SKI
 - ALWAYS group related rules under clear Markdown headings and bullets.
 - ALWAYS keep agent instructions in CLAUDE.md files only — NEVER an AGENTS.md
   beside or instead of one; Codex reads CLAUDE.md through
-  `project_doc_fallback_filenames` in `~/.codex/config.toml`.
+  `project_doc_fallback_filenames` in `~/.codex/config.toml`, which the
+  Kronael sync sets. The one exception is the toolkit's Codex bridge: its repo
+  root `AGENTS.md`, `codex/AGENTS.md` and the block sync writes into
+  `~/.codex/AGENTS.md`.
 
 - XML wrappers such as `<important if="…">`, descriptive tag names and the
   `.claude/rules/*.md` `paths` loader — what each does and does not do:
