@@ -12,7 +12,8 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     echo disk > "$ROOT/one/disk.qcow2"
     echo disk > "$ROOT/two/disk.qcow2"
     remove_boxes qemubox-one 'tw*'
-    [ ! -d "$ROOT/one" ] && [ ! -d "$ROOT/two" ]
+    [ ! -d "$ROOT/one" ]
+    [ ! -d "$ROOT/two" ]
     [ -d "$ROOT/keep" ]
     touch "$ROOT/keep/unknown"
     if remove_boxes keep; then exit 1; fi
@@ -56,7 +57,9 @@ stop_modes_test() {
     stop_box vm force 2> "$fixture/stop-force.log"
     [ ! -e "$fixture/stop-ssh" ]
     grep -q 'sending SIGTERM' "$fixture/stop-force.log"
-    [ ! -e "$ROOT/vm/pid" ] && [ ! -e "$ROOT/vm/ready" ] && [ -f "$ROOT/vm/stopped" ]
+    [ ! -e "$ROOT/vm/pid" ]
+    [ ! -e "$ROOT/vm/ready" ]
+    [ -f "$ROOT/vm/stopped" ]
     bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
     vm_pid=$!
     echo "$vm_pid" > "$ROOT/vm/pid"
@@ -66,7 +69,8 @@ stop_modes_test() {
     grep -q 'sudo poweroff' "$fixture/stop-ssh"
     grep -q 'waiting up to 90s for guest shutdown' "$fixture/stop-graceful.log"
     if grep -q SIGTERM "$fixture/stop-graceful.log"; then exit 1; fi
-    [ ! -e "$ROOT/vm/pid" ] && [ -f "$ROOT/vm/stopped" ]
+    [ ! -e "$ROOT/vm/pid" ]
+    [ -f "$ROOT/vm/stopped" ]
     bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
     vm_pid=$!
     echo "$vm_pid" > "$ROOT/vm/pid"
@@ -150,7 +154,7 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     session_markers() { :; }
     stop_box() { touch "$fixture/stopped"; }
     leave_session
-)
+) 2> "$fixture/leave.err"
 eq "last session preserves disk" "$(cat "$fixture/leave/vm/disk.qcow2")" disk
 true_ "QEMUBOX_LINGER=0 powers off at once" '[ -f "$fixture/stopped" ]'
 false_ "QEMUBOX_LINGER=0 stamps no idle" '[ -e "$fixture/leave/vm/idle" ]'

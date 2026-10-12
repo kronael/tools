@@ -54,7 +54,8 @@ base_test() {
     prune_boxes
     for suffix in qcow2 vmlinuz initrd; do
         [ ! -e "$ROOT/base/stale.$suffix" ]
-        [ -f "$ROOT/base/fixture.$suffix" ] && [ -f "$ROOT/base/used.$suffix" ]
+        [ -f "$ROOT/base/fixture.$suffix" ]
+        [ -f "$ROOT/base/used.$suffix" ]
     done
 }
 regression "prune removes only unused noncurrent base sets" base_test
@@ -130,6 +131,8 @@ metadata_test() {
     mkdir -p "$ROOT/vm"
     touch "$ROOT/vm/seed.iso" "$ROOT/vm/user-data" "$ROOT/vm/meta-data"
     if remove_box vm; then exit 1; fi
-    [ -f "$ROOT/vm/seed.iso" ] && [ -f "$ROOT/vm/user-data" ] && [ -f "$ROOT/vm/meta-data" ]
+    [ -f "$ROOT/vm/seed.iso" ]
+    [ -f "$ROOT/vm/user-data" ]
+    [ -f "$ROOT/vm/meta-data" ]
 }
 regression "removal leaves unowned cloud metadata alone" metadata_test

@@ -32,7 +32,8 @@ eq "missing rc is empty" "${#rc_tokens[@]}" 0
     persist_builds=""; eph_no_tmpfs=""; tmp_session=""; new_session=""
     printf '%s\n' '-A -D -K -S -T -n attacker -d bash -x codex -P -B -N' > "$PROJ/.qemuboxrc"
     project_rc "$PROJ"
-    [ "$name_override" = original ] && [ "$entrypoint" = claude ]
+    [ "$name_override" = original ]
+    [ "$entrypoint" = claude ]
     [ -z "$ssh_agent$docker_sock$gpg_forward" ]
     [ "$persist_builds$eph_no_tmpfs$new_session" = 111 ]
     [ -z "$tmp_session" ]
