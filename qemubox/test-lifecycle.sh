@@ -37,8 +37,11 @@ exits 2 'stop_boxes --bad one' "stop rejects unknown options"
     grep -q 'qemubox-down is not running' "$fixture/stop-skipped"
     if stop_boxes nonexistent-xyz; then exit 1; fi
     [ "$(cat "$fixture/stop-args")" = $'one graceful\ntwo force\none force' ]
+    stop_boxes -a 2> "$fixture/stop-skipped"
+    [ "$(cat "$fixture/stop-args")" = $'one graceful\ntwo force\none force\none graceful\ntwo graceful' ]
+    grep -q 'qemubox-down is not running' "$fixture/stop-skipped"
 ) > "$fixture/stop.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/stop.log"; bad "stop: -f anywhere, rm matching, stopped boxes skipped"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/stop.log"; bad "stop: -f anywhere, -a, rm matching, stopped boxes skipped"; }
 
 stop_modes_test() {
     regression_setup

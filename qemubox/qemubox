@@ -48,7 +48,7 @@ host_cfg_files=(.claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg)
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | status <name> | stop <name|glob>... [-f]
+       qemubox ls | status <name> | stop <name|glob|-a>... [-f]
        qemubox rm <name|glob|-a>... | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
@@ -1004,13 +1004,14 @@ stop_boxes() {
     do
         case "$pat" in
             -f|--force) mode=force; continue ;;
+            -a|--all) pat='*' ;;
             -*) echo "qemubox stop: unknown option '$pat'" >&2; return 2 ;;
         esac
         named=1
         match_boxes "$pat" || { echo "qemubox stop: no match for '$pat'" >&2; rc=1; }
     done
     [ -n "$named" ] || {
-        echo "qemubox stop: a name or glob is required (-f skips the guest shutdown)" >&2
+        echo "qemubox stop: a name or glob is required (-a for all, -f skips the guest shutdown)" >&2
         return 2
     }
     for name in "${targets[@]}"

@@ -78,6 +78,7 @@ Management:
 qemubox ls               # list NAME STATUS USE RAM DISK PATH
 qemubox status repo      # readiness of one VM (process/ssh/boot) without a shell
 qemubox stop repo        # power one VM off, keep its disk (-f: signal qemu at once)
+qemubox stop -a          # power every running VM off
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
 qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
@@ -117,8 +118,8 @@ keeps the VM up and reports an error.
 the guest to shut down and waits up to 90 s, then sends qemu SIGTERM and,
 10 s later, SIGKILL, printing a line before each wait. `-f` skips the guest
 shutdown and signals qemu at once. Both take the VM lock, so a session that
-holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names and globs match
-as for `rm`; a stopped box is reported and skipped.
+holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
+match as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
 space allocated on the host (both sizes in KiB); a VM waiting out
