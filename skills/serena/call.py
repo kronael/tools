@@ -3,12 +3,15 @@
 stop Serena.
 
 Usage: call.py <tool> '<json object of arguments>'
-Prints the tool's text reply. Exits 1 when the tool reports an error and 2
-when Serena cannot start or answer; Serena's own log tail goes to stderr.
+Prints the tool's text reply and exits 0; exits 1 when the tool reports an
+error and 2 when the call cannot run (no git tree, no serena, bad JSON, no
+reply within 300 s), with the reason and Serena's log tail on stderr.
 """
 
+import contextlib
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -16,12 +19,13 @@ from typing import IO
 from typing import Any
 
 PROTOCOL = '2025-06-18'
+REPLY_DEADLINE_S = 300
 STOP_GRACE_S = 30
 
 
-def project_root() -> str:
+def run_git_toplevel() -> str:
     top = subprocess.run(
-        ['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True, check=True
+        ['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE, text=True, check=True
     )
     return top.stdout.strip()
 
@@ -33,13 +37,16 @@ def send(server: subprocess.Popen[str], message: dict[str, Any]) -> None:
 
 
 def request(
-    server: subprocess.Popen[str], n: int, method: str, params: dict[str, Any]
+    server: subprocess.Popen[str], request_id: int, method: str, params: dict[str, Any]
 ) -> dict[str, Any]:
     assert server.stdout is not None
-    send(server, {'jsonrpc': '2.0', 'id': n, 'method': method, 'params': params})
+    send(server, {'jsonrpc': '2.0', 'id': request_id, 'method': method, 'params': params})
     for line in server.stdout:
-        message = json.loads(line)
-        if message.get('id') != n:
+        try:
+            message = json.loads(line)
+        except json.JSONDecodeError:
+            raise RuntimeError(f'{method}: serena wrote a non-JSON line: {line.strip()}') from None
+        if 'method' in message or message.get('id') != request_id:
             continue
         if 'error' in message:
             raise RuntimeError(f'{method}: {message["error"]}')
@@ -49,12 +56,21 @@ def request(
 
 def stop(server: subprocess.Popen[str]) -> None:
     assert server.stdin is not None
-    server.stdin.close()
+    with contextlib.suppress(BrokenPipeError):
+        server.stdin.close()
     try:
         server.wait(timeout=STOP_GRACE_S)
     except subprocess.TimeoutExpired:
-        server.terminate()
-        server.wait(timeout=STOP_GRACE_S)
+        os.killpg(server.pid, signal.SIGTERM)
+        try:
+            server.wait(timeout=STOP_GRACE_S)
+        except subprocess.TimeoutExpired:
+            os.killpg(server.pid, signal.SIGKILL)
+            server.wait()
+
+
+def on_alarm(*_: object) -> None:
+    raise TimeoutError(f'serena did not answer within {REPLY_DEADLINE_S} s')
 
 
 def log_tail(log: IO[str]) -> str:
@@ -64,24 +80,31 @@ def log_tail(log: IO[str]) -> str:
 
 def run_serena(tool: str, arguments: dict[str, Any], log: IO[str]) -> dict[str, Any]:
     server = subprocess.Popen(
-        ['serena', 'start-mcp-server', '--context', 'ide', '--project', project_root()],
+        ['serena', 'start-mcp-server', '--context', 'ide', '--project', run_git_toplevel()],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=log,
         text=True,
         env=dict(os.environ, SERENA_USAGE_REPORTING='false'),
+        start_new_session=True,
     )
+    signal.signal(signal.SIGALRM, on_alarm)
+    signal.alarm(REPLY_DEADLINE_S)
     try:
-        client = {'name': 'kronael-serena-call', 'version': '1'}
         request(
             server,
             1,
             'initialize',
-            {'protocolVersion': PROTOCOL, 'capabilities': {}, 'clientInfo': client},
+            {
+                'protocolVersion': PROTOCOL,
+                'capabilities': {},
+                'clientInfo': {'name': 'kronael-serena-call', 'version': '1'},
+            },
         )
         send(server, {'jsonrpc': '2.0', 'method': 'notifications/initialized'})
         return request(server, 2, 'tools/call', {'name': tool, 'arguments': arguments})
     finally:
+        signal.alarm(0)
         stop(server)
 
 
@@ -90,11 +113,15 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 2
     tool = sys.argv[1]
-    arguments = json.loads(sys.argv[2])
+    try:
+        arguments = json.loads(sys.argv[2])
+    except json.JSONDecodeError as err:
+        print(f'serena-call: arguments are not JSON: {err}', file=sys.stderr)
+        return 2
     with tempfile.TemporaryFile('w+') as log:
         try:
             result = run_serena(tool, arguments, log)
-        except RuntimeError as err:
+        except (RuntimeError, OSError, subprocess.CalledProcessError) as err:
             print(f'serena-call: {err}\n{log_tail(log)}', file=sys.stderr)
             return 2
     print(''.join(part.get('text', '') for part in result['content']))

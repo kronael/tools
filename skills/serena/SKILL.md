@@ -21,10 +21,15 @@ python3 ~/.claude/skills/serena/call.py rename_symbol \
 
 - Run it from inside the git project: it activates the top level of the
   working tree. A Python rename takes about 2 s, start to stop.
+- `relative_path` is relative to that top level, not to the working
+  directory: from `hooks/`, `lib/state.py` is not found and
+  `hooks/lib/state.py` works.
 - `name_path` is the symbol's path inside the file: `Class/method` for a
   method, the bare name for a top-level definition.
-- Exit 0 prints Serena's reply; 1 means the tool refused (no such symbol);
-  2 means Serena did not start or answer, with its log tail on stderr.
+- Exit 0 prints Serena's reply; 1 means the tool refused (no such symbol,
+  no such file); 2 means the call could not run — no git tree, no `serena`
+  on PATH, arguments that are not JSON, or no reply within 300 s — with the
+  reason, and Serena's log tail when it started, on stderr.
 
 ## Which language
 
