@@ -11,8 +11,10 @@ step. Codex wiring is `../codex-hooks.json`; it installs to
 hook scripts.
 
 `skill_frontmatter_lint.py` and `spec_lint.py` also live in `hooks/` and run
-from `make skills-frontmatter`, `make spec-lint` and pre-commit, not from a
-lifecycle event.
+on demand, not from a lifecycle event: the first from `make skills-frontmatter`
+and pre-commit, the second from `make spec-lint SPECS=<dir>` or by hand in a
+project before a spec commit (`../skills/specs/format.md` § Self-review before
+commit).
 
 ## The hooks
 

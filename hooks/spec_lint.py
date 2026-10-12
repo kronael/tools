@@ -22,7 +22,7 @@ from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import parse_meta
 
-STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
+STATUSES = ('draft', 'experiment', 'planned', 'partial', 'reference')
 NUMBERED = re.compile(r'^(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
 FLAT_PAD = 2
 PHASE_DEPTH = 2
@@ -245,8 +245,8 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
                         Severity.ERROR,
                         'spec-status',
                         f'{index}:{number}: [spec-status] index Status {cells[1]!r} differs '
-                        f'from {resolved.name} status {status!r} — format.md: update Status '
-                        'on ship',
+                        f'from {resolved.name} status {status!r} — format.md: Status matches '
+                        'the frontmatter',
                     )
                 )
     findings.extend(
@@ -254,7 +254,7 @@ def check_index(root: Path, files: list[Path]) -> list[Finding]:
             Severity.ERROR,
             'spec-index-row',
             f'{path}:1: [spec-index-row] no row in {index} — format.md: ALWAYS add a row '
-            'on create, update Status on ship',
+            'on create, remove the row with the file',
         )
         for path in files
         if path.resolve() not in linked
@@ -282,7 +282,8 @@ def check_prose(path: Path, text: str) -> list[Finding]:
                     Severity.WARN,
                     'spec-future-tense',
                     f'{path}:{number}: [spec-future-tense] {planned.group(0)!r} — format.md: '
-                    'NEVER write future-tense plans; specs describe state, not work (warn)',
+                    'NEVER write future-tense plans; a spec describes the design of the change, '
+                    'not a schedule (warn)',
                 )
             )
     return findings

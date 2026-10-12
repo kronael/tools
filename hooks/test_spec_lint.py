@@ -7,11 +7,11 @@ from spec_lint import spec_roots
 
 INDEX = """| Spec | Status | Summary |
 |------|--------|---------|
-| [01-auth.md](01-auth.md) | shipped | JWT auth flow |
+| [01-auth.md](01-auth.md) | planned | JWT auth flow |
 """
 
 SPEC = """---
-status: shipped
+status: planned
 ---
 
 # Auth
@@ -44,9 +44,18 @@ def test_clean_corpus_passes(tmp_path: Path) -> None:
 
 
 def test_unknown_status_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC.replace('shipped', 'proposed'))
+    root = corpus(tmp_path, spec=SPEC.replace('planned', 'proposed'))
     assert 'spec-status' in rules(root, Severity.ERROR)
     assert report(root) == 2
+
+
+def test_shipped_status_fails(tmp_path: Path) -> None:
+    root = corpus(
+        tmp_path,
+        index=INDEX.replace('| planned |', '| shipped |'),
+        spec=SPEC.replace('planned', 'shipped'),
+    )
+    assert 'spec-status' in rules(root, Severity.ERROR)
 
 
 def test_missing_frontmatter_fails(tmp_path: Path) -> None:
@@ -55,12 +64,12 @@ def test_missing_frontmatter_fails(tmp_path: Path) -> None:
 
 
 def test_index_status_prose_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, index=INDEX.replace('| shipped |', '| active — superseded by 02 |'))
+    root = corpus(tmp_path, index=INDEX.replace('| planned |', '| active — superseded by 02 |'))
     assert 'spec-status' in rules(root, Severity.ERROR)
 
 
 def test_index_status_mismatch_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, index=INDEX.replace('| shipped |', '| draft |'))
+    root = corpus(tmp_path, index=INDEX.replace('| planned |', '| draft |'))
     assert 'spec-status' in rules(root, Severity.ERROR)
     assert report(root) == 2
 
