@@ -195,7 +195,7 @@
   no test — duplication. Hot `SKILL.md` bodies restate rules a cold
   `software/` runbook owns: `skills/py/SKILL.md:121-123,130,132-137`
   (`strict-typing.md` one mode, `ci.md` `python -m pytest`, `testing.md`
-  fixtures and doubles), `skills/go/SKILL.md:38-39,42,147,151`
+  fixtures and doubles), `skills/go/SKILL.md:38-39,42,155,159-160`
   (`strict-typing.md` linters, `dynamic-analysis.md` `-race`, goleak,
   govulncheck), `skills/rs/SKILL.md:74-76,85,137` (`testing.md`, `cli`,
   `dynamic-analysis.md` miri). `skills/software/SKILL.md:29` says NEVER
@@ -212,12 +212,12 @@
   § House conventions (test, test-all, smoke); `ci.md:44` "NEVER add a
   `lint` target" vs `ops:47`, `mk:76,86`, `py:142`, `ts:156`; `ci.md:50`
   sets `PYTHONPATH` per target, `py:148` once. Log line:
-  `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:183`
+  `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:186`
   (`INFO subsystem: message`); health: `service:12` (`/health`, `/ready`)
   vs `observe.md:12` (`/.well-known/live`); Python: `py:19` 3.13+ vs
   `strict-typing.md:43` 3.12; aliasing: `py:93-94` allows `heapq_merge` on
   a collision vs `code.md:26-28` NEVER rename; prose wrap:
-  `skills/create/web/code-presentation.md:110` 90 chars vs `code.md:167` 100,
+  `skills/create/web/code-presentation.md:110` 90 chars vs `code.md:170` 100,
   which `rumdl` reflows. **Options:** one owner per
   fact, the rest point. **Default if nothing is decided:** `code.md` and
   WISDOM win where they speak; the rest stays until picked.
@@ -235,13 +235,13 @@
   — docs. `skills/solana/deps.md:12` calls anchor-lang 1.1.2 the newest
   release and `:22` solana-pubkey 4.3.0; the crates index lists 1.2.1
   (depending on `solana-pubkey` v3 and v4) and 4.4.0, and `:118-121` rests
-  on the 1.1.2 claim. `skills/solana/layout.md:123` is "verified at cargo
+  on the 1.1.2 claim. `skills/solana/layout.md:113` is "verified at cargo
   1.97.1". **Fix:** re-verify each pin against the index and the toolchain.
 
 - **README-ROUTER-CONTRADICTS-ITSELF** (LOW, docs) — owner decision, no test
   — docs. `skills/readme/sync.md:56` puts an "Architectural Decisions"
-  section in ARCHITECTURE; `skills/readme/topology.md:85` says NEVER
-  record a decision there. `sync.md:24-48` and `topology.md:43-57` give two
+  section in ARCHITECTURE; `skills/readme/topology.md:86` says NEVER
+  record a decision there. `sync.md:24-48` and `topology.md:44-58` give two
   README section orders. `skills/release/library.md:115` wants README line 2
   "technical"; `sync.md:26-28` "a 13-year-old understands". **Options:**
   (a) topology owns layout and order, sync points; (b) sync owns. **Default
@@ -259,7 +259,7 @@
   `skills/scavenge/SKILL.md:56,75,132` call astra directly; `oracle` never
   routes to `pi`; `astra`, `pi` and `oracle` share the triggers "second
   opinion", "sanity check" and "disagreement after reasoning"
-  (`skills/wisdom/SKILL.md:48` forbids a shared primary trigger);
+  (`skills/wisdom/SKILL.md:47` forbids a shared primary trigger);
   `skills/terra/SKILL.md:24-27` requires `--sandbox read-only` outside
   dockbox while `astra:29,57` always bypasses the sandbox. **Default if
   nothing is decided:** as written.
@@ -291,7 +291,7 @@
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
   test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
   non-obvious why" — a general why comment that none of the three in-body
-  exceptions in `skills/software/code.md:76-81` covers, while
+  exceptions in `skills/software/code.md:79-84` covers, while
   `skills/refine/software.md:29-38` hunts every comment outside them, so the
   Python lens licenses what the baseline refuses. **Options:** (a) cut
   the clause, leaving `software.md` the one comment lens; (b) keep it as a
@@ -350,6 +350,30 @@
   keep — a reference file loads alone, so a restatement there is what its
   reader sees; (b) cut the mode files to pointers. **Default if nothing is
   decided:** (a).
+
+- **SQUASH-MAPPING-SHORT-SHAS-AND-WIDTH** (LOW, docs) — open (record only),
+  no test — docs. The mapping example in `skills/squash/SKILL.md:59-76`
+  shows 6-character SHAs (`abc111`) against WISDOM's full-hash rule and the
+  skill's own "A full SHA goes on a line of its own" (`:56-57`); and `:54`
+  promises a 40-column read while a block line is `1. ` plus a subject of up
+  to 72 characters, 75 columns. **Fix:** full SHAs on their own lines in the
+  example; state that the subject line may wrap, or drop the 40-column claim.
+
+- **REFACTOR-MANIFEST-UNCHECKED** (LOW, docs) — open (record only), no test
+  — docs. `skills/software/refactor-stack.md:324-327` requires a port's
+  manifest to account for every source file, but nothing diffs its rows
+  against `git ls-tree -r --name-only <source SHA>`, so a file missing from
+  both the manifest and the port passes. The `software/SKILL.md:26` row for
+  `refactor-stack.md` does not name the manifest, and the port row (`:27`)
+  routes to `credits.md`, so a port request does not reach it. **Fix:** add
+  the `ls-tree` diff to the manifest bullet and "port manifest" to a row.
+
+- **TESTING-VS-REFACTOR-COMMIT-CADENCE** (LOW, docs) — open (record only), no
+  test — docs. `skills/software/testing.md:34-36` runs the full `make test`
+  tier "once before the commit"; `skills/software/refactor-stack.md:113-114`
+  commits after every edit, which makes that a full run per edit. **Fix:**
+  scope one of the two — e.g. refactor-stack commits on the focused run and
+  runs the full tier per pushed layer.
 
 ## Codex bridge
 
@@ -422,12 +446,14 @@
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which
-  strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
+  strips it from the test env, and `hooks/ARCHITECTURE.md:217,222`, which
   documents the clause — none in `Makefile`, `.github/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
-  get the block messages injected into their transcripts. **Fix:** one line
-  either way — set it in the eval runner, or delete the clause — but which
-  one is a scope call; no test — config.
+  get the block messages injected into their transcripts. No eval runner
+  exists in this tree, so nothing here can set it. **Options:** (a) delete
+  the clause and its `hooks/ARCHITECTURE.md` mention; (b) keep it for an
+  external runner that sets `CLAUDE_EVAL` itself. **Default if nothing is
+  decided:** (b); no test — config.
 
 - **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
   stamps per session are named at their call sites — `local-`
@@ -615,12 +641,15 @@
   the first; name the other two in `hooks/ARCHITECTURE.md`.
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
-  CONFIRMED 2026-10-10, no test — config. No workflow runs
-  `skills/recall-memories/test_recall.py`, `make lints` or `make spec-lint`
-  (`grep -rn recall .github` is empty); `test-hooks.yml` triggers on
-  `hooks/**` only while `hooks/test_prompt_nudge.py:40,48` reads
-  `skills/*/SKILL.md`, so a push touching only `skills/` skips it. **Fix:**
-  add the three to `lint.yml.tmpl` and `skills/**` to the hooks path filter.
+  CONFIRMED 2026-10-12, no test — config. Root `make test` runs
+  `skills/recall-memories/test_recall.py` (`Makefile:64`), but no workflow
+  runs root `make test` or `make lints` (`grep -rn recall .github` is empty);
+  `test-hooks.yml` triggers on `hooks/**` only while
+  `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
+  touching only `skills/` skips it. `make spec-lint` stays out of CI: it
+  needs `SPECS=<dir>` and this repo keeps no specs. **Fix:** add
+  `test_recall.py` and `make lints` to `lint.yml.tmpl` and `skills/**` to
+  the hooks path filter.
 
 - **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
   — config. `agents/distill.md:4`, `agents/refine.md:4` and
@@ -638,6 +667,22 @@
   `spinnerTipsEnabled`) fall under step 5's diff-and-ask with no rule naming
   them. Policy over enforcement is the house rule. **Default if nothing is
   decided:** as written.
+
+- **SPEC-LINT-MISSING-PATH-GREEN** (LOW, correctness) — CONFIRMED
+  2026-10-12. `make spec-lint SPECS=/nonexistent` and `python3
+  hooks/spec_lint.py '~/proj/specs'` (quoted, so `~` is not expanded) both
+  exit 0 with no output: `spec_roots` (`hooks/spec_lint.py:68-81`) finds no
+  root for a missing path and `main` (`:334-342`) reports nothing, so a typo
+  in the path reads as a clean corpus. Measured: the two commands above;
+  the xfail test in `hooks/test_spec_lint.py` is still to write. **Fix:**
+  `main` exits non-zero naming each path that does not exist.
+
+- **PROMPT-NUDGE-UNNUMBERED-SPEC-EXAMPLE** (LOW, docs) — open (record only),
+  no test — docs. `hooks/prompt_nudge.py:18` gives `specs/multi-tenancy.md`
+  as the example of a lowercase doc name, which teaches an unnumbered spec
+  file against the `NN-topic.md` numbering in `skills/specs/format.md`.
+  **Fix:** a numbered example, or a non-spec path such as `docs/setup.md`
+  alone.
 
 ## rig
 
@@ -760,7 +805,7 @@
 
 - **DOCKBOX-HELP-OMITS-X-AND-IMAGE-PACKAGES-UNUSED** (LOW, docs) — CONFIRMED
   2026-10-10, no test — docs. `dockbox/dockbox:430` accepts `-x` and
-  `README.md:69` documents it, but the `--help` Options list (`:304-317`)
+  `dockbox/README.md:71` documents it, but the `--help` Options list (`:304-317`)
   shows only `-d`. `dockbox/Dockerfile:20` installs `iptables ipset iproute2
   dnsutils aggregate`, which no script in the repo uses (`grep -rnw` over
   dockbox, qemubox and the docs finds nothing); the egress lockdown they
