@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.4.31] — 20261012
+
+> kronael v0.4.31 — Code maps and language-server renames on demand
+>
+> Two new skills map a codebase and rename symbols through the language server, and both run only when called.
+>
+> • codemap — ripwire overview, task lookup, callers, blast radius, and graphs drawn from the code.
+> • serena — one-shot Python and Rust rename, plus a check for code behind disabled cargo features.
+> • Renames — each language names its tool: serena, gopls rename, or ts-morph with workspace paths.
+> • Skills — one file owns each rule; long reference moved to files read on demand.
+> • Lint — the skill lint skips git-ignored paths, so scratch checkouts no longer fail it.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codemap`: ripwire maps, `--for`, callers, uses, impact, Mermaid and HTML call graphs; goda, pydeps.
+- `serena`: `call.py` runs Serena for one call over stdio; it is never an MCP server.
+- Renames: Python and Rust through `serena`, Go through `gopls rename`, TypeScript through ts-morph.
+- Install: ripwire is binary-only and never an MCP server; Serena sets `web_dashboard: false`.
+- Skills: repeated rules point at one owner; port-to-go, browse and wisdom overflow moved to siblings.
+- `make skills-frontmatter`: skips git-ignored paths and no longer crashes on a root inside one.
+
 ## [v0.4.30] — 20261010
 
 > kronael v0.4.30 — Diary out of repos, one owner per rule
