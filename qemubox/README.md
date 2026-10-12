@@ -56,7 +56,8 @@ qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
 qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
-qemubox -N bash            # empty VM, no project mount
+qemubox -E bash            # scratch VM: no project mount, works in /tmp/work
+qemubox -N                 # new Claude session, no resume picker
 ```
 
 `qemubox [tool] [dirs] [args]`. The first bare (non-path) argument is the tool:
@@ -64,6 +65,11 @@ qemubox -N bash            # empty VM, no project mount
 Claude models, `codex` / `gpt` / `mini` / `spark` for Codex, `bash` / `zsh` for
 a login shell, or any binary in the VM. `exec <cmd>` passes every later argument
 through untouched. The default VM name is the project dir basename; `-n name` gives a separate box.
+
+`-E` starts an ephemeral session: qemubox mounts no project dir, and the
+session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
+The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
+dir argument is an error, and `-E` implies `-N`.
 
 Management:
 
@@ -124,7 +130,7 @@ Default host access includes:
 
 1. **Your project dir(s)** — 9p-mounted at their real host paths, read-write,
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
-   read-write one. `-N` runs an empty VM with no project mount.
+   read-write one. `-E` mounts no project dir.
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
    all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
@@ -194,12 +200,13 @@ What it does **not** give you — do **not** run genuinely hostile code here:
 `~/.qemuboxrc` supplies default flags, one per line, with blank lines and
 `#` comments ignored. Command-line flags override these defaults.
 The project `.qemuboxrc` applies its safe flags after command-line parsing,
-as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`.
+as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-E`, `-n`, `-d` and `-x`.
 Files contain whitespace-separated tokens, never shell code. Project rc files
 are masked read-only inside the guest.
 
 Git worktrees also mount their common git directory at its host path.
-Claude opens its session selector when the project has JSONL history;
+Claude opens its session selector when the project has JSONL history
+(`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
 Codex defaults to `gpt-6.1-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
 

@@ -9,6 +9,7 @@ GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
+EPH_WORKDIR=/tmp/work
 agent_tokens=(CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY)
 
 name_override=""
@@ -19,9 +20,10 @@ ssh_agent=""
 gpg_sock=""
 docker_sock=""
 docker_remote=""
-no_copy=""
 persist_builds=""
 eph_no_tmpfs=""
+eph_session=""
+new_session=""
 gcloud_creds=""
 gpg_forward=""
 untrusted=""
@@ -70,7 +72,10 @@ Options:
     -x tool    Alias for -d, matching dockbox
     -e VAR     Forward env var into the session
     -v path    Extra 9p mount at same path ro by default; path:rw for read-write
-    -N         No project mount; run in VM home
+    -E         Ephemeral session: mount no project dir, start in $EPH_WORKDIR
+               (guest tmpfs, lost at power-off); VM name tmp unless -n;
+               implies -N
+    -N         New Claude session: skip the resume picker
     -H         Egress kill-switch: disable the guest's outbound network
     -U         Untrusted: inject NO host config/credentials, force network off,
                but still mount the project dir(s). --untrusted also works.
@@ -91,6 +96,7 @@ Examples:
     qemubox codex ~/src/repo
     qemubox bash
     qemubox -n mybox bash
+    qemubox -E bash
     qemubox cargo test ~/src/repo
     qemubox -H cargo test ~/src/repo
     qemubox -v ~/src/lib ~/src/repo
@@ -109,7 +115,7 @@ Environment: QEMUBOX_MEM=16384 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
-        Project files cannot set -A/-D/-K/-S/-n/-d/-x.
+        Project files cannot set -A/-D/-K/-S/-E/-n/-d/-x.
 Lifecycle: last session powers off; disk survives until rm.
 Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
        Reclaim unreferenced bases except current.
@@ -450,7 +456,7 @@ stage_ephemeral() {
     local mode=tmpfs find_expr=()
     [ -z "$eph_no_tmpfs" ] || mode=disk
     printf '%s\0' "$mode" > "$output"
-    [ -z "$persist_builds$no_copy" ] || return 0
+    [ -z "$persist_builds" ] || return 0
     for name in "${EPHEMERAL_DIRS[@]}"
     do
         [ "${#find_expr[@]}" -eq 0 ] || find_expr+=(-o)
@@ -670,13 +676,10 @@ mount_host_paths() {
         setup_mount_path "$name" "$dest"
         ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
     done
-    if [ -z "$no_copy" ]
-    then
-        for dest in "${dirs[@]}"
-        do
-            ssh_plain_box "$name" "if [ -f $(quote "$dest/.qemuboxrc") ]; then sudo mount --bind /dev/null $(quote "$dest/.qemuboxrc") && sudo mount -o remount,bind,ro $(quote "$dest/.qemuboxrc"); fi"
-        done
-    fi
+    for dest in "${dirs[@]}"
+    do
+        ssh_plain_box "$name" "if [ -f $(quote "$dest/.qemuboxrc") ]; then sudo mount --bind /dev/null $(quote "$dest/.qemuboxrc") && sudo mount -o remount,bind,ro $(quote "$dest/.qemuboxrc"); fi"
+    done
 }
 
 setup_guest_runtime() {
@@ -1036,7 +1039,8 @@ apply_flag() {
                 *:rw) extra_modes+=(rw) ;;
                 *) extra_modes+=(ro) ;;
             esac ;;
-        N) no_copy=1 ;;
+        E) eph_session=1 ;;
+        N) new_session=1 ;;
         H) network="" ;;
         U) untrusted=1; network="" ;;
         A) ssh_agent=1 ;;
@@ -1075,10 +1079,10 @@ read_rc() {
 project_rc() {
     read_rc "$1/.qemuboxrc"
     OPTIND=1
-    while getopts ":n:d:x:e:v:HKUADgGPTSN" opt "${rc_tokens[@]}"
+    while getopts ":n:d:x:e:v:HKUADgGPTSEN" opt "${rc_tokens[@]}"
     do
         case "$opt" in
-            A|D|K|S|n|d|x)
+            A|D|K|S|E|n|d|x)
                 echo "qemubox: ignoring -$opt in project .qemuboxrc (use ~/.qemuboxrc)" >&2 ;;
             *) apply_flag "$opt" "${OPTARG:-}" ;;
         esac
@@ -1087,6 +1091,7 @@ project_rc() {
 
 resume_session() {
     local slug="${primary//[^A-Za-z0-9]/-}" sessions
+    [ -z "$new_session" ] || return 0
     [ "${cmd[0]}" = claude ] || return 0
     sessions=("$HOME/.claude/projects/$slug/"*.jsonl)
     if [ -f "${sessions[0]}" ]
@@ -1178,24 +1183,22 @@ assemble_mounts() {
     then
         add_mount "$HOME/.config/gcloud" "$GUEST_HOME/.config/gcloud" ro required || return 1
     fi
-    if [ -z "${no_copy:-}" ]; then
-        local gc gcr gitmounts=()
-        for dir in "${dirs[@]}"
-        do
-            add_mount "$dir" "$dir" rw
-            gc=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
-            [[ "$gc" == "$dir" || "$gc" == "$dir"/* ]] && continue
-            case " ${gitmounts[*]} " in *" $gc "*) continue ;; esac
-            if gcr=$(realpath -e "$gc")
-            then
-                gitmounts+=("$gc")
-                add_mount "$gcr" "$gc" rw
-            else
-                echo "qemubox: worktree git dir missing ($gc); repair the .git gitlink" >&2
-                return 1
-            fi
-        done
-    fi
+    local gc gcr gitmounts=()
+    for dir in "${dirs[@]}"
+    do
+        add_mount "$dir" "$dir" rw
+        gc=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
+        [[ "$gc" == "$dir" || "$gc" == "$dir"/* ]] && continue
+        case " ${gitmounts[*]} " in *" $gc "*) continue ;; esac
+        if gcr=$(realpath -e "$gc")
+        then
+            gitmounts+=("$gc")
+            add_mount "$gcr" "$gc" rw
+        else
+            echo "qemubox: worktree git dir missing ($gc); repair the .git gitlink" >&2
+            return 1
+        fi
+    done
     for i in "${!extra_dirs[@]}"; do
         dir="$(realpath -e -- "${extra_dirs[$i]}")" || return 1
         add_mount "$dir" "$dir" "${extra_modes[$i]}" required || return 1
@@ -1228,6 +1231,13 @@ a wrong line here is a qemubox launcher bug.
   the box deletes its disk. Private tmpfs files, including Claude sessions
   and temporary build files, are lost at power-off.
 EOF
+    if [ -n "$eph_session" ]
+    then
+        cat <<EOF
+- No project dir is mounted. The working dir $EPH_WORKDIR is guest tmpfs: its
+  files are lost at power-off.
+EOF
+    fi
     if [ "${eph[0]}" = tmpfs ] && [ "${#eph[@]}" -gt 1 ]
     then
         cat <<EOF
@@ -1284,7 +1294,7 @@ for a in "$@"; do
 done
 set -- "${_args[@]}"
 
-while getopts ":n:d:x:e:v:HKUADgGPTSN" opt; do
+while getopts ":n:d:x:e:v:HKUADgGPTSEN" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -1310,9 +1320,20 @@ for arg in "$@"; do
     esac
 done
 
-[ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
-primary="${dirs[-1]}"
-project_rc "$primary"
+if [ -n "$eph_session" ]
+then
+    [ "${#dirs[@]}" -eq 0 ] || {
+        echo "qemubox: -E mounts no project dir; use -v for a host path" >&2
+        exit 2
+    }
+    primary="$EPH_WORKDIR"
+    name_override="${name_override:-tmp}"
+    new_session=1
+else
+    [ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
+    primary="${dirs[-1]}"
+    project_rc "$primary"
+fi
 [ "$entrypoint" = exec ] || resume_session
 name="$(box_name "${name_override:-${primary##*/}}")"
 
@@ -1332,10 +1353,8 @@ for warning in "${warnings[@]}"; do
     note "$warning"
 done
 
-workdir=""
-if [ -z "${no_copy:-}" ]; then
-    workdir="$primary"
-fi
+cd_workdir="cd $(quote "$primary")"
+[ -z "$eph_session" ] || cd_workdir="mkdir -p $(quote "$primary") && $cd_workdir"
 
 remote=""
 for arg in "${cmd[@]}" "${args[@]}"; do
@@ -1344,8 +1363,8 @@ for arg in "${cmd[@]}" "${args[@]}"; do
 done
 
 rc=0
-remote=". $env_file && rm -f $env_file${workdir:+ && cd $(quote "$workdir")} && exec$remote"
-note "running in qemubox-$name${workdir:+:$workdir}"
+remote=". $env_file && rm -f $env_file && $cd_workdir && exec$remote"
+note "running in qemubox-$name:$primary"
 session_tty
 ssh_box "$name" "${tty[@]}" "$remote" <&0 9>&- &
 session_pid=$!

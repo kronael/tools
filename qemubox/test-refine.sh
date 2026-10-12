@@ -98,7 +98,7 @@ plugins_test() {
 regression "plugins have a readonly 9p export" plugins_test
 
 rc_test() {
-    reset_mounts; dirs=("$PROJ"); no_copy=""
+    reset_mounts; dirs=("$PROJ")
     ssh_plain_box() { echo "$2" >> "$fixture/rc-commands"; }
     mount_host_paths vm
     grep -F -- "$PROJ/.qemuboxrc" "$fixture/rc-commands" | grep -q 'remount,bind,ro'
