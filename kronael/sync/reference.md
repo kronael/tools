@@ -662,6 +662,7 @@ touches it. After `serena init`, set three keys in
 
 | Tool | Command | Skills |
 |------|---------|--------|
+| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended dvisvgm`), output needs `ffmpeg` | /create (manim) |
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 ## ripwire — deterministic codebase maps for agents (step 7)
@@ -670,11 +671,13 @@ Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
 agent a ranked, deterministic call-graph map of a repo — relevant symbols,
 callers, change-risk, tests to run — instead of blind grepping. Offline C++
 binary: no API key, no embeddings, no daemon, no network calls. The `codemap`
-skill is its entry point. Install the prebuilt binary only (the installer
-verifies a mandatory sha256 and prompts for consent):
+skill is its entry point. Install the prebuilt binary only, at the version
+`codemap` was verified on (the installer verifies a mandatory sha256; its
+`y/N` prompt reads nothing under Claude Code's `!`, so `RIPWIRE_INSTALL_YES=1`
+stands in for it — running the command is the consent):
 
 ```sh
-RIPWIRE_NO_ACTIVATE=1 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+RIPWIRE_NO_ACTIVATE=1 RIPWIRE_INSTALL_YES=1 RIPWIRE_VERSION=v0.6.5 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
 ```
 
 - Installs `ripwire` to `~/.local/bin` and touches no agent config.

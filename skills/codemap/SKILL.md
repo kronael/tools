@@ -50,8 +50,8 @@ tour and call it a map.
 
 ## Diagrams from the code
 
-ALWAYS write output under the project's gitignored `./tmp/` — NEVER a
-tracked path.
+ALWAYS write output under the project's gitignored `./tmp/` (`mkdir -p tmp`
+first) — NEVER a tracked path.
 
 | Picture | Command |
 |---|---|
