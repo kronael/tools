@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.34] — 20261012
+
+> kronael v0.4.34 — temporary boxes and new Claude sessions
+>
+> dockbox and qemubox can start a temporary session with no project mounted, and can start Claude without the resume picker.
+>
+> • `-T` — temporary session: no project mount, work in `/tmp/work`, gone when the box exits.
+> • `-N` — start a new Claude session instead of the resume picker.
+> • `-B` — build dirs on disk instead of RAM; this was `-T`, so update rc files.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox, qemubox: `-T` mounts no project dir and starts in tmpfs `/tmp/work`, box `tmp`.
+- dockbox, qemubox: `-N` skips `claude --resume`; `-T` implies it.
+- BREAKING: disk-backed build-dir overmounts move from `-T` to `-B`; change `-T` to `-B` in rc files.
+- BREAKING: qemubox `-N` no longer skips the project mount; use `-T`.
+- A project rc ignores `-T` and accepts `-B` and `-N`.
+
 ## [v0.4.33] — 20261012
 
 > kronael v0.4.33 — reviews wait for the owner, worktrees can go
