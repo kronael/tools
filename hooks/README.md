@@ -10,6 +10,9 @@ step. Codex wiring is `../codex-hooks.json`; it installs to
 `~/.codex/hooks.json` and calls `codex_hook.py` before delegating to the same
 hook scripts.
 
+`statusline.py` is the status-line command `settings-recommended.json` sets:
+model, context use, and the 5-hour and weekly limits in whole percent.
+
 `skill_frontmatter_lint.py` and `spec_lint.py` also live in `hooks/` and run
 on demand, not from a lifecycle event: the first from `make skills-frontmatter`
 and pre-commit, the second from `make spec-lint SPECS=<dir>` or by hand in a
