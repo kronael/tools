@@ -47,7 +47,8 @@ host_cfg_files=(.claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg)
 usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
-       qemubox ls | status <name> | rm <name|glob|-a>... | prune [hours] | build-base [--force]
+       qemubox ls | status <name> | stop <name|glob>... [-f]
+       qemubox rm <name|glob|-a>... | prune [hours] | build-base [--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
 
@@ -101,6 +102,7 @@ Examples:
     qemubox -H cargo test ~/src/repo
     qemubox -v ~/src/lib ~/src/repo
     qemubox ls
+    qemubox stop repo
     qemubox rm repo
 
 Ingress: dirs and config are mounted into the VM with QEMU 9p.
@@ -117,6 +119,8 @@ Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
         Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
 Lifecycle: last session powers off; disk survives until rm.
+Stop: qemubox stop asks the guest to power off and waits up to 90s before
+      signalling qemu; -f signals qemu at once (SIGTERM, then SIGKILL).
 Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
        Reclaim unreferenced bases except current.
 State: $ROOT
@@ -718,21 +722,45 @@ then
 fi'
 }
 
+wait_stopped() {
+    local n
+    for ((n = 0; n < $2; n++))
+    do
+        running "$1" || return 0
+        sleep 1
+    done
+}
+
+# Power a running box off and keep its disk. Mode graceful (default) asks the
+# guest to shut down and waits up to 90s before signalling qemu; mode force
+# signals qemu at once. Fails when qemu outlives SIGKILL.
 stop_box() {
+    local mode="${2:-graceful}"
     name="$(box_name "$1")"
     running "$name" || return 0
     dir="$(box_dir "$name")"
     pid="$(cat "$dir/pid")"
-    ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 || note "poweroff SSH closed; waiting for qemu"
-    # Wait for a clean guest shutdown (systemd can take ~90s), then escalate
-    # SIGTERM -> SIGKILL so a wedged VM is terminated, never left as an orphaned
-    # qemu whose disk remove_box is about to unlink.
-    for _ in $(seq 1 90); do running "$name" || break; sleep 1; done
-    running "$name" && kill "$pid" 2>/dev/null || true
-    for _ in $(seq 1 10); do running "$name" || break; sleep 1; done
-    running "$name" && kill -9 "$pid" 2>/dev/null || true
-    for _ in $(seq 1 5); do running "$name" || break; sleep 1; done
-    if running "$name"; then
+    if [ "$mode" = graceful ]
+    then
+        ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 ||
+            note "poweroff SSH closed; waiting for qemu"
+        note "waiting up to 90s for guest shutdown of qemubox-$name"
+        wait_stopped "$name" 90
+    fi
+    if running "$name"
+    then
+        note "sending SIGTERM to qemu PID $pid; waiting up to 10s"
+        kill "$pid" 2>/dev/null || true
+        wait_stopped "$name" 10
+    fi
+    if running "$name"
+    then
+        note "sending SIGKILL to qemu PID $pid; waiting up to 5s"
+        kill -9 "$pid" 2>/dev/null || true
+        wait_stopped "$name" 5
+    fi
+    if running "$name"
+    then
         echo "VM still running as PID $pid" >&2
         return 1
     fi
@@ -878,8 +906,26 @@ list_boxes() {
     [ -n "$found" ] || echo "no qemubox VMs"
 }
 
+match_boxes() {
+    local dir name target matched=""
+    for dir in "$ROOT"/*
+    do
+        [ -d "$dir" ] || continue
+        name=${dir##*/}
+        [ "$name" = base ] && continue
+        rm_matches "$name" "$1" || continue
+        matched=1
+        for target in "${targets[@]}"
+        do
+            [ "$target" != "$name" ] || continue 2
+        done
+        targets+=("$name")
+    done
+    [ -n "$matched" ]
+}
+
 remove_boxes() {
-    local pat dir name matched rc=0 targets=() target
+    local pat name rc=0 targets=()
     [ "$#" -gt 0 ] || {
         echo "qemubox rm: a name or glob is required (-a for all)" >&2
         return 2
@@ -890,26 +936,44 @@ remove_boxes() {
             -a|--all) pat='*' ;;
             -*) echo "qemubox rm: unknown option '$pat'" >&2; return 2 ;;
         esac
-        matched=""
-        for dir in "$ROOT"/*
-        do
-            [ -d "$dir" ] || continue
-            name=${dir##*/}
-            [ "$name" = base ] && continue
-            rm_matches "$name" "$pat" || continue
-            matched=1
-            for target in "${targets[@]}"
-            do
-                [ "$target" != "$name" ] || continue 2
-            done
-            targets+=("$name")
-        done
-        [ -n "$matched" ] || { echo "qemubox rm: no match for '$pat'" >&2; rc=1; }
+        match_boxes "$pat" || { echo "qemubox rm: no match for '$pat'" >&2; rc=1; }
     done
     for name in "${targets[@]}"
     do
         lock_box "$name" || { rc=1; continue; }
         remove_box "$name" || rc=1
+        unlock_box
+    done
+    return "$rc"
+}
+
+stop_boxes() {
+    local pat name rc=0 mode=graceful named="" targets=()
+    for pat in "$@"
+    do
+        case "$pat" in
+            -f|--force) mode=force; continue ;;
+            -*) echo "qemubox stop: unknown option '$pat'" >&2; return 2 ;;
+        esac
+        named=1
+        match_boxes "$pat" || { echo "qemubox stop: no match for '$pat'" >&2; rc=1; }
+    done
+    [ -n "$named" ] || {
+        echo "qemubox stop: a name or glob is required (-f skips the guest shutdown)" >&2
+        return 2
+    }
+    for name in "${targets[@]}"
+    do
+        lock_box "$name" || { rc=1; continue; }
+        if ! running "$name"
+        then
+            note "qemubox-$name is not running"
+        elif stop_box "$name" "$mode"
+        then
+            echo "stopped qemubox-$name"
+        else
+            rc=1
+        fi
         unlock_box
     done
     return "$rc"
@@ -1269,6 +1333,7 @@ case "${1:-}" in
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
     rm|destroy) shift; remove_boxes "$@"; exit $? ;;
+    stop) shift; stop_boxes "$@"; exit $? ;;
     prune) prune_boxes "${2:-2160}"; exit $? ;;
     build-base)
         force=""

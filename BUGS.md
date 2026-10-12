@@ -861,6 +861,16 @@
   `-f`/`rebuild` (`:1266`) and `QEMUBOX_QEMU` (`:10`) appear in neither the
   usage text nor `qemubox/README.md`. **Fix:** document them or drop them.
 
+- **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
+  2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
+  `lock_box` (`qemubox/qemubox`), whose `QEMUBOX_READY_TIMEOUT` wait (180 s)
+  ends in `ready_error`: "VM qemubox-x not ready; serial log:" plus the
+  serial tail. A stop blocked by a launch that holds the lock while it waits
+  on a wedged guest gets that message, which names the wrong cause, and exits
+  1 without signalling qemu. **Fix:** `lock_box` reports the lock wait
+  itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
+  `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
+
 ## bhctl
 
 - **BHCTL-HELP-NEEDS-PAIRED-DEVICE** (LOW, ux) — CONFIRMED 2026-10-10. The

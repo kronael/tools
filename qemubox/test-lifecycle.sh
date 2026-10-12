@@ -19,6 +19,54 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
 ) > "$fixture/removal.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/removal.log"; bad "rm multiple targets and failures"; }
 
+exits 2 'stop_boxes' "stop requires names"
+exits 2 'stop_boxes -f' "stop -f alone requires names"
+exits 2 'stop_boxes --bad one' "stop rejects unknown options"
+(
+    set -e
+    ROOT="$fixture/stopping"
+    mkdir -p "$ROOT/one" "$ROOT/two" "$ROOT/down"
+    running() { [ "$1" != down ]; }
+    lock_box() { locked=1; }
+    unlock_box() { locked=""; }
+    stop_box() { echo "$1 ${2:-graceful}" >> "$fixture/stop-args"; }
+    stop_boxes qemubox-one
+    stop_boxes two -f
+    stop_boxes -f 'o*' down 2> "$fixture/stop-skipped"
+    [ "$(cat "$fixture/stop-args")" = $'one graceful\ntwo force\none force' ]
+    grep -q 'qemubox-down is not running' "$fixture/stop-skipped"
+    if stop_boxes nonexistent-xyz; then exit 1; fi
+    [ "$(cat "$fixture/stop-args")" = $'one graceful\ntwo force\none force' ]
+) > "$fixture/stop.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/stop.log"; bad "stop: -f anywhere, rm matching, stopped boxes skipped"; }
+
+stop_modes_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm"
+    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
+    vm_pid=$!
+    trap 'kill "$vm_pid" 2>/dev/null || true; wait "$vm_pid" 2>/dev/null || true' EXIT
+    echo "$vm_pid" > "$ROOT/vm/pid"
+    touch "$ROOT/vm/ready"
+    sleep 0.05
+    ssh_plain_box() { echo "$*" >> "$fixture/stop-ssh"; }
+    stop_box vm force 2> "$fixture/stop-force.log"
+    [ ! -e "$fixture/stop-ssh" ]
+    grep -q 'sending SIGTERM' "$fixture/stop-force.log"
+    [ ! -e "$ROOT/vm/pid" ] && [ ! -e "$ROOT/vm/ready" ] && [ -f "$ROOT/vm/stopped" ]
+    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
+    vm_pid=$!
+    echo "$vm_pid" > "$ROOT/vm/pid"
+    sleep 0.05
+    ssh_plain_box() { echo "$*" >> "$fixture/stop-ssh"; kill "$vm_pid"; }
+    stop_box vm 2> "$fixture/stop-graceful.log"
+    grep -q 'sudo poweroff' "$fixture/stop-ssh"
+    grep -q 'waiting up to 90s for guest shutdown' "$fixture/stop-graceful.log"
+    if grep -q SIGTERM "$fixture/stop-graceful.log"; then exit 1; fi
+    [ ! -e "$ROOT/vm/pid" ] && [ -f "$ROOT/vm/stopped" ]
+}
+regression "stop -f signals qemu without a guest shutdown; graceful asks first" stop_modes_test
+
 (
     set -e
     ROOT="$fixture/pruning"
