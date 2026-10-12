@@ -22,8 +22,8 @@ If unsure, treat as new task.
 
 ## 2. Recall (new task only)
 
-- First task of the session: the diary and `MEMORY.md` reads WISDOM
-  § Continuity requires.
+- First task of the session: the diary read WISDOM § Continuity
+  requires.
 - The user references prior work, a name you do not recognize, or "what
   we decided": `/recall-memories <term>` — it greps the session
   transcripts. NEVER answer from diary + memory alone.

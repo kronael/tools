@@ -27,7 +27,7 @@ launch shape as `/dispatch`) a background agent that audits the **entire**
 codebase for one problem CATEGORY and files each real instance as its own
 `BUGS.md` entry, per `/bugs`'s format/ID rules (read that skill first — sweep
 is the search, not the file mechanics). Record only — never fix what it finds
-(the `bugs` skill's Bug Triage Protocol).
+(WISDOM § Bug triage).
 
 #### Category
 
@@ -77,8 +77,9 @@ Spawn one opus sub per concern. Hard rules:
 
 - **One concern per sub** — authz scope is not migrate enumeration is not
   dispatch lifecycle. If a "fix" spans concerns, split it.
-- **Sequential on the shared tree** — WISDOM § Agents; `Skill(worktree)`
-  decides when a sub gets its own detached worktree, and how.
+- **Sequential on the shared tree** — NEVER run writing subs in parallel
+  on a shared tree (WISDOM § Agents); `Skill(worktree)` decides when a sub
+  gets its own detached worktree, and how.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need

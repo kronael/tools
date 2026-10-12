@@ -65,8 +65,8 @@ still-unpushed stack — and for good once pushed.
 - ALWAYS name the worktree, the SHA it is clean at, and the paths that are out
   of bounds — a sub that meets a dirty tree otherwise treats the changes as its
   own and commits over another agent's work.
-- Writing subs serial, parallel only for read-only subs or a detached
-  worktree: WISDOM § Agents.
+- ALWAYS run writing subs serially — NEVER in parallel unless each has its
+  own detached worktree; parallel is for read-only subs (WISDOM § Agents).
 - ALWAYS send a correction to a running sub with `SendMessage` rather than
   editing its files behind it — and record anything durable the correction
   settles where the next session will read it, not only in the message.

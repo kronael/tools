@@ -1,7 +1,7 @@
 ---
 name: writing
 description: Router for how prose reads and how a document or page looks — copy rules and the owner's page rules. NOT for PR descriptions (use pr-draft), tweets (use tweet), diary entries (use diary), the AI-tells catalogue (use humanize), or which file a fact belongs in (use readme).
-when_to_use: "write a doc, doc prose, headers as claims, tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, make this page readable, simpler wording, 13yo style, rewrite this copy, explain a metric or formula in plain English; AI slop, fix the slop, card header, box title, figure title, accent stripe, colour legend, status pill on every line, all-caps labels, em-dash chain, wall of text, one narrow column, heading anchor, nav label, name the entity first, sources note, link text in brackets, full address, plain English, Simplified Technical English, ASD-STE100"
+when_to_use: "write a doc, doc prose, headers as claims, tooltip, help text, label, caption, microcopy, UI string, button text, error message, empty-state text, make this clearer, make this page readable, page layout, simpler wording, 13yo style, rewrite this copy, explain a metric or formula in plain English; AI slop, fix the slop, card header, box title, figure title, accent stripe, colour legend, status pill on every line, all-caps labels, em-dash chain, wall of text, one narrow column, heading anchor, nav label, name the entity first, sources note, link text in brackets, full address, plain English, Simplified Technical English, ASD-STE100"
 ---
 
 # Writing — prose and page router

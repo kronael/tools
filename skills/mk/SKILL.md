@@ -104,3 +104,8 @@ help:
 
 Double quotes in `@echo "..."` are correct Make syntax — do NOT convert them
 to single quotes (yamlfmt single-quote convention applies only to `.yml` files).
+
+## Echo
+
+- ALWAYS let make echo what ran — NEVER `@`-prefix a recipe line beyond the
+  few whose echo is noise, such as `@echo` in `help`.

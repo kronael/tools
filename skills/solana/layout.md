@@ -69,7 +69,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
 Unit tests follow `rs` § Testing: `src/<module>_test.rs` beside its subject,
 declared at the top of the module it tests with `#[path]`. That section owns
-the rule and the `E0583` trap behind it.
+the rule.
 
 ### Module names
 
