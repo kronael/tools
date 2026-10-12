@@ -181,6 +181,14 @@ def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
     assert findings(path) == []
 
 
+def test_agents_md_needs_no_reference(tmp_path: Path) -> None:
+    """With AGENTS.md loaded beside CLAUDE.md, a directory's AGENTS.md is not cold."""
+    path = make(tmp_path, VALID)
+    sibling(path, 'AGENTS.md')
+    sibling(path, 'mode/AGENTS.md')
+    assert findings(path) == []
+
+
 def test_absolute_home_path_fails(tmp_path: Path) -> None:
     """A real account segment trips bare, with a tail, and on macOS alike."""
     for leak in '/home/devuser', '/home/devuser/src', '/Users/alice':

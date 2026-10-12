@@ -64,9 +64,9 @@ LONG_SKILLS = frozenset({'ship'})
 # text at this many characters (its skillListingMaxDescChars default); a
 # keyword past the cap never reaches the model.
 LISTING_CAP = 1536
-# Claude Code preloads SKILL.md and loads a directory's CLAUDE.md on its own.
+# Claude Code preloads SKILL.md and loads a directory's CLAUDE.md and AGENTS.md on its own.
 # Every other sibling is cold until a chain of names reaches it.
-PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md'})
+PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md', 'AGENTS.md'})
 # A written `.md` path, whole: `flavors/manim.md` is one token, so it cannot
 # stand for a root `manim.md`. The lookbehind keeps `contexts.md` from yielding
 # `ts.md`; it admits `/` so a path still starts after `../` or `~/`.
