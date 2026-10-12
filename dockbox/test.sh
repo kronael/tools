@@ -336,6 +336,8 @@ touch "$tmp/home/.claude/projects/$slug/session.jsonl"
 HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
 true_ "resume maps every nonalphanumeric path character" \
     'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" dockbox -N -n resume claude "$primary" >/dev/null 2>&1
+false_ "-N starts a new session over existing history" 'grep -q "claude --resume" "$log"'
 
 # A project .dockboxrc takes --no-ephemeral like the command line does: builds
 # persist (no overmount for node_modules), claude gets no stray "--", and no
@@ -384,6 +386,31 @@ run=$(grep "^run " "$log")
 true_  "a home rc --no-ephemeral still persists builds" \
     '[ "$rc" = 0 ] && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$tmp/home/.dockboxrc"
+
+# -E mounts no project: the box keys on tmp, works in a box-only tmpfs that
+# dockbox-init chowns, and its claude starts a new session over old history.
+cd "$proj" || exit 1
+fresh -E
+true_  "-E starts a box"                  '[ "$rc" = 0 ]'
+true_  "-E keys the box on tmp"           'grep -q -- " --name dockbox-tmp " <<< "$run"'
+true_  "-E works in a tmpfs workdir" \
+    'grep -q -- " --tmpfs /tmp/work:rw,exec,mode=1777 " <<< "$run" && grep -q -- " -w /tmp/work " <<< "$run"'
+true_  "-E chowns the workdir"            'grep -q -- "DOCKBOX_EPH_PATHS=/home/dockbox:/tmp/work " <<< "$run"'
+false_ "-E mounts no project dir"         'grep -q -- " -v $proj:" <<< "$run"'
+false_ "-E overmounts no project build dir" 'grep -q -- "$proj/node_modules" <<< "$run"'
+mkdir -p "$tmp/home/.claude/projects/-tmp-work"
+touch "$tmp/home/.claude/projects/-tmp-work/session.jsonl"
+HOME="$tmp/home" dockbox -E >/dev/null 2>&1
+true_  "-E re-enters its own box"         'grep -q "^exec -it .* dockbox-tmp setpriv " "$log"'
+false_ "-E starts a new session"          'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -E claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+true_  "-E refuses a project dir, starting no box" \
+    '[ "$rc" = 2 ] && grep -q "use -v" "$tmp/err" && ! grep -q "^run " "$log"'
+printf -- "-E\n" > "$proj/.dockboxrc"
+fresh -n pe
+true_  "project rc -E is ignored"         'grep -q "ignoring -E" "$tmp/err" && grep -q -- " -v $proj:$proj:rw " <<< "$run"'
+rm -f -- "$proj/.dockboxrc"
+cd "$here" || exit 1
 
 # The help line naming the flags a project rc ignores lists exactly the set the
 # rc loop's `case` ignores.
