@@ -262,18 +262,21 @@ RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/d
 # chmod so adding one rebuilds only this layer and the tail. A pinned uv Python
 # lands in /opt (not root's 0700 home) so any runtime UID can run the tool.
 # SERENA_HOME keeps Serena's config, logs and per-project caches out of every
-# repo and out of $HOME, which changes with the runtime user. ripwire is the
-# release binary only, checked against its published sha256.
+# repo and out of $HOME, which changes with the runtime user. manim's pycairo
+# and manimpango build from source against the cairo and pango headers, with
+# clang: gcc lands only in the tail. ripwire is the release binary only,
+# checked against its published sha256.
 ARG RIPWIRE_VERSION=0.6.5
 ENV UV_PYTHON_INSTALL_DIR=/opt/dev-tools/uv/python \
     SERENA_HOME=/opt/dev-tools/serena
 RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz ffmpeg texlive-latex-base texlive-latex-recommended dvisvgm \
+    libcairo2-dev libpango1.0-dev \
   && apt-get clean && rm -f /var/lib/apt/lists/*_* \
   && uv tool install ast-grep-cli && rm -f /opt/dev-tools/uv/bin/sg \
   && uv tool install ruff \
   && uv tool install -p 3.13 serena-agent \
-  && uv tool install -p 3.13 manim \
+  && CC=clang uv tool install -p 3.13 manim \
   && serena init \
   && sed -i \
     -e 's|^web_dashboard: .*|web_dashboard: false|' \
