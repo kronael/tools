@@ -138,7 +138,7 @@
 - **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
   design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
   sub, while `dockbox haiku` (`dockbox/dockbox:412`) and `qemubox haiku`
-  (`qemubox/qemubox:1104`) start an interactive Claude Code session on
+  (`qemubox/qemubox:1223`) start an interactive Claude Code session on
   `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
   `qemubox/test-parity.sh:8` pin the alias in both. **Options:** (a) drop the
   `haiku` alias from both launchers, their usage text, qemubox's README and
@@ -720,7 +720,7 @@
 
 - **BOX-CODEX-DUPLICATE-MODEL-FLAG** (MED, config) — CONFIRMED 2026-10-08,
   no test — config. `dockbox/dockbox:445,462` and
-  `qemubox/qemubox:1101,1341` prepend `-m` and forward the user's model flag.
+  `qemubox/qemubox:1222,1482` prepend `-m` and forward the user's model flag.
   An explicit `-m` or `--model` then prevents Codex from starting.
   Reproduce with Codex 0.160.0:
   `codex -m gpt-6.1-sol --model gpt-6-astra --version` exits 2 with
@@ -794,9 +794,9 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:443,491` and `qemubox/qemubox:1105,1109` launch the
+  `dockbox/dockbox:443,491` and `qemubox/qemubox:1221,1225` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:290`, `qemubox:53,58`, `qemubox/README.md:63`) and
+  (`dockbox:290`, `qemubox:57,62`, `qemubox/README.md:65`) and
   `dockbox/test.sh:357,366` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
@@ -815,20 +815,20 @@
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:180-186` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:206-212` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:128-132`) and the guest user has
-  passwordless sudo (`:189`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:153-158`) and the guest user has
+  passwordless sudo (`:215`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:596`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:657`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:617`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1155-1161`) carries them.
+  `-nic` at `qemubox:678`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1271-1277`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -840,25 +840,25 @@
 - **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
   `qemubox -n x -T exec sudo poweroff` ends with ssh's
   "kex_exchange_identification: Connection reset by peer" and
-  `qemubox:326` "cannot remove session marker; keeping qemubox-x running",
+  `qemubox:384` "cannot remove session marker; keeping qemubox-x running",
   while `qemubox status x` already reports `process=stopped`. `running` at
-  `:320` still sees the QEMU process during shutdown; the marker ssh then
+  `:378` still sees the QEMU process during shutdown; the marker ssh then
   fails. **Fix:** re-check `running` before printing the note; say the VM is
   shutting down instead.
 - **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
   First boot prints systemctl's two "Removed '/etc/systemd/system/...
   systemd-timesyncd.service'" lines into the user's terminal from
-  `sync_guest_clock` (`qemubox:528`). **Fix:** `systemctl disable --now
+  `sync_guest_clock` (`qemubox:587`). **Fix:** `systemctl disable --now
   --quiet`.
 - **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
   Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
-  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:162`
+  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:169`
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
   block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
 
 - **QEMUBOX-UNDOCUMENTED-ALIASES-AND-ENV** (LOW, docs) — CONFIRMED
-  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1261`),
-  `-f`/`rebuild` (`:1266`) and `QEMUBOX_QEMU` (`:10`) appear in neither the
+  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1388`),
+  `-f`/`rebuild` (`:1394`) and `QEMUBOX_QEMU` (`:11`) appear in neither the
   usage text nor `qemubox/README.md`. **Fix:** document them or drop them.
 
 - **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
@@ -867,9 +867,47 @@
   ends in `ready_error`: "VM qemubox-x not ready; serial log:" plus the
   serial tail. A stop blocked by a launch that holds the lock while it waits
   on a wedged guest gets that message, which names the wrong cause, and exits
-  1 without signalling qemu. **Fix:** `lock_box` reports the lock wait
+  1 without signalling qemu. The idle check (`stop_after_linger`,
+  `qemubox/qemubox:321`) takes the lock the same way, so a check blocked for
+  180 s writes the same `ready_error` into `idle.log` and ends, where a failed
+  session count retries. **Fix:** `lock_box` reports the lock wait
   itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
   `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
+
+- **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
+  `linger_box` (`qemubox/qemubox:357`) backgrounds the idle check with `&`
+  from the leaving session's shell, which runs without job control, so the
+  check keeps the session's process group: a shell that sourced the script
+  and called `linger_box` saw the check report that shell's PGID. `trap ''
+  HUP` covers a terminal hangup, but a signal to the group — a multiplexer
+  or supervisor tearing the job down, `kill -- -<pgid>` — ends the check
+  with the session and the VM never powers off. **Proposal:** start the
+  check under `setsid` so it owns its session and process group; test: the
+  check's PGID differs from the launcher's. No test — design.
+
+- **QEMUBOX-PAUSED-ON-HOST-ENOSPC** (MED, ops) — proposed. The `-drive` at
+  `qemubox/qemubox:673` sets no `werror=`, and qemu's default `werror=enospc`
+  pauses the guest when the host filesystem under `disk.qcow2` fills. The
+  launcher passes no `-qmp` or `-monitor` socket, so nothing can see the
+  paused state or send `cont`: `qemubox status` reports `process=running`
+  and `ssh=open` while every SSH connect ends in "Connection timed out
+  during banner exchange", and `stop` reaches SIGKILL after its 90 s and
+  10 s waits (seen 2026-10-12 after the host disk filled; no clean
+  shutdown). **Options:** (a) `-qmp unix:$dir/qmp,server,nowait` at launch,
+  `status_box` reports `query-status`, `stop_box` sends `cont` before the
+  poweroff and `quit` on `-f`; (b) `werror=report` on the drive so the guest
+  gets EIO and keeps running; (c) document the limit. **Default if nothing
+  is decided:** (c). No test — ops.
+
+- **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
+  (`qemubox/qemubox:1441`) lingers like any other: after its session exits,
+  `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
+  seconds (default 1200), and a second `qemubox -T` in that window joins the
+  VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
+  says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
+  for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
+  window in README § Usage. **Default if nothing is decided:** (b). No test
+  — design.
 
 ## bhctl
 
