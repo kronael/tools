@@ -191,14 +191,6 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **COMMIT-EVALS-BRACKET-FORMAT** (LOW, docs) — CONFIRMED at HEAD 2026-09-25.
-  `evals/commit/0[1-5].json` `must_use_format` expects `[fix] …`-style
-  subjects (`01.json:13`, `03.json:18`), and `research/eval-sets.md:196`
-  shows the same, while `skills/commit/SKILL.md:33` prescribes
-  `type(scope): …`. A run scores a skill-compliant commit as a format
-  failure. **Fix:** rewrite the regexes and rubric lines to the
-  `type(scope):` form; no test — docs.
-
 - **LANG-SKILLS-RESTATE-COLD-RUNBOOKS** (LOW, duplication) — owner decision,
   no test — duplication. Hot `SKILL.md` bodies restate rules a cold
   `software/` runbook owns: `skills/py/SKILL.md:121-123,130,132-137`
@@ -431,7 +423,7 @@
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which
   strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
-  documents the clause — none in `Makefile`, `.github/`, `evals/`, or any
+  documents the clause — none in `Makefile`, `.github/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
   get the block messages injected into their transcripts. **Fix:** one line
   either way — set it in the eval runner, or delete the clause — but which

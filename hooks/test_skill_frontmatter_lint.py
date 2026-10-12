@@ -317,7 +317,7 @@ def test_root_inside_an_ignored_directory_is_scanned(tmp_path: Path) -> None:
 
 
 def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
-    """evals/README.md shows a real-looking path as the thing to strip."""
+    """A doc that shows a real-looking path as the thing to strip opts out."""
     doc = tmp_path / 'README.md'
     doc.write_text('<!-- lint: allow skill-local-path -->\nStrip /home/devuser/wk/.\n')
     assert check_leaks(doc) == []
