@@ -15,7 +15,7 @@ STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/ca
   say what to DO and what HAPPENED, the middle is padding."""
 
 DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
-- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ dir; plans/ only as .claude/plans/ (plan mode's directory, where ship records live)
+- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dir: plans and ship records live under ~/.claude/ (ship skill § Work record), never in the repo
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
 COMMIT_RULES = """Commit rules:

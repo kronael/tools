@@ -45,7 +45,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
   error:
 
   ```rust
-  pub const ID: Pubkey = pubkey!("J9Rve…6F25");   // in the state crate
+  pub const ID: Pubkey = pubkey!("<program id>");   // in the state crate
 
   #[test]                                          // in the program crate
   fn state_crate_names_this_program() {
@@ -91,7 +91,7 @@ and the file stops fitting in one mental context.
 
 ### Where invariants live
 
-`rs`'s abstraction rules hold, with one on-chain corollary: a per-account
+`software/code.md` § Design's abstraction rules hold, with one on-chain corollary: a per-account
 invariant belongs as a method on the account type in the state crate, not as a
 free function taking that account as its first argument. Signer seeds, an
 open-item counter, an entry lookup:

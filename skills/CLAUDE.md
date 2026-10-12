@@ -89,6 +89,7 @@ skills it replaces.
   them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
   xhigh. ALWAYS change an agent file and every skill that quotes it in one
   commit.
+- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
 - `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
   mechanical edits too wide for the parent, and the steps of a written plan
   (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
@@ -108,6 +109,8 @@ skills it replaces.
   (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
   its agent serves only an explicit dispatch of a whole refine pass.
   Knowledge lives in the skill that owns the concern, NEVER in an agent body.
+- `terra` is the exception because it routes an OpenAI model. NEVER add an
+  `agents/terra.md`; Codex reads `skills/terra/SKILL.md` through the bridge.
 - This section owns the agents rule. ALWAYS point here in one line from any
   other file; NEVER restate the list.
 - A skill that needs isolation or a model says so in its own body (`## Where
@@ -122,17 +125,21 @@ skills it replaces.
 
 ## Prompt examples and context
 
-- Treat examples as steering tokens, not neutral documentation.
-- Prefer explicit rules over examples when the rule can be stated directly.
-- Keep examples scarce, ordinary, and representative; label what property
-  should generalize.
-- Do not keep examples merely as history or proof of dogfooding. They prime
-  future runs and spend context.
-- Move example galleries, research notes, and test cases to cold references;
-  keep preloaded skills as decision surfaces.
+- ALWAYS treat examples as steering tokens, not neutral documentation.
+- ALWAYS prefer an explicit rule over an example when the rule can be stated
+  directly.
+- ALWAYS keep examples scarce, ordinary, and representative; label what
+  property should generalize.
+- NEVER keep an example merely as history or proof of dogfooding. It primes
+  future runs and spends context.
+- ALWAYS move example galleries, research notes, and test cases to cold
+  references; keep preloaded skills as decision surfaces.
 - ALWAYS give an illustrative absolute path a one-character account segment
   (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
-  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`).
+  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`). A file
+  whose point is the real-looking path — what to strip, where a slug comes
+  from — opts out with `<!-- lint: allow skill-local-path -->` on a line of
+  its own.
 
 ## Editing a router
 

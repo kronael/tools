@@ -83,7 +83,7 @@ or one skill governs — never a whole file of mixed concerns.
 
 - One verdict table per file: rule, question 1 and question 2 per model,
   behavioural evidence, verdict. ALWAYS record the tables as the diary
-  companion `.diary/YYYYMMDD-subtraction.md`, referenced from that day's log —
+  companion `YYYYMMDD-subtraction.md` (`diary` § Named companions), referenced from that day's log —
   the next pass starts from it.
 - ALWAYS file a proposed cut to an always-loaded file (`global`, `code.md`) in
   `BUGS.md` as a proposal naming which model produced what, and wait for the

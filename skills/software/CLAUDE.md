@@ -1,14 +1,13 @@
 # software/ — edit reference
 
-Router for deep engineering runbooks extracted from `../ops/SKILL.md`
-(which keeps only terse hot rules + a pointer table). Convention:
-`../CLAUDE.md`.
+Router for deep engineering runbooks; `../ops/SKILL.md` keeps only terse hot
+rules + a pointer table. Convention: `../CLAUDE.md`.
 
 ## What lives where
 
 | File | Holds |
 |---|---|
-| `code.md` | language-agnostic code baseline: naming, layout, design, boring-code, grug — the base every language skill pulls in via `requires: software` |
+| `code.md` | language-agnostic code baseline: naming, layout, design, boring-code, grug — the base every language skill reads first (its ALWAYS Read line) |
 | `docker.md` | Python+uv two-layer Dockerfile, m4 monorepo Dockerfile generation |
 | `ci.md` | Makefile pattern for Python+uv (prepare/build/test/right/image/clean) |
 | `deploy.md` | Ansible docker-service role, per-deployable subdir layout |
@@ -17,6 +16,8 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 | `uvx-tools.md` | PEP 723 single-file scripts, uvx distribution, package layout |
 | `strict-typing.md` | un-circumventable strict lint/type config (py basedpyright/ruff, ts tsconfig/biome/eslint, go golangci-lint) — which linters to run + bans `Any`, `# type: ignore`, `as any`, blanket `//nolint` |
 | `dynamic-analysis.md` | runtime checkers as test/CI targets (not pre-commit): race detector, sanitizers, fuzzing, Miri, memory/leak, property testing — go, rust, py |
+| `lsp.md` | a language server that will not start: install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats |
+| `js-perf.md` | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs |
 | `money.md` | exact arithmetic for money/token amounts: why never float (incl. the decode step), the integer → fixed-point → wide-integer → arbitrary-precision ladder, deriving the overflow bound, round once at the edge, checked add, the tests that catch it |
 | `refactor-stack.md` | re-shipping an unreviewable branch as a stack: test layer first, dividing criterion, four passes, mutation proof, deletion oracles, diffstat split, long runs, merging the base forward, evidence per branch, landing a native GitHub stack (merge-async) |
 | `credits.md` | attribution and licensing for ported or adapted work: the `NOTICE` file format, per-file header and LICENSE retention, the attribution chain through an intermediary, license compatibility |
@@ -28,7 +29,7 @@ Router for deep engineering runbooks extracted from `../ops/SKILL.md`
 - New runbook → new `<topic>.md` + dispatch row in `SKILL.md` + keywords in
   its `when_to_use` (trimmed — it preloads).
 - ops' pointer table mirrors ONLY the devops runbooks (docker/ci/deploy/
-  observe/uvx-tools) — ops was split off from software. A non-devops page
+  observe/uvx-tools). A non-devops page
   (e.g. `code.md`, `strict-typing.md`) gets NO ops row; it routes via this
   SKILL.md only.
 - When you do add/rename a devops runbook, keep ops' table in sync:

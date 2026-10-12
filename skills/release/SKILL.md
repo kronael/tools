@@ -101,14 +101,17 @@ version, CHANGELOG and tag.
    **Pass B — the `### Added / ### Changed / ### Fixed` body.**
    Maintainer-facing. Compress to ~20% of raw commit-log paraphrase.
 
-   - Lead with notable user-facing features. First bullets name what
-     the user can now do, in user vocabulary.
-     Internal refactors and plumbing go after.
-   - One line per change. Drop commit SHAs and internal-only file
-     paths from body bullets (migration numbers and `Spec: specs/X.md`
-     pointers stay).
+   - Keep only what a user, operator or caller of the component must
+     know: new or removed features, modes, flags and config keys;
+     changed behaviour or data format; breaking changes; deploy steps.
+     Leave out how it works, function and module names, refactors,
+     tests, evidence and reasons; those live in the code, the docs and
+     the PR. An entry with nothing user-visible is one line.
+   - One bullet = one sentence, at most 100 characters, NEVER a
+     paragraph. A PR's entry is 1-6 bullets. Drop commit SHAs and
+     internal-only file paths (migration numbers and
+     `Spec: specs/X.md` pointers stay).
    - Collapse synonymous bullets across sections.
-   - Cut multi-sentence "why" paragraphs.
    - If total body bullets ≤ 5, collapse to a single un-headed list.
    - Preserve at full detail (never trim): security fixes, breaking
      changes, env-var renames, schema migrations, anything the

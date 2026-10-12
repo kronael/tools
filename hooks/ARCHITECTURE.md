@@ -6,7 +6,7 @@
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
                                  ──> local.py        (LOCAL.md on first prompt)
 
-Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block)
+Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
           ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
                                                   pretool_nudge.py; periodic
                                                   commit/diary nudge)
@@ -30,9 +30,10 @@ first runs through `codex_hook.py`.
 `state.py` — per-session throttle stamp paths, the state root, and
 `hook_event(data)`, which reads the event key across all three spellings.
 
-`local.py`, `memory_nudge.py`, `prompt_nudge.py` and `reclaude.py` import it as
-`lib.state`, resolved from the hook script's own directory (`sys.path[0]`), so
-an install that omits the directory tracebacks on every prompt. `stop.py`
+`local.py`, `memory_nudge.py`, `prompt_nudge.py`, `pretool_nudge.py` and
+`reclaude.py` import it as `lib.state`, resolved from the hook script's own
+directory (`sys.path[0]`), so an install that omits the directory tracebacks
+on every prompt and every tool call. `stop.py`
 imports nothing from it: it carries its own `hook_event`, which checks
 `KRONAEL_HOOK_EVENT` before the three payload keys.
 
@@ -71,9 +72,8 @@ model; `systemMessage` reaches only the user.
    `/solve`. Continuations stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
-4. In Claude only, route a prompt that starts with `/astra` or `/sol` to
-   `/astra` (`/sol` is its Sol variant); route `ask codex`, `ask astra`,
-   `oracle`, and `second opinion` to `/astra`.
+4. In Claude only, route a prompt that starts with `/astra`, and the phrases
+   `ask codex`, `ask astra`, `oracle`, and `second opinion`, to `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
 6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
@@ -112,10 +112,13 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    bytes back.
 
 **PreToolUse flow:**
-1. For shell tools (`Bash`, Codex `exec_command`), block true unsafe commands:
-   amend, hard reset, broad add, no-verify commits, any recursive `rm`
-   (`-r`, `-R`, `-rf`, `--recursive`), and recursive Codex execution inside
-   Codex.
+1. For shell tools (`Bash`, Codex `exec_command`), block the commands
+   `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names, and recursive Codex
+   execution inside Codex. Then
+   `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
+   PR body, an issue body or a comment is blocked when the body it carries
+   fails the lint, cannot be read, or is required and absent. The reason names
+   the failing lines and the skill that owns the text.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -127,6 +130,28 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    " Read ~/.claude/skills/software/code.md first." when the skill is in
    `CODE_SKILLS`.
 Codex sees `<skill>` as `@py`, `@go`, etc.
+
+### gh_text_lint.py (library + CLI)
+
+**Input:** a text kind (`pr`, `issue`, `comment`) and the text, or a shell
+command plus its `cwd`.
+**Output:** `lint` returns `Problem(line, text)` records; `command_reason`
+returns the block reason for a posting command, or None; the CLI prints
+`<file>:<line>: <problem>` lines and exits 1, or `ok: <kind> <chars> chars`.
+
+The rules are WISDOM § Git and the Format section of the posting skill, kept
+to what a program can check. `mark_heredocs` replaces each heredoc's content
+with a marker so it is never read as a command, backslash-newline
+continuations are joined, and `find_posts` locates every gh
+invocation that posts, and each one is checked over its own slice of the
+command with the `cd` calls before it applied to `cwd`. `read_bodies` finds
+the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
+`-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
+`$(cat <path>)`); a `$VAR` path, stdin, a missing or undecodable file,
+unparsable JSON or a command substitution is an OSError the gate reports, and
+any other exception becomes the block reason. Imported by `pretool_nudge.py`;
+run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
+`gh-comment`.
 
 ### post_tool_nudge.sh (PostToolUse)
 
@@ -197,50 +222,23 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    `git diff --stat` and re-stamp. A failed `git status` inside a repo
    appends its stderr instead, unthrottled — an unreadable tree is reported,
    never read as clean.
-4. Resolve the diary tree (`diary_trees`, below) and check for today's
-   `YYYYMMDD.md` (UTC) under its `.diary/`. Missing or >1h stale → append a
-   diary nudge on every Stop; no stamp throttles it. The directory need not
-   exist; a repo without one is nudged to start it.
+4. Resolve the diary file (`main_tree`, `diary_file`, below) and check for
+   today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
+   on every Stop; no stamp throttles it. The directory need not exist; a
+   repo without one is nudged to start it.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
 `<git-dir>/claude-commit-nudge` (commit nudge throttle).
 
-**Diary tree:** an ignored diary is never committed, so its one copy lives
-in the main worktree; any other is committed per branch and read in the
-current worktree. The check tests the dated file: a `.diary/` ignore rule
-matches the bare `.diary` only once the directory exists.
-
-```
-git_dir = rev-parse --absolute-git-dir
-common  = rev-parse --path-format=absolute --git-common-dir
-current = rev-parse --show-toplevel
-     │
-     v
-same realpath(git_dir, common)? ──yes──> main = current
-     │                               (plain repo, submodule,
-     │ no: linked worktree            --separate-git-dir repo)
-     v
-core.worktree in <common>/config? ──yes──> main = <common>/<value>
-     │                                     (worktree of a submodule)
-     │ no
-     v
-main = dirname(<common>)                   (worktree of a plain repo)
-
-check-ignore -q .diary/YYYYMMDD.md, run in current
-     │
-     ├── ignored ─────> <main>/.diary/YYYYMMDD.md
-     └── not ignored ──> <current>/.diary/YYYYMMDD.md
-```
-
-`dirname(<common>)` cannot be the general rule: a submodule's or a
-`--separate-git-dir` repo's common dir is a git dir stored elsewhere, so its
-parent is not their checkout. Git records no main tree for a
-linked worktree of a `--separate-git-dir` repo; there the last branch yields
-the git dir's parent, and an ignored diary is looked for beside the git dir.
-`../skills/diary/SKILL.md` § Where to write resolves `<main>` the same way;
-change both together.
+**Diary file:** `~/.claude/projects/<slug>/diary/YYYYMMDD.md`, never inside
+the repo. `<slug>` is the first entry of `git worktree list --porcelain`
+(the main tree) with every non-alphanumeric character replaced by `-`, so
+every worktree of a repo reads the same file. Git lists the git dir, not the
+checkout, for a submodule or a `--separate-git-dir` repo; the slug follows
+that path, and `../skills/diary/SKILL.md` § Where it lives names the same
+tree. Change both together. Outside a repo the hook checks nothing.
 
 ### memory_nudge.py (PreCompact + Stop)
 
@@ -266,51 +264,15 @@ State: the `memory-nudge-{start,done}-{session_id}` stamps in `~/.claude/state` 
 frequency than stop.py's recurring diary/commit nudges — at most once via
 PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
 
-## Data Flow
-
-### UserPromptSubmit
-
-```
-stdin:
-{
-  "prompt": "improve the error handling",
-  "hook_event": "UserPromptSubmit",
-  "session_id": "abc123",
-  "cwd": "/project"
-}
-
-stdout (prompt_nudge.py match):
-{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "Invoke /improve."}}
-```
-
-### Stop
-
-```
-stdin:
-{
-  "cwd": "/project"
-  // "stop_hook_active": true — field absent when inactive; Claude Code only sends it when true
-}
-
-stdout (dirty tree + stale diary; commit guidance elided):
-{
-  "decision": "block",
-  "reason": "Uncommitted changes detected.\n<diff stat>\nCommit your work — ... Run /commit.\nRules: ...\nDiary not updated in over an hour (now 16:52 2026-10-01). Run /diary deliberately if there is work to record."
-}
-
-stdout (nothing to nudge, or a judging SHIP_ROLE): empty
-```
-
-Codex rewrites known Kronael refs in nudge output, e.g. `Run @commit` and
-`Run @diary`.
-
 ## Error Handling
 
-All Python hooks catch `json.JSONDecodeError`, `EOFError`, `ValueError`
-and bail with exit 0 so a broken payload never blocks the session. File
-I/O errors are swallowed for the same reason. `post_tool_nudge.sh`
-always exits 0, and a rumdl run that fails or times out becomes a context note
-rather than an exit code.
+`pretool_nudge.py` wraps `main()` in `suppress(Exception)` and exits 0. The
+other Python hooks catch `json.JSONDecodeError`, `EOFError` and `ValueError` on
+the payload and exit 0. `stop.py` lets an OS error escape: a `cwd` that does
+not exist raises `FileNotFoundError` from its first `git` call and exits 1,
+which Claude Code shows and does not treat as blocking. `post_tool_nudge.sh`
+always exits 0, and a rumdl run that fails or times out becomes a context
+note rather than an exit code.
 
 ## Extension Points
 

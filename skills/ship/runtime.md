@@ -76,7 +76,7 @@ independent research.
 
 | Primitive | Place in this flow |
 |---|---|
-| Workflow | Only after the owner opts in to native workflows. Bounded orchestration of approved steps or read-only research and checks, with ≤4 agents. Editing agents run one at a time or in detached worktrees created by hand per `worktree` — the runtime's isolated copies create branches. Load the native `workflow-authoring` reference before authoring a task script. The main agent accepts results and owns decisions. |
+| Workflow | Only after the owner opts in to native workflows. Bounded orchestration of approved steps or read-only research and checks. Editing agents run one at a time or in detached worktrees created by hand per `worktree` — the runtime's isolated copies create branches. Load the native `workflow-authoring` reference before authoring a task script. The main agent accepts results and owns decisions. |
 | Active session /goal | Continue toward the existing measurable acceptance condition. Surface evidence for its evaluator, which runs no checks itself. Request and acceptance of a goal follow the runtime's own rules. |
 | /loop | Only for owner-requested repeated work or external state that needs polling. It repeats this plan's next safe action, not a general mandate to expand scope. |
 | ScheduleWakeup | Self-paced /loop scheduling under the exposed tool's instructions. For harness-tracked background work, rely on completion notifications, with only a permitted long fallback for a hang. |

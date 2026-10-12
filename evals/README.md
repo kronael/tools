@@ -92,7 +92,7 @@ Details: [`research/eval-sets.md#scoring-formula`](../research/eval-sets.md#scor
 3. **Source the example** from one of three:
    - **Real session transcript** (preferred — 60% of target mix). Find a turn in `~/.claude/projects/<slug>/*.jsonl` where the skill was invoked successfully. Paraphrase the user prompt and edit identifying details so we don't ship private data verbatim.
    - **Synthetic from a skill rule** (30%). Take an ALWAYS or NEVER from the SKILL.md and template an example that exercises it.
-   - **Failure case** (10%). Pick a `.diary/` entry or a `[fix]`/`[refined]` commit that reveals a regression; reconstruct the pre-failure state.
+   - **Failure case** (10%). Pick a diary entry or a `[fix]`/`[refined]` commit that reveals a regression; reconstruct the pre-failure state.
 4. **Fill in the JSON** per the schema. Pay attention to:
    - `must_not_include`: every literal substring you want banned. Case-sensitive.
    - `should_mention`: literal substrings the response must reference. Case-insensitive in the harness.
@@ -119,7 +119,7 @@ If you notice candidates that score implausibly well, suspect contamination firs
 When mining real sessions:
 
 - **Paraphrase the user prompt.** Don't copy verbatim if it contains personal details.
-- **Strip identifying paths.** Replace `/home/ondra/wk/myproject/` with `/some/repo/` or a fake path that makes sense for the example.
+- **Strip identifying paths.** Replace `/home/u/wk/myproject/` with `/some/repo/` or a fake path that makes sense for the example.
 - **Edit diffs.** If the real diff includes proprietary code or secrets, replace with synthesized equivalents that exercise the same skill behavior.
 - **Set `source: "real-session"` and `provenance: "<session-id-truncated>"`** so we can find it again if needed.
 

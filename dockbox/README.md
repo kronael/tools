@@ -206,12 +206,12 @@ Automatic:
 - a generated sandbox note -> `/etc/claude-code/CLAUDE.md` (ro) — Claude
   Code loads it in every session, so the agent knows it is in dockbox and
   which mounts survive; `CLAUDE_SANDBOX=dockbox` is set as well
+- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
+- `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
   (commit signing; off by default)
-- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
-- `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Project dirs are mounted at exact paths with read-write access.
 
@@ -324,11 +324,10 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permission prompts are bypassed two ways: `bypassPermissions`
-mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
-passed by the `claude` wrapper in the image. This is intentional — the use
-case is a trusted agent doing real work, not untrusted code execution. If you
-need security isolation, this is not the tool.
+All Claude Code permission prompts are bypassed by
+`--dangerously-skip-permissions`, passed by the `claude` wrapper in the image.
+This is intentional — the use case is a trusted agent doing real work, not
+untrusted code execution. If you need security isolation, this is not the tool.
 
 Boxes are kept apart from each other and from the host's Claude sessions
 (private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the

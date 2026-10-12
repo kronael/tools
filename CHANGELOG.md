@@ -1,20 +1,129 @@
 # Changelog
 
-## [v0.4.25] — 20261011
+## [v0.4.30] — 20261010
 
-> kronael v0.4.25 — pages that come out finished
+> kronael v0.4.30 — Diary out of repos, one owner per rule
 >
-> The writing skill now carries the rules a page owner used to type as corrections, plus a checklist run before handover.
+> The diary moves to ~/.claude like ship records, and a full refine pass cuts repeated rules from the bundle.
 >
-> • Word budget — a study page stays at most 5,500 visible words, counted once across widths.
-> • Layout — text fills its box, rows align, one fact appears once, every term is glossed.
-> • Figures — one per flow, faithful to the code and test, refusals show the attempt.
-> • Checklist — 15 items before handover; the mechanical ones become keeper checks in `make lint`.
+> • diary — entries go to ~/.claude/projects/<slug>/diary/; no repo carries a .diary/ dir.
+> • Stop hook — checks the new diary path, keyed on the main tree's resolved path.
+> • recall — reads the home diary first, then a repo's older .diary/ when one exists.
+> • sync — the settings merge keeps your cleanupPeriodDays and your other hook events.
+> • Docs — each rule lives in one file, and the other files point at it.
 >
-> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
-- `readme/page.md`: section order, CEO/CTO/novice lenses, decide section; `readme/topology.md` points keeper checks at `make lint`; `readme/onepager.md` problem section states the reader's cost and the change.
+- `diary`: entries go to `~/.claude/projects/<slug>/diary/`, keyed on the resolved main tree.
+- No repo carries a `.diary/` dir or an ignore line for one; this repo's tracked diary is removed.
+- Stop hook: checks the new path; it stays silent outside git.
+- `recall-memories`: reads the home diary first, then a repo's `.diary/`, read-only.
+- `ship`: the record slug uses the resolved path; outside git, `pwd -P`.
+- Sync: the settings merge keeps `cleanupPeriodDays` and other hook events.
+- Codex plugin manifest declares the Unlicense.
+- Bundle docs: one owner file per rule; refine and topology overflow moved to sibling files.
+
+## [v0.4.29] — 20261010
+
+> kronael v0.4.29 — Records out of repos, Bun tooling
+>
+> Ship records and plans live under ~/.claude, and JavaScript-family tooling is TypeScript run by Bun.
+>
+> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
+> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
+> • ts — tooling scripts are TypeScript on Bun; shared checkers live in one global tools project.
+> • sweep — worktree isolation and reconciliation follow the worktree skill.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
+- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
+- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
+- `ts`: JavaScript-family tooling is TypeScript run by Bun; no `.js`/`.mjs`/`.cjs` tooling.
+- `ts`: reusable checkers stay in the global tools project with project-local config.
+- `sweep`: parallel fixes and their reconciliation defer to the `worktree` skill.
+- Merge: origin's v0.4.26 and v0.4.27 join this line; the v0.4.27 section is origin's.
+
+## [v0.4.28] — 20261010
+
+> kronael v0.4.28 — PR bodies are a TL;DR
+>
+> A PR body is now a TL;DR of one to three sentences, with no bullets, and the naming rules no longer list languages.
+>
+> • pr-draft — a body is the TL;DR lead, `Closes #N` lines and 🤖; nothing the title or diff shows.
+> • GitHub gate — a body over 400 chars, a bullet, a second paragraph or a code block fails.
+> • code.md — naming rules stated for all code; the sh skill points there.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pr-draft`: a body is the `**TL;DR:**` lead, optional `Closes`/`Fixes #N` lines and `🤖`.
+- GitHub gate: a PR body over 400 chars, a bullet, text after the lead or a code block is refused.
+- WISDOM § Git: DISTILL names the TL;DR as the whole PR body.
+- `code.md`: the `is_`/`has_` and `run_<command>` rules name no language; `sh` only points at `code.md`.
+
+## [v0.4.27] — 20261010
+
+> kronael v0.4.27 — Worktrees follow explicit choices
+>
+> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+>
+> • Default checkout — routine editing workers share one tree with one writer at a time.
+> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
+> • Shared resources — isolated workers still coordinate services, ports and caches.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Routine editing workers use one shared checkout with one writer at a time.
+- Separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+- Worktrees still share services, ports and caches.
+
+## [v0.4.26] — 20261010
+
+> kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
+>
+> PR, issue and comment text is linted before it posts, Python gains async and typing rules, and subagents are capped per tier.
+>
+> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
+> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
+> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
+> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
+> • Agents — at most 3 sonnet, 1 fable and 2 opus subagents at once; only the owner lifts the cap.
+> • refine — a Python lens; a worktree is removed only once its HEAD is on a remote ref.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh` PR, issue, comment and review posts whose body fails the WISDOM lint are refused.
+- `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>` lints a body by hand.
+- `pr-draft` distills until the lint prints `ok:`; `gh-comment` and `gh-issue` lint before posting.
+- Settings: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` always apply.
+- Skill lint: a sibling `.md` lints its owner; the opt-out marker counts only on its own line.
+- `py`: short file I/O inline, one shared `to_thread` helper, subprocesses reaped by one manager.
+- Typing: one project-wide pyright `strict`; a test file opts down with `# pyright: basic`.
+- `refine`: a Python lens; a worktree is removed only when its HEAD is on a remote ref and clean.
+- Agents: at most 3 `sonnet`, 1 `fable` and 2 `opus` subagents at once; only the owner lifts it.
+- `release`: a changelog bullet is one sentence, at most 100 characters, user-visible change only.
+- `software/code.md`: a function wrapping one external command is named `run_<command>`.
+- `wisdom`: XML tags are labels, not loaders; conditional loading is `.claude/rules/*.md` `paths`.
+- `BUGS.md`: a gh gate proposal, two gate gaps, four skill-lint gaps and five rule conflicts.
+
+## [v0.4.25] — 20261008
+
+> kronael v0.4.25 — Sol 6.1 workers and defaults
+>
+> Terra delegates coding work to GPT-6.1 Sol, and the Codex box launchers select the same model.
+>
+> • /terra — GPT-6.1 Sol at high effort, through a native Codex worker or the CLI.
+> • Box defaults — dockbox codex and qemubox codex use GPT-6.1 Sol at xhigh effort.
+> • Explicit Sol opinions — oracle selects GPT-6.1 Sol at high effort.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/terra` selects GPT-6.1 Sol/high through independent native workers or ephemeral CLI sessions.
+  CLI permissions follow the task. Editing workers use their own worktree.
+- `dockbox codex` and `qemubox codex` select GPT-6.1 Sol/xhigh.
+  Explicit Sol second opinions through `astra` and `oracle` select GPT-6.1 Sol/high.
+- Known box limits: duplicate model flags fail. Explicit dockbox Codex routes omit the defaults.
+  `BUGS.md` records both configuration defects.
 
 ## [v0.4.24] — 20261008
 

@@ -14,12 +14,12 @@ ALWAYS load the `writing` skill before drafting or editing prose in any mode.
 | If you need | Read |
 |---|---|
 | to bring existing docs back in line with shipped code — README, ARCHITECTURE, CHANGELOG edits, the sync protocol and where it runs; the README opening order (what, link row, status line, why, how to start) and the one status wording; the cost rule (formula with every term, one figure it reproduces); doc code taken from compiled, tested files by region include, the README example copied from a guide region | `sync.md` |
-| to decide WHICH file a fact belongs in, or to lay out a repo and its docs — the house layout: README, PLAN (why), ARCHITECTURE (where), FEATURES (a test per row), BUGS, the study page, the numbers ledger `verified.md`, root and per-package CLAUDE.md, the reading order, README as a docs-site hub and the doc-site sidebar order (guide groups, then reference), generated counts vs typed measured figures, the examples-index verdict column, what `make lint` checks, what is tracked and what stays local, CHANGELOG or not | `topology.md` |
-| the order of sections INSIDE one integration guide, API-reference page or example page — guide vs reference shape, examples before or after parameters, where errors go, Diátaxis on one page, an example or recipe page from Status to What has been tested | `shape.md` |
+| to decide WHICH file a fact belongs in, or to lay out a repo and its docs — the house layout: README, PLAN (why), ARCHITECTURE (where), FEATURES (a test per row), BUGS, the study page, the numbers ledger `verified.md`, root and per-package CLAUDE.md, the reading order, README as a docs-site hub, generated counts vs typed measured figures, the examples-index verdict column, what `make lint` checks, what is tracked and what stays local, CHANGELOG or not | `topology.md` |
+| the order of sections INSIDE one integration guide, API-reference page or example page — guide vs reference shape, examples before or after parameters, where errors go, Diátaxis on one page, an example or recipe page from Status to What has been tested, and the doc-site sidebar order (guide groups, then reference) | `shape.md` |
 | one self-contained public HTML page for a stranger — what it is, who it is for, what is different, what it costs, what to do next, published to the web root | `onepager.md` |
 | one HTML explainer page under `docs/` for someone who will use or change the code — what it holds and in what order (the answer first, how the parts fit, limits, one block per flow, the decide section last), the CEO, CTO and novice lenses, the fact pass on refine; how it reads and looks is the `writing` skill | `page.md` |
 
 Audience decides the file: `sync.md`, `topology.md`, `shape.md` and `page.md`
 write for someone who will use or change the code, `onepager.md` writes for
 someone deciding whether to care at all. NEVER let a onepager claim what the project's own `BUGS.md` or
-`.claude/plans/critique-*.md` contradicts.
+the record dir's `critique-*.md` (`ship` § Work record) contradicts.

@@ -54,7 +54,7 @@ help:
 	@echo "make clean-<dir> - clean one project"
 	@echo "make workflows   - regenerate PROJECTS from */Makefile"
 	@echo "make gen-ci      - regenerate .github/workflows/ from templates"
-	@echo "make skills-frontmatter     - lint SKILL.md (frontmatter YAML + wisdom body rules)"
+	@echo "make skills-frontmatter     - lint every SKILL.md; scan every .md for leaked paths and secrets"
 	@echo "make skills-frontmatter-fix - auto-fix loose SKILL.md YAML"
 	@echo "make spec-lint   - lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)"
 	@echo "make lints       - prove co-located ast-grep lint rules against fixtures"
@@ -84,10 +84,10 @@ workflows:
 gen-ci: $(CI_WORKFLOWS)
 
 skills-frontmatter:
-	python3 hooks/skill_frontmatter_lint.py skills
+	python3 hooks/skill_frontmatter_lint.py .
 
 skills-frontmatter-fix:
-	python3 hooks/skill_frontmatter_lint.py --write skills
+	python3 hooks/skill_frontmatter_lint.py --write .
 
 # Lints a spec corpus, this repo's own by default: SPECS=~/proj/specs checks
 # another. The rules are skills/specs/format.md, not this repo's layout.

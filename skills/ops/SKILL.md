@@ -35,7 +35,6 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 ## Anti-Patterns
 
 - Use EWMA (not sliding windows) for window calculations
-- NEVER manually .close() async context managers
 
 ## Process
 

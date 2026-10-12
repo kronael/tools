@@ -16,8 +16,8 @@ the user to approve each item, so they ALWAYS run in the main thread.
 
 ## Sources
 
-- `~/.claude/projects/<slug>/*.jsonl` — per-project transcripts (slug = cwd
-  with `/` → `-`); reading recipe in `recall-memories` §1.
+- `~/.claude/projects/<slug>/*.jsonl` — per-project transcripts (slug = CWD
+  with every non-alphanumeric character → `-`); reading recipe in `recall-memories` §1.
 - `~/.claude/history.jsonl` — global prompt history.
 - `~/.claude/projects/<slug>/memory/` — existing memory files and the
   `MEMORY.md` index.
@@ -57,7 +57,7 @@ mistake on one language — a lint candidate.
 - ALWAYS locate the specific failure or decision in the transcripts BEFORE
   drafting anything.
 - NEVER promote one session to a skill or a lint — the same pattern in 2+
-  distinct sessions; a single session goes to `.diary/`.
+  distinct sessions; a single session goes to the diary.
 - NEVER lint judgment (whether a name fits, minimality, "boring code") — a
   false positive trains `--no-verify`. A mechanical shape is lintable, such as
   a bool-returning function without an `is_`/`has_`/`can_`/`should_` prefix.

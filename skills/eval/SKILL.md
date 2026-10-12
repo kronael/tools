@@ -28,8 +28,8 @@ real defect goes to `BUGS.md` via `/bugs`, fixes go through `refine`.
 
 No file. Adopt the role with no softening, cite file, line, env var or spec
 section for every claim, and write the memo to
-`.claude/plans/critique-<role>-<YYYYMMDD>.md` (`ship` § Work record owns the
-directory): one-line verdict (pass / fail / conditional), top-3 strengths,
+`critique-<role>-<YYYYMMDD>.md` in the record dir (`ship` § Work record
+names it): one-line verdict (pass / fail / conditional), top-3 strengths,
 top-3 blockers, the kill shot, and the next action that would change the
 verdict.
 

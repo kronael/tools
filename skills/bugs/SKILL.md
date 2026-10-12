@@ -21,7 +21,7 @@ when_to_use: "log this bug, open issues, what's broken, what's the queue, prune 
 Nothing else. It is NOT a log of audits, reviews, sessions or sweeps: no
 "Status — <date> — <what I checked>" blocks, no lead paragraphs describing a
 review pass, no counts of what was verified. That narrative belongs in
-`.diary/`. A reader opens `BUGS.md` to learn what is broken, not what someone
+the diary. A reader opens `BUGS.md` to learn what is broken, not what someone
 did.
 
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
@@ -114,8 +114,8 @@ existing ignored/skipped test and match it; never invent a second convention.
 - ALWAYS put the entry id in the skip/ignore reason next to the mechanism
   (`"<ENTRY-ID>: <mechanism>"`) — either side greps straight to the other.
 - NEVER let writing this test become writing the fix. The test asserts correct
-  behavior and stays red; producing it is recording, exactly the CLAUDE.md Bug
-  Triage Protocol's "record, don't fix" — the assertion, never the code that
+  behavior and stays red; producing it is recording, exactly WISDOM § Bug
+  triage's "record, don't fix" — the assertion, never the code that
   makes it pass.
 
 **Carve-out — no test required:** `docs`, `ops`, `config`, `design`,

@@ -16,7 +16,6 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - NEVER `use super::`, NEVER local `use` inside function bodies
   (exception: tests/main where scoping demands it)
 - ALWAYS `use crate::` for absolute paths
-- NEVER rename — full path or canonical name; renaming erases origin
 - **Common types in scope, rare types full-path — consistently project-wide.**
   A type a crate uses pervasively (`Arc`, the project's main error type, common
   wire/record types) gets a top-of-file single-line `use` so it reads bare
@@ -122,7 +121,8 @@ fn main() -> eyre::Result<()> {
 ```
 
 ## Unwrap Safety
-- NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`
+- NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`; the one
+  exception is a `//` reason on the line directly above (§ Lints)
 - `.expect()` ok at startup (fail-fast) or on documented invariants; otherwise propagate
 - Prefer propagating to panicking: if the fn already returns `Result` (and the
   caller has a retry/backoff/supervisor), `?` the error — don't `.expect()`. A

@@ -48,7 +48,7 @@ artifacts to `create`, not this inline explanation skill.
 ## NEVER
 
 - NEVER publish the HTML fallback as a claude.ai Artifact — this repo is
-  local-output only (root `CLAUDE.md`); ALWAYS use an available local opener
+  local-output only (WISDOM § Documentation); ALWAYS use an available local opener
   on the file instead.
 - NEVER force text or mermaid before a requested HTML explanation — ALWAYS
   select the form by the question and requested format.

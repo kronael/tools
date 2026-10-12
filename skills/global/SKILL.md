@@ -11,9 +11,9 @@ known drifts. If a blank agent would do it anyway, it does not belong here.
 
 ## Continuity
 
-Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with `/` → `-`),
-memory index `.../<slug>/memory/MEMORY.md`, diary `<cwd>/.diary/*.md`. Newest by
-mtime.
+Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
+memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it
+lives. Newest by mtime.
 
 - ALWAYS read the 2-3 newest diary entries before answering — and on a new task
   too, not only at session start (`/recall-memories <topic>`). MEMORY.md arrives
@@ -131,13 +131,16 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - NEVER `gh release create`: the annotated tag is the release. NEVER
   `gh pr review --approve` on the user's behalf.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
-  new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
+  new or rewritten, with `/pr-draft` — NEVER freehand; its shape and cap, REST
   PATCH path and `🤖` marker are the contract.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body
   (drafted or posted), review comment, thread reply, issue, release notes —
   before showing it for approval. DISTILL: cut to the shortest text that still
-  carries the claim, the reasoning and the evidence, inside the posting skill's
-  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
+  carries the claim and its reasoning, in the posting skill's shape and under
+  its cap; what the title, the diff or the commits show, results and history
+  are cut first. A PR body is its `**TL;DR:**` lead, any `Closes #N` and the
+  `🤖`, nothing else.
+  REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
   and no other attribution, no marketing language, no history framing, addresses
   and signatures in full, the repo's title convention, every claim verified or
   marked as an inference, and the posting skill's own Format section. Done =
@@ -160,13 +163,14 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 ## Documentation
 
 - ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
-  file or top-level dir. NEVER `todos/`; `plans/` only as `.claude/plans/`.
+  file or top-level dir. NEVER `todos/` or `plans/`: plans and work records
+  live under `~/.claude/` (`ship` § Work record), never in a repo.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",
   backwards-compat framing, or a one-off backfill inside a permanent file. State
-  what is true now and its genuine quirks; history lives in git and `.diary/`.
+  what is true now and its genuine quirks; history lives in git and the diary.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
   verbatim and NEVER re-litigate the wording, in review or in an eval report.
@@ -177,7 +181,9 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 
 ## Agents
 
-- 1-2 subagents typically, NEVER more than 4.
+- NEVER run more than 3 `sonnet`, 1 `fable` or 2 `opus` subagents at once. Only
+  the owner lifts the cap — explicitly, for one named task, after seeing what
+  would be spawned — and the lift ends with that task.
 - Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
   code-editing subs in parallel on a shared tree — they interleave, one reverts
   another, reviewers read half-edited files.

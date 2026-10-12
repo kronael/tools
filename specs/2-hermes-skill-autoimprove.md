@@ -76,8 +76,8 @@ not a proposal — just "this turn looks interesting; come back to it later".
   "episode_id": "20260525-184523-abc123-001",
   "ts": "2026-05-25T18:45:23Z",
   "session_id": "abc123-...",
-  "jsonl_path": "/home/ondra/.claude/projects/-home-ondra-.../abc123.jsonl",
-  "cwd": "/home/ondra/wk/foo",
+  "jsonl_path": "/home/u/.claude/projects/-home-u-wk-foo/abc123.jsonl",
+  "cwd": "/home/u/wk/foo",
   "trigger": "user_correction",
   "signal": {
     "last_user_text_excerpt": "no don't add comments, the code is self-explanatory",
@@ -198,7 +198,7 @@ Without an eval set, the rest is theater. Build this first.
 - Location: `evals/<skill>/<id>.json`
 - Schema: see [research/eval-sets.md](../research/eval-sets.md)
 - Initial size: 30 hand-curated examples across `commit`, `py`, `ts`, `tsx`, `rs`, `release`, `ship`, `wisdom`
-- Sources: real session transcripts (60%), synthetic from skill rules (30%), failure cases from `.diary/` and bug commits (10%)
+- Sources: real session transcripts (60%), synthetic from skill rules (30%), failure cases from the diary and bug commits (10%)
 - Scoring: outcome (0.5) + rubric (0.3) + cost (0.2)
 
 Add `evals/README.md` documenting the schema, contamination tradeoff, and how to add an example.

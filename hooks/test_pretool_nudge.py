@@ -126,6 +126,7 @@ BLOCK_CASES = [
     'git checkout -b feature',
     'git switch -c feature',
     'git worktree add /repo/.wt origin/master',
+    'gh release create v1.0.0 --notes x',
     'killall node',
     'rm -rf tmp/build',
 ]
@@ -188,6 +189,37 @@ def test_process_blocks_unsafe_commands(command: str) -> None:
 @pytest.mark.parametrize('command', NONBLOCK_CASES)
 def test_process_allows_safe_commands(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+ROBOT = '\U0001f916'
+GOOD_PR = f'**TL;DR:** Deploys the collector through the service list.\n\n{ROBOT}\n'
+
+
+def test_process_refuses_a_pr_body_that_fails_the_github_text_lint(tmp_path) -> None:
+    (tmp_path / 'body.md').write_text(
+        f'## Summary\n\nStuff.\n\n{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)\n',
+        encoding='utf-8',
+    )
+    payload = {
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'gh pr create --title "fix: X" --body-file body.md'},
+        'cwd': str(tmp_path),
+    }
+    result = process(payload)
+    assert result is not None
+    assert result['decision'] == 'block'
+    assert 'banned attribution' in result['reason']
+    assert 'pr-draft' in result['reason']
+
+
+def test_process_allows_a_pr_body_that_passes_the_github_text_lint(tmp_path) -> None:
+    (tmp_path / 'body.md').write_text(GOOD_PR, encoding='utf-8')
+    payload = {
+        'tool_name': 'Bash',
+        'tool_input': {'command': 'gh pr create --title "fix: X" --body-file body.md'},
+        'cwd': str(tmp_path),
+    }
+    assert process(payload) is None
 
 
 def test_process_blocks_recursive_codex_inside_codex() -> None:

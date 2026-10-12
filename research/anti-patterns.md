@@ -113,7 +113,7 @@ This is what killed v1 of our spec (Stop hook = per-turn). v3 inherits the fix:
 
 - **Eval-loop runs are manual.** Triggered by `make refine-skill SKILL=<name>`. Never per-turn, never per-session.
 - **Proposer + evaluator are offline.** No "during a live user turn" anything. The eval loop is batch work that produces PRs.
-- **Reflexion's good variant (episode-boundary) is what `.diary/` is.** Users write diary entries at session end; the eval set mines them for failure cases. Episode-boundary reflection by humans, not by the agent.
+- **Reflexion's good variant (episode-boundary) is what the diary is.** Users write diary entries at session end; the eval set mines them for failure cases. Episode-boundary reflection by humans, not by the agent.
 
 ## 6. Comet/Perplexity prompt drift (March 2026)
 

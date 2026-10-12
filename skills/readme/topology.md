@@ -30,11 +30,11 @@ page's craft: `page.md`. Prose: `writing`.
 - ALWAYS add a file only once its question has an answer the README cannot hold
   in one section — NEVER an empty stub. Root docs are UPPERCASE.
 - NEVER create `todos/`, `notes/`, `facts/`, `compare/` or `WHY.md` — each
-  one's content has a row above. `plans/` exists only as `.claude/plans/`
-  (§ Tracked and local).
+  one's content has a row above. NEVER `plans/`: plans and work records live
+  under `~/.claude/` (`ship` § Work record).
 - NEVER create `CHANGELOG.md` unless the project publishes versions to outside
   consumers (crates.io, npm, PyPI, a plugin) — history lives in git and
-  `.diary/`. A repo that keeps one keeps it; `release` writes it.
+  the diary. A repo that keeps one keeps it; `release` writes it.
 - In a repo laid out otherwise, ALWAYS put a new fact where its question already
   lives — NEVER migrate the layout unasked.
 
@@ -75,25 +75,6 @@ second copy of the site:
   compiles.
 - A closing "Repository layout" names each top directory. The link row plus
   "Repository layout" replace "How to read this".
-
-## A doc site splits into guide and reference
-
-A built docs site (VitePress, mdBook, Docusaurus) turns the file split above
-into a sidebar. ALWAYS order it as the newcomer's questions arrive:
-
-| Group | Pages | What the pages must do |
-|---|---|---|
-| Start here | Why, Getting started, How it works | Why carries the status line, the cost and the wrong-reason refutation of § Keeping it; How it works is one complete annotated example on one screen |
-| Capabilities | one page per thing the reader gets, titled by it ("Amounts read at run time"), NEVER by the mechanism | each opens with what the plain approach cannot do |
-| Build | one how-to page per task | guide shape, `shape.md` |
-| Examples | an index, then one page per example | `shape.md` § Example and recipe pages |
-| Security | trust model, security posture, failure modes | each failure mode says what happens, then how to recover |
-| Reference | one page per SDK language, then language, wire format, errors, glossary, limits, scope | glossary: one heading per term, so every term has an anchor; limits: every maximum in one place, naming the source file the values come from; scope: a table of Choice, Instead of, Why |
-
-Contributor docs, such as style notes for page authors, may live in `docs/`
-beside the pages, ALWAYS excluded from the build (VitePress `srcExclude`) —
-NEVER published as reader pages. Plans, reviews and other work records NEVER
-go in `docs/`. They live in `.claude/plans/`, as § Tracked and local sets.
 
 ## PLAN.md and ARCHITECTURE.md
 
@@ -175,12 +156,10 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 ## Tracked and local
 
 - Every file above is tracked, `BUGS.md` included — it is in the reading order.
-- Local, root-anchored in `.gitignore`: `/.claude/plans/` (`ship` § Work record
-  owns the setting and the ignore step), `/.diary/` (`diary`), `/specs/`,
-  `/tmp/`. ALWAYS root-anchor them — a bare `specs/` matches at every depth and
-  swallows a real `src/specs/`, and `/.claude/plans/` keeps the committed
-  `.claude/` files (settings, commands, skills) tracked. A repo that already
-  tracks `.diary/` or `specs/` keeps tracking them.
+- Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
+  them — a bare `specs/` matches at every depth and swallows a real
+  `src/specs/`. A repo that already tracks `specs/` keeps tracking it.
+- A repo carries no diary (`diary` § Where it lives).
 
 ## Keeping it
 

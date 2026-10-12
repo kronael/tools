@@ -317,7 +317,7 @@ an older head is a gate on something else.
   first (§ Order, § Proof per test).
 - A proof per edited site against its production callers, with the sites that
   hold only under a runtime condition and the deliberate differences listed
-  by name in the PR.
+  by name in a comment on the PR.
 - The base's own unchanged suite run on the branch, deleted names stubbed so
   it collects. Failures on removed names and changed call shapes are
   expected. An assertion or value error is a behaviour difference.

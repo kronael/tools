@@ -13,11 +13,11 @@
 
 ## Work record
 
-Plans, the ship record and critiques live in the main tree's
-`.claude/plans/` — plan mode's directory, pinned by `plansDirectory` in
-`.claude/settings.json` and ignored by the root-anchored `/.claude/plans/`
-line. ALWAYS reuse the active change's record where it is; `ship` § Work record
-owns the rule.
+Plans live in Claude Code's default `~/.claude/plans/`; the ship record and
+critiques in the project's record dir under `~/.claude/projects/`, which
+`ship` § Work record names. NEVER create `.claude/plans/`, `.ship/`, a
+`plansDirectory` setting or an ignore line for them in a repository. ALWAYS
+reuse the active change's record where it is.
 
 ## Response style
 

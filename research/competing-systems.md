@@ -61,7 +61,7 @@ This is the row whose mechanics we are most directly inheriting.
 
 Per-episode self-criticism. **The granularity is the key result**: reflection at the episode boundary (after a task ends) works; reflection inside a turn doesn't. This is what killed v1 of our spec (Stop hook = per-turn).
 
-For v3, Reflexion's pattern shows up indirectly: the `.diary/` entries the user writes are a form of episode-boundary reflection. The eval-loop proposer can mine `.diary/` for failure cases (see [`eval-sets.md`](eval-sets.md#10-failure-cases)).
+For v3, Reflexion's pattern shows up indirectly: the diary entries the user writes are a form of episode-boundary reflection. The eval-loop proposer can mine the diary for failure cases (see [`eval-sets.md`](eval-sets.md#10-failure-cases)).
 
 ### LangGraph human-in-the-loop
 

@@ -62,7 +62,7 @@ the gaps honestly.
 
 ## Output
 
-`.claude/plans/critique-ceo-<YYYYMMDD>.md` with boot, demo flow, faults,
+`critique-ceo-<YYYYMMDD>.md` in the record dir (`ship` § Work record) with boot, demo flow, faults,
 findings, numeric grade, and one-sentence call.
 
 ## Anti-patterns

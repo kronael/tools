@@ -314,7 +314,7 @@ Each example targets a specific skill:
     {"criterion": "<what to check>", "weight": 0.3}
   ],
   "source": "real-session | synthetic | failure-case",
-  "provenance": "<session hash or .diary entry>"
+  "provenance": "<session hash or diary entry>"
 }
 ```
 
@@ -324,7 +324,7 @@ Each example targets a specific skill:
 |---|---|---|
 | Real session transcripts | 60% | Walk `~/.claude/projects/<slug>/*.jsonl`. Find turns where a skill was invoked and the action succeeded. Paraphrase the user prompt, edit context to drop private data. |
 | Synthetic from skill rules | 30% | Every ALWAYS/NEVER in a SKILL.md implies a test case. Templating script extracts rules and generates prompts. Human reviews for plausibility. |
-| Failure cases | 10% | Search `.diary/*.md` for "fix:", "bug:", "regressed". Each is a high-value example because it pins behavior the current skill *didn't* prevent. |
+| Failure cases | 10% | Search the diary files for "fix:", "bug:", "regressed". Each is a high-value example because it pins behavior the current skill *didn't* prevent. |
 
 Real sessions ground the eval in actual usage. Synthetic gives mechanical coverage. Failures pin known regressions.
 
