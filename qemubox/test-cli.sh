@@ -88,6 +88,17 @@ STUB
     fi
     [ "$(ls "$STUB/sess")" = $$ ]
     unset STUB_RC
+    for linger in 1234567890 12x -1
+    do
+        if QEMUBOX_LINGER="$linger" bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1
+        then
+            exit 1
+        else
+            [ "$?" = 2 ]
+        fi
+        grep -q 'QEMUBOX_LINGER must be whole seconds' "$STUB/output"
+    done
+    [ "$(ls "$STUB/sess")" = $$ ]
     for signal in HUP TERM; do
         rm -f "$STUB/command"
         STUB_HOLD=1 bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1 &

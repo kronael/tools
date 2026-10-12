@@ -1465,8 +1465,8 @@ done
 [ -n "$untrusted" ] && apply_untrusted
 
 [ -n "$gpg_forward" ] && detect_gpg
-[[ "$LINGER" =~ ^[0-9]+$ ]] || {
-    echo "qemubox: QEMUBOX_LINGER must be whole seconds, got '$LINGER'" >&2
+[[ "$LINGER" =~ ^[0-9]{1,9}$ ]] || {
+    echo "qemubox: QEMUBOX_LINGER must be whole seconds, at most 9 digits, got '$LINGER'" >&2
     exit 2
 }
 enter_session
