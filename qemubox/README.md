@@ -3,8 +3,9 @@
 Real isolation with zero ceremony — **security that gets out of your way.**
 
 A QEMU VM runs a coding agent with its own kernel. Project files and agent
-config are shared with the host. The last session powers the VM off; its disk
-and guest home survive the next launch. `qemubox rm` deletes the disk.
+config are shared with the host. The VM powers off twenty minutes after its
+last session exits; its disk and guest home survive the next launch.
+`qemubox rm` deletes the disk.
 Build tmpfs mounts last for one boot. Files written to host shares remain.
 
 **qemubox vs dockbox** — same idea, different wall between guest and host:
@@ -86,8 +87,13 @@ qemubox build-base       # (re)bake the prebuilt base image
 
 ## Lifecycle
 
-A box starts on first use and powers off when the **last** session exits
-(counted by session markers). The disk stays on the host; the next launch
+A box starts on first use. When the **last** session exits (counted by
+session markers) the VM stays up for `QEMUBOX_LINGER` seconds (default 1200,
+twenty minutes), so the next launch joins it without a boot. A detached check
+then takes the VM lock and powers it off, provided no session is running and
+none has exited since; each last-session exit restarts the wait, and the
+check logs to `idle.log` in the box's state dir. `QEMUBOX_LINGER=0` powers
+off as the last session exits. The disk stays on the host; the next launch
 boots that disk and keeps files in the guest home. `qemubox rm` deletes it.
 A missing recorded base image refuses launch with a `qemubox rm` hint.
 Each disk records trusted or `-U` mode. A mismatch or missing trust record
@@ -112,7 +118,8 @@ holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names and globs match
 as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
-space allocated on the host (both sizes in KiB). `rm` accepts several names
+space allocated on the host (both sizes in KiB); a VM waiting out
+`QEMUBOX_LINGER` is `running idle`. `rm` accepts several names
 or globs, with or without the `qemubox-` prefix, and fails if removal fails.
 `prune [hours]` removes stopped VMs after that many hours (default 2160).
 Running VMs with no sessions stop after four hours since readiness; their disks
@@ -225,6 +232,6 @@ New mount parent directories belong to the user; existing parents keep their own
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
-pid, and serial log. `QEMUBOX_SOURCE` selects the tools source repository.
+pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.

@@ -5,6 +5,7 @@ ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
 MEM="${QEMUBOX_MEM:-16384}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
+LINGER="${QEMUBOX_LINGER:-1200}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
@@ -118,7 +119,8 @@ Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
         Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
-Lifecycle: last session powers off; disk survives until rm.
+Lifecycle: the VM stays up QEMUBOX_LINGER=1200 seconds after the last session
+           exits, then powers off (0: at once); disk survives until rm.
 Stop: qemubox stop asks the guest to power off and waits up to 90s before
       signalling qemu; -f signals qemu at once (SIGTERM, then SIGKILL).
 Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
@@ -312,6 +314,37 @@ session_markers() {
     done
 }
 
+should_stop_idle() {
+    local idle markers
+    running "$1" || return 1
+    idle=$(stat -c %Y "$(box_dir "$1")/idle" 2>/dev/null) || return 1
+    [ $(( $(date +%s) - idle )) -ge "$LINGER" ] || return 1
+    markers=$(session_markers "$1") || return 1
+    [ -z "$markers" ]
+}
+
+stop_after_linger() {
+    trap '' HUP
+    sleep "$LINGER"
+    lock_box "$1" || return 1
+    if should_stop_idle "$1"
+    then
+        note "no session for ${LINGER}s; powering off qemubox-$1, keeping disk"
+        stop_box "$1" || return 1
+    else
+        note "qemubox-$1 is busy, stopped or stamped idle again; leaving it"
+    fi
+    unlock_box
+}
+
+linger_box() {
+    local dir
+    dir="$(box_dir "$1")"
+    touch "$dir/idle"
+    note "last session exited; qemubox-$1 powers off after ${LINGER}s idle"
+    (stop_after_linger "$1") </dev/null >>"$dir/idle.log" 2>&1 9>&- &
+}
+
 leave_session() {
     local rc=$? left
     trap - EXIT HUP TERM INT
@@ -334,7 +367,10 @@ leave_session() {
                 rc=1
             elif left=$(session_markers "$name")
             then
-                if [ -z "$left" ]
+                if [ -z "$left" ] && [ "$LINGER" -gt 0 ]
+                then
+                    linger_box "$name"
+                elif [ -z "$left" ]
                 then
                     note "last session exited; powering off qemubox-$name, keeping disk"
                     stop_box "$name" || rc=1
@@ -783,6 +819,7 @@ remove_box() {
     fi
     rm -f "$dir/disk.qcow2"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port"
+    rm -f "$dir/idle" "$dir/idle.log"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
@@ -1291,9 +1328,10 @@ a wrong line here is a qemubox launcher bug.
   removed. \`~/.claude\` shares the host's config unless -U omits it, so edits
   to shared skills, memory and settings reach the host. NEVER edit a
   \`server-*\` skill here: it describes the host, not this VM.
-- The last session powers off the VM. Disk files survive re-entry; removing
-  the box deletes its disk. Private tmpfs files, including Claude sessions
-  and temporary build files, are lost at power-off.
+- The VM powers off once its last session has exited and QEMUBOX_LINGER
+  seconds (default 1200) pass with no session. Disk files survive re-entry;
+  removing the box deletes its disk. Private tmpfs files, including Claude
+  sessions and temporary build files, are lost at power-off.
 EOF
     if [ -n "$tmp_session" ]
     then
@@ -1409,6 +1447,10 @@ done
 [ -n "$untrusted" ] && apply_untrusted
 
 [ -n "$gpg_forward" ] && detect_gpg
+[[ "$LINGER" =~ ^[0-9]+$ ]] || {
+    echo "qemubox: QEMUBOX_LINGER must be whole seconds, got '$LINGER'" >&2
+    exit 2
+}
 enter_session
 env_file="/dev/shm/qemubox-env.$sid"
 envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target)

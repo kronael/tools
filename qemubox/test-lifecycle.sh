@@ -108,6 +108,7 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
 (
     ROOT="$fixture/leave"
     name=vm; sid=123; session_pid=""; locked=""
+    LINGER=0
     mkdir -p "$ROOT/vm"
     echo disk > "$ROOT/vm/disk.qcow2"
     running() { return 0; }
@@ -117,7 +118,8 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     leave_session
 )
 eq "last session preserves disk" "$(cat "$fixture/leave/vm/disk.qcow2")" disk
-true_ "last session powers off" '[ -f "$fixture/stopped" ]'
+true_ "QEMUBOX_LINGER=0 powers off at once" '[ -f "$fixture/stopped" ]'
+false_ "QEMUBOX_LINGER=0 stamps no idle" '[ -e "$fixture/leave/vm/idle" ]'
 eq "exit removes own marker" "$(cat "$fixture/leave-command")" \
     'sudo rm -f /run/qemubox/sess/123'
 for mode in busy failed; do
@@ -131,6 +133,54 @@ for mode in busy failed; do
     ) >/dev/null 2>&1
     false_ "$mode count keeps VM" '[ -f "$fixture/incorrect-stop-$mode" ]'
 done
+
+(
+    set -e
+    ROOT="$fixture/linger"
+    mkdir -p "$ROOT/vm"
+    LINGER=600
+    running() { return 0; }
+    session_markers() { :; }
+    touch -d '15 minutes ago' "$ROOT/vm/idle"
+    should_stop_idle vm
+    touch "$ROOT/vm/idle"
+    if should_stop_idle vm; then exit 1; fi
+    touch -d '15 minutes ago' "$ROOT/vm/idle"
+    session_markers() { echo 456; }
+    if should_stop_idle vm; then exit 1; fi
+    session_markers() { return 1; }
+    if should_stop_idle vm; then exit 1; fi
+    session_markers() { :; }
+    running() { return 1; }
+    if should_stop_idle vm; then exit 1; fi
+    running() { return 0; }
+    rm "$ROOT/vm/idle"
+    if should_stop_idle vm; then exit 1; fi
+) > "$fixture/linger.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/linger.log"; bad "idle stop: old stamp, no markers, running VM"; }
+
+(
+    ROOT="$fixture/leave-linger"
+    name=vm; sid=123; session_pid=""; locked=""
+    LINGER=1
+    mkdir -p "$ROOT/vm"
+    running() { return 0; }
+    ssh_plain_box() { :; }
+    session_markers() { :; }
+    stop_box() { touch "$fixture/linger-stopped"; }
+    leave_session
+) 2> "$fixture/leave-linger.err"
+false_ "last session lingers instead of stopping at once" '[ -f "$fixture/linger-stopped" ]'
+true_ "last session stamps idle" '[ -f "$fixture/leave-linger/vm/idle" ]'
+true_ "exit announces the linger" 'grep -q "powers off after 1s" "$fixture/leave-linger.err"'
+for ((i = 0; i < 300; i++))
+do
+    [ ! -f "$fixture/linger-stopped" ] || break
+    sleep 0.01
+done
+true_ "detached check powers off after the linger" '[ -f "$fixture/linger-stopped" ]'
+true_ "detached check logs its decision" \
+    'grep -q "powering off qemubox-vm" "$fixture/leave-linger/vm/idle.log"'
 
 (
     set -e
