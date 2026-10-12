@@ -64,8 +64,39 @@ stop_modes_test() {
     grep -q 'waiting up to 90s for guest shutdown' "$fixture/stop-graceful.log"
     if grep -q SIGTERM "$fixture/stop-graceful.log"; then exit 1; fi
     [ ! -e "$ROOT/vm/pid" ] && [ -f "$ROOT/vm/stopped" ]
+    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
+    vm_pid=$!
+    echo "$vm_pid" > "$ROOT/vm/pid"
+    sleep 0.05
+    ssh_plain_box() { :; }
+    sleep() { :; }
+    stop_box vm 2> "$fixture/stop-escalate.log"
+    grep -q 'waiting up to 90s' "$fixture/stop-escalate.log"
+    grep -q 'sending SIGTERM' "$fixture/stop-escalate.log"
+    if grep -q SIGKILL "$fixture/stop-escalate.log"; then exit 1; fi
+    [ ! -e "$ROOT/vm/pid" ]
+    [ -f "$ROOT/vm/stopped" ]
+    bash -c 'trap "" TERM; exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
+    vm_pid=$!
+    echo "$vm_pid" > "$ROOT/vm/pid"
+    command sleep 0.05
+    stop_box vm force 2> "$fixture/stop-kill.log"
+    grep -q 'sending SIGTERM' "$fixture/stop-kill.log"
+    grep -q 'sending SIGKILL' "$fixture/stop-kill.log"
+    [ ! -e "$ROOT/vm/pid" ]
+    [ -f "$ROOT/vm/stopped" ]
 }
 regression "stop -f signals qemu without a guest shutdown; graceful asks first" stop_modes_test
+
+(
+    set -e
+    sleep() { :; }
+    running() { return 0; }
+    if wait_stopped vm 3; then exit 1; fi
+    running() { return 1; }
+    wait_stopped vm 3
+) > "$fixture/wait.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/wait.log"; bad "wait_stopped reports a timeout"; }
 
 (
     set -e
