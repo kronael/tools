@@ -326,7 +326,14 @@ def read_label(path: Path) -> str:
     meta = path.with_suffix('.meta.json')
     if not meta.exists():
         return ''
-    data = json.loads(meta.read_text())
+    try:
+        data = json.loads(meta.read_text())
+    except (ValueError, UnicodeError) as err:
+        print(f'skipped malformed agent metadata {meta}: {err}', file=sys.stderr)
+        return ''
+    if not isinstance(data, dict):
+        print(f'skipped malformed agent metadata {meta}: expected an object', file=sys.stderr)
+        return ''
     return f'{data.get("agentType", "")}: {data.get("description", "")}'
 
 
