@@ -105,7 +105,9 @@ dockbox codex           # 3rd terminal: codex inside the same box
 ```
 
 The entered session shares the container's `HOME`, mounts, and
-processes, and runs as your host user (not root). The **command** —
+processes, runs as your host user (not root), and starts in the
+container's working directory — the project of its first launch, which the
+box is sure to mount, not the directory this invocation runs from. The **command** —
 tool, `--model`, `--effort`, args — takes effect, and **env flags**
 (`-e`, `-g`) are forwarded into the session, so a box first started
 without `-g` still gets the token when a later `dockbox -g` re-enters
@@ -206,8 +208,10 @@ Automatic:
   path (ro) - installed plugins. `installed_plugins.json` records absolute
   host paths.
 - `~/.claude/settings.json` -> a copy of the host file with the sandbox off
-  (ro), written once when the box is created. A plugin enabled on the host
-  after that stays disabled in the box until the box is recreated.
+  (ro), written once when the box is created; a `settings.local.json` alone
+  does not stop the sandbox restart loop a host `settings.json` turns on. A
+  plugin enabled on the host after that stays disabled in the box until the
+  box is recreated.
 - `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
@@ -221,7 +225,9 @@ Automatic:
 
 Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
-  (commit signing; off by default)
+  (commit signing; off by default), and only while the host agent answers.
+  Docker creates `/home/dockbox/.gnupg` as root around the socket, so
+  dockbox-init chowns that directory to you for gpg's lock files.
 
 Project dirs are mounted at exact paths with read-write access.
 
@@ -266,10 +272,12 @@ keep toolchains, caches and dependency dirs out of your host workdir:
 
 2. **Overmount by default** (Node, Bun, Python venvs, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
-   workdir, finds every matching directory (recursive, pruned so it
+   workdir to depth 4, finds every matching directory (pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
    mount inside the container. Owned by the runtime user, removed with
-   the box.
+   the box. Deeper matches are vendored stores (pnpm, yarn) holding
+   hundreds of `node_modules` the box never writes; a mount for each
+   would exceed the argument limit.
 
    Names overmounted by default:
 
