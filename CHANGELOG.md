@@ -1,6 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.37] — 20261013
+
+> kronael v0.4.37 — spec-lint on PATH, pushes through the gh token
+>
+> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
+>
+> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
+> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
+> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
+> • Subagents — at most 2 sonnet plus 1 opus or fable at once.
+> • Asks — only before approving a PR, merging one or pushing to the default head.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
 - `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
 - `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
