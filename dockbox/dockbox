@@ -465,6 +465,17 @@ strip_long() {
     done
 }
 
+project_rc() {
+    local opt
+    OPTIND=1
+    while getopts ":n:d:x:e:v:HKADgGPBTSN" opt; do
+        case "$opt" in
+            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            *) apply_flag "$opt" "${OPTARG:-}" ;;
+        esac
+    done
+}
+
 # ~/.dockboxrc: default flags, prepended so the command line overrides them.
 read_rc "$HOME/.dockboxrc"
 strip_long "$HOME/.dockboxrc" "${rc_tokens[@]}"
@@ -509,23 +520,12 @@ if [[ -n "$tmp_session" ]]; then
     _primary_dir="$TMP_WORKDIR"
     dir_override="${dir_override:-tmp}"
     new_session=1
-    rc_tokens=()
 else
     [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
     _primary_dir="$(cd "${dirs[-1]}" && pwd)"
     read_rc "$_primary_dir/.dockboxrc"
-fi
-strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
-rc_tokens=("${stripped[@]}")
-# getopts with no words parses "$@", the command-line leftovers: skip it.
-if (( ${#rc_tokens[@]} )); then
-    OPTIND=1
-    while getopts ":n:d:x:e:v:HKADgGPBTSN" opt "${rc_tokens[@]}"; do
-        case "$opt" in
-            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
-            *) apply_flag "$opt" "${OPTARG:-}" ;;
-        esac
-    done
+    strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
+    project_rc "${stripped[@]}"
 fi
 if [[ "$entrypoint" != exec ]]; then
     tool_cmd "$entrypoint"
@@ -703,7 +703,6 @@ done
 # Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
 # chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
 # has no baked user — it works for any host UID without rebuilding.
-user_arg=(--user 0:0)
 extra_env+=(-e "DOCKBOX_UID=$(id -u)")
 extra_env+=(-e "DOCKBOX_GID=$(id -g)")
 extra_env+=(-e "DOCKBOX_USER=$(id -un)")
@@ -796,7 +795,7 @@ docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
 docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
-    "${user_arg[@]}" \
+    --user 0:0 \
     --security-opt "seccomp=$SECCOMP" \
     "${cap_args[@]}" \
     "${network_arg[@]}" \
