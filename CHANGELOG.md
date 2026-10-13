@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.4.40] — 20261013
+
+> kronael v0.4.40 — Codex shows its limits in the footer
+>
+> Sync sets the Codex footer to the model, context and the 5-hour and weekly limits.
+>
+> • Codex — the footer shows model, context used, and 5-hour and weekly quota left.
+> • Sync — the Codex bridge sets that footer and keeps every other Codex setting.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `sync` § Codex bridge: `tui.status_line` = model, context, 5-hour and weekly limit; reset times stay in `/status`.
+- `hooks/test_statusline.py`: the bridge's TOML array is tested.
+
 ## [v0.4.39] — 20261013
 
 > kronael v0.4.39 — the status line shows, and sync reports settings it left out
