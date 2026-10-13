@@ -133,17 +133,22 @@ VM references, keeping the `current` base.
 ## Build directories
 
 `node_modules`, `.venv`, `.next`, `.turbo` and `.cache` directories found under each
-project become empty tmpfs mounts owned by the guest user. Discovery stops at
+project become empty bind mounts owned by the guest user. Discovery stops at
 depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.
 
 `-P` / `--no-ephemeral` keeps project build directories on the host.
-`-B` mounts directories backed by the guest disk, keyed by canonical path.
-Both modes keep `/tmp` on a tmpfs capped at 75% of guest RAM (48 GiB at the
-default 64 GiB), with `/tmp/cargo-target` a directory on it and
-`CARGO_TARGET_DIR=/tmp/cargo-target` in each session; a full `/tmp` fails
-with ENOSPC before the guest runs out of memory. Guest disk build data
-survives boots until removal; tmpfs data disappears at shutdown. A failed mount stops launch.
+`-B` backs them with the guest disk, keyed by canonical path. Without `-B`
+they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
+
+`/tmp` is a tmpfs capped at 75% of guest RAM (48 GiB at the default 64 GiB).
+Without `-B`, the build directories, `/tmp/cargo-target` and every other file
+in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
+guest. Process memory is not counted against the cap.
+Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target`.
+
+Guest disk build data survives boots until removal. `/tmp` data disappears at
+shutdown. A failed mount stops launch.
 
 ## What crosses into the VM
 

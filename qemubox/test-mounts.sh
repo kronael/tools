@@ -93,7 +93,10 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
     export fixture
     printf '%s\0' tmpfs "$PROJ/space dir/node_modules" > "$eph"
     bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    grep -Fx -- "-t tmpfs -o rw,exec,mode=1777,uid=1234,gid=5678 tmpfs $PROJ/space dir/node_modules" "$fixture/mounts"
+    key=$(realpath -e "$PROJ/space dir/node_modules" | sha256sum); key=${key%% *}
+    grep -Fx -- "--bind /tmp/qemubox-builds/$key $PROJ/space dir/node_modules" "$fixture/mounts"
+    grep -Fx -- "1234:5678 /tmp/qemubox-builds/$key" "$fixture/chown"
+    ! grep -q -- "-t tmpfs" "$fixture/mounts"
     printf '%s\0' disk "$PROJ/node_modules" > "$eph"
     bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
     key=$(realpath -e "$PROJ/node_modules" | sha256sum); key=${key%% *}

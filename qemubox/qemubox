@@ -119,8 +119,9 @@ Environment: QEMUBOX_MEM=65536 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
 Memory: the host backs guest RAM as the guest touches it and takes freed pages
         back (virtio-balloon free page reporting). Guest /tmp is a tmpfs capped
-        at 75% of RAM, /tmp/cargo-target a directory on it: a full /tmp gives
-        ENOSPC, not an out-of-memory guest.
+        at 75% of RAM. /tmp/cargo-target and the build-dir mounts live on it,
+        so a full /tmp gives ENOSPC, not an out-of-memory guest. Process
+        memory is not counted against the cap.
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
@@ -540,22 +541,19 @@ uid=$1
 gid=$2
 {
     IFS= read -r -d '' mode
+    case "$mode" in
+        tmpfs) root=/tmp/qemubox-builds ;;
+        disk) root=/var/lib/qemubox/builds ;;
+        *) echo "Invalid build mount mode: $mode" >&2; exit 1 ;;
+    esac
     while IFS= read -r -d '' path
     do
         mkdir -p -- "$path"
-        case "$mode" in
-            tmpfs)
-                mount -t tmpfs -o "rw,exec,mode=1777,uid=$uid,gid=$gid" tmpfs "$path"
-                ;;
-            disk)
-                key=$(realpath -e -- "$path" | sha256sum)
-                backing="/var/lib/qemubox/builds/${key%% *}"
-                mkdir -p "$backing"
-                chown "$uid:$gid" "$backing"
-                mount --bind "$backing" "$path"
-                ;;
-            *) echo "Invalid build mount mode: $mode" >&2; exit 1 ;;
-        esac
+        key=$(realpath -e -- "$path" | sha256sum)
+        backing="$root/${key%% *}"
+        mkdir -p "$backing"
+        chown "$uid:$gid" "$backing"
+        mount --bind "$backing" "$path"
     done
 } < "$3"
 EOF
