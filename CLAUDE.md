@@ -111,9 +111,16 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   sibling data file has no cap (`skills/CLAUDE.md` § Editing a router). Skill/CLAUDE content uses
   **ALWAYS/NEVER** statements and targets non-obvious patterns LLMs miss — not
   generic advice.
-- **NEVER put local paths, org-specific refs, or secrets in source.** Those
-  live in `~/.claude/LOCAL.md` (auto-injected by the `local` hook), which is
-  never committed.
+- **This repo is public; bots read every push within hours.** NEVER put a
+  local path, a secret or a concrete private name in anything a push
+  publishes — source, an example, a test fixture, `CHANGELOG.md`, a commit
+  or tag message: a project, repo, session, service, host, domain, product
+  feature or metric. ALWAYS invent the example and state provenance
+  generically. Private names and local paths live in `~/.claude/LOCAL.md`
+  (auto-injected by the `local` hook), which is never committed.
+- **NEVER commit specs, plans, ship records or diary entries**: no `specs/`,
+  `plans/`, `todos/`, `.ship/` or `.diary/`. They live under
+  `~/.claude/projects/<slug>/` (`ship` § Work record, `diary`).
 - **Testing bundle changes**: re-run `/kronael:sync` (or say "sync") and
   use the result in a real project. There's no unit test for skill behavior.
 
@@ -149,7 +156,7 @@ that no chain reaches. A written path names a file when it is the file's
 path from the skill root, or a trailing part of that path no other file
 under the skill shares — so a bare basename counts only while it is unique.
 `CLAUDE.md` is exempt at any depth. The same target scans every `.md` in the
-tree, hidden directories aside, for an absolute home path or a credential
+tree, hidden and git-ignored directories aside, for an absolute home path or a credential
 shape.
 
 **Both bridges work, proven by running them**
@@ -177,6 +184,15 @@ the wiring being right and the tool running are different claims.
 - ALWAYS bump `plugins/kronael/.codex-plugin/plugin.json` `version` too. Codex
   caches plugins by version, so a stale version keeps serving the old bridge
   skill.
+- ALWAYS run the leak scan before tagging; a hit on an ADDED line (`^+` in
+  `git diff <last tag>..HEAD`) or in `git log <last tag>..HEAD --format=%B`
+  blocks the tag — a removed line is the fix, not a leak. Grep both for each
+  name in `~/.claude/LOCAL.md` § Private names, then read both for specifics no
+  list predicts: a host, domain, metric, palette, incident or person.
+- ALWAYS list every approach extracted or distilled from private work — a
+  design, an incident, a measured number — in the release ask; tag only after
+  the owner vets each one explicitly. A leak on origin stays public (forks and
+  scrapers keep history): fix the tree, NEVER promise a rewrite.
 
 ## Docs map
 

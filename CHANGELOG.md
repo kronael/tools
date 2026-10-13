@@ -1,17 +1,6 @@
 # Changelog
 
-## [v0.4.31] — 20261011
-
-> kronael v0.4.31 — spec-lint on PATH, pushes through the gh token
->
-> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
->
-> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
-> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
-> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
-> • WISDOM § Git — agents push through ghpush; without the workflow scope they report the refusal.
->
-> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 - `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
 - `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
@@ -25,6 +14,102 @@
 - `rig`: `ghpush` pushes stated refspecs to origin's GitHub repo over HTTPS with the gh token.
 - `rig`: `ghfetch <refspec>` fetches the same way when the SSH origin refuses; `ghpush -u` prints the URL.
 - WISDOM § Git: agents push and fetch through `ghpush`; `settings-recommended.json` asks for it.
+
+## [v0.4.35] — 20261013
+
+> kronael v0.4.35 — qemubox waits before power-off, weekly use on screen
+>
+> A qemubox VM now stays up 20 minutes after its last session, and the status line shows weekly plan use in whole percent.
+>
+> • `qemubox stop <name>` — powers a VM off; `-f` skips the guest shutdown wait, `-a` stops all.
+> • Idle stop — the VM powers off after `QEMUBOX_LINGER` seconds (default 1200) with no session.
+> • Status line — model, context, 5-hour and weekly limits, each in whole percent.
+> • AGENTS.md — Claude Code loads it beside CLAUDE.md; a directory may keep AGENTS.md canonical.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox: `stop <name|glob>... [-f|-a]`; each wait step prints a line before it waits.
+- qemubox: `QEMUBOX_LINGER` (seconds, default 1200, `0` powers off at once); log in the box's `idle.log`.
+- Settings: `statusLine` runs `hooks/statusline.py`; `pluginConfigs` loads AGENTS.md beside CLAUDE.md.
+- `readme`, `wisdom`: one instruction file per directory, `CLAUDE.md` or `AGENTS.md` with a `@AGENTS.md` shim.
+- `specs`: no doc or code links a spec; a shipped spec MAY be deleted once the docs hold its state.
+- Removed from the repo: `specs/`, `research/`, `evals/` and the spec-lint pre-commit hook.
+
+## [v0.4.34] — 20261012
+
+> kronael v0.4.34 — temporary boxes and new Claude sessions
+>
+> dockbox and qemubox can start a temporary session with no project mounted, and can start Claude without the resume picker.
+>
+> • `-T` — temporary session: no project mount, work in `/tmp/work`, gone when the box exits.
+> • `-N` — start a new Claude session instead of the resume picker.
+> • `-B` — build dirs on disk instead of RAM; this was `-T`, so update rc files.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox, qemubox: `-T` mounts no project dir and starts in tmpfs `/tmp/work`, box `tmp`.
+- dockbox, qemubox: `-N` skips `claude --resume`; `-T` implies it.
+- BREAKING: disk-backed build-dir overmounts move from `-T` to `-B`; change `-T` to `-B` in rc files.
+- BREAKING: qemubox `-N` no longer skips the project mount; use `-T`.
+- A project rc ignores `-T` and accepts `-B` and `-N`.
+
+## [v0.4.33] — 20261012
+
+> kronael v0.4.33 — reviews wait for the owner, worktrees can go
+>
+> A PR review now stays pending until the owner types SUBMIT REVIEW, and a finished worktree can be removed after two checks.
+>
+> • Review gate — a review submit needs `SUBMIT REVIEW` in the user's newest message.
+> • Worktrees — `git worktree remove --force` runs once HEAD is kept and changes are shown.
+> • dockbox — manim builds, renders `MathTex` and starts without a bytecode recompile.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh-comment`, `review`: a posted review stays PENDING; § Submit runs only on `SUBMIT REVIEW`.
+- Hooks: `gh pr review`, `/reviews/<id>/events` and a `/reviews` POST with `event` need it.
+- Hooks: a payload without `transcript_path` (Codex) refuses the submit; the user submits by hand.
+- `worktree` § Removing a worktree and WISDOM § Shell: the one lift of the recursive-removal ban.
+- dockbox: `texlive-latex-extra`, cairo/pango headers; manim and serena compile bytecode at build.
+
+## [v0.4.32] — 20261012
+
+> kronael v0.4.32 — pages that come out finished
+>
+> The writing and readme skills now carry the page rules an owner used to type by hand, plus a trial form audit.
+>
+> • Writing — a 15-item handover checklist; the mechanical items become keeper checks in `make lint`.
+> • Pages — answer first, then how the parts fit, limits before flow detail, the decide section last.
+> • Lenses — a study page runs the CEO, CTO and novice reads before handover.
+> • Form audit (trial) — a headless browser measures layout, type, contrast and figures at two widths.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, a conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
+- `readme/page.md`: what a study page holds and in what order — the answer first, how the parts fit, limits before flow detail, each flow its own block, the decide section last — plus the CEO, CTO and novice lenses before handover.
+- `readme/onepager.md`: the problem section leads with the reader's cost today and the change the project makes.
+- `readme/topology.md`: the `writing/page.md` keeper items wire into `make lint`; the study page carries an update rule.
+- `create/form.md`: a trial form audit — a headless browser measures layout, type, contrast and figures at 1440 and 375, light and dark — reached by a `create` dispatch row.
+
+## [v0.4.31] — 20261012
+
+> kronael v0.4.31 — Code maps and language-server renames on demand
+>
+> Two new skills map a codebase and rename symbols through the language server, and both run only when called.
+>
+> • codemap — ripwire overview, task lookup, callers, blast radius, and graphs drawn from the code.
+> • serena — one-shot Python and Rust rename, plus a check for code behind disabled cargo features.
+> • Renames — each language names its tool: serena, gopls rename, or ts-morph with workspace paths.
+> • Skills — one file owns each rule; long reference moved to files read on demand.
+> • Lint — the skill lint skips git-ignored paths, so scratch checkouts no longer fail it.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codemap`: ripwire maps, `--for`, callers, uses, impact, Mermaid and HTML call graphs; goda, pydeps.
+- `serena`: `call.py` runs Serena for one call over stdio; it is never an MCP server.
+- Renames: Python and Rust through `serena`, Go through `gopls rename`, TypeScript through ts-morph.
+- Install: ripwire is binary-only and never an MCP server; Serena sets `web_dashboard: false`.
+- Skills: repeated rules point at one owner; port-to-go, browse and wisdom overflow moved to siblings.
+- `make skills-frontmatter`: skips git-ignored paths and no longer crashes on a root inside one.
 
 ## [v0.4.30] — 20261010
 
@@ -1453,7 +1538,7 @@ file answers to that name.
 
 - `qemubox`: prebuilt base image — `build-base` (run once by `make install`, non-fatal without KVM/network) bakes the guest apt layer into `provisioned.qcow2` via a throwaway `.build` box; new boxes overlay it and skip first-boot apt.
 - `qemubox`: ref-counted lifecycle — a per-session marker in `/run/qemubox/sess` (dropped right after boot, before provisioning); the VM is torn down when the last session exits, concurrent sessions keep it up. `stop_box` escalates poweroff→SIGTERM→SIGKILL (90s systemd wait) so a wedged VM is killed not orphaned, and `remove_box` never deletes a live VM's disk.
-- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm staking-rewards` also removed `staking-rewards-facade`).
+- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm web-api` also removed `web-api-facade`).
 - `qemubox`: provisioning/guest output streams behind a dim `>` gutter, distinct from the `>>>` script voice; both ASCII, TTY-guarded (plain text when piped).
 - `qemubox` + `dockbox`: rewritten READMEs with an ELI13 section and an honest security-posture statement — the tools confine host-filesystem blast radius and give a disposable env, but inject real agent credentials and leave outbound network on, so they are not a boundary against hostile code. Tracked hardening (network kill-switch, gpg opt-in, `--untrusted` mode, behavioral tests) is in `BUGS.md`.
 

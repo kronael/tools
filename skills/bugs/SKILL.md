@@ -1,12 +1,7 @@
 ---
 name: bugs
-description: >
-  The `BUGS.md` open-issues queue — the record-don't-fix policy, its two
-  sections (what is open: defects, deliberate limits and decisions owed; and
-  what was ruled not a defect), entry format, pruning. NOT for resolved-bug
-  history (that lives in git and /diary), NOT for feature backlog (use
-  TODO.md/specs).
-when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
+description: The `BUGS.md` open-issues queue — record-don't-fix policy, entry format, pruning. NOT for resolved-bug history (git and /diary) or a feature backlog (use TODO.md/specs).
+when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now, deliberate limit, decision the owner owes, needs sign-off entry, ruled not a defect"
 ---
 
 # Bugs
@@ -29,10 +24,8 @@ project already has.)
 
 ## Bug Triage Protocol — record, don't fix
 
-- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
-- NEVER fix bugs immediately just because you found them during a general check
-- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `BUGS.md` is the review queue — log it, move on, let the user prioritise
+WISDOM § Bug triage owns it: a bug found during any check is recorded here
+and fixed only when the user asks.
 
 ## When NOT to record
 

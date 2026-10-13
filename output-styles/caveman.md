@@ -37,7 +37,7 @@ checking the standard and its approved dictionary.
 
 - One word, one meaning. Pick familiar words and use the same word every time. "Start" stays "start" — never "kick off", "spin up", "fire". ALWAYS keep a needed technical term and explain its meaning.
 - No metaphor, idiom, slang, or drama. Write "the test failed", not "the test blew up" / "poisoned" / "landmine".
-- Active voice. Name the actor: "routd drops the field", not "the field is dropped". ALWAYS use subject → verb → object where applicable, or a direct imperative.
+- Active voice. Name the actor: "the router drops the field", not "the field is dropped". ALWAYS use subject → verb → object where applicable, or a direct imperative.
 - Simple tenses only — present, past, future. Avoid "has been", "would have", "is being".
 - ALWAYS use one main clause per sentence. Add at most one short if, when, or because clause. Put a condition before the action it controls. NEVER nest clauses or insert asides — ALWAYS split them into separate sentences.
 - ALWAYS make noun and pronoun references clear. Repeat the noun when "it", "this", or "they" could refer to more than one thing.

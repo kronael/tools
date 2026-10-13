@@ -114,9 +114,9 @@ renders the line.
 
 Example — generalize the shape, not the topic:
 ```
-feat(unstake): Send quote and settlement events to Mixpanel
+feat(checkout): Send quote and payment events to analytics
 
-**TL;DR:** Instant unstake reports quote drop-off and settlement outcomes to Mixpanel, not only to server logs. Settlement is read at `confirmed`, so a dropped tx reports `pending` forever.
+**TL;DR:** Checkout reports quote drop-off and payment outcomes to analytics, not only to server logs. Payment is read at `captured`, so a voided charge reports `pending` forever.
 
 Closes #212
 

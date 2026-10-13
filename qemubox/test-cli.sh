@@ -60,8 +60,20 @@ STUB
     )
     if grep -q -- ' -t ' "$STUB/ssh.log"; then exit 1; fi
     [ "$(ls "$STUB/sess")" = $$ ]
-    bash "$here/qemubox" -N -n cli exec true </dev/null > "$STUB/output" 2>&1
-    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && exec codex ' "$STUB/command"
+    bash "$here/qemubox" -T -n cli exec true </dev/null > "$STUB/output" 2>&1
+    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && mkdir -p /tmp/work && cd /tmp/work && exec codex ' "$STUB/command"
+    if bash "$here/qemubox" -T -n cli exec true "$PROJ" </dev/null > "$STUB/output" 2>&1; then
+        exit 1
+    else
+        [ "$?" = 2 ]
+    fi
+    grep -q 'use -v' "$STUB/output"
+    mkdir -p "$HOME/.claude/projects/-tmp-work"
+    touch "$HOME/.claude/projects/-tmp-work/session.jsonl"
+    bash "$here/qemubox" -T -n cli -x claude </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& cd /tmp/work && exec claude --model ' "$STUB/command"
+    rm "$HOME/.claude/projects/-tmp-work/session.jsonl"
+    rmdir "$HOME/.claude/projects/-tmp-work"
     grep -qxF 'export CLAUDE_CODE_OAUTH_TOKEN=zzsecret-oat\ \$x' "$STUB/env"
     printf '%s\n' '-e CLAUDE_CODE_OAUTH_TOKEN' '-e RCPROBE' > "$PROJ/.qemuboxrc"
     (cd "$PROJ" && bash "$here/qemubox" -U -g -n cli exec true) </dev/null > "$STUB/output" 2>&1
@@ -76,6 +88,17 @@ STUB
     fi
     [ "$(ls "$STUB/sess")" = $$ ]
     unset STUB_RC
+    for linger in 1234567890 12x -1
+    do
+        if QEMUBOX_LINGER="$linger" bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1
+        then
+            exit 1
+        else
+            [ "$?" = 2 ]
+        fi
+        grep -q 'QEMUBOX_LINGER must be whole seconds' "$STUB/output"
+    done
+    [ "$(ls "$STUB/sess")" = $$ ]
     for signal in HUP TERM; do
         rm -f "$STUB/command"
         STUB_HOLD=1 bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1 &

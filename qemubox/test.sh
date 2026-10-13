@@ -40,7 +40,7 @@ regression_setup() {
     mkdir -p "$ROOT/base"
     echo fixture > "$ROOT/base/current"
     for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
-    dirs=(); no_copy=1
+    dirs=()
     qemu-img() { touch "$dir/disk.qcow2"; }
     bsdtar() { :; }
     mke2fs() { :; }
@@ -52,8 +52,8 @@ eq "box_name default" "$(box_name)" "default"
 
 false_ "rm empty pattern matches nothing"    'rm_matches anything ""'
 true_  "rm '\''*'\'' matches all"                 'rm_matches anything "*"'
-true_  "rm exact match"                      'rm_matches staking-rewards staking-rewards'
-false_ "rm exact does not substring-match"   'rm_matches staking-rewards-facade staking-rewards'
+true_  "rm exact match"                      'rm_matches web-api web-api'
+false_ "rm exact does not substring-match"   'rm_matches web-api-facade web-api'
 true_  "rm glob star"                        'rm_matches repo-1 "repo-*"'
 false_ "rm glob non-match"                   'rm_matches other "repo-*"'
 
@@ -110,13 +110,20 @@ true_ "note lists the empty dependency dirs" \
 false_ "note omits a dependency dir absent at launch" '[[ "$gout" == *"$PROJ/.turbo"* ]]'
 network=""; gout="$(guest_note myhost "$eph")"
 true_ "note: network off"          '[[ "$gout" == *"Outbound network: off."* ]]'
-for flag in P T N; do
+false_ "note names no tmpfs workdir without -T" '[[ "$gout" == *"working dir"* ]]'
+for flag in P B; do
     run_assemble
     persist_builds=""; eph_no_tmpfs=""; apply_flag "$flag"
     stage_ephemeral "$eph"; gout="$(guest_note myhost "$eph")"
     false_ "-$flag note claims no empty dependency dir" '[[ "$gout" == *box-only* ]]'
 done
-persist_builds=""; eph_no_tmpfs=""; no_copy=""
+persist_builds=""; eph_no_tmpfs=""
+dirs=(); apply_flag T
+stage_ephemeral "$eph"; gout="$(guest_note myhost "$eph")"
+false_ "-T note claims no empty dependency dir" '[[ "$gout" == *box-only* ]]'
+true_ "-T note names the tmpfs workdir" \
+    '[[ "$gout" == *"working dir /tmp/work is guest tmpfs"* ]]'
+tmp_session=""
 
 ## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"

@@ -17,18 +17,24 @@ page's craft: `page.md`. Prose: `writing`.
 | `FEATURES.md` | What does it do today, and which test proves it? |
 | `BUGS.md` | What is open: defects, deliberate limits, decisions owed? Format: `bugs`. |
 | `TODO.md` | What is deferred and not yet a spec? Format: `next` § Later. |
-| `<pkg>/README.md` | How does a caller use this package? |
+| `specs/<NN>-<topic>.md` | What change is in flight, and why? No row above links it. Format: `specs`. |
+| `<dir>/README.md` | What does this directory implement, and how is it used? |
 | `test/research/README.md`, `test/research/<project>.md` | What else does this job, and how does this differ? |
 | `test/research/verified.md` | Where does each number in these documents come from? |
-| `CLAUDE.md`, `<pkg>/CLAUDE.md` | What must an editor not break? |
+| `CLAUDE.md`, `<dir>/CLAUDE.md` or `AGENTS.md` | What must an editor not break? |
 | `LICENSE`, `NOTICE` | Under what terms? Copyright in `LICENSE`; provenance and third-party terms in `NOTICE`. |
 
 - ALWAYS put a fact in the file whose question it answers and link it from the
   others — NEVER a second copy; copies drift apart unnoticed.
+- One tree beside the code: the root README and ARCHITECTURE hold the overview,
+  a short section per concept with one link down. ALWAYS say at each level only
+  what the level above does not, and name each file one level down in one line.
 - ALWAYS open each file with its question in one sentence and links to the
   files that answer the neighbouring questions.
-- ALWAYS add a file only once its question has an answer the README cannot hold
-  in one section — NEVER an empty stub. Root docs are UPPERCASE.
+- ALWAYS add a file only once its question outgrows one section of the file
+  above — NEVER an empty stub. Root docs are UPPERCASE; a concept gets its
+  `<dir>/README.md`, with its diagram, in the directory that implements it —
+  NEVER a page under `docs/`, which holds the study page and the site.
 - NEVER create `todos/`, `notes/`, `facts/`, `compare/` or `WHY.md` — each
   one's content has a row above. NEVER `plans/`: plans and work records live
   under `~/.claude/` (`ship` § Work record).
@@ -43,8 +49,7 @@ page's craft: `page.md`. Prose: `writing`.
 This order; cut a section with nothing true to say. Under 150 lines.
 
 1. The title, then what it is and who it is for, in one plain sentence.
-2. The link to the study page, naming what it answers; with a docs site, the
-   link row of `sync.md` step 3.
+2. The link to the study page, naming what it answers.
 3. Any status that changes whether to use it (unaudited, not for real funds).
 4. **The words** — each domain term defined before its first use.
 5. **What it gives you** — one bullet per capability that works today.
@@ -54,7 +59,6 @@ This order; cut a section with nothing true to say. Under 150 lines.
 8. **Commands** — every `make` target with a one-line comment.
 9. **How to read this**, last — a table of order, file and the question it
    answers, the study page first, `LICENSE`/`NOTICE` unnumbered.
-   With a docs site, the hub shape below replaces it.
 
 - ALWAYS state what adopting costs by `sync.md` § Rules; with a docs site the
   README links to the Why page that states it.
@@ -82,11 +86,15 @@ second copy of the site:
   model, the decisions that must stay true and the deferred scope. ALWAYS name
   the alternative a decision rejected and why.
 - ARCHITECTURE.md is for an engineer changing the code: NEVER re-explain what
-  the thing is, and NEVER record a decision there — link PLAN.md. ALWAYS give
-  it a package-flow diagram, a repository map (path → what it owns), a
-  data-ownership table (data, source of truth, consumers) and one diagram per
-  flow whose order matters; a structure in prose alone is undocumented. Draw
-  with `diagrams`. Under 300 lines.
+  the thing is. ALWAYS give it a package-flow diagram, a repository map (path
+  → what it owns), a data-ownership table (data, source of truth, consumers)
+  and one diagram per concept, flows drawn in order; a concept in prose alone
+  is undocumented. Draw with `diagrams`. Under 300 lines.
+- A concept, here or in its `<dir>/README.md`, is its intent — what it is for,
+  the constraint it keeps, how its parts relate — in its diagram plus a few
+  concrete sentences, the WHY of the structure beside it. NEVER narrate what
+  the code does; point at the file. A WHY that outlives the structure is a
+  PLAN.md decision; link it.
 
 ## FEATURES.md
 
@@ -98,7 +106,7 @@ second copy of the site:
 
 ## Numbers — one ledger
 
-- Every measured number in the README, FEATURES.md, the package READMEs and
+- Every measured number in the README, FEATURES.md, the directory READMEs and
   the page comes from `test/research/verified.md`: one section per
   measurement, the command in a fenced block, its output, the date and the
   toolchain. The docs quote it.
@@ -131,29 +139,36 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
 
 - every FEATURES.md row's test exists at its path, and every `untested` id
   exists in `BUGS.md`;
+- every path the ARCHITECTURE.md repository map names exists;
+- every `<dir>/README.md` is linked from the nearest README or ARCHITECTURE
+  above it, every `<dir>/CLAUDE.md` or `AGENTS.md` from the one above it;
 - every page claim's link carries `data-evidence="path::exact test name"` or
   `data-evidence="BUGS.md::<BUG-ID>"`, checked the same way;
-- every number of two or more digits in the README, FEATURES.md, the package
+- every number of two or more digits in the README, FEATURES.md, the directory
   READMEs and the page's visible text appears in the ledger. This proves
   membership, not meaning; a changed meaning re-runs the command;
 - the checker first refuses a planted fake citation and finds a planted real
   test, so a parser that matches nothing cannot pass;
-- every Markdown file passes `rumdl check .` — wrapped at the width and clean
-  on the enabled rules (`software/code.md` § Layout and formatting names the
-  config and the hook that runs it on each write).
+- every item `writing/page.md` § Before handing over marks `keeper`, each
+  with its planted failure and a stated pass condition;
+- every Markdown file passes `rumdl check .` — wrapped at the width, every
+  relative link resolving (MD057) and clean on the enabled rules
+  (`software/code.md` § Layout and formatting names the config and the hook
+  that runs it on each write).
 
-## CLAUDE.md files
+## Instruction files
 
-- A short root `CLAUDE.md` plus one `<pkg>/CLAUDE.md` per package that has
-  invariants of its own. A rule that holds inside one package lives in that
-  package's file, NEVER the root. Content: `wisdom` § CLAUDE.md (project).
-  Under 200 lines each.
-- NEVER put the reading order or a which-file index in a CLAUDE.md — the
-  README's "How to read this" holds it.
+- ONE per directory, under 200 lines: `CLAUDE.md`, or where a repo keeps
+  `AGENTS.md` canonical, `AGENTS.md` plus `CLAUDE.md` as the single line
+  `@AGENTS.md`; NEVER rules in both. Content: `wisdom` § CLAUDE.md (project).
+- A rule that holds only in a subtree lives in that subtree's file, NEVER the
+  parent; the parent names its subtree files in one line. NEVER a reading order
+  or which-file index in one — the README's "How to read this" holds it.
 
 ## Tracked and local
 
-- Every file above is tracked, `BUGS.md` included — it is in the reading order.
+- Every file above but `specs/` is tracked, `BUGS.md` included — it is in the
+  reading order.
 - Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
   them — a bare `specs/` matches at every depth and swallows a real
   `src/specs/`. A repo that already tracks `specs/` keeps tracking it.

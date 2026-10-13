@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PreToolUse hook: block unsafe commands and unlinted GitHub text, and emit per-language file nudges.
+# PreToolUse hook: block unsafe commands, unlinted GitHub text and an unasked review submit, and emit per-language file nudges.
 # PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
 # its repository opted in with a root .rumdl.toml.
 # Production: silent-fail on any error, except an unsafe command is blocked and the GitHub text gate refuses on its own error.
@@ -152,7 +152,7 @@ def process(data: object) -> dict | None:
                 'decision': 'block',
                 'reason': f'block: unsafe command blocked ({reason}).',
             }
-        refused = command_reason(command, data.get('cwd'))
+        refused = command_reason(command, data.get('cwd'), data.get('transcript_path'))
         if refused:
             return {'decision': 'block', 'reason': f'block: {refused}'}
         return None

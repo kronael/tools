@@ -8,7 +8,7 @@ mount_mode() {
 run_assemble() {
     reset_mounts
     name=testbox; primary="$PROJ"; dirs=("$PROJ")
-    no_copy=""; gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()
+    gcloud_creds=""; untrusted=""; extra_dirs=(); extra_modes=()
     eval "${1:-:}"
     assemble_mounts
 }
@@ -46,8 +46,8 @@ eq   "untrusted: no qemubox-home"      "$(mount_mode /mnt/qemubox-home)" ""
 eq   "untrusted: no per-slug memory"   "$(mount_mode "$slug_dest")" ""
 eq   "untrusted: no history"          "$(mount_mode /mnt/qemubox-history)" ""
 
-run_assemble 'no_copy=1'
-eq "no-project: project not mounted" "$(mount_mode "$PROJ")" ""
+run_assemble 'dirs=()'
+eq "-T: project not mounted" "$(mount_mode "$PROJ")" ""
 
 run_assemble 'extra_dirs=("'"$LIB"'"); extra_modes=(ro)'
 eq "extra -v mount honors ro mode" "$(mount_mode "$LIB")" "ro"
@@ -56,7 +56,7 @@ mkdir -p "$PROJ/node_modules/hidden/.cache" "$PROJ/.next" \
     "$PROJ/packages/a/.turbo" "$PROJ/packages/b/.cache" \
     "$PROJ/a/b/c/node_modules" "$PROJ/a/b/c/d/node_modules" \
     "$PROJ/space dir/node_modules" "$PROJ/server/.venv" "$PROJ/build"
-dirs=("$PROJ"); no_copy=""; persist_builds=""; eph_no_tmpfs=""
+dirs=("$PROJ"); persist_builds=""; eph_no_tmpfs=""
 eph="$fixture/ephemeral"
 stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
@@ -70,14 +70,14 @@ done
 apply_flag P; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
 eq "-P disables project overmounts" "${#paths[@]}" 1
-persist_builds=""; apply_flag T; stage_ephemeral "$eph"
+persist_builds=""; apply_flag B; stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
-eq "-T chooses guest disk" "${paths[0]}" disk
-eq "-T keeps same build dirs" "${#paths[@]}" 8
-no_copy=1; stage_ephemeral "$eph"
+eq "-B chooses guest disk" "${paths[0]}" disk
+eq "-B keeps same build dirs" "${#paths[@]}" 8
+dirs=(); stage_ephemeral "$eph"
 mapfile -d '' -t paths < "$eph"
-eq "-N skips project overmounts" "${#paths[@]}" 1
-no_copy=""; eph_no_tmpfs=""
+eq "-T stages no project overmount" "${#paths[@]}" 1
+dirs=("$PROJ"); eph_no_tmpfs=""
 exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find stops launch"
 
 (

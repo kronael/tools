@@ -1,6 +1,6 @@
 ---
 name: squash
-description: Reorganize the UNPUSHED commits on a detached tip into a clean, logical, PR-review-friendly history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
+description: Reorganize the UNPUSHED commits on a detached tip into a reviewable history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
 when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, collapse churn, rebase -i alternative"
 user-invocable: true
 ---
@@ -49,18 +49,30 @@ Read `git log --stat "$BASE"..HEAD` and the diffs. Group into logical commits:
 ## 3. Approval gate — show, then confirm
 
 History rewrite is destructive. BEFORE running any reset, print the proposed mapping
-and WAIT for an explicit go-ahead:
+and WAIT for an explicit go-ahead.
+
+ALWAYS print the mapping, and the final stack, so it reads in a 40-column terminal
+(a phone): one block per new commit — its subject, then the old commits indented
+under it. NEVER a side-by-side old → new layout; it wraps into noise. A full SHA
+goes on a line of its own.
 
 ```
-OLD tip: <OLD>   BASE: <BASE>
-old: abc111 wip parser      ┐
-old: abc222 fix parser typo ┼→ new: fix(parser): Handle empty input
-old: abc333 test parser     ┘
-old: def444 bump serde 1.1  ┐
-old: def555 bump serde 1.2  ┼→ new: chore(deps): Bump serde to 1.3
-old: def666 bump serde 1.3  ┘
-old: aaa777 add debug print ┐
-old: aaa888 remove it       ┴→ (dropped — churn cancels)
+OLD tip:
+<OLD>
+BASE:
+<BASE>
+
+1. fix(parser): Handle empty input
+   abc111 wip parser
+   abc222 fix parser typo
+   abc333 test parser
+2. chore(deps): Bump serde to 1.3
+   def444 bump serde 1.1
+   def555 bump serde 1.2
+   def666 bump serde 1.3
+x. dropped, churn cancels
+   aaa777 add debug print
+   aaa888 remove it
 ```
 
 ALWAYS get the go-ahead here. NEVER reset before the user approves the mapping.
@@ -114,5 +126,4 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 - ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
 - NEVER rewrite a commit that any `origin/*` head holds — fetch first; the `BASE` floor and its STOP checks enforce this.
-- NEVER skip pre-commit hooks.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.

@@ -15,7 +15,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 - Cross-compilation: volume mount source, NEVER copy
 - ALWAYS set memory limits (2GB typical) and build timeout (30m)
 - Multi-stage layers: deps in base, compile in build, runtime only in final. NEVER copy source into the base layer — it breaks the cache on every change
-- `sudo` is available: ALWAYS `sudo docker …` for docker commands you run ad hoc via the Bash tool. NEVER `sudo` inside an authored or committed script — parameterize privilege (`sh` skill)
+- `sudo docker …` for ad-hoc docker commands: WISDOM § Environment; never `sudo` in a committed script: `sh` skill
 
 ## Container hardening
 
@@ -30,7 +30,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 ## Storage
 
-- Config: `${PREFIX:-/srv}/key/`, Runtime: `${PREFIX:-/srv}/run/`, Data: `${PREFIX:-/srv}/data/<project>/`
+- Config: `${PREFIX:-/srv}/key/`, Runtime: `${PREFIX:-/srv}/run/`; the data dir: WISDOM § House conventions
 
 ## Anti-Patterns
 
@@ -44,9 +44,8 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 ## CI/CD
 
-- ALWAYS `make` for build/lint/test/clean — explicit targets: `make prepare`, `make image`, `make test`
+- `make` for build/lint/test/clean and the build/temp-dir rule: WISDOM § House conventions — explicit targets: `make prepare`, `make image`, `make test`
 - ALWAYS debug builds locally (faster, better errors); NEVER run release builds locally, NEVER mix debug/release artifacts
-- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other build/temp path, per command or otherwise, and NEVER move a build between target directories — each switch costs a full rebuild and splits the cache across mounts. Out of space in the configured target dir? SAY so and stop; freeing or resizing it is the maintainer's call
 
 ## Runbooks (cold — read on demand)
 

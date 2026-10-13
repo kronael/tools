@@ -258,6 +258,48 @@ exec "$@"\n' > /usr/local/bin/dockbox-init && chmod +x /usr/local/bin/dockbox-in
 # World-readable + writable tooling so any runtime UID can use it
 RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox
 
+# Tools the codemap, serena, astgrep, py and create skills call, below the big
+# chmod so adding one rebuilds only this layer and the tail. A pinned uv Python
+# lands in /opt (not root's 0700 home) so any runtime UID can run the tool.
+# SERENA_HOME keeps Serena's config, logs and per-project caches out of every
+# repo and out of $HOME, which changes with the runtime user. manim's pycairo
+# and manimpango build from source against the cairo and pango headers, with
+# clang: gcc lands only in the tail; its LaTeX template needs standalone.cls
+# (texlive-latex-extra). Bytecode compiles at build, so a fresh box neither
+# recompiles nor prints pydub's SyntaxWarnings. ripwire is the release binary only,
+# checked against its published sha256.
+ARG RIPWIRE_VERSION=0.6.5
+ENV UV_PYTHON_INSTALL_DIR=/opt/dev-tools/uv/python \
+    SERENA_HOME=/opt/dev-tools/serena
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    graphviz ffmpeg texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm \
+    libcairo2-dev libpango1.0-dev \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_* \
+  && uv tool install ast-grep-cli && rm -f /opt/dev-tools/uv/bin/sg \
+  && uv tool install ruff \
+  && UV_COMPILE_BYTECODE=1 uv tool install -p 3.13 serena-agent \
+  && CC=clang UV_COMPILE_BYTECODE=1 uv tool install -p 3.13 manim \
+  && serena init \
+  && sed -i \
+    -e 's|^web_dashboard: .*|web_dashboard: false|' \
+    -e 's|^excluded_tools: .*|excluded_tools: [onboarding, list_memories, read_memory, write_memory, edit_memory, rename_memory, delete_memory]|' \
+    -e 's|^project_serena_folder_location: .*|project_serena_folder_location: "/opt/dev-tools/serena/projects/$projectFolderName"|' \
+    "$SERENA_HOME/serena_config.yml" \
+  && grep -qx 'web_dashboard: false' "$SERENA_HOME/serena_config.yml" \
+  && grep -q '^excluded_tools: \[onboarding' "$SERENA_HOME/serena_config.yml" \
+  && grep -q '^project_serena_folder_location: "/opt/dev-tools/serena/projects/' "$SERENA_HOME/serena_config.yml" \
+  && ARCH=$(dpkg --print-architecture) \
+  && case "$ARCH" in amd64) RWARCH=x64 ;; arm64) RWARCH=arm64 ;; *) RWARCH=$ARCH ;; esac \
+  && RW=ripwire-${RIPWIRE_VERSION}-linux-${RWARCH} \
+  && cd /tmp && wget -q "https://github.com/redhat-et/ripwire/releases/download/v${RIPWIRE_VERSION}/${RW}.tar.gz" \
+     "https://github.com/redhat-et/ripwire/releases/download/v${RIPWIRE_VERSION}/${RW}.tar.gz.sha256" \
+  && sha256sum -c "${RW}.tar.gz.sha256" \
+  && tar xzf "${RW}.tar.gz" "${RW}/ripwire" \
+  && install -m 755 "${RW}/ripwire" /usr/local/bin/ripwire \
+  && rm -f "${RW}.tar.gz" "${RW}.tar.gz.sha256" "${RW}/ripwire" && rmdir "${RW}" \
+  && ripwire --version \
+  && chmod -R a+rwX /opt/dev-tools/uv /opt/dev-tools/serena
+
 # Kronael block for dockbox-codex-bridge, read only at container start. Below
 # the big chmod so editing the block keeps that layer cached.
 COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
@@ -299,7 +341,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     CLAUDE_CODE_DISABLE_AUTOUPDATE NPM_CONFIG_PREFIX NVM_DIR BUN_INSTALL \
     CARGO_HOME RUSTUP_HOME GOROOT GOPATH SDKMAN_DIR PLAYWRIGHT_BROWSERS_PATH \
-    PUPPETEER_CACHE_DIR UV_TOOL_BIN_DIR UV_TOOL_DIR DOTNET_ROOT PATH; do \
+    PUPPETEER_CACHE_DIR UV_TOOL_BIN_DIR UV_TOOL_DIR UV_PYTHON_INSTALL_DIR SERENA_HOME \
+    DOTNET_ROOT PATH; do \
       value="$(printenv "$key")"; \
       printf '%s="%s"\n' "$key" "$value" >> /etc/environment; \
       printf 'export %s="%s"\n' "$key" "$value" >> /etc/profile.d/dev-tools.sh; \

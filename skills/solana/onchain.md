@@ -193,7 +193,7 @@ cancellation simply fails during that window and must be re-sent.
 
 Close paired accounts together. If closing account B requires account A to
 authorize it, closing A alone strands B's rent until an identical A is recreated
-— so `close_book` closes the page in the same instruction.
+— so `close_market` closes the page in the same instruction.
 
 ## Config, fees, and who controls whom
 

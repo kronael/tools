@@ -5,8 +5,8 @@ is the only thing that reaches the sub.
 
 ## Shape — goal, not steps
 
-State what the output enables, hand over the context, draw the bounds, define
-done, and let the sub choose the path. Numbered steps degrade current models.
+Brief by goal (WISDOM § Agents, `dispatch`); a refine brief carries these
+blocks:
 
 ```
 I'm <larger task> for <who>. They need <what the output enables>.
@@ -65,8 +65,8 @@ still-unpushed stack — and for good once pushed.
 - ALWAYS name the worktree, the SHA it is clean at, and the paths that are out
   of bounds — a sub that meets a dirty tree otherwise treats the changes as its
   own and commits over another agent's work.
-- ALWAYS keep writing subs serial on a shared tree; parallel belongs to
-  read-only subs and to `git worktree add --detach` isolation.
+- ALWAYS run writing subs serially — NEVER in parallel unless each has its
+  own detached worktree; parallel is for read-only subs (WISDOM § Agents).
 - ALWAYS send a correction to a running sub with `SendMessage` rather than
   editing its files behind it — and record anything durable the correction
   settles where the next session will read it, not only in the message.

@@ -336,6 +336,8 @@ touch "$tmp/home/.claude/projects/$slug/session.jsonl"
 HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
 true_ "resume maps every nonalphanumeric path character" \
     'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" dockbox -N -n resume claude "$primary" >/dev/null 2>&1
+false_ "-N starts a new session over existing history" 'grep -q "claude --resume" "$log"'
 
 # A project .dockboxrc takes --no-ephemeral like the command line does: builds
 # persist (no overmount for node_modules), claude gets no stray "--", and no
@@ -385,6 +387,34 @@ true_  "a home rc --no-ephemeral still persists builds" \
     '[ "$rc" = 0 ] && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$tmp/home/.dockboxrc"
 
+# -T mounts no project: the box keys on tmp, works in a box-only tmpfs that
+# dockbox-init chowns, and its claude starts a new session over old history.
+cd "$proj" || exit 1
+fresh -T
+true_  "-T starts a box"                  '[ "$rc" = 0 ]'
+true_  "-T keys the box on tmp"           'grep -q -- " --name dockbox-tmp " <<< "$run"'
+true_  "-T works in a tmpfs workdir" \
+    'grep -q -- " --tmpfs /tmp/work:rw,exec,mode=1777 " <<< "$run" && grep -q -- " -w /tmp/work " <<< "$run"'
+true_  "-T chowns the workdir"            'grep -q -- "DOCKBOX_EPH_PATHS=/home/dockbox:/tmp/work " <<< "$run"'
+false_ "-T mounts no project dir"         'grep -q -- " -v $proj:" <<< "$run"'
+false_ "-T overmounts no project build dir" 'grep -q -- "$proj/node_modules" <<< "$run"'
+mkdir -p "$tmp/home/.claude/projects/-tmp-work"
+touch "$tmp/home/.claude/projects/-tmp-work/session.jsonl"
+HOME="$tmp/home" dockbox -T >/dev/null 2>&1
+true_  "-T re-enters its own box"         'grep -q "^exec -it .* dockbox-tmp setpriv " "$log"'
+false_ "-T starts a new session"          'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -T claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+true_  "-T refuses a project dir, starting no box" \
+    '[ "$rc" = 2 ] && grep -q "use -v" "$tmp/err" && ! grep -q "^run " "$log"'
+printf -- "-T\n" > "$proj/.dockboxrc"
+fresh -n pe
+true_  "project rc -T is ignored"         'grep -q "ignoring -T" "$tmp/err" && grep -q -- " -v $proj:$proj:rw " <<< "$run"'
+rm -f -- "$proj/.dockboxrc"
+fresh -n pe -B
+true_  "-B puts build dirs on Docker volumes" \
+    'grep -q -- " -v $proj/node_modules " <<< "$run" && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+cd "$here" || exit 1
+
 # The help line naming the flags a project rc ignores lists exactly the set the
 # rc loop's `case` ignores.
 ignored=$(sed -n 's/^[[:space:]]*\([A-Za-z|]*\)) echo "dockbox: ignoring -\$opt.*/\1/p' "$here/dockbox" | tr '|' '\n' | sort)
@@ -414,7 +444,7 @@ true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]
 true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'
 true_ "note lists volume and tmpfs as lost" \
     '[[ "$nout" == *"Lost at exit (tmpfs or volume): /p/node_modules /home/dockbox"* ]]'
-true_ "note lists a -T volume as an empty dependency dir" '[[ "$nout" == *"  - /p/node_modules"* ]]'
+true_ "note lists a -B volume as an empty dependency dir" '[[ "$nout" == *"  - /p/node_modules"* ]]'
 true_ "note names the gh token -g brings" '[[ "$nout" == *"without \`-g\` has none"* ]]'
 nout="$(sandbox_note myhost bridge -v /p:/p:rw \
     --tmpfs /p/.venv:rw,exec,mode=1777 --tmpfs /tmp:rw,exec,mode=1777)"

@@ -11,6 +11,18 @@
   **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
   test — skill text.
 
+- **FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE** (LOW, design) — proposed,
+  needs sign-off. `skills/writing/page.md:181` marks "one font family, five
+  sizes at most" a `keeper` (a `make lint` check that fails the build), but
+  `skills/create/form.md:67` and its calibration record (`:81`) measure
+  distinct rendered sizes and report the owner's accepted pages run 12–15,
+  failing only at >16 (≤5 is a "watch", never failing). A keeper at five sizes
+  fails every accepted page; the measurable fail sits at sixteen. No keeper
+  check exists yet, so nothing breaks today. **Proposal:** the owner sets the
+  enforceable number — drop the `keeper` from the five-sizes rule, or state the
+  measurable threshold (distinct rendered sizes) the keeper enforces, and point
+  `writing/page.md` and `form.md` at one owner for it. No test — design.
+
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every
   transcript under `~/.claude/projects/` and lets a `PermissionError` escape:
@@ -100,7 +112,7 @@
 
 - **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
   2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
-  (`.mjs`); `skills/browse/SKILL.md:96` has the agent write `tmp/debug.mjs`
+  (`.mjs`); `skills/browse/debug.md:19` has the agent write `tmp/debug.mjs`
   and run it with `node`. **Fix:** a `tmp/debug.ts` run by `bun`, or scope the
   ts rule to committed tooling. No test — duplication.
 
@@ -126,7 +138,7 @@
 - **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
   design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
   sub, while `dockbox haiku` (`dockbox/dockbox:412`) and `qemubox haiku`
-  (`qemubox/qemubox:1104`) start an interactive Claude Code session on
+  (`qemubox/qemubox:1223`) start an interactive Claude Code session on
   `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
   `qemubox/test-parity.sh:8` pin the alias in both. **Options:** (a) drop the
   `haiku` alias from both launchers, their usage text, qemubox's README and
@@ -179,19 +191,11 @@
   ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
   CI runner has no ast-grep).
 
-- **COMMIT-EVALS-BRACKET-FORMAT** (LOW, docs) — CONFIRMED at HEAD 2026-09-25.
-  `evals/commit/0[1-5].json` `must_use_format` expects `[fix] …`-style
-  subjects (`01.json:13`, `03.json:18`), and `research/eval-sets.md:196`
-  shows the same, while `skills/commit/SKILL.md:33` prescribes
-  `type(scope): …`. A run scores a skill-compliant commit as a format
-  failure. **Fix:** rewrite the regexes and rubric lines to the
-  `type(scope):` form; no test — docs.
-
 - **LANG-SKILLS-RESTATE-COLD-RUNBOOKS** (LOW, duplication) — owner decision,
   no test — duplication. Hot `SKILL.md` bodies restate rules a cold
   `software/` runbook owns: `skills/py/SKILL.md:121-123,130,132-137`
   (`strict-typing.md` one mode, `ci.md` `python -m pytest`, `testing.md`
-  fixtures and doubles), `skills/go/SKILL.md:38-39,42,147,151`
+  fixtures and doubles), `skills/go/SKILL.md:38-39,42,155,159-160`
   (`strict-typing.md` linters, `dynamic-analysis.md` `-race`, goleak,
   govulncheck), `skills/rs/SKILL.md:74-76,85,137` (`testing.md`, `cli`,
   `dynamic-analysis.md` miri). `skills/software/SKILL.md:29` says NEVER
@@ -204,15 +208,17 @@
   decision, no test — docs. Four canonical Make target sets:
   `skills/software/ci.md:47-48` (prepare, build, test, right, image, clean),
   `skills/mk/SKILL.md:71-78` (prepare, check, right, test, integration,
-  clean), `skills/ts/SKILL.md:120-121` (prepare, check, right, test), WISDOM
+  clean), `skills/ts/SKILL.md:156-157` (prepare, check, right, test), WISDOM
   § House conventions (test, test-all, smoke); `ci.md:44` "NEVER add a
-  `lint` target" vs `ops:48`, `mk:76,86`, `py:125`, `ts:120`; `ci.md:50`
-  sets `PYTHONPATH` per target, `py:131` once. Log line:
-  `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:183`
+  `lint` target" vs `ops:47`, `mk:76,86`, `py:142`, `ts:156`; `ci.md:50`
+  sets `PYTHONPATH` per target, `py:148` once. Log line:
+  `software/observe.md:5` (`[LEVEL] key=value`) vs `software/code.md:186`
   (`INFO subsystem: message`); health: `service:12` (`/health`, `/ready`)
   vs `observe.md:12` (`/.well-known/live`); Python: `py:19` 3.13+ vs
   `strict-typing.md:43` 3.12; aliasing: `py:93-94` allows `heapq_merge` on
-  a collision vs `code.md:26-28` NEVER rename. **Options:** one owner per
+  a collision vs `code.md:26-28` NEVER rename; prose wrap:
+  `skills/create/web/code-presentation.md:110` 90 chars vs `code.md:170` 100,
+  which `rumdl` reflows. **Options:** one owner per
   fact, the rest point. **Default if nothing is decided:** `code.md` and
   WISDOM win where they speak; the rest stays until picked.
 
@@ -229,13 +235,13 @@
   — docs. `skills/solana/deps.md:12` calls anchor-lang 1.1.2 the newest
   release and `:22` solana-pubkey 4.3.0; the crates index lists 1.2.1
   (depending on `solana-pubkey` v3 and v4) and 4.4.0, and `:118-121` rests
-  on the 1.1.2 claim. `skills/solana/layout.md:123` is "verified at cargo
+  on the 1.1.2 claim. `skills/solana/layout.md:113` is "verified at cargo
   1.97.1". **Fix:** re-verify each pin against the index and the toolchain.
 
 - **README-ROUTER-CONTRADICTS-ITSELF** (LOW, docs) — owner decision, no test
   — docs. `skills/readme/sync.md:56` puts an "Architectural Decisions"
-  section in ARCHITECTURE; `skills/readme/topology.md:85` says NEVER
-  record a decision there. `sync.md:24-48` and `topology.md:43-57` give two
+  section in ARCHITECTURE; `skills/readme/topology.md:86` says NEVER
+  record a decision there. `sync.md:24-48` and `topology.md:44-58` give two
   README section orders. `skills/release/library.md:115` wants README line 2
   "technical"; `sync.md:26-28` "a 13-year-old understands". **Options:**
   (a) topology owns layout and order, sync points; (b) sync owns. **Default
@@ -253,7 +259,7 @@
   `skills/scavenge/SKILL.md:56,75,132` call astra directly; `oracle` never
   routes to `pi`; `astra`, `pi` and `oracle` share the triggers "second
   opinion", "sanity check" and "disagreement after reasoning"
-  (`skills/wisdom/SKILL.md:48` forbids a shared primary trigger);
+  (`skills/wisdom/SKILL.md:47` forbids a shared primary trigger);
   `skills/terra/SKILL.md:24-27` requires `--sandbox read-only` outside
   dockbox while `astra:29,57` always bypasses the sandbox. **Default if
   nothing is decided:** as written.
@@ -281,6 +287,100 @@
   at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
   `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
   rule wins inside a sync; RECLAUDE scopes project work.
+
+- **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
+  test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
+  non-obvious why" — a general why comment that none of the three in-body
+  exceptions in `skills/software/code.md:79-84` covers, while
+  `skills/refine/software.md:29-38` hunts every comment outside them, so the
+  Python lens licenses what the baseline refuses. **Options:** (a) cut
+  the clause, leaving `software.md` the one comment lens; (b) keep it as a
+  Python allowance and say so in `code.md`. **Default if nothing is
+  decided:** as written.
+
+- **CREATE-PORTED-HERMES-TOOL-NAMES** (LOW, docs) — CONFIRMED at HEAD
+  2026-10-11, no test — docs. Ported files under `skills/create/` name Hermes
+  tools this harness lacks — `write_file`, `read_file`, `patch`, `terminal`,
+  `browser_navigate`, `browser_vision` (`web.md:685-692,804-808`,
+  `web/popular-web-designs.md:44-47,85-86`, line 13 of all 54
+  `web/popular-web-designs/templates/*.md`, `diagram/excalidraw.md:31-32,36`,
+  `diagram/architecture-diagram.md:47`, `web/design-md.md:133`,
+  `art/pretext.md:156`, `art.md:226` (`terminal`); also
+  `skills/humanize/SKILL.md:38,94,108`) — and a
+  `generative-widgets` skill (`popular-web-designs.md:42,85` and the
+  templates) the bundle does not ship. **Options:** (a) one line in
+  `create/SKILL.md` § Rules mapping the Hermes names to Read, Write, Edit,
+  Bash and the `browse` skill; (b) rewrite each ported file. **Default if
+  nothing is decided:** as written.
+
+- **CREATE-DEAD-POINTERS** (LOW, docs) — CONFIRMED at HEAD 2026-10-11, no
+  test — docs. House file: `skills/create/divergence.md:54` names `tmp/inspiration.py`,
+  which exists neither in the repo (`find` over the tree) nor in an install. Ported
+  files: `art/ascii-video/README.md:278` → `design-patterns.md` (absent; the
+  patterns are in `references/scenes.md`); `art/p5js/README.md:40`,
+  `art/p5js/scripts/setup.sh:3`, `video/manim/README.md:22` →
+  `skills/creative/...` (the upstream layout); `art/ascii-video.md:69` →
+  `composition.md § Adaptive Tonemap` (the heading is "The `tonemap()`
+  Function"); `art/pretext.md:39-40` names `ascii-art`, `ascii-video` and
+  `p5js` as skills (now `art.md`, `art/ascii-video.md`, `art/p5js.md`);
+  `video/render/examples/README.md:25` cites a Lottie row `video/render.md`
+  lacks. **Fix:** the house file names the project that holds the implementation
+  or drops the pointer; the ported files are the owner's call per
+  `software/credits.md`.
+
+- **CREATE-PORTED-TREES-RESTATE-THEMSELVES** (LOW, duplication) — owner
+  decision, no test — duplication. Each ported mode file restates rules its
+  own `references/` and `README.md` carry. manim: monospace-only font in 4
+  files, opacity layering 1.0/0.4/0.15 in 4, `buff >= 0.5` in 5, raw-string
+  LaTeX in 4, `self.wait()` in 6, the timing table, palette, quality presets
+  and stitch command in 2-3 each. ascii-video: the ffmpeg `stderr=PIPE`
+  deadlock in 5, font cell height in 4, `tonemap()` in 6, and `README.md`
+  repeating the mode table, pipeline and catalogs. p5js: seeded randomness,
+  FES off, HSB, `fbm`, `createGraphics`, WebGL gotchas, key bindings,
+  `noLoop()` capture and fxhash each in the mode file and 1-3 references,
+  plus two SVG Export sections in `references/export-pipeline.md:330-361,491-519`
+  pinning `p5.js-svg` 1.5.1 and 1.6.0. pretext: real-prose, prepare-once and
+  pin-the-version each 2-3 times inside `art/pretext.md`. excalidraw: the
+  `label` warning in 4 places. design-md: the anatomy example against
+  `templates/starter.md`. popular-web-designs: the Hermes block at line 13 of
+  all 54 templates, and the three-mode decision table in `web.md:22-36`,
+  `popular-web-designs.md:27-35` and `design-md.md:34-37`. `web.md` against
+  itself: self-contained HTML 4 times, verification 3, "2-3 variants" at
+  `:646` against "at least three options" at `:326-346`. **Options:** (a)
+  keep — a reference file loads alone, so a restatement there is what its
+  reader sees; (b) cut the mode files to pointers. **Default if nothing is
+  decided:** (a).
+
+- **SQUASH-MAPPING-SHORT-SHAS-AND-WIDTH** (LOW, docs) — open (record only),
+  no test — docs. The mapping example in `skills/squash/SKILL.md:59-76`
+  shows 6-character SHAs (`abc111`) against WISDOM's full-hash rule and the
+  skill's own "A full SHA goes on a line of its own" (`:56-57`); and `:54`
+  promises a 40-column read while a block line is `1. ` plus a subject of up
+  to 72 characters, 75 columns. **Fix:** full SHAs on their own lines in the
+  example; state that the subject line may wrap, or drop the 40-column claim.
+
+- **REFACTOR-MANIFEST-UNCHECKED** (LOW, docs) — open (record only), no test
+  — docs. `skills/software/refactor-stack.md:324-327` requires a port's
+  manifest to account for every source file, but nothing diffs its rows
+  against `git ls-tree -r --name-only <source SHA>`, so a file missing from
+  both the manifest and the port passes. The `software/SKILL.md:26` row for
+  `refactor-stack.md` does not name the manifest, and the port row (`:27`)
+  routes to `credits.md`, so a port request does not reach it. **Fix:** add
+  the `ls-tree` diff to the manifest bullet and "port manifest" to a row.
+
+- **TESTING-VS-REFACTOR-COMMIT-CADENCE** (LOW, docs) — open (record only), no
+  test — docs. `skills/software/testing.md:34-36` runs the full `make test`
+  tier "once before the commit"; `skills/software/refactor-stack.md:113-114`
+  commits after every edit, which makes that a full run per edit. **Fix:**
+  scope one of the two — e.g. refactor-stack commits on the focused run and
+  runs the full tier per pushed layer.
+
+- **WISDOM-BODY-OVER-200-LINES** (LOW, docs) — CONFIRMED 2026-10-13, no test
+  — docs. `skills/global/SKILL.md` body is 202 lines: `make skills-frontmatter`
+  warns `[skill-length]` (> 200) while `CLAUDE.md` § Under 200 lines holds the
+  wisdom file to the cap. § Git grew the ghpush bullet, § Shell the worktree
+  lift and § Agents the cap wording. **Fix:** cut two lines — the owner's
+  wording, so the owner's call which.
 
 ## Codex bridge
 
@@ -353,12 +453,14 @@
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which
-  strips it from the test env, and `hooks/ARCHITECTURE.md:208,213`, which
-  documents the clause — none in `Makefile`, `.github/`, `evals/`, or any
+  strips it from the test env, and `hooks/ARCHITECTURE.md:217,222`, which
+  documents the clause — none in `Makefile`, `.github/`, or any
   `settings*.json` env block. Effect is the opposite of the intent: eval runs
-  get the block messages injected into their transcripts. **Fix:** one line
-  either way — set it in the eval runner, or delete the clause — but which
-  one is a scope call; no test — config.
+  get the block messages injected into their transcripts. No eval runner
+  exists in this tree, so nothing here can set it. **Options:** (a) delete
+  the clause and its `hooks/ARCHITECTURE.md` mention; (b) keep it for an
+  external runner that sets `CLAUDE_EVAL` itself. **Default if nothing is
+  decided:** (b); no test — config.
 
 - **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
   stamps per session are named at their call sites — `local-`
@@ -407,21 +509,23 @@
   Pre-commit hands the scan every staged `.md` (`files: \.md$`,
   `.pre-commit-config.yaml:14`), while `make skills-frontmatter` and CI walk
   the tree through `visible_files()`, which skips hidden directories
-  (`hooks/skill_frontmatter_lint.py:110`). A tracked `.md` in a hidden dir is
+  (`hooks/skill_frontmatter_lint.py:145`). A tracked `.md` in a hidden dir is
   scanned on commit and skipped by the tree target. Latent: no tracked `.md`
   sits in a hidden dir. **Proposal:** one scope for both — the script drops
   hidden paths it is handed, or the pre-commit pattern excludes them.
   Changes the scan's input contract — needs sign-off; no test — design.
 
 - **SKILL-LINT-ORPHAN-WALKS-HIDDEN-DIRS** (LOW, correctness) — CONFIRMED at
-  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:326`)
-  collects a skill's docs with `rglob('*.md')`, hidden dirs included, while
-  `visible_files()` skips them for the tree walk. Pytest run from inside the
-  skill leaves an ignored `.pytest_cache/README.md` there, and `make
-  skills-frontmatter` and the pre-commit lint exit 2 on it as a
-  `skill-orphan`. Reproduce: `cd skills/recall-memories && uvx pytest -q
-  test_recall.py`, then `make skills-frontmatter`. **Fix:** skip hidden path
-  parts in `sibling_docs`, as `visible_files()` does. No test yet.
+  HEAD 2026-10-10. `sibling_docs` (`hooks/skill_frontmatter_lint.py:365`)
+  collects a skill's docs with `rglob('*.md')`, hidden dirs and git-ignored
+  paths included, while `visible_files()` skips both for the tree walk
+  (`:145,150`). Pytest run from inside the skill leaves an ignored
+  `.pytest_cache/README.md` there, and `make skills-frontmatter` and the
+  pre-commit lint exit 2 on it as a `skill-orphan`; an ignored
+  `skills/<x>/tmp/notes.md` fails the same way. Reproduce: `cd
+  skills/recall-memories && uvx pytest -q test_recall.py`, then `make
+  skills-frontmatter`. **Fix:** skip hidden path parts and git-ignored paths
+  in `sibling_docs`, as `visible_files()` does. No test yet.
 
 - **LINT-CI-DISPATCH-EMPTY-REFS** (LOW, config) — CONFIRMED 2026-10-07.
   `.github/templates/lint.yml.tmpl` passes
@@ -544,12 +648,15 @@
   the first; name the other two in `hooks/ARCHITECTURE.md`.
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
-  CONFIRMED 2026-10-10, no test — config. No workflow runs
-  `skills/recall-memories/test_recall.py`, `make lints` or `make spec-lint`
-  (`grep -rn recall .github` is empty); `test-hooks.yml` triggers on
-  `hooks/**` only while `hooks/test_prompt_nudge.py:40,48` reads
-  `skills/*/SKILL.md`, so a push touching only `skills/` skips it. **Fix:**
-  add the three to `lint.yml.tmpl` and `skills/**` to the hooks path filter.
+  CONFIRMED 2026-10-12, no test — config. Root `make test` runs
+  `skills/recall-memories/test_recall.py` (`Makefile:64`), but no workflow
+  runs root `make test` or `make lints` (`grep -rn recall .github` is empty);
+  `test-hooks.yml` triggers on `hooks/**` only while
+  `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
+  touching only `skills/` skips it. `make spec-lint` stays out of CI: it
+  needs `SPECS=<dir>` and this repo keeps no specs. **Fix:** add
+  `test_recall.py` and `make lints` to `lint.yml.tmpl` and `skills/**` to
+  the hooks path filter.
 
 - **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
   — config. `agents/distill.md:4`, `agents/refine.md:4` and
@@ -567,6 +674,13 @@
   `spinnerTipsEnabled`) fall under step 5's diff-and-ask with no rule naming
   them. Policy over enforcement is the house rule. **Default if nothing is
   decided:** as written.
+
+- **PROMPT-NUDGE-UNNUMBERED-SPEC-EXAMPLE** (LOW, docs) — open (record only),
+  no test — docs. `hooks/prompt_nudge.py:18` gives `specs/multi-tenancy.md`
+  as the example of a lowercase doc name, which teaches an unnumbered spec
+  file against the `NN-topic.md` numbering in `skills/specs/format.md`.
+  **Fix:** a numbered example, or a non-spec path such as `docs/setup.md`
+  alone.
 
 ## rig
 
@@ -604,7 +718,7 @@
 
 - **BOX-CODEX-DUPLICATE-MODEL-FLAG** (MED, config) — CONFIRMED 2026-10-08,
   no test — config. `dockbox/dockbox:445,462` and
-  `qemubox/qemubox:1101,1341` prepend `-m` and forward the user's model flag.
+  `qemubox/qemubox:1222,1482` prepend `-m` and forward the user's model flag.
   An explicit `-m` or `--model` then prevents Codex from starting.
   Reproduce with Codex 0.160.0:
   `codex -m gpt-6.1-sol --model gpt-6-astra --version` exits 2 with
@@ -678,9 +792,9 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:443,491` and `qemubox/qemubox:1105,1109` launch the
+  `dockbox/dockbox:443,491` and `qemubox/qemubox:1221,1225` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:290`, `qemubox:53,58`, `qemubox/README.md:63`) and
+  (`dockbox:290`, `qemubox:57,62`, `qemubox/README.md:65`) and
   `dockbox/test.sh:357,366` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
@@ -689,7 +803,7 @@
 
 - **DOCKBOX-HELP-OMITS-X-AND-IMAGE-PACKAGES-UNUSED** (LOW, docs) — CONFIRMED
   2026-10-10, no test — docs. `dockbox/dockbox:430` accepts `-x` and
-  `README.md:69` documents it, but the `--help` Options list (`:304-317`)
+  `dockbox/README.md:71` documents it, but the `--help` Options list (`:304-317`)
   shows only `-d`. `dockbox/Dockerfile:20` installs `iptables ipset iproute2
   dnsutils aggregate`, which no script in the repo uses (`grep -rnw` over
   dockbox, qemubox and the docs finds nothing); the egress lockdown they
@@ -699,20 +813,20 @@
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:180-186` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:206-212` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:128-132`) and the guest user has
-  passwordless sudo (`:189`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:153-158`) and the guest user has
+  passwordless sudo (`:215`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:596`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:657`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:617`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1155-1161`) carries them.
+  `-nic` at `qemubox:678`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1271-1277`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -722,28 +836,76 @@
   has tested it here, because this box has no `/dev/kvm` access.
 
 - **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
-  `qemubox -n x -N exec sudo poweroff` ends with ssh's
+  `qemubox -n x -T exec sudo poweroff` ends with ssh's
   "kex_exchange_identification: Connection reset by peer" and
-  `qemubox:326` "cannot remove session marker; keeping qemubox-x running",
+  `qemubox:384` "cannot remove session marker; keeping qemubox-x running",
   while `qemubox status x` already reports `process=stopped`. `running` at
-  `:320` still sees the QEMU process during shutdown; the marker ssh then
+  `:378` still sees the QEMU process during shutdown; the marker ssh then
   fails. **Fix:** re-check `running` before printing the note; say the VM is
   shutting down instead.
 - **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
   First boot prints systemctl's two "Removed '/etc/systemd/system/...
   systemd-timesyncd.service'" lines into the user's terminal from
-  `sync_guest_clock` (`qemubox:528`). **Fix:** `systemctl disable --now
+  `sync_guest_clock` (`qemubox:587`). **Fix:** `systemctl disable --now
   --quiet`.
 - **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
   Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
-  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:162`
+  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:169`
   `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
   block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
 
 - **QEMUBOX-UNDOCUMENTED-ALIASES-AND-ENV** (LOW, docs) — CONFIRMED
-  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1261`),
-  `-f`/`rebuild` (`:1266`) and `QEMUBOX_QEMU` (`:10`) appear in neither the
+  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1388`),
+  `-f`/`rebuild` (`:1394`) and `QEMUBOX_QEMU` (`:11`) appear in neither the
   usage text nor `qemubox/README.md`. **Fix:** document them or drop them.
+
+- **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
+  2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
+  `lock_box` (`qemubox/qemubox`), whose `QEMUBOX_READY_TIMEOUT` wait (180 s)
+  ends in `ready_error`: "VM qemubox-x not ready; serial log:" plus the
+  serial tail. A stop blocked by a launch that holds the lock while it waits
+  on a wedged guest gets that message, which names the wrong cause, and exits
+  1 without signalling qemu. The idle check (`stop_after_linger`,
+  `qemubox/qemubox:321`) takes the lock the same way, so a check blocked for
+  180 s writes the same `ready_error` into `idle.log` and ends, where a failed
+  session count retries. **Fix:** `lock_box` reports the lock wait
+  itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
+  `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
+
+- **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
+  `linger_box` (`qemubox/qemubox:357`) backgrounds the idle check with `&`
+  from the leaving session's shell, which runs without job control, so the
+  check keeps the session's process group: a shell that sourced the script
+  and called `linger_box` saw the check report that shell's PGID. `trap ''
+  HUP` covers a terminal hangup, but a signal to the group — a multiplexer
+  or supervisor tearing the job down, `kill -- -<pgid>` — ends the check
+  with the session and the VM never powers off. **Proposal:** start the
+  check under `setsid` so it owns its session and process group; test: the
+  check's PGID differs from the launcher's. No test — design.
+
+- **QEMUBOX-PAUSED-ON-HOST-ENOSPC** (MED, ops) — proposed. The `-drive` at
+  `qemubox/qemubox:673` sets no `werror=`, and qemu's default `werror=enospc`
+  pauses the guest when the host filesystem under `disk.qcow2` fills. The
+  launcher passes no `-qmp` or `-monitor` socket, so nothing can see the
+  paused state or send `cont`: `qemubox status` reports `process=running`
+  and `ssh=open` while every SSH connect ends in "Connection timed out
+  during banner exchange", and `stop` reaches SIGKILL after its 90 s and
+  10 s waits (seen 2026-10-12 after the host disk filled; no clean
+  shutdown). **Options:** (a) `-qmp unix:$dir/qmp,server,nowait` at launch,
+  `status_box` reports `query-status`, `stop_box` sends `cont` before the
+  poweroff and `quit` on `-f`; (b) `werror=report` on the drive so the guest
+  gets EIO and keeps running; (c) document the limit. **Default if nothing
+  is decided:** (c). No test — ops.
+
+- **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
+  (`qemubox/qemubox:1441`) lingers like any other: after its session exits,
+  `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
+  seconds (default 1200), and a second `qemubox -T` in that window joins the
+  VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
+  says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
+  for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
+  window in README § Usage. **Default if nothing is decided:** (b). No test
+  — design.
 
 ## bhctl
 

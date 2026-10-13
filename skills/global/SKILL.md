@@ -144,8 +144,7 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   before posting it or showing it for approval. DISTILL: cut to the shortest text that still
   carries the claim and its reasoning, in the posting skill's shape and under
   its cap; what the title, the diff or the commits show, results and history
-  are cut first. A PR body is its `**TL;DR:**` lead, any `Closes #N` and the
-  `🤖`, nothing else.
+  are cut first.
   REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
   and no other attribution, no marketing language, no history framing, addresses
   and signatures in full, the repo's title convention, every claim verified or
@@ -157,7 +156,8 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 - Tee once, read the file: `<cmd> 2>&1 | tee ./tmp/out.log && tail -20
   ./tmp/out.log`. NEVER re-run a command to see another part of its output.
 - NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
-  explicitly named files, or leave cleanup to the user.
+  explicitly named files, or leave cleanup to the user. One lift: `git worktree
+  remove --force` after the checks in `worktree` § Removing a worktree.
 - NEVER kill a process you did not start, not even to free a port; kill your
   own by PID.
 - NEVER hit an external API per request, and NEVER re-fetch what is already on

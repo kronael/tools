@@ -85,7 +85,7 @@ absent; anything else waits for the source root.
 Report only:
 
 - canonical sync result from `kronael/sync/SKILL.md` if the sync ran
-- Codex bridge paths changed: `~/.codex/AGENTS.md`, `~/.codex/config.toml`, project `AGENTS.md`,
+- Codex bridge paths changed: `~/.codex/AGENTS.md`, `~/.codex/config.toml`,
   `~/.agents/skills`, `.agents/skills`, `~/.codex/hooks.json`
 - whether Codex can now see global guidance, installed skills, and hook wiring; tell the
   user to start a new thread, use `/skills` or `@skill-name`, and open `/hooks`

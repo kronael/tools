@@ -10,9 +10,14 @@ step. Codex wiring is `../codex-hooks.json`; it installs to
 `~/.codex/hooks.json` and calls `codex_hook.py` before delegating to the same
 hook scripts.
 
-`skill_frontmatter_lint.py` also lives in `hooks/` and runs from
-`make skills-frontmatter` and pre-commit, not from a lifecycle event. The spec
-linter is the standalone CLI tool `spec-lint/`.
+`statusline.py` is the status-line command `settings-recommended.json` sets:
+model, context use, and the 5-hour and weekly limits in whole percent.
+
+`skill_frontmatter_lint.py` also lives in `hooks/` and runs on demand, not from
+a lifecycle event: from `make skills-frontmatter` and pre-commit. The spec
+linter is the standalone CLI tool `spec-lint/`: `make spec-lint SPECS=<dir>`
+here, or `spec-lint specs` by hand in a project before a spec commit
+(`../skills/specs/format.md` § Before commit).
 
 ## The hooks
 
@@ -60,7 +65,16 @@ never read as a command. The body comes from
 the inline `--body` (literal or `$(cat <path>)`); a path it cannot read (a
 shell variable, a missing or undecodable file), stdin, unparsable JSON and a
 required body that is absent (`--fill`, `--web`) are refused too, and an
-exception inside the lint refuses rather than allows. The lint is WISDOM § Git
+exception inside the lint refuses rather than allows. A review submit — `gh pr
+review`, `gh api` on `/reviews/<id>/events`, a `/reviews` POST whose `--input`
+JSON or `-f`/`-F` field carries `event`, or the `submitPullRequestReview`
+mutation — is refused unless the newest message the user typed contains
+`SUBMIT REVIEW`; the hook reads it from the tail of the payload's
+`transcript_path`, skipping tool results, hook feedback (`isMeta`), task
+notifications (`origin.kind`) and a subagent's thread (`isSidechain`). No
+transcript — Codex, a payload without the field — refuses too: the user
+submits by hand. Posting the review without `event` stays PENDING and needs
+no ask. The lint is WISDOM § Git
 made checkable: a bare `🤖` as the last line and none of the harness footer,
 the `**TL;DR:**` lead with nothing after it but `Closes #N` lines, and no
 bullet, header, table, rule, checkbox or code block in a PR body, the `🤖 `

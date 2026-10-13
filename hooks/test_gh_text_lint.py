@@ -1,24 +1,29 @@
 from __future__ import annotations
 
+import json
 import time
 
 import gh_text_lint
 import pytest
+from gh_text_lint import SUBMIT_ASK
 from gh_text_lint import Kind
 from gh_text_lint import command_reason
+from gh_text_lint import latest_prompt
 from gh_text_lint import lint
 
 ROBOT = '\U0001f916'
 FOOTER = f'{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)'
 CLOSE = 'Closes #12'
 GOOD_PR = (
-    '**TL;DR:** Deploys the collector on hel1v1 through the `service:` list, so the playbook goes.\n\n'
+    '**TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
     f'{CLOSE}\n\n'
     f'{ROBOT}\n'
 )
 PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
 GOOD_ISSUE = f'`gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n\n{ROBOT}\n'
-GOOD_COMMENT = f'{ROBOT} \U0001f534 Charges `sold_lamports`, the retained piece.\nFix: use the sale leg here.\n'
+GOOD_COMMENT = (
+    f'{ROBOT} \U0001f534 Charges `sold_qty`, the retained piece.\nFix: use the sale leg here.\n'
+)
 
 LINT_CASES = [
     (Kind.PR, GOOD_PR, None),
@@ -72,9 +77,9 @@ LINT_CASES = [
         GOOD_PR.replace('Deploys', 'Leveraging the cache, deploys'),
         'marketing word "Leveraging"',
     ),
-    (Kind.PR, GOOD_PR.replace('hel1v1', 'commit deadbeef...cafe'), 'write it in full'),
-    (Kind.PR, GOOD_PR.replace('hel1v1', 'vault 7xKXtg...gAsU'), 'write it in full'),
-    (Kind.PR, GOOD_PR.replace('hel1v1', '0x12ab…'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', 'commit deadbeef...cafe'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', 'vault 7xKXtg...gAsU'), 'write it in full'),
+    (Kind.PR, GOOD_PR.replace('web1', '0x12ab…'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
@@ -116,7 +121,7 @@ def test_lint_pr_draft_ratio_ignores_the_draft_title() -> None:
 
 
 TITLE_CASES = [
-    ('fix(ansible): Deploy news-collector through the standard service list', None),
+    ('fix(ansible): Deploy price-feed through the standard service list', None),
     ('x' * 73, 'title 73 chars, max 72'),
     ('feat: Add A and B and C', 'title lists changes'),
 ]
@@ -151,6 +156,12 @@ def tree(tmp_path):
     (tmp_path / 'tmp' / 'review-raw.json').write_text(
         '{"comments": [{"body": "' + GOOD_COMMENT + '"}]}', encoding='utf-8'
     )
+    (tmp_path / 'tmp' / 'submit.json').write_text(
+        '{"commit_id": "abc", "event": "COMMENT", "comments": [{"path": "a.py", "line": 1, "body": "'
+        + GOOD_COMMENT.replace('\n', '\\n')
+        + '"}]}',
+        encoding='utf-8',
+    )
     return tmp_path
 
 
@@ -173,7 +184,6 @@ ALLOWED = [
     'gh api repos/o/r/pulls/176 --jq .body',
     'gh api repos/o/r/pulls/176/reviews --jq ".[] | select(.state==\\"PENDING\\") | .id"',
     'gh api repos/o/r/pulls/176/reviews/1 --method DELETE',
-    'gh api repos/o/r/pulls/176/reviews/1/events --method POST --input - <<\'EOF\'\n{"event":"COMMENT","body":""}\nEOF',
     'gh api repos/o/r/pulls/176/reviews --method POST --input tmp/review.json',
     'gh api repos/o/r/pulls/176/comments -F commit_id=abc -f path=a.py -F line=10 -f body="'
     + ROBOT
@@ -189,7 +199,6 @@ ALLOWED = [
     f'gh issue comment 5 --body "{ROBOT} Repro on 3.11.\nFails on 3.12 too.\nLog attached."',
     f'gh api repos/o/r/pulls/comments/123/replies -f body="{ROBOT} Deferred: B55 names it."',
     f'gh issue create --repo o/r --title "T" --body "$(cat <<\'EOF\'\nSymptom first.\n\n{ROBOT}\nEOF\n)"',
-    'gh pr review 176 --approve',
     "cat > docs/x.md <<'EOF'\nRun this:\n\ngh pr create --title t --fill\nEOF",
     'grep -c "gh pr create" transcript.jsonl',
     'git push origin abc:refs/heads/x',
@@ -216,7 +225,7 @@ REFUSED = [
     ),
     ('gh pr comment 176 --body "Looks wrong to me."', f'must start with "{ROBOT} "'),
     ('gh pr comment 176 --body-file tmp/pr-body.md', f'must start with "{ROBOT} "'),
-    ('gh pr review 176 --comment --body "Looks good, ship it"', f'must start with "{ROBOT} "'),
+    ('gh pr review 176 --comment --body "Looks good, ship it"', 'review submit refused'),
     (
         "gh api repos/o/r/pulls/176/reviews --method POST --input - <<'EOF'\n"
         '{"commit_id": "abc", "comments": [{"path": "a.py", "line": 1, "body": "Overflows at u64::MAX."}]}\nEOF',
@@ -248,6 +257,148 @@ def test_command_reason_refuses(command: str, expected: str, tree) -> None:
     reason = command_reason(command, str(tree))
     assert reason is not None, command
     assert expected in reason, reason
+
+
+def human(content: str | list) -> dict:
+    return {
+        'type': 'user',
+        'origin': {'kind': 'human'},
+        'message': {'role': 'user', 'content': content},
+    }
+
+
+def transcript(path, *records: dict) -> str:
+    path.write_text(
+        ''.join(json.dumps(r, separators=(',', ':')) + '\n' for r in records), encoding='utf-8'
+    )
+    return str(path)
+
+
+NOT_THE_USER = {
+    'hook feedback': {
+        'type': 'user',
+        'isMeta': True,
+        'message': {'role': 'user', 'content': f'Stop hook feedback: {SUBMIT_ASK}'},
+    },
+    'task notification': {
+        'type': 'user',
+        'origin': {'kind': 'task-notification', 'producer': 'session-task'},
+        'message': {
+            'role': 'user',
+            'content': f'<task-notification>{SUBMIT_ASK}</task-notification>',
+        },
+    },
+    'subagent thread': {
+        'type': 'user',
+        'isSidechain': True,
+        'message': {'role': 'user', 'content': f'Give a review, then {SUBMIT_ASK}.'},
+    },
+    'tool result': {
+        'type': 'user',
+        'message': {
+            'role': 'user',
+            'content': [{'type': 'tool_result', 'tool_use_id': 'x', 'content': SUBMIT_ASK}],
+        },
+    },
+    'assistant turn': {
+        'type': 'assistant',
+        'message': {
+            'role': 'assistant',
+            'content': [{'type': 'text', 'text': f'Say {SUBMIT_ASK} to submit review 1.'}],
+        },
+    },
+}
+
+SUBMITS = [
+    'gh pr review 176 --approve',
+    f'gh pr review 176 --comment --body "{ROBOT} Looks right."',
+    f'gh pr review 176 -r -b "{ROBOT} Overflows at u64::MAX."',
+    'gh api repos/o/r/pulls/176/reviews/1/events --method POST --input - <<\'EOF\'\n{"event":"COMMENT","body":""}\nEOF',
+    'gh api repos/o/r/pulls/176/reviews/$PENDING/events -f event=COMMENT',
+    'gh api repos/o/r/pulls/176/reviews --method POST --input tmp/submit.json',
+    'gh api repos/o/r/pulls/176/reviews --method POST --input - <<\'EOF\'\n{"commit_id": "abc", "event": "COMMENT", "comments": []}\nEOF',
+    'gh api repos/o/r/pulls/176/reviews -F commit_id=abc -f event=APPROVE',
+    "gh api graphql -f query='mutation($id:ID!){submitPullRequestReview(input:{pullRequestReviewId:$id,event:COMMENT}){pullRequestReview{id}}}' -f id=PRR_1",
+    'gh api repos/o/r/pulls/176/reviews/1 --method DELETE && gh pr review 176 --approve',
+]
+
+PENDING = [
+    'gh api repos/o/r/pulls/176/reviews --method POST --input tmp/review.json',
+    'gh api repos/o/r/pulls/176/reviews --jq ".[] | select(.state==\\"PENDING\\") | .id"',
+    'gh api repos/o/r/pulls/176/reviews/1 --method DELETE',
+    'gh api repos/o/r/pulls/176/reviews/1 --jq .state',
+    f'gh pr comment 176 --body "{ROBOT} Fix the lease."',
+    "gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id}}}' -f id=T_1",
+]
+
+
+@pytest.mark.parametrize('command', SUBMITS)
+def test_submit_needs_the_ask_in_the_users_newest_message(command: str, tree) -> None:
+    asked = transcript(
+        tree / 'tmp' / 'asked.jsonl', human('post them'), human(f'yes. {SUBMIT_ASK}, then check #7')
+    )
+    answered = transcript(
+        tree / 'tmp' / 'answered.jsonl',
+        human(SUBMIT_ASK),
+        human('yes. please also verify the lease'),
+    )
+    assert command_reason(command, str(tree), asked) is None
+    for path in answered, None, str(tree / 'tmp' / 'missing.jsonl'):
+        reason = command_reason(command, str(tree), path)
+        assert reason is not None, (command, path)
+        assert 'review submit refused' in reason
+        assert SUBMIT_ASK in reason
+
+
+@pytest.mark.parametrize('record', NOT_THE_USER.values(), ids=NOT_THE_USER.keys())
+def test_submit_reads_only_what_the_user_typed(record: dict, tree) -> None:
+    """A record that is not the user's words neither grants the ask nor hides
+    the user's own ask behind it."""
+    command = SUBMITS[0]
+    said_no = transcript(tree / 'tmp' / 'no.jsonl', human('no'), record)
+    assert command_reason(command, str(tree), said_no) is not None
+    said_yes = transcript(tree / 'tmp' / 'yes.jsonl', human(SUBMIT_ASK), record)
+    assert command_reason(command, str(tree), said_yes) is None
+
+
+@pytest.mark.parametrize('command', PENDING)
+def test_pending_posts_and_reads_need_no_ask(command: str, tree) -> None:
+    answered = transcript(tree / 'tmp' / 'answered.jsonl', human('yes'))
+    assert command_reason(command, str(tree), answered) is None
+
+
+def test_submit_body_is_linted_once_the_ask_is_given(tree) -> None:
+    asked = transcript(tree / 'tmp' / 'asked.jsonl', human(SUBMIT_ASK))
+    reason = command_reason('gh pr review 176 --comment --body "Looks good"', str(tree), asked)
+    assert reason is not None
+    assert f'must start with "{ROBOT} "' in reason
+
+
+def test_latest_prompt_joins_text_blocks_and_takes_the_newest(tree) -> None:
+    path = transcript(
+        tree / 'tmp' / 'blocks.jsonl',
+        human('first'),
+        human([{'type': 'text', 'text': 'look'}, {'type': 'image', 'source': {}}]),
+    )
+    assert latest_prompt(path) == 'look'
+    assert latest_prompt(None) == ''
+    assert latest_prompt(str(tree / 'tmp' / 'missing.jsonl')) == ''
+
+
+def test_latest_prompt_skips_a_long_turn_inside_the_hook_budget(tree) -> None:
+    """A turn's tool results are skipped by a substring scan, not parsed, so
+    megabytes of output after the ask stay far inside the 500 ms budget."""
+    result = {
+        'type': 'user',
+        'message': {
+            'role': 'user',
+            'content': [{'type': 'tool_result', 'tool_use_id': 'x', 'content': 'x' * 2048}],
+        },
+    }
+    path = transcript(tree / 'tmp' / 'long.jsonl', human(SUBMIT_ASK), *([result] * 4000))
+    start = time.perf_counter()
+    assert latest_prompt(path) == SUBMIT_ASK
+    assert time.perf_counter() - start < 0.5
 
 
 def test_command_reason_names_the_skill_and_the_lint() -> None:

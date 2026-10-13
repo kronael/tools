@@ -15,6 +15,10 @@ eq "codex does not use Claude resume" "${cmd[1]}" -m
 primary="$fixture/no-sessions"
 tool_cmd claude; resume_session
 eq "claude starts fresh without sessions" "${cmd[1]}" --model
+primary="$fixture/project.with.dots"
+new_session=1; tool_cmd claude; resume_session
+eq "-N starts a new session over existing history" "${cmd[1]}" --model
+new_session=""
 
 printf '# defaults\n\n-n global\n-P' > "$fixture/rc"
 read_rc "$fixture/rc"
@@ -25,12 +29,14 @@ eq "missing rc is empty" "${#rc_tokens[@]}" 0
     set -e
     name_override=original; entrypoint=claude
     ssh_agent=""; docker_sock=""; gpg_forward=""; warnings=()
-    persist_builds=""; eph_no_tmpfs=""; no_copy=""
-    printf '%s\n' '-A -D -K -S -n attacker -d bash -x codex -P -T -N' > "$PROJ/.qemuboxrc"
+    persist_builds=""; eph_no_tmpfs=""; tmp_session=""; new_session=""
+    printf '%s\n' '-A -D -K -S -T -n attacker -d bash -x codex -P -B -N' > "$PROJ/.qemuboxrc"
     project_rc "$PROJ"
-    [ "$name_override" = original ] && [ "$entrypoint" = claude ]
+    [ "$name_override" = original ]
+    [ "$entrypoint" = claude ]
     [ -z "$ssh_agent$docker_sock$gpg_forward" ]
-    [ "$persist_builds$eph_no_tmpfs$no_copy" = 111 ]
+    [ "$persist_builds$eph_no_tmpfs$new_session" = 111 ]
+    [ -z "$tmp_session" ]
     [ "${#warnings[@]}" = 0 ]
 ) > "$fixture/project-rc.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/project-rc.log"; bad "project rc safe subset"; }
@@ -44,7 +50,7 @@ rm -f "$PROJ/.qemuboxrc"
     git -C "$fixture/git-main" worktree add -q --detach "$fixture/git-worktree"
     reset_mounts
     dirs=("$fixture/git-worktree" "$fixture/git-worktree")
-    name=worktree; no_copy=""; untrusted=1; extra_dirs=(); extra_modes=()
+    name=worktree; untrusted=1; extra_dirs=(); extra_modes=()
     assemble_mounts
     [ "$(mount_mode "$fixture/git-main/.git")" = rw ]
     [ "$(printf '%s\n' "${mount_dests[@]}" | grep -Fxc "$fixture/git-main/.git")" = 1 ]

@@ -480,7 +480,7 @@ def check_one_index(index: Path, specs: set[Path], repo: Path) -> tuple[list[Fin
         if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
             message = (
                 f'index Status {cells[1]!r} differs from {spec.name} status '
-                f'{status!r} — format.md: update Status on ship'
+                f'{status!r} — format.md: Status matches the frontmatter'
             )
             findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
     return findings, linked
@@ -508,7 +508,7 @@ def check_index(root: Path, files: list[Path], repo: Path) -> list[Finding]:
             continue
         message = (
             f'no row in {index} or a phase index it links — format.md: ALWAYS add a row '
-            'on create, update Status on ship'
+            'on create, remove the row with the file'
         )
         findings.append(finding(Severity.ERROR, 'spec-index-row', path, 1, message))
     return findings
@@ -545,7 +545,7 @@ def check_prose(path: Path, text: str) -> list[Finding]:
         if planned is not None:
             message = (
                 f'{planned.group(0)!r} — format.md: NEVER write future-tense plans; '
-                'specs describe state, not work (warn)'
+                'a spec describes the design of the change, not a schedule (warn)'
             )
             findings.append(finding(Severity.WARN, 'spec-future-tense', path, number, message))
         history = HISTORY.search(bare)

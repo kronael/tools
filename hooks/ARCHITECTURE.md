@@ -92,8 +92,9 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 ### pretool_nudge.py (PreToolUse; PostToolUse via post_tool_nudge.sh)
 
 **Input:** JSON with `tool_name`, `tool_input` (`file_path`, `notebook_path`,
-`command`, `cmd`, or `apply_patch` patch text), `session_id`, and the event
-(`hook_event_name`, read via `lib/state.py`).
+`command`, `cmd`, or `apply_patch` patch text), `session_id`,
+`transcript_path`, and the event (`hook_event_name`, read via
+`lib/state.py`).
 **Output:** `{"decision": "block", "reason": "..."}`,
 `hookSpecificOutput.additionalContext`, or silent.
 
@@ -118,7 +119,10 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
    PR body, an issue body or a comment is blocked when the body it carries
    fails the lint, cannot be read, or is required and absent. The reason names
-   the failing lines and the skill that owns the text.
+   the failing lines and the skill that owns the text. A segment that submits
+   a review (`is_submit`) is blocked unless `latest_prompt(transcript_path)`
+   — the newest record the user typed, read from the transcript's tail —
+   contains `SUBMIT REVIEW`; no transcript blocks.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -149,7 +153,12 @@ the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
 `-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
 `$(cat <path>)`); a `$VAR` path, stdin, a missing or undecodable file,
 unparsable JSON or a command substitution is an OSError the gate reports, and
-any other exception becomes the block reason. Imported by `pretool_nudge.py`;
+any other exception becomes the block reason. `is_submit` recognises the
+submitting forms (`SUBMITS`, and a `/reviews` POST with `event` in its
+`--input` JSON or `-f`/`-F` field); `latest_prompt` walks the transcript
+backwards in 64 KiB chunks, skips tool-result lines before parsing, and
+returns the first `type: user` record that is not `isMeta`, not `isSidechain`
+and whose `origin.kind` is `human` or absent. Imported by `pretool_nudge.py`;
 run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 `gh-comment`.
 

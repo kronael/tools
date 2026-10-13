@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from skill_frontmatter_lint import LOCAL_PATH
 from skill_frontmatter_lint import Severity
 from skill_frontmatter_lint import check_body
 from skill_frontmatter_lint import check_leaks
@@ -180,6 +181,14 @@ def test_claude_md_needs_no_reference(tmp_path: Path) -> None:
     assert findings(path) == []
 
 
+def test_agents_md_needs_no_reference(tmp_path: Path) -> None:
+    """With AGENTS.md loaded beside CLAUDE.md, a directory's AGENTS.md is not cold."""
+    path = make(tmp_path, VALID)
+    sibling(path, 'AGENTS.md')
+    sibling(path, 'mode/AGENTS.md')
+    assert findings(path) == []
+
+
 def test_absolute_home_path_fails(tmp_path: Path) -> None:
     """A real account segment trips bare, with a tail, and on macOS alike."""
     for leak in '/home/devuser', '/home/devuser/src', '/Users/alice':
@@ -190,6 +199,8 @@ def test_absolute_home_path_fails(tmp_path: Path) -> None:
 def test_hooks_tree_ships_no_home_path() -> None:
     """hooks/ runs on other machines, so a literal home path here is the leak."""
     home = str(Path.home())
+    if not LOCAL_PATH.search(home):
+        pytest.skip(f'{home} is a container HOME the lint exempts')
     tree = Path(__file__).parent
     leaking = [
         p.relative_to(tree).as_posix()
@@ -287,8 +298,34 @@ def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
     assert run_lint(tmp_path).returncode == 0
 
 
+def test_git_ignored_directories_are_not_scanned(tmp_path: Path) -> None:
+    """A research checkout under the ignored tmp/ is scratch, not the bundle."""
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('tmp/\n/notes.md\n')
+    scratch = tmp_path / 'tmp' / 'checkout'
+    scratch.mkdir(parents=True)
+    make(scratch, '---\nname: other\n---\n\nNo keys.\n')
+    (scratch / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    kept = make(tmp_path, VALID)
+    (tmp_path / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    assert skill_files([tmp_path]) == [kept]
+    assert run_lint(tmp_path).returncode == 0
+
+
+def test_root_inside_an_ignored_directory_is_scanned(tmp_path: Path) -> None:
+    """Naming a path under the ignored tmp/ lints it rather than crashing git."""
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('tmp/\n')
+    scratch = tmp_path / 'tmp' / 'checkout'
+    scratch.mkdir(parents=True)
+    (scratch / 'notes.md').write_text('Edit /home/devuser/src/x.py.\n')
+    result = run_lint(scratch)
+    assert result.returncode == 2, result
+    assert 'skill-local-path' in result.stderr
+
+
 def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
-    """evals/README.md shows a real-looking path as the thing to strip."""
+    """A doc that shows a real-looking path as the thing to strip opts out."""
     doc = tmp_path / 'README.md'
     doc.write_text('<!-- lint: allow skill-local-path -->\nStrip /home/devuser/wk/.\n')
     assert check_leaks(doc) == []

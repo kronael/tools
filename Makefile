@@ -91,11 +91,10 @@ skills-frontmatter:
 skills-frontmatter-fix:
 	python3 hooks/skill_frontmatter_lint.py --write .
 
-# Lints a spec corpus, this repo's own by default: SPECS=~/proj/specs checks
-# another. The rules are skills/specs/format.md, not this repo's layout.
-SPECS ?= specs
-
+# Lints another project's spec corpus: SPECS=~/proj/specs. This repo keeps no
+# specs; the rules are skills/specs/format.md.
 spec-lint:
+	@test -n "$(SPECS)" || { echo "usage: make spec-lint SPECS=<dir>"; exit 2; }
 	python3 spec-lint/spec_lint.py $(SPECS)
 
 lints:

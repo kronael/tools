@@ -18,7 +18,7 @@ comments, design and the boring-code rules.
 ## Config Precedence
 
 CLI flags > env vars > config files > defaults. Fail fast on invalid config.
-TOML config file is the first positional param, the API-keys file the second.
+The config file and API-keys positions: WISDOM § House conventions.
 
 ## Exit Codes
 

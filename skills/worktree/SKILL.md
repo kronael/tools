@@ -1,7 +1,7 @@
 ---
 name: worktree
 description: Isolate a code-editing subagent when its change gets a separate PR, the user requests a worktree, or an applicable skill explicitly opts in. NOT for routine serial edits or read-only agents.
-when_to_use: change gets its own PR, user requests a worktree, applicable skill explicitly opts in, reconcile worktree commits
+when_to_use: change gets its own PR, user requests a worktree, applicable skill explicitly opts in, reconcile worktree commits, remove a worktree, stale or prunable worktree, worktree registered under a missing path
 ---
 
 # Worktree selection
@@ -53,5 +53,39 @@ git worktree add --detach <repo-root>/.<name> <sha>
 
 ALWAYS give the sub that path, the fork SHA and its owned files; require all
 edits there and verify `git -C <path> branch --show-current` prints nothing.
-ALWAYS reconcile and verify the diff before removing that specific worktree;
-NEVER remove another task's worktree.
+ALWAYS reconcile and verify the diff before removing it (§ Removing a worktree).
+
+## Removing a worktree
+
+Removal deletes the directory, files included: the one lift of WISDOM § Shell's
+ban on recursive removal, and it covers `git worktree remove --force` only.
+ALWAYS remove this task's worktree once reconciled, and a worktree the user asks
+removed; NEVER another task's worktree on your own call.
+
+ALWAYS pass both checks first, in this order, and state each result:
+
+1. Its HEAD is kept: `git branch -a --contains <sha>` (sha from `git worktree
+   list`) prints a ref, or its diff is reconciled into main. Else ALWAYS save
+   it first: `git update-ref refs/keep/<name> <sha>`.
+2. Its uncommitted changes are shown — `git -C <path> status --porcelain` and
+   `git -C <path> diff` — and either called throwaway in the reply or saved
+   first: `git -C <path> stash push -u -m <name>` (the stash lives in the
+   shared repo; `git stash list` from the main tree shows it).
+
+Then:
+
+```bash
+git worktree remove --force <path> && git worktree prune
+```
+
+- When `git -C <path>` fails with "not a git repository" because the worktree
+  was registered under a path this machine lacks (a host path, seen from a
+  container), ALWAYS run `git worktree repair <path>` from the main tree first;
+  it rewrites both pointers, and the checks and the removal then run as above.
+  NEVER `git worktree prune` before the checks: it drops the admin dir the
+  diff needs.
+- When a mount point inside the directory survives `remove --force`, ALWAYS
+  finish by hand: delete the files `find <path> -xdev -type f` lists, `rmdir`
+  the emptied dirs, then `git worktree prune`; the mount points stay — name
+  them in the reply. NEVER `rm -r` for this: the Shell ban holds, and the
+  permission deny list refuses it.

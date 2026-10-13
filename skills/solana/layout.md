@@ -49,7 +49,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
   #[test]                                          // in the program crate
   fn state_crate_names_this_program() {
-      assert_eq!(crate::ID, limit_program_state::ID);
+      assert_eq!(crate::ID, market_program_state::ID);
   }
   ```
 
@@ -58,7 +58,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
   must forward into the state crate:
 
   ```toml
-  idl-build = ["anchor-lang/idl-build", "limit-program-state/idl-build"]  # program
+  idl-build = ["anchor-lang/idl-build", "market-program-state/idl-build"]  # program
   idl-build = ["anchor-lang/idl-build"]                                   # state
   ```
 
@@ -67,19 +67,9 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
 ### Where the test-module declarations go
 
-Unit tests follow `rs`: `src/<module>_test.rs` beside its subject, declared at the top of the
-module it tests with `#[path]`, so the test module stays a child of its subject and reaches its
-private items:
-
-```rust
-#[cfg(test)]
-#[path = "price_test.rs"]
-mod price_test;
-```
-
-A bare `mod price_test;` inside `src/price.rs` resolves to `src/price/price_test.rs` and fails
-with `E0583`; the `#[path]` line is what makes the sibling file work. NEVER `<module>/tests.rs`,
-NEVER an inline `mod tests { ... }`, NEVER the declarations gathered in `lib.rs`.
+Unit tests follow `rs` § Testing: `src/<module>_test.rs` beside its subject,
+declared at the top of the module it tests with `#[path]`. That section owns
+the rule.
 
 ### Module names
 
@@ -114,8 +104,8 @@ struct that owns the arrays and carries `as_seeds()`.
 Name the program crate for what it does, then keep five names in sync: the
 package name, the `[lib] name`, the `#[program]` module, the `Anchor.toml`
 `[programs.*]` key, and the built `.so`. Cargo derives the lib target from the
-package name with dashes turned to underscores (`limit-program` →
-`limit_program`), and the artifact filename is the lib name — so a rename that
+package name with dashes turned to underscores (`market-program` →
+`market_program`), and the artifact filename is the lib name — so a rename that
 misses one of the five still builds, and silently deploys under the old name.
 
 ## Cargo profiles: declare only what is not already the default

@@ -1,7 +1,7 @@
 ---
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
-when_to_use: editing .go files or writing Go code; gopls, gopls mcp, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup; go-gl, glfw, OpenGL desktop window
+when_to_use: editing .go files or writing Go code; gopls, gopls mcp, gopls rename, extract function, inline call, go fix, modernize, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup; go-gl, glfw, OpenGL desktop window
 ---
 
 # Go
@@ -30,6 +30,17 @@ sanitizers). Below are Go-specific additions.
 - ALWAYS `go_symbol_references` BEFORE changing any symbol's definition. Go
   interfaces are implicit, so grep under-reports implementers and a rename
   compiles green while silently dropping an interface satisfaction.
+- ALWAYS rename with `gopls rename -d <file>:<line>:<col> <new>`, then `-w`
+  once the diff reads right — NEVER grep-and-edit. The MCP `go_rename_symbol`
+  returns the same diff and applies nothing.
+- ALWAYS inline a call or extract a function with `gopls codeaction
+  -kind=refactor.inline.call` (or `refactor.extract.function`) `-exec -diff
+  <file>:<l>:<c>-<l>:<c>`, then `-w` — NEVER by hand. Extract names the new
+  function `newFunction`; rename it next.
+- ALWAYS modernize with `go fix -diff ./...` (one analyzer: `-rangeint`,
+  `-stringsseq`; `go tool fix help` lists them), then without `-diff` —
+  NEVER hand-rewrite loops into `range n`, `slices.Contains` or `wg.Go`. It
+  also applies `//go:fix inline` directives.
 - ALWAYS `go_diagnostics` after every edit; fix to zero BEFORE running tests.
 - NEVER `go test ./...` unless asked — test only the packages you changed.
 
@@ -70,8 +81,8 @@ It carries the goroutine-sizing rule and the single-sink I/O pattern.
 - Shared domain types go in `core/` (or equivalent); adapters convert at entry
 - DTOs (request/response bodies, MCP params) are defined adjacent to their
   handler — not in a global `types/` package unless ≥3 packages share them
-- One canonical parse path per format: if cron parsing lives in `timed/`, ipc
-  must import that function, not reimplement it
+- One canonical parse path per format: if cron parsing lives in `sched/`, the API
+  package must import that function, not reimplement it
 
 ## Variadic parameters
 

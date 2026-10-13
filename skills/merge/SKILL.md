@@ -1,6 +1,6 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; merge origin — bring a detached line up to date with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for syncing ~/.claude with the bundle repo (use kronael/sync).
+description: Resolve conflicts in a git merge, rebase or cherry-pick and finish it; merge origin — bring a detached line up to origin's default head. NOT for ambiguous semantic conflicts (resolve manually) or syncing ~/.claude with the bundle repo (use kronael/sync).
 when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date, update a pushed PR branch, merge the base forward, PR diff ballooned after a squash merge"
 user-invocable: true
 ---
@@ -124,10 +124,7 @@ Detect the operation FIRST; it decides the finish command AND which side is "our
 
 ## 2. Find all conflicts
 
-```bash
-grep -rln "<<<<<<< HEAD" <project_dirs>/
-grep -n "<<<<<<\|=======\|>>>>>>>" <file>   # per-file
-```
+`git diff --name-only --diff-filter=U`, then `grep -n '^<<<<<<<\|^=======\|^>>>>>>>' <file>` per file.
 
 ## 3. Classify each conflict
 
@@ -191,7 +188,7 @@ Escape hatches (per replayed patch):
 - `git rebase --abort` / `cherry-pick --abort` / `git merge --abort` to bail
   entirely to the pre-op state. NEVER leave a half-finished rebase.
 
-If pre-commit reformats (merge only), retry once. NEVER `--amend` / `--no-verify`.
+If pre-commit reformats (merge only), retry once.
 
 ## Priority rule (when user says "prioritize HEAD / feature branch")
 

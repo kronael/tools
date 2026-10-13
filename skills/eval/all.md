@@ -36,7 +36,7 @@ verdict, so a later session has the context instead of re-deriving it.
   `<X>`, kill-shot `<Y>` — see `<record dir>/eval-all-<date>.md`" so
   `/recall-memories` finds it next session.
 - Any concrete real defect a lens surfaces → log to `BUGS.md` via `/bugs`
-  (record-only; NEVER fix here — Bug Triage Protocol).
+  (record-only; NEVER fix here — WISDOM § Bug triage).
 
 ## Report (≤ 20 lines)
 Verdict table (lens → verdict → kill-shot), the single most important next

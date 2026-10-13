@@ -6,6 +6,7 @@ SECCOMP="$HOME/.local/share/dockbox/seccomp.json"
 CAPS=(sys_nice ipc_lock sys_ptrace)
 
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
+TMP_WORKDIR=/tmp/work
 # dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
 # mountpoint. Container writes to host paths for these; use -P to disable
 # all ephemeral mounts if you need a completely clean workdir.
@@ -34,6 +35,8 @@ extra_vols=()
 extra_env=()
 persist_builds=""
 eph_no_tmpfs=""
+tmp_session=""
+new_session=""
 claude_args=()
 exec_cmd=()
 
@@ -54,7 +57,9 @@ apply_flag() {
         K) gpg_forward=1 ;;
         S) grant_sudo=1 ;;
         P) persist_builds=1 ;;
-        T) eph_no_tmpfs=1 ;;
+        B) eph_no_tmpfs=1 ;;
+        T) tmp_session=1 ;;
+        N) new_session=1 ;;
         g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
            [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
         G) gcloud_creds=1 ;;
@@ -138,7 +143,7 @@ sandbox_note() {
                     [[ "$src" == "$dst" ]] && src="same path"
                     binds+=("- $dst ($mode) <- $src")
                 else
-                    lost+=("$spec")  # -T: an anonymous volume
+                    lost+=("$spec")  # -B: an anonymous volume
                     deps+=("$spec")
                 fi ;;
         esac
@@ -307,7 +312,10 @@ Options:
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
-    -T         Build-dir overmounts on disk volumes; \$HOME and /tmp stay tmpfs
+    -B         Build-dir overmounts on disk volumes; \$HOME and /tmp stay tmpfs
+    -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
+               (tmpfs, lost with the box); box name tmp unless -n; implies -N
+    -N         New Claude session: skip the resume picker
     -H         Use host network
     -A         Forward SSH agent
     -D         Mount Docker socket
@@ -336,7 +344,7 @@ Ephemeral builds (default):
 
     Two backends pick the overmount type only:
       tmpfs  (default) — kernel tmpfs. RAM-backed.
-      volume (-T)      — anonymous Docker volume. Disk-backed.
+      volume (-B)      — anonymous Docker volume. Disk-backed.
                          Removed with the box.
 
     Pass -P / --no-ephemeral to disable both and see host build dirs.
@@ -355,7 +363,9 @@ Examples:
     dockbox -v ~/wk/lib               # extra mount ro (default)
     dockbox -v ~/wk/lib:rw            # extra mount rw
     dockbox -P                        # keep host build dirs (no overmount)
-    dockbox -T                        # build-dir overmounts on disk volumes
+    dockbox -B                        # build-dir overmounts on disk volumes
+    dockbox -T                        # scratch box, no project, $TMP_WORKDIR
+    dockbox -N                        # new Claude session, no resume picker
     dockbox -e GH_TOKEN               # forward arbitrary env var
     dockbox -g                        # forward GH/GITHUB token
     dockbox -n mybox .                # custom name
@@ -384,8 +394,8 @@ Sandbox note: /etc/claude-code/CLAUDE.md (generated, ro) tells the agent it
 
 Config: ~/.dockboxrc (global) and .dockboxrc in the project dir.
         dockbox flags, one per line, # comments ok. The command line
-        overrides ~/.dockboxrc. Project .dockboxrc takes the safe
-        subset only — -A/-D/-K/-S/-n/-d/-x are ignored there (use ~/.dockboxrc).
+        overrides ~/.dockboxrc. Project .dockboxrc takes the safe subset
+        only: -A/-D/-K/-S/-T/-n/-d/-x are ignored there (use ~/.dockboxrc).
 EOF
         exit 0 ;;
 esac
@@ -427,7 +437,7 @@ set -- "${stripped[@]}" "$@"
 strip_long "" "$@"
 set -- "${stripped[@]}"
 
-while getopts ":n:d:x:e:v:HKADgGPTS" opt; do
+while getopts ":n:d:x:e:v:HKADgGPBTSN" opt; do
     apply_flag "$opt" "${OPTARG:-}"
 done
 shift $((OPTIND - 1))
@@ -463,22 +473,33 @@ for arg in "$@"; do
     esac
 done
 
-[[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
-_primary_dir="$(cd "${dirs[-1]}" && pwd)"
-
 # Project .dockboxrc: per-repo default flags, applied before any flag is
 # consumed below. Gated to the safe subset — an untrusted repo must not
 # silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
-# or change the tool/name (-n/-d/-x). Those live in ~/.dockboxrc only.
-read_rc "$_primary_dir/.dockboxrc"
+# or change the tool/name/workdir (-n/-d/-x/-T). Those live in ~/.dockboxrc
+# only. A -T box has no project, so it reads no project rc.
+if [[ -n "$tmp_session" ]]; then
+    [[ ${#dirs[@]} -eq 0 ]] || {
+        echo "dockbox: -T mounts no project dir; use -v for a host path" >&2
+        exit 2
+    }
+    _primary_dir="$TMP_WORKDIR"
+    dir_override="${dir_override:-tmp}"
+    new_session=1
+    rc_tokens=()
+else
+    [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
+    _primary_dir="$(cd "${dirs[-1]}" && pwd)"
+    read_rc "$_primary_dir/.dockboxrc"
+fi
 strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
 rc_tokens=("${stripped[@]}")
 # getopts with no words parses "$@", the command-line leftovers: skip it.
 if (( ${#rc_tokens[@]} )); then
     OPTIND=1
-    while getopts ":n:d:x:e:v:HKADgGPTS" opt "${rc_tokens[@]}"; do
+    while getopts ":n:d:x:e:v:HKADgGPBTSN" opt "${rc_tokens[@]}"; do
         case "$opt" in
-            A|D|K|S|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
             *) apply_flag "$opt" "${OPTARG:-}" ;;
         esac
     done
@@ -493,7 +514,7 @@ fi
 
 if [[ ${#exec_cmd[@]} -gt 0 ]]; then
     cmd=("${exec_cmd[@]}")
-elif [[ "$entrypoint" == "claude" && -n "$_has_session" ]]; then
+elif [[ "$entrypoint" == "claude" && -n "$_has_session" && -z "$new_session" ]]; then
     cmd=("$entrypoint" --resume "${claude_args[@]}")
 elif [[ "$entrypoint" == "codex" ]]; then
     # Mirror the claude wrapper: inside dockbox the container is the perimeter,
@@ -702,6 +723,11 @@ mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
 extra_env+=(-e CARGO_TARGET_DIR=/tmp/cargo-target)
 chown_paths=("/home/dockbox")
+if [[ -n "$tmp_session" ]]; then
+    workdir="$TMP_WORKDIR"
+    mounts+=(--tmpfs "$workdir:rw,exec,mode=1777")
+    chown_paths+=("$workdir")
+fi
 # The -K gpg-socket mount makes Docker auto-create /home/dockbox/.gnupg as root;
 # gpg (running as the drop-in user) then can't write its trustdb lock there.
 # Chown just the dir (dockbox-init chowns non-recursively, so the mounted socket
@@ -742,7 +768,7 @@ extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 
 # overmount so container can't modify project .dockboxrc
-[[ -f "$workdir/.dockboxrc" ]] && \
+[[ -z "$tmp_session" && -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
 # Sandbox note from the final mount list, mounted at the managed-policy path the

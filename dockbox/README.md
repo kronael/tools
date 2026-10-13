@@ -56,7 +56,9 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
+dockbox -B                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
+dockbox -T                        # scratch box: no project mount, works in /tmp/work
+dockbox -N                        # new Claude session, no resume picker
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
@@ -66,7 +68,13 @@ dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = a
 dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-x` to override.
+Default command: claude. Use `-x` to override. Claude opens its resume picker
+when the project dir has Claude history; `-N` starts a new session instead.
+
+`-T` starts a temporary session: dockbox mounts no project dir, and the
+session starts in `/tmp/work`, a tmpfs that the box loses when its last
+session exits. The box is `dockbox-tmp` unless `-n` names it. `-v` still
+adds host paths, a dir argument is an error, and `-T` implies `-N`.
 
 `dockbox ls` USE is `busy` while any session or command runs in the box and
 `idle` when only its sleeper is left — a box no session holds, safe to remove.
@@ -137,11 +145,11 @@ whitespace-separated, with lines starting `#` as comments.
 - `~/.dockboxrc` — global defaults, every flag. It is read ahead of the
   command line, so a command-line `-n`, `-d` or `-x` wins over it.
 - `.dockboxrc` in the project dir (the last dir named) — per-project
-  defaults. It takes `-e`, `-v`, `-H`, `-T`, `-g`, `-G` and `-P` /
-  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`
-  with a warning, so a cloned repo cannot grant itself sudo, the Docker
-  socket or your SSH/gpg agent, or switch the tool or box name. Put those in
-  `~/.dockboxrc`.
+  defaults. It takes `-e`, `-v`, `-H`, `-B`, `-g`, `-G`, `-N` and `-P` /
+  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and
+  `-x` with a warning, so a cloned repo cannot grant itself sudo, the Docker
+  socket or your SSH/gpg agent, or switch the tool, box name or workdir. Put
+  those in `~/.dockboxrc`.
 
 Both are optional. Global applies first, project appends. Neither file
 reaches `docker run`: a Docker flag such as `--gpus all` in either file is
@@ -248,8 +256,9 @@ Build artifacts are an attack surface, not state to persist. Two layers
 keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
-   caches and toolchains live in the image, not your project. dockbox
+   `RUSTUP_HOME`, `UV_TOOL_DIR`, `UV_PYTHON_INSTALL_DIR` and `SERENA_HOME`
+   to `/opt/dev-tools/...`, so tool caches, toolchains and Serena's
+   per-project state live in the image, not your project. dockbox
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
@@ -294,7 +303,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    - **tmpfs** (default): kernel `tmpfs` per path. RAM-backed (pages out
      to swap under pressure). Fast for many-small-file workloads.
      Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless swapped.
-   - **volume** (`-T`): anonymous Docker volume per path. Disk-backed.
+   - **volume** (`-B`): anonymous Docker volume per path. Disk-backed.
      Pick this when you don't want to pay RAM for the artifact dirs.
 
 **Trade-off**: every fresh session re-installs and re-builds. Intentional —

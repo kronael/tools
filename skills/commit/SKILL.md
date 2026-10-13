@@ -68,7 +68,6 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 
 - NEVER `git commit` without `-m "msg" -- file1 file2` (no staging, explicit files)
 - ALWAYS hold every commit to WISDOM § Git — it owns the history and branch rules
-- NEVER skip pre-commit hooks
 - NEVER commit if unrelated dirty files exist alongside the cohesive chunk
 - Ignore other agents' uncommitted changes
 - Worktrees — creation, reconciliation and removal — are the `worktree` skill's.

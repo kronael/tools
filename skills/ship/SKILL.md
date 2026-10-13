@@ -32,9 +32,8 @@ Read the ONE file matching the current stage, then return here.
 ## Work record
 
 Default: `~/.claude/projects/<slug>/ship/plan-NN-name.md` — the **record
-dir**. `<slug>` is the MAIN tree's resolved path (first entry of `git
-worktree list`; outside git `pwd -P`, NEVER `$PWD`) with every
-non-alphanumeric character replaced by `-`: `/home/u/app/x` records in
+dir**, beside the diary: `<slug>` is the one `diary` § Where it lives
+computes from the MAIN tree, so `/home/u/app/x` records in
 `~/.claude/projects/-home-u-app-x/ship/`. NN is the next free zero-padded
 number, the name lowercase kebab; `mkdir -p` the dir before the first write.
 Reuse the active change's record where it is. The plan holds the owner
@@ -179,11 +178,13 @@ findings and remaining decisions. Distinguish verified local delivery,
 waiting for approval, and a blocked acceptance item. NEVER call a blocked
 or merely prepared destination shipped.
 
-Use `diary` for decisions and open items, `specs` for durable architecture,
-and `next` § Later for owner-deferred follow-ups. Release notes belong to
-`release`. Retain the plan while paused, blocked or waiting for delivery
-approval. On completion, distill durable content, then prune only named
-scratch files under the project's policy. Directory removal is the owner's.
+Use `diary` for decisions and open items, `readme` for the shipped state in
+ARCHITECTURE.md and README.md (the spec folds into them and goes: `specs` →
+`format.md`), and `next` § Later for owner-deferred follow-ups. Release
+notes belong to `release`. Retain the plan while paused, blocked or waiting
+for delivery approval. On completion, distill durable content, then prune
+only named scratch files under the project's policy. Directory removal is
+the owner's.
 
 Completion criterion: the owner can see what landed and what remains, and
 unfinished work has an exact resume point.
