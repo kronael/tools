@@ -68,8 +68,10 @@ dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = a
 dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-x` to override. Claude opens its resume picker
-when the project dir has Claude history; `-N` starts a new session instead.
+Default command: claude. Use `-x` to override. A `--model` (or Codex `-m`)
+after the tool name replaces the alias's model and effort. Claude opens its
+resume picker when the project dir has Claude history; `-N` starts a new
+session instead.
 
 `-T` starts a temporary session: dockbox mounts no project dir, and the
 session starts in `/tmp/work`, a tmpfs that the box loses when its last

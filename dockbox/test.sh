@@ -367,6 +367,25 @@ claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
     '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
 
+# -d and -x take the same alias table as the first argument; a model flag in
+# the session's own arguments replaces the alias's model and effort.
+bypass="--dangerously-bypass-approvals-and-sandbox"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d codex "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d codex takes the codex alias defaults" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -x haiku "$proj" >/dev/null 2>"$tmp/err"
+true_  "-x haiku runs claude on the haiku model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex --model gpt-6-astra "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the codex alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass --model gpt-6-astra" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --model claude-sonnet-5-5 "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the claude alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d bash is the login shell the bash argument gives" \
+    'grep -q -- " -- /bin/bash -l$" "$log"'
+
 # Any other long flag in an rc file is an error naming the file and the flag,
 # in the project rc and in ~/.dockboxrc alike. After the tool name it is the
 # tool's argument and reaches the tool (the test above).

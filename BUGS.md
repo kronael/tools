@@ -727,14 +727,6 @@
   "the argument '--model <MODEL>' cannot be used multiple times".
   **Fix:** inject the alias model only when the user supplies no model flag.
 
-- **DOCKBOX-EXPLICIT-CODEX-SKIPS-DEFAULTS** (MED, config) — CONFIRMED
-  2026-10-08, no test — config. `-d codex` and `-x codex` skip the alias
-  defaults at `dockbox/dockbox:435,445`; `:502` adds only the sandbox bypass.
-  Reproduce: compare `dockbox -d codex .` with `dockbox codex .`.
-  The explicit route omits `-m gpt-6.1-sol` and
-  `-c model_reasoning_effort=xhigh`, despite the equivalence claim at `:306`.
-  **Fix:** apply the alias defaults to the explicit Codex route.
-
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
