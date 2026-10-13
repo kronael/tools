@@ -796,14 +796,14 @@
   launchers to `high` (scripts, help, READMEs, test) or state the box's own
   reason for xhigh. Owner's call.
 
-- **DOCKBOX-HELP-OMITS-X-AND-IMAGE-PACKAGES-UNUSED** (LOW, docs) — CONFIRMED
-  2026-10-10, no test — docs. `dockbox/dockbox:430` accepts `-x` and
-  `dockbox/README.md:71` documents it, but the `--help` Options list (`:304-317`)
-  shows only `-d`. `dockbox/Dockerfile:20` installs `iptables ipset iproute2
-  dnsutils aggregate`, which no script in the repo uses (`grep -rnw` over
-  dockbox, qemubox and the docs finds nothing); the egress lockdown they
-  served was rejected. **Fix:** add the `-x` help line; the packages are the
-  owner's call.
+- **DOCKBOX-IMAGE-PACKAGES-UNUSED** (LOW, design) — owner decision, no test —
+  design. `dockbox/Dockerfile:20` installs `iptables ipset iproute2 dnsutils
+  aggregate`; no script in the repo uses them (`grep -rnw` over dockbox,
+  qemubox and the docs finds nothing) and the egress lockdown they served was
+  rejected, though `iproute2` and `dnsutils` still give a box `ip`, `ss` and
+  `dig` at the prompt. **Options:** (a) drop `iptables ipset aggregate` at the
+  next image rebuild; (b) keep all five. **Default if nothing is decided:**
+  (b).
 
 ## qemubox
 
