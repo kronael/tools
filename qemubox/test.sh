@@ -161,7 +161,6 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     setup_guest_builds() { :; }
     setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
     setup_guest_sessions() { :; }
-    setup_guest_auth() { :; }
     setup_guest_limits() { :; }
     sync_guest_clock() { :; }
     start_box identitybox

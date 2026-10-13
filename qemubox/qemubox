@@ -692,7 +692,6 @@ start_box() {
     setup_guest_builds "$name"
     setup_guest_runtime "$name"
     setup_guest_sessions "$name"
-    setup_guest_auth "$name"
     setup_guest_limits "$name"
     sync_guest_clock "$name"
     ssh_plain_box "$name" 'sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/ready'
@@ -705,6 +704,7 @@ detect_gpg() {
     # A socket FILE can outlive its agent; probe liveness so -K doesn't forward a
     # dead socket (which surfaces as a confusing "no agent" inside the guest).
     if [ -S "$gpg_sock" ] && gpg-connect-agent /bye >/dev/null 2>&1; then
+        note "forwarding gpg-agent into qemubox-$name over SSH"
         return
     fi
     if [ -n "$gpg_sock" ]; then
@@ -713,19 +713,9 @@ detect_gpg() {
     gpg_sock=""
 }
 
-setup_guest_auth() {
-    name="$1"
-    ssh_plain_box "$name" "mkdir -p ~/.gnupg && chmod 700 ~/.gnupg"
-    if [ -n "$gpg_sock" ]; then
-        note "forwarding gpg-agent into qemubox-$name over SSH"
-        note "why: this mirrors dockbox's gpg-agent socket mount without sharing a host filesystem"
-    fi
-}
-
 mount_host_paths() {
     name="$1"
     note "mounting host paths into qemubox-$name with 9p"
-    note "why: qemubox mirrors dockbox access patterns without copying files"
     ssh_plain_box "$name" 'sudo modprobe -a 9p 9pnet_virtio'
     ssh_plain_box "$name" 'grep -qw 9p /proc/filesystems' || {
         note "guest kernel lacks 9p filesystem support; rebuild with qemubox build-base --force"
