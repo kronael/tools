@@ -195,9 +195,9 @@ nothing: read the pixels yourself (`visual` skill).
 4. One font family, five sizes at most, body ≥16px. `keeper`
 5. Word budget met, counted as § Density defines. `keeper`
 6. Every term glossed at first use or cut; the term list is "Glossary".
-7. No mechanics that decide nothing: no rent, payer, depth or layout talk
-   outside the one cost figure. `keeper`: a banned-word list, that figure
-   exempt.
+7. No mechanics that decide nothing (§ Density): no rent, payer, depth or
+   layout talk outside the one cost figure and a wire format the page is
+   about. `keeper`: a banned-word list, that figure and that format exempt.
 8. When sibling pages or a project brand exist, the brand block, tokens and
    names match them. `keeper`
 9. First screen is one claim answering the question the page was asked;
