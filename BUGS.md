@@ -12,7 +12,7 @@
   test — skill text.
 
 - **FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE** (LOW, design) — proposed,
-  needs sign-off. `skills/writing/page.md:181` marks "one font family, five
+  needs sign-off. `skills/writing/page.md:195` marks "one font family, five
   sizes at most" a `keeper` (a `make lint` check that fails the build), but
   `skills/create/form.md:67` and its calibration record (`:81`) measure
   distinct rendered sizes and report the owner's accepted pages run 12–15,
@@ -73,6 +73,17 @@
   (a) count a sub under the model it runs on (`improve` as `sonnet`,
   `general-purpose` as the parent's model); (b) count only the three named
   types. **Default if nothing is decided:** (a). No test — design.
+
+- **AGENT-ROUTING-RULES-DISAGREE** (LOW, docs) — owner decision.
+  `skills/global/SKILL.md:200-202` runs every implementation as an `opus`
+  plan and one `sonnet` sub per step, but `skills/sonnet/SKILL.md:21` lets
+  the parent plan, and `skills/ship/SKILL.md:113` sends a step to `opus` when
+  the plan leaves a design call open. `skills/fable/SKILL.md:12` sends every
+  spec, architecture or skill text to `fable`, while `:19` forbids `fable`
+  whenever `opus` can do the work, which covers an ordinary spec. **Options:**
+  (a) WISDOM names the parent-plans and `opus`-step exceptions, and `fable`
+  `:19` exempts the tasks `:11-14` list; (b) the skills drop the exceptions.
+  **Default if nothing is decided:** (a). No test — skill text.
 
 - **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
   decision. `skills/refine/SKILL.md:146-155` removes every worktree after the
