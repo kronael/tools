@@ -460,6 +460,7 @@ loosen-only rule and the diff-and-ask of `SKILL.md` step 5.
 | Key | Value | Why |
 |-----|-------|-----|
 | `hooks` | each event `settings-recommended.json` names, replaced; other events stay | the wiring of `~/.claude/hooks/*.py` |
+| `statusLine` | the recommended command | the wiring of `~/.claude/hooks/statusline.py`; unset, the token and context line never shows |
 | `cleanupPeriodDays` | the recommended value, raised, NEVER lowered | the 30-day default deletes transcripts at startup |
 | `outputStyle` | `"caveman"` | else the style file never activates |
 | `attribution.commit` | `""` | unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER `attribution: false` — versions before v2.1.281 reject it and skip the whole file |
@@ -476,6 +477,7 @@ S=~/.claude/settings.json
 [ -e "$S" ] || echo '{}' > "$S"
 jq -s '(.[0].permissions.deny // []) as $d
   | .[0].hooks = ((.[0].hooks // {}) + .[1].hooks)
+  | .[0].statusLine = .[1].statusLine
   | .[0].cleanupPeriodDays = ([(.[0].cleanupPeriodDays // 0), .[1].cleanupPeriodDays] | max)
   | .[0].outputStyle = .[1].outputStyle
   | .[0].attribution = ((.[0].attribution | objects) // {})
@@ -487,6 +489,14 @@ jq -s '(.[0].permissions.deny // []) as $d
   | .[0].isolatePeerMachines = .[1].isolatePeerMachines
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
   | .[0]' "$S" "$SRC/settings-recommended.json" > "$S.new" && mv "$S.new" "$S"
+```
+
+After the merge, list every recommended key whose live value still differs
+(the step 5 completion criterion and the step 8 report read this list):
+
+```sh
+jq -rn --slurpfile r "$SRC/settings-recommended.json" --slurpfile l ~/.claude/settings.json \
+  '$r[0] | keys[] as $k | select($r[0][$k] != $l[0][$k]) | $k'
 ```
 
 `diffSidebarOpen` and `diffTool` are global config, not settings keys, so

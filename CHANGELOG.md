@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.39] — 20261013
+
+> kronael v0.4.39 — the status line shows, and sync reports settings it left out
+>
+> Sync now always wires the status line, and it lists every recommended setting that still differs.
+>
+> • Status line — one compact line: model, context, 5-hour and weekly use with their reset times.
+> • Sync — the status line joins the settings that every sync applies.
+> • Sync — each run lists the recommended settings keys that still differ from the live file.
+> • Agents — codex workers count as subagents: terra as sonnet, sol as opus, astra as fable.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/statusline.py`: `O5.5 · c 38% · 5h 17% → 20:50 · w 89% → Sun 18. 11:00`.
+- `sync` step 5: `statusLine` joins the always-apply set; declining the asked keys never skips it.
+- `sync` step 5 and step 8: the differing-keys list is written down and reported.
+- WISDOM § Agents: codex workers follow every sub rule and share the caps.
+
 ## [v0.4.38] — 20261013
 
 > kronael v0.4.38 — opus plans, sonnet builds, pages pruned

@@ -54,7 +54,8 @@ run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
 (`reference.md` § Server memory; NEVER offer when `CLAUDE_SANDBOX` is set).
 Run ONLY the opted-in groups.
 
-Every later sync skips the questionnaire but ALWAYS still runs steps 7-8 —
+Every later sync skips the questionnaire but ALWAYS still runs step 5's
+always-apply set and steps 7-8 —
 NEVER skip tools or dockbox silently; a stale binary or an un-offered dep is
 the failure. Settings still confirm before applying.
 
@@ -144,8 +145,10 @@ the failure. Settings still confirm before applying.
      `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
      replaces an installed `deny` of the same rule (deny evaluates first).
    - Rest of permissions, sandbox, env: show the diff, ask.
+   Declining the asked keys NEVER skips the always-apply set.
    Completion criterion: reading `settings.json` back shows every
-   always-apply key at its value and the four deny entries paren-closed.
+   always-apply key at its value and the four deny entries paren-closed, and
+   the differing-keys list (`reference.md` § Settings) is written down.
 
 6. **Codex bridge** — when running from Codex or asked: follow
    `reference.md` § Codex bridge, after copying
@@ -172,7 +175,9 @@ the failure. Settings still confirm before applying.
    class counts; files merged into the repo (uncommitted — the owner reviews
    and commits; push is separate) and hunks moved to `LOCAL.md`; kept paths;
    every path left in `RUN/old`, with "cleared on reboot — copy out what you
-   want now"; settings, Codex bridge, tools and CLI tools applied or skipped.
+   want now"; settings applied or skipped, with every recommended key that
+   still differs and its live value; Codex bridge, tools and CLI tools
+   applied or skipped.
    A `~/.claude/backup/` dir: sync writes nothing there — give its size and
    offer to `mv` it into `RUN`. Claude skills invoke bare (`/commit`), Codex
    ones as `@commit` after `/hooks` trust.
