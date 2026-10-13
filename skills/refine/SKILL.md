@@ -84,10 +84,9 @@ code extension and still carries every claim the reviewer will trust.
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Launch each with `subagent_type` set by the context's heaviest tag:
-   `simplify` → `sonnet`, `correctness` → `opus` (`fable` under `/release`,
-   `opus` when fable cannot run) — NEVER `model=`, which leaves the effort to
-   the parent. A context whose lenses carry no tag (a document context) runs
-   as `correctness`. The subs report
+   `simplify` → `sonnet`, `correctness` → `opus` — NEVER `model=`, which
+   leaves the effort to the parent. A context whose lenses carry no tag (a
+   document context) runs as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
    files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
@@ -166,8 +165,8 @@ to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
 ## Review Checklist
 
 - ALWAYS scale to the change: tens of lines or three assertions → inline, 1-2
-  lenses; NEVER fan out agents over a ~40-line diff — except under `/release`,
-  which runs the full pass whatever the size (release step 1.5).
+  lenses; NEVER fan out agents over a ~40-line diff. Under `/release` the
+  first pass sets the size (release step 1.5).
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
 - NEVER read an empty result as a finding until that same query has produced a

@@ -28,15 +28,16 @@ version, CHANGELOG and tag.
      usual default); skip the bump step if pyproject already says it.
 1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
    tree on a first release) before bumping anything. A bare "release" implies
-   it — NEVER ask whether to refine. Run it at full depth whatever the diff
-   size: every context and every applicable lens — NEVER drop one;
-   `correctness` contexts on `fable` (`opus` when fable is unavailable); and a
-   second opinion over the same range — the `astra` skill directly, or an
-   `opus` or `fable` sub when astra cannot run (auth or CLI failure; a missing
-   model follows `astra` § Model) — its findings settled in refine
-   step 7 and applied through step 8, NEVER in main context. Any change landing
-   after the refine, other than the refine's own commits and the release
-   commit, reruns it — NEVER tag code the refine did not see.
+   it — NEVER ask whether to refine. ALWAYS open with ONE first pass over the
+   whole range on `fable` (`opus` when fable is unavailable; the project
+   `CLAUDE.md` § Release may name another runner). It returns correctness
+   findings and the change's complexity, and that sizes the rest: a simple
+   change stops there, a complex one gets the refine contexts the first pass
+   names. NEVER add a second-opinion pass on top — it repeats the first pass at
+   full price. Findings settle in refine step 7 and apply through step 8,
+   NEVER in main context. Any change landing after the refine, other than the
+   refine's own commits and the release commit, reruns it — NEVER tag code the
+   refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).
    Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
@@ -166,7 +167,7 @@ version, CHANGELOG and tag.
   tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag
-- ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
+- ALWAYS refine before the version bump, sized by the step-1.5 first pass — NEVER
   release a change the refine did not see, other than the refine's own commits
   and the release commit
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim
