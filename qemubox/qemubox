@@ -168,9 +168,6 @@ missing_deps() {
     }
 }
 
-# Script voice: qemubox's own control/status lines. A bold-cyan ">>>" prefix on
-# a TTY sets these apart from raw guest output; piped/non-interactive stays the
-# exact plain "qemubox: ..." text so logs and greps are unchanged.
 note() {
     if [ -t 2 ]; then
         printf '\033[1;36m>>> qemubox:\033[0m %s\n' "$*" >&2 || :
@@ -457,11 +454,6 @@ ssh_plain_box() {
     ssh "${ssh_opts[@]}" "$GUEST_USER@127.0.0.1" "$@"
 }
 
-# Guest voice: run a guest command and stream its output behind a dim gutter so
-# it reads as "inside the VM". ONLY for standalone, human-facing calls whose
-# output is neither captured nor used for control flow -- the gutter pipe plus
-# `pipefail` would corrupt the exit status of those. Off a TTY it is exactly
-# ssh_plain_box (no pipe), so behavior and output stay byte-for-byte unchanged.
 ssh_stream_box() {
     if [ -t 2 ]; then
         ssh_plain_box "$@" 2>&1 | sed $'s/^/\033[2m> \033[0m/' >&2
@@ -672,7 +664,6 @@ start_box() {
         note "guest network: restricted; only host SSH forwarding is open"
     fi
     mapfile -t mounts < <(qemu_mount_args)
-    # Docker-built initramfs can detect host swap; this VM must not wait for it.
     "$QEMU" "${accel[@]}" \
         -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
         -device virtio-balloon-pci,free-page-reporting=on \
@@ -702,8 +693,6 @@ start_box() {
 
 detect_gpg() {
     gpg_sock="$(gpgconf --list-dirs agent-socket 2>/dev/null || true)"
-    # A socket FILE can outlive its agent; probe liveness so -K doesn't forward a
-    # dead socket (which surfaces as a confusing "no agent" inside the guest).
     if [ -S "$gpg_sock" ] && gpg-connect-agent /bye >/dev/null 2>&1; then
         note "forwarding gpg-agent into qemubox-$name over SSH"
         return
@@ -818,8 +807,6 @@ remove_box() {
     local name dir rel
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    # stop_box escalates to SIGKILL, so a failure means the VM is still alive:
-    # never delete its disk or keys then.
     stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" \
         "$dir/config/ephemeral" "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
@@ -853,7 +840,6 @@ build_base() (
         exit 1
     }
     read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
-    # Debian installs mke2fs in /usr/sbin, which a non-root PATH omits.
     PATH="$PATH:/usr/sbin:/sbin"
     missing_deps "${docker_cmd[0]}" bsdtar mke2fs qemu-img tar flock
     tmp=$(mktemp -d)
@@ -1089,9 +1075,6 @@ prune_bases() (
     done
 )
 
-# Report a box's readiness from the pidfile / serial log / SSH port only -- no
-# shell into the guest -- so a wedged VM (process up, SSH dead) is distinguishable
-# from a healthy one, which plain "running" in ls cannot show.
 status_box() {
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
@@ -1104,8 +1087,6 @@ status_box() {
     [ -f "$dir/serial.log" ] && grep -qiE 'qemubox: ready' "$dir/serial.log" && boot=ready
     printf "qemubox-%s\tprocess=%s\tssh=%s\tboot=%s\tport=%s\n" \
         "$name" "$proc" "$ssh_state" "$boot" "$port"
-    # 9p mounts are set up post-boot over SSH, not at boot, so they never appear
-    # in the serial log; enter the box (qemubox bash) to inspect them.
 }
 
 add_env() {
@@ -1120,8 +1101,6 @@ add_env() {
 }
 
 copy_arg() {
-    # Strip only a trailing mode suffix so paths that themselves contain a colon
-    # survive (the mode is parsed from the full arg by the caller).
     path="$1"
     case "$path" in
         *:rw) path="${path%:rw}" ;;
@@ -1136,8 +1115,6 @@ copy_arg() {
 apply_flag() {
     case "$1" in
         n)
-            # box_name keeps '.', so reject traversal/reserved names here in the
-            # main shell (apply_flag runs un-subshelled) where exit stops the run.
             case "$2" in
                 ""|.|..|base|.build|.locks|*/*)
                     echo "qemubox: invalid -n name: '$2'" >&2; exit 2 ;;
@@ -1174,7 +1151,7 @@ apply_flag() {
         G) gcloud_creds=1 ;;
         *) usage >&2; exit 2 ;;
     esac
-    return 0  # never let a falsey last branch (e.g. -g with no token) trip set -e
+    return 0
 }
 
 read_rc() {
@@ -1243,11 +1220,6 @@ rm_matches() {
     esac
 }
 
-# -U injects nothing: neutralize every credential-forwarding flag before mounts
-# and forwards are assembled. assemble_mounts already skips the config mounts
-# under $untrusted; this also drops -A/-D/-K/-G/-g and the agent tokens so they
-# cannot smuggle a live credential into an "untrusted" box. Operates on the
-# parsing globals.
 apply_untrusted() {
     dropped=""
     [ -n "$ssh_agent$docker_sock$gpg_forward$gcloud_creds" ] && dropped=1
@@ -1267,8 +1239,6 @@ apply_untrusted() {
     esac
 }
 
-# Env values reach the guest on stdin, never in ssh argv: every host user can
-# read /proc/<pid>/cmdline. /dev/shm is guest tmpfs, outside every 9p mount.
 send_envs() {
     local e
     for e in "${envs[@]}"
@@ -1323,10 +1293,6 @@ assemble_mounts() {
     return 0
 }
 
-# Print the guest's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
-# Claude Code loads in every session, so the agent knows it is in a throwaway VM
-# and what survives it. $1 host name, $2 the staged ephemeral list; reads the
-# assembled mount_* arrays.
 guest_note() {
     local eph=()
     net=off
