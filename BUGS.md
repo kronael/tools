@@ -137,8 +137,8 @@
 
 - **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
   design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
-  sub, while `dockbox haiku` (`dockbox/dockbox:72`) and `qemubox haiku`
-  (`qemubox/qemubox:1196`) start an interactive Claude Code session on
+  sub, while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
+  (`qemubox/qemubox:1202`) start an interactive Claude Code session on
   `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
   `qemubox/test-parity.sh:18` pin the alias in both. **Options:** (a) drop the
   `haiku` alias from both launchers, their usage text, qemubox's README and
@@ -721,7 +721,7 @@
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
-  its marker and lists the marker dir (`dockbox/dockbox:542-543`), then
+  its marker and lists the marker dir (`dockbox/dockbox:552-553`), then
   force-removes the box on an empty listing (`:544-545`). A second invocation
   that passed the running check (`:549`) and writes its marker (`:530`)
   between that listing and the removal has its box removed under it; one
@@ -770,9 +770,9 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:70,74` and `qemubox/qemubox:1194,1198` launch the
+  `dockbox/dockbox:76,80` and `qemubox/qemubox:1200,1204` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:312`, `qemubox:57,62`, `qemubox/README.md:65`) and
+  (`dockbox:318`, `qemubox:57,62`, `qemubox/README.md:65`) and
   `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
@@ -781,7 +781,7 @@
 
 - **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
   test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
-  `mktemp` files (`dockbox/dockbox:579,701`) and bind-mounts them into the
+  `mktemp` files (`dockbox/dockbox:589,711`) and bind-mounts them into the
   box; nothing removes them afterwards, neither `leave_session`'s `docker rm`
   nor `dockbox rm`, so every box leaves two files in the host `/tmp`.
   **Fix:** write both under a per-box dir in `~/.local/share/dockbox/` and
@@ -812,7 +812,7 @@
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
   `-nic` at `qemubox:675`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1240-1246`) carries them.
+  `envs` so `send_envs` (`qemubox:1248-1254`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -828,14 +828,14 @@
   serial tail. A stop blocked by a launch that holds the lock while it waits
   on a wedged guest gets that message, which names the wrong cause, and exits
   1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:325`) takes the lock the same way, so a check blocked for
+  `qemubox/qemubox:327`) takes the lock the same way, so a check blocked for
   180 s writes the same `ready_error` into `idle.log` and ends, where a failed
   session count retries. **Fix:** `lock_box` reports the lock wait
   itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
   `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
 
 - **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:361`) backgrounds the idle check with `&`
+  `linger_box` (`qemubox/qemubox:363`) backgrounds the idle check with `&`
   from the leaving session's shell, which runs without job control, so the
   check keeps the session's process group: a shell that sourced the script
   and called `linger_box` saw the check report that shell's PGID. `trap ''
@@ -860,7 +860,7 @@
   is decided:** (c). No test — ops.
 
 - **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1404`) lingers like any other: after its session exits,
+  (`qemubox/qemubox:1413`) lingers like any other: after its session exits,
   `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
   seconds (default 1200), and a second `qemubox -T` in that window joins the
   VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
