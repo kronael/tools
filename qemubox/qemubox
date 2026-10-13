@@ -423,37 +423,37 @@ enter_session() {
     unlock_box
 }
 
+ssh_args() {
+    local dir
+    dir="$(box_dir "$1")"
+    ssh_opts=(-i "$dir/key" -p "$(port_for "$1")" \
+        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
+        -o BatchMode=yes -o LogLevel=ERROR \
+        -o UserKnownHostsFile="$dir/known_hosts" \
+        -o StrictHostKeyChecking=accept-new)
+}
+
 ssh_box() {
     name="$(box_name "$1")"
-    dir="$(box_dir "$name")"
     shift
+    ssh_args "$name"
     agent=()
     [ -n "$ssh_agent" ] && agent=(-A)
     gpg=()
     [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "$GUEST_HOME/.gnupg/S.gpg-agent:$gpg_sock")
     docker=()
     [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
-    exec ssh -i "$dir/key" -p "$(port_for "$name")" \
-        "${agent[@]}" \
-        "${gpg[@]}" \
-        "${docker[@]}" \
-        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
-        -o BatchMode=yes -o LogLevel=ERROR -o ExitOnForwardFailure=yes \
-        -o UserKnownHostsFile="$dir/known_hosts" \
-        -o StrictHostKeyChecking=accept-new \
+    exec ssh "${ssh_opts[@]}" -o ExitOnForwardFailure=yes \
+        "${agent[@]}" "${gpg[@]}" "${docker[@]}" \
         "$GUEST_USER@127.0.0.1" "$@"
 }
 
 ssh_plain_box() {
+    local name
     name="$(box_name "$1")"
-    dir="$(box_dir "$name")"
     shift
-    ssh -i "$dir/key" -p "$(port_for "$name")" \
-        -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
-        -o BatchMode=yes -o LogLevel=ERROR \
-        -o UserKnownHostsFile="$dir/known_hosts" \
-        -o StrictHostKeyChecking=accept-new \
-        "$GUEST_USER@127.0.0.1" "$@"
+    ssh_args "$name"
+    ssh "${ssh_opts[@]}" "$GUEST_USER@127.0.0.1" "$@"
 }
 
 # Guest voice: run a guest command and stream its output behind a dim gutter so
