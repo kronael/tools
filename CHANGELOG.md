@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.38] — 20261013
+
+> kronael v0.4.38 — opus plans, sonnet builds, pages pruned
+>
+> Implementation runs as an opus plan with one sonnet step at a time, and page rules cut repeats.
+>
+> • Agents — opus plans implementation, sonnet runs each step, fable never writes the code.
+> • Agents — fable takes specs, architecture, skill text, algorithms and red reviews.
+> • Pages — a prune pass per section cuts what the heading, a figure or the obvious already says.
+> • Pages — a wire format the page is about is drawn as a packet diagram, never a table.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: implementation is an `opus` plan, then one `sonnet` sub per step, each diff read.
+- `fable`: specs, architecture, skill text, algorithms and red reviews; never implementation.
+- `ship`: plans on `opus`, steps on `sonnet`; the CLI runs on its default `sonnet`.
+- `writing`: page.md prunes each section before handover and drops statements of the obvious.
+- `writing`: page.md draws a wire format as a packet diagram, exempt from the mechanics ban.
+
 ## [v0.4.37] — 20261013
 
 > kronael v0.4.37 — spec-lint on PATH, pushes through the gh token
