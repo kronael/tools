@@ -144,17 +144,19 @@ box_dir() {
 }
 
 port_for() {
-    _pf_dir="$(box_dir "$1")"
-    # A box persists its chosen port in $dir/port (start_box picks the first free
-    # one from the name-hash, so a collision reallocates). Read it back if set.
-    if [ -s "$_pf_dir/port" ]; then cat "$_pf_dir/port"; return; fi
+    local dir cksum
+    dir="$(box_dir "$1")"
+    if [ -s "$dir/port" ]
+    then
+        cat "$dir/port"
+        return
+    fi
     cksum=$(printf '%s' "$(box_name "$1")" | cksum | awk '{print $1}')
     echo $((10000 + cksum % 50000))
 }
 
 missing_deps() {
-    miss=""
-    local deps=("$QEMU" qemu-img ssh ssh-keygen tar flock)
+    local miss="" dep deps=("$QEMU" qemu-img ssh ssh-keygen tar flock)
     [ "$#" -eq 0 ] || deps=("$@")
     for dep in "${deps[@]}"; do
         command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
@@ -290,13 +292,12 @@ wait_ready() {
     deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
     while [ "$SECONDS" -lt "$deadline" ]
     do
-        if ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1
+        if [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ]
         then
-            [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ] || {
-                sleep 1
-                continue
-            }
-            return 0
+            if ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1
+            then
+                return 0
+            fi
         fi
         sleep 1
     done
@@ -1234,11 +1235,11 @@ tool_cmd() {
 }
 
 rm_matches() {
-    _n="$1"; _pat="${2#qemubox-}"
-    [ -z "$_pat" ] && return 1  # empty never matches; the caller requires a pattern (use '*' for all)
-    case "$_pat" in
-        *[*?]*) case "$_n" in $_pat) return 0 ;; *) return 1 ;; esac ;;
-        *) [ "$_n" = "$_pat" ] ;;
+    local pat="${2#qemubox-}"
+    [ -n "$pat" ] || return 1
+    case "$pat" in
+        *[*?]*) [[ "$1" == $pat ]] ;;
+        *) [ "$1" = "$pat" ] ;;
     esac
 }
 
