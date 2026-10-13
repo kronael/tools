@@ -132,7 +132,7 @@ true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
-eq "default RAM" "$MEM" "16384"
+eq "default RAM" "$MEM" "65536"
 eq "default CPUs" "$CPUS" "4"
 eq "default disk" "$DISK" "40G"
 eq "guest user matches host" "$GUEST_USER" "$(id -un)"
@@ -174,6 +174,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
+    grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
     ! grep -q 'seed.iso' "$fixture/qemu.args"
 ) >"$fixture/boot-test.log" 2>&1

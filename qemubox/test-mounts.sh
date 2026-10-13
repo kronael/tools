@@ -115,14 +115,15 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
     ssh_stream_box() { bash -c "$2"; }
     sudo() { "$@"; }
     mount() { echo "$*" >> "$fixture/tmp-mounts"; }
-    mkdir() { :; }
+    install() { echo "$*" >> "$fixture/tmp-installs"; }
     export fixture
-    export -f sudo mount mkdir
+    export -f sudo mount install
     setup_guest_tmp testbox
-    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777 tmpfs /tmp' "$fixture/tmp-mounts"
-    grep -Fx -- "-t tmpfs -o rw,exec,mode=1777,uid=$(id -u),gid=$(id -g) tmpfs /tmp/cargo-target" "$fixture/tmp-mounts"
+    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp' "$fixture/tmp-mounts"
+    grep -Fx -- "-d -o $(id -u) -g $(id -g) /tmp/cargo-target" "$fixture/tmp-installs"
+    [ "$(wc -l < "$fixture/tmp-mounts")" = 1 ]
 ) > "$fixture/tmp-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp and cargo mounts"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp cap and cargo-target dir"; }
 
 exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
     "failed tmp mount stops launch"

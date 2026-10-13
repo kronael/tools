@@ -139,8 +139,10 @@ Only directories present at launch are overmounted.
 
 `-P` / `--no-ephemeral` keeps project build directories on the host.
 `-B` mounts directories backed by the guest disk, keyed by canonical path.
-Both modes keep `/tmp` and `/tmp/cargo-target` on tmpfs, with
-`CARGO_TARGET_DIR=/tmp/cargo-target` in each session. Guest disk build data
+Both modes keep `/tmp` on a tmpfs capped at 75% of guest RAM (48 GiB at the
+default 64 GiB), with `/tmp/cargo-target` a directory on it and
+`CARGO_TARGET_DIR=/tmp/cargo-target` in each session; a full `/tmp` fails
+with ENOSPC before the guest runs out of memory. Guest disk build data
 survives boots until removal; tmpfs data disappears at shutdown. A failed mount stops launch.
 
 ## What crosses into the VM
@@ -237,5 +239,15 @@ New mount parent directories belong to the user; existing parents keep their own
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
 pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+
+## Memory
+
+A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
+host memory only once the guest touches it, and the VM's virtio-balloon
+device reports freed pages back to the host, so a VM costs what the guest
+holds, not its size: a `cargo clean` or a removed tmpfs file returns its
+pages. Cold guest pages go to the host's swap when host RAM runs short; the
+guest itself has no swap, so the `/tmp` cap (§ Build directories) is what
+keeps a large build from exhausting guest memory.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
