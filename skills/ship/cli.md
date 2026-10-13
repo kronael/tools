@@ -31,12 +31,12 @@ With the owner's explicit OK in this session, a scratchpad wrapper may
 instead read the token from `/proc/$CLAUDE_PID/environ`, export it and
 `exec "$@"`. NEVER echo, log or commit the token.
 
-`ship` runs every role on `--model` (env `MODEL`, default `sonnet`) with
-fixed role timeouts sized for sonnet. ALWAYS launch it with
-`MODEL=fable TIMEOUT_SCALE=3`: it runs its tasks back to back, so no diff is
-read before the next task, and WISDOM puts unread code generation on fable.
-The scale is measured: fable's validator needs about 215 s against the fixed
-180 s timeout. A fable sub writes and re-verifies the specs.
+`ship` runs every role on one `--model` (env `MODEL`, default `sonnet`) with
+fixed role timeouts sized for sonnet. ALWAYS launch it on the default: sonnet
+writes the steps, and fable is not an implementer (WISDOM § Agents). The CLI
+runs its tasks back to back, so no diff is read before the next task;
+ALWAYS read the whole diff after the run and run the gates yourself
+(`BUGS.md` SHIP-INTO-TOOLS-AS-STEP-RUNNER, SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES).
 `ship -k <spec>` runs only the spec validator, which proves the
 login and the spec. The validator gets only `Read`, `Glob` and `Grep`
 (`--tools` restricts even under `bypassPermissions`), so it cannot touch

@@ -92,9 +92,10 @@ skills it replaces.
 - ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
 - `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
   mechanical edits too wide for the parent, and the steps of a written plan
-  (`sonnet` § Plan, then execute). `opus` takes design calls and plan steps
-  that need judgment. `fable` takes unattended multi-file code, `ship` plans,
-  and security or deep audits.
+  (`sonnet` § Plan, then execute). `opus` takes design calls, the plans for
+  implementation work and plan steps that need judgment. `fable` takes specs,
+  architecture, WISDOM and skill writing, algorithmic solutions, and red
+  reviews or deep audits — NEVER implementation.
 - No Haiku tier: Haiku is batch-only (`global` § Agents owns the rule) —
   NEVER add an agent file, launcher skill or nudge keyword that pins it.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the

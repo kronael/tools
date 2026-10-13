@@ -1,6 +1,6 @@
 ---
 name: sonnet
-description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, mechanical edits, and the steps of a written plan. NOT for a design call the plan leaves open (use /opus) or unattended multi-file code (use /fable)."
+description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, mechanical edits, and the steps of a written plan. NOT for a design call the plan leaves open (use /opus) or multi-file code without a written plan (plan it with /opus first)."
 when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, pre-review, flagging, find simplification, survey codebase, read-only analysis, map files, grep and report"
 user-invocable: true
 ---
@@ -10,7 +10,7 @@ With a prompt after /sonnet: launch it as a background agent (`run_in_background
 ALWAYS reach for /sonnet without being asked when the task is:
 - A bug hunt, a pre-review sweep, or a read-only survey or audit.
 - A mechanical edit too wide for the parent (§ Plan: a codemod stays in the parent).
-- One step of a written plan whose design the plan settles (a `ship` step goes to `/opus`).
+- One step of a written plan whose design the plan settles (a `ship` step goes here).
 
 - ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
 - NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin.
@@ -18,7 +18,7 @@ ALWAYS reach for /sonnet without being asked when the task is:
 
 ## Plan, then execute
 
-For work too big for one pass — a feature across packages, a refactor, a change at many call sites — the parent (the main thread) plans, a sonnet sub executes each delegated step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
+For work too big for one pass — a feature across packages, a refactor, a change at many call sites — the parent (the main thread) or an `/opus` sub plans, a sonnet sub executes each delegated step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
 
 NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make it in the parent.
 

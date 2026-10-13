@@ -1046,8 +1046,18 @@
   in kronael/ship); (4) a plan-file producer; (5) `-n 1` by default and
   `depends_on` enforced, since workers share one cwd; then cost in the trace
   and the move hygiene (ruff, CI template for Python 3.14, stale `--help`).
-  `skills/ship/cli.md` keeps `MODEL=fable` until (2) and (3) land. Waits for
+  `skills/ship/cli.md` has the owner read the whole diff after a run until (2) and (3) land. Waits for
   the owner's sign-off. Recorded 2026-10-06.
+
+- **SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES** (LOW, ship) — RECORDED 2026-10-13.
+  `skills/ship/cli.md` states that the `ship` CLI runs every role (spec
+  validator, planner, worker, judge) on one `--model` (env `MODEL`, default
+  `sonnet`). WISDOM § Agents routes planning to `opus`, steps to `sonnet` and
+  specs or red reviews to `fable`, so the CLI cannot follow the routing: a
+  run on `sonnet` plans and judges on the implementer tier, and a run on
+  `fable` makes it the implementer. **Fix:** in kronael/ship, a model per role
+  (planner `opus`, worker `sonnet`, validator and judge `fable` or `opus`).
+  The CLI default stays `sonnet` until then. No test — the model is a CLI flag.
 
 - **SHIP-CLI-TRACE-LOG-IN-TREE** (LOW, ship) — RECORDED 2026-10-10. The
   `ship` CLI (kronael/ship) writes its trace log under the working

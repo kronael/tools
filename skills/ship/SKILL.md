@@ -86,8 +86,9 @@ line are explicit, with material owner decisions answered.
 
 ### 3. Plan against the current code
 
-ALWAYS plan in a fresh subagent with no conversation fork. Use `fable` when
-available, and `runtime.md` for supported role equivalents. The planner
+ALWAYS plan in a fresh subagent with no conversation fork. Use `opus`, or `fable`
+only when the plan is itself a spec, architecture or algorithm problem;
+`runtime.md` names supported role equivalents. The planner
 researches the live code and writes or updates the work record. Existing
 plans and specs are inputs to verify, not authority about code. Read
 `prompt.md` for the brief and plan fields.
@@ -109,8 +110,8 @@ gate, and no unresolved owner decision blocks the first step.
 
 ### 4. Implement and verify each step
 
-ALWAYS dispatch each bounded step to `opus`, or to `sonnet` for a
-single-file or template step. `runtime.md` names supported equivalents.
+ALWAYS dispatch each bounded step to `sonnet`, or to `opus` when the plan
+leaves a design call open. `runtime.md` names supported equivalents.
 Follow `worktree` for isolation and reconciliation. Parallel work needs
 independent owned paths and dependencies. Read-only investigations may
 share the tree. If the owner explicitly chose the CLI, read `cli.md` at
