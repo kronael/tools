@@ -869,6 +869,22 @@
   window in README § Usage. **Default if nothing is decided:** (b). No test
   — design.
 
+- **QEMUBOX-TMP-STACKED-TMPFS** (LOW, ops) — open (record only), no test —
+  ops. `setup_guest_tmp` (`qemubox/qemubox:532-535`) mounts a tmpfs over
+  `/tmp` on every boot, and systemd's `tmp.mount` already mounted one there,
+  so guest `/tmp` is two stacked tmpfs mounts and the first is hidden.
+  Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
+  **Fix:** size the existing mount with `mount -o remount,size=75% /tmp`
+  instead of stacking a second one.
+
+- **QEMUBOX-POWEROFF-LEAVES-READY-NOT-STOPPED** (LOW, ops) — open (record
+  only), no test — ops. After a guest poweroff, `leave_session` only reports
+  it (`qemubox/qemubox:394`). A later `stop_box` returns early because the VM
+  is not running (`:776`), so `ready` and `pid` stay and `stopped` (`:802`)
+  is never written. `prune` then dates the box from the directory mtime
+  (`:1044`), not from the poweroff. **Fix:** record the stop in the poweroff
+  branch of `leave_session`.
+
 ## bhctl
 
 - **BHCTL-HELP-NEEDS-PAIRED-DEVICE** (LOW, ux) — CONFIRMED 2026-10-10. The
