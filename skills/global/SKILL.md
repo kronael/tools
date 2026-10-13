@@ -133,13 +133,15 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
   AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
 - NEVER `gh release create`: the annotated tag is the release. NEVER
-  `gh pr review --approve` on the user's behalf.
+  `gh pr review --approve` on the user's behalf. Approving a PR, merging one and
+  pushing to `<default head>` ask the user first; opening a PR or rewriting its
+  body needs no approval once its text passed the two phases below.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
   new or rewritten, with `/pr-draft` — NEVER freehand; its shape and cap, REST
   PATCH path and `🤖` marker are the contract.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body
   (drafted or posted), review comment, thread reply, issue, release notes —
-  before showing it for approval. DISTILL: cut to the shortest text that still
+  before posting it or showing it for approval. DISTILL: cut to the shortest text that still
   carries the claim and its reasoning, in the posting skill's shape and under
   its cap; what the title, the diff or the commits show, results and history
   are cut first. A PR body is its `**TL;DR:**` lead, any `Closes #N` and the
