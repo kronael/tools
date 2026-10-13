@@ -27,7 +27,7 @@ timezone_test() {
     export -f modprobe mount
     bash "$fixture/zone-init"
     [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
-    ! grep -q '^RUN for key in TZ ' "$here/../dockbox/Dockerfile"
+    if grep -q '^RUN for key in TZ ' "$here/../dockbox/Dockerfile"; then exit 1; fi
 }
 regression "identity and init set the UTC time zone" timezone_test
 

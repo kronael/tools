@@ -25,7 +25,7 @@ PY
     wait_ready() { :; }; ssh_plain_box() { :; }
     setup_guest_tmp() { :; }; mount_host_paths() { :; }
     setup_guest_builds() { :; }; setup_guest_runtime() { :; }
-    setup_guest_auth() { :; }; setup_guest_limits() { :; }
+    setup_guest_limits() { :; }
     sync_guest_clock() { :; }
     QEMU=fake_qemu
     fake_qemu() { printf '%s\n' "$@" > "$fixture/port-qemu"; }

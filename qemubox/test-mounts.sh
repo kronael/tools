@@ -93,7 +93,10 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
     export fixture
     printf '%s\0' tmpfs "$PROJ/space dir/node_modules" > "$eph"
     bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    grep -Fx -- "-t tmpfs -o rw,exec,mode=1777,uid=1234,gid=5678 tmpfs $PROJ/space dir/node_modules" "$fixture/mounts"
+    key=$(realpath -e "$PROJ/space dir/node_modules" | sha256sum); key=${key%% *}
+    grep -Fx -- "--bind /tmp/qemubox-builds/$key $PROJ/space dir/node_modules" "$fixture/mounts"
+    grep -Fx -- "1234:5678 /tmp/qemubox-builds/$key" "$fixture/chown"
+    ! grep -q -- "-t tmpfs" "$fixture/mounts"
     printf '%s\0' disk "$PROJ/node_modules" > "$eph"
     bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
     key=$(realpath -e "$PROJ/node_modules" | sha256sum); key=${key%% *}
@@ -115,14 +118,15 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
     ssh_stream_box() { bash -c "$2"; }
     sudo() { "$@"; }
     mount() { echo "$*" >> "$fixture/tmp-mounts"; }
-    mkdir() { :; }
+    install() { echo "$*" >> "$fixture/tmp-installs"; }
     export fixture
-    export -f sudo mount mkdir
+    export -f sudo mount install
     setup_guest_tmp testbox
-    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777 tmpfs /tmp' "$fixture/tmp-mounts"
-    grep -Fx -- "-t tmpfs -o rw,exec,mode=1777,uid=$(id -u),gid=$(id -g) tmpfs /tmp/cargo-target" "$fixture/tmp-mounts"
+    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp' "$fixture/tmp-mounts"
+    grep -Fx -- "-d -o $(id -u) -g $(id -g) /tmp/cargo-target" "$fixture/tmp-installs"
+    [ "$(wc -l < "$fixture/tmp-mounts")" = 1 ]
 ) > "$fixture/tmp-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp and cargo mounts"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp cap and cargo-target dir"; }
 
 exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
     "failed tmp mount stops launch"

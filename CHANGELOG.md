@@ -1,18 +1,6 @@
 # Changelog
 
-## [v0.4.36] — 20261013
-
-> kronael v0.4.36 — spec-lint on PATH, pushes through the gh token
->
-> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
->
-> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
-> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
-> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
-> • Subagents — at most 2 sonnet plus 1 opus or fable at once.
-> • Asks — only before approving a PR, merging one or pushing to the default head.
->
-> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 - `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
 - `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
@@ -35,6 +23,28 @@
 - WISDOM § Git: PR approval, a merge and a default-head push ask first; opening a PR does not.
 - WISDOM § Agents: at most 2 `sonnet` and 1 `opus` or `fable` subagent at once.
 - Settings: `gh pr review --approve` and `ghpush` to master or main ask; `gh pr create` does not.
+
+## [v0.4.36] — 20261013
+
+> kronael v0.4.36 — bigger qemubox /tmp, one release review pass
+>
+> qemubox VMs get 64 GiB of RAM and a 48 GiB /tmp, and they return freed memory to the host.
+>
+> • qemubox memory — `QEMUBOX_MEM` defaults to 65536; freed guest pages go back to the host.
+> • qemubox /tmp — one tmpfs at 75% of RAM holds cargo builds and build dirs; full means ENOSPC.
+> • Model flags — `--model` or `-m` after an alias replaces its model and effort in both boxes.
+> • Release — one first review pass sizes the refine, with no second-opinion pass.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox: `QEMUBOX_MEM` default 65536; a virtio-balloon device returns freed guest pages to the host.
+- qemubox: guest `/tmp` is one tmpfs at 75% of RAM; cargo builds and tmpfs build dirs sit on it.
+- qemubox, dockbox: `--model` or `-m` after an alias replaces the alias's model and effort.
+- dockbox: `-d codex` and `-x` keep the alias defaults; box settings drop the top-level `defaultMode`.
+- qemubox: a guest poweroff in a session reports "powered off"; first boot drops systemctl noise.
+- Removed: qemubox `destroy` (use `rm`) and `build-base rebuild` (use `build-base -f`).
+- `release`: one first pass sizes the refine, no second-opinion pass; this repo runs it on Astra.
+- `squash`: prints the mapping and rebuilds without an approval stop.
 
 ## [v0.4.35] — 20261013
 

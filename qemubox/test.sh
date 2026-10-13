@@ -85,6 +85,15 @@ eq "-U clears docker_sock" "$docker_sock" ""
 eq "-U clears gpg_forward" "$gpg_forward" ""
 eq "-U clears gcloud"      "$gcloud_creds" ""
 eq "-U drops cred envs and agent tokens, keeps the rest" "${envs[*]}" "MYVAR=keep"
+for tool in codex opus; do
+    cmd=(); tool_cmd "$tool"; warnings=(); apply_untrusted
+    true_ "-U warns that $tool cannot authenticate" \
+        'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+done
+cmd=(); tool_cmd bash; warnings=(); apply_untrusted
+false_ "-U does not warn for a shell" \
+    'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+cmd=()
 
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
@@ -132,7 +141,7 @@ true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
-eq "default RAM" "$MEM" "16384"
+eq "default RAM" "$MEM" "65536"
 eq "default CPUs" "$CPUS" "4"
 eq "default disk" "$DISK" "40G"
 eq "guest user matches host" "$GUEST_USER" "$(id -un)"
@@ -161,12 +170,11 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     setup_guest_builds() { :; }
     setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
     setup_guest_sessions() { :; }
-    setup_guest_auth() { :; }
     setup_guest_limits() { :; }
     sync_guest_clock() { :; }
     start_box identitybox
     [ -f "$ROOT/identitybox/ready" ]
-    ! flock -n "$ROOT/.locks/identitybox" true
+    if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
     echo retained > "$ROOT/identitybox/disk.qcow2"
     ensure_box identitybox
@@ -174,8 +182,9 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
+    grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    ! grep -q 'seed.iso' "$fixture/qemu.args"
+    if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
 rm -f "$ROOT/base/fixture.vmlinuz"

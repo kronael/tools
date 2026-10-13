@@ -7,9 +7,6 @@ CAPS=(sys_nice ipc_lock sys_ptrace)
 
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
 TMP_WORKDIR=/tmp/work
-# dist/build excluded: build tools do `rm -rf dist` which hits EBUSY on a
-# mountpoint. Container writes to host paths for these; use -P to disable
-# all ephemeral mounts if you need a completely clean workdir.
 
 MOUNTS=(
     "$HOME/.claude:/home/dockbox/.claude:rw"
@@ -38,12 +35,11 @@ eph_no_tmpfs=""
 tmp_session=""
 new_session=""
 claude_args=()
-exec_cmd=()
+cmd=()
 
 apply_flag() {
     case "$1" in
         n)
-            # Reject traversal/reserved names before they become part of a container name.
             case "$2" in
                 ""|.|..|*/*) echo "dockbox: invalid -n name: '$2'" >&2; exit 2 ;;
             esac
@@ -60,12 +56,54 @@ apply_flag() {
         B) eph_no_tmpfs=1 ;;
         T) tmp_session=1 ;;
         N) new_session=1 ;;
-        g) [[ -n "${GH_TOKEN:-}" ]] && extra_env+=(-e GH_TOKEN)
-           [[ -n "${GITHUB_TOKEN:-}" ]] && extra_env+=(-e GITHUB_TOKEN) ;;
+        g)
+            if [[ -n "${GH_TOKEN:-}" ]]
+            then
+                extra_env+=(-e GH_TOKEN)
+            fi
+            if [[ -n "${GITHUB_TOKEN:-}" ]]
+            then
+                extra_env+=(-e GITHUB_TOKEN)
+            fi ;;
         G) gcloud_creds=1 ;;
         *) claude_args+=("-$2") ;;
     esac
-    return 0  # never let a falsey last branch (e.g. -g, no token) trip set -e
+}
+
+tool_cmd() {
+    local opts=() arg has_model=""
+    case "$1" in
+        claude) cmd=(claude); opts=(--model claude-opus-5-5 --effort xhigh) ;;
+        codex) cmd=(codex); opts=(-m gpt-6.1-sol -c model_reasoning_effort=xhigh) ;;
+        haiku) cmd=(claude); opts=(--model claude-haiku-4-5-20251001) ;;
+        sonnet) cmd=(claude); opts=(--model claude-sonnet-5-5 --effort high) ;;
+        opus) cmd=(claude); opts=(--model claude-opus-5-5 --effort xhigh) ;;
+        fable) cmd=(claude); opts=(--model claude-fable-5-1) ;;
+        gpt) cmd=(codex); opts=(-m gpt-6-astra) ;;
+        mini) cmd=(codex); opts=(-m gpt-5.4-mini) ;;
+        spark) cmd=(codex); opts=(-m gpt-5.3-codex-spark) ;;
+        sh|bash) cmd=(/bin/bash -l) ;;
+        zsh) cmd=(/bin/zsh -l) ;;
+        *) cmd=("$1") ;;
+    esac
+    if [[ "${cmd[0]}" == codex ]]; then
+        cmd+=(--dangerously-bypass-approvals-and-sandbox)
+    fi
+    for arg in "${claude_args[@]}"; do
+        case "$arg" in
+            -m|--model|--model=*) has_model=1 ;;
+        esac
+    done
+    [[ -n "$has_model" ]] || cmd+=("${opts[@]}")
+}
+
+resume_session() {
+    local slug="${_primary_dir//[^A-Za-z0-9]/-}" sessions
+    [[ -z "$new_session" && "${cmd[0]}" == claude ]] || return 0
+    sessions=("$HOME/.claude/projects/$slug/"*.jsonl)
+    if [[ -f "${sessions[0]}" ]]; then
+        cmd=(claude --resume "${cmd[@]:1}")
+    fi
 }
 
 rm_matches() {
@@ -74,8 +112,6 @@ rm_matches() {
     [[ "$1" == $pat ]]
 }
 
-# Total the tmpfs rows of `df -k --output=fstype,used,target` on stdin, each
-# mount once by target (df resamples it per path on it), printed as M or G.
 tmpfs_used() {
     awk '$1 == "tmpfs" {
             target = $0; sub(/^[^ ]+ +[^ ]+ +/, "", target)
@@ -87,8 +123,6 @@ tmpfs_used() {
         }'
 }
 
-# Classify `docker top` output on stdin (ps -ef columns, CMD from field 8): idle
-# when only the docker-init and sleep keepers run, else busy; fails if none run.
 box_use() {
     awk '$2 == "PID" { next }
         {
@@ -119,10 +153,6 @@ loopback_resolver() {
         END { exit !(n && !other) }' "$1"
 }
 
-# Print the box's /etc/claude-code/CLAUDE.md, the Linux managed-policy file
-# Claude Code loads in every session, so the boxed agent knows where it is and
-# what survives. $1 host name, $2 network (host|bridge), then the docker mount
-# args as assembled: -v spec / --tmpfs spec pairs.
 sandbox_note() {
     local host="$1" net="$2" spec src dst mode lost=() deps=() binds=()
     shift 2
@@ -143,7 +173,7 @@ sandbox_note() {
                     [[ "$src" == "$dst" ]] && src="same path"
                     binds+=("- $dst ($mode) <- $src")
                 else
-                    lost+=("$spec")  # -B: an anonymous volume
+                    lost+=("$spec")
                     deps+=("$spec")
                 fi ;;
         esac
@@ -192,8 +222,6 @@ EOF
     echo "Lost at exit (tmpfs or volume): ${lost[*]}"
 }
 
-# Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
-# so tests can exercise them directly.
 [ -n "${DOCKBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
@@ -300,6 +328,7 @@ Tools (first positional arg — no leading dash):
     bash|zsh|sh     Interactive login shell (sh is an alias for bash)
     exec <cmd>      Run <cmd> in the box, every later arg passed through
     <any cmd>       Any binary installed in the image
+    A --model/-m after the tool replaces the alias's model and effort.
 
 Boxes:
     ls              List boxes: USE busy/idle (idle: safe to rm), TMPFS (RAM), DISK
@@ -309,6 +338,7 @@ Boxes:
 Options:
     -n name    Key the container on this name, not the primary dir basename
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
+    -x tool    Alias for -d
     -e VAR     Forward env var (e.g. -e GH_TOKEN)
     -v path    Extra mount at same path ro by default; path:rw for read-write
     -P         Persist build dirs (disable default ephemeral overmounts)
@@ -335,7 +365,7 @@ Kernel:
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
     the container, owned by the container user, removed with the box.
-    Recursive (monorepo workspaces included).
+    Found to depth 4, so monorepo workspaces are included.
 
     Container starts as root; dockbox-init registers the host invoker in
     /etc/passwd, chowns \$HOME (/home/dockbox tmpfs) plus every overmount to
@@ -403,17 +433,13 @@ esac
 read_rc() {
     rc_tokens=()
     [[ -f "$1" ]] || return 0
-    while IFS= read -r line; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
         [[ -z "$line" || "$line" == \#* ]] && continue
         read -ra words <<< "$line"
         rc_tokens+=("${words[@]}")
     done < "$1"
 }
 
-# Apply the long flags getopts can't parse and leave the rest in stripped[].
-# $1 is the rc file the words came from, or "" for the command line. Any other
-# --word in an rc file is an error: getopts would read it as short flags. On
-# the command line it belongs to the tool and passes through.
 strip_long() {
     local src="$1" a
     shift
@@ -429,7 +455,18 @@ strip_long() {
     done
 }
 
-# ~/.dockboxrc: default flags, prepended so the command line overrides them.
+project_rc() {
+    local opt
+    OPTIND=1
+    while getopts ":n:d:x:e:v:HKADgGPBTSN" opt; do
+        case "$opt" in
+            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project" \
+                ".dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            *) apply_flag "$opt" "${OPTARG:-}" ;;
+        esac
+    done
+}
+
 read_rc "$HOME/.dockboxrc"
 strip_long "$HOME/.dockboxrc" "${rc_tokens[@]}"
 set -- "${stripped[@]}" "$@"
@@ -445,25 +482,15 @@ shift $((OPTIND - 1))
 if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
     case "$1" in
         /*|./*|.|~*) : ;;
-        *)
-            _tool="$1"; shift
-            case "$_tool" in
-                haiku)  entrypoint=claude; claude_args=(--model claude-haiku-4-5-20251001 "${claude_args[@]}") ;;
-                sonnet) entrypoint=claude; claude_args=(--model claude-sonnet-5-5 --effort high "${claude_args[@]}") ;;
-                opus)   entrypoint=claude; claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}") ;;
-                fable)  entrypoint=claude; claude_args=(--model claude-fable-5-1 "${claude_args[@]}") ;;
-                codex)  entrypoint=codex; claude_args=(-m gpt-6.1-sol -c model_reasoning_effort=xhigh "${claude_args[@]}") ;;
-                gpt)    entrypoint=codex; claude_args=(-m gpt-6-astra "${claude_args[@]}") ;;
-                mini)   entrypoint=codex; claude_args=(-m gpt-5.4-mini "${claude_args[@]}") ;;
-                spark)  entrypoint=codex; claude_args=(-m gpt-5.3-codex-spark "${claude_args[@]}") ;;
-                sh|bash) entrypoint=/bin/bash; claude_args=(-l "${claude_args[@]}") ;;
-                zsh)    entrypoint=/bin/zsh;  claude_args=(-l "${claude_args[@]}") ;;
-                exec)   [[ $# -eq 0 ]] && { echo "dockbox exec: a command is required" >&2; exit 2; }
-                        exec_cmd=("$@"); entrypoint=""; set -- ;;
-                *)      entrypoint="$_tool" ;;
-            esac
-            ;;
+        *) entrypoint="$1"; shift ;;
     esac
+fi
+if [[ "$entrypoint" == exec ]]; then
+    [[ $# -gt 0 ]] || {
+        echo "dockbox exec: a command is required" >&2
+        exit 2
+    }
+    cmd=("$@"); set --
 fi
 
 for arg in "$@"; do
@@ -473,11 +500,6 @@ for arg in "$@"; do
     esac
 done
 
-# Project .dockboxrc: per-repo default flags, applied before any flag is
-# consumed below. Gated to the safe subset — an untrusted repo must not
-# silently grant sudo (-S), the Docker socket (-D), SSH-agent forwarding (-A),
-# or change the tool/name/workdir (-n/-d/-x/-T). Those live in ~/.dockboxrc
-# only. A -T box has no project, so it reads no project rc.
 if [[ -n "$tmp_session" ]]; then
     [[ ${#dirs[@]} -eq 0 ]] || {
         echo "dockbox: -T mounts no project dir; use -v for a host path" >&2
@@ -486,60 +508,21 @@ if [[ -n "$tmp_session" ]]; then
     _primary_dir="$TMP_WORKDIR"
     dir_override="${dir_override:-tmp}"
     new_session=1
-    rc_tokens=()
 else
     [[ ${#dirs[@]} -eq 0 ]] && dirs=(.)
     _primary_dir="$(cd "${dirs[-1]}" && pwd)"
     read_rc "$_primary_dir/.dockboxrc"
+    strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
+    project_rc "${stripped[@]}"
 fi
-strip_long "$_primary_dir/.dockboxrc" "${rc_tokens[@]}"
-rc_tokens=("${stripped[@]}")
-# getopts with no words parses "$@", the command-line leftovers: skip it.
-if (( ${#rc_tokens[@]} )); then
-    OPTIND=1
-    while getopts ":n:d:x:e:v:HKADgGPBTSN" opt "${rc_tokens[@]}"; do
-        case "$opt" in
-            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
-            *) apply_flag "$opt" "${OPTARG:-}" ;;
-        esac
-    done
-fi
-_session_dir="$HOME/.claude/projects/${_primary_dir//[^A-Za-z0-9]/-}"
-_has_session=""
-ls "$_session_dir"/*.jsonl >/dev/null 2>&1 && _has_session=1
-if [[ "$entrypoint" == "claude" ]] && \
-   ! printf '%s\n' "${claude_args[@]}" | grep -qx -- '--model'; then
-    claude_args=(--model claude-opus-5-5 --effort xhigh "${claude_args[@]}")
+if [[ "$entrypoint" != exec ]]; then
+    tool_cmd "$entrypoint"
+    resume_session
+    cmd+=("${claude_args[@]}")
 fi
 
-if [[ ${#exec_cmd[@]} -gt 0 ]]; then
-    cmd=("${exec_cmd[@]}")
-elif [[ "$entrypoint" == "claude" && -n "$_has_session" && -z "$new_session" ]]; then
-    cmd=("$entrypoint" --resume "${claude_args[@]}")
-elif [[ "$entrypoint" == "codex" ]]; then
-    # Mirror the claude wrapper: inside dockbox the container is the perimeter,
-    # so run codex with no inner bwrap sandbox and no approval prompts. The flag
-    # is a top-level option, forwarded to the interactive TUI and to subcommands.
-    cmd=("$entrypoint" --dangerously-bypass-approvals-and-sandbox "${claude_args[@]}")
-else
-    cmd=("$entrypoint" "${claude_args[@]}")
-fi
-
-# Name keys on the primary dir's basename (= workdir basename below), or on
-# -n in its place. The dockbox- prefix is never overridable: ls, rm and prune
-# all filter on it, so a container without it is invisible and never reaped.
 CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 
-# Every session is a `docker exec` into a detached, long-lived container whose
-# PID 1 just sleeps. Sessions are ref-counted (one marker file each) so the
-# container is removed only after the LAST session exits — a session quitting
-# never tears the container out from under other live execs. exec skips
-# dockbox-init's gosu-drop, so the session enters as root and setpriv drops it
-# to the host user: `docker exec -u` would leave it no capabilities, setpriv
-# keeps CAPS ambient, and --init-groups reads the groups dockbox-init
-# registered, the set `-u uid:gid` gives. It asks only for the CAPS the box was
-# created with, so a box started without them still enters, without them.
-# $@ = extra docker-exec flags (-w).
 enter_session() {
     trap '' TSTP
     local rc=0 owner have c caps="" cap_opts=()
@@ -558,17 +541,12 @@ enter_session() {
     trap leave_session EXIT
     trap 'exit 129' HUP
     trap 'exit 143' TERM
-    # Forward run-time env (-e / -g token) into this exec too: unlike mounts and
-    # network, env CAN be set per-exec, so a box first started without -g still
-    # gets the token when a later invocation passes it.
     docker exec -it -u 0:0 -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" \
         setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups \
         "${cap_opts[@]}" -- "${cmd[@]}" || rc=$?
     exit "$rc"
 }
 
-# enter_session's EXIT trap: drop this session's marker, then remove the box
-# only when the marker dir lists empty; a failed listing keeps the box up.
 leave_session() {
     local left
     left=$(docker exec "$CONTAINER_NAME" sh -c \
@@ -578,12 +556,6 @@ leave_session() {
     fi
 }
 
-# Container already up — re-enter it. No -w: inherit the container's working
-# dir (the original project, guaranteed mounted); this invocation's workdir may
-# differ and need not exist in the container. The command (tool + model/effort)
-# applies; run-time flags (-v, -H, -D, -g/-G/-e, tmpfs HOME) belong to the live
-# container and can't change — use -n <name> for a separate one. Gate before
-# provisioning so re-entry skips the mount/settings/find work it would discard.
 if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
     enter_session
 fi
@@ -614,10 +586,6 @@ if [[ ${#network_arg[@]} -eq 0 ]]; then
     fi
 fi
 
-# Override settings.json with sandbox disabled — settings.local.json alone does
-# not suppress the sandbox restart loop when the host settings.json enables it.
-# Merge host settings then force sandbox off so the host config (permissions,
-# hooks) is preserved but the container never enters bubblewrap mode.
 _settings=$(mktemp)
 python3 -c "
 import json, os, sys
@@ -627,7 +595,6 @@ try:
 except Exception:
     d = {}
 d['sandbox'] = {'enabled': False}
-d['defaultMode'] = 'bypassPermissions'
 print(json.dumps(d))
 " > "$_settings"
 mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")
@@ -638,9 +605,6 @@ if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
     docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
 fi
 
-# gpg-agent socket is a live signing credential: forward it only on -K, and only
-# when the agent actually answers -- a socket FILE can outlive its agent, and
-# forwarding a dead one gives the confusing "agent not running" inside the box.
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
 if [[ -n "$gpg_forward" ]]; then
     if [[ -S "$gpg_sock" ]] && gpg-connect-agent /bye >/dev/null 2>&1; then
@@ -668,13 +632,6 @@ for dir in "${dirs[@]}"; do
     dir="$(cd "$dir" && pwd)"
     mounts+=(-v "$dir:$dir:rw")
     workdir="$dir"
-    # Git worktree: its .git is a gitlink file pointing at the main repo's
-    # .git/worktrees/<name>, which lives OUTSIDE this mount, so git would be
-    # dead in the container. Mount the backing common git dir (the shared
-    # object/ref store; the per-worktree gitdir nests under it) at its own
-    # path. A normal repo's common dir is already inside the mount — the
-    # prefix test skips it. If the backing store is gone (a broken gitlink),
-    # warn and continue rather than fail the launch.
     gc=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
     [[ "$gc" == "$dir" || "$gc" == "$dir"/* ]] && continue
     case " ${_gitmounts[*]} " in *" $gc "*) continue ;; esac
@@ -693,10 +650,6 @@ for vol in "${extra_vols[@]}"; do
     mounts+=(-v "$src:$src:$mode")
 done
 
-# Run as root; dockbox-init creates a /etc/passwd entry for the host invoker,
-# chowns $HOME and every overmount to their UID/GID, then gosu-drops. Image
-# has no baked user — it works for any host UID without rebuilding.
-user_arg=(--user 0:0)
 extra_env+=(-e "DOCKBOX_UID=$(id -u)")
 extra_env+=(-e "DOCKBOX_GID=$(id -g)")
 extra_env+=(-e "DOCKBOX_USER=$(id -un)")
@@ -707,8 +660,6 @@ for c in "${CAPS[@]}"; do
     cap_args+=(--cap-add "$c")
 done
 
-# Fresh tmpfs $HOME for the runtime user, chowned by dockbox-init. Bind
-# mounts of ~/.claude, ~/.gitconfig, ~/.zsh_history etc. nest into this.
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
 
 if [[ -d "$HOME/.claude" ]]; then
@@ -718,8 +669,6 @@ fi
 
 mounts+=(--tmpfs /tmp:rw,exec,mode=1777)
 
-# Cargo target dir: dedicated tmpfs so builds never write to the host workdir.
-# CARGO_TARGET_DIR tells Cargo to use this path regardless of project layout.
 mounts+=(--tmpfs /tmp/cargo-target:rw,exec,mode=1777)
 extra_env+=(-e CARGO_TARGET_DIR=/tmp/cargo-target)
 chown_paths=("/home/dockbox")
@@ -728,18 +677,8 @@ if [[ -n "$tmp_session" ]]; then
     mounts+=(--tmpfs "$workdir:rw,exec,mode=1777")
     chown_paths+=("$workdir")
 fi
-# The -K gpg-socket mount makes Docker auto-create /home/dockbox/.gnupg as root;
-# gpg (running as the drop-in user) then can't write its trustdb lock there.
-# Chown just the dir (dockbox-init chowns non-recursively, so the mounted socket
-# inside is untouched) so signing works.
 [[ -n "$gpg_forward" ]] && chown_paths+=("/home/dockbox/.gnupg")
 
-# Cap depth at 4: covers workspace patterns (./node_modules,
-# ./packages/foo/node_modules, ./apps/bar/dist). Vendored pnpm/yarn
-# stores nest hundreds of node_modules deeper — overmounting each
-# blows ARG_MAX, and they're internal caches the container won't write.
-# Single find with -prune on any name so we don't double-mount nested
-# artifacts that a parent overmount already covers.
 if [[ -z "$persist_builds" ]]; then
     find_expr=()
     for name in "${EPHEMERAL_DIRS[@]}"; do
@@ -763,16 +702,12 @@ fi
 eph_list=$(IFS=:; echo "${chown_paths[*]}")
 extra_env+=(-e "DOCKBOX_EPH_PATHS=$eph_list")
 
-# screenshot sharing: host /tmp/capture.png -> project capture.png
 [[ -f /tmp/capture.png ]] || touch /tmp/capture.png
 mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
 
-# overmount so container can't modify project .dockboxrc
 [[ -z "$tmp_session" && -f "$workdir/.dockboxrc" ]] && \
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
-# Sandbox note from the final mount list, mounted at the managed-policy path the
-# image owns: the agent reads where it is, and no host config is touched.
 _note=$(mktemp)
 _net=bridge
 [[ ${#network_arg[@]} -gt 0 ]] && _net=host
@@ -781,15 +716,10 @@ mounts+=(-v "$_note:/etc/claude-code/CLAUDE.md:ro")
 
 docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
 
-# Start detached with a sleeper PID 1 (--init reaps zombies) so the container's
-# lifetime is independent of any session. dockbox-init runs the per-user setup,
-# touches /run/dockbox/ready, then holds the container open with sleep infinity.
-# The seccomp profile is Docker's default plus io_uring, which the default
-# denies and Agave's solana-test-validator needs.
 docker run -d --init \
     --name "$CONTAINER_NAME" \
     --entrypoint /usr/local/bin/dockbox-init \
-    "${user_arg[@]}" \
+    --user 0:0 \
     --security-opt "seccomp=$SECCOMP" \
     "${cap_args[@]}" \
     "${network_arg[@]}" \

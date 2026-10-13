@@ -1,6 +1,19 @@
 tool_cmd codex
 eq "codex default model and effort" "${cmd[*]}" \
     'codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh'
+args=(--model gpt-6-astra); tool_cmd codex
+eq "a session --model replaces the codex alias model and effort" "${cmd[*]}" codex
+args=(-m x); tool_cmd gpt
+eq "a session -m replaces the alias model" "${cmd[*]}" codex
+args=(--model=x); tool_cmd opus
+eq "a session --model= replaces the claude alias model and effort" "${cmd[*]}" claude
+args=(--verbose); tool_cmd sonnet
+eq "other session flags keep the alias model" "${cmd[*]}" \
+    'claude --model claude-sonnet-5-5 --effort high'
+args=(-p "explain the -m flag"); tool_cmd opus
+eq "a model flag inside a prompt keeps the alias model" "${cmd[*]}" \
+    'claude --model claude-opus-5-5 --effort xhigh'
+args=()
 primary="$fixture/project.with.dots"
 slug="${primary//[\/.]/-}"
 mkdir -p "$HOME/.claude/projects/$slug"
@@ -95,9 +108,9 @@ eq "nonterminal stdout does not allocate tty" "${#tty[@]}" 0
     printf '%s\n' 'guest - nice -20' 'guest - rtprio 99' 'guest - memlock unlimited' > "$fixture/expected-limits"
     cmp "$fixture/limits/90-qemubox.conf" "$fixture/expected-limits"
     date() { echo 12345.125; }
-    ssh_plain_box() { echo "$2" > "$fixture/clock-command"; }
+    ssh_plain_box() { echo "$2" >> "$fixture/clock-command"; }
     sync_guest_clock vm
-    [ "$(cat "$fixture/clock-command")" = 'sudo date -u -s @12345.125 >/dev/null' ]
+    [ "$(cat "$fixture/clock-command")" = $'sudo systemctl disable --now --quiet systemd-timesyncd.service\nsudo date -u -s @12345.125 >/dev/null' ]
 ) > "$fixture/guest-parity.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/guest-parity.log"; bad "mount parents, limits and clock setup"; }
 exits 23 'set -e; ssh_plain_box() { return 23; }; sync_guest_clock vm' \

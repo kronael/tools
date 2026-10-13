@@ -358,6 +358,11 @@ true_  "project rc --no-ephemeral persists builds" \
 true_  "project rc --no-ephemeral passes no -- to claude" \
     '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
+printf -- '--no-ephemeral' > "$proj/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
+run=$(grep "^run " "$log")
+true_  "an rc file's unterminated last line still counts" \
+    '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$proj/.dockboxrc"
 
 # Without a project .dockboxrc the project-rc pass has no words to read; the
@@ -366,6 +371,28 @@ HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2
 claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
     '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
+
+# -d and -x take the same alias table as the first argument; a model flag in
+# the session's own arguments replaces the alias's model and effort.
+bypass="--dangerously-bypass-approvals-and-sandbox"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d codex "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d codex takes the codex alias defaults" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -x haiku "$proj" >/dev/null 2>"$tmp/err"
+true_  "-x haiku runs claude on the haiku model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex --model gpt-6-astra "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the codex alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass --model gpt-6-astra" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --model claude-sonnet-5-5 "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the claude alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus -p "explain the -m flag" "$proj" >/dev/null 2>"$tmp/err"
+true_  "a model flag inside a prompt keeps the alias model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d bash is the login shell the bash argument gives" \
+    'grep -q -- " -- /bin/bash -l$" "$log"'
 
 # Any other long flag in an rc file is an error naming the file and the flag,
 # in the project rc and in ~/.dockboxrc alike. After the tool name it is the

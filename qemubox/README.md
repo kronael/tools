@@ -25,7 +25,7 @@ make install
 
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
-`qemubox build-base --force` refreshes the agent CLI build layer.
+`qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
 
 System packages:
 
@@ -40,7 +40,8 @@ sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cl
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
 `mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
-that support before it starts. Allow about 20 GB free in `/tmp` and 11 GB
+that support before it starts. Debian installs `mke2fs` in `/usr/sbin`, which a
+non-root PATH omits, so the build adds it. Allow about 20 GB free in `/tmp` and 11 GB
 per base on the state filesystem.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
@@ -133,15 +134,22 @@ VM references, keeping the `current` base.
 ## Build directories
 
 `node_modules`, `.venv`, `.next`, `.turbo` and `.cache` directories found under each
-project become empty tmpfs mounts owned by the guest user. Discovery stops at
+project become empty bind mounts owned by the guest user. Discovery stops at
 depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.
 
 `-P` / `--no-ephemeral` keeps project build directories on the host.
-`-B` mounts directories backed by the guest disk, keyed by canonical path.
-Both modes keep `/tmp` and `/tmp/cargo-target` on tmpfs, with
-`CARGO_TARGET_DIR=/tmp/cargo-target` in each session. Guest disk build data
-survives boots until removal; tmpfs data disappears at shutdown. A failed mount stops launch.
+`-B` backs them with the guest disk, keyed by canonical path. Without `-B`
+they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
+
+`/tmp` is a tmpfs capped at 75% of guest RAM, 48 GiB at the default 64 GiB.
+Without `-B`, the build directories, `/tmp/cargo-target` and every other file
+in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
+guest. Process memory is not counted against the cap.
+Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target`.
+
+Guest disk build data survives boots until removal. `/tmp` data disappears at
+shutdown. A failed mount stops launch.
 
 ## What crosses into the VM
 
@@ -227,7 +235,9 @@ Git worktrees also mount their common git directory at its host path.
 Claude opens its session selector when the project has JSONL history
 (`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-6.1-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
+Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
+the tool name replaces the alias's model and effort. SSH allocates a tty only
+if stdin and stdout are terminals.
 
 Guest setup disables guest NTP and syncs the clock from the host before
 the first session of each boot. The guest runs in UTC.
@@ -237,5 +247,19 @@ New mount parent directories belong to the user; existing parents keep their own
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
 pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+`QEMUBOX_QEMU` selects the qemu binary, default `qemu-system-x86_64`.
+
+## Memory
+
+A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
+host memory only once the guest touches it, and the VM's virtio-balloon
+device reports freed pages back to the host, so a VM costs what the guest
+holds, not its size: a `cargo clean` or a removed tmpfs file returns its
+pages. If the host has swap, cold guest pages go there when host RAM runs
+short. The guest itself has no swap, so the `/tmp` cap under Build directories
+keeps a large build from exhausting guest memory.
+
+The guest boots with `noresume`. A Docker-built initramfs can detect host
+swap, and the VM must not wait for it.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
