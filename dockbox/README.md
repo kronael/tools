@@ -68,7 +68,7 @@ dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = a
 dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-x` to override. A `--model` (or Codex `-m`)
+Default command: claude. Use `-x` to override. A `--model` or Codex `-m`
 after the tool name replaces the alias's model and effort. Claude opens its
 resume picker when the project dir has Claude history; `-N` starts a new
 session instead.
@@ -105,9 +105,9 @@ dockbox codex           # 3rd terminal: codex inside the same box
 ```
 
 The entered session shares the container's `HOME`, mounts, and
-processes, runs as your host user (not root), and starts in the
-container's working directory — the project of its first launch, which the
-box is sure to mount, not the directory this invocation runs from. The **command** —
+processes, and runs as your host user (not root). It starts in the
+container's working directory, the project of its first launch, which the
+box always mounts, not the directory this invocation runs from. The **command** —
 tool, `--model`, `--effort`, args — takes effect, and **env flags**
 (`-e`, `-g`) are forwarded into the session, so a box first started
 without `-g` still gets the token when a later `dockbox -g` re-enters
@@ -208,10 +208,10 @@ Automatic:
   path (ro) - installed plugins. `installed_plugins.json` records absolute
   host paths.
 - `~/.claude/settings.json` -> a copy of the host file with the sandbox off
-  (ro), written once when the box is created; a `settings.local.json` alone
-  does not stop the sandbox restart loop a host `settings.json` turns on. A
-  plugin enabled on the host after that stays disabled in the box until the
-  box is recreated.
+  (ro), written once when the box is created. A `settings.local.json` alone
+  cannot stop the sandbox restart loop, which starts when the host
+  `settings.json` enables Claude Code's sandbox. A plugin enabled on the host
+  after that stays disabled in the box until the box is recreated.
 - `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
@@ -275,8 +275,8 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    workdir to depth 4, finds every matching directory (pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
    mount inside the container. Owned by the runtime user, removed with
-   the box. Deeper matches are vendored stores (pnpm, yarn) holding
-   hundreds of `node_modules` the box never writes; a mount for each
+   the box. Deeper matches are vendored pnpm and yarn stores that hold
+   hundreds of `node_modules` the box never writes. A mount for each
    would exceed the argument limit.
 
    Names overmounted by default:

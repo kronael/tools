@@ -25,7 +25,7 @@ make install
 
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
-`qemubox build-base -f` (or `--force`) refreshes the agent CLI build layer.
+`qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
 
 System packages:
 
@@ -142,7 +142,7 @@ Only directories present at launch are overmounted.
 `-B` backs them with the guest disk, keyed by canonical path. Without `-B`
 they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 
-`/tmp` is a tmpfs capped at 75% of guest RAM (48 GiB at the default 64 GiB).
+`/tmp` is a tmpfs capped at 75% of guest RAM, 48 GiB at the default 64 GiB.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
 in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
@@ -235,7 +235,7 @@ Git worktrees also mount their common git directory at its host path.
 Claude opens its session selector when the project has JSONL history
 (`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-6.1-sol`/`xhigh`; a `--model` (or Codex `-m`) after
+Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
 the tool name replaces the alias's model and effort. SSH allocates a tty only
 if stdin and stdout are terminals.
 
@@ -246,8 +246,8 @@ New mount parent directories belong to the user; existing parents keep their own
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
-pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository;
-`QEMUBOX_QEMU` the qemu binary (default `qemu-system-x86_64`).
+pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+`QEMUBOX_QEMU` selects the qemu binary, default `qemu-system-x86_64`.
 
 ## Memory
 
@@ -255,8 +255,8 @@ A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
 host memory only once the guest touches it, and the VM's virtio-balloon
 device reports freed pages back to the host, so a VM costs what the guest
 holds, not its size: a `cargo clean` or a removed tmpfs file returns its
-pages. Cold guest pages go to the host's swap when host RAM runs short; the
-guest itself has no swap, so the `/tmp` cap (§ Build directories) is what
+pages. If the host has swap, cold guest pages go there when host RAM runs
+short. The guest itself has no swap, so the `/tmp` cap under Build directories
 keeps a large build from exhausting guest memory.
 
 The guest boots with `noresume`. A Docker-built initramfs can detect host

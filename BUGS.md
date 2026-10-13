@@ -780,7 +780,7 @@
   reason for xhigh. Owner's call.
 
 - **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
-  test — ops. Each launch writes the settings copy and the sandbox note to
+  test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
   `mktemp` files (`dockbox/dockbox:579,701`) and bind-mounts them into the
   box; nothing removes them afterwards, neither `leave_session`'s `docker rm`
   nor `dockbox rm`, so every box leaves two files in the host `/tmp`.
@@ -820,7 +820,6 @@
   Unmeasured: that slirp actually drops guest DNS under `restrict=on` — the
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
-
 
 - **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
   2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
