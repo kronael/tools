@@ -85,6 +85,15 @@ eq "-U clears docker_sock" "$docker_sock" ""
 eq "-U clears gpg_forward" "$gpg_forward" ""
 eq "-U clears gcloud"      "$gcloud_creds" ""
 eq "-U drops cred envs and agent tokens, keeps the rest" "${envs[*]}" "MYVAR=keep"
+for tool in codex opus; do
+    cmd=(); tool_cmd "$tool"; warnings=(); apply_untrusted
+    true_ "-U warns that $tool cannot authenticate" \
+        'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+done
+cmd=(); tool_cmd bash; warnings=(); apply_untrusted
+false_ "-U does not warn for a shell" \
+    'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+cmd=()
 
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"

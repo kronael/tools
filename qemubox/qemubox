@@ -1237,8 +1237,8 @@ apply_untrusted() {
     done
     envs=("${kept[@]}")
     [ -n "$dropped" ] && warnings+=("-U: dropping credential-forwarding flags (-A/-D/-K/-G/-g) and agent tokens; untrusted mode injects nothing")
-    case "${entrypoint:-}" in
-        claude|codex|haiku|sonnet|opus|fable|gpt|mini|spark)
+    case "${cmd[0]:-}" in
+        claude|codex)
             warnings+=("-U: no credentials injected; the agent cannot authenticate -- use bash/build/test") ;;
     esac
 }
