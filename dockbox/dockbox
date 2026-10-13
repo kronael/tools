@@ -627,7 +627,6 @@ try:
 except Exception:
     d = {}
 d['sandbox'] = {'enabled': False}
-d['defaultMode'] = 'bypassPermissions'
 print(json.dumps(d))
 " > "$_settings"
 mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")

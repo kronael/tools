@@ -735,13 +735,6 @@
   `-c model_reasoning_effort=xhigh`, despite the equivalence claim at `:306`.
   **Fix:** apply the alias defaults to the explicit Codex route.
 
-- **DOCKBOX-DEFAULTMODE-TOP-LEVEL** (LOW, config) — CONFIRMED 2026-10-06.
-  The box settings override sets `d['defaultMode'] = 'bypassPermissions'`
-  (`dockbox/dockbox:609`), a top-level key Claude Code does not read; the
-  setting is `permissions.defaultMode`. No effect today: the image's `claude`
-  wrapper passes `--dangerously-skip-permissions` (`dockbox/Dockerfile:167`).
-  **Fix:** set `permissions.defaultMode`, or drop the line.
-
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
