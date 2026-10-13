@@ -688,7 +688,6 @@ start_box() {
     sync_guest_clock "$name"
     ssh_plain_box "$name" 'sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/ready'
     touch "$dir/ready"
-
 }
 
 detect_gpg() {
@@ -1221,10 +1220,9 @@ rm_matches() {
 }
 
 apply_untrusted() {
-    dropped=""
+    local dropped="" e kept=()
     [ -n "$ssh_agent$docker_sock$gpg_forward$gcloud_creds" ] && dropped=1
     ssh_agent=""; docker_sock=""; docker_remote=""; gpg_forward=""; gcloud_creds=""
-    kept=()
     for e in "${envs[@]}"; do
         case " GH_TOKEN GITHUB_TOKEN DOCKER_HOST ${agent_tokens[*]} " in
             *" ${e%%=*} "*) dropped=1 ;;
@@ -1248,6 +1246,7 @@ send_envs() {
 }
 
 assemble_mounts() {
+    local d i dir gc gcr host_cfg history_dir gitmounts=()
     if [ -z "$untrusted" ]; then
         host_cfg="$(box_dir "$name")/hostcfg"
         stage_host_cfg "$host_cfg"
@@ -1270,7 +1269,6 @@ assemble_mounts() {
     then
         add_mount "$HOME/.config/gcloud" "$GUEST_HOME/.config/gcloud" ro required || return 1
     fi
-    local gc gcr gitmounts=()
     for dir in "${dirs[@]}"
     do
         add_mount "$dir" "$dir" rw
