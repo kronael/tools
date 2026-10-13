@@ -185,9 +185,10 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
 
 ## Agents
 
-- NEVER run more than 3 `sonnet`, 1 `fable` or 2 `opus` subagents at once. Only
-  the owner lifts the cap — explicitly, for one named task, after seeing what
-  would be spawned — and the lift ends with that task.
+- NEVER run more than 2 `sonnet` subagents and 1 `opus` or `fable` subagent at
+  once — the 1 is one of either, not one each. Only the owner lifts the cap —
+  explicitly, for one named task, after seeing what would be spawned — and the
+  lift ends with that task.
 - Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
   code-editing subs in parallel on a shared tree — they interleave, one reverts
   another, reviewers read half-edited files.
