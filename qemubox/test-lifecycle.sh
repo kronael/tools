@@ -171,6 +171,29 @@ for mode in busy failed; do
     ) >/dev/null 2>&1
     false_ "$mode count keeps VM" '[ -f "$fixture/incorrect-stop-$mode" ]'
 done
+(
+    name=vm; sid=123; session_pid=""; locked=""
+    running() { [ ! -e "$fixture/guest-down" ]; }
+    ssh_plain_box() { return 255; }
+    sleep() { touch "$fixture/guest-down"; }
+    stop_box() { touch "$fixture/incorrect-stop-poweroff"; }
+    leave_session
+) 2> "$fixture/poweroff.err"
+eq "a guest poweroff ends the session cleanly" "$?" 0
+true_ "a guest poweroff is reported as such" 'grep -q "powered off during the session" "$fixture/poweroff.err"'
+false_ "a guest poweroff is not a kept VM" 'grep -q "keeping qemubox-vm running" "$fixture/poweroff.err"'
+false_ "a guest poweroff signals nothing" '[ -f "$fixture/incorrect-stop-poweroff" ]'
+(
+    name=vm; sid=123; session_pid=""; locked=""
+    running() { return 0; }
+    ssh_plain_box() { return 255; }
+    sleep() { :; }
+    stop_box() { touch "$fixture/incorrect-stop-marker"; }
+    leave_session
+) 2> "$fixture/marker.err"
+eq "a failed marker removal on a live VM exits 1" "$?" 1
+true_ "a failed marker removal keeps the VM" 'grep -q "keeping qemubox-vm running" "$fixture/marker.err"'
+false_ "a failed marker removal signals nothing" '[ -f "$fixture/incorrect-stop-marker" ]'
 
 (
     set -e

@@ -379,32 +379,32 @@ leave_session() {
     then
         exit 1
     fi
-    if running "$name"
+    if ! running "$name"
     then
-        if [ -n "$sid" ]
+        :
+    elif [ -z "$sid" ]
+    then
+        [ -z "$booted" ] || stop_box "$name" || rc=1
+    elif ! ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid"
+    then
+        if wait_stopped "$name" 15
         then
-            if ! ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid"
-            then
-                note "cannot remove session marker; keeping qemubox-$name running"
-                rc=1
-            elif left=$(session_markers "$name")
-            then
-                if [ -z "$left" ] && [ "$LINGER" -gt 0 ]
-                then
-                    linger_box "$name"
-                elif [ -z "$left" ]
-                then
-                    note "last session exited; powering off qemubox-$name, keeping disk"
-                    stop_box "$name" || rc=1
-                fi
-            else
-                note "cannot count sessions; keeping qemubox-$name running"
-                rc=1
-            fi
-        elif [ -n "$booted" ]
-        then
-            stop_box "$name" || rc=1
+            note "qemubox-$name powered off during the session"
+        else
+            note "cannot remove session marker; keeping qemubox-$name running"
+            rc=1
         fi
+    elif ! left=$(session_markers "$name")
+    then
+        note "cannot count sessions; keeping qemubox-$name running"
+        rc=1
+    elif [ -z "$left" ] && [ "$LINGER" -gt 0 ]
+    then
+        linger_box "$name"
+    elif [ -z "$left" ]
+    then
+        note "last session exited; powering off qemubox-$name, keeping disk"
+        stop_box "$name" || rc=1
     fi
     unlock_box
     exit "$rc"

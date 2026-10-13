@@ -837,14 +837,6 @@
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
 
-- **QEMUBOX-POWEROFF-CLAIMS-RUNNING** (LOW, ux) — CONFIRMED 2026-10-01.
-  `qemubox -n x -T exec sudo poweroff` ends with ssh's
-  "kex_exchange_identification: Connection reset by peer" and
-  `qemubox:384` "cannot remove session marker; keeping qemubox-x running",
-  while `qemubox status x` already reports `process=stopped`. `running` at
-  `:378` still sees the QEMU process during shutdown; the marker ssh then
-  fails. **Fix:** re-check `running` before printing the note; say the VM is
-  shutting down instead.
 - **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
   Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
   not the last in its `set -e` block asserts nothing: `qemubox/test.sh:169`
