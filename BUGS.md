@@ -137,10 +137,10 @@
 
 - **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
   design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
-  sub, while `dockbox haiku` (`dockbox/dockbox:412`) and `qemubox haiku`
-  (`qemubox/qemubox:1223`) start an interactive Claude Code session on
+  sub, while `dockbox haiku` (`dockbox/dockbox:72`) and `qemubox haiku`
+  (`qemubox/qemubox:1196`) start an interactive Claude Code session on
   `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
-  `qemubox/test-parity.sh:8` pin the alias in both. **Options:** (a) drop the
+  `qemubox/test-parity.sh:18` pin the alias in both. **Options:** (a) drop the
   `haiku` alias from both launchers, their usage text, qemubox's README and
   the two tests; (b) keep it as a typed model flag the rule does not govern —
   the user picks it, no skill routes to it. **Default if nothing is
@@ -721,22 +721,22 @@
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops
-  its marker and lists the marker dir (`dockbox/dockbox:552-553`), then
-  force-removes the box on an empty listing (`:554-555`). A second invocation
-  that passed the running check (`:565`) and writes its marker (`:535`)
+  its marker and lists the marker dir (`dockbox/dockbox:542-543`), then
+  force-removes the box on an empty listing (`:544-545`). A second invocation
+  that passed the running check (`:549`) and writes its marker (`:530`)
   between that listing and the removal has its box removed under it; one
-  that writes it just after the removal exits with no message, since `:535`
+  that writes it just after the removal exits with no message, since `:530`
   discards the error. (b) Two launchers for a project with no box both pass
-  the same check (`:565`), and the second's pre-run `docker rm -f -v`
-  (`:755`) removes the box the first just started (`:762`), with any session
+  the same check (`:549`), and the second's pre-run `docker rm -f -v`
+  (`:707`) removes the box the first just started (`:709`), with any session
   already in it. `prune` probes an idle box and removes it in two steps
-  (`:267-270`), so a session entering between them is removed the same way.
+  (`:292-296`), so a session entering between them is removed the same way.
   **Fix:** a per-box host lock (e.g. `flock`) held across marker
   registration, the empty-listing-to-removal step, and creation — a new
   lifecycle contract; no test — design.
 
 - **BOXES-SHARE-CLAUDE-RUNTIME-STATE** (MED, design) — needs sign-off.
-  Both boxes bind the whole `~/.claude` rw (`dockbox/dockbox:14`,
+  Both boxes bind the whole `~/.claude` rw (`dockbox/dockbox:12`,
   `qemubox/qemubox` `assemble_mounts`), which holds persistent state the
   contract wants shared (`projects/`, `memory`, `skills`, `settings.json`,
   `.credentials.json`) and per-process runtime state it does not: besides
@@ -770,14 +770,22 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:443,491` and `qemubox/qemubox:1221,1225` launch the
+  `dockbox/dockbox:70,74` and `qemubox/qemubox:1194,1198` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:290`, `qemubox:57,62`, `qemubox/README.md:65`) and
-  `dockbox/test.sh:357,366` pin it. The one reason on record (CHANGELOG
+  (`dockbox:312`, `qemubox:57,62`, `qemubox/README.md:65`) and
+  `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
   launchers to `high` (scripts, help, READMEs, test) or state the box's own
   reason for xhigh. Owner's call.
+
+- **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
+  test — ops. Each launch writes the settings copy and the sandbox note to
+  `mktemp` files (`dockbox/dockbox:579,701`) and bind-mounts them into the
+  box; nothing removes them afterwards, neither `leave_session`'s `docker rm`
+  nor `dockbox rm`, so every box leaves two files in the host `/tmp`.
+  **Fix:** write both under a per-box dir in `~/.local/share/dockbox/` and
+  remove that dir with the box.
 
 - **DOCKBOX-IMAGE-PACKAGES-UNUSED** (LOW, design) — owner decision, no test —
   design. `dockbox/Dockerfile:20` installs `iptables ipset iproute2 dnsutils
@@ -791,20 +799,20 @@
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:206-212` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:208-214` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:153-158`) and the guest user has
-  passwordless sudo (`:215`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:155-160`) and the guest user has
+  passwordless sudo (`:217`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:657`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:654`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:678`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1271-1277`) carries them.
+  `-nic` at `qemubox:675`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1240-1246`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -821,14 +829,14 @@
   serial tail. A stop blocked by a launch that holds the lock while it waits
   on a wedged guest gets that message, which names the wrong cause, and exits
   1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:321`) takes the lock the same way, so a check blocked for
+  `qemubox/qemubox:325`) takes the lock the same way, so a check blocked for
   180 s writes the same `ready_error` into `idle.log` and ends, where a failed
   session count retries. **Fix:** `lock_box` reports the lock wait
   itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
   `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
 
 - **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:357`) backgrounds the idle check with `&`
+  `linger_box` (`qemubox/qemubox:361`) backgrounds the idle check with `&`
   from the leaving session's shell, which runs without job control, so the
   check keeps the session's process group: a shell that sourced the script
   and called `linger_box` saw the check report that shell's PGID. `trap ''
@@ -839,7 +847,7 @@
   check's PGID differs from the launcher's. No test — design.
 
 - **QEMUBOX-PAUSED-ON-HOST-ENOSPC** (MED, ops) — proposed. The `-drive` at
-  `qemubox/qemubox:673` sets no `werror=`, and qemu's default `werror=enospc`
+  `qemubox/qemubox:670` sets no `werror=`, and qemu's default `werror=enospc`
   pauses the guest when the host filesystem under `disk.qcow2` fills. The
   launcher passes no `-qmp` or `-monitor` socket, so nothing can see the
   paused state or send `cont`: `qemubox status` reports `process=running`
@@ -853,7 +861,7 @@
   is decided:** (c). No test — ops.
 
 - **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1441`) lingers like any other: after its session exits,
+  (`qemubox/qemubox:1404`) lingers like any other: after its session exits,
   `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
   seconds (default 1200), and a second `qemubox -T` in that window joins the
   VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
@@ -960,7 +968,7 @@
   explicit per-box grant. Both READMEs say it crosses the box wall.
 
 - **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
-  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:14,20`).
+  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
   Claude Code and Codex both rewrite their token files on login refresh, so a
   ro or redacted token breaks auth inside the box. The README already says
   dockbox is not a boundary for hostile code.
