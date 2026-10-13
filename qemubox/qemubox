@@ -1143,12 +1143,17 @@ apply_flag() {
         P) persist_builds=1 ;;
         B) eph_no_tmpfs=1 ;;
         g)
-            [ -n "${GH_TOKEN:-}" ] && envs+=("GH_TOKEN=$GH_TOKEN")
-            [ -n "${GITHUB_TOKEN:-}" ] && envs+=("GITHUB_TOKEN=$GITHUB_TOKEN") ;;
+            if [ -n "${GH_TOKEN:-}" ]
+            then
+                envs+=("GH_TOKEN=$GH_TOKEN")
+            fi
+            if [ -n "${GITHUB_TOKEN:-}" ]
+            then
+                envs+=("GITHUB_TOKEN=$GITHUB_TOKEN")
+            fi ;;
         G) gcloud_creds=1 ;;
         *) usage >&2; exit 2 ;;
     esac
-    return 0
 }
 
 read_rc() {
