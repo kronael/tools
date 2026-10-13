@@ -387,6 +387,9 @@ true_  "a session --model replaces the codex alias model and effort" \
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --model claude-sonnet-5-5 "$proj" >/dev/null 2>"$tmp/err"
 true_  "a session --model replaces the claude alias model and effort" \
     '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus -p "explain the -m flag" "$proj" >/dev/null 2>"$tmp/err"
+true_  "a model flag inside a prompt keeps the alias model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
 true_  "-d bash is the login shell the bash argument gives" \
     'grep -q -- " -- /bin/bash -l$" "$log"'

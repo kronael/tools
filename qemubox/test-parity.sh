@@ -10,6 +10,9 @@ eq "a session --model= replaces the claude alias model and effort" "${cmd[*]}" c
 args=(--verbose); tool_cmd sonnet
 eq "other session flags keep the alias model" "${cmd[*]}" \
     'claude --model claude-sonnet-5-5 --effort high'
+args=(-p "explain the -m flag"); tool_cmd opus
+eq "a model flag inside a prompt keeps the alias model" "${cmd[*]}" \
+    'claude --model claude-opus-5-5 --effort xhigh'
 args=()
 primary="$fixture/project.with.dots"
 slug="${primary//[\/.]/-}"
