@@ -222,8 +222,6 @@ EOF
     echo "Lost at exit (tmpfs or volume): ${lost[*]}"
 }
 
-# Sourcing with DOCKBOX_LIB=1 loads the helpers above without running the CLI,
-# so tests can exercise them directly.
 [ -n "${DOCKBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
@@ -462,7 +460,8 @@ project_rc() {
     OPTIND=1
     while getopts ":n:d:x:e:v:HKADgGPBTSN" opt; do
         case "$opt" in
-            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project .dockboxrc (use ~/.dockboxrc)" >&2 ;;
+            A|D|K|S|T|n|d|x) echo "dockbox: ignoring -$opt in project" \
+                ".dockboxrc (use ~/.dockboxrc)" >&2 ;;
             *) apply_flag "$opt" "${OPTARG:-}" ;;
         esac
     done
@@ -487,7 +486,10 @@ if [[ -z "$entrypoint_explicit" && $# -gt 0 ]]; then
     esac
 fi
 if [[ "$entrypoint" == exec ]]; then
-    [[ $# -gt 0 ]] || { echo "dockbox exec: a command is required" >&2; exit 2; }
+    [[ $# -gt 0 ]] || {
+        echo "dockbox exec: a command is required" >&2
+        exit 2
+    }
     cmd=("$@"); set --
 fi
 

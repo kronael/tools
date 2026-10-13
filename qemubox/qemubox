@@ -292,7 +292,8 @@ wait_ready() {
     do
         if [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ]
         then
-            if ssh_plain_box "$name" "test -f /run/qemubox/ready" >/dev/null 2>&1
+            if ssh_plain_box "$name" "test -f /run/qemubox/ready" \
+                >/dev/null 2>&1
             then
                 return 0
             fi
@@ -1175,7 +1176,8 @@ project_rc() {
     do
         case "$opt" in
             A|D|K|S|T|n|d|x)
-                echo "qemubox: ignoring -$opt in project .qemuboxrc (use ~/.qemuboxrc)" >&2 ;;
+                echo "qemubox: ignoring -$opt in project .qemuboxrc" \
+                    "(use ~/.qemuboxrc)" >&2 ;;
             *) apply_flag "$opt" "${OPTARG:-}" ;;
         esac
     done
@@ -1347,8 +1349,6 @@ EOF
     done
 }
 
-# Sourcing with QEMUBOX_LIB=1 loads the helpers above without running the CLI,
-# so tests can exercise them directly.
 [ -n "${QEMUBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
@@ -1396,7 +1396,10 @@ if [ -z "$entrypoint_explicit" ] && [ "$#" -gt 0 ]; then
 fi
 
 if [ "$entrypoint" = exec ]; then
-    [ "$#" -gt 0 ] || { echo "qemubox exec: a command is required" >&2; exit 2; }
+    [ "$#" -gt 0 ] || {
+        echo "qemubox exec: a command is required" >&2
+        exit 2
+    }
     cmd=("$@"); set --
 fi
 
