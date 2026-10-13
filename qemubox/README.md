@@ -229,7 +229,9 @@ Git worktrees also mount their common git directory at its host path.
 Claude opens its session selector when the project has JSONL history
 (`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-6.1-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
+Codex defaults to `gpt-6.1-sol`/`xhigh`; a `--model` (or Codex `-m`) after
+the tool name replaces the alias's model and effort. SSH allocates a tty only
+if stdin and stdout are terminals.
 
 Guest setup disables guest NTP and syncs the clock from the host before
 the first session of each boot. The guest runs in UTC.

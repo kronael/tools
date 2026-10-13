@@ -718,15 +718,6 @@
 
 ## dockbox
 
-- **BOX-CODEX-DUPLICATE-MODEL-FLAG** (MED, config) — CONFIRMED 2026-10-08,
-  no test — config. `dockbox/dockbox:445,462` and
-  `qemubox/qemubox:1222,1482` prepend `-m` and forward the user's model flag.
-  An explicit `-m` or `--model` then prevents Codex from starting.
-  Reproduce with Codex 0.160.0:
-  `codex -m gpt-6.1-sol --model gpt-6-astra --version` exits 2 with
-  "the argument '--model <MODEL>' cannot be used multiple times".
-  **Fix:** inject the alias model only when the user supplies no model flag.
-
 - **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
   serializes creating, entering and removing a box, so two invocations for
   the same project can remove each other's box. (a) A leaving session drops

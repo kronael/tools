@@ -1,6 +1,16 @@
 tool_cmd codex
 eq "codex default model and effort" "${cmd[*]}" \
     'codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh'
+args=(--model gpt-6-astra); tool_cmd codex
+eq "a session --model replaces the codex alias model and effort" "${cmd[*]}" codex
+args=(-m x); tool_cmd gpt
+eq "a session -m replaces the alias model" "${cmd[*]}" codex
+args=(--model=x); tool_cmd opus
+eq "a session --model= replaces the claude alias model and effort" "${cmd[*]}" claude
+args=(--verbose); tool_cmd sonnet
+eq "other session flags keep the alias model" "${cmd[*]}" \
+    'claude --model claude-sonnet-5-5 --effort high'
+args=()
 primary="$fixture/project.with.dots"
 slug="${primary//[\/.]/-}"
 mkdir -p "$HOME/.claude/projects/$slug"
