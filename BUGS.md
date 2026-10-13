@@ -838,11 +838,6 @@
   has tested it here, because this box has no `/dev/kvm` access.
 
 
-- **QEMUBOX-UNDOCUMENTED-ALIASES-AND-ENV** (LOW, docs) — CONFIRMED
-  2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1388`),
-  `-f`/`rebuild` (`:1394`) and `QEMUBOX_QEMU` (`:11`) appear in neither the
-  usage text nor `qemubox/README.md`. **Fix:** document them or drop them.
-
 - **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
   2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
   `lock_box` (`qemubox/qemubox`), whose `QEMUBOX_READY_TIMEOUT` wait (180 s)

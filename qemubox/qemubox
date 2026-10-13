@@ -49,7 +49,7 @@ usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
        qemubox ls | status <name> | stop <name|glob|-a>... [-f]
-       qemubox rm <name|glob|-a>... | prune [hours] | build-base [--force]
+       qemubox rm <name|glob|-a>... | prune [hours] | build-base [-f|--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
 
@@ -115,6 +115,7 @@ Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
 is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 
 Environment: QEMUBOX_MEM=65536 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
+             QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
 Memory: the host backs guest RAM as the guest touches it and takes freed pages
         back (virtio-balloon free page reporting). Guest /tmp is a tmpfs capped
         at 75% of RAM, /tmp/cargo-target a directory on it: a full /tmp gives
@@ -1388,13 +1389,13 @@ case "${1:-}" in
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
-    rm|destroy) shift; remove_boxes "$@"; exit $? ;;
+    rm) shift; remove_boxes "$@"; exit $? ;;
     stop) shift; stop_boxes "$@"; exit $? ;;
     prune) prune_boxes "${2:-2160}"; exit $? ;;
     build-base)
         force=""
         case "${2:-}" in
-            ""|--force|-f|rebuild) [ -n "${2:-}" ] && force=1 ;;
+            ""|-f|--force) [ -n "${2:-}" ] && force=1 ;;
             *) echo "unknown build-base option: $2" >&2; exit 2 ;;
         esac
         build_base "$force"

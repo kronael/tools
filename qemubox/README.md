@@ -25,7 +25,7 @@ make install
 
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
-`qemubox build-base --force` refreshes the agent CLI build layer.
+`qemubox build-base -f` (or `--force`) refreshes the agent CLI build layer.
 
 System packages:
 
@@ -238,7 +238,8 @@ New mount parent directories belong to the user; existing parents keep their own
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
-pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository;
+`QEMUBOX_QEMU` the qemu binary (default `qemu-system-x86_64`).
 
 ## Memory
 
