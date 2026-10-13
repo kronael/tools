@@ -358,6 +358,11 @@ true_  "project rc --no-ephemeral persists builds" \
 true_  "project rc --no-ephemeral passes no -- to claude" \
     '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
+printf -- '--no-ephemeral' > "$proj/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
+run=$(grep "^run " "$log")
+true_  "an rc file's unterminated last line still counts" \
+    '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$proj/.dockboxrc"
 
 # Without a project .dockboxrc the project-rc pass has no words to read; the
