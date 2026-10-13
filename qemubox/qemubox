@@ -588,7 +588,7 @@ EOF
 
 sync_guest_clock() {
     ssh_plain_box "$1" \
-        "sudo systemctl disable --now systemd-timesyncd.service"
+        "sudo systemctl disable --now --quiet systemd-timesyncd.service"
     ssh_plain_box "$1" "sudo date -u -s $(quote "@$(date +%s.%N)") >/dev/null"
 }
 

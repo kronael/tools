@@ -845,11 +845,6 @@
   `:378` still sees the QEMU process during shutdown; the marker ssh then
   fails. **Fix:** re-check `running` before printing the note; say the VM is
   shutting down instead.
-- **QEMUBOX-FIRST-BOOT-SYSTEMCTL-NOISE** (LOW, ux) — CONFIRMED 2026-10-01.
-  First boot prints systemctl's two "Removed '/etc/systemd/system/...
-  systemd-timesyncd.service'" lines into the user's terminal from
-  `sync_guest_clock` (`qemubox:587`). **Fix:** `systemctl disable --now
-  --quiet`.
 - **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
   Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
   not the last in its `set -e` block asserts nothing: `qemubox/test.sh:169`
