@@ -90,9 +90,18 @@ passes — every item there is one the owner otherwise prompts for.
   onepager's budget is `readme/onepager.md`'s. Past the budget the owner
   cuts, so cut first: the obvious, the second statement of a fact, the
   mechanics. NEVER cut a feature or a limit to make the budget.
+- ALWAYS prune section by section before handing a page over, even under
+  budget: for each section, then each sentence, ask what the reader loses if
+  it goes. Keep what answers a reader's question and each non-obvious detail,
+  stated once where the reader needs it. NEVER keep a sentence the heading, a
+  figure or another section already says — link to that place instead.
+  NEVER state the obvious: status words for what exists ("built", "works"),
+  a role restated in every flow, a refusal followed by "the run fails". The
+  test: would the page's reader be surprised or need it? If not, cut it.
 - NEVER mechanics that decide nothing — rent and who pays it, call depth, byte
-  layouts, how a tool works inside. The page shows who signs, what moves, what
-  is refused, and the proof. A cost stays only as the one figure
+  layouts, how a tool works inside. A wire format the page is about is no
+  mechanic: draw it as § Diagrams says. The page shows who signs, what moves,
+  what is refused, and the proof. A cost stays only as the one figure
   `readme/sync.md` § Rules requires.
 - NEVER an identifier that carries no claim — a list of variant names, bare
   field or function names. One that stays gets a plain gloss. A term is
@@ -152,6 +161,11 @@ passes — every item there is one the owner otherwise prompts for.
 - NEVER draw an edge label over an arrowhead — ALWAYS beside the edge.
 - NEVER a lone box in a row built for three — fill the row or give the box its
   own; a box is sized to its text, NEVER a large empty bottom.
+- ALWAYS draw a wire format the page is about (an event record, an
+  instruction's data) as a packet diagram: a byte-offset ruler on top, rows
+  of a fixed byte count with the start offset at the left, each field boxed
+  at a width set by its byte count, wrapping onto the next row, with its name
+  and size inside. NEVER a table or a row of equal boxes for a byte layout.
 - A wide and a narrow variant of one diagram carry the same edge labels.
 - ALWAYS give a chart one stated comparison, only the series that comparison
   uses, and its reading beside it.
