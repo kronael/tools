@@ -64,9 +64,13 @@ the body says only what they cannot.
    changed:` line naming each edit the review made, or `Review changed:
    nothing` followed by what it checked.
 5. Show the result: the `ok:` line, the `Review changed:` line, then title and
-   body in ONE fenced code block so it is easy to copy. Ask if they want to
-   tweak anything. For a NEW PR, STOP — NEVER run `gh pr create` or open the
-   PR.
+   body in ONE fenced code block so it is easy to copy. For a NEW PR whose head
+   is already pushed (WISDOM § Git gates the push), open it with that title and
+   body once steps 3 and 4 passed, as WISDOM § Git allows:
+   ```
+   gh pr create --head <pushed head> --title '<title>' --body-file tmp/pr-body.md
+   ```
+   A user who asked only for the text gets the block and no `gh pr create`.
 
 ## Setting the description on an EXISTING PR
 
@@ -85,7 +89,7 @@ NEVER change an existing PR's title — the PATCH sends `body` alone, never
 `title`. Rewrite the title ONLY when the user explicitly asks; otherwise the
 author's title stands even if it doesn't match your body.
 
-STILL NEVER `gh pr create` (new PR) or `gh pr merge`.
+NEVER open a second PR for an existing one, and NEVER `gh pr merge` (WISDOM § Git).
 
 ## Format
 

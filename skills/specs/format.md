@@ -93,8 +93,26 @@ ALWAYS run `spec-lint specs` from the repo root; `spec-lint --help` lists every
 rule. The kronael sync installs it, else `cd spec-lint && make install` from
 the tools clone. An explicit `specs/` directory is checked even without an
 index or numbered files; discovery from a project directory or a changed file
-requires an index or numbered spec, so a test suite or the `skills/specs/`
-router is excluded. The lint checks everything above except the judgements:
-the spec says WHY and WHERE, never HOW; it opens with a definition; proposed
-code is marked as proposed; a measured number carries its commit; and no doc
-or code links a spec.
+requires `index.md` or a numbered spec directly in `specs/`, so a test suite or
+the `skills/specs/` router is excluded, and so is a corpus kept only in phase
+directories.
+
+The lint checks the items above that name a `lint:` rule, and only the
+mechanical part of each. Everything else is a judgement:
+
+- the spec says WHY and WHERE, never HOW, with no implementation steps,
+  duplicated code, re-stated signatures or schedules
+- it opens with a definition, and coins no term
+- proposed code is marked as proposed, and a new or absent claim cites its
+  search
+- a measured number carries its commit
+- a refactor or removal Contract holds the baseline numbers and the edit per gate
+- a schema table derives from its code type with `file:line`, and each contract
+  and term has one owning spec
+- no table, column, mode or abstraction no current case needs
+- a defect goes to `BUGS.md`, never into a spec
+- `status` moves in the commit that approves or lands the work
+- phase directories only when specs cluster into workstreams, and the next
+  number is max + 1
+- no doc or code links a spec; a shipped spec's facts move to the doc before
+  the spec is deleted

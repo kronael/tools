@@ -36,9 +36,10 @@ LONG = 500
 TOO_LONG = 1000
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 STATUS = re.compile(r'^status:\s*([^#]*?)\s*(?:#.*)?$', re.MULTILINE)
-LINK = re.compile(r'\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)')
+LINK = re.compile(r'\[[^\]]*\]\(((?:[^()\s]|\([^()\s]*\))+)(?:\s+"[^"]*")?\)')
 SCHEME = re.compile(r'^[a-z][a-z0-9+.-]*:')
 FENCE = re.compile(r'^\s*(`{3,}|~{3,})')
+CLOSING_FENCE = re.compile(r'^\s*(`{3,}|~{3,})\s*$')
 TBD = re.compile(r'\bTBD\b|\bTODO\b|(?i:implement later)')
 FUTURE = re.compile(r"\bwe will\b|\bwe'll\b|\bwill be\b", re.IGNORECASE)
 HISTORY = re.compile(
@@ -65,7 +66,12 @@ OPEN_QUESTIONS = re.compile(
     r'^#{1,6}\s.*\b(?:open questions?|unresolved|undecided)\b', re.IGNORECASE
 )
 CHECKLIST = re.compile(r'^\s*[-*+] \[[ xX]\] ')
-CREATE_TABLE = re.compile(r'\bcreate table (?:if not exists )?([a-z_][a-z0-9_.]*)', re.IGNORECASE)
+CREATE_TABLE = re.compile(
+    r'\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?'
+    r'(["`\[]?[a-z_][a-z0-9_]*["`\]]?(?:\.["`\[]?[a-z_][a-z0-9_]*["`\]]?)*)',
+    re.IGNORECASE,
+)
+QUOTES = str.maketrans('', '', '"`[]')
 TICKED = re.compile(r'`([^`\n]+)`')
 AT_LINE = re.compile(r':(\d+)(?:-(\d+))?$')
 SUFFIX = re.compile(r'\.[a-z][a-z0-9+]{0,9}$')
@@ -99,12 +105,14 @@ rules (format.md owns the wording):
   spec-naming          <NN>-<topic>.md flat or <phase>/<N>-<topic>.md   error
                        two files share a number                         error
                        flat number not zero-padded                     warn
-  spec-status          frontmatter status outside the closed vocabulary error
-                       index Status cell differs from the file          error
+  spec-status          no frontmatter, or a status outside the closed   error
+                       vocabulary
+                       index Status cell is prose or differs from the   error
+                       file
   spec-index-row       spec without a row in index.md or its phase index error
   spec-index-dangling  index link to a file that does not exist        error
   spec-link            spec link to a file that does not exist         error
-  spec-table-owner     CREATE TABLE <name> in two specs                 error
+  spec-table-owner     CREATE TABLE <name> in two specs' fenced code    error
   spec-length          over 1000 lines                                  error
                        over 500 lines                                   warn
   spec-tbd             TBD, TODO, implement later                      error
@@ -113,10 +121,11 @@ rules (format.md owns the wording):
                        as before, backward compatibility
   spec-wording         harness; marketing words                        warn
   spec-options         a heading laying out options or alternatives    warn
-  spec-open-questions  an open-questions heading outside draft         warn
+  spec-open-questions  an open-questions heading outside draft or       warn
+                       reference
   spec-checklist       a task-list item                                 warn
-  spec-pointer         `path` or `path:line` stale, ambiguous or past   warn
-                       the end of the file
+  spec-pointer         `dir/path` or `path:line` stale, ambiguous or    warn
+                       past the end of the file
   spec-no-pointer      a partial or shipped spec names no file         warn
 
 exit codes: 0 no errors, 1 errors found, 2 bad path or arguments
@@ -150,23 +159,31 @@ def is_spec_corpus(path: Path) -> bool:
     return (path / 'index.md').is_file() or numbered
 
 
+def is_skipped_dir(path: Path) -> bool:
+    if path.name in SKIP_DIRS:
+        return True
+    try:
+        return (path / '.git').exists()
+    except PermissionError:
+        return True
+
+
 def walk(top: Path) -> list[tuple[Path, list[str]]]:
-    """Every directory under `top` with its file names, skipping generated dirs
-    and nested repositories: a dir holding its own `.git` is another checkout.
+    """Every directory under `top` with its file names, skipping generated dirs,
+    nested repositories (a dir holding its own `.git` is another checkout) and
+    dirs the user cannot read.
     """
     found: list[tuple[Path, list[str]]] = []
     for dirpath, dirnames, filenames in os.walk(top):
         here = Path(dirpath)
-        dirnames[:] = [
-            d for d in dirnames if d not in SKIP_DIRS and not (here / d / '.git').exists()
-        ]
+        dirnames[:] = [d for d in dirnames if not is_skipped_dir(here / d)]
         found.append((here, filenames))
     return found
 
 
 def nearest_root(path: Path) -> Path | None:
     for candidate in (path, *path.parents):
-        if candidate.name == 'specs' and candidate.is_dir() and is_spec_corpus(candidate):
+        if candidate.name == 'specs' and is_spec_corpus(candidate):
             return candidate
     return None
 
@@ -192,13 +209,15 @@ def spec_roots(paths: list[Path]) -> list[Path]:
 
 
 def spec_files(root: Path) -> list[Path]:
-    """Every spec file: `.md` under the corpus except the indexes and
-    `CLAUDE.md`, which Claude Code reads as directory instructions.
+    """Every spec file: a regular `.md` file under the corpus except the indexes
+    and `CLAUDE.md`, which Claude Code reads as directory instructions.
     """
     return sorted(
         path
         for path in root.glob('**/*.md')
-        if path.name not in NOT_SPECS and not SKIP_DIRS & set(path.relative_to(root).parts)
+        if path.name not in NOT_SPECS
+        and not SKIP_DIRS & set(path.relative_to(root).parts)
+        and path.is_file()
     )
 
 
@@ -222,23 +241,27 @@ def status_of(text: str) -> str | None:
     return match.group(1).strip('\'"') if match else ''
 
 
-def split_fences(text: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
-    """Numbered lines outside fenced blocks, then the lines inside them — a
-    fence quotes code, not spec prose.
+def split_fences(text: str) -> tuple[list[tuple[int, str]], list[list[tuple[int, str]]]]:
+    """Numbered lines outside fenced blocks, then each block's lines — a fence
+    quotes code, not spec prose. As in CommonMark, only a bare run of the
+    opening character, at least as long, closes a block: "```bash" inside a
+    "```" block is content.
     """
     outside: list[tuple[int, str]] = []
-    inside: list[tuple[int, str]] = []
+    blocks: list[list[tuple[int, str]]] = []
     opened = ''
     for number, line in enumerate(text.splitlines(), start=1):
         fence = FENCE.match(line)
         if fence and not opened:
             opened = fence.group(1)
+            blocks.append([])
             continue
-        if fence and fence.group(1)[0] == opened[0] and len(fence.group(1)) >= len(opened):
+        closing = CLOSING_FENCE.match(line)
+        if closing and closing.group(1)[0] == opened[0] and len(closing.group(1)) >= len(opened):
             opened = ''
             continue
-        (inside if opened else outside).append((number, line))
-    return outside, inside
+        (blocks[-1] if opened else outside).append((number, line))
+    return outside, blocks
 
 
 def prose(text: str) -> list[tuple[int, str]]:
@@ -273,27 +296,27 @@ def link_file(named: str, beside: Path, repo: Path) -> Path:
 def pointer_path(token: str) -> str | None:
     """The path a backticked token points at, or None.
 
-    A pointer is `path:line` or a backticked path with a slash — a bare
-    `config.yaml` reads as a kind of file more often than a place in this repo.
-    An extension is lowercase, which keeps `net/http.Server` out. A segment
-    that is itself a documented placeholder (PLACEHOLDER) names a shape, not a
-    file, and is never meant to resolve.
+    A pointer is a file path with a slash, with or without an extension, or a
+    bare `name.ext:line` — a bare `config.yaml` reads as a kind of file more
+    often than a place in this repo, and a bare `name:line` as a host and port.
+    A directory (`app/`) is not a pointer: the repo index holds files only. A
+    `..` path is never resolved. A segment that is itself a documented
+    placeholder (PLACEHOLDER) names a shape, not a file, and is never meant to
+    resolve.
     """
     if NOT_IN_PATH & set(token) or '://' in token or '..' in token:
         return None
-    if token.startswith(('/', '~', '-', '#', '@', ':')):
+    if token.startswith(('/', '~', '-', '#', '@', ':')) or token.endswith('/'):
         return None
     path = AT_LINE.sub('', token)
-    if SUFFIX.search(path) is None:
-        return None
-    if '/' not in path and path == token:
+    if '/' not in path and (path == token or SUFFIX.search(path) is None):
         return None
     if PLACEHOLDER.search(path):
         return None
     return path
 
 
-def names_file(token: str) -> bool:
+def is_file_name(token: str) -> bool:
     """A backticked token shaped like a file: a pointer, or a bare `name.ext`."""
     if pointer_path(token) is not None:
         return True
@@ -441,7 +464,7 @@ def linked_files(line: str, beside: Path, repo: Path) -> list[tuple[str, Path]]:
 def phase_indexes(index: Path, repo: Path) -> list[Path]:
     """The `<phase>/index.md` files the root index links."""
     found: list[Path] = []
-    for _, line in prose(index.read_text()):
+    for _, line in prose(index.read_text(encoding='utf-8-sig')):
         for _, candidate in linked_files(line, index.parent, repo):
             if candidate.name == 'index.md' and candidate.is_file() and candidate != index:
                 found.append(candidate)
@@ -452,7 +475,7 @@ def check_one_index(index: Path, specs: set[Path], repo: Path) -> tuple[list[Fin
     """Dangling links and Status cells in one index; the specs it lists."""
     findings: list[Finding] = []
     linked: set[Path] = set()
-    for number, line in prose(index.read_text()):
+    for number, line in prose(index.read_text(encoding='utf-8-sig')):
         for target, named in linked_files(line, index.parent, repo):
             if not named.exists():
                 message = (
@@ -476,7 +499,7 @@ def check_one_index(index: Path, specs: set[Path], repo: Path) -> tuple[list[Fin
                 '— format.md: the Status column carries the lifecycle value, not prose'
             )
             findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
-        status = status_of(spec.read_text())
+        status = status_of(spec.read_text(encoding='utf-8-sig'))
         if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
             message = (
                 f'index Status {cells[1]!r} differs from {spec.name} status '
@@ -567,8 +590,9 @@ def check_prose(path: Path, text: str) -> list[Finding]:
             )
             findings.append(finding(Severity.WARN, 'spec-options', path, number, message))
         if OPEN_QUESTIONS.match(line) and status not in OPEN_STATUSES:
+            state = f'a {status!r} spec' if status else 'a spec without a status'
             message = (
-                f'open questions in a {status!r} spec — format.md: promotion out of draft '
+                f'open questions in {state} — format.md: promotion out of draft '
                 'answers them or cuts them (warn)'
             )
             findings.append(finding(Severity.WARN, 'spec-open-questions', path, number, message))
@@ -587,7 +611,7 @@ def check_pointers(root: Path, path: Path, text: str) -> list[Finding]:
     named_any = False
     for number, line in prose(text):
         for token in TICKED.findall(line):
-            named_any = named_any or names_file(token)
+            named_any = named_any or is_file_name(token)
             pointer = pointer_path(token)
             if pointer is None:
                 continue
@@ -632,9 +656,12 @@ def check_tables(files: list[Path]) -> list[Finding]:
     """A table is declared in exactly one spec; a second declaration is a fork."""
     owners: dict[str, list[tuple[Path, int]]] = {}
     for path in files:
-        for number, line in split_fences(path.read_text())[1]:
-            for name in CREATE_TABLE.findall(line):
-                owners.setdefault(name.lower(), []).append((path, number))
+        for block in split_fences(path.read_text(encoding='utf-8-sig'))[1]:
+            code = '\n'.join(line for _, line in block)
+            for match in CREATE_TABLE.finditer(code):
+                name = match.group(1).translate(QUOTES).lower()
+                number = block[0][0] + code.count('\n', 0, match.start())
+                owners.setdefault(name, []).append((path, number))
     findings: list[Finding] = []
     for name, places in owners.items():
         specs = sorted({path for path, _ in places})
@@ -659,7 +686,7 @@ def check_corpus(root: Path) -> list[Finding]:
     findings.extend(check_numbers(files))
     findings.extend(check_tables(files))
     for path in files:
-        text = path.read_text()
+        text = path.read_text(encoding='utf-8-sig')
         findings.extend(check_naming(root, path))
         findings.extend(check_status(path, text))
         findings.extend(check_length(path, text))
@@ -712,6 +739,7 @@ def main() -> int:
     )
     parser.add_argument('-v', '--verbose', action='store_true', help='name each corpus checked')
     args = parser.parse_args()
+    sys.stdout.reconfigure(errors='backslashreplace')
     return run(args.paths, args.verbose)
 
 

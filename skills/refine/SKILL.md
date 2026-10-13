@@ -153,9 +153,9 @@ code extension and still carries every claim the reviewer will trust.
     and reason. NEVER `--force` past a refusal, and NEVER read age or a dead
     lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
-    from here and why, and each step-1 instruction's outcome. NEVER `git push`
-    without the user's ask, and NEVER `gh pr merge`, `gh pr review` or
-    `gh pr create`. The closing report follows `report.md`.
+    from here and why, and each step-1 instruction's outcome. NEVER push by
+    any command (`git push`, `ghpush`) without the user's ask (WISDOM § Git),
+    and NEVER `gh pr merge` or `gh pr review`. The closing report follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.

@@ -74,5 +74,5 @@ Return the issue URL that `gh issue create` prints.
 - Keep it terse: shortest issue that a maintainer can act on wins.
 - One issue per invocation; don't batch unrelated problems into one issue.
 - Report facts (repro, status, body, version), not speculation about their code.
-- This skill only FILES issues. It does not comment on PRs (use gh-comment) and
-  NEVER touches `gh pr create/merge`, `gh release create`, or `git push`.
+- This skill only FILES issues. It does not comment on PRs (use gh-comment),
+  open, merge or push anything (WISDOM § Git), or create a release.

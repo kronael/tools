@@ -699,7 +699,7 @@ one toolchain is missing — report that tool skipped and continue.
 
 | Tool | Command | Notes |
 |------|---------|-------|
-| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim |
+| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim, and ghpush/ghfetch for HTTPS with the `gh` token |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |

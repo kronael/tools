@@ -158,18 +158,31 @@ token, so `ghpush` runs
 
 ```
 git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
-    push --no-follow-tags https://github.com/<owner>/<repo>.git <refspec>...
+    -c url.<url>.insteadOf=<url> -c url.<url>.pushInsteadOf=<url> \
+    push --no-follow-tags <url> <refspec>...
 ```
 
-and `ghfetch` the same with `fetch`, with owner and repo read from `origin`
-(`git@github.com:`, `ssh://` or `https://` forms). Neither rewrites
-`remote.origin.url` or stores the token: clones, remotes and worktrees stay
-SSH. A push refspec is `<src>:refs/heads/<branch>` or
-`<tag>:refs/tags/<tag>`, and only the stated tags travel; a `+` refspec, a
-wildcard, a delete, `-f`, `--force-with-lease`, `--tags`, `--all` and
-`--mirror` are refused. A token without the `workflow` scope cannot push a
-change under `.github/workflows` — GitHub refuses the push; report it
-rather than working around it.
+and `ghfetch` the same with `fetch`, where `<url>` is
+`https://github.com/<owner>/<repo>.git`. `ghpush` reads owner and repo from
+origin's push URL (`git remote get-url --push origin`, so a
+`remote.origin.pushurl` wins) and `ghfetch` from its fetch URL; either may be
+`git@github.com:`, `ssh://git@github.com/`, `ssh://git@github.com:<port>/`,
+`ssh://git@ssh.github.com:<port>/`, `https://github.com/` or
+`https://<userinfo>@github.com/`, and any other form, `GitHub.com` included,
+is refused. The two `url.<url>` rules outmatch a `url.<base>.insteadOf` or
+`pushInsteadOf` on a shorter base such as `https://github.com/`, so a rewrite
+to SSH in the user's config does not catch the HTTPS URL. Neither command
+rewrites `remote.origin.url` or stores the token: clones, remotes and
+worktrees stay SSH.
+
+A push refspec is `<src>:refs/heads/<branch>` or `<src>:refs/tags/<tag>`:
+one colon, a non-empty source and a non-empty name; only the stated tags
+travel. Both commands refuse `-f`, `--force`, `--force-with-lease`,
+`--force-if-includes`, `--tags`, `--all`, `--mirror`, `-d`, `--delete` and any
+other flag but `-n`, `-u` and `-h`; `ghpush` also refuses a `+` refspec, a wildcard,
+a delete (`:<dst>`) and any other destination. `-u` takes no refspec. A token
+without the `workflow` scope cannot push a change under `.github/workflows` —
+GitHub refuses the push; report it rather than working around it.
 
 ### Rebase (rir)
 

@@ -1,4 +1,6 @@
 # pyright: basic
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -25,9 +27,23 @@ Tokens are verified once, at the edge — `src/config.py:3` holds the key.
 """
 
 
+SCRIPT = Path(__file__).with_name('spec_lint.py')
+
+
 @pytest.fixture(autouse=True)
 def fresh_index():
     indexed_files.cache_clear()
+
+
+@pytest.fixture
+def locked(tmp_path: Path):
+    if os.geteuid() == 0:
+        pytest.skip('root reads a mode-000 directory')
+    path = tmp_path / 'secrets'
+    (path / '.git').mkdir(parents=True)
+    path.chmod(0)
+    yield path
+    path.chmod(0o755)
 
 
 def corpus(tmp_path: Path, index: str = INDEX, spec: str = SPEC, name: str = '01-auth.md') -> Path:
@@ -490,10 +506,134 @@ def test_findings_and_summary_go_to_stdout(
 
 
 def test_help_names_rules_and_exit_codes() -> None:
-    script = Path(__file__).with_name('spec_lint.py')
     result = subprocess.run(
-        [sys.executable, str(script), '--help'], capture_output=True, text=True, check=False
+        [sys.executable, str(SCRIPT), '--help'], capture_output=True, text=True, check=False
     )
     assert result.returncode == 0
     assert 'spec-pointer' in result.stdout
     assert 'exit codes' in result.stdout
+
+
+@pytest.mark.usefixtures('locked')
+def test_unreadable_dir_is_skipped(tmp_path: Path) -> None:
+    root = component_corpus(tmp_path, SPEC.replace('src/config.py:3', 'planning.py:1'))
+    touch(tmp_path / 'tools' / 'planning.py')
+    assert spec_roots([tmp_path]) == [root]
+    assert check_corpus(root) == []
+
+
+def test_broken_symlink_and_dir_named_like_a_spec_are_not_specs(tmp_path: Path) -> None:
+    root = corpus(tmp_path)
+    (root / '02-link.md').symlink_to(root / 'gone.md')
+    (root / '03-notes.md').mkdir()
+    assert check_corpus(root) == []
+
+
+def test_path_without_an_extension_is_a_pointer(tmp_path: Path) -> None:
+    (tmp_path / 'rig').mkdir()
+    (tmp_path / 'rig' / 'rig').write_text('#!/bin/sh\n')
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'rig/rig:999'))
+    found = check_corpus(root)
+    assert [item.rule for item in found] == ['spec-pointer']
+    assert 'past the end of the file (1 lines)' in found[0].message
+    touch(tmp_path / 'server' / 'Makefile')
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'server/Makefile'))
+    assert check_corpus(root) == []
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'server/Gonefile'))
+    assert [item.rule for item in check_corpus(root)] == ['spec-pointer']
+
+
+def test_host_port_and_directory_are_not_pointers(tmp_path: Path) -> None:
+    spec = SPEC + '\nThe API listens on `localhost:3004`; the build lands in `frontend/`.\n'
+    assert check_corpus(corpus(tmp_path, spec=spec)) == []
+
+
+def test_dotdot_path_is_not_resolved(tmp_path: Path) -> None:
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', '../src/config.py:999'))
+    assert [item.rule for item in check_corpus(root)] == ['spec-no-pointer']
+
+
+def test_link_with_balanced_parentheses_resolves(tmp_path: Path) -> None:
+    root = corpus(tmp_path, spec=SPEC + '\nSee [design](../docs/design(v2).md).\n')
+    design = tmp_path / 'docs' / 'design(v2).md'
+    design.parent.mkdir()
+    design.write_text('# v2\n')
+    assert check_corpus(root) == []
+    design.unlink()
+    found = check_corpus(root)
+    assert [item.rule for item in found] == ['spec-link']
+    assert "link '../docs/design(v2).md' resolves to nothing" in found[0].message
+
+
+@pytest.mark.parametrize(
+    ('statement', 'plain'),
+    [
+        ('CREATE TABLE "users" (id int);', 'users'),
+        ('CREATE TABLE `users` (id int);', 'users'),
+        ('CREATE TABLE [users] (id int);', 'users'),
+        ('CREATE TABLE\nusers (id int);', 'users'),
+        ('create table if not exists\n  "public"."users" (id int);', 'public.users'),
+    ],
+)
+def test_quoted_or_wrapped_create_table_is_an_owner(
+    tmp_path: Path, statement: str, plain: str
+) -> None:
+    index = INDEX + '| [02-db.md](02-db.md) | shipped | DB |\n'
+    root = corpus(tmp_path, index=index, spec=SPEC + f'\n```sql\n-- users\n{statement}\n```\n')
+    (root / '02-db.md').write_text(SPEC + f'\n```sql\nCREATE TABLE {plain} (id int);\n```\n')
+    found = [item for item in check_corpus(root) if item.rule == 'spec-table-owner']
+    assert len(found) == 1
+    assert f'01-auth.md:11: [spec-table-owner] table {plain!r} is also declared in 02-db.md' in (
+        found[0].message
+    )
+
+
+def test_utf8_spec_reads_and_prints_under_the_c_locale(tmp_path: Path) -> None:
+    env = {**os.environ, 'LC_ALL': 'C', 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0'}
+    for spec, code in (SPEC, 0), (SPEC + '\nRotation interval: TBD.\n', 1):
+        root = corpus(tmp_path, spec=spec)
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), str(root)],
+            capture_output=True,
+            text=True,
+            env=env,
+            check=False,
+        )
+        assert result.returncode == code, result.stderr
+        assert 'Traceback' not in result.stderr
+
+
+def test_spec_with_a_byte_order_mark_has_frontmatter(tmp_path: Path) -> None:
+    root = corpus(tmp_path)
+    (root / '01-auth.md').write_text('\ufeff' + SPEC, encoding='utf-8')
+    assert check_corpus(root) == []
+
+
+def test_fence_with_an_info_string_does_not_close_a_block(tmp_path: Path) -> None:
+    quoted = '\n```\n```bash\n# TODO: upstream bug\n```\n\nRotation interval: TBD.\n'
+    found = check_corpus(corpus(tmp_path, spec=SPEC + quoted))
+    assert [item.rule for item in found] == ['spec-tbd']
+    assert "'TBD'" in found[0].message
+
+
+def test_open_questions_without_a_status_names_the_state(tmp_path: Path) -> None:
+    for spec in '# Auth\n\n## Open questions\n', '---\nowner: x\n---\n\n## Open questions\n':
+        root = corpus(tmp_path, spec=spec)
+        found = [item for item in check_corpus(root) if item.rule == 'spec-open-questions']
+        assert len(found) == 1
+        assert 'open questions in a spec without a status' in found[0].message
+
+
+def test_help_and_readme_name_the_same_rules() -> None:
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), '--help'], capture_output=True, text=True, check=False
+    )
+    readme = SCRIPT.with_name('README.md').read_text(encoding='utf-8')
+    in_help = set(re.findall(r'^  (spec-[a-z-]+) ', result.stdout, re.MULTILINE))
+    in_readme = set(re.findall(r'^\| `(spec-[a-z-]+)` \|', readme, re.MULTILINE))
+    assert in_help == in_readme
+    assert len(in_help) == 16
+    for phrase in 'no frontmatter', 'Status cell is prose':
+        assert phrase in result.stdout
+    for phrase in 'no YAML frontmatter', 'Status cell that is prose':
+        assert phrase in readme

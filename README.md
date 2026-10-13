@@ -8,7 +8,7 @@ Command-line utilities and Claude Code configuration.
 - [dockbox](dockbox/) — dockerized Claude Code or Codex sandbox
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
-- [rig](rig/) — ripgit: detached checkout, push, rebase, merge; git aliases (`gco`, `gif`, `gib`, and more)
+- [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`ghpush`, `ghfetch`); git aliases (`gco`, `gif`, `gib`, and more)
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)

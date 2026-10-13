@@ -63,8 +63,8 @@
   skill, saved plan or hook. No test — design.
 
 - **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
-  `skills/global/SKILL.md:184-186` caps `sonnet`, `fable` and `opus` subagents
-  by `subagent_type`; the bundle also launches `general-purpose`
+  `skills/global/SKILL.md:190-193` caps subagents by `subagent_type` at 2
+  `sonnet` and 1 `opus` or `fable`; the bundle also launches `general-purpose`
   (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
   (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
   `skills/recall-memories/SKILL.md:165`) and the thin
@@ -378,8 +378,11 @@
 - **WISDOM-BODY-OVER-200-LINES** (LOW, docs) — CONFIRMED 2026-10-13, no test
   — docs. `skills/global/SKILL.md` body is 202 lines: `make skills-frontmatter`
   warns `[skill-length]` (> 200) while `CLAUDE.md` § Under 200 lines holds the
-  wisdom file to the cap. § Git grew the ghpush bullet, § Shell the worktree
-  lift and § Agents the cap wording. **Fix:** cut two lines — the owner's
+  wisdom file to the cap. The body measures 195 lines at origin/master and 202
+  at HEAD (`git show <rev>:skills/global/SKILL.md | awk 'n>=2 && (p || NF)
+  {p=1; c++} /^---$/{n++} END{print c}'`); the range changed only § Git (the
+  ghpush bullet and the approval sentence) and § Agents (the cap wording).
+  **Fix:** cut two lines — the owner's
   wording, so the owner's call which.
 
 ## Codex bridge
@@ -588,7 +591,7 @@
   `git commit -m "docs: never killall by name"` → `killall` (measured at
   63ad23b). Masking heredocs before the scan would let `bash <<EOF` through,
   and the `Co-Authored-By` pattern (`:28`) must keep reading the message, so
-  the scope is a judgment call. Also `settings-recommended.json:23` keeps a
+  the scope is a judgment call. Also `settings-recommended.json:22` keeps a
   `Bash(gh release create*)` `ask` entry for a command the hook denies first
   (`:33`), so that ask never fires. **Options:** (a) skip quoted text for the
   patterns that name a bare command, and drop the dead ask entry; (b) leave
@@ -649,7 +652,7 @@
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs
-  `skills/recall-memories/test_recall.py` (`Makefile:64`), but no workflow
+  `skills/recall-memories/test_recall.py` (`Makefile:66`), but no workflow
   runs root `make test` or `make lints` (`grep -rn recall .github` is empty);
   `test-hooks.yml` triggers on `hooks/**` only while
   `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
@@ -675,6 +678,25 @@
   them. Policy over enforcement is the house rule. **Default if nothing is
   decided:** as written.
 
+- **SETTINGS-ASK-RULES-VS-WISDOM-GIT-TEXT** (LOW, config) — owner decision,
+  no test — config. (i) `skills/global/SKILL.md:131-138` gates a push to
+  `<default head>`, a merge and an approval, and says opening a PR needs no
+  approval; `settings-recommended.json` has no `allow` rule for `ghpush` or
+  `gh pr create`, and with `"defaultMode": "default"` (`:37`) any Bash command
+  outside `allow` still prompts, so removing `gh pr create*` from `ask`
+  changed nothing in that mode. (ii) The ask rules hard-code
+  `refs/heads/master` and `refs/heads/main` (`:25-26`) while the text resolves
+  `<default head>` from `git ls-remote --symref origin HEAD`
+  (`skills/global/SKILL.md:117`), so a repo whose default head is `trunk` is
+  unguarded, and the trailing `*` makes `refs/heads/master-fix` ask (a dated
+  `refs/heads/20261013_master-fix` does not match). (iii) `ghpush
+  v1:refs/tags/v1`, the tag push `skills/release/SKILL.md:131` calls the
+  publication, matches no ask rule. **Options:** (a) add `allow` rules for
+  `Bash(ghpush *)` and `Bash(gh pr create*)`, an `ask` rule for `ghpush
+  *refs/tags/*`, and the default-head rule per repo in project settings;
+  (b) leave the rules and let the WISDOM text say the settings default
+  prompts. **Default if nothing is decided:** as written.
+
 - **PROMPT-NUDGE-UNNUMBERED-SPEC-EXAMPLE** (LOW, docs) — open (record only),
   no test — docs. `hooks/prompt_nudge.py:18` gives `specs/multi-tenancy.md`
   as the example of a lowercase doc name, which teaches an unnumbered spec
@@ -696,23 +718,88 @@
   `Bash(git push*)` ask rule (`settings-recommended.json:18`) matches the
   command string, so it never matches `rig push`, `rig p` or the `rip`
   symlink, though each runs `git push origin …` (`rig/rig:179`, dispatch at
-  `rig/rig:244`). An unlisted command still gets the default prompt, but an
+  `rig/rig:328`). An unlisted command still gets the default prompt, but an
   allow rule that admits them pushes with no ask gate left. **Fix:** an ask
   rule for the rig push forms; which forms, and whether to gate them at all,
   is the maintainer's call.
 
-- **RIG-HELP-EXITS-1** (LOW, ux) — CONFIRMED 2026-10-10. `rig/rig:267`
-  routes `-h|--help|help` to `usage()`, which ends in `exit 1` (`:237`), so
+- **RIG-HELP-EXITS-1** (LOW, ux) — CONFIRMED 2026-10-10. `rig/rig:353`
+  routes `-h|--help|help` to `usage()`, which ends in `exit 1` (`:321`), so
   `rig --help` fails in a pipeline. **Fix:** exit 0 on an explicit help
   request.
 
 - **RIG-MAKEFILE-STALE-NAME-CLEANUP** (LOW, dead code) — owner decision.
   `rig/Makefile:7-12` removes retired `gt*`/`gb`/`gpo` symlinks under
-  `~/.local/bin` and `~/bin`; `cmd_install` (`rig/rig:193-204`, proven by
-  `rig/test.sh:162-168`) already removes every stray symlink to `rig` in the
+  `~/.local/bin` and `~/bin`; `cmd_install` (`rig/rig:268-287`, proven by
+  `rig/test.sh:296-312`) already removes every stray symlink to `rig` in the
   install dir, so only the `~/bin` line and non-symlink entries do anything.
   **Default if nothing is decided:** keep until a host without the old names
   is confirmed.
+
+- **RIG-GHPUSH-USER-RULE-TIES-ON-FULL-URL** (LOW, correctness) — open
+  (record only). `ghpush` passes `-c url.<url>.insteadOf=<url> -c
+  url.<url>.pushInsteadOf=<url>` (`rig/rig:256`) and its help promises to beat
+  only a rule on a shorter base (`rig/rig:212`, `rig/README.md:172-174`). A
+  user rule whose base is the exact full HTTPS URL ties with them, and the
+  user's rule wins. Measured: `GIT_CONFIG_GLOBAL` holding `[url
+  "git@github.com:o/r.git"] pushInsteadOf = https://github.com/o/r.git`, origin
+  set to that HTTPS URL, then `git -c url.<url>.insteadOf=<url> -c
+  url.<url>.pushInsteadOf=<url> remote get-url --push origin` printed
+  `git@github.com:o/r.git`. The xfail test in `rig/test.sh` is still to write.
+  **Fix:** a lookup that refuses when the URL comes back rewritten.
+  `git ls-remote --get-url <url>` applies `insteadOf` only: it printed the
+  unrewritten HTTPS URL in the same setup, so the push side needs
+  `git remote get-url --push` against a remote set to the URL.
+
+## spec-lint
+
+- **SPEC-LINT-PHASED-CORPUS-NO-INDEX-INVISIBLE** (LOW, correctness) —
+  CONFIRMED 2026-10-13. `is_spec_corpus` (`spec-lint/spec_lint.py:151-159`)
+  globs top-level `*.md` only, so a `specs/` that keeps its files in phase
+  directories and has no `specs/index.md` is no corpus to discovery or to a
+  changed-file run. Measured in a fresh repo holding `specs/1/2-webhooks.md`:
+  `spec-lint specs/1/2-webhooks.md` prints "no spec corpus" and exits 0, while
+  `spec-lint specs` exits 1 with `spec-index-row`. A pre-commit hook that
+  passes changed files passes a corpus the explicit run fails. The xfail test
+  in `spec-lint/test_spec_lint.py` is still to write. **Fix:** count a
+  numbered file one phase directory down (`*/*.md`) as well.
+
+- **SPEC-LINT-INDEX-ROW-SHAPE-NOT-STATED** (LOW, correctness) — owner
+  decision. `check_one_index` (`spec-lint/spec_lint.py:489-491`) skips a row
+  with fewer than three cells and reads the spec link from the first cell. An
+  index row `| 2 | [2-webhooks.md](1/2-webhooks.md) | planned | hooks |`
+  under a `| # | Spec | Status | Summary |` header, or a two-column index,
+  yields a false `spec-index-row` "no row" (`:533-536`) while the row exists
+  (measured). `skills/specs/format.md` § Naming and index shows only the
+  three-column shape. **Options:** (a) widen the reader to find the link and
+  the Status cell in any column; (b) state the three-column shape, link
+  first, as the contract in `format.md`. **Default if nothing is decided:** as
+  written. The xfail test for (a) in `spec-lint/test_spec_lint.py` is still to
+  write.
+
+- **SPEC-LINT-POINTER-NOISE-SLASH-TOKENS** (LOW, correctness) — measured on a
+  160-warning corpus 2026-10-13, 43 of them new since the pointer rule
+  accepted extension-less slash paths. `pointer_path`
+  (`spec-lint/spec_lint.py:296-313`) takes any slash token, so prose such as
+  `turn/start`, `3/7`, `net/http.Server` and `kronael/candle` warns
+  `spec-pointer`. `AT_LINE` (`:76`) accepts only `-`, so `src/file.tsx:96–106`
+  with an en-dash warns "does not resolve" while `src/file.tsx:96-106`
+  resolves (measured against a 200-line file). The xfail test in
+  `spec-lint/test_spec_lint.py` is still to write. **Fix:** treat an
+  extension-less slash token as a pointer only when its first segment is an
+  existing directory of the repo, and let `AT_LINE` take `-` or `–`.
+
+- **SPEC-LINT-UNREADABLE-TARGET-RAISES** (LOW, correctness) — open (record
+  only). On Python 3.13 and older `Path.exists()` and `read_bytes()` raise
+  `PermissionError` on a target under an unreadable directory (measured on
+  Python 3.11.2: a `chmod 000` directory and a spec citing `locked/x.py` end
+  in `PermissionError: [Errno 13]`). `walk` skips such directories
+  (`is_skipped_dir`, `spec-lint/spec_lint.py:163-167`), but `resolve_pointer`'s
+  `(base / pointer).exists()` (`:368`), a link's `named.exists()` (`:480`,
+  `:545`) and `line_count`'s `read_bytes()` (`:348`) still raise when a spec
+  points into one. The xfail test in `spec-lint/test_spec_lint.py` is still to
+  write. **Fix:** catch `PermissionError` at those four sites and report the
+  pointer as unresolved.
 
 ## dockbox
 
@@ -809,6 +896,20 @@
   dockbox, qemubox and the docs finds nothing); the egress lockdown they
   served was rejected. **Fix:** add the `-x` help line; the packages are the
   owner's call.
+
+- **BOX-RAW-PUSH-RECIPE-BESIDE-GHPUSH** (LOW, design) — owner decision.
+  `dockbox/dockbox:177-186` puts a raw push recipe in the box's guidance,
+  `git -c credential.helper= -c credential.helper='!gh auth git-credential'
+  <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>`,
+  asserted by `dockbox/test.sh:441`. `skills/global/SKILL.md:122-130` names
+  `ghpush` and `ghfetch` (rig) as the agent's push and fetch, so the recipe is
+  a second push path in another form. It matches neither `Bash(git push*)`
+  (the command starts `git -c`) nor `Bash(ghpush *refs/heads/master*)`
+  (`settings-recommended.json:18,25`), so a push to master through it meets
+  no ask rule. **Options:** (a) route the box at `ghpush`/`ghfetch`, which
+  needs rig in the image (`grep -n -w rig dockbox/Dockerfile` is empty);
+  (b) keep the recipe and add an ask rule for it. **Default if nothing is
+  decided:** as written. No test — design.
 
 ## qemubox
 
