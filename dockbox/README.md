@@ -226,8 +226,8 @@ Automatic:
 Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
   (commit signing; off by default), and only while the host agent answers.
-  Docker creates `/home/dockbox/.gnupg` as root around the socket, so
-  dockbox-init chowns that directory to you for gpg's lock files.
+  Docker creates `/home/dockbox/.gnupg` as root around the socket, so gpg
+  cannot write its trustdb lock. dockbox-init chowns that directory to you.
 
 Project dirs are mounted at exact paths with read-write access.
 

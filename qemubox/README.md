@@ -40,7 +40,8 @@ sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cl
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
 `mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
-that support before it starts. Allow about 20 GB free in `/tmp` and 11 GB
+that support before it starts. Debian installs `mke2fs` in `/usr/sbin`, which a
+non-root PATH omits, so the build adds it. Allow about 20 GB free in `/tmp` and 11 GB
 per base on the state filesystem.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
@@ -257,5 +258,8 @@ holds, not its size: a `cargo clean` or a removed tmpfs file returns its
 pages. Cold guest pages go to the host's swap when host RAM runs short; the
 guest itself has no swap, so the `/tmp` cap (§ Build directories) is what
 keeps a large build from exhausting guest memory.
+
+The guest boots with `noresume`. A Docker-built initramfs can detect host
+swap, and the VM must not wait for it.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
