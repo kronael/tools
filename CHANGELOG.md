@@ -1,19 +1,40 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.36] — 20261013
+
+> kronael v0.4.36 — spec-lint on PATH, pushes through the gh token
+>
+> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
+>
+> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
+> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
+> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
+> • Subagents — at most 2 sonnet plus 1 opus or fable at once.
+> • Asks — only before approving a PR, merging one or pushing to the default head.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
 - `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
 - `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
+- `spec-lint`: a path with a slash is a pointer, extension or not; `..` paths and dirs are not.
 - `spec-lint`: a `<phase>/index.md` the root index links carries rows; `specs/CLAUDE.md` is no spec.
 - `spec-lint`: new rules spec-link, spec-table-owner, spec-length, spec-history, spec-wording.
 - `spec-lint`: new rules spec-options, spec-open-questions, spec-checklist, spec-no-pointer.
 - `spec-lint`: spec-naming fails a shared number; spec-pointer warns past the end of a file.
+- `spec-lint`: a quoted or line-broken `CREATE TABLE` is an owner; a link with parentheses resolves.
+- `spec-lint`: skips an unreadable directory; a broken symlink or a dir named `*.md` is no spec.
+- `spec-lint`: reads specs as UTF-8 with or without a BOM and prints under any locale.
 - `spec-lint`: exit 0 clean, 1 errors, 2 bad path; findings on stdout; `--help` lists every rule.
-- `specs`: format.md adds definition first, one decision, one owner per table, proposed vs existing.
-- `specs`: format.md adds numbers stamped with their commit, a refactor Contract, no history words.
-- `rig`: `ghpush` pushes stated refspecs to origin's GitHub repo over HTTPS with the gh token.
-- `rig`: `ghfetch <refspec>` fetches the same way when the SSH origin refuses; `ghpush -u` prints the URL.
-- WISDOM § Git: agents push and fetch through `ghpush`; `settings-recommended.json` asks for it.
+- `specs`: format.md adds definition first, one owner per table, proposed vs existing, no history.
+- `specs`: format.md names the judgements no lint makes: the Contract, numbers with their commit.
+- `rig`: `ghpush` pushes stated refspecs to origin's GitHub push URL over HTTPS with the gh token.
+- `rig`: `ghpush` keeps HTTPS under `url.*.insteadOf`; a refspec names `refs/heads` or `refs/tags`.
+- `rig`: `ghfetch <refspec>` fetches the same way when SSH refuses; `ghpush -u` prints the URL.
+- `rig`: `ghpush`/`ghfetch` read `ssh://git@github.com:<port>/` and `ssh.github.com` remotes.
+- WISDOM § Git: agents push and fetch through `ghpush`; only a push to `master` or `main` asks.
+- WISDOM § Git: PR approval, a merge and a default-head push ask first; opening a PR does not.
+- WISDOM § Agents: at most 2 `sonnet` and 1 `opus` or `fable` subagent at once.
+- Settings: `gh pr review --approve` and `ghpush` to master or main ask; `gh pr create` does not.
 
 ## [v0.4.35] — 20261013
 
