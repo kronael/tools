@@ -533,6 +533,22 @@ project `.codex/` config and enabled plugins — Kronael writes
   header — TOML then makes it part of that table — and move a `CLAUDE.md`
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
+- Native footer in `~/.codex/config.toml`: ALWAYS set the sync-owned
+  `tui.status_line` to this array, replacing any existing array, including `[]`.
+  ALWAYS merge only this key into the existing `[tui]` table, or create that
+  table once if absent. NEVER append a duplicate `[tui]` on repeat syncs.
+  ALWAYS preserve unrelated keys and tables, including model settings,
+  credentials, hooks and other TUI settings.
+
+  ```toml
+  [tui]
+  status_line = ["model-name", "context-used", "five-hour-limit", "weekly-limit"]
+  ```
+
+  The native footer shows context used and quota remaining; Claude's footer
+  shows quota used. Codex omits quota windows when their data is unavailable.
+  The native setting accepts an item array, not a command or custom format.
+  The footer has no reset times; `/status` shows resets.
 - Projects: the fallback key covers a project that keeps its instructions in
   `CLAUDE.md`. Codex loads one
   instruction file per directory, so a project with `AGENTS.md` never gets its

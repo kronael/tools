@@ -21,7 +21,7 @@ $(W)/$(1).yml: $(T)/$(2).yml.tmpl
 endef
 
 $(eval $(call gen-ci,test-udfix,test-go,udfix,[udfix/**],10))
-$(eval $(call gen-ci,test-hooks,test-py,hooks,[hooks/**],5))
+$(eval $(call gen-ci,test-hooks,test-py,hooks,[hooks/**$(COMMA) kronael/sync/**],5))
 $(eval $(call gen-ci,test-spec-lint,test-py,spec-lint,[spec-lint/**],5))
 $(eval $(call gen-ci,test-qemubox,test-bash,qemubox,[qemubox/**],5))
 $(eval $(call gen-ci,test-dockbox,test-bash,dockbox,[dockbox/**],5))
