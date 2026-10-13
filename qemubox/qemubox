@@ -369,7 +369,7 @@ linger_box() {
 }
 
 leave_session() {
-    local rc=$? left
+    local rc=$? left err
     trap - EXIT HUP TERM INT
     if [ -n "$session_pid" ]
     then
@@ -386,12 +386,13 @@ leave_session() {
     elif [ -z "$sid" ]
     then
         [ -z "$booted" ] || stop_box "$name" || rc=1
-    elif ! ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid"
+    elif ! err=$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid" 2>&1)
     then
         if wait_stopped "$name" 15
         then
             note "qemubox-$name powered off during the session"
         else
+            [ -z "$err" ] || echo "$err" >&2
             note "cannot remove session marker; keeping qemubox-$name running"
             rc=1
         fi
