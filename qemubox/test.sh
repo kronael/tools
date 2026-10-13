@@ -166,7 +166,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     sync_guest_clock() { :; }
     start_box identitybox
     [ -f "$ROOT/identitybox/ready" ]
-    ! flock -n "$ROOT/.locks/identitybox" true
+    if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
     echo retained > "$ROOT/identitybox/disk.qcow2"
     ensure_box identitybox
@@ -176,7 +176,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    ! grep -q 'seed.iso' "$fixture/qemu.args"
+    if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
 rm -f "$ROOT/base/fixture.vmlinuz"

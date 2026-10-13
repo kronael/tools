@@ -837,11 +837,6 @@
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
 
-- **QEMUBOX-TEST-NEGATION-NO-OP** (LOW, tests) — CONFIRMED 2026-10-06.
-  Bash exempts a `!`-negated command from `set -e`, so a `! cmd` line that is
-  not the last in its `set -e` block asserts nothing: `qemubox/test.sh:169`
-  `! flock -n "$ROOT/.locks/identitybox" true` in the identity and boot
-  block passes whatever it finds. **Fix:** `if cmd; then exit 1; fi`.
 
 - **QEMUBOX-UNDOCUMENTED-ALIASES-AND-ENV** (LOW, docs) — CONFIRMED
   2026-10-10, no test — docs. `destroy` (`qemubox/qemubox:1388`),
