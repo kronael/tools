@@ -2,6 +2,15 @@
 
 ## Bundle
 
+- **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
+  2026-10-14. `make skills-frontmatter` warns `skills/global/SKILL.md:
+  [skill-length] body is 206 lines (> 200)`; the body passed 200 with the
+  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3) and the warn is
+  not a failure, so every commit carries it. **Fix:** push a section's
+  overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
+  body), after a subtraction pass over the always-loaded rules; no test —
+  the lint already reports it.
+
 - **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
   `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
