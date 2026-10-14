@@ -130,7 +130,7 @@ Lifecycle: the VM stays up QEMUBOX_LINGER=1200 seconds after the last session
            exits, then powers off (0: at once); disk survives until rm.
 Stop: qemubox stop resumes a paused guest, trims its disk, asks it to power
       off and waits up to 90s before stopping qemu; -f stops qemu at once
-      (quit over QMP, then SIGKILL).
+      (quit over QMP or SIGTERM, then SIGKILL).
 Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
        Reclaim unreferenced bases except current.
 State: $ROOT
@@ -267,15 +267,17 @@ running() {
 }
 
 qmp_box() {
-    python3 - "$(box_dir "$1")/qmp" "$2" <<'EOF'
+    python3 - "$(box_dir "$1")" "$2" <<'EOF'
 import json
+import os
 import socket
 import sys
 
 try:
+    os.chdir(sys.argv[1])
     with socket.socket(socket.AF_UNIX) as sock:
         sock.settimeout(5)
-        sock.connect(sys.argv[1])
+        sock.connect("qmp")
         qmp = sock.makefile("rw")
         qmp.readline()
         for command in ["qmp_capabilities", sys.argv[2]]:
@@ -290,7 +292,7 @@ try:
             if "error" in reply:
                 sys.exit(f"QMP {command}: {reply['error']['desc']}")
 except OSError as err:
-    sys.exit(f"QMP {sys.argv[1]}: {err}")
+    sys.exit(f"QMP {sys.argv[1]}/qmp: {err}")
 print(reply["return"].get("status", ""))
 EOF
 }
@@ -721,7 +723,7 @@ start_box() {
         note "guest network: restricted; only host SSH forwarding is open"
     fi
     mapfile -t mounts < <(qemu_mount_args)
-    "$QEMU" "${accel[@]}" \
+    (cd "$dir" && "$QEMU" "${accel[@]}" \
         -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
         -device virtio-balloon-pci,free-page-reporting=on \
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2,discard=unmap,detect-zeroes=unmap" \
@@ -731,8 +733,8 @@ start_box() {
         "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
         -serial "file:$dir/serial.log" \
-        -qmp "unix:$dir/qmp,server=on,wait=off" \
-        -display none -daemonize -pidfile "$dir/pid" 9>&-
+        -qmp "unix:qmp,server=on,wait=off" \
+        -display none -daemonize -pidfile "$dir/pid" 9>&-)
     booted=1
     note "waiting for guest setup on 127.0.0.1:$port"
     wait_ready "$name" boot
