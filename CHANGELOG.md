@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.4.42] — 20261014
+
+> kronael v0.4.42 — fable asks before astra, Rust keeps one path per item
+>
+> Two rules: a fable limit asks the user before astra takes over, and Rust crates stop re-exporting other crates.
+>
+> • Fable — a usage or spend limit now asks the user before the same brief runs on astra.
+> • Rust — a crate re-exports only its own types; callers import another crate's items from that crate.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `fable`: on a usage or spend limit, ask the user before switching to astra; never switch silently.
+- `rs`: re-export only the crate's own types, never another crate's items.
+
 ## [v0.4.41] — 20261014
 
 > kronael v0.4.41 — the robot opens every GitHub text
