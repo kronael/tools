@@ -963,7 +963,8 @@
   and `ssh=open` while every SSH connect ends in "Connection timed out
   during banner exchange", and `stop` reaches SIGKILL after its 90 s and
   10 s waits (seen 2026-10-12 after the host disk filled; no clean
-  shutdown). **Options:** (a) `-qmp unix:$dir/qmp,server,nowait` at launch,
+  shutdown; seen again 2026-10-14 with `/home` at 479M free, qemu at 0 CPU
+  ticks and no SSH banner). **Options:** (a) `-qmp unix:$dir/qmp,server,nowait` at launch,
   `status_box` reports `query-status`, `stop_box` sends `cont` before the
   poweroff and `quit` on `-f`; (b) `werror=report` on the drive so the guest
   gets EIO and keeps running; (c) document the limit. **Default if nothing
