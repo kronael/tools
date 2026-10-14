@@ -567,6 +567,14 @@
   No proposal: each is a way around the gate an agent has to choose, and a
   shell parser is the wrong size for a hook.
 
+- **GH-GATE-REST-CREATE-UNCHECKED** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-14. `POSTS` in `hooks/gh_text_lint.py` matches a `gh api` call on
+  `pulls/<N>` or `issues/<N>` but not the create routes, so `gh api -X POST
+  repos/<o>/<r>/issues -f body=…` and `… /pulls -f body=…` post a body the
+  lint never sees (`command_reason` returns None). **Fix:** two `POSTS`
+  entries for `API + r'\b(?:issues|pulls)(?![\w/])'`, kind by the path, body
+  required; test in `REFUSED` with a body lacking the opener.
+
 - **GH-LINT-FLAGS-RANGES-AND-FLAG-NAMES** (LOW, hooks) — CONFIRMED at HEAD
   2026-10-08. `SHORTENED` in `hooks/gh_text_lint.py` reads a git range
   `c98c2da...c1bcf64` as a shortened hash, and `MARKETING` reads the flag
