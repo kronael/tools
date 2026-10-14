@@ -96,11 +96,12 @@ lives. Newest by mtime.
 
 ## Git
 
-These override the harness on purpose — it says to branch first and to add a
-Co-Authored-By line and a "Generated with Claude Code" footer. These win.
+These override the harness on purpose — it says to branch first, to add a
+Co-Authored-By line and a "Generated with Claude Code" footer, and to end a
+PR body with the robot. These win.
 
-- Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
-  body Claude writes, the prefix of a comment or thread reply Claude posts.
+- Attribution is `🤖 ` before the first word of every PR body, issue body,
+  comment and thread reply Claude writes on GitHub, and the robot nowhere else.
   NEVER Co-Authored-By, a "Generated with Claude Code" footer, a Claude or
   claude.ai link, or a session URL — in commits, PR bodies, comments, releases.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.

@@ -139,8 +139,8 @@ def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
 
 @dataclass(frozen=True)
 class Element:
-    """One unit of a PR body: the lead, a closer, the robot, or a stray bullet
-    or paragraph, with its continuation lines joined."""
+    """One unit of a PR body: the lead, a closer, or a stray bullet or
+    paragraph, with its continuation lines joined."""
 
     line: int
     kind: str
@@ -155,11 +155,9 @@ def split_elements(prose: list[tuple[int, str]]) -> list[Element]:
         if not text:
             after_blank = True
             continue
-        starts = BULLET.match(line) or CLOSER.match(line) or text == ROBOT
+        starts = BULLET.match(line) or CLOSER.match(line)
         if out and not after_blank and not starts:
             out[-1] = replace(out[-1], text=f'{out[-1].text} {text}')
-        elif text == ROBOT:
-            out.append(Element(n, 'robot', text))
         elif BULLET.match(line):
             out.append(Element(n, 'bullet', text))
         elif CLOSER.match(line):
@@ -177,7 +175,7 @@ def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
     for n, line in enumerate(lines, 1):
         lower = line.lower()
         problems += [
-            Problem(n, f'banned attribution "{b}": the only attribution is a bare {ROBOT}')
+            Problem(n, f'banned attribution "{b}": the only attribution is the opening "{ROBOT} "')
             for b in BANNED
             if b in lower
         ]
@@ -189,24 +187,26 @@ def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
     return problems
 
 
-def lint_last_line(lines: list[str]) -> list[Problem]:
-    if lines[-1].strip() == ROBOT:
-        return []
-    return [Problem(len(lines), f'last line must be a bare {ROBOT} and nothing else')]
+def lint_opener(lines: list[str]) -> list[Problem]:
+    start = next((n for n, line in enumerate(lines, 1) if line.strip()), 1)
+    has_opener = lines[start - 1].startswith(ROBOT + ' ')
+    problems = [] if has_opener else [Problem(start, f'must start with "{ROBOT} "')]
+    for n, line in enumerate(lines, 1):
+        if line.count(ROBOT) > (1 if has_opener and n == start else 0):
+            problems.append(Problem(n, f'{ROBOT} belongs at the start only'))
+    return problems
 
 
 def lint_pr(lines: list[str]) -> list[Problem]:
     problems = []
     first = next((line for line in lines if line.strip()), '')
-    if not first.startswith(TLDR):
+    if not first.removeprefix(ROBOT + ' ').startswith(TLDR):
         problems.append(Problem(1, f'open with {TLDR} and the outcome, not a header or narrative'))
     for n, line in enumerate(lines, 1):
         if CHECKBOX.match(line):
             problems.append(Problem(n, 'checkbox: no test plan or checklist'))
         if THIS_PR.search(line):
             problems.append(Problem(n, '"this PR": name what the change does instead'))
-        if ROBOT in line and n < len(lines):
-            problems.append(Problem(n, f'{ROBOT} belongs on the last line only'))
     prose = []
     for n, line in split_prose(lines):
         if HEADER.match(line):
@@ -243,13 +243,6 @@ def lint_elements(elements: list[Element]) -> list[Problem]:
     return problems
 
 
-def lint_comment(lines: list[str]) -> list[Problem]:
-    first = next((line for line in lines if line.strip()), '')
-    if first.startswith(ROBOT + ' '):
-        return []
-    return [Problem(1, f'comment must start with "{ROBOT} "')]
-
-
 def lint_title(title: str) -> list[Problem]:
     problems = []
     if len(title) > MAX_TITLE:
@@ -267,7 +260,7 @@ def lint(
         return [Problem(0, 'empty body')]
     lines = body.split('\n')
     problems = lint_common(kind, lines, body)
-    problems += lint_comment(lines) if kind is Kind.COMMENT else lint_last_line(lines)
+    problems += lint_opener(lines)
     if kind is Kind.PR:
         problems += lint_pr(lines)
         if draft is not None and len(body) >= len(draft.rstrip()):
