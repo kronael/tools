@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.43] — 20261014
+
+> kronael v0.4.43 — qemubox sees a paused VM
+>
+> qemubox now reports a VM that qemu paused on a full host disk, and VM disks shrink when the guest frees space.
+>
+> • Paused VMs — `ls` and `status` show `paused:io-error`, and a launch into one fails at once.
+> • Stop — `qemubox stop` resumes a paused guest before its shutdown; `-f` quits qemu over QMP.
+> • Disk space — guest discards reach the overlay, and `stop` trims the guest disk.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: each VM gets a QMP socket in its owner-only state dir; the host needs `python3`.
+- `qemubox`: `ls` and `status` show `paused:<reason>`; a launch into a paused VM fails at once.
+- `qemubox stop`: resumes a paused guest, trims its disk, then powers off; `-f` quits over QMP.
+- `qemubox`: the disk passes guest discards through, so space the guest frees leaves the overlay.
+- A VM that is running now gets the socket and the discard pass-through at its next boot.
+- `BUGS.md`: guest `/etc/group` breaks when qemu stops hard soon after boot.
+
 ## [v0.4.42] — 20261014
 
 > kronael v0.4.42 — fable asks before astra, Rust keeps one path per item
