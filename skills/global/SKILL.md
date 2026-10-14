@@ -204,8 +204,8 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   execute); NEVER hand it to one sub whose work no parent reads. `fable` takes
   specs, architecture, WISDOM and skill writing, algorithmic solutions, and red
   reviews or deep audits — NEVER implementation, with one exception: a change
-  to a shared library other components import (morha `lib/`) goes to `fable`,
-  never `sonnet` or `opus`. Haiku is batch-only, NEVER a
+  to a shared library other components import (morha `lib/`) goes to `fable`
+  or `astra`, never `sonnet` or `opus`. Haiku is batch-only, NEVER a
   sub — light work goes to `sonnet` or the main thread.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.
