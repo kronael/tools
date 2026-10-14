@@ -171,7 +171,9 @@ tokio::spawn(fetch_and_process(client));
 ## Crate Organization
 - Crate-per-concern: types/, common/, clients/, engine/
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
-- Re-export key types at crate root
+- ALWAYS re-export the crate's own key types at its root — NEVER re-export another crate's items
+  (`pub use other_crate::X`, a `pub use solana_pubkey::Pubkey`): a caller depends on the crate that
+  defines `X` and imports it from there, so one item has one path and the dependency is visible.
 - When the project draws a domain/adapter boundary, keep `Serialize`/`Deserialize` on adapter-layer DTOs, not on core domain entities
 
 ## Non-Workspace Repos

@@ -192,7 +192,7 @@ def test_process_allows_safe_commands(command: str) -> None:
 
 
 ROBOT = '\U0001f916'
-GOOD_PR = f'**TL;DR:** Deploys the collector through the service list.\n\n{ROBOT}\n'
+GOOD_PR = f'{ROBOT} **TL;DR:** Deploys the collector through the service list.\n'
 
 
 def test_process_refuses_a_pr_body_that_fails_the_github_text_lint(tmp_path) -> None:

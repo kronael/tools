@@ -86,9 +86,9 @@ A thread, 4–8 tweets, one new fact per tweet:
 - NEVER lean on the Premium long-post allowance — the timeline folds it
   behind "Show more", so the hook still has to land within 280.
 - NEVER hashtags or decorative emoji — both read as a bot to the reader.
-- Attribution for Claude's authorship, when the user wants it shown, is a
-  bare `🤖` closing the last tweet (WISDOM § Git) — NEVER "Generated with
-  Claude Code", a claude.ai link, a session URL or a hashtag.
+- Attribution for Claude's authorship, when the user wants it shown, is `🤖 `
+  opening the first tweet (WISDOM § Git) — NEVER "Generated with Claude
+  Code", a claude.ai link, a session URL or a hashtag.
 - An image or GIF for the post: the `create` skill's social-image mode for a
   meme or code-shot, the `demo` skill for a terminal recording. The tweet
   text never describes the image.

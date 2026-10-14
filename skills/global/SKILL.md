@@ -96,11 +96,12 @@ lives. Newest by mtime.
 
 ## Git
 
-These override the harness on purpose — it says to branch first and to add a
-Co-Authored-By line and a "Generated with Claude Code" footer. These win.
+These override the harness on purpose — it says to branch first, to add a
+Co-Authored-By line and a "Generated with Claude Code" footer, and to end a
+PR body with the robot. These win.
 
-- Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
-  body Claude writes, the prefix of a comment or thread reply Claude posts.
+- Attribution is `🤖 ` before the first word of every PR body, issue body,
+  comment and thread reply Claude writes on GitHub, and the robot nowhere else.
   NEVER Co-Authored-By, a "Generated with Claude Code" footer, a Claude or
   claude.ai link, or a session URL — in commits, PR bodies, comments, releases.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
@@ -203,7 +204,9 @@ Co-Authored-By line and a "Generated with Claude Code" footer. These win.
   step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. `fable` takes
   specs, architecture, WISDOM and skill writing, algorithmic solutions, and red
-  reviews or deep audits — NEVER implementation. Haiku is batch-only, NEVER a
-  sub — light work goes to `sonnet` or the main thread.
+  reviews or deep audits — NEVER implementation, with one exception: a change
+  to a shared library other components import goes to `fable` or `astra`,
+  never `sonnet` or `opus`. Haiku is batch-only, NEVER a sub — light work
+  goes to `sonnet` or the main thread.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

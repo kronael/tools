@@ -15,12 +15,11 @@ ROBOT = '\U0001f916'
 FOOTER = f'{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)'
 CLOSE = 'Closes #12'
 GOOD_PR = (
-    '**TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
-    f'{CLOSE}\n\n'
-    f'{ROBOT}\n'
+    f'{ROBOT} **TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
+    f'{CLOSE}\n'
 )
 PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
-GOOD_ISSUE = f'`gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n\n{ROBOT}\n'
+GOOD_ISSUE = f'{ROBOT} `gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n'
 GOOD_COMMENT = (
     f'{ROBOT} \U0001f534 Charges `sold_qty`, the retained piece.\nFix: use the sale leg here.\n'
 )
@@ -32,12 +31,14 @@ LINT_CASES = [
     (Kind.PR, '', 'empty body'),
     (
         Kind.PR,
-        GOOD_PR.replace(ROBOT + '\n', FOOTER + '\n'),
+        GOOD_PR + FOOTER + '\n',
         'banned attribution "generated with [claude"',
     ),
-    (Kind.PR, GOOD_PR.replace(ROBOT + '\n', 'Co-Authored-By: X <x@y>\n'), 'banned attribution'),
-    (Kind.PR, GOOD_PR.replace(ROBOT + '\n', 'Done.\n'), f'last line must be a bare {ROBOT}'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, f'{ROBOT} {CLOSE}'), 'belongs on the last line'),
+    (Kind.PR, GOOD_PR + 'Co-Authored-By: X <x@y>\n', 'banned attribution'),
+    (Kind.PR, GOOD_PR.replace(f'{ROBOT} ', ''), f'must start with "{ROBOT} "'),
+    (Kind.PR, GOOD_PR.replace(f'{ROBOT} ', '') + f'\n{ROBOT}\n', f'must start with "{ROBOT} "'),
+    (Kind.PR, GOOD_PR + f'\n{ROBOT}\n', 'belongs at the start only'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'{ROBOT} {CLOSE}'), 'belongs at the start only'),
     (Kind.PR, GOOD_PR.replace('**TL;DR:**', '## Summary\n\n'), 'open with **TL;DR:**'),
     (Kind.PR, GOOD_PR.replace(CLOSE, f'## Ansible\n\n{CLOSE}'), 'header'),
     (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), 'horizontal rule'),
@@ -84,8 +85,12 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', '- [x] 3.11\n- [ ] 3.12\n\nRepro:'), None),
-    (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', f'The bot wrote "{ROBOT} nit: x".\n\nRepro:'), None),
-    (Kind.ISSUE, GOOD_ISSUE.replace(ROBOT + '\n', FOOTER + '\n'), 'banned attribution'),
+    (
+        Kind.ISSUE,
+        GOOD_ISSUE.replace('Repro:', f'The bot wrote "{ROBOT} nit: x".\n\nRepro:'),
+        'belongs at the start only',
+    ),
+    (Kind.ISSUE, GOOD_ISSUE + FOOTER + '\n', 'banned attribution'),
     (Kind.COMMENT, GOOD_COMMENT.replace(f'{ROBOT} ', ''), f'must start with "{ROBOT} "'),
     (Kind.COMMENT, '\n' + GOOD_COMMENT, None),
     (Kind.COMMENT, f'{ROBOT} Repro on 3.11.\nFails on 3.12 too.\nLog attached.\n', None),
@@ -93,6 +98,7 @@ LINT_CASES = [
     (Kind.COMMENT, f'{ROBOT} Deferred: this PR does not touch the lease.', None),
     (Kind.COMMENT, f'{ROBOT} ' + 'x' * 240, '242 chars, cap 240'),
     (Kind.COMMENT, GOOD_COMMENT + f'\n{FOOTER}', 'banned attribution'),
+    (Kind.COMMENT, GOOD_COMMENT + f'\n{ROBOT}\n', 'belongs at the start only'),
 ]
 
 
@@ -140,10 +146,11 @@ def test_lint_title(title: str, expected: str | None) -> None:
 def tree(tmp_path):
     (tmp_path / 'tmp').mkdir()
     (tmp_path / 'sub' / 'tmp').mkdir(parents=True)
-    bad = GOOD_PR.replace(ROBOT + '\n', FOOTER + '\n')
+    bad = GOOD_PR + FOOTER + '\n'
     (tmp_path / 'tmp' / 'pr-body.md').write_text(GOOD_PR, encoding='utf-8')
     (tmp_path / 'tmp' / 'pr body.md').write_text(GOOD_PR, encoding='utf-8')
     (tmp_path / 'tmp' / 'bad.md').write_text(bad, encoding='utf-8')
+    (tmp_path / 'tmp' / 'end-robot.md').write_text(GOOD_PR + f'\n{ROBOT}\n', encoding='utf-8')
     (tmp_path / 'sub' / 'tmp' / 'pr-body.md').write_text(bad, encoding='utf-8')
     (tmp_path / 'tmp' / 'latin1.md').write_bytes(b'**TL;DR:** caf\xe9 au lait.\n')
     (tmp_path / 'tmp' / 'title.txt').write_text('fix: X\n', encoding='utf-8')
@@ -176,7 +183,7 @@ ALLOWED = [
     '/usr/bin/gh pr create --title t --body-file tmp/pr-body.md',
     'gh pr create --title t --body-file "tmp/pr body.md"',
     'gh pr create --title "$(cat tmp/title.txt)" --body-file tmp/pr-body.md',
-    'gh pr create --title t --body "**TL;DR:** Says \\"done\\".\n\n' + ROBOT + '"',
+    f'gh pr create --title t --body "{ROBOT} **TL;DR:** Says \\"done\\"."',
     'gh api -X PATCH repos/o/r/pulls/176 -f body="$(cat tmp/pr-body.md)" --jq ".body | length"',
     'python3 gen.py --input tmp/review.json; gh pr create --title "fix: X" --body-file tmp/pr-body.md',
     'gh pr edit 5 --add-label bug',
@@ -198,7 +205,7 @@ ALLOWED = [
     f'gh pr comment 1 --body "{ROBOT} Deferred: this PR does not touch the lease."',
     f'gh issue comment 5 --body "{ROBOT} Repro on 3.11.\nFails on 3.12 too.\nLog attached."',
     f'gh api repos/o/r/pulls/comments/123/replies -f body="{ROBOT} Deferred: B55 names it."',
-    f'gh issue create --repo o/r --title "T" --body "$(cat <<\'EOF\'\nSymptom first.\n\n{ROBOT}\nEOF\n)"',
+    f'gh issue create --repo o/r --title "T" --body "$(cat <<\'EOF\'\n{ROBOT} Symptom first.\nEOF\n)"',
     "cat > docs/x.md <<'EOF'\nRun this:\n\ngh pr create --title t --fill\nEOF",
     'grep -c "gh pr create" transcript.jsonl',
     'git push origin abc:refs/heads/x',
@@ -214,17 +221,24 @@ REFUSED = [
         'S=tmp; gh api -X PATCH repos/o/r/pulls/176 -f body="$(cat $S/pr-body.md)"',
         'pass a literal path',
     ),
-    ('gh pr create --title "fix: X" --body "## Summary\n\nStuff.\n\n' + ROBOT + '"', 'header'),
+    (
+        f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n## Summary\n\nMore."',
+        'header',
+    ),
     (f'gh pr create --title "{"x" * 80}" --body-file tmp/pr-body.md', 'title 80 chars'),
-    ('gh pr edit 5 --body "no robot here"', 'last line must be a bare'),
-    ('gh api -X PATCH repos/o/r/pulls/176 -f body=@tmp/bad.md', 'last line must be a bare'),
+    ('gh pr edit 5 --body "no robot here"', f'must start with "{ROBOT} "'),
+    ('gh api -X PATCH repos/o/r/pulls/176 -F body=@tmp/end-robot.md', 'belongs at the start only'),
+    (
+        'gh api -X PATCH repos/o/r/pulls/176 -f body=@tmp/end-robot.md',
+        f'must start with "{ROBOT} "',
+    ),
     ('cd sub && gh pr create --title t --body-file tmp/pr-body.md', 'banned attribution'),
     (
         'gh pr create --title t --body-file tmp/pr-body.md && gh pr comment 1 --body "no robot here"',
         f'must start with "{ROBOT} "',
     ),
     ('gh pr comment 176 --body "Looks wrong to me."', f'must start with "{ROBOT} "'),
-    ('gh pr comment 176 --body-file tmp/pr-body.md', f'must start with "{ROBOT} "'),
+    ('gh pr comment 176 --body-file tmp/end-robot.md', 'belongs at the start only'),
     ('gh pr review 176 --comment --body "Looks good, ship it"', 'review submit refused'),
     (
         "gh api repos/o/r/pulls/176/reviews --method POST --input - <<'EOF'\n"
@@ -243,7 +257,7 @@ REFUSED = [
     (f'gh issue create --repo o/r --title "T" --body "Symptom.\n\n{FOOTER}"', 'banned attribution'),
     ('cd /x && gh pr comment 1 --body "$(python3 gen.py)"', 'command substitution'),
     (f'gh pr comment 1 --body "{ROBOT} Fix `x` here."', 'command substitution'),
-    ('gh api --method PATCH \\\nrepos/o/r/pulls/1 -f body="bad"', 'last line must be a bare'),
+    ('gh api --method PATCH \\\nrepos/o/r/pulls/1 -f body="bad"', f'must start with "{ROBOT} "'),
 ]
 
 
