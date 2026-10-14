@@ -567,6 +567,18 @@
   No proposal: each is a way around the gate an agent has to choose, and a
   shell parser is the wrong size for a hook.
 
+- **SETTINGS-PR-ATTRIBUTION-SAYS-LAST** (LOW, config) — proposed, needs
+  sign-off. `settings-recommended.json` sets `attribution.pr` to `"🤖"`, so
+  every session's harness reminder reads "End pull request descriptions
+  with: 🤖" while WISDOM § Git puts the robot first and the lint refuses it
+  last; WISDOM wins by precedence and the hook enforces it, at the cost of a
+  contradicting reminder in every session. **Proposal:** set `attribution.pr`
+  to `""` once a logged-in `claude -p --settings '{"attribution":{"pr":""}}'`
+  shows the reminder drops its PR line rather than falling back to the
+  `Generated with [Claude Code]` footer (unverified here: the nested probe
+  was not logged in); then `kronael/sync/reference.md` § Settings and
+  `kronael/sync/SKILL.md` step 5 name the new value. No test — config.
+
 - **GH-GATE-REST-CREATE-UNCHECKED** (LOW, hooks) — CONFIRMED at HEAD
   2026-10-14. `POSTS` in `hooks/gh_text_lint.py` matches a `gh api` call on
   `pulls/<N>` or `issues/<N>` but not the create routes, so `gh api -X POST
