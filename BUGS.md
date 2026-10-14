@@ -158,9 +158,9 @@
 - **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
   design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
   sub, while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
-  (`qemubox/qemubox:1278`) start an interactive Claude Code session on
+  (`qemubox/qemubox:1280`) start an interactive Claude Code session on
   `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
-  `qemubox/test-parity.sh:18` pin the alias in both. **Options:** (a) drop the
+  `qemubox/test-parity.sh:21` pin the alias in both. **Options:** (a) drop the
   `haiku` alias from both launchers, their usage text, qemubox's README and
   the two tests; (b) keep it as a typed model flag the rule does not govern —
   the user picks it, no skill routes to it. **Default if nothing is
@@ -895,9 +895,9 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:76,80` and `qemubox/qemubox:1276,1280` launch the
+  `dockbox/dockbox:76,80` and `qemubox/qemubox:1278,1282` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:318`, `qemubox:57,62`, `qemubox/README.md:65`) and
+  (`dockbox:318`, `qemubox:58,62`, `qemubox/README.md:66`) and
   `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
@@ -938,20 +938,20 @@
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:225-231` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:172-177`) and the guest user has
-  passwordless sudo (`:234`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:174-179`) and the guest user has
+  passwordless sudo (`:236`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:711`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:713`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:732`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1324-1330`) carries them.
+  `-nic` at `qemubox:734`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1326-1332`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -967,14 +967,14 @@
   serial tail. A stop blocked by a launch that holds the lock while it waits
   on a wedged guest gets that message, which names the wrong cause, and exits
   1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:384`) takes the lock the same way, so a check blocked for
+  `qemubox/qemubox:386`) takes the lock the same way, so a check blocked for
   180 s writes the same `ready_error` into `idle.log` and ends, where a failed
   session count retries. **Fix:** `lock_box` reports the lock wait
   itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
   `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
 
 - **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:420`) backgrounds the idle check with `&`
+  `linger_box` (`qemubox/qemubox:422`) backgrounds the idle check with `&`
   from the leaving session's shell, which runs without job control, so the
   check keeps the session's process group: a shell that sourced the script
   and called `linger_box` saw the check report that shell's PGID. `trap ''
@@ -987,7 +987,8 @@
 - **QEMUBOX-GUEST-GROUP-NOT-CRASH-SAFE** (MED, ops) — open (record only), no
   test — ops; CONFIRMED 2026-10-14 on a scratch box. `qemubox-init`
   (`dockbox/Dockerfile`, the `vm` stage) rewrites `/etc/group` on every boot
-  with `sed -i` and then appends each host group with `printf >>`. A qemu stop
+  in one loop over the host groups: for each, `sed -i` deletes its line and
+  `printf >>` appends the new one. A qemu stop
   without a guest shutdown (`qemubox stop -f`, or the escalation after the
   90 s wait) soon after boot loses the appended data but keeps the file
   size, so `/etc/group` ends in NUL bytes (28 on the scratch box). The next
@@ -998,17 +999,17 @@
   to a temp file, `sync` it, and `mv` it into place.
 
 - **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1489`) lingers like any other: after its session exits,
+  (`qemubox/qemubox:1491`) lingers like any other: after its session exits,
   `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
   seconds (default 1200), and a second `qemubox -T` in that window joins the
-  VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
+  VM and finds the earlier scratch files, while `qemubox/README.md:71-74`
   says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
   for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
   window in README § Usage. **Default if nothing is decided:** (b). No test
   — design.
 
 - **QEMUBOX-TMP-STACKED-TMPFS** (LOW, ops) — open (record only), no test —
-  ops. `setup_guest_tmp` (`qemubox/qemubox:589-592`) mounts a tmpfs over
+  ops. `setup_guest_tmp` (`qemubox/qemubox:591-594`) mounts a tmpfs over
   `/tmp` on every boot, and systemd's `tmp.mount` already mounted one there,
   so guest `/tmp` is two stacked tmpfs mounts and the first is hidden.
   Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
@@ -1017,10 +1018,10 @@
 
 - **QEMUBOX-POWEROFF-LEAVES-READY-NOT-STOPPED** (LOW, ops) — open (record
   only), no test — ops. After a guest poweroff, `leave_session` only reports
-  it (`qemubox/qemubox:451`). A later `stop_box` returns early because the VM
-  is not running (`:834`), so `ready` and `pid` stay and `stopped` (`:875`)
+  it (`qemubox/qemubox:453`). A later `stop_box` returns early because the VM
+  is not running (`:836`), so `ready` and `pid` stay and `stopped` (`:877`)
   is never written. `prune` then dates the box from the directory mtime
-  (`:1120`), not from the poweroff. **Fix:** record the stop in the poweroff
+  (`:1122`), not from the poweroff. **Fix:** record the stop in the poweroff
   branch of `leave_session`.
 
 ## bhctl
