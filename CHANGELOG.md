@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.41] — 20261014
+
+> kronael v0.4.41 — the robot opens every GitHub text
+>
+> Every PR body, issue and comment Claude posts starts with 🤖, and the gate refuses it anywhere else.
+>
+> • GitHub text — a PR body, issue, comment or reply opens with `🤖 `; the robot appears nowhere else.
+> • Gate — the hook refuses a body with the robot last or missing, and the lint names the line.
+> • Skills — pr-draft, gh-issue and tweet state the opener and override the harness's last-line robot.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Git: attribution is `🤖 ` before the first word of every GitHub text, nowhere else.
+- `hooks/gh_text_lint.py`: one opener check for PR, issue and comment; a second robot is refused.
+- `pr-draft`, `gh-issue`, `tweet`, `hooks/README.md`: the opener replaces the last-line robot.
+- WISDOM § Agents: the shared-library rule names no project.
+- `BUGS.md`: the wisdom body over its cap, REST create routes unchecked, the reminder's last robot.
+
 ## [v0.4.40] — 20261013
 
 > kronael v0.4.40 — Codex shows its limits in the footer

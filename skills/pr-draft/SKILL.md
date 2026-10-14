@@ -40,8 +40,8 @@ the body says only what they cannot.
    absence from the default head isn't proof it's free to change — and say it
    in the TL;DR. A verified-but-unfixed issue goes into the TL;DR too, never
    dropped to look clean. This file is the draft, NEVER the deliverable.
-3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, a bare `🤖`
-   as its last line. Cut until `wc -m tmp/pr-body.md` is under the cap, then
+3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, opening
+   with `🤖 ` before `**TL;DR:**`. Cut until `wc -m tmp/pr-body.md` is under the cap, then
    keep cutting while a word says what the title, the diff or the commits
    show: file lists, values, results, history, a reason a reader would guess,
    hedges, filler. Then run
@@ -52,8 +52,9 @@ the body says only what they cannot.
    § Format a program can check: the `**TL;DR:**` lead and nothing after it
    but `Closes`/`Fixes #N` lines; no bullet, header, table, rule, code block,
    checkbox, "This PR", marketing word or shortened hash; 400 chars in all;
-   the title's length and a second "and"; a bare `🤖` as the last line and
-   none of the harness footer; and that the body is shorter than the draft.
+   the title's length and a second "and"; `🤖 ` opening the body, the robot
+   nowhere else, and none of the harness footer; and that the body is shorter
+   than the draft.
    Completion criterion: the `ok:` line, which carries the size and the cut
    ratio.
 4. REVIEW-ON-WISDOM — the checks no program runs, over `tmp/pr-body.md`: every
@@ -102,13 +103,13 @@ comma list of changes — needing "and" twice means name the outcome above them.
 **Body**, under 400 chars in all (a ceiling, not a target — a one-line fix is
 one sentence):
 
-- **Lead**: `**TL;DR:**` and one to three sentences — the outcome, its cause,
-  and anything the reviewer must not miss (a wire-visible change, a known gap).
-  The only paragraph.
+- **Lead**: `🤖 **TL;DR:**` and one to three sentences — the outcome, its
+  cause, and anything the reviewer must not miss (a wire-visible change, a
+  known gap). The only paragraph. The robot opens the body and appears nowhere
+  else (WISDOM § Git): the harness reminder asks for it as the last line, and
+  its `Generated with [Claude Code]` line is the banned footer with a robot in
+  front of it; the lint and the hook refuse both.
 - **Closers**: `Closes #N` or `Fixes #N`, one line each, only when real.
-- **Last line**: a bare `🤖` (WISDOM § Git). The harness reminder's
-  `Generated with [Claude Code]` line is the banned footer with a robot in
-  front of it; the lint and the hook refuse it.
 
 NEVER in a body: a bullet, header, table, rule, checkbox, code block or image;
 "This PR"; a file list, rename or value the diff shows; a test, lint or CI
@@ -120,9 +121,7 @@ Example — generalize the shape, not the topic:
 ```
 feat(checkout): Send quote and payment events to analytics
 
-**TL;DR:** Checkout reports quote drop-off and payment outcomes to analytics, not only to server logs. Payment is read at `captured`, so a voided charge reports `pending` forever.
+🤖 **TL;DR:** Checkout reports quote drop-off and payment outcomes to analytics, not only to server logs. Payment is read at `captured`, so a voided charge reports `pending` forever.
 
 Closes #212
-
-🤖
 ```

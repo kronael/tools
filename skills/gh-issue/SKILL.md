@@ -32,12 +32,12 @@ If unsure which repo, ASK — do not guess a slug.
   Include a copy-pasteable repro (curl/command) when there is one. Keep it to
   what a maintainer needs to act; cut everything else.
 - Prefer real evidence (status codes, exact response bodies, versions) over prose.
-- ALWAYS write the body to `tmp/issue-body.md` and end it with a bare `🤖`
-  line (WISDOM § Git).
+- ALWAYS write the body to `tmp/issue-body.md`, opening with `🤖 ` before the
+  first word (WISDOM § Git).
 - Then DISTILL and REVIEW-ON-WISDOM (WISDOM § Git), this section as the shape
   checklist, and run `python3 ~/.claude/hooks/gh_text_lint.py issue
-  tmp/issue-body.md` until it prints `ok:` — the bare `🤖` last line, the
-  attribution ban, the 3,000-char cap. The PreToolUse hook runs the same lint
+  tmp/issue-body.md` until it prints `ok:` — the `🤖 ` opener and no robot
+  elsewhere, the attribution ban, the 3,000-char cap. The PreToolUse hook runs the same lint
   on `gh issue create` and refuses a body that fails or that it cannot read.
   Completion criterion before § 3: the `ok:` line, and a `Review changed:`
   line naming what the review changed.

@@ -2,6 +2,15 @@
 
 ## Bundle
 
+- **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
+  2026-10-14. `make skills-frontmatter` warns `skills/global/SKILL.md:
+  [skill-length] body is 206 lines (> 200)`; the body passed 200 with the
+  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3) and the warn is
+  not a failure, so every commit carries it. **Fix:** push a section's
+  overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
+  body), after a subtraction pass over the always-loaded rules; no test —
+  the lint already reports it.
+
 - **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
   `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
@@ -557,6 +566,26 @@
   `g=gh; $g pr create ...` and `xargs gh pr create` post without a check.
   No proposal: each is a way around the gate an agent has to choose, and a
   shell parser is the wrong size for a hook.
+
+- **SETTINGS-PR-ATTRIBUTION-SAYS-LAST** (LOW, config) — proposed, needs
+  sign-off. `settings-recommended.json` sets `attribution.pr` to `"🤖"`, so
+  every session's harness reminder reads "End pull request descriptions
+  with: 🤖" while WISDOM § Git puts the robot first and the lint refuses it
+  last; WISDOM wins by precedence and the hook enforces it, at the cost of a
+  contradicting reminder in every session. **Proposal:** set `attribution.pr`
+  to `""` once a logged-in `claude -p --settings '{"attribution":{"pr":""}}'`
+  shows the reminder drops its PR line rather than falling back to the
+  `Generated with [Claude Code]` footer (unverified here: the nested probe
+  was not logged in); then `kronael/sync/reference.md` § Settings and
+  `kronael/sync/SKILL.md` step 5 name the new value. No test — config.
+
+- **GH-GATE-REST-CREATE-UNCHECKED** (LOW, hooks) — CONFIRMED at HEAD
+  2026-10-14. `POSTS` in `hooks/gh_text_lint.py` matches a `gh api` call on
+  `pulls/<N>` or `issues/<N>` but not the create routes, so `gh api -X POST
+  repos/<o>/<r>/issues -f body=…` and `… /pulls -f body=…` post a body the
+  lint never sees (`command_reason` returns None). **Fix:** two `POSTS`
+  entries for `API + r'\b(?:issues|pulls)(?![\w/])'`, kind by the path, body
+  required; test in `REFUSED` with a body lacking the opener.
 
 - **GH-LINT-FLAGS-RANGES-AND-FLAG-NAMES** (LOW, hooks) — CONFIRMED at HEAD
   2026-10-08. `SHORTENED` in `hooks/gh_text_lint.py` reads a git range
