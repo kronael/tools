@@ -31,11 +31,11 @@ System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils openssh-client tar libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 libarchive-tools e2fsprogs docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base openssh tar libarchive e2fsprogs docker
+sudo pacman -S qemu-base openssh tar python libarchive e2fsprogs docker
 # Fedora
-sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
 ```
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
@@ -115,16 +115,27 @@ a timeout prints the serial log tail. HUP and TERM remove the session marker.
 Dead host PID markers are removed under the lock. A failed marker listing
 keeps the VM up and reports an error.
 
-`qemubox stop <name>` powers a running VM off and keeps its disk: it asks
-the guest to shut down and waits up to 90 s, then sends qemu SIGTERM and,
-10 s later, SIGKILL, printing a line before each wait. `-f` skips the guest
-shutdown and signals qemu at once. Both take the VM lock, so a session that
+`qemubox stop <name>` powers a running VM off and keeps its disk: it resumes
+a paused guest, runs `fstrim /` in the guest, asks it to shut down and waits
+up to 90 s, then asks qemu to quit over QMP and, 10 s later, sends SIGKILL,
+printing a line before each wait. `-f` skips the guest shutdown and stops qemu
+at once. A VM booted before qemubox opened a QMP socket gets SIGTERM in place
+of the quit. Both take the VM lock, so a session that
 holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
 match as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
 space allocated on the host (both sizes in KiB); a VM waiting out
-`QEMUBOX_LINGER` is `running idle`. `rm` accepts several names
+`QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails,
+as when the host filesystem under the overlay fills. `ls` and `status` then
+show `paused:` and qemu's reason, such as `paused:io-error`, and a launch into
+that VM fails with that state rather than waiting. Free host space, then
+`qemubox stop` it. Each VM has a QMP control socket, `qmp` in its state dir.
+The state dir is owner-only.
+
+The overlay passes guest discards through, and `stop` trims the guest disk,
+so space freed in the guest leaves the overlay on the host. A guest that
+powers itself off skips the trim; the next `stop` does it. `rm` accepts several names
 or globs, with or without the `qemubox-` prefix, and fails if removal fails.
 `prune [hours]` removes stopped VMs after that many hours (default 2160).
 Running VMs with no sessions stop after four hours since readiness; their disks
