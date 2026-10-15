@@ -31,7 +31,7 @@ Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ 
 
 Before every final answer, re-read `~/.claude/output-styles/caveman.md` and apply its Budget and Shape.
 Tool calls, resumed sessions, and context compaction do not turn this style off.
-Keep the active surface format and any stricter response budget.
+Keep the active surface format. Preserve any stricter response budget.
 
 ## Language: ASD-STE100 Simplified Technical English
 
