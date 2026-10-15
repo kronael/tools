@@ -773,8 +773,7 @@ mount_host_paths() {
     for i in "${!mount_tags[@]}"; do
         tag="${mount_tags[$i]}"
         dest="${mount_dests[$i]}"
-        # cache=mmap: SQLite WAL needs a shared mmap of its -shm file
-        opts="trans=virtio,version=9p2000.L,msize=104857600,cache=mmap"
+        opts="trans=virtio,version=9p2000.L,msize=104857600"
         [ "${mount_modes[$i]}" = ro ] && opts="$opts,ro"
         setup_mount_path "$name" "$dest"
         ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
@@ -1523,7 +1522,8 @@ done
 }
 enter_session
 env_file="/dev/shm/qemubox-env.$sid"
-envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target)
+envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target
+    CODEX_SQLITE_HOME=/tmp/codex-sqlite)
 send_envs
 
 for warning in "${warnings[@]}"; do
