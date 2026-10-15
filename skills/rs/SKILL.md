@@ -21,7 +21,7 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
   gets a top-of-file `use` and reads bare. A rare std or external item may
   stay a full inline path (`std::time::Duration`). A rare item of this crate
   goes through its imported module: `use crate::store;` then `store::open(..)`.
-  NEVER `crate::` inside a body, and NEVER a generic prefix (`types::`,
+  NEVER `crate::` inside a body (a macro body needs `$crate::` paths; that is the exception), and NEVER a generic prefix (`types::`,
   `args::`, `accounts::`) that hides which module is meant; keep a prefix only
   where it carries meaning (`postgres::connect` beside `redis::connect`).
 - Keep files small enough to hold in one mental context; small files + uniform
