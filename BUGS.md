@@ -89,7 +89,10 @@
   the parent plan, and `skills/ship/SKILL.md:113` sends a step to `opus` when
   the plan leaves a design call open. `skills/fable/SKILL.md:12` sends every
   spec, architecture or skill text to `fable`, while `:19` forbids `fable`
-  whenever `opus` can do the work, which covers an ordinary spec. **Options:**
+  whenever `opus` can do the work, which covers an ordinary spec. `:210-211`
+  of the global file sends a project's own library to an `opus` plan, then
+  `sonnet` or `opus` steps, an `opus` step that its own `:203-204` rules out.
+  **Options:**
   (a) WISDOM names the parent-plans and `opus`-step exceptions, and `fable`
   `:19` exempts the tasks `:11-14` list; (b) the skills drop the exceptions.
   **Default if nothing is decided:** (a). No test — skill text.

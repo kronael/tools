@@ -25,6 +25,11 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
   `use` it everywhere it's common — do NOT scatter bare `Arc` in some files and
   `std::sync::Arc::...` full paths in others. Reduces import churn + makes every
   file read the same way.
+- Prefer a `use` of the item (written bare) or its full path over a partial
+  module path such as `types::RetryPolicy`: a generic prefix (`types`,
+  `args`, `accounts`) makes the reader look up which one is meant. Keep a
+  short prefix only where it carries meaning the bare name loses, for example
+  the backend in `postgres::connect` beside `redis::connect`.
 - Keep files small enough to hold in one mental context; small files + uniform
   imports make any file quick to reason about. Split a file that outgrows that.
 
