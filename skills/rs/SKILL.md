@@ -30,6 +30,9 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
   `args`, `accounts`) makes the reader look up which one is meant. Keep a
   short prefix only where it carries meaning the bare name loses, for example
   the backend in `postgres::connect` beside `redis::connect`.
+- In a function body, NEVER call through a long `crate::a::b::f(...)` path:
+  `use` the item at the top and call it bare or with its meaningful prefix. An
+  inline full path stays only for a std item used once.
 - Keep files small enough to hold in one mental context; small files + uniform
   imports make any file quick to reason about. Split a file that outgrows that.
 
