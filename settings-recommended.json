@@ -36,6 +36,18 @@
     "defaultMode": "default"
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/style_nudge.py",
+            "timeout": 500
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
@@ -121,11 +133,6 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/memory_nudge.py",
-            "timeout": 500
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/style_nudge.py",
             "timeout": 500
           }
         ]

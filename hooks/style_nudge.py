@@ -26,9 +26,7 @@ def read_reminder(home: Path) -> str | None:
 
 
 def output_for(event: str, reminder: str) -> dict | None:
-    if event == 'PreCompact':
-        return {'ok': True, 'systemMessage': reminder}
-    if event in {'UserPromptSubmit', 'PostToolUse'}:
+    if event in {'UserPromptSubmit', 'PostToolUse', 'SessionStart'}:
         return {
             'hookSpecificOutput': {
                 'hookEventName': event,

@@ -44,11 +44,20 @@ def test_context_events_reach_the_model(event: str) -> None:
     }
 
 
-def test_precompact_uses_the_supported_system_message_shape() -> None:
-    assert output_for('PreCompact', 'style') == {'ok': True, 'systemMessage': 'style'}
+def test_compaction_uses_session_start_context() -> None:
+    assert output_for('SessionStart', 'style') == {
+        'hookSpecificOutput': {
+            'hookEventName': 'SessionStart',
+            'additionalContext': 'style',
+        }
+    }
 
 
-@pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse', 'PreCompact'])
+def test_precompact_emits_no_discarded_context() -> None:
+    assert output_for('PreCompact', 'style') is None
+
+
+@pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse', 'SessionStart'])
 def test_installed_hook_emits_on_each_lifecycle_path(monkeypatch, capsys, tmp_path: Path, event: str) -> None:
     install_style(tmp_path)
     output = run(monkeypatch, capsys, tmp_path, event)
@@ -69,6 +78,12 @@ def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
 
     settings = json.loads((root / 'settings-recommended.json').read_text())
     hooks = settings['hooks']
-    for event in 'UserPromptSubmit', 'PostToolUse', 'PreCompact':
+    for event in 'UserPromptSubmit', 'PostToolUse':
         commands = [hook['command'] for group in hooks[event] for hook in group['hooks']]
         assert 'python3 ~/.claude/hooks/style_nudge.py' in commands
+    compact = [group for group in hooks['SessionStart'] if group['matcher'] == 'compact']
+    assert len(compact) == 1
+    commands = [hook['command'] for hook in compact[0]['hooks']]
+    assert 'python3 ~/.claude/hooks/style_nudge.py' in commands
+    precompact = [hook['command'] for group in hooks['PreCompact'] for hook in group['hooks']]
+    assert 'python3 ~/.claude/hooks/style_nudge.py' not in precompact
