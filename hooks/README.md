@@ -38,6 +38,10 @@ with its own maintenance.
 When caveman is selected, this hook renders the canonical `Budget` and `Shape`
 sections from `output-styles/caveman.md`. It adds that reminder through
 `UserPromptSubmit`, `PostToolUse`, and `SessionStart` with the `compact` matcher.
+On `Stop`, it requests one same-query revision after a declared character
+budget overrun. A style without that declaration gets one Budget and Shape
+self-check. Empty output and the revision Stop stay silent. This feedback does
+not change a message already delivered through `reply` or `send`.
 Recommended settings wire these events; install them through the normal bundle
 sync.
 

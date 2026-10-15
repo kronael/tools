@@ -20,9 +20,10 @@ def install_style(home: Path, selected: str = 'caveman') -> None:
     )
 
 
-def run(monkeypatch, capsys, home: Path, event: str) -> dict | None:
+def run(monkeypatch, capsys, home: Path, event: str, **data) -> dict | None:
     monkeypatch.setenv('HOME', str(home))
-    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps({'hook_event_name': event})))
+    payload = {'hook_event_name': event, **data}
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
     main()
     text = capsys.readouterr().out.strip()
     return json.loads(text) if text else None
@@ -44,13 +45,15 @@ def test_reader_is_silent_for_another_selected_style(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse'])
 def test_context_events_reach_the_model(event: str) -> None:
-    assert output_for(event, 'style') == {
+    rendered = {'text': 'style', 'characterBudget': None}
+    assert output_for(event, rendered, {}) == {
         'hookSpecificOutput': {'hookEventName': event, 'additionalContext': 'style'}
     }
 
 
 def test_compaction_uses_session_start_context() -> None:
-    assert output_for('SessionStart', 'style') == {
+    rendered = {'text': 'style', 'characterBudget': None}
+    assert output_for('SessionStart', rendered, {}) == {
         'hookSpecificOutput': {
             'hookEventName': 'SessionStart',
             'additionalContext': 'style',
@@ -59,7 +62,86 @@ def test_compaction_uses_session_start_context() -> None:
 
 
 def test_precompact_emits_no_discarded_context() -> None:
-    assert output_for('PreCompact', 'style') is None
+    assert output_for('PreCompact', {'text': 'style'}, {}) is None
+
+
+def test_stop_requests_one_revision_after_an_actual_overrun() -> None:
+    rendered = {
+        'text': 'style',
+        'characterBudget': 20,
+    }
+    output = output_for(
+        'Stop',
+        rendered,
+        {'last_assistant_message': 'This answer is longer than twenty characters.'},
+    )
+    context = output['hookSpecificOutput']['additionalContext']
+    assert '20' in context
+    assert 'Revise only the final answer.' in context
+
+
+def test_stop_accepts_text_within_the_declared_budget() -> None:
+    rendered = {
+        'text': 'style',
+        'characterBudget': 20,
+    }
+    assert (
+        output_for(
+            'Stop',
+            rendered,
+            {'last_assistant_message': 'Within budget.'},
+        )
+        is None
+    )
+
+
+def test_stop_active_bounds_feedback_to_one_revision() -> None:
+    rendered = {
+        'text': 'style',
+        'characterBudget': 5,
+    }
+    assert (
+        output_for(
+            'Stop',
+            rendered,
+            {
+                'last_assistant_message': 'This answer exceeds the budget.',
+                'stop_hook_active': True,
+            },
+        )
+        is None
+    )
+
+
+def test_stop_uses_the_canonical_self_check_without_a_character_budget(
+    monkeypatch, capsys, tmp_path: Path
+) -> None:
+    install_style(tmp_path)
+    output = run(
+        monkeypatch,
+        capsys,
+        tmp_path,
+        'Stop',
+        last_assistant_message='A useful answer.',
+    )
+    context = output['hookSpecificOutput']['additionalContext']
+    assert '## Budget — chat only' in context
+    assert '## Shape — chat only' in context
+
+
+@pytest.mark.parametrize(
+    'data',
+    [
+        {'last_assistant_message': ''},
+        {'last_assistant_message': '<think>silent</think>'},
+        {'last_assistant_message': 'too long to accept', 'stop_hook_active': True},
+    ],
+)
+def test_stop_skips_empty_silent_and_second_attempts(
+    monkeypatch, capsys, tmp_path: Path, data: dict
+) -> None:
+    install_style(tmp_path)
+    assert run(monkeypatch, capsys, tmp_path, 'Stop', **data) is None
 
 
 @pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse', 'SessionStart'])
@@ -111,3 +193,5 @@ def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
     assert 'python3 ~/.claude/hooks/style_nudge.py' in commands
     precompact = [hook['command'] for group in hooks['PreCompact'] for hook in group['hooks']]
     assert 'python3 ~/.claude/hooks/style_nudge.py' not in precompact
+    stop = [hook['command'] for group in hooks['Stop'] for hook in group['hooks']]
+    assert stop.count('python3 ~/.claude/hooks/style_nudge.py') == 1

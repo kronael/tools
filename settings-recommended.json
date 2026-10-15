@@ -112,6 +112,11 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/memory_nudge.py",
             "timeout": 500
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/style_nudge.py",
+            "timeout": 500
           }
         ]
       }

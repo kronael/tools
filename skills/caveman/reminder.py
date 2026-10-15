@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 STYLE_NAME = 'caveman'
+SILENT_BLOCK = re.compile(r'<(?:status|think)>[\s\S]*?</(?:status|think)>')
 
 
 def section(raw: str, heading: str) -> str | None:
@@ -58,16 +59,51 @@ def render_reminder(home: Path, portable: bool = True) -> dict[str, str | int | 
     }
 
 
+def render_feedback(rendered: dict[str, str | int | None], data: object) -> str | None:
+    if not isinstance(data, dict) or data.get('stop_hook_active'):
+        return None
+    message = data.get('last_assistant_message')
+    if not isinstance(message, str):
+        return None
+    visible = SILENT_BLOCK.sub('', message).strip()
+    if not visible:
+        return None
+
+    budget = rendered['characterBudget']
+    if isinstance(budget, int):
+        if len(visible) <= budget:
+            return None
+        check = f'The answer has {len(visible)} characters. The selected budget is {budget}.'
+    else:
+        check = 'Check the answer against the canonical Budget and Shape rules:\n' + str(
+            rendered['text']
+        )
+    return (
+        '<caveman-feedback>\n'
+        + check
+        + '\nRevise only the final answer. Keep its material evidence, conclusions, '
+        'and uncertainty. Do not repeat tool calls, external actions, or status '
+        'updates. Return only the revised final answer.\n</caveman-feedback>'
+    )
+
+
 def main() -> None:
     portable = '--always' not in sys.argv[1:]
     as_json = '--json' in sys.argv[1:]
-    args = [arg for arg in sys.argv[1:] if arg not in {'--always', '--json'}]
+    feedback = '--feedback' in sys.argv[1:]
+    args = [arg for arg in sys.argv[1:] if arg not in {'--always', '--feedback', '--json'}]
     home = Path(args[0]) if args else Path.home()
     try:
         rendered = render_reminder(home, portable)
+        if feedback and rendered:
+            rendered_feedback = render_feedback(rendered, json.load(sys.stdin))
     except (json.JSONDecodeError, OSError, TypeError, ValueError):  # fmt: skip
         return
     if not rendered:
+        return
+    if feedback:
+        if rendered_feedback:
+            sys.stdout.write(rendered_feedback + '\n')
         return
     sys.stdout.write(json.dumps(rendered) if as_json else str(rendered['text']))
     sys.stdout.write('\n')

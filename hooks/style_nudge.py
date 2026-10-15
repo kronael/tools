@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from __future__ import annotations
 
 import json
@@ -18,12 +17,22 @@ def read_reminder(home: Path, portable: bool = True) -> str | None:
     return rendered['text'] if rendered else None
 
 
-def output_for(event: str, reminder: str) -> dict | None:
+def output_for(event: str, rendered: dict, data: dict) -> dict | None:
+    if event == 'Stop':
+        feedback = MODULE['render_feedback'](rendered, data)
+        if not feedback:
+            return None
+        return {
+            'hookSpecificOutput': {
+                'hookEventName': event,
+                'additionalContext': feedback,
+            }
+        }
     if event in {'UserPromptSubmit', 'PostToolUse', 'SessionStart'}:
         return {
             'hookSpecificOutput': {
                 'hookEventName': event,
-                'additionalContext': reminder,
+                'additionalContext': rendered['text'],
             }
         }
     return None
@@ -35,10 +44,10 @@ def main() -> None:
         if not isinstance(data, dict):
             return
         home = Path(os.environ.get('HOME', '')).expanduser()
-        reminder = read_reminder(home)
-        if not reminder:
+        rendered = MODULE['render_reminder'](home)
+        if not rendered:
             return
-        output = output_for(hook_event(data), reminder)
+        output = output_for(hook_event(data), rendered, data)
         if output:
             print(json.dumps(output))
     except (json.JSONDecodeError, OSError, TypeError, ValueError):
