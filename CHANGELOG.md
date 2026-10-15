@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.44] — 20261015
+
+> kronael v0.4.44 — only shared libraries go to fable, Rust imports stay bare
+>
+> Two rules: only a globally shared library goes to fable, and Rust code imports an item or writes its full path.
+>
+> • Agents — fable takes a library other repos import; a project's own crate gets the regular path.
+> • Rust — `use` the item bare or write its full path, never a partial one like `types::X`.
+> • Rust — a short module prefix stays only where it carries meaning the bare name loses.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: only a library other repositories or teams import goes to `fable` or `astra`.
+- WISDOM § Agents: a project's own library takes an `opus` plan, then `sonnet` or `opus` steps.
+- `rs`: prefer a `use` of the item or its full path over a partial module path such as `types::X`.
+- `rs`: keep a short module prefix only where it carries meaning the bare name loses.
+
 ## [v0.4.43] — 20261014
 
 > kronael v0.4.43 — qemubox sees a paused VM
