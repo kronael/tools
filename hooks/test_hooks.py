@@ -117,16 +117,16 @@ class HooksTestSuite:
         print('\n[nudge.py Keyword Routing]')
         print('-' * 70)
         self.test(
-            "nudge.py - 'improve code' → @improve",
+            "nudge.py - 'improve code' → /improve",
             'nudge.py',
             json.dumps({'prompt': 'improve code'}),
-            expect_output='@improve',
+            expect_output='/improve',
         )
         self.test(
-            "nudge.py - 'visual' → @visual",
+            "nudge.py - 'visual' → /visual",
             'nudge.py',
             json.dumps({'prompt': 'visual'}),
-            expect_output='@visual',
+            expect_output='/visual',
         )
         self.test(
             "nudge.py - 'ship' → /ship",
@@ -147,10 +147,10 @@ class HooksTestSuite:
             expect_output='Commit rules',
         )
         self.test(
-            "nudge.py - 'readme' → @readme",
+            "nudge.py - 'readme' → /readme",
             'nudge.py',
             json.dumps({'prompt': 'write readme'}),
-            expect_output='@readme',
+            expect_output='/readme',
         )
 
         print('\n[local.py Negation Handling]')

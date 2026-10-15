@@ -60,11 +60,13 @@ code extension and still carries every claim the reviewer will trust.
    live WISDOM that govern it — NEVER a frozen checklist. A validation gate a
    lens names that the test target misses (a typecheck) runs once the lens is
    read, and again at step 10. ALWAYS seed the correctness lenses from
-   **Confessed defaults**. Tag each lens `simplify` (reuse, dead code,
+   `defaults.md`. Tag each lens `simplify` (reuse, dead code,
    minimisation, a new path grown beside an old one the change should have
    changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
-   recurring contexts and what each one's sub must be handed.
+   recurring contexts and what each one's sub must be handed; `py.md`, `ts.md`
+   and `tsx.md` carry the per-language lenses, `software.md` the `code.md` lens
+   every code context reads.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
 
@@ -82,10 +84,9 @@ code extension and still carries every claim the reviewer will trust.
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Launch each with `subagent_type` set by the context's heaviest tag:
-   `simplify` → `sonnet`, `correctness` → `opus` (`fable` under `/release`,
-   `opus` when fable cannot run) — NEVER `model=`, which leaves the effort to
-   the parent. A context whose lenses carry no tag (a document context) runs
-   as `correctness`. The subs report
+   `simplify` → `sonnet`, `correctness` → `opus` — NEVER `model=`, which
+   leaves the effort to the parent. A context whose lenses carry no tag (a
+   document context) runs as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
    files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
@@ -103,9 +104,10 @@ code extension and still carries every claim the reviewer will trust.
 8. **Triage and apply** — DROP a finding that adds an abstraction, targets
    unused code (grep first), conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (`software/code.md` § System changes); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest with serial
-   `Task(agent="improve")`, one context at a time, briefed from `brief.md`.
+   (WISDOM § System-change discipline); NEVER build one without sign-off.
+   Apply a finding only if the result is simpler. Apply the rest serially, one
+   context at a time, briefed from `brief.md`: `simplify` →
+   `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.
@@ -118,9 +120,10 @@ code extension and still carries every claim the reviewer will trust.
    → every acceptance command in the diff has been run in this turn and its
    coverage checked against a second query.
 
-10. **Document and commit** — `Task(agent="readme")` with what changed, one line
-    per file; it reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where
-    the project keeps them, against what the code now does. ALWAYS push every
+10. **Document and commit** — `Agent(subagent_type="readme")` told to read the
+    `readme` skill's `sync.md`, with what changed, one line per file; it
+    reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where the project
+    keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
     number left standing in a second file is the next pass's false premise.
     Then final build and test, and `Skill(commit, "refa: Apply refinements")`
@@ -129,54 +132,41 @@ code extension and still carries every claim the reviewer will trust.
 
 11. **Close** — `git log --format='%an %s%n%b'` over the range: conventional
     subjects ≤72 characters, one logical change each, NO `Co-Authored-By`
-    trailer, detached HEAD. ALWAYS do this before any push — afterwards amend,
-    squash and force-push are all barred and the violation is permanent. Reply
+    trailer, detached HEAD. ALWAYS do this before any push — a pushed
+    violation is permanent, and WISDOM § Git bans amend, force-push and a
+    squash of a pushed commit. Reply
     to each step-5 WON'T-FIX thread, and each FIX that step 8 deferred, with the
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
     here: list each with its thread id and fix SHA, and show the PR's own head
-    refspec, `git push origin <fix-sha>:refs/heads/<headRefName>`; resolve and
+    refspec, `ghpush <fix-sha>:refs/heads/<headRefName>`; resolve and
     request re-review through `gh-comment` once that push lands. A bot-authored
     thread resolves once replied (`gh-comment` § Resolve a thread). ONLY threads
-    addressed this pass. `git worktree remove --force` each stale Claude-managed
-    worktree under `.claude/worktrees/`; NEVER touch a worktree elsewhere. Then a
+    addressed this pass. Then the worktrees: one this run created goes by
+    `worktree` (reconciled, then removed). For the rest, `git fetch --all`;
+    an entry of `git worktree list` after the first (the main tree) is
+    integrated only when `git branch -r --contains <its HEAD>` prints a ref
+    AND `git -C <path> status --porcelain` prints nothing — `git worktree
+    remove <path>` those, then `git worktree prune`. Every other one is
+    unfinished work, this session's or another's: it stays, listed by path
+    and reason. NEVER `--force` past a refusal, and NEVER read age or a dead
+    lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
-    from here and why, and each step-1 instruction's outcome. NEVER `git push`
-    without the user's ask, and NEVER `gh pr merge`, `gh pr review` or
-    `gh pr create`.
+    from here and why, and each step-1 instruction's outcome. NEVER push by
+    any command (`git push`, `ghpush`) without the user's ask (WISDOM § Git),
+    and NEVER `gh pr merge` or `gh pr review`. The closing report follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
-    and every fixed one listed, and no stale `.claude/worktrees/` entry remains.
+    and every fixed one listed, and every worktree left is named with its
+    reason.
 
 Pass every agent `Intent:` (the user's original words), `Primary:` (files
 to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
 
-## Confessed defaults — hunt these first
-
-Asked in isolation, models name these as their own defaults while being able to
-recite the rule against each. Knowing a rule and following it differ; this is
-where the gap shows.
-
-- **Errors** — a broad catch that logs and continues; a fallback `None`/`[]`/`0`
-  letting callers proceed on bad data; graceful degradation where crashing is
-  cheaper than corrupted output; a guard on a path the caller already
-  guarantees; a second logging or helper path because the first was never
-  grepped for.
-- **Scope** — adjacent code tidied unasked; the reported instance patched while
-  sibling cases that fail the same way are left.
-- **Tests** — mocks stacked until the test proves nothing; the assertion edited
-  when a broken test is annoying; a guessed test command reported green.
-- **Comments** — a comment above almost every block, half restating the code;
-  docstrings added reflexively to a repo that has none; verbose names where the
-  repo is terse.
-- **Reporting** — done declared on a green run without exercising the path; a
-  partial result softened into language that reads complete; a subagent's
-  summary repeated without opening its diff.
-
 ## Review Checklist
 
 - ALWAYS scale to the change: tens of lines or three assertions → inline, 1-2
-  lenses; NEVER fan out agents over a ~40-line diff — except under `/release`,
-  which runs the full pass whatever the size (release step 1.5).
+  lenses; NEVER fan out agents over a ~40-line diff. Under `/release` the
+  first pass sets the size (release step 1.5).
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
 - NEVER read an empty result as a finding until that same query has produced a
@@ -192,8 +182,9 @@ where the gap shows.
   target exports; a bare invocation's errors belong to the invocation.
 - ALWAYS open the diff behind a subagent's report before acting on it, and
   NEVER report a sub as running without the `agentId` its launch returned.
-- ALWAYS delegate the edit to the improve agent; NEVER do the improvement work
-  in main context.
+- ALWAYS delegate the edit to a subagent carrying the `improve` skill; NEVER do
+  the improvement work in main context, and NEVER launch a sub through a
+  `claude` CLI call from Bash — the Agent tool only.
 - NEVER edit a file while a sub is reading it, and NEVER run two writing subs on
   one tree.
 - ALWAYS route a critique, plan or creative second opinion to `oracle` instead.

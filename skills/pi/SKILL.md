@@ -10,13 +10,12 @@ user-invocable: true
 Runs `pi -p` as a subprocess for a one-shot second opinion. `pi` is the Pi
 coding agent (badlogic/earendil, `pi.dev`) — same shape as codex: one binary,
 agent loop, its own tools (read/bash/edit/write). Methodology + citations:
-`docs/pi/research-pi.md`.
+`docs/pi/research-pi.md` in the bundle source repo.
 
 Why alongside `/astra`: pi answers from a **different model** than this Claude
-harness (its default here is `codex-serve/gpt-5.5`; configurable to
-Gemini/GPT/Claude), so it's a real second opinion. Use it to cross-check Astra
-or when you want a non-Claude view. NEVER use a raw `Agent(...)` for a second
-opinion — use this skill or `/astra`.
+harness (configurable to Gemini/GPT/Claude), so it's a real second opinion.
+Use it to cross-check Astra or when you want a non-Claude view. NEVER use a raw
+`Agent(...)` for a second opinion — use this skill or `/astra`.
 
 ## Invoke
 
@@ -47,7 +46,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 ## Model — newest available, high effort
 
 - Discover with `pi --list-models`; it prints the providers/models the current
-  auth can reach (here: `claude-serve` haiku/sonnet + a `codex-serve` gpt model).
+  auth can reach.
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
   strongest configured model. Add `--thinking high` (or `xhigh`) for max reasoning.
@@ -62,7 +61,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 pi has NO non-interactive `login status` (unlike codex). Two working paths:
 
 - **Subscription login** — cached in `~/.pi/agent/settings.json` (Claude Pro /
-  ChatGPT Plus / Copilot via `codex-serve`/`claude-serve`). Presence of that
+  ChatGPT Plus / Copilot, directly or through a local proxy). Presence of that
   file = probably logged in; confirm only via an actual `-p` call.
 - **BYOK env var** — `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`,
   etc., or `--api-key <key>` per run.
@@ -72,28 +71,13 @@ once and `/login`. ALWAYS report "pi isn't configured" and continue. NEVER crash
 
 ## Rules
 
-pi is a peer agent — it has tools and sees the repo. Give it the goal and entry
-points, then let it explore. NEVER pre-chew the answer or walk it through steps.
-For open-ended tasks give a high-level goal and let pi research it.
-
-### Adversarial framing
-
-Like any model, pi is sycophantic — confirming questions get confirming answers.
-
-- ALWAYS attack your own conclusion: "Find the flaw in X", "Why would this break?"
-- NEVER ask "is X correct?" / "does this look right?" — primes a yes.
-
-### Prompt contents
-
-- ALWAYS state the goal in one line ("Goal: <X>").
-- Targeted questions: hand it entry points (file paths, symbols, error output).
-- NEVER paste your reasoning chain or conclusions — biases the second opinion.
+pi is a peer agent with tools and repo access, as codex is: `astra` § Rules
+owns the briefing rules — goal and entry points, adversarial framing, no
+reasoning chain pasted in, every claim verified before acting — and they
+apply to pi unchanged.
 
 To restrict what pi can touch (read-only-ish review): `--tools read,grep,find,ls`
 or `--no-tools`. `-a/--approve` govern project file-trust, NOT tool gating.
-
-ALWAYS verify pi's claim against the codebase before acting. Discard with a
-one-line reason if wrong; cite when acting.
 
 ## Output
 

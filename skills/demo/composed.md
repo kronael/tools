@@ -45,7 +45,7 @@ then render):
   `tmp/<name>_frames/` (a per-demo dir — two concurrent captures sharing
   `tmp/frames` clobber each other), then ffmpeg palettegen/paletteuse → gif.
 - **Mix media, keep the real parts real.** Compose stills/animation with a real
-  asciinema cast of the product running (the "germinal" pattern). The terminal is
+  asciinema cast of the product running. The terminal is
   ALWAYS the real cast; narrative beats are best as real sourced imagery (meme,
   photo) over hand-drawn Canvas. ffmpeg-concat all segments at ONE canvas size
   (record the cast at that size) so the terminal never scales/letterboxes.
@@ -79,7 +79,7 @@ tight and zoom on the specific seam/edge across a few frames spanning the
 motion range — a static-looking artifact can still change (or vanish) as
 things rotate relative to each other.
 
-The **`visual` agent** is the right tool for this iterate-render-critique loop.
+The **`visual` skill** is the right tool for this iterate-render-critique loop.
 
 ### Environment gotchas (hard-won)
 
@@ -153,14 +153,7 @@ immersion the theme built.
   not just `0..N`) and let the real proof sit between them in the compose
   script. This guarantees the closer matches the opener's grade/grain/shadow
   exactly, because it *is* the opener's asset pipeline, not a re-creation of it.
-- **A themed medium can still spell out words without breaking its rules.**
-  You don't need a photo of text to stay "in medium" — construct letters the
-  same way you'd construct any non-photographic paper piece already in the
-  rig (a flat-color cut shape + the same dark ink-edge stroke + the same
-  drop-shadow direction as everything else): render bold glyphs, colorize,
-  ink-edge the WHOLE word as one silhouette (one rim around the word, not one
-  rim per letter — six separately-inked letters read as stickers, not a sign).
-  Tying the wordmark's colors to another beat's palette (e.g. the same
-  value-ramp hex stops the terminal's tiles use) makes the payoff rhyme with
-  the proof beat instead of needing a tagline to explain the connection.
+- **A themed medium can still spell out words without breaking its rules** —
+  the wordmark is one more cut-paper piece built in the rig: `cutout.md`
+  § The closer stays in the same paper world.
 

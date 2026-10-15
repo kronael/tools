@@ -19,6 +19,10 @@ ALWAYS re-verify each finding against the CURRENT code before classifying —
 it may be stale, already-fixed, or refuted outright. Never take a finding's
 claim on faith.
 
+ALWAYS name which items are still unclear after that and wait for answers
+before implementing any one — findings are often related, so a partial
+reading produces a wrong fix to the items you did understand.
+
 - **(a) actionable code bug** — a concrete fix the diff should carry
 - **(b) design / product decision** — reverses a product choice, changes scope,
   or is a judgement call
@@ -30,7 +34,7 @@ claim on faith.
 
 Apply fixes for (a) ONE AT A TIME. For each: make the **minimal** edit that
 resolves it — no refactors, no scope creep. VERIFY in the same pass with the
-project's typecheck and tests, capturing once: `make test 2>&1 | tee test.log && tail -8 test.log`.
+project's typecheck and tests, capturing once: `make test 2>&1 | tee ./tmp/test.log && tail -8 ./tmp/test.log`.
 
 ## 4. Surface (b), never guess
 
@@ -72,7 +76,7 @@ GH review"; skip only if the user explicitly asked for code-only, no reply.
 `gh-comment` owns every disposition (§ Reply to a thread, § Resolve a thread,
 § Re-review request) — NEVER call the thread API directly from here. Reply to
 the unfixed threads now. ALWAYS show the PR's own head refspec,
-`git push origin <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
+`ghpush <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
 user's ask (WISDOM § Git). The fixed threads' resolve and the one re-review
 request run once that push has landed.
 

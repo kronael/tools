@@ -5,8 +5,8 @@ is the only thing that reaches the sub.
 
 ## Shape — goal, not steps
 
-State what the output enables, hand over the context, draw the bounds, define
-done, and let the sub choose the path. Numbered steps degrade current models.
+Brief by goal (WISDOM § Agents, `dispatch`); a refine brief carries these
+blocks:
 
 ```
 I'm <larger task> for <who>. They need <what the output enables>.
@@ -31,7 +31,7 @@ Done: <observable condition>.
 - ALWAYS demand the positive control beside any "there is no X": the same query
   returning a hit where one exists.
 - ALWAYS name the queries that lie here — the wrapped `grep` skips `.git` and
-  every gitignored path (`/.diary/`, `/BUGS.md`, `/specs/`) — use
+  every gitignored path (`/specs/`) — use
   `/usr/bin/grep` there, a failed fetch prints nothing, a bare identifier
   matches its prefixes, a grep over a projection cannot see a field you did not
   print.
@@ -46,11 +46,13 @@ A subagent's harness can carry an instruction to sign commits with a
 `Co-Authored-By` trailer, which this house forbids. The install blanks
 `attribution.commit`; this block is the backstop when a harness ignores it.
 Seven commits once landed with the trailer because two briefs omitted this
-block, and amend and squash are both barred, so the violation is permanent.
+block, and amend is barred, so the trailer stays until a `/squash` of the
+still-unpushed stack — and for good once pushed.
 
 ```
 - Conventional commits, `type(scope): Message`, subject ≤72 characters.
-- Stage by path. NEVER `git add -A`, NEVER `--amend`, NEVER `git push`.
+- Stage by path. NEVER `git add -A`, NEVER `--amend`, NEVER push by any
+  command, `git push` or `ghpush` (WISDOM § Git).
 - NEVER add a `Co-Authored-By` trailer to any commit.
 - Detached HEAD only — NEVER create or attach a local branch.
 - NEVER remove recursively; delete named files only.
@@ -64,8 +66,8 @@ block, and amend and squash are both barred, so the violation is permanent.
 - ALWAYS name the worktree, the SHA it is clean at, and the paths that are out
   of bounds — a sub that meets a dirty tree otherwise treats the changes as its
   own and commits over another agent's work.
-- ALWAYS keep writing subs serial on a shared tree; parallel belongs to
-  read-only subs and to `git worktree add --detach` isolation.
+- ALWAYS run writing subs serially — NEVER in parallel unless each has its
+  own detached worktree; parallel is for read-only subs (WISDOM § Agents).
 - ALWAYS send a correction to a running sub with `SendMessage` rather than
   editing its files behind it — and record anything durable the correction
   settles where the next session will read it, not only in the message.

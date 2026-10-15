@@ -1,6 +1,6 @@
 ---
 name: sync
-description: Sync the Kronael toolkit between this repo and ~/.claude on this host, first setup included, and bridge it into Codex. NOT for bringing the git line up to date with origin (use merge), pushing to origin (git push, gated), or vendoring skills into another project (use sync-tools-skills).
+description: Sync the Kronael toolkit between this repo and ~/.claude on this host, first setup included, and bridge it into Codex. NOT for bringing the git line up to date with origin (use merge), or pushing to origin (git push, gated).
 when_to_use: "sync kronael, sync kronael tools, sync (in this repo), /kronael:sync, install kronael, set up kronael, update kronael, ~/.claude out of date, stale or leftover skills in ~/.claude, bring ~/.claude edits back into the repo"
 ---
 
@@ -28,9 +28,9 @@ WISDOM § Git) and **merge origin** (`origin` → the repo's git line, `merge`).
   `gitCommit`, `gitDescribe`, `installedAt`) and `files`
   (`".claude/<path>": {source, source_sha256}`), the sha of each file as the
   last sync wrote it (`CLAUDE.md`: the wisdom body).
-- **keep-list** — `~/.claude/kronael-keep.txt`, the owner's list of
-  installed-only paths a sync carries over (`reference.md` § Keep-list). It
-  lives outside the bundle and NEVER enters the repo.
+- **keep-list** — `~/.claude/.keep`, the installed-only paths a sync carries
+  over (`reference.md` § Keep-list); a symlink directly in a bundle dir is kept
+  without a line. It lives outside the bundle and NEVER enters the repo.
 - **run dir** (`RUN`) — `${TMPDIR:-/tmp}/kronael-sync-<UTC stamp>/`: scratch,
   backups for steps 5-6, and `old/`, the moved-aside bundle.
 
@@ -49,12 +49,13 @@ A **first sync** = neither `~/.claude/CLAUDE.md` nor `~/.claude/skills/`
 exists. Before any write, explain sync in 2-3 lines and ask which groups to
 run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
 (default on — nothing else works without it), **Settings** (step 5),
-**External tools** (step 7 core), **CLI tools** rig/udfix + CDPATH, **dockbox**
+**External tools** (step 7 core), **CLI tools** rig/udfix/spec-lint + CDPATH, **dockbox**
 (needs Docker), **Heavy** security-audit + video, **ripwire**, and **Server memory**
 (`reference.md` § Server memory; NEVER offer when `CLAUDE_SANDBOX` is set).
 Run ONLY the opted-in groups.
 
-Every later sync skips the questionnaire but ALWAYS still runs steps 7-8 —
+Every later sync skips the questionnaire but ALWAYS still runs step 5's
+always-apply set and steps 7-8 —
 NEVER skip tools or dockbox silently; a stale binary or an un-offered dep is
 the failure. Settings still confirm before applying.
 
@@ -80,7 +81,7 @@ the failure. Settings still confirm before applying.
    `M`: `same` (I = S), `stale` (I = M, or I is a committed source version: an
    older install), `edited` (S = M: only live changed), `both` (all three
    differ), `merged` (a `both` already in the repo), `no-base` (no `M`),
-   `kept`, `shadow`, `retired` (a name the bundle dropped), `only-live` (no
+   `kept`, `shadow`, `retired` (a dropped name, unedited), `only-live` (no
    source counterpart, not kept), `junk` (caches, a session's `.claude/`).
    Exit 1 = a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line; step 3 settles each.
    Completion criterion: the class counts and every decision line printed.
@@ -112,11 +113,12 @@ the failure. Settings still confirm before applying.
    only, on the owner's explicit yes — copy it into `SRC`), or **leave** (the
    default; it ends in `RUN/old`). NEVER put an installed-only path in the repo
    without that yes — it may be an org or private skill — and NEVER drop one
-   unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line.
-   Each `SYMLINK`: the owner keeps it (keep-list, under a bundle dir) or `mv`s
-   it into `RUN`. Each `UNRESOLVED` hook path MUST be kept or unwired first: a
-   missing hook script makes `python3` exit 2, which Claude Code treats as
-   blocking — every prompt and tool call in every session fails.
+   unlisted. Each `shadow` or `BADKEEP`: the owner fixes or deletes the line,
+   or `mv`s a lineless kept symlink into `RUN`. Each `SYMLINK`: the owner makes
+   a root a real dir, keeps a nested one by a line, or `mv`s it into `RUN`.
+   Each `UNRESOLVED` hook path MUST be kept or unwired first: a missing hook
+   script makes `python3` exit 2, which Claude Code treats as blocking — every
+   prompt and tool call in every session fails.
    Completion criterion: rerun § Classify exits 0 with no `shadow` line, and
    every `only-live` line has an answer or the stated default.
 
@@ -133,36 +135,20 @@ the failure. Settings still confirm before applying.
    `same` and `kept`; manifest `gitCommit` = `git -C "$SRC" rev-parse HEAD`.
 
 5. **Merge settings.** Copy `settings.json` and `~/.claude.json` into `RUN`
-   first. Merge `settings-recommended.json` into `~/.claude/settings.json`:
-   - **Hooks block** — replace each event it names with the recommended
-     wiring (`~/.claude/hooks/*.py`).
-   - ALWAYS apply, never ask: `cleanupPeriodDays` (raise to the recommended
-     value, never lower — the 30-day default deletes transcripts at startup);
-     `outputStyle` (else the style file never activates); `attribution.commit`
-     `""` (unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER
-     `attribution: false` — versions before v2.1.281 reject it and skip the
-     whole file); `bashEditDiffEnabled` `false` (unset, `auto` and
-     `bypassPermissions` modes diff the tree around every Bash command;
-     `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it); `crossSessionInbound`
-     `"refuse"` and `isolatePeerMachines` `true` (v2.1.224+; unset, delivery
-     between sessions follows their permission class — `SendMessage` stays
-     allowed, it is also the subagent channel).
-   - **Recursive-removal deny guard** — `Bash(rm -r*)`, `Bash(rm -R*)`,
-     `Bash(rm -fr*)`, `Bash(rm --recursive*)`: ALWAYS all four, even when the
-     rest of permissions is declined. NEVER put the glob outside the parens
-     (`Bash(rm -rf /)*` matches nothing); verify the four after merging.
+   first. Apply `reference.md` § Settings — the always-apply keys, the
+   recursive-removal deny guard and the `~/.claude.json` diff keys, never
+   asked. Then merge the rest of `settings-recommended.json`:
    - **Loosen-only** — NEVER tighten the owner's posture: never flip
      `sandbox.enabled` to true, narrow `sandbox.excludedCommands`, move
-     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow`.
-     Only the deny guard, `crossSessionInbound` and `isolatePeerMachines`
-     override. An installed `deny` the source lists under `ask`: remove the
-     `deny` and add the `ask` (deny evaluates first).
+     `permissions.defaultMode` off `bypassPermissions`, or drop an `allow` or
+     `enabledPlugins` entry (add the recommended ones). Only the deny guard,
+     `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
+     replaces an installed `deny` of the same rule (deny evaluates first).
    - Rest of permissions, sandbox, env: show the diff, ask.
-   - `diffSidebarOpen` `false` and `diffTool` `"terminal"` are global config,
-     not settings keys: set them in `~/.claude.json`, keeping every other key;
-     they apply on the next start.
+   Declining the asked keys NEVER skips the always-apply set.
    Completion criterion: reading `settings.json` back shows every
-   always-apply key at its value and the four deny entries paren-closed.
+   always-apply key at its value and the four deny entries paren-closed, and
+   the differing-keys list (`reference.md` § Settings) is written down.
 
 6. **Codex bridge** — when running from Codex or asked: follow
    `reference.md` § Codex bridge, after copying
@@ -170,6 +156,8 @@ the failure. Settings still confirm before applying.
    NEVER write the Kronael block into `~/.claude/CLAUDE.md`.
    Completion criterion: `~/.codex/AGENTS.md` holds the block, the symlinks
    resolve, and `~/.codex/hooks.json` equals `codex-hooks.json`.
+   Parse `~/.codex/config.toml` as TOML and verify `tui.status_line` equals
+   the ordered array in `reference.md` § Codex bridge.
 
 7. **External tools.** `which` each; install the missing **Core** batch from
    `reference.md` § External tool commands (ask once), then ask separately for
@@ -177,8 +165,8 @@ the failure. Settings still confirm before applying.
    ask: SHOW the curl-pipe one-liner and let the user run it.
    Completion criterion: each tool is present, installed, or declined.
 
-8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig and udfix
-   always, dockbox on its own ask, from their dirs at `SRC` (else point to
+8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix and
+   spec-lint always, dockbox on its own ask, from their dirs at `SRC` (else point to
    `cd <tool> && make install` from a clone) — and write its CDPATH block into
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.
@@ -189,7 +177,9 @@ the failure. Settings still confirm before applying.
    class counts; files merged into the repo (uncommitted — the owner reviews
    and commits; push is separate) and hunks moved to `LOCAL.md`; kept paths;
    every path left in `RUN/old`, with "cleared on reboot — copy out what you
-   want now"; settings, Codex bridge, tools and CLI tools applied or skipped.
+   want now"; settings applied or skipped, with every recommended key that
+   still differs and its live value; Codex bridge, tools and CLI tools
+   applied or skipped.
    A `~/.claude/backup/` dir: sync writes nothing there — give its size and
    offer to `mv` it into `RUN`. Claude skills invoke bare (`/commit`), Codex
    ones as `@commit` after `/hooks` trust.

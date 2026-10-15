@@ -25,6 +25,6 @@ GLMakie needs a GPU/EGL context but renders headless. FFMPEG.jl backs `record` �
 - Strength: the math is right (built by the dynamical-systems research community); trivial mp4 export.
 - Limit: Julia toolchain + first-call latency; not for UI/social-styled content.
 
-Use for the arizuko coordination theme when you want provably-correct phase-space behavior (e.g. Kuramoto order-parameter dynamics, coupling-strength bifurcation).
+Use for an agent-coordination theme when you want provably-correct phase-space behavior (e.g. Kuramoto order-parameter dynamics, coupling-strength bifurcation).
 
 Sources: [DynamicalSystems.jl visualizations](https://juliadynamics.github.io/DynamicalSystems.jl/dev/visualizations/) · [Makie animations](https://docs.makie.org/stable/documentation/animation/) · [BifurcationKit.jl](https://github.com/bifurcationkit/BifurcationKit.jl)

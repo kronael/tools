@@ -4,17 +4,20 @@
 - ALWAYS read `~/.claude/CLAUDE.md` when it exists.
 - ALWAYS read every applicable `CLAUDE.md` from the project root to the current
   directory, even when `AGENTS.md` is loaded.
+- ALWAYS read the project's `.claude/CLAUDE.md` when it exists: Codex never
+  loads it, because `project_doc_fallback_filenames` entries are matched as
+  bare file names in each directory.
 - Before reading or editing a file, ALWAYS check from the project root through
   its directory for a closer `CLAUDE.md` and read it first.
 - NEVER choose between `AGENTS.md` and `CLAUDE.md`; apply both.
 
 ## Work record
 
-Plans, the ship record and critiques live in the main tree's
-`.claude/plans/` — plan mode's directory, pinned by `plansDirectory` in
-`.claude/settings.json` and ignored by the root-anchored `/.claude/plans/`
-line. ALWAYS reuse the active change's record where it is; `ship` § Work record
-owns the rule.
+Plans live in Claude Code's default `~/.claude/plans/`; the ship record and
+critiques in the project's record dir under `~/.claude/projects/`, which
+`ship` § Work record names. NEVER create `.claude/plans/`, `.ship/`, a
+`plansDirectory` setting or an ignore line for them in a repository. ALWAYS
+reuse the active change's record where it is.
 
 ## Response style
 

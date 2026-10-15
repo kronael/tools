@@ -7,15 +7,19 @@ source root) and `RUN` (the run dir) exported and `$RUN/keep.py` written
 
 ## Keep-list (steps 0, 1, 3, 4)
 
-`~/.claude/kronael-keep.txt` — one path per line, relative to `~/.claude/`,
-glob patterns allowed (`*` stays inside one path segment); a line starting
-with `#` is a comment. Each entry is an installed-only path inside one of the
-bundle dirs that the owner wants back after every sync:
+`~/.claude/.keep` — one path per line, relative to `~/.claude/`, glob
+patterns allowed (`*` stays inside one path segment); a line starting with `#`
+is a comment. Each entry is an installed-only path inside one of the bundle
+dirs that the owner wants back after every sync. A symlink that is a direct
+child of a bundle dir (`skills/<name>`, `agents/<file>`) — a `ripwire-*` skill,
+a skill linked from another checkout — is kept without a line: it points at
+work that lives elsewhere, never at bundle content. A deeper symlink no entry
+covers is not: § Classify prints `SYMLINK <path>` for it. Org skills install as
+plugins, not by the keep-list: `ARCHITECTURE.md` § Org overlays.
 
 ```text
 # installed-only paths a sync carries over; never published
 skills/acme-deploy
-skills/ripwire-*
 agents/acme-oncall.md
 ```
 
@@ -24,7 +28,10 @@ A trailing `/` is dropped. An entry that is absolute, has an empty, `.` or
 commands/` is an error: § Classify prints `BADKEEP <entry>` and exits 1, and
 § Swap refuses before it creates anything. An entry whose path the source
 also has, as a file or a dir, shadows it: § Classify prints `shadow`, § Swap
-refuses it, and the owner deletes the line.
+refuses it, and the owner deletes the line — or, for a symlink kept without
+one, `mv`s the symlink into `RUN`. While a `~/.claude/kronael-keep.txt`
+exists, `expand` stops with exit 1 and tells the owner to rename it to
+`.keep`; an unreadable `.keep` or bundle dir stops it the same way.
 
 Step 0 writes the one reader of the list; § Classify and § Swap both import
 it, so the paths Classify prints as `kept` are the paths Swap copies:
@@ -43,15 +50,20 @@ def invalid(entry):
 
 
 def expand(live):
-    """Paths under live that the keep-list names, outermost only.
+    """Paths under live that the keep-list names, plus every symlink that is a
+    direct child of a bundle dir, outermost only.
 
-    A bad entry prints BADKEEP lines and exits 1.
+    A bad entry, an unreadable list or bundle dir, or a kronael-keep.txt
+    prints the cause and exits 1.
     """
-    path = os.path.join(live, 'kronael-keep.txt')
+    path, stray = os.path.join(live, '.keep'), os.path.join(live, 'kronael-keep.txt')
+    if os.path.lexists(stray):
+        print(f'Found {stray}: sync reads only {path}; rename it')
+        sys.exit(1)
     try:
         lines = [x.strip() for x in open(path)] if os.path.isfile(path) else []
-    except OSError as e:
-        print(f'Cannot read {path}: {e.strerror}')
+    except OSError as err:
+        print(f'Cannot read {path}: {err.strerror}')
         sys.exit(1)
     entries = [x.rstrip('/') for x in lines if x and not x.startswith('#')]
     bad = [k for k in entries if invalid(k)]
@@ -59,6 +71,18 @@ def expand(live):
         print('\n'.join(f'BADKEEP {k}' for k in bad))
         sys.exit(1)
     paths = {p for k in entries for p in glob.glob(k, root_dir=live)}
+    for d in DIRS:
+        top = os.path.join(live, d)
+        if os.path.islink(top):
+            continue  # a symlinked bundle root: § Classify prints SYMLINK
+        try:
+            names = os.listdir(top)
+        except FileNotFoundError:
+            continue
+        except OSError as err:
+            print(f'Cannot read {top}: {err.strerror}')
+            sys.exit(1)
+        paths |= {f'{d}/{n}' for n in names if os.path.islink(os.path.join(top, n))}
     return sorted(p for p in paths
                   if not any(p.startswith(q + '/') for q in paths))
 
@@ -74,15 +98,18 @@ Read-only. Prints a count per class and one line per path that needs a
 decision; exits 1 on a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line. A live file
 identical to any committed version of its source path is an older install,
 not local work: it counts as `stale`. A `both` file whose three-way merge
-into the repo copy changes nothing is `merged`. A path under a name the
-bundle shipped and dropped (`RETIRED`), or a legacy nested
-`skills/<name>/<name>/` copy, is `retired`: it moves aside with the old bundle
-and needs no answer. Caches and the `.claude/` scratch a session run inside a
+into the repo copy changes nothing is `merged`. A legacy nested
+`skills/<name>/<name>/` copy, or a path under a name the bundle shipped and
+dropped (`RETIRED`) whose live bytes are a committed version of that path, is
+`retired`: it moves aside with the old bundle and needs no answer. A
+live-edited file under a `RETIRED` name is `only-live`, which step 3 asks
+about. Caches and the `.claude/` scratch a session run inside a
 bundle dir leaves are `junk`. A bundle dir the live tree lacks (a first sync,
 an older install) is skipped; a dir or file it cannot read, live or source,
 stops the run with one `Cannot read <path>` line and exit 1. A symlink is
-never read through: a bundle root that is one, or one under a bundle dir that
-the keep-list does not name, prints `SYMLINK <path>`. `UNRESOLVED` lines are
+never read through: one that is a direct child of a bundle dir is `kept`; a
+bundle root that is one, or one deeper and not under a keep-list entry,
+prints `SYMLINK <path>`. `UNRESOLVED` lines are
 settings hook commands pointing at paths the swap would drop. Scratch files
 go to `$RUN/classify/`. An empty or absent live bundle prints `no live bundle
 files`.
@@ -96,19 +123,28 @@ src, home, tmp = os.environ['SRC'], os.path.expanduser('~'), os.path.join(os.env
 live = os.path.join(home, '.claude')
 JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
-RETIRED = {  # names the bundle shipped and dropped: moved aside, never asked about
+RETIRED = {  # names the bundle shipped and dropped
     *(f'skills/{n}' for n in (
-        'bash', 'codex', 'con', 'cont', 'create-architecture-diagram', 'create-ascii-art',
+        '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'codex', 'con',
+        'cont', 'create-architecture-diagram', 'create-ascii-art', 'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
-        'create-design-md', 'create-excalidraw', 'create-humanizer', 'create-manim-video',
-        'create-p5js', 'create-popular-web-designs', 'create-pretext', 'create-sketch',
-        'create-video-render', 'create-video-script', 'doc-topology', 'docs-audit',
-        'eye-13yo', 'gh-fix', 'gh-review', 'hacker-eval', 'merge-trivial', 'onepager',
-        'python', 'research-analysis', 'resolve', 'rust', 'settle', 'software-engineering',
-        'sub', 'testing', 'typescript', 'useless',
+        'create-design-md', 'create-eval', 'create-excalidraw', 'create-humanizer',
+        'create-manim-video', 'create-p5js', 'create-popular-web-designs', 'create-pretext',
+        'create-sketch', 'create-video-render', 'create-video-script', 'cto-eval',
+        'data-reports', 'design-eval', 'doc-topology', 'docs-audit', 'eval-all', 'explore', 'eye-13yo',
+        'finalize-crate',
+        'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'haiku', 'hiring-eval', 'later', 'markdown-converter',
+        'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
+        'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
+        'software-engineering', 'speed-demo', 'sub', 'sync-tools-skills', 'testing',
+        'trader', 'typescript', 'useless',
     )),
+    'agents/haiku.md',
+    'commands/improve.md', 'commands/learn.md', 'commands/readme.md', 'commands/refine.md',
+    'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
-    'hooks/redirect.py', 'output-styles/80-caveman.md',
+    'hooks/redirect.py', 'hooks/spec_lint.py', 'hooks/test_spec_lint.py',
+    'output-styles/80-caveman.md',
 }
 
 def read(p):
@@ -163,10 +199,12 @@ def prefixes(rel):
     parts = rel.split('/')
     return ['/'.join(parts[:i]) for i in range(1, len(parts) + 1)]
 
-def retired(rel):  # a dropped name, or a legacy nested skills/<name>/<name>/ copy
+def retired(rel):  # committed bytes under a dropped name, or a legacy skills/<n>/<n>/ copy
     parts = rel.split('/')
-    return any(p in RETIRED for p in prefixes(rel)) or (
-        len(parts) > 3 and parts[0] == 'skills' and parts[1] == parts[2])
+    if len(parts) > 3 and parts[0] == 'skills' and parts[1] == parts[2]:
+        return True
+    return (any(p in RETIRED for p in prefixes(rel))
+            and committed(rel, read(os.path.join(live, rel))))
 
 def kept(rel):
     return any(p in keepset for p in prefixes(rel))
@@ -293,7 +331,7 @@ die() { echo "Swap refused: $*" >&2; exit 1; }
 [[ ! -e "$RUN/old" ]] || die "$RUN/old exists: use a new run dir"
 [[ ! -e "$L/.kronael-sync-new" && ! -e "$L/.kronael-sync-old" ]] ||
   die "a .kronael-sync-* dir is left in $L: step 0"
-python3 "$RUN/keep.py" || die "fix $L/kronael-keep.txt (the lines above)"
+python3 "$RUN/keep.py" || die "the keep-list check failed (the lines above)"
 mkdir -p "$L"
 mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
 aside() {
@@ -413,7 +451,72 @@ only when the rollback fails (`ROLLBACK FAILED`, exit 2, naming the paths
 still swapped) or the run is killed; step 0 handles both. The loop blocks
 SIGINT, SIGTERM and SIGHUP, so a signal cannot stop it halfway.
 
+## Settings (step 5)
+
+The always-apply set — written on every sync, never asked, even when the
+rest of permissions is declined. Every other key falls under the
+loosen-only rule and the diff-and-ask of `SKILL.md` step 5.
+
+| Key | Value | Why |
+|-----|-------|-----|
+| `hooks` | each event `settings-recommended.json` names, replaced; other events stay | the wiring of `~/.claude/hooks/*.py` |
+| `statusLine` | the recommended command | the wiring of `~/.claude/hooks/statusline.py`; unset, the token and context line never shows |
+| `cleanupPeriodDays` | the recommended value, raised, NEVER lowered | the 30-day default deletes transcripts at startup |
+| `outputStyle` | `"caveman"` | else the style file never activates |
+| `attribution.commit` | `""` | unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER `attribution: false` — versions before v2.1.281 reject it and skip the whole file |
+| `attribution.pr` | `"🤖"` | unset, the reminder asks for the `Generated with [Claude Code]` footer, which WISDOM § Git bans |
+| `attribution.sessionUrl` | `false` | unset, a web or Remote Control session adds a session link, which WISDOM § Git bans |
+| `bashEditDiffEnabled` | `false` | unset, `auto` and `bypassPermissions` modes diff the tree around every Bash command; `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it |
+| `crossSessionInbound`, `isolatePeerMachines` | `"refuse"`, `true` | v2.1.224+; unset, delivery between sessions follows their permission class — `SendMessage` stays allowed, it is also the subagent channel |
+| `permissions.deny` | `Bash(rm -r*)`, `Bash(rm -R*)`, `Bash(rm -fr*)`, `Bash(rm --recursive*)` added | the recursive-removal guard; NEVER put the glob outside the parens — `Bash(rm -rf /)*` matches nothing |
+
+Apply the set (an absent `settings.json` starts as `{}`):
+
+```sh
+S=~/.claude/settings.json
+[ -e "$S" ] || echo '{}' > "$S"
+jq -s '(.[0].permissions.deny // []) as $d
+  | .[0].hooks = ((.[0].hooks // {}) + .[1].hooks)
+  | .[0].statusLine = .[1].statusLine
+  | .[0].cleanupPeriodDays = ([(.[0].cleanupPeriodDays // 0), .[1].cleanupPeriodDays] | max)
+  | .[0].outputStyle = .[1].outputStyle
+  | .[0].attribution = ((.[0].attribution | objects) // {})
+  | .[0].attribution.commit = .[1].attribution.commit
+  | .[0].attribution.pr = .[1].attribution.pr
+  | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
+  | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].crossSessionInbound = .[1].crossSessionInbound
+  | .[0].isolatePeerMachines = .[1].isolatePeerMachines
+  | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
+  | .[0]' "$S" "$SRC/settings-recommended.json" > "$S.new" && mv "$S.new" "$S"
+```
+
+After the merge, list every recommended key whose live value still differs
+(the step 5 completion criterion and the step 8 report read this list):
+
+```sh
+jq -rn --slurpfile r "$SRC/settings-recommended.json" --slurpfile l ~/.claude/settings.json \
+  '$r[0] | keys[] as $k | select($r[0][$k] != $l[0][$k]) | $k'
+```
+
+`diffSidebarOpen` and `diffTool` are global config, not settings keys, so
+`settings-recommended.json` cannot carry them. Pin both in `~/.claude.json`,
+keeping every other key; they apply on the next Claude Code start:
+
+```sh
+jq '.diffSidebarOpen = false | .diffTool = "terminal"' ~/.claude.json > ~/.claude.json.new \
+  && mv ~/.claude.json.new ~/.claude.json
+```
+
 ## Codex bridge (step 6)
+
+Run from the source root (`SRC`); a bridge-only request runs the same
+section. What Codex reads: global guidance from `~/.codex/AGENTS.override.md`,
+else `~/.codex/AGENTS.md`, never `~/.claude/CLAUDE.md`; skills from
+`.agents/skills` and `~/.agents/skills`, never `.claude/skills` or
+`~/.codex/skills`; hooks from `~/.codex/hooks.json`, `~/.codex/config.toml`,
+project `.codex/` config and enabled plugins — Kronael writes
+`~/.codex/hooks.json`. Bridge skills with symlinks, NEVER copies.
 
 - Global guidance: `~/.codex/AGENTS.md` is a REAL file holding the marked
   block from `codex/AGENTS.md`, which tells Codex to read
@@ -423,17 +526,94 @@ SIGINT, SIGTERM and SIGHUP, so a signal cannot stop it halfway.
   Kronael block, else append it; NEVER overwrite content outside the markers.
   An existing `~/.codex/AGENTS.override.md` shadows `AGENTS.md` — conflict,
   show and ask. NEVER rely on project fallback names for global guidance.
-- `~/.codex/config.toml`: ensure top-level `project_doc_fallback_filenames`
-  contains `CLAUDE.md` (before the first `[table]`; NEVER under `[tui]` etc.).
-- Symlink `~/.agents/skills` → `~/.claude/skills`. Per-skill symlinks only if
-  it is already a directory; there, `rm` each per-skill symlink that no
-  longer resolves (`find ~/.agents/skills -maxdepth 1 -xtype l` lists them).
-  If pi is installed, symlink `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md`
+- `~/.codex/config.toml`: ensure the top-level key
+  `project_doc_fallback_filenames = ["CLAUDE.md"]`, so Claude-only projects
+  load in Codex. Insert it before the first `[table]` header, or append
+  `CLAUDE.md` to an existing top-level array. NEVER append it after a table
+  header — TOML then makes it part of that table — and move a `CLAUDE.md`
+  entry found under `[tui]` or `[tui.model_availability_nux]` to the
+  top-level key.
+- Native footer in `~/.codex/config.toml`: ALWAYS set the sync-owned
+  `tui.status_line` to this array, replacing any existing array, including `[]`.
+  ALWAYS merge only this key into the existing `[tui]` table, or create that
+  table once if absent. NEVER append a duplicate `[tui]` on repeat syncs.
+  ALWAYS preserve unrelated keys and tables, including model settings,
+  credentials, hooks and other TUI settings.
+
+  ```toml
+  [tui]
+  status_line = ["model-name", "context-used", "five-hour-limit", "weekly-limit"]
+  ```
+
+  The native footer shows context used and quota remaining; Claude's footer
+  shows quota used. Codex omits quota windows when their data is unavailable.
+  The native setting accepts an item array, not a command or custom format.
+  The footer has no reset times; `/status` shows resets.
+- Projects: the fallback key covers a project that keeps its instructions in
+  `CLAUDE.md`. Codex loads one
+  instruction file per directory, so a project with `AGENTS.md` never gets its
+  `CLAUDE.md` as a fallback, and no fallback entry reaches
+  `.claude/CLAUDE.md`; the Kronael block covers both.
+
+- `~/.agents/skills`, checked as a symlink before anything else:
+  - a symlink to `~/.claude/skills` → already bridged;
+  - any other symlink, dangling included → conflict: report it and stop; the
+    owner chooses replace, leave or skip;
+  - missing → symlink it to `~/.claude/skills`;
+  - a real directory → `rm` each dangling per-skill symlink whose target is
+    under `~/.claude/skills/` (the source dropped that skill), then link each
+    missing source-owned skill — every `$SRC/skills/*/` except `global`,
+    never an installed-only overlay; a name already taken by something else
+    is reported and left alone;
+  - anything else → conflict.
+
+  ```sh
+  A="$HOME/.agents/skills" C="$HOME/.claude/skills"
+  mkdir -p "$HOME/.agents"
+  if [ -L "$A" ]; then
+    if [ "$(readlink -m "$A")" = "$(readlink -m "$C")" ]; then
+      echo "already bridged"
+    else
+      echo "conflict: $A -> $(readlink "$A"); ask: replace, leave or skip"; exit 1
+    fi
+  elif [ ! -e "$A" ]; then
+    ln -s "$C" "$A" && echo "linked $A -> $C"
+  elif [ -d "$A" ]; then
+    for l in "$A"/*; do
+      [ -L "$l" ] && [ ! -e "$l" ] || continue
+      case "$(readlink -m "$l")" in
+        "$(readlink -m "$C")"/*) rm "$l" && echo "removed dangling $l" ;;
+      esac
+    done
+    for d in "$SRC"/skills/*/; do
+      name="$(basename "$d")"
+      [ "$name" = global ] || [ ! -e "$C/$name" ] && continue
+      if [ "$(readlink -m "$A/$name")" = "$(readlink -m "$C/$name")" ]; then
+        continue
+      elif [ -e "$A/$name" ] || [ -L "$A/$name" ]; then
+        echo "conflict: $A/$name exists"
+      else
+        ln -s "$C/$name" "$A/$name" && echo "linked $name"
+      fi
+    done
+  else
+    echo "conflict: $A is neither a directory nor a symlink"; exit 1
+  fi
+  ```
+
+- Project `.claude/skills`, run in the PROJECT's root, never in `SRC`:
+  `mkdir -p .agents && ln -s ../.claude/skills .agents/skills`, only when
+  `.claude/skills` exists and `.agents/skills` does not; an existing
+  `.agents/skills` → ask: leave it, add per-skill symlinks, or skip.
+- If pi is installed, symlink `~/.pi/agent/AGENTS.md` → `~/.claude/CLAUDE.md`
   (skip if a real file exists).
-- Copy `codex-hooks.json` → `~/.codex/hooks.json`. It wires Codex's lifecycle
-  events into `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads
-  before delegating to the Kronael hooks (and drops context-only output for
-  Codex `PreCompact`, which only accepts block decisions).
+- Copy `codex-hooks.json` → `~/.codex/hooks.json`, after the Claude hook
+  scripts are in place. It wires Codex's lifecycle events into
+  `~/.claude/hooks/codex_hook.py`, which normalizes Codex payloads before
+  delegating to the Kronael hooks, rewrites their `/skill` nudges to
+  `@skill`, and drops context-only output for Codex `PreCompact`, which only
+  accepts block decisions. NEVER point Codex at the Claude hook scripts
+  directly.
 - Tell the user to open `/hooks` in the next Codex TUI session and trust the
   changed hooks. One-shot verify only: `--dangerously-bypass-hook-trust`.
 
@@ -447,12 +627,14 @@ Run `which <tool>` first; skip if present and recent.
 |------|---------|--------|
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
-| `codex` | `bun install -g @openai/codex` | /astra /sol /oracle |
+| `codex` | `bun install -g @openai/codex` | /astra /oracle |
 | `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |
 | `pre-commit` | `uv tool install pre-commit` | all (hooks) |
-| `ast-grep` | `uv tool install ast-grep-cli && rm -f ~/.local/bin/sg` | /astgrep |
+| `ast-grep` | `uv tool install --upgrade ast-grep-cli && rm -f ~/.local/bin/sg` — `--upgrade` because `ast-grep outline` needs a recent release (0.50 has it) | /astgrep |
+| `ruff` | `uv tool install ruff` | /py |
+| `serena` | `uv tool install -p 3.13 serena-agent && serena init`, then the config below | /serena |
 
 `pi` ships a `#!/usr/bin/env node` shebang but its TUI uses the `v` regex flag,
 which needs Node 20+. On an older system node every invocation dies with
@@ -469,21 +651,39 @@ SH
 chmod +x ~/.local/bin/pi
 ```
 
+**Serena** — an MCP server over the installed language servers that also
+edits. The `serena` skill runs it one-shot over stdio for a rename; NEVER
+register it with `claude mcp add` or in `~/.codex/config.toml` — a
+registered server loads its tool list and manual into every session that
+touches it. After `serena init`, set three keys in
+`~/.serena/serena_config.yml`:
+
+- `project_serena_folder_location: "<home>/.serena/projects/$projectFolderName"`,
+  `<home>` written out as an absolute path. The default `$projectDir/.serena`
+  writes Serena's cache and `project.yml` into every repo it opens — agent
+  files NEVER live in a repo. Only `$projectDir` and `$projectFolderName`
+  expand, so two checkouts with one folder name share one project folder.
+- `web_dashboard: false` — else every one-shot start also starts a web
+  dashboard server and opens a browser tab for it.
+- `excluded_tools: [onboarding, list_memories, read_memory, write_memory, edit_memory, rename_memory, delete_memory]`
+  — memory lives in Claude Code auto-memory and the diary; NEVER a second store.
+
 **Security audit** — ask separately (large, optional):
 
 | Tool | Command | Skills |
 |------|---------|--------|
-| `bandit` | `uv tool install bandit` | /red-eval |
-| `pip-audit` | `uv tool install pip-audit` | /red-eval |
-| `semgrep` | `uv tool install semgrep` | /red-eval |
-| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /red-eval |
-| `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /red-eval |
-| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /red-eval |
+| `bandit` | `uv tool install bandit` | /eval (red) |
+| `pip-audit` | `uv tool install pip-audit` | /eval (red) |
+| `semgrep` | `uv tool install semgrep` | /eval (red) |
+| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /eval (red) |
+| `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /eval (red) |
+| `gitleaks` | download from github.com/gitleaks/gitleaks releases | /eval (red) |
 
 **Video rendering** — ask separately (heavy, rarely needed):
 
 | Tool | Command | Skills |
 |------|---------|--------|
+| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm`; the template needs `standalone.cls`), output needs `ffmpeg` | /create (manim) |
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 ## ripwire — deterministic codebase maps for agents (step 7)
@@ -491,34 +691,27 @@ chmod +x ~/.local/bin/pi
 Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
 agent a ranked, deterministic call-graph map of a repo — relevant symbols,
 callers, change-risk, tests to run — instead of blind grepping. Offline C++
-binary: no API key, no embeddings, no daemon, no network calls. Install the
-prebuilt binary (the installer verifies a mandatory sha256 and prompts for
-consent):
+binary: no API key, no embeddings, no daemon, no network calls. The `codemap`
+skill is its entry point. Install the prebuilt binary only, at the version
+`codemap` was verified on (the installer verifies a mandatory sha256; its
+`y/N` prompt reads nothing under Claude Code's `!`, so `RIPWIRE_INSTALL_YES=1`
+stands in for it — running the command is the consent):
 
 ```sh
-RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
+RIPWIRE_NO_ACTIVATE=1 RIPWIRE_INSTALL_YES=1 RIPWIRE_VERSION=v0.6.5 RIPWIRE_REPO=redhat-et/ripwire bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-et/ripwire/main/scripts/install.sh)"
 ```
 
-- Installs `ripwire` to `~/.local/bin` and auto-symlinks its `ripwire-*`
-  skills into `~/.claude/skills` — namespaced, so they never collide with
-  kronael skills. They are installed-only paths: on a yes, ALWAYS append
-  `skills/ripwire-*` to the keep-list, or the next sync moves them out with
-  the old bundle. It also detects `~/.codex`/`~/.agents` and activates for
-  Codex.
+- Installs `ripwire` to `~/.local/bin` and touches no agent config.
+- Without `RIPWIRE_NO_ACTIVATE=1` it also symlinks 16 of its 17 `ripwire-*`
+  skills into `~/.claude/skills` (`ripwire-opt-remarks` stays staged unless
+  `--contributor`) and activates for Codex when it finds `~/.codex` or
+  `~/.agents`. Each adds an always-on listing entry that `codemap` already
+  covers. As symlinks they survive a sync without a keep-list line.
 - Its data-logging hooks stay OFF (gated behind an explicit `--hook`; even
   armed they log only a local hashed routing meter, never prompt/command/path
   text, `RIPWIRE_ROUTE_METER=0` to disable). Leave hooks off to keep it silent.
-- `RIPWIRE_NO_ACTIVATE=1` installs the binary only, touching no agent config.
-- MCP (optional second interface — CLI + skills already work without it). Use
-  ripwire's own recipe printer `ripwire wrap <agent>`; it PRINTS the exact line
-  and never edits any config — you run it:
-  - Claude Code: `ripwire wrap claude` → `claude mcp add ripwire -- ripwire --mcp`
-    (append `--scope user` for all projects; writes `mcpServers` into
-    `~/.claude.json`, NOT `settings.json`). NEVER put `mcpServers` in
-    `settings-recommended.json`.
-  - Codex: `ripwire wrap codex` → a `[mcp_servers.ripwire]` stanza for
-    `~/.codex/config.toml` (CLI-first; MCP restricted to audit/health verbs).
-  - `ripwire wrap --all` detects every installed agent and emits each config.
+- NEVER register ripwire as an MCP server — ALWAYS let `codemap` run the
+  CLI on demand.
 
 ## CLI tools (step 8)
 
@@ -532,8 +725,9 @@ one toolchain is missing — report that tool skipped and continue.
 
 | Tool | Command | Notes |
 |------|---------|-------|
-| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim |
+| `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim, and ghpush/ghfetch for HTTPS with the `gh` token |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
+| `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
 

@@ -1,6 +1,6 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase, then optionally fix it. Record-only by default (the `bugs` skill's Bug Triage Protocol) — filing each real instance in BUGS.md; the Fix and Verify phases run only when the owner asks for them. NOT for a single known bug (use /bugs), NOT for a targeted one-file change (use /improve), NOT for foreground/inline audits (use /dispatch directly).
+description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs), a one-file change (use /improve) or an inline audit (use /dispatch).
 when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
 user-invocable: true
 ---
@@ -27,13 +27,13 @@ launch shape as `/dispatch`) a background agent that audits the **entire**
 codebase for one problem CATEGORY and files each real instance as its own
 `BUGS.md` entry, per `/bugs`'s format/ID rules (read that skill first — sweep
 is the search, not the file mechanics). Record only — never fix what it finds
-(the `bugs` skill's Bug Triage Protocol).
+(WISDOM § Bug triage).
 
 #### Category
 
 - `/sweep <description>` — audit for exactly that pattern, repo-wide.
-- `/sweep` with no argument — read the most recent `BUGS.md` "✅ FIXED"/
-  "Resolved" entries and the latest `.diary/` entry to find the pattern class
+- `/sweep` with no argument — read the latest fix commit (`git log`) and the
+  newest diary entry to find the pattern class
   of what was just fixed, then sweep for other instances of that same class
   that the original fix didn't touch.
 
@@ -66,8 +66,8 @@ When two adversarial subs disagree on a finding, a third check that MEASURES
 rather than asserts settles it, not a re-read of either sub's prose.
 
 Findings that check out get fixed (Phase 2) or, if fixing them is a
-redesign, filed to `BUGS.md` as a proposal needing owner sign-off (CLAUDE.md
-Bug Triage Protocol). Findings that don't check out get reported as dropped,
+redesign, filed to `BUGS.md` as a proposal needing owner sign-off (WISDOM
+§ Bug triage). Findings that don't check out get reported as dropped,
 with the reason — silence about a rejected finding reads as it having been
 missed rather than checked.
 
@@ -77,10 +77,9 @@ Spawn one opus sub per concern. Hard rules:
 
 - **One concern per sub** — authz scope is not migrate enumeration is not
   dispatch lifecycle. If a "fix" spans concerns, split it.
-- **Sequential on the shared tree** — NEVER run two code-editing subs in
-  parallel on the same checkout. They interleave: one reverts the other's
-  edits, mid-flight commits, half-edited files. Parallel is ONLY safe with
-  isolated worktrees (Agent `isolation: "worktree"`).
+- **Sequential on the shared tree** — NEVER run writing subs in parallel
+  on a shared tree (WISDOM § Agents); `Skill(worktree)` decides when a sub
+  gets its own detached worktree, and how.
 - **Include tests** — every new param, response field, MCP tool, REST
   endpoint, or behavior change gets a test IN THE SAME SUB, not a
   follow-up. Security-sensitive changes (authz, scoping, secrets) need
@@ -110,21 +109,13 @@ After verifying each sub's output:
 2. One commit per concern, through the `commit` skill — WISDOM § Git owns the
    staging, message and history rules.
 3. Watch for parallel hazard: if another session is editing the shared
-   tree (user mid-edit, another sub in flight), scope your `git add` to
-   YOUR files only. Verify `git diff --cached` before committing.
+   tree (user mid-edit, another sub in flight), commit your
+   files by path (`git commit -- <files>`, the `commit` skill).
 
 ## Worktree reconciliation
 
-Full isolation + reconciliation rules: `Skill(worktree)`.
-
-When a sub ran with `isolation: "worktree"`, bring its work back with:
-
-```bash
-git diff <fork-base> <sub-tip> -- <sub-owned-files> | git apply --3way
-```
-
-Do NOT `git cherry-pick` — on linked worktrees it silently empties and
-slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
+ALWAYS bring a worktree sub's work back by `Skill(worktree)` § Reconciling a
+worktree sub's commits into main. NEVER `git cherry-pick` it.
 
 ## Hard rules (non-negotiable)
 
@@ -140,23 +131,23 @@ slips HEAD. See `[[worktree_reconcile]]` memory for the full recipe.
 | Failure | Rule violated |
 |---------|--------------|
 | Sub commits test without impl → broken HEAD | partial-commit check |
-| dashd auth guard committed without tests, security hole ships silently | ship-with-tests |
+| Auth guard committed without tests, security hole ships silently | ship-with-tests |
 | cherry-pick on worktree branch empties commit, HEAD slips | worktree-reconcile |
 | Two subs edit same file, one reverts the other | sequential-on-shared-tree |
 | Sub says "green", build actually broken | verify-the-artifact |
 | Parallel session's uncommitted edit captured by `git add -A` | explicit-file-list |
 | Audit finding accepted on its framing, direction was inverted | verify-a-finding-before-you-fix-it |
 
-Real incidents (arizuko, 2026-05-28 to 2026-06-05):
-- dashd auth guard scaffolded but NEVER applied to routes — existed unwired
-  for weeks; only caught by a full route audit, not by the original commit.
+Real incidents, one service project:
+- A dashboard auth guard was scaffolded but NEVER applied to routes — unwired
+  for weeks; only a full route audit caught it, not the original commit.
 - cherry-pick on worktree branches dropped reconciled bucket work off HEAD
   twice in one session; required `git reflog` recovery both times.
-- Rebuilding krons image without SECRETS_KEY in .env crash-looped gated;
-  a "deployed successfully" sub report masked the actual state until the
-  502s were noticed.
+- Rebuilding an image without a required secret in `.env` crash-looped the
+  gateway; a "deployed successfully" sub report masked the actual state until
+  the 502s were noticed.
 
-Real incidents (turbocharge, 2026-08-15 to 2026-08-19):
+Real incidents, one CLI project:
 - A commissioned CTO audit reported that a fix's ratio "reads backwards";
   re-deriving which side of the pair was baseline showed the number was
   right and only the prose sentence had the direction inverted — fixing the

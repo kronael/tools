@@ -6,15 +6,14 @@ when_to_use: session start
 
 # Development Wisdom
 
-Only what a capable agent does NOT do unprompted: local facts, workflows, and
-the known drifts. Generic good practice is deliberately absent — if a blank
-agent would do it anyway, it does not belong here.
+Only what a capable agent does NOT do unprompted: local facts, workflows and
+known drifts. If a blank agent would do it anyway, it does not belong here.
 
 ## Continuity
 
-Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with `/` → `-`),
-memory index `.../<slug>/memory/MEMORY.md`, diary `<cwd>/.diary/*.md`. Newest by
-mtime.
+Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
+memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it
+lives. Newest by mtime.
 
 - ALWAYS read the 2-3 newest diary entries before answering — and on a new task
   too, not only at session start (`/recall-memories <topic>`). MEMORY.md arrives
@@ -28,19 +27,17 @@ mtime.
 
 ## Response style
 
-- The line cap and answer-first shape come from the output style. What it does
-  not cover: the cap lifts for content you were asked to generate, planning you
-  were asked to show, or a root cause you were asked to walk through.
+- The output style sets the line cap and answer-first shape; the cap lifts
+  when asked to generate content, show planning or walk through a root cause.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is
   unverified; never assert then correct when challenged.
 - NEVER treat an absence ("no such knob", "X can't do Y", "there is none") as
-  found until the search could have found it: the vendor's own vocabulary or the
-  source, not guessed synonyms, and the access the answer needs — a path you
-  cannot read returns nothing, and a shell expands a glob as YOU before `sudo`
-  runs. NEVER build a design decision or a subagent brief on an unconfirmed
-  negative.
+  found until the search could have found it: the vendor's own vocabulary or
+  the source, not guessed synonyms, and the access the answer needs — an
+  unreadable path returns nothing; a shell expands a glob as YOU before `sudo`
+  runs. NEVER build a decision or a subagent brief on an unconfirmed negative.
 
 ## Environment
 
@@ -63,7 +60,7 @@ mtime.
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second
-- `make` for build/lint/test/clean, debug builds, build/test/lint every ~50 lines
+- `make` for build/lint/test/clean, debug builds
 - NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build/temp
   path, and NEVER move a build between target directories — each switch costs a
   full rebuild and splits the cache across mounts. If the configured directory is
@@ -76,10 +73,9 @@ mtime.
 ## Bug triage
 
 - RECORD bugs found during any check in `BUGS.md` at project root; fix ONLY when
-  the user asks. It is the review queue — log it, move on, let them prioritise.
-  Use `/bugs` for entry format and pruning.
-- The drift is fixing as you find during an audit: it destroys the queue and
-  produces a large unrequested diff.
+  the user asks. It is the review queue — log it, move on, let them prioritise;
+  `/bugs` owns entry format and pruning. The drift is fixing as you find during
+  an audit: it destroys the queue and produces a large unrequested diff.
 
 ## System-change discipline
 
@@ -89,31 +85,29 @@ mtime.
 - Fail loud, to the user: an error on a user-facing path MUST surface (thrown,
   non-2xx, delivered), not just logged. NEVER swallow it, and NEVER add
   retry/fallback/best-effort as "robustness" — that turns a visible failure into
-  an invisible one. Retry ONLY the transient: network, DB busy/locked. When
-  the MECHANISM swallows — a fire-and-forget submit whose result nobody
-  collects, a detached task, a bare catch — replace it with one that
-  propagates; NEVER keep it and bolt on counters and collectors to recover what
-  it dropped, which is more code that still reports less.
+  an invisible one. Retry ONLY the transient: network, DB busy/locked. When the
+  MECHANISM swallows — a fire-and-forget submit nobody collects, a detached
+  task, a bare catch — replace it with one that propagates; NEVER keep it and
+  bolt on counters and collectors to recover the drops: more code, less reported.
 - Prefer the cause fix to the loud log — make the bad state impossible by
   construction.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
   `BUGS.md` as a proposal FIRST and ships only after sign-off.
-- No abstraction until there are 2-3 real call sites.
 
 ## Git
 
-These rules contradict the harness on purpose (it says to branch first, and its
-attribution reminder asks for a Co-Authored-By line and a "Generated with
-Claude Code" footer). These win.
+These override the harness on purpose — it says to branch first, to add a
+Co-Authored-By line and a "Generated with Claude Code" footer, and to end a
+PR body with the robot. These win.
 
-- Attribution is a bare `🤖` and nothing else: the last line of a PR or issue
-  body Claude writes, the prefix of a comment or thread reply Claude posts.
-  NEVER Co-Authored-By, NEVER a "Generated with Claude Code" footer, a
-  Claude/claude.ai link or a session URL — in commits, PR bodies, comments and
-  releases alike.
+- Attribution is `🤖 ` before the first word of every PR body, issue body,
+  comment and thread reply Claude writes on GitHub, and the robot nowhere else.
+  NEVER Co-Authored-By, a "Generated with Claude Code" footer, a Claude or
+  claude.ai link, or a session URL — in commits, PR bodies, comments, releases.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
 - Invoking /refine, /ship, /commit, /release IS the ask to commit.
-- NEVER `git add -A`, NEVER `--amend`, NEVER squash.
+- NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
+  local commits are squashed only through `/squash`.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
   --show-current` prints nothing). NEVER create a local branch, no exception:
   no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
@@ -126,41 +120,47 @@ Claude Code" footer). These win.
   `git status`'s "up to date" without a fetch — it compares with the last one.
 - Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
   dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
-- ONLY `git push` when the user asked for a push in that message — NEVER on your
-  own initiative or as the silent tail of a commit, sync, release or ship
-  workflow; those end at the local commit or tag. ALWAYS state the exact remote
-  and refspec first and push only that, by SHA (`git push origin
-  <sha>:refs/heads/YYYYMMDD_<tag>`). NEVER `--force` or `--force-with-lease`.
+- ONLY push when the user asked for a push in that message — NEVER on your own
+  initiative or as the silent tail of a commit, sync, release or ship workflow;
+  those end at the local commit or tag. ALWAYS state the exact refspec first and
+  push only that, by SHA, with `ghpush <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
+  a one-off HTTPS push through the `gh` token, the SSH remote left to the human
+  — NEVER rewrite `remote.origin.url` or store the token, and NEVER `--force` in
+  any form. A token without the `workflow` scope cannot push a change under
+  `.github/workflows`: report GitHub's refusal, NEVER work around it. Where the
+  SSH origin refuses a fetch, `ghfetch <refspec>` reads it the same way.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
   AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
-- ONLY run `gh pr create`, `gh pr merge` or `gh repo create` when the user
-  asked for that action in that message — show the title and body first and
-  wait. NEVER `gh release create`: the annotated tag is the release. NEVER
-  `gh pr review --approve` on the user's behalf.
+- NEVER `gh release create`: the annotated tag is the release. NEVER
+  `gh pr review --approve` on the user's behalf. Approving a PR, merging one and
+  pushing to `<default head>` ask the user first; opening a PR or rewriting its
+  body needs no approval once its text passed the two phases below.
 - ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
-  new or rewritten, with `/pr-draft` — NEVER freehand; its reviewer guide, REST
+  new or rewritten, with `/pr-draft` — NEVER freehand; its shape and cap, REST
   PATCH path and `🤖` marker are the contract.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body
   (drafted or posted), review comment, thread reply, issue, release notes —
-  before showing it for approval. DISTILL: cut to the shortest text that still
-  carries the claim, the reasoning and the evidence, inside the posting skill's
-  size cap. REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖`
-  rule above and no other attribution, no marketing language, no history
-  framing, addresses and signatures in full, the repo's title convention,
-  every claim verified or marked as an inference, and the posting skill's own
-  Format section. Done = every check passes on the text shown; name what the
-  review changed.
+  before posting it or showing it for approval. DISTILL: cut to the shortest text that still
+  carries the claim and its reasoning, in the posting skill's shape and under
+  its cap; what the title, the diff or the commits show, results and history
+  are cut first.
+  REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
+  and no other attribution, no marketing language, no history framing, addresses
+  and signatures in full, the repo's title convention, every claim verified or
+  marked as an inference, and the posting skill's own Format section. Done =
+  every check passes on the text shown; name what the review changed.
 
 ## Shell
 
 - Tee once, read the file: `<cmd> 2>&1 | tee ./tmp/out.log && tail -20
   ./tmp/out.log`. NEVER re-run a command to see another part of its output.
 - NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
-  explicitly named files, or leave cleanup to the user.
-- NEVER `killall`/`pkill` by name — kill by PID. ALWAYS handle SIGINT/SIGTERM in
-  anything long-running.
+  explicitly named files, or leave cleanup to the user. One lift: `git worktree
+  remove --force` after the checks in `worktree` § Removing a worktree.
+- NEVER kill a process you did not start, not even to free a port; kill your
+  own by PID.
 - NEVER hit an external API per request, and NEVER re-fetch what is already on
   disk — cache it, continue from last state.
 - NEVER use the `SendFeedback` tool, NEVER draft Claude Code product or model
@@ -169,38 +169,46 @@ Claude Code" footer). These win.
 
 ## Documentation
 
-- Layout — UPPERCASE root files, `specs/`, `docs/`, `.diary/`, `.claude/plans/`
-  (only `plans/`), no `todos/`, root-anchored ignores: `readme` → `topology.md`.
+- ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
+  file or top-level dir. NEVER `todos/` or `plans/`: plans and work records
+  live under `~/.claude/` (`ship` § Work record), never in a repo.
 - NEVER write an unrequested summary/report/analysis `.md` — the report belongs
   in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",
   backwards-compat framing, or a one-off backfill inside a permanent file. State
-  what is true now and its genuine quirks; history lives in git and `.diary/`.
-- Comments earn their place only by saying what the code cannot: why a choice was
-  made, or what is surprising. NEVER restate the code or a name.
+  what is true now and its genuine quirks; history lives in git and the diary.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
-  verbatim as given and NEVER re-litigate the wording, in review or in an eval
-  report.
+  verbatim and NEVER re-litigate the wording, in review or in an eval report.
+- ALWAYS write every address, signature and hash in full — in docs, code
+  comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
 - NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
   local files (HTML, MD) the user opens themselves.
 
 ## Agents
 
-- 1-2 subagents typically, NEVER more than 4.
+- NEVER run more than 2 `sonnet` and 1 `opus` or `fable` subagent at once.
+  Codex workers are subagents under every rule here: `terra` counts as
+  `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the owner lifts the cap —
+  explicitly, for one named task, after seeing what would be spawned — and the
+  lift ends with that task.
 - Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
   code-editing subs in parallel on a shared tree — they interleave, one reverts
   another, reviewers read half-edited files.
 - Brief a subagent by GOAL, not numbered steps — models degrade on
   over-prescription. Give the goal, the context it needs, what is out of bounds
   and what "done" looks like, then let it choose the path.
-- ALWAYS run autonomous code generation — a sub writing a comprehensive or
-  multi-file change that no parent reads before the work goes on — on
-  `subagent_type: "fable"`, NEVER the default model; its mistakes cost review,
-  not tokens. Cheap models are for READ-ONLY fan-out. Bigger work: ALWAYS plan
-  in the main thread (an `/opus` sub from Sonnet or Haiku), then run each step
-  on a `sonnet` sub and read its diff before the next (`sonnet` § Plan, then
-  execute); a step read that way, here or in `ship`, is not autonomous.
+- ALWAYS run implementation — a comprehensive or multi-file change, autonomous
+  code generation — as a plan from an `opus` sub, then one `sonnet` sub per
+  step, its diff read by the parent before the next (`sonnet` § Plan, then
+  execute); NEVER hand it to one sub whose work no parent reads. `fable` takes
+  specs, architecture, WISDOM and skill writing, algorithmic solutions, and red
+  reviews or deep audits — NEVER implementation, with one exception: a change
+  to a globally shared library — one that other repositories or teams import,
+  published or org-wide — goes to `fable` or `astra`, never `sonnet` or
+  `opus`. A library inside one project (its own SDK crate, say) takes the
+  regular path: an `opus` plan, then `sonnet` or `opus` steps. Haiku is batch-only, NEVER a sub — light work
+  goes to `sonnet` or the main thread.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

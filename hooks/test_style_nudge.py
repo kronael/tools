@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import shlex
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -162,7 +165,7 @@ def test_missing_canonical_budget_fails_silent(monkeypatch, capsys, tmp_path: Pa
     assert run(monkeypatch, capsys, tmp_path, 'UserPromptSubmit') is None
 
 
-def test_arizuko_mode_renders_the_surface_delivery_check(tmp_path: Path) -> None:
+def test_surface_mode_renders_the_surface_delivery_check(tmp_path: Path) -> None:
     """The canonical style renders a pre-delivery check with the selected Length."""
     install_style(tmp_path, selected='discord-channel')
     styles = tmp_path / '.claude' / 'output-styles'
@@ -184,6 +187,46 @@ def test_arizuko_mode_renders_the_surface_delivery_check(tmp_path: Path) -> None
     ) in reminder
 
 
+@pytest.mark.parametrize('harness', ['claude', 'codex'])
+@pytest.mark.parametrize('selected', ['caveman', 'concise', 'missing'])
+def test_prompt_wiring_delivers_one_canonical_reminder_per_prompt(
+    tmp_path: Path, harness: str, selected: str
+) -> None:
+    """Both configured harnesses deliver style through their shared prompt hook."""
+    if selected != 'missing':
+        install_style(tmp_path, selected=selected)
+    root = Path(__file__).resolve().parent.parent
+    (tmp_path / '.claude').mkdir(exist_ok=True)
+    (tmp_path / '.claude' / 'hooks').symlink_to(root / 'hooks', target_is_directory=True)
+    config = 'codex-hooks.json' if harness == 'codex' else 'settings-recommended.json'
+    groups = json.loads((root / config).read_text())['hooks']['UserPromptSubmit']
+    commands = [hook['command'] for group in groups for hook in group['hooks']]
+    env = {**os.environ, 'HOME': str(tmp_path), 'KRONAEL_HOOK_STATE': str(tmp_path / 'state')}
+    for prompt in ['add an endpoint', 'now wire it', 'debug the hook']:
+        payload = {
+            'hook_event_name': 'UserPromptSubmit',
+            'prompt': prompt,
+            'session_id': 'session',
+            'cwd': str(tmp_path),
+        }
+        outputs = {}
+        for command in commands:
+            result = subprocess.run(
+                [arg.replace('~/', str(tmp_path) + '/') for arg in shlex.split(command)],
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                env=env,
+                check=True,
+            )
+            output = json.loads(result.stdout) if result.stdout.strip() else {}
+            outputs[command] = output.get('hookSpecificOutput', {}).get('additionalContext', '')
+        canonical = next(text for command, text in outputs.items() if 'prompt_nudge' in command)
+        expected = int(selected == 'caveman')
+        assert canonical.count('<caveman-reminder>') == expected
+        assert sum(text.count('<caveman-reminder>') for text in outputs.values()) == expected
+
+
 def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
     root = Path(__file__).resolve().parent.parent
     raw = (root / 'output-styles' / 'caveman.md').read_text()
@@ -193,9 +236,11 @@ def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
 
     settings = json.loads((root / 'settings-recommended.json').read_text())
     hooks = settings['hooks']
-    for event in 'UserPromptSubmit', 'PostToolUse':
-        commands = [hook['command'] for group in hooks[event] for hook in group['hooks']]
-        assert 'python3 ~/.claude/hooks/style_nudge.py' in commands
+    prompt = [hook['command'] for group in hooks['UserPromptSubmit'] for hook in group['hooks']]
+    assert prompt.count('python3 ~/.claude/hooks/prompt_nudge.py') == 1
+    assert 'python3 ~/.claude/hooks/style_nudge.py' not in prompt
+    posttool = [hook['command'] for group in hooks['PostToolUse'] for hook in group['hooks']]
+    assert 'python3 ~/.claude/hooks/style_nudge.py' in posttool
     compact = [group for group in hooks['SessionStart'] if group['matcher'] == 'compact']
     assert len(compact) == 1
     commands = [hook['command'] for hook in compact[0]['hooks']]

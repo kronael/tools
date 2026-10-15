@@ -7,19 +7,11 @@ repos:
     - repo: local
       hooks:
           - id: skill-frontmatter
-            name: lint SKILL.md (frontmatter YAML + wisdom body rules)
+            name: lint skills (frontmatter, body rules, sibling reach) + leak scan
             entry: python hooks/skill_frontmatter_lint.py --write --fail-on-write
             language: python
             additional_dependencies: [PyYAML]
-            files: (^|/)SKILL\.md$
-            pass_filenames: true
-
-          - id: spec-lint
-            name: lint specs/ (naming, status, index rows, code pointers)
-            entry: python hooks/spec_lint.py
-            language: python
-            additional_dependencies: [PyYAML]
-            files: (^|/)specs/.*\.md$
+            files: \.md$
             pass_filenames: true
 
     - repo: https://github.com/pre-commit/pre-commit-hooks

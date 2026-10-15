@@ -1,11 +1,16 @@
 ---
 name: release
 description: Prepare a release. NOT for a single commit (use commit).
-when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release"
+when_to_use: "release, release it, do a release, prepare a release, cut a release, tag a release, finalize the crate or package, publish to crates.io/npm/PyPI"
 user-invocable: true
 ---
 
 # Release
+
+Finalizing a library for an external audience — extraction from a host repo,
+competitor survey, honest benchmarks, rtrb-style README, release verification
+— is `library.md`: read it and run it first, then the process below for the
+version, CHANGELOG and tag.
 
 ## Process
 
@@ -23,15 +28,16 @@ user-invocable: true
      usual default); skip the bump step if pyproject already says it.
 1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
    tree on a first release) before bumping anything. A bare "release" implies
-   it — NEVER ask whether to refine. Run it at full depth whatever the diff
-   size: every context and every applicable lens — NEVER drop one;
-   `correctness` contexts on `fable` (`opus` when fable is unavailable); and a
-   second opinion over the same range — the `astra` skill directly, or an
-   `opus` or `fable` sub when astra cannot run (auth or CLI failure; a missing
-   model follows `astra` § Model) — its findings settled in refine
-   step 7 and applied through step 8, NEVER in main context. Any change landing
-   after the refine, other than the refine's own commits and the release
-   commit, reruns it — NEVER tag code the refine did not see.
+   it — NEVER ask whether to refine. ALWAYS open with ONE first pass over the
+   whole range on `fable` (`opus` when fable is unavailable; the project
+   `CLAUDE.md` § Release may name another runner). It returns correctness
+   findings and the change's complexity, and that sizes the rest: a simple
+   change stops there, a complex one gets the refine contexts the first pass
+   names. NEVER add a second-opinion pass on top — it repeats the first pass at
+   full price. Findings settle in refine step 7 and apply through step 8,
+   NEVER in main context. Any change landing after the refine, other than the
+   refine's own commits and the release commit, reruns it — NEVER tag code the
+   refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).
    Discover the version file:
    - Python: `pyproject.toml` `version = "..."` (each subdir pyproject
@@ -43,13 +49,16 @@ user-invocable: true
    - ALWAYS bump the project version wherever `README.md`/`CLAUDE.md` state it.
 3. **Changelog** — `CHANGELOG.md` at repo root.
    - File exists with `[Unreleased]` → move to `[vX.Y.Z] — YYYYMMDD`.
-   - File missing → create with one section `[vX.Y.Z] — YYYYMMDD`.
-     First release needs no `[Unreleased]` placeholder.
+   - File missing → create one ONLY when the project publishes versions to
+     outside consumers (`readme` → `topology.md`), with one section
+     `[vX.Y.Z] — YYYYMMDD` and no `[Unreleased]` placeholder; otherwise no
+     file is created and the `Full notes:` line drops.
    - Multi-deployable repos (sibling subdirs with own pyproject) —
-     each subdir gets its OWN `CHANGELOG.md` for that deployable. Root
-     changelog summarises across them.
+     each subdir that keeps a changelog has its OWN `CHANGELOG.md` for
+     that deployable. Root changelog summarises across them.
    - Empty since-last-tag → generate entries from `git log <last>..HEAD`.
-3.5. **Distill to ~20%.** Re-read the just-written entry. Two passes:
+3.5. **Distill to ~20%.** Re-read the just-written entry — or, with no
+   CHANGELOG, write the text from `git log <last>..HEAD`. Two passes:
 
    **Pass A — the `>` blockquote (broadcast).** This is the verbatim
    chat-broadcast — what the user reads in Telegram/Discord/email.
@@ -93,14 +102,17 @@ user-invocable: true
    **Pass B — the `### Added / ### Changed / ### Fixed` body.**
    Maintainer-facing. Compress to ~20% of raw commit-log paraphrase.
 
-   - Lead with notable user-facing features. First bullets name what
-     the user can now do, in user vocabulary.
-     Internal refactors and plumbing go after.
-   - One line per change. Drop commit SHAs and internal-only file
-     paths from body bullets (migration numbers and `Spec: specs/X.md`
-     pointers stay).
+   - Keep only what a user, operator or caller of the component must
+     know: new or removed features, modes, flags and config keys;
+     changed behaviour or data format; breaking changes; deploy steps.
+     Leave out how it works, function and module names, refactors,
+     tests, evidence and reasons; those live in the code, the docs and
+     the PR. An entry with nothing user-visible is one line.
+   - One bullet = one sentence, at most 100 characters, NEVER a
+     paragraph. A PR's entry is 1-6 bullets. Drop commit SHAs and
+     internal-only file paths (migration numbers and
+     `Spec: specs/X.md` pointers stay).
    - Collapse synonymous bullets across sections.
-   - Cut multi-sentence "why" paragraphs.
    - If total body bullets ≤ 5, collapse to a single un-headed list.
    - Preserve at full detail (never trim): security fixes, breaking
      changes, env-var renames, schema migrations, anything the
@@ -123,16 +135,17 @@ user-invocable: true
 4.5. **Critique gate when unclear.** If verification passes but the release is
    still not obviously good enough from context, run the relevant critique lens
    before committing:
-   - demo/readiness uncertainty → `ceo-eval`
-   - production/SLA/operations uncertainty → `cto-eval`
+   - demo/readiness uncertainty → `eval` CEO lens
+   - production/SLA/operations uncertainty → `eval` CTO lens
    - hostile input, corrupted state, replay, concurrency, exploitability, or
-     "this needs a no-bullshit deep pass" → `red-eval`
-   - first-run comprehensibility or local tryability uncertainty →
-     `13yo-eval`
+     "this needs a no-bullshit deep pass" → `eval` red lens
+   - first-run comprehensibility or local tryability uncertainty → `eval`
+     novice lens
 
    Treat any hold from those lenses as release-blocking unless the user
    explicitly accepts the risk in the release notes.
-5. **Commit** — version files + CHANGELOG(s) in one `release: vX.Y.Z` commit.
+5. **Commit** — version files + the CHANGELOG(s) the repo keeps in one
+   `release: vX.Y.Z` commit.
 6. **Tag** — an ANNOTATED tag on the release commit whose message is the
    step-3.5 blockquote: `git tag -a vX.Y.Z -F <message file>`. ONE tag per repo
    (subdir versions track in their own pyprojects). **Collision-safe, ALWAYS:**
@@ -154,7 +167,7 @@ user-invocable: true
   tagged (bump past collisions), and recreate (`git tag -d` then re-tag) any tag
   that collides or points at an orphaned commit — NEVER mint a duplicate or
   leave a dangling version tag
-- ALWAYS refine at full depth before the version bump (step 1.5) — NEVER
+- ALWAYS refine before the version bump, sized by the step-1.5 first pass — NEVER
   release a change the refine did not see, other than the refine's own commits
   and the release commit
 - NEVER compress the `>` blockquote past the rules above — it's broadcast verbatim

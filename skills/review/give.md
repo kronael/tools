@@ -14,6 +14,7 @@ Empty diff → say so and stop.
 Group files into ≤4 non-overlapping buckets by domain. Per bucket pick 3-5
 orthogonal lenses: correctness, simplicity, error handling, type safety, test
 coverage, security, performance, API contract, invariant/topology.
+ALWAYS hand a code bucket the `../refine/software.md` lenses (`code.md` hunts).
 
 **Invariant/topology lens** — topology/multiplicity/scope changes (one process
 split into many, a new scope-key on shared storage, a type gaining a collection
@@ -43,13 +44,13 @@ A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailab
 `subagent_type="opus"`; NEVER skip this pass):
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
-   regression risks, and broken invariants. NEVER seed it with the sonnet
+   regression risks, and broken invariants. NEVER seed it with the step-3
    findings for this job; it approaches cold.
-2. **Reverify** — KEEP or DROP each sonnet finding with a one-line reason. KEEP
+2. **Reverify** — KEEP or DROP each step-3 finding with a one-line reason. KEEP
    only what is real, impactful, in changed code, and non-obvious to the author.
 
 Feed it the change goal and house rules. Final pool = its findings + the KEEPs.
-ALWAYS run this pass. ALWAYS trust its DROPs over the sonnet findings.
+ALWAYS run this pass. ALWAYS trust its DROPs over the step-3 findings.
 
 ## 5. Minimality
 
@@ -81,7 +82,8 @@ record the round in the diary — one line. Then stop.
 
 Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
 the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
-flagging; the `improve` agent that verifies and fixes runs on Sonnet 5.5).
+flagging; the fixes run on the `improve` agent, Sonnet 5.5 at high, for
+`simplify` work and on `opus` for `correctness` — `refine` step 8).
 ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
 
 ## GitHub PR (gh)
@@ -103,3 +105,7 @@ re-litigate a resolved thread.
 Present the report and WAIT. On "post", hand the survivors to `gh-comment`,
 which owns the distill and review-on-wisdom phases, the gate, batching,
 out-of-diff fallback and the `🤖` prefix — a whole-PR summary body included.
+The post leaves the review PENDING, and it stays so until the user's own
+latest message says `SUBMIT REVIEW` (`gh-comment` § Submit): "yes", "post"
+and an answer to another question are not that, and the hook refuses the
+submit without it.

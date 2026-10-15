@@ -13,7 +13,7 @@ polished draft hides the design space; four rough ones reveal it.
 Independence must be **structural**, not requested. Four agents told "diverge"
 but handed the *same* starting assets converge anyway — they take the cheap path
 (recolor, retime, one gag) and you get four near-identical outputs. This is the
-**germinal v1–v4 failure**: same rig + same source photos + same recording →
+**v1–v4 failure**: same rig + same source photos + same recording →
 skin-deep variation only. Force independence by:
 
 - **BANNING the shared assets.** Forbid reading the prior version's files,
@@ -39,8 +39,7 @@ the user selected upstream and fan out 4 independent takes on THIS level only:
    clears the bar.
 
 Between levels, **re-extract the selected version into a graph/text spec**
-(node hierarchy + tracks + beat map as prose/markdown — see
-`../../projects/*/schema/demo/germinal-v4.stage.md` for the shape). The next
+(node hierarchy + tracks + beat map as prose/markdown). The next
 fan-out builds on that clean skeleton, NOT on the messy artifact — text is
 forkable and asset-free, so it transmits structure without dragging craft along.
 

@@ -2,6 +2,8 @@
 name: Lint
 
 on:
+    push:
+        branches: [master]
     pull_request:
         branches: [master]
     workflow_dispatch:
@@ -20,5 +22,7 @@ jobs:
             - uses: pre-commit/action@v3.0.0
               with:
                   extra_args: >-
-                      --from-ref ${{ github.event.pull_request.base.sha }}
-                      --to-ref ${{ github.event.pull_request.head.sha }}
+                      --from-ref ${{ github.event.pull_request.base.sha || github.event.before }}
+                      --to-ref ${{ github.event.pull_request.head.sha || github.sha }}
+            - run: pip install PyYAML
+            - run: make skills-frontmatter

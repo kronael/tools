@@ -1,96 +1,118 @@
 # Spec files — naming, status, index
 
-Design references live in `specs/`. Master index: `specs/index.md`.
+A spec drives one change: what to build and why, written before the code. It
+NEVER documents the system; current state belongs to the docs (`readme` →
+`topology.md`).
 
-## Frontmatter
+## Status
 
-Every spec file starts with YAML frontmatter:
+Every spec starts with frontmatter `status:` — one of `draft`, `experiment`,
+`planned`, `partial`, `shipped`, `reference`; the index Status cell carries the
+same word. NEVER invent another (`implemented`, `superseded`) or write prose
+there; lint: spec-status (hard fail).
 
-```yaml
----
-status: draft|experiment|planned|partial|shipped|reference
----
-```
+- **`draft`** — not approved. NEVER start its work; promote to `planned` only
+  on explicit approval.
+- **`experiment`** — prototype on a preview branch. NEVER merge it to
+  production before it is promoted to `planned` and its gates clear.
+- **`planned`** → **`partial`** → **`shipped`** — approved, in progress, done.
+- **`reference`** — analysis that never ships.
 
-Lifecycle: `draft` → `planned` → `partial` → `shipped`.
+ALWAYS move `status` in the commit that approves or lands the work. Open
+questions live only in a `draft` (or a `reference`); promotion answers them
+or cuts them; lint: spec-open-questions (warn).
 
-- **`draft`** — idea captured, NOT approved. Implementation is blocked.
-  A draft spec must never be started. Promote to `planned` only when
-  the work is explicitly approved to begin.
-- **`experiment`** — live prototype in a preview branch; validates the idea
-  before committing to production. Must not merge to production until
-  explicitly promoted to `planned` AND any stated gates are cleared.
-- **`planned`** — approved and ready to implement in production.
-- **`partial`** — in progress.
-- **`shipped`** — complete; trim HOW, keep WHY + code pointers.
-- **`reference`** — analysis doc that never ships; no lifecycle.
+## Naming and index
 
-These six are the whole vocabulary, for the frontmatter AND the index Status
-column — NEVER invent another (`proposed`, `active`, `superseded`) and NEVER
-write prose in the Status cell; lint: spec-status (hard fail).
+- ALWAYS number specs: flat `specs/<NN>-<topic>.md` (zero-padded NN, next =
+  max + 1), or `specs/<phase>/<N>-<topic>.md` ONLY when specs cluster into
+  distinct workstreams. NEVER an unnumbered name, and two files NEVER share
+  one number; lint: spec-naming (hard fail; an unpadded flat number warns).
+- ALWAYS keep `specs/index.md` in step: one row per file
+  (`| [01-auth.md](01-auth.md) | partial | JWT auth flow |`), Status equal to
+  the frontmatter, the row removed with the file; lint: spec-index-row,
+  spec-index-dangling. A phase may keep its own `specs/<phase>/index.md`; its
+  rows count once the master table links it.
 
-## File naming and ordering
+## Body
 
-ALWAYS number spec files — the number gives stable ordering and a short handle
-("spec 3"). NEVER use an unnumbered by-content name like `specs/auth.md`;
-lint: spec-naming (hard fail; an unpadded flat number warns).
+- ALWAYS open with one plain sentence saying what the thing IS, before any
+  path, mechanism or `## Problem` — a reader hangs the mechanism on that
+  handle, and a "wtf?" means it was missing.
+- ALWAYS write the problem (the constraint it answers), the approach — the
+  decision and its one caveat, WHY this way — and pointers to the code it
+  changes (`src/config.ts` — one sentence why). NEVER an option space or a
+  taxonomy for the reader to choose from; lint: spec-options (warn).
+- A pointer that no longer resolves, matches several files or points past the
+  end of its file is stale; lint: spec-pointer (warn). A `partial` or
+  `shipped` spec with no pointer at all; lint: spec-no-pointer (warn). A link
+  to another spec or file resolves; lint: spec-link (hard fail).
+- Tables with `file:line` anchors over prose — a spec over 500 lines is
+  prose; lint: spec-length (warn; hard fail over 1000).
+- One owner: each table, contract and term has one owning spec the others
+  link to; a schema table derives from the code type it describes, with
+  `file:line`; lint: spec-table-owner (hard fail on a second `CREATE TABLE`).
+- Existing vs proposed: existing code is cited by `file:line`; a new API sits
+  under a heading that says it is proposed. NEVER present proposed code as
+  existing, and NEVER call something new or absent without the search that
+  found nothing.
+- A measured number — a test count, coverage, a line count — carries the
+  commit it was measured at and is re-measured before it is repeated.
+- A refactor or removal spec carries a Contract: the baseline numbers
+  measured before the first edit, and the exact edit each gate performs.
+- NEVER implementation steps, code that duplicates the codebase, re-stated
+  signatures (link `file:line`), checklists, schedules or TBD/TODO — decide or
+  omit; lint: spec-tbd (hard fail), spec-future-tense, spec-checklist (warn).
+- NEVER a table, column, mode or abstraction no current case needs — name the
+  case that would force it instead.
+- NEVER narrate history ("no longer", "formerly", "used to be", "renamed
+  from", backward compatibility) — a spec states what is; git holds what was;
+  lint: spec-history (warn).
+- NEVER coin a term or borrow jargon — the codebase's own name, "tests" never
+  "harness", and no marketing words; lint: spec-wording (warn).
+- NEVER write a defect up as a spec — it goes to `BUGS.md`, linked from the
+  spec.
 
-**Default (flat):** `specs/<NN>-<topic>.md`, NN a zero-padded integer.
-- Next number: `ls specs/[0-9]*-*.md | sed 's|.*/||' | cut -d- -f1 | sort -n | tail -1` then +1 (first is `01`).
-- `<topic>` is kebab-case content name: `specs/03-vote-tracking.md`.
+## Links point one way
 
-**Phases (only for large multi-stream efforts):** `specs/<phase>/<N>-<topic>.md`,
-e.g. `specs/1/2-webhooks.md`. Use phase subdirs ONLY when specs cluster into
-distinct workstreams; a single-project corpus stays flat. Next N: `ls specs/<phase>/`, max + 1.
+- NEVER link a spec from the docs or the code — ALWAYS state the fact in the
+  doc. A spec points at what it changes; nothing points back, so deleting a
+  spec never breaks a doc.
 
-`specs/index.md` is the master table — ALWAYS add a row on create, update Status
-on ship; the Spec cell links the file and Status matches its frontmatter.
-Lint: spec-index-row, spec-index-dangling, spec-status (hard fail):
+## When the change ships
 
-```markdown
-| Spec | Status | Summary |
-|------|--------|---------|
-| [01-auth.md](01-auth.md) | shipped | JWT auth flow |
-| [02-webhooks.md](02-webhooks.md) | planned | Outbound webhooks |
-```
+1. ALWAYS move what stays true — each structure, its WHY beside it — into the
+   doc `readme` → `topology.md` names; set `status: shipped` in the same change.
+2. The spec MAY then be deleted — NEVER before step 1. Before deleting or
+   renaming, ALWAYS grep the repo for its path AND its handle (`spec 4/6`);
+   a path-only grep misses the handle. Re-point every hit in the same change.
 
-## What specs contain
+## Before commit
 
-- **Problem**: why this exists, what was wrong before
-- **Approach**: design decisions, tradeoffs, WHY this way
-- **Code pointers**: WHERE code lives and WHY it's there
-  (e.g. "`src/config.ts` — HOST\_\* exports computed at startup"); a pointer
-  that no longer resolves is stale — lint: spec-pointer (warn)
-- **Stubs are good**: file path + one sentence of WHY
+ALWAYS run `spec-lint specs` from the repo root; `spec-lint --help` lists every
+rule. The kronael sync installs it, else `cd spec-lint && make install` from
+the tools clone. An explicit `specs/` directory is checked even without an
+index or numbered files; discovery from a project directory or a changed file
+requires `index.md` or a numbered spec directly in `specs/`, so a test suite or
+the `skills/specs/` router is excluded, and so is a corpus kept only in phase
+directories.
 
-## What specs do NOT contain
+The lint checks the items above that name a `lint:` rule, and only the
+mechanical part of each. Everything else is a judgement:
 
-- Step-by-step implementation details (read the code)
-- Code snippets that duplicate what's in the codebase
-- Completed checklists or TODO items
-- Comments about implementation order or timeline
-- NEVER use "TBD" / "TODO" / "implement later" — decide now or omit; lint:
-  spec-tbd (hard fail)
-- NEVER write future-tense plans ("we will…") — specs describe state, not work;
-  lint: spec-future-tense (warn)
-- NEVER re-state function signatures already in code — link to file:line instead
-
-## After shipping
-
-1. Update frontmatter to `status: shipped`
-2. Trim implementation detail — keep problem, design, WHY, and the code pointers
-3. Update `specs/index.md` status column
-
-## Self-review before commit
-
-ALWAYS run `python3 ~/.claude/hooks/spec_lint.py specs` from the repo root — it
-checks every item below except 3, a judgement call no lint can make.
-An explicit `specs/` directory is checked even without an index or numbered
-files. Discovery from a project directory or a changed file requires an index
-or numbered spec, so a test suite or the `skills/specs/` router is excluded.
-
-1. Frontmatter status matches reality
-2. index.md row added/updated
-3. No HOW (implementation steps) — only WHY + WHERE
-4. No future tense; no "TBD"
-5. Code pointers resolve (paths exist)
+- the spec says WHY and WHERE, never HOW, with no implementation steps,
+  duplicated code, re-stated signatures or schedules
+- it opens with a definition, and coins no term
+- proposed code is marked as proposed, and a new or absent claim cites its
+  search
+- a measured number carries its commit
+- a refactor or removal Contract holds the baseline numbers and the edit per gate
+- a schema table derives from its code type with `file:line`, and each contract
+  and term has one owning spec
+- no table, column, mode or abstraction no current case needs
+- a defect goes to `BUGS.md`, never into a spec
+- `status` moves in the commit that approves or lands the work
+- phase directories only when specs cluster into workstreams, and the next
+  number is max + 1
+- no doc or code links a spec; a shipped spec's facts move to the doc before
+  the spec is deleted

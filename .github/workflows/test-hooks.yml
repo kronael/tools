@@ -3,7 +3,7 @@ name: Test — hooks
 
 on:
     push:
-        paths: [hooks/**]
+        paths: [hooks/**, kronael/sync/**]
     pull_request:
         branches: [master]
 

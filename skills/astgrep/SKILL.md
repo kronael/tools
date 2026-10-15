@@ -1,7 +1,7 @@
 ---
 name: astgrep
 description: Structural code search and rewrite with ast-grep (tree-sitter AST patterns). NOT for type-aware refactors (use the LSP/language skill) or literal search (use ripgrep). NOT for SQL — no built-in grammar.
-when_to_use: ast-grep, structural search, structural find/replace, codemod, batch refactor by pattern, rewrite a call pattern across the repo, find all usages structurally, sgconfig, YAML lint rule, match by AST node kind
+when_to_use: ast-grep, structural search, structural find/replace, codemod, batch refactor by pattern, rewrite a call pattern across the repo, find all usages structurally, outline, list a file's symbols, rewrite comments or docstrings, sgconfig, YAML lint rule, match by AST node kind
 user-invocable: true
 ---
 
@@ -9,7 +9,9 @@ user-invocable: true
 
 Search and rewrite code by its tree-sitter AST, not text. A pattern is real
 code with meta-variables; matches respect nesting and skip strings/comments.
-Methodology + citations: `docs/astgrep/research-astgrep.md`.
+Methodology + citations: the bundle source repo's `docs/astgrep/research-astgrep.md`
+and `docs/astgrep/codex-critique.md` (empirical breakage); upstream docs at
+ast-grep.github.io.
 
 ALWAYS invoke the binary as `ast-grep`. NEVER rely on `sg` — it collides with
 shadow-utils' `/usr/bin/sg`; `uv tool upgrade ast-grep-cli` recreates the shim.
@@ -45,6 +47,15 @@ Useful flags: `-i` interactive confirm, `-U/--update-all` apply all,
 `--json[=stream]` machine output, `--debug-query[=ast]` show how a pattern
 parsed (reach for this the moment a pattern "should match but doesn't").
 
+## Outline — list symbols before reading
+
+- ALWAYS `ast-grep outline <file>` before reading a whole source file —
+  signatures plus member names, about a thirteenth of the bytes (a 20.6 kB TS
+  file → 1.5 kB). NEVER Read a large file only to learn what it defines.
+- On a directory it prints exported names only; ALWAYS add
+  `--items structure` to see private symbols, `--view signatures` for line
+  numbers, `--json=compact` for a script.
+
 ## Pattern syntax
 
 - `$VAR` — exactly one **named** node. Uppercase/digits/underscore only.
@@ -62,7 +73,7 @@ return), or match by `kind:` directly.
 ## Rewrite safety — the iron rules
 
 A bare `run -p/-r` **over-matches by construction**. Codex-verified failures
-(see `docs/astgrep/codex-critique.md`):
+(`codex-critique.md`, cited above):
 
 - `console.log($$$) -> ''` wrecks expressions: `() => console.log(a)` becomes
   `() => `. Delete log *statements* only via a scan rule with
@@ -99,6 +110,34 @@ fix: ''
 - `constraints` (per meta-var sub-rules), `transform` (derive vars before
   `fix`), `rewriters` (recursive sub-rewrites).
 
+Comments and docstrings — ALWAYS rewrite them with a `kind: comment` rule,
+NEVER `sed`, which also rewrites the same text inside strings:
+
+```yaml
+id: retag-todo
+language: python
+rule: { pattern: $C, kind: comment, regex: 'TODO\(old\)' }
+transform:
+  NEW: { replace: { source: $C, replace: 'TODO\(old\)', by: 'TODO(new)' } }
+fix: $NEW
+```
+
+- `transform` needs the node captured — keep `pattern: $C` beside `kind`.
+- Rust has no `comment` kind: `any: [{kind: line_comment}, {kind: block_comment}]`
+  (doc comments included). Go, TS, Python use `comment`.
+- A Python docstring — module, class or function, and no later string
+  statement:
+  ```yaml
+  rule:
+    kind: string
+    inside:
+      kind: expression_statement
+      nthChild: 1
+      any:
+        - inside: { kind: module }
+        - inside: { kind: block, inside: { any: [{ kind: function_definition }, { kind: class_definition }] } }
+  ```
+
 Project config `sgconfig.yml`: `ruleDirs`, `utilDirs`, `testConfigs`,
 `languageGlobs`, `customLanguages`. `scan` discovers rules from `ruleDirs`.
 Test rules with `ast-grep test` (`valid:` must not match, `invalid:` must).
@@ -117,8 +156,3 @@ strict→loose: `cst`, `smart`, `ast`, `relaxed`, `signature`, `template`.
 - Trusting auto-detect on JSX — pass `-l tsx` explicitly.
 - Skipping the formatter pass — leaves mis-indented output.
 - Claiming SQL works — it needs a custom grammar build first.
-
-## Reference
-
-`docs/astgrep/research-astgrep.md` (cited methodology),
-`docs/astgrep/codex-critique.md` (empirical breakage), ast-grep.github.io.

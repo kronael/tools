@@ -1,13 +1,16 @@
 ---
 name: data
-description: Data collectors and ETL. NOT for one-shot fetches (use sh or py).
-when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data source"
+description: Data collectors, ETL and trading bots. NOT for one-shot fetches (use sh or py).
+when_to_use: "building a scraper, ETL pipeline, real-time feed, WebSocket data source, trading bot, exchange API, paper trading"
 ---
 
 # Collector/Data Collection
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+A trading bot — exchange API, paper trading, order sizing, the bot state
+machine: read `trader.md` on top of this file.
+
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 ## Testing
 
@@ -22,7 +25,7 @@ and design rules.
 
 ## State Management
 
-- state.json for recovery: resume from last_processed + 1. NEVER re-fetch existing data — ALWAYS continue from the last state
+- state.json for recovery: resume from last_processed + 1 (WISDOM § Shell: never re-fetch what is on disk)
 - Save state every 10,000 items, keep portable (JSON)
 - ALWAYS make pipeline writes idempotent (UPSERT by primary key, not INSERT) — retries must not duplicate
 - ALWAYS version raw payloads (store source schema_version with data); NEVER drop unknown fields silently — keep in raw blob
@@ -39,7 +42,7 @@ and design rules.
 
 - restart_on_failure decorator for crash recovery
 - Retry with exponential backoff, NEVER trust external APIs
-- Cache-first: local cache before RPC fallback. NEVER hit an external API per request — cache everything
+- Cache-first: local cache before RPC fallback (WISDOM § Shell)
 - LeakyBucket for expensive APIs (ChatGPT, etc.)
 
 ## Backfill
@@ -75,7 +78,7 @@ and design rules.
 
 ## Pipeline (file-based stages)
 
-- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — swap via an injected dependency param (see the `py` skill), NEVER `monkeypatch`.
+- Data is numpy/pandas/dataclasses. ALWAYS pure functions in modules. NEVER inheritance for behavior or testability — a test patches the symbol at its use site (see the `py` skill § Testing); a dependency param is for a real production dependency, NEVER a test seam.
 - Pipeline = stages of typed files. Each stage owns a directory. Stage N+1 reads stage N. Path = `{batch}/{key_path}/{date}.{pqt|jl}`. Day file = unit of work.
 - ALWAYS tidy at ingestion: one row/observation, one col/variable, one table/entity. NEVER re-clean downstream.
 - Raw is append-only. ALWAYS rebuild downstream from raw. NEVER UPDATE/DELETE raw.

@@ -31,14 +31,18 @@ With the owner's explicit OK in this session, a scratchpad wrapper may
 instead read the token from `/proc/$CLAUDE_PID/environ`, export it and
 `exec "$@"`. NEVER echo, log or commit the token.
 
-`ship` runs every role on `--model` (env `MODEL`, default `sonnet`) with
-fixed role timeouts sized for sonnet. ALWAYS launch with
-`MODEL=fable TIMEOUT_SCALE=3`: fable is the model WISDOM requires for
-unattended code, and at scale 1 fable's validator fails on the 180 s
-timeout. `ship -k <spec>` runs only the spec validator, which proves the
-login and the spec, but it is not read-only: the validator runs with
-`bypassPermissions` and can commit, so ALWAYS run it on a worktree you can
-reset and check `git log` afterwards.
+`ship` runs every role on one `--model` (env `MODEL`, default `sonnet`) with
+fixed role timeouts sized for sonnet. ALWAYS launch it on the default: sonnet
+writes the steps, and fable is not an implementer (WISDOM § Agents). The CLI
+runs its tasks back to back, so no diff is read before the next task;
+ALWAYS read the whole diff after the run and run the gates yourself
+(`BUGS.md` SHIP-INTO-TOOLS-AS-STEP-RUNNER, SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES).
+`ship -k <spec>` runs only the spec validator, which proves the
+login and the spec. The validator gets only `Read`, `Glob` and `Grep`
+(`--tools` restricts even under `bypassPermissions`), so it cannot touch
+the repo; it writes only ship's own state under `DATA_DIR` and its trace
+log, which the CLI hard-codes under the working directory's `.ship/`
+(`BUGS.md` SHIP-CLI-TRACE-LOG-IN-TREE).
 
 If the CLI is absent, report the requirement. Installation is a separate
 owner choice. NEVER install its bundled skill over the toolkit's `ship`.
@@ -47,9 +51,12 @@ ALWAYS keep this skill as the owner-facing controller.
 ## Supply the accepted work
 
 ALWAYS pass exactly one `.md` path — the work record or its cited spec.
-With none or several, the CLI keeps its state in its own data directory
-(`DATA_DIR`; its README names the default) and wipes that directory at
-start, so NEVER point `DATA_DIR` at `.claude/plans/`. Ensure the file
+The CLI keeps its state in `DATA_DIR`, default `.ship/<spec slug>` under the
+working directory, and wipes it on `-f`, on stale state and on a changed
+spec. ALWAYS launch it with `DATA_DIR=<record dir>/cli/<plan name>`
+(`SKILL.md` § Work record names the record dir): the default lands in the
+tree, one shared dir lets a wipe for one change erase another, and the
+record dir itself must never be `DATA_DIR`. Ensure the file
 carries concrete deliverables, owned paths, acceptance checks, gates,
 exclusions and worker boundaries.
 

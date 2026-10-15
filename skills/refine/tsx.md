@@ -7,7 +7,7 @@ reads to pick the agent type.
 ## Effect emission identity `correctness`
 
 - A `useEffect` that emits (analytics, logging, a toast, a mutation) and dedups
-  on a hand-written key — `` `${amount}|${winner}|${exclude}` `` — silently
+  on a hand-written key — `` `${amount}|${currency}|${region}` `` — silently
   merges distinct events into one. Every field the author did not list is a
   collision, and a collision is a dropped event, not an error: two different
   user actions produce one row and nothing complains.

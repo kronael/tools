@@ -20,8 +20,7 @@ with a persistent disk — use [qemubox](../qemubox/) instead.
 ## Build
 
 ```bash
-make image              # builds the (UID-agnostic) image with host TZ
-make image TZ=EST       # custom timezone (default: host TZ or UTC)
+make image              # builds the (UID-agnostic) image; sessions run in UTC
 ```
 
 The image has no baked user. At runtime, dockbox passes your host UID/GID
@@ -57,7 +56,9 @@ dockbox ~/wk/p1 ~/wk/p2           # mount multiple dirs, work in last
 dockbox -v ~/wk/lib               # extra mount at same path (ro, default)
 dockbox -v ~/wk/lib:rw            # extra mount at same path (rw)
 dockbox -P                        # persist host build dirs (no overmount)
-dockbox -T                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
+dockbox -B                        # build-dir overmounts on anonymous Docker volumes (disk), not tmpfs
+dockbox -T                        # scratch box: no project mount, works in /tmp/work
+dockbox -N                        # new Claude session, no resume picker
 dockbox -e GH_TOKEN               # forward env var into container
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
@@ -67,7 +68,15 @@ dockbox rm <name|glob|-a>...      # force-remove boxes and their volumes (-a = a
 dockbox prune [hours]             # remove idle boxes, and exited ones older than N hours (default: 2160)
 ```
 
-Default command: claude. Use `-x` to override.
+Default command: claude. Use `-x` to override. A `--model` or Codex `-m`
+after the tool name replaces the alias's model and effort. Claude opens its
+resume picker when the project dir has Claude history; `-N` starts a new
+session instead.
+
+`-T` starts a temporary session: dockbox mounts no project dir, and the
+session starts in `/tmp/work`, a tmpfs that the box loses when its last
+session exits. The box is `dockbox-tmp` unless `-n` names it. `-v` still
+adds host paths, a dir argument is an error, and `-T` implies `-N`.
 
 `dockbox ls` USE is `busy` while any session or command runs in the box and
 `idle` when only its sleeper is left — a box no session holds, safe to remove.
@@ -96,7 +105,9 @@ dockbox codex           # 3rd terminal: codex inside the same box
 ```
 
 The entered session shares the container's `HOME`, mounts, and
-processes, and runs as your host user (not root). The **command** —
+processes, and runs as your host user (not root). It starts in the
+container's working directory, the project of its first launch, which the
+box always mounts, not the directory this invocation runs from. The **command** —
 tool, `--model`, `--effort`, args — takes effect, and **env flags**
 (`-e`, `-g`) are forwarded into the session, so a box first started
 without `-g` still gets the token when a later `dockbox -g` re-enters
@@ -138,11 +149,11 @@ whitespace-separated, with lines starting `#` as comments.
 - `~/.dockboxrc` — global defaults, every flag. It is read ahead of the
   command line, so a command-line `-n`, `-d` or `-x` wins over it.
 - `.dockboxrc` in the project dir (the last dir named) — per-project
-  defaults. It takes `-e`, `-v`, `-H`, `-T`, `-g`, `-G` and `-P` /
-  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`
-  with a warning, so a cloned repo cannot grant itself sudo, the Docker
-  socket or your SSH/gpg agent, or switch the tool or box name. Put those in
-  `~/.dockboxrc`.
+  defaults. It takes `-e`, `-v`, `-H`, `-B`, `-g`, `-G`, `-N` and `-P` /
+  `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and
+  `-x` with a warning, so a cloned repo cannot grant itself sudo, the Docker
+  socket or your SSH/gpg agent, or switch the tool, box name or workdir. Put
+  those in `~/.dockboxrc`.
 
 Both are optional. Global applies first, project appends. Neither file
 reaches `docker run`: a Docker flag such as `--gpus all` in either file is
@@ -193,6 +204,15 @@ Automatic:
   live in each box's own `/tmp`, so a private registry means boxes and the
   host neither see nor message each other's sessions, and two boxes' low
   container PIDs cannot overwrite each other's records.
+- `~/.claude/plugins` -> `/home/dockbox/.claude/plugins` and the same host
+  path (ro) - installed plugins. `installed_plugins.json` records absolute
+  host paths.
+- `~/.claude/settings.json` -> a copy of the host file with the sandbox off
+  (ro), written once when the box is created. A `settings.local.json` alone
+  cannot stop the sandbox restart loop, which starts when the host
+  `settings.json` enables Claude Code's sandbox. A plugin enabled on the host
+  after that stays disabled in the box until the box is recreated.
+- `~/.codex` -> `/home/dockbox/.codex` (rw) - Codex config and credentials
 - `~/.claude.json` -> copied at startup with `diffSidebarOpen` pinned off
   (fallback creates minimal file)
 - `~/.gitconfig` -> `/home/dockbox/.gitconfig` (ro)
@@ -200,13 +220,14 @@ Automatic:
 - a generated sandbox note -> `/etc/claude-code/CLAUDE.md` (ro) — Claude
   Code loads it in every session, so the agent knows it is in dockbox and
   which mounts survive; `CLAUDE_SANDBOX=dockbox` is set as well
+- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
+- `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
 
 Opt-in:
 - `gpg-agent socket` -> `/home/dockbox/.gnupg/S.gpg-agent` — only with `-K`
-  (commit signing; off by default)
-- `~/.dockbox_history` -> `/home/dockbox/.zsh_history` (rw)
-- `/etc/localtime` -> `/etc/localtime` (ro)
-- `/tmp/capture.png` -> `<workdir>/capture.png` (ro)
+  (commit signing; off by default), and only while the host agent answers.
+  Docker creates `/home/dockbox/.gnupg` as root around the socket, so gpg
+  cannot write its trustdb lock. dockbox-init chowns that directory to you.
 
 Project dirs are mounted at exact paths with read-write access.
 
@@ -243,22 +264,25 @@ Build artifacts are an attack surface, not state to persist. Two layers
 keep toolchains, caches and dependency dirs out of your host workdir:
 
 1. **Rust / Python uv state in `/opt`**: the image sets `CARGO_HOME`,
-   `RUSTUP_HOME`, and `UV_TOOL_DIR` to `/opt/dev-tools/...`, so tool
-   caches and toolchains live in the image, not your project. dockbox
+   `RUSTUP_HOME`, `UV_TOOL_DIR`, `UV_PYTHON_INSTALL_DIR` and `SERENA_HOME`
+   to `/opt/dev-tools/...`, so tool caches, toolchains and Serena's
+   per-project state live in the image, not your project. dockbox
    also sets `CARGO_TARGET_DIR=/tmp/cargo-target`, a dedicated tmpfs, so
    Cargo never writes `target/` to the workdir.
 
-2. **Overmount by default** (Node, Bun, framework caches): for any
+2. **Overmount by default** (Node, Bun, Python venvs, framework caches): for any
    ecosystem that hardcodes its output dir in CWD, dockbox walks the
-   workdir, finds every matching directory (recursive, pruned so it
+   workdir to depth 4, finds every matching directory (pruned so it
    doesn't recurse into matches), and replaces each with a fresh empty
    mount inside the container. Owned by the runtime user, removed with
-   the box.
+   the box. Deeper matches are vendored pnpm and yarn stores that hold
+   hundreds of `node_modules` the box never writes. A mount for each
+   would exceed the argument limit.
 
    Names overmounted by default:
 
    ```
-   node_modules  .next  .turbo  .cache
+   node_modules  .venv  .next  .turbo  .cache
    ```
 
    `dist` and `build` are not overmounted, so they land in the host
@@ -289,7 +313,7 @@ keep toolchains, caches and dependency dirs out of your host workdir:
    - **tmpfs** (default): kernel `tmpfs` per path. RAM-backed (pages out
      to swap under pressure). Fast for many-small-file workloads.
      Cost: RAM. 1 GB `node_modules` ≈ 1 GB RAM unless swapped.
-   - **volume** (`-T`): anonymous Docker volume per path. Disk-backed.
+   - **volume** (`-B`): anonymous Docker volume per path. Disk-backed.
      Pick this when you don't want to pay RAM for the artifact dirs.
 
 **Trade-off**: every fresh session re-installs and re-builds. Intentional —
@@ -319,11 +343,10 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 ## Permissions
 
-All Claude Code permission prompts are bypassed two ways: `bypassPermissions`
-mode injected via `settings.local.json`, and `--dangerously-skip-permissions`
-passed by the `claude` wrapper in the image. This is intentional — the use
-case is a trusted agent doing real work, not untrusted code execution. If you
-need security isolation, this is not the tool.
+All Claude Code permission prompts are bypassed by
+`--dangerously-skip-permissions`, passed by the `claude` wrapper in the image.
+This is intentional — the use case is a trusted agent doing real work, not
+untrusted code execution. If you need security isolation, this is not the tool.
 
 Boxes are kept apart from each other and from the host's Claude sessions
 (private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the

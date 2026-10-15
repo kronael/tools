@@ -16,7 +16,7 @@ export TELEGRAM_API_ID=12345678        # https://my.telegram.org/apps
 export TELEGRAM_API_HASH=abcdef…
 export TELEGRAM_PHONE=+1234567890      # asks for the code on the first run
 
-uv run main.py some_group -1005125571890
+uv run main.py some_group -1001234567890
 uv run users.py some_group
 ```
 

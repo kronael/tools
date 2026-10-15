@@ -336,16 +336,20 @@ touch "$tmp/home/.claude/projects/$slug/session.jsonl"
 HOME="$tmp/home" dockbox -n resume claude "$primary" >/dev/null 2>&1
 true_ "resume maps every nonalphanumeric path character" \
     'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" dockbox -N -n resume claude "$primary" >/dev/null 2>&1
+false_ "-N starts a new session over existing history" 'grep -q "claude --resume" "$log"'
 
 # A project .dockboxrc takes --no-ephemeral like the command line does: builds
 # persist (no overmount for node_modules), claude gets no stray "--", and no
 # "ignoring" warning. The run without an rc proves the overmount is there to lose.
 proj="$tmp/proj"
-mkdir -p "$proj/node_modules"
+mkdir -p "$proj/node_modules" "$proj/server/.venv"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")
 true_  "a box without an rc overmounts node_modules" \
     'grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+true_  "a box without an rc overmounts a nested .venv" \
+    'grep -q -- "--tmpfs $proj/server/.venv:" <<< "$run"'
 echo "--no-ephemeral" > "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
 run=$(grep "^run " "$log")
@@ -354,6 +358,11 @@ true_  "project rc --no-ephemeral persists builds" \
 true_  "project rc --no-ephemeral passes no -- to claude" \
     '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
+printf -- '--no-ephemeral' > "$proj/.dockboxrc"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
+run=$(grep "^run " "$log")
+true_  "an rc file's unterminated last line still counts" \
+    '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$proj/.dockboxrc"
 
 # Without a project .dockboxrc the project-rc pass has no words to read; the
@@ -362,6 +371,28 @@ HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2
 claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
     '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
+
+# -d and -x take the same alias table as the first argument; a model flag in
+# the session's own arguments replaces the alias's model and effort.
+bypass="--dangerously-bypass-approvals-and-sandbox"
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d codex "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d codex takes the codex alias defaults" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -x haiku "$proj" >/dev/null 2>"$tmp/err"
+true_  "-x haiku runs claude on the haiku model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex --model gpt-6-astra "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the codex alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass --model gpt-6-astra" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --model claude-sonnet-5-5 "$proj" >/dev/null 2>"$tmp/err"
+true_  "a session --model replaces the claude alias model and effort" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus -p "explain the -m flag" "$proj" >/dev/null 2>"$tmp/err"
+true_  "a model flag inside a prompt keeps the alias model" \
+    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
+true_  "-d bash is the login shell the bash argument gives" \
+    'grep -q -- " -- /bin/bash -l$" "$log"'
 
 # Any other long flag in an rc file is an error naming the file and the flag,
 # in the project rc and in ~/.dockboxrc alike. After the tool name it is the
@@ -382,6 +413,34 @@ run=$(grep "^run " "$log")
 true_  "a home rc --no-ephemeral still persists builds" \
     '[ "$rc" = 0 ] && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 rm -f -- "$tmp/home/.dockboxrc"
+
+# -T mounts no project: the box keys on tmp, works in a box-only tmpfs that
+# dockbox-init chowns, and its claude starts a new session over old history.
+cd "$proj" || exit 1
+fresh -T
+true_  "-T starts a box"                  '[ "$rc" = 0 ]'
+true_  "-T keys the box on tmp"           'grep -q -- " --name dockbox-tmp " <<< "$run"'
+true_  "-T works in a tmpfs workdir" \
+    'grep -q -- " --tmpfs /tmp/work:rw,exec,mode=1777 " <<< "$run" && grep -q -- " -w /tmp/work " <<< "$run"'
+true_  "-T chowns the workdir"            'grep -q -- "DOCKBOX_EPH_PATHS=/home/dockbox:/tmp/work " <<< "$run"'
+false_ "-T mounts no project dir"         'grep -q -- " -v $proj:" <<< "$run"'
+false_ "-T overmounts no project build dir" 'grep -q -- "$proj/node_modules" <<< "$run"'
+mkdir -p "$tmp/home/.claude/projects/-tmp-work"
+touch "$tmp/home/.claude/projects/-tmp-work/session.jsonl"
+HOME="$tmp/home" dockbox -T >/dev/null 2>&1
+true_  "-T re-enters its own box"         'grep -q "^exec -it .* dockbox-tmp setpriv " "$log"'
+false_ "-T starts a new session"          'grep -q "claude --resume" "$log"'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -T claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
+true_  "-T refuses a project dir, starting no box" \
+    '[ "$rc" = 2 ] && grep -q "use -v" "$tmp/err" && ! grep -q "^run " "$log"'
+printf -- "-T\n" > "$proj/.dockboxrc"
+fresh -n pe
+true_  "project rc -T is ignored"         'grep -q "ignoring -T" "$tmp/err" && grep -q -- " -v $proj:$proj:rw " <<< "$run"'
+rm -f -- "$proj/.dockboxrc"
+fresh -n pe -B
+true_  "-B puts build dirs on Docker volumes" \
+    'grep -q -- " -v $proj/node_modules " <<< "$run" && ! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
+cd "$here" || exit 1
 
 # The help line naming the flags a project rc ignores lists exactly the set the
 # rc loop's `case` ignores.
@@ -406,11 +465,21 @@ nout="$(sandbox_note myhost bridge \
 true_ "note names the sandbox"       '[[ "$nout" == *CLAUDE_SANDBOX=dockbox* ]]'
 true_ "note names the host"          '[[ "$nout" == *"host \`myhost\`"* ]]'
 true_ "note names the network"       '[[ "$nout" == *"Network: bridge"* ]]'
+true_ "note routes GitHub over HTTPS" '[[ "$nout" == *"credential.helper='"'"'!gh auth git-credential'"'"'"* ]]'
 true_ "note maps a box path to host" '[[ "$nout" == *"- /home/dockbox/.claude (rw) <- /h/.claude"* ]]'
 true_ "note marks a same-path mount" '[[ "$nout" == *"- /p (rw) <- same path"* ]]'
 true_ "note keeps a ro mode"         '[[ "$nout" == *"settings.json (ro) <- /tmp/s.json"* ]]'
 true_ "note lists volume and tmpfs as lost" \
     '[[ "$nout" == *"Lost at exit (tmpfs or volume): /p/node_modules /home/dockbox"* ]]'
+true_ "note lists a -B volume as an empty dependency dir" '[[ "$nout" == *"  - /p/node_modules"* ]]'
+true_ "note names the gh token -g brings" '[[ "$nout" == *"without \`-g\` has none"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw \
+    --tmpfs /p/.venv:rw,exec,mode=1777 --tmpfs /tmp:rw,exec,mode=1777)"
+true_ "note lists an empty dependency dir" \
+    '[[ "$nout" == *"empty box-only mounts."*"  - /p/.venv"$'"'"'\n'"'"'"- GitHub"* ]]'
+false_ "note omits a tmpfs that is no dependency dir" '[[ "$nout" == *"  - /tmp"* ]]'
+nout="$(sandbox_note myhost bridge -v /p:/p:rw --tmpfs /tmp:rw,exec,mode=1777)"
+false_ "note claims no empty dependency dir without one" '[[ "$nout" == *box-only* ]]'
 
 echo "dockbox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

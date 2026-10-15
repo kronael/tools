@@ -38,7 +38,7 @@ rir main            # fetch + rebase -i on origin/main
 rip feature         # push rebased HEAD to origin/feature
 ```
 
-Detached HEAD is safe: reflog keeps all commits for 90 days. If you
+Detached HEAD is safe: reflog keeps all commits for 30 days. If you
 lose track, `git reflog` finds everything. No local branches to
 maintain, no tracking to configure, no stale branches to clean up.
 
@@ -49,6 +49,8 @@ maintain, no tracking to configure, no stale branches to clean up.
 | `rig checkout` / `rig co` | `rco` | Fetch + detached checkout of a ref, tag, hash or origin branch pattern |
 | `rig gco` | `gco` | Detached checkout without fetch; `gco [ref] -- paths` restores files |
 | `rig push` / `rig p` | `rip` | Push HEAD to origin/branch |
+| `rig ghpush` | `ghpush` | Push stated refspecs to origin's GitHub repo over HTTPS with the `gh` token; the remote stays SSH |
+| `rig ghfetch` | `ghfetch` | Fetch from origin's GitHub repo the same way |
 | `rig rebase` / `rig r` | `rir` | Fetch + rebase -i origin/branch |
 | `rig merge` / `rig m` | `rim` | Fetch + merge origin/branch |
 
@@ -139,6 +141,49 @@ walking first-parent ancestry until it finds a commit with a remote ref.
 Stops at merge commits (ambiguous parentage) and falls back to fzf
 selection when detection fails.
 
+### Push and fetch with the gh token (ghpush, ghfetch)
+
+```bash
+ghpush <sha>:refs/heads/20260101_topic   # one-off HTTPS push, remote URL untouched
+ghpush v1.2.3:refs/tags/v1.2.3           # a tag, the same way
+ghpush -n <sha>:refs/heads/x             # print the git command
+ghpush -u                                # print the HTTPS URL
+ghfetch <branch>                         # read over HTTPS the same way, into FETCH_HEAD
+ghfetch '+refs/heads/*:refs/remotes/origin/*'   # refresh the tracking refs
+```
+
+The human pushes over SSH with `rip`. An agent session often has no SSH
+agent (`Permission denied (publickey)`) while `gh auth status` shows a
+token, so `ghpush` runs
+
+```
+git -c credential.helper= -c 'credential.helper=!gh auth git-credential' \
+    -c url.<url>.insteadOf=<url> -c url.<url>.pushInsteadOf=<url> \
+    push --no-follow-tags <url> <refspec>...
+```
+
+and `ghfetch` the same with `fetch`, where `<url>` is
+`https://github.com/<owner>/<repo>.git`. `ghpush` reads owner and repo from
+origin's push URL (`git remote get-url --push origin`, so a
+`remote.origin.pushurl` wins) and `ghfetch` from its fetch URL; either may be
+`git@github.com:`, `ssh://git@github.com/`, `ssh://git@github.com:<port>/`,
+`ssh://git@ssh.github.com:<port>/`, `https://github.com/` or
+`https://<userinfo>@github.com/`, and any other form, `GitHub.com` included,
+is refused. The two `url.<url>` rules outmatch a `url.<base>.insteadOf` or
+`pushInsteadOf` on a shorter base such as `https://github.com/`, so a rewrite
+to SSH in the user's config does not catch the HTTPS URL. Neither command
+rewrites `remote.origin.url` or stores the token: clones, remotes and
+worktrees stay SSH.
+
+A push refspec is `<src>:refs/heads/<branch>` or `<src>:refs/tags/<tag>`:
+one colon, a non-empty source and a non-empty name; only the stated tags
+travel. Both commands refuse `-f`, `--force`, `--force-with-lease`,
+`--force-if-includes`, `--tags`, `--all`, `--mirror`, `-d`, `--delete` and any
+other flag but `-n`, `-u` and `-h`; `ghpush` also refuses a `+` refspec, a wildcard,
+a delete (`:<dst>`) and any other destination. `-u` takes no refspec. A token
+without the `workflow` scope cannot push a change under `.github/workflows` —
+GitHub refuses the push; report it rather than working around it.
+
 ### Rebase (rir)
 
 ```bash
@@ -162,7 +207,8 @@ rim ?             # Interactive branch selection
 Single busybox-style script. `rig aliases` lists every installed symlink,
 including `rco`, `gco`, `rip`, `rir`, `rim`, and the git aliases above.
 They dispatch via `basename $0`. Checkout, rebase, and merge share a
-`cmd_branch_op` helper; push has its own handler. Checkout (`rco`), rebase,
+`cmd_branch_op` helper; push has its own handler, and `ghpush`/`ghfetch`
+share a third. Checkout (`rco`), rebase,
 and merge fetch by default; `-z` suppresses fetch. `gco` never fetches.
 `rig install` owns the symlink list; `make install` delegates to it.
 

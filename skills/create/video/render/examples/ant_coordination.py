@@ -2,7 +2,7 @@
 # Ant stigmergy — headless mp4 / gif.
 # Deps: pip install numpy opencv-python   (+ imageio for --gif)
 # Run:  ./ant_coordination.py --variant bloom --speed 2 --gif \
-#           --text "Arizuko 0.49.0" "Shortest path always wins"
+#           --text "Project 1.0.0" "Shortest path always wins"
 
 import argparse
 import json

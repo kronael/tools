@@ -49,7 +49,7 @@ expires and the failure looks like an empty timeline, not an error.
 
 ### Commands
 
-Single-file PEP 723 script. Both forms below auto-resolve `selenium` + `click`.
+Single-file PEP 723 script. The commands below auto-resolve `selenium` + `click`.
 
 ```sh
 uv run main.py timeline <username>              # home timeline, continuously
@@ -62,7 +62,7 @@ Common flags:
 | flag | default | meaning |
 |---|---|---|
 | `--headless/--no-headless` | headless | watch the browser work |
-| `-d, --delay` | `30` | seconds between profiles in `user` mode |
+| `-d, --delay` | `30` | seconds between profiles in `user` mode, plus a random jitter of up to the same |
 | `--debug` | off | DEBUG logging (before the subcommand) |
 
 ### Output
@@ -72,8 +72,9 @@ Common flags:
 ./export/user_<target>.jl
 ```
 
-One tweet object per line — `id`, `url`, `author`, `text`, `ctime`. Existing
-ids are read back before each run, so a re-run appends only what is new.
+One tweet object per line — `id`, `url`, `author`, `text`, `ctime`,
+`collected_at`. Existing ids are read back before each run, so a re-run
+appends only what is new.
 
 ### Requirements
 

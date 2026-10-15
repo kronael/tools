@@ -18,10 +18,12 @@
       "Bash(git push*)",
       "Bash(git pull*)",
       "Bash(rsync *)",
-      "Bash(gh pr create*)",
       "Bash(gh pr merge*)",
       "Bash(gh release create*)",
-      "Bash(gh repo create*)"
+      "Bash(gh repo create*)",
+      "Bash(gh pr review --approve*)",
+      "Bash(ghpush *refs/heads/master*)",
+      "Bash(ghpush *refs/heads/main*)"
     ],
     "deny": [
       "Bash(rm -r*)",
@@ -30,7 +32,6 @@
       "Bash(rm --recursive*)",
       "Bash(chmod 777*)",
       "Bash(ssh *)",
-      "Bash(gh pr review --approve*)",
       "SendFeedback(*)"
     ],
     "defaultMode": "default"
@@ -60,11 +61,6 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/prompt_nudge.py",
-            "timeout": 500
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/style_nudge.py",
             "timeout": 500
           }
         ]
@@ -166,11 +162,24 @@
   "crossSessionInbound": "refuse",
   "isolatePeerMachines": true,
   "attribution": {
-    "commit": ""
+    "commit": "",
+    "pr": "🤖",
+    "sessionUrl": false
   },
   "env": {
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
   },
   "outputStyle": "caveman",
-  "cleanupPeriodDays": 3650000
+  "cleanupPeriodDays": 3650000,
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 ~/.claude/hooks/statusline.py"
+  }
 }

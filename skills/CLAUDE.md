@@ -11,8 +11,10 @@ repo CLAUDE.md links to this file.
   data `.md` files, read on demand. Current routers: `create/` (artifact
   generators), `software/` (engineering baseline + runbooks), `specs/` (spec
   workflow), `readme/` (documentation: sync, file topology, page shape),
-  `review/` (give/take a code review — see `review/SKILL.md`), `research/`
-  (research baseline).
+  `review/` (give/take a code review — see `review/SKILL.md`), `eval/`
+  (one evaluation lens per file, `all.md` runs every lens), `research/`
+  (research baseline), `writing/` (prose rules hot, `page.md` for how a
+  document or page is laid out).
 - Preload model (verified): Claude Code injects `name` + `description` +
   `when_to_use` per skill into the always-on listing; `when_to_use` is
   "appended to description" and the combined text is capped at 1,536 chars
@@ -76,42 +78,69 @@ skills it replaces.
 - Bare verbs and tech names stay flat top-level.
 - A verb skill may route its own modes under its own name (`readme/`,
   `review/`).
-- `writing`, `humanize` = shared references cited by prose skills
-  (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`).
+- `writing` = the one owner of the prose and page rules (router, `page.md`
+  cold); `humanize` = the AI-tells catalogue it finishes with. Cited by prose
+  skills (`tweet`, `pr-draft`, `readme`, `diary` → `writing` → `humanize`);
+  every other skill, agent or file points there in one line, NEVER restates.
 
 ## Subagent effort defaults
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
   them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
-  xhigh, `haiku` = model only (Haiku 4.5 rejects `effort`). ALWAYS change an
-  agent file and every skill that quotes it in one commit.
-- `sonnet` runs investigations, bug hunts, pre-review, and the steps of a
-  written plan (`sonnet` § Plan, then execute). `opus` takes design calls and
-  plan steps that need judgment. `fable` takes unattended multi-file code,
-  `ship` plans, and security or deep audits.
-- `haiku` subagents are for cheap exploration, research, mapping, grep-style
-  surveys, and mechanical bounded edits. Escalate once the work requires
-  multi-step design judgment, cross-file architecture, or ambiguous tradeoffs.
+  xhigh. ALWAYS change an agent file and every skill that quotes it in one
+  commit.
+- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
+- `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
+  mechanical edits too wide for the parent, and the steps of a written plan
+  (`sonnet` § Plan, then execute). `opus` takes design calls, the plans for
+  implementation work and plan steps that need judgment. `fable` takes specs,
+  architecture, WISDOM and skill writing, algorithmic solutions, and red
+  reviews or deep audits — NEVER implementation.
+- No Haiku tier: Haiku is batch-only (`global` § Agents owns the rule) —
+  NEVER add an agent file, launcher skill or nudge keyword that pins it.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 
+## Agent definitions
+
+- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`,
+  with no body — and thin skill agents whose body only loads the same-named
+  skill. `visual`, `readme`, `improve` (pins Sonnet 5.5 at high), `learn` and
+  `distill` are each launched from their skill's `## Where it runs`
+  (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
+  its agent serves only an explicit dispatch of a whole refine pass.
+  Knowledge lives in the skill that owns the concern, NEVER in an agent body.
+- `terra` is the exception because it routes an OpenAI model. NEVER add an
+  `agents/terra.md`; Codex reads `skills/terra/SKILL.md` through the bridge.
+- This section owns the agents rule. ALWAYS point here in one line from any
+  other file; NEVER restate the list.
+- A skill that needs isolation or a model says so in its own body (`## Where
+  it runs`): ALWAYS its thin same-named agent where one fits, else
+  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`) told to
+  load the skill. NEVER write a content-bearing agent definition, and NEVER reduce
+  a skill body to one "launch agent X" line.
+
 ## Earning a rule's place
 
-- ALWAYS run the `wisdom` skill's subtraction test before adding or trimming
-  rules: a fresh sub writes its defaults for the topic, and whatever it produces
-  unprompted does not go in. Only drifts, unguessable local facts, workflows and
-  deliberate harness overrides survive.
+- ALWAYS run `wisdom` § The subtraction test before adding or trimming a rule.
 
 ## Prompt examples and context
 
-- Treat examples as steering tokens, not neutral documentation.
-- Prefer explicit rules over examples when the rule can be stated directly.
-- Keep examples scarce, ordinary, and representative; label what property
-  should generalize.
-- Do not keep examples merely as history or proof of dogfooding. They prime
-  future runs and spend context.
-- Move example galleries, research notes, and test cases to cold references;
-  keep preloaded skills as decision surfaces.
+- ALWAYS treat examples as steering tokens, not neutral documentation.
+- ALWAYS prefer an explicit rule over an example when the rule can be stated
+  directly.
+- ALWAYS keep examples scarce, ordinary, and representative; label what
+  property should generalize.
+- NEVER keep an example merely as history or proof of dogfooding. It primes
+  future runs and spends context.
+- ALWAYS move example galleries, research notes, and test cases to cold
+  references; keep preloaded skills as decision surfaces.
+- ALWAYS give an illustrative absolute path a one-character account segment
+  (`/home/u/app/x`). The leak lint reads a longer one as a real machine path
+  and errors (`skill-local-path` in `hooks/skill_frontmatter_lint.py`). A file
+  whose point is the real-looking path — what to strip, where a slug comes
+  from — opts out with `<!-- lint: allow skill-local-path -->` on a line of
+  its own.
 
 ## Editing a router
 

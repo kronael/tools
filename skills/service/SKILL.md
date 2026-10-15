@@ -6,8 +6,8 @@ when_to_use: "building a REST API, microservice, adding a /health endpoint"
 
 # Service/API
 
-Requires the `software` skill's `code.md` for shared naming, style, comments,
-and design rules.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules.
 
 - Liveness: /health (process alive), Readiness: /ready (deps ready)
 - Versioned paths: /v1/, /v2/ (not query params)

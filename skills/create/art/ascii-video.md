@@ -212,6 +212,7 @@ For segmented videos (quotes, scenes, chapters), render each as a separate clip 
 | `ascii-video/references/inputs.md` | Audio analysis (FFT, bands, beats), video sampling, image conversion, text/lyrics, TTS integration (ElevenLabs, voice assignment, audio mixing) |
 | `ascii-video/references/optimization.md` | Hardware detection, quality profiles, vectorized patterns, parallel rendering, memory management, performance budgets |
 | `ascii-video/references/troubleshooting.md` | NumPy broadcasting traps, blend mode pitfalls, multiprocessing/pickling, brightness diagnostics, ffmpeg issues, font problems, common mistakes |
+| `ascii-video/README.md` | Upstream README: what the renderer is, mode table, the six-stage pipeline, palette and generator catalogs, hardware profiles, file structure |
 
 ---
 

@@ -1,5 +1,6 @@
 import io
 import json
+from pathlib import Path
 
 import prompt_nudge
 import pytest
@@ -30,10 +31,23 @@ def test_codex_route_requires_explicit_second_opinion() -> None:
     assert explicit_route('oracle this') == '/astra'
 
 
-@pytest.mark.parametrize('skill', ['astra', 'sol'])
-def test_slash_route_to_astra_and_sol_suppressed_in_codex(skill) -> None:
-    assert explicit_route(f'/{skill} handle this') == f'/{skill}'
-    assert explicit_route(f'/{skill} handle this', harness='codex') is None
+def test_slash_astra_routes_to_astra_and_is_suppressed_in_codex() -> None:
+    assert explicit_route('/astra handle this') == '/astra'
+    assert explicit_route('/astra handle this', harness='codex') is None
+
+
+def test_every_route_names_a_bundled_skill() -> None:
+    skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
+    targets = {
+        *prompt_nudge.SKILL_KEYWORDS.values(),
+        *(v for _, routes in prompt_nudge.ESCALATION_PATTERNS for v in routes.values()),
+        explicit_route('/astra handle this'),
+        explicit_route('oracle this'),
+    }
+    missing = [
+        t for t in targets if not (t and t[0] == '/' and (skills / t[1:] / 'SKILL.md').is_file())
+    ]
+    assert not missing
 
 
 @pytest.mark.parametrize(
@@ -78,6 +92,25 @@ def test_continue_routes_to_continue_skill() -> None:
     assert explicit_route('continue') == '/continue'
     assert explicit_route('cont') == '/continue'
     assert explicit_route('pick up where we left off') is None
+
+
+@pytest.mark.parametrize(
+    'word',
+    [
+        'ceo',
+        'cto',
+        'eval',
+        'novice',
+        'pentest',
+        'roi',
+        'security',
+        'ux',
+        'usability',
+        'walkthrough',
+    ],
+)
+def test_eval_lens_words_route_to_eval(word) -> None:
+    assert explicit_route(f'run a {word} pass on the dashboard') == '/eval'
 
 
 def test_ship_phrasings_route_to_ship() -> None:
