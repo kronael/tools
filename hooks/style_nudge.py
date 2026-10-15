@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import json
 import os
-import re
 import sys
 from pathlib import Path
+from runpy import run_path
 
 from lib.state import hook_event
 
-STYLE_NAME = 'caveman'
-SECTION_RE = re.compile(r'^## Persistence\n(?P<body>.*?)(?=^## |\Z)', re.MULTILINE | re.DOTALL)
+RENDERER = Path(__file__).resolve().parent.parent / 'skills' / 'caveman' / 'reminder.py'
+MODULE = run_path(str(RENDERER))
 
 
-def read_reminder(home: Path) -> str | None:
-    settings = json.loads((home / '.claude' / 'settings.json').read_text())
-    if settings.get('outputStyle') != STYLE_NAME:
-        return None
-    raw = (home / '.claude' / 'output-styles' / f'{STYLE_NAME}.md').read_text()
-    matched = SECTION_RE.search(raw)
-    if not matched:
-        return None
-    body = matched.group('body').strip()
-    if not body:
-        return None
-    return f'<caveman-reminder>\n{body}\n</caveman-reminder>'
+def read_reminder(home: Path, portable: bool = True) -> str | None:
+    rendered = MODULE['render_reminder'](home, portable)
+    return rendered['text'] if rendered else None
 
 
 def output_for(event: str, reminder: str) -> dict | None:

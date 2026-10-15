@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import io
 import json
 from pathlib import Path
 
 import pytest
-from style_nudge import SECTION_RE
 from style_nudge import main
 from style_nudge import output_for
 from style_nudge import read_reminder
@@ -14,7 +15,8 @@ def install_style(home: Path, selected: str = 'caveman') -> None:
     (claude / 'output-styles').mkdir(parents=True)
     (claude / 'settings.json').write_text(json.dumps({'outputStyle': selected}))
     (claude / 'output-styles' / 'caveman.md').write_text(
-        '# Caveman\n\n## Persistence\n\nKeep applying caveman.\n\n## Language\n\nPlain.\n'
+        '# Caveman\n\n## Budget — chat only\n\nKeep replies short.\n\n'
+        '## Shape — chat only\n\nLead with the answer.\n\n## Language\n\nPlain.\n'
     )
 
 
@@ -29,7 +31,10 @@ def run(monkeypatch, capsys, home: Path, event: str) -> dict | None:
 def test_reader_uses_the_selected_caveman_file(tmp_path: Path) -> None:
     install_style(tmp_path)
     reminder = read_reminder(tmp_path)
-    assert reminder == '<caveman-reminder>\nKeep applying caveman.\n</caveman-reminder>'
+    assert reminder == (
+        '<caveman-reminder>\n## Budget — chat only\n\nKeep replies short.\n\n'
+        '## Shape — chat only\n\nLead with the answer.\n</caveman-reminder>'
+    )
 
 
 def test_reader_is_silent_for_another_selected_style(tmp_path: Path) -> None:
@@ -58,23 +63,42 @@ def test_precompact_emits_no_discarded_context() -> None:
 
 
 @pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse', 'SessionStart'])
-def test_installed_hook_emits_on_each_lifecycle_path(monkeypatch, capsys, tmp_path: Path, event: str) -> None:
+def test_installed_hook_emits_on_each_lifecycle_path(
+    monkeypatch, capsys, tmp_path: Path, event: str
+) -> None:
     install_style(tmp_path)
     output = run(monkeypatch, capsys, tmp_path, event)
     assert output is not None
     assert 'caveman-reminder' in json.dumps(output)
 
 
-def test_missing_persistence_section_fails_silent(monkeypatch, capsys, tmp_path: Path) -> None:
+def test_missing_canonical_budget_fails_silent(monkeypatch, capsys, tmp_path: Path) -> None:
     install_style(tmp_path)
-    (tmp_path / '.claude' / 'output-styles' / 'caveman.md').write_text('# Caveman\n')
+    (tmp_path / '.claude' / 'output-styles' / 'caveman.md').write_text(
+        '# Caveman\n\n## Shape — chat only\n\nLead with the answer.\n'
+    )
     assert run(monkeypatch, capsys, tmp_path, 'UserPromptSubmit') is None
+
+
+def test_arizuko_mode_adds_the_selected_surface_length(tmp_path: Path) -> None:
+    install_style(tmp_path, selected='discord-channel')
+    styles = tmp_path / '.claude' / 'output-styles'
+    (styles / 'discord-channel.md').write_text(
+        '# Discord\n\n## Length\n\nDefault ceiling: ~500 chars.\n\n## Tone\n\nBrief.\n'
+    )
+    reminder = read_reminder(tmp_path, portable=False)
+    assert reminder is not None
+    assert '## Budget — chat only' in reminder
+    assert '## Shape — chat only' in reminder
+    assert '## Length\n\nDefault ceiling: ~500 chars.' in reminder
 
 
 def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
     root = Path(__file__).resolve().parent.parent
     raw = (root / 'output-styles' / 'caveman.md').read_text()
-    assert SECTION_RE.search(raw)
+    assert '## Budget — chat only' in raw
+    assert '## Shape — chat only' in raw
+    assert (root / 'skills' / 'caveman' / 'reminder.py').is_file()
 
     settings = json.loads((root / 'settings-recommended.json').read_text())
     hooks = settings['hooks']

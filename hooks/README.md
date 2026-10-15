@@ -35,10 +35,11 @@ with its own maintenance.
 
 ### style_nudge.py (Claude context hooks)
 
-When caveman is selected, this hook reads the canonical `Persistence` section
-from `output-styles/caveman.md`. It adds that reminder through `UserPromptSubmit`,
-`PostToolUse`, and `SessionStart` with the `compact` matcher. Recommended settings
-wire these events; install them through the normal bundle sync.
+When caveman is selected, this hook renders the canonical `Budget` and `Shape`
+sections from `output-styles/caveman.md`. It adds that reminder through
+`UserPromptSubmit`, `PostToolUse`, and `SessionStart` with the `compact` matcher.
+Recommended settings wire these events; install them through the normal bundle
+sync.
 
 ### pretool_nudge.py (PreToolUse)
 
