@@ -1027,6 +1027,18 @@
   (`:1122`), not from the poweroff. **Fix:** record the stop in the poweroff
   branch of `leave_session`.
 
+- **QEMUBOX-CODEX-MEMORIES-PRIVATE-DB** (MED, correctness) — open (record
+  only), unverified, no test — correctness. Each session sets
+  `CODEX_SQLITE_HOME=/tmp/codex-sqlite` (`qemubox/qemubox`, where `envs` is
+  built), so a guest Codex reads a private `memories_1.sqlite` but writes the
+  memory files in the shared `~/.codex/memories`. With Codex memories
+  enabled, consolidation syncs those files to its own database and deletes
+  summaries the database lacks (Codex 0.162.0,
+  `codex-rs/memories/write/src/storage.rs`), so a guest can delete memories
+  the host wrote. Inert while memories are off: no `config.toml` key enables
+  them and `~/.codex/memories` is empty. **Fix:** turn memories off for the
+  guest Codex, or keep its memory files on the guest disk too.
+
 ## bhctl
 
 - **BHCTL-HELP-NEEDS-PAIRED-DEVICE** (LOW, ux) — CONFIRMED 2026-10-10. The

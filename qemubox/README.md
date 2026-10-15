@@ -162,8 +162,10 @@ guest. Process memory is not counted against the cap.
 Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
 `CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
 guest `/tmp`, because 9p gives the guest no shared mmap and no lock shared
-with the host. At shutdown the databases disappear; Codex rebuilds its thread
-index from `~/.codex/sessions` at the next start.
+with the host. A `sqlite_home` key in `~/.codex/config.toml` overrides the
+variable. At shutdown the databases disappear with any prompts still queued in
+them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
+start.
 
 Guest disk build data survives boots until removal. `/tmp` data disappears at
 shutdown. A failed mount stops launch.
