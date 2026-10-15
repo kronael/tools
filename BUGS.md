@@ -401,7 +401,7 @@
   wisdom file to the cap. The body measures 195 lines at origin/master and 202
   at HEAD (`git show <rev>:skills/global/SKILL.md | awk 'n>=2 && (p || NF)
   {p=1; c++} /^---$/{n++} END{print c}'`); the range changed only § Git (the
-  ghpush bullet and the approval sentence) and § Agents (the cap wording).
+  `rip -g` bullet and the approval sentence) and § Agents (the cap wording).
   **Fix:** cut two lines — the owner's
   wording, so the owner's call which.
 
@@ -721,7 +721,7 @@
 - **SETTINGS-ASK-RULES-VS-WISDOM-GIT-TEXT** (LOW, config) — owner decision,
   no test — config. (i) `skills/global/SKILL.md:131-138` gates a push to
   `<default head>`, a merge and an approval, and says opening a PR needs no
-  approval; `settings-recommended.json` has no `allow` rule for `ghpush` or
+  approval; `settings-recommended.json` has no `allow` rule for `rip -g` or
   `gh pr create`, and with `"defaultMode": "default"` (`:37`) any Bash command
   outside `allow` still prompts, so removing `gh pr create*` from `ask`
   changed nothing in that mode. (ii) The ask rules hard-code
@@ -729,10 +729,10 @@
   `<default head>` from `git ls-remote --symref origin HEAD`
   (`skills/global/SKILL.md:117`), so a repo whose default head is `trunk` is
   unguarded, and the trailing `*` makes `refs/heads/master-fix` ask (a dated
-  `refs/heads/20261013_master-fix` does not match). (iii) `ghpush
+  `refs/heads/20261013_master-fix` does not match). (iii) `rip -g
   v1:refs/tags/v1`, the tag push `skills/release/SKILL.md:131` calls the
   publication, matches no ask rule. **Options:** (a) add `allow` rules for
-  `Bash(ghpush *)` and `Bash(gh pr create*)`, an `ask` rule for `ghpush
+  `Bash(rip -g *)` and `Bash(gh pr create*)`, an `ask` rule for `rip -g
   *refs/tags/*`, and the default-head rule per repo in project settings;
   (b) leave the rules and let the WISDOM text say the settings default
   prompts. **Default if nothing is decided:** as written.
@@ -776,10 +776,10 @@
   **Default if nothing is decided:** keep until a host without the old names
   is confirmed.
 
-- **RIG-GHPUSH-USER-RULE-TIES-ON-FULL-URL** (LOW, correctness) — open
-  (record only). `ghpush` passes `-c url.<url>.insteadOf=<url> -c
-  url.<url>.pushInsteadOf=<url>` (`rig/rig:256`) and its help promises to beat
-  only a rule on a shorter base (`rig/rig:212`, `rig/README.md:172-174`). A
+- **RIG-PUSH-G-USER-RULE-TIES-ON-FULL-URL** (LOW, correctness) — open
+  (record only). `rip -g` passes `-c url.<url>.insteadOf=<url> -c
+  url.<url>.pushInsteadOf=<url>` (`rig/rig:291`) and its help promises to beat
+  only a rule on a shorter base (`rig/rig:247`, `rig/README.md:172-174`). A
   user rule whose base is the exact full HTTPS URL ties with them, and the
   user's rule wins. Measured: `GIT_CONFIG_GLOBAL` holding `[url
   "git@github.com:o/r.git"] pushInsteadOf = https://github.com/o/r.git`, origin
@@ -926,11 +926,11 @@
   `git -c credential.helper= -c credential.helper='!gh auth git-credential'
   <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>`,
   asserted by `dockbox/test.sh:468`. `skills/global/SKILL.md:122-130` names
-  `ghpush` and `ghfetch` (rig) as the agent's push and fetch, so the recipe is
+  `rip -g` and `rif -g` (rig) as the agent's push and fetch, so the recipe is
   a second push path in another form. It matches neither `Bash(git push*)`
-  (the command starts `git -c`) nor `Bash(ghpush *refs/heads/master*)`
+  (the command starts `git -c`) nor `Bash(rip -g *refs/heads/master*)`
   (`settings-recommended.json:18,25`), so a push to master through it meets
-  no ask rule. **Options:** (a) route the box at `ghpush`/`ghfetch`, which
+  no ask rule. **Options:** (a) route the box at `rip -g`/`rif -g`, which
   needs rig in the image (`grep -n -w rig dockbox/Dockerfile` is empty);
   (b) keep the recipe and add an ask rule for it. **Default if nothing is
   decided:** as written. No test — design.
