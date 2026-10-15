@@ -42,7 +42,7 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 400, Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_CHARS = {Kind.PR: 1800, Kind.ISSUE: 3000, Kind.COMMENT: 240}
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
@@ -227,17 +227,18 @@ def lint_pr(lines: list[str]) -> list[Problem]:
 
 def lint_elements(elements: list[Element]) -> list[Problem]:
     problems = []
+    bullets = 0
     for e in elements:
         if e.kind == 'bullet':
-            problems.append(
-                Problem(e.line, 'bullet: the body is the TL;DR; fold the reason into it or cut it')
-            )
+            bullets += 1
+            if bullets > 3:
+                problems.append(Problem(e.line, 'review pointers: keep at most three bullets'))
         elif e.kind == 'paragraph':
             problems.append(
                 Problem(
                     e.line,
-                    'text after the lead: one paragraph only, then `Closes #N` lines;'
-                    ' fold what matters into the TL;DR',
+                    'text after the lead: use up to three review pointers;'
+                    ' fold other context into the TL;DR',
                 )
             )
     return problems
