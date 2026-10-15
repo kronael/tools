@@ -16,23 +16,14 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - NEVER `use super::`, NEVER local `use` inside function bodies
   (exception: tests/main where scoping demands it)
 - ALWAYS `use crate::` for absolute paths
-- **Common types in scope, rare types full-path — consistently project-wide.**
-  A type a crate uses pervasively (`Arc`, the project's main error type, common
-  wire/record types) gets a top-of-file single-line `use` so it reads bare
-  (`Arc<str>`, not `std::sync::Arc<str>`). A type used once or twice gets a full
-  inline path (`std::time::Duration`, `std::sync::atomic::AtomicU64`) instead of
-  a `use`. Pick the SAME side project-wide: if `Arc` is `use`d where it's common,
-  `use` it everywhere it's common — do NOT scatter bare `Arc` in some files and
-  `std::sync::Arc::...` full paths in others. Reduces import churn + makes every
-  file read the same way.
-- Prefer a `use` of the item (written bare) or its full path over a partial
-  module path such as `types::RetryPolicy`: a generic prefix (`types`,
-  `args`, `accounts`) makes the reader look up which one is meant. Keep a
-  short prefix only where it carries meaning the bare name loses, for example
-  the backend in `postgres::connect` beside `redis::connect`.
-- NEVER write `crate::` inside a function body. Import the module and call
-  through its short name: `use crate::store;` then `store::open(...)`. A rare
-  item reads well with that module prefix; a common one is imported bare.
+- **Common items bare, rare items prefixed — the same way project-wide.**
+  An item a crate uses often (`Arc`, its main error type, common wire types)
+  gets a top-of-file `use` and reads bare. A rare std or external item may
+  stay a full inline path (`std::time::Duration`). A rare item of this crate
+  goes through its imported module: `use crate::store;` then `store::open(..)`.
+  NEVER `crate::` inside a body, and NEVER a generic prefix (`types::`,
+  `args::`, `accounts::`) that hides which module is meant; keep a prefix only
+  where it carries meaning (`postgres::connect` beside `redis::connect`).
 - Keep files small enough to hold in one mental context; small files + uniform
   imports make any file quick to reason about. Split a file that outgrows that.
 
