@@ -76,7 +76,7 @@ GH review"; skip only if the user explicitly asked for code-only, no reply.
 `gh-comment` owns every disposition (§ Reply to a thread, § Resolve a thread,
 § Re-review request) — NEVER call the thread API directly from here. Reply to
 the unfixed threads now. ALWAYS show the PR's own head refspec,
-`ghpush <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
+`rip -g <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
 user's ask (WISDOM § Git). The fixed threads' resolve and the one re-review
 request run once that push has landed.
 
