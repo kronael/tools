@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.46] — 20261015
+
+> kronael v0.4.46 — Shared style reminders, quieter guest boot
+>
+> Claude and Codex receive the same per-prompt style reminder, and qemubox reduces boot console output.
+>
+> • Caveman — one canonical reminder across prompt, tool and compaction hooks.
+> • Codex and Claude — each prompt receives one reminder when the style is selected.
+> • qemubox — `loglevel=5` reduces console work while preserving guest diagnostics.
+> • Recall — memory searches keep the intended project scope.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The canonical style supplies the reply budget and delivery self-check; model compliance remains imperfect.
+- qemubox retains its q35 machine and existing image format.
+
 ## [v0.4.45] — 20261015
 
 > kronael v0.4.45 — Codex starts inside qemubox, PR bodies get review pointers
