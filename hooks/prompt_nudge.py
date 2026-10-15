@@ -6,14 +6,6 @@ import sys
 
 from lib.state import session_state
 
-STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
-- Lead with the answer. No preamble, no recap of what the diff already shows.
-- ~17 lines, hard max 20. No tables or headers in a normal reply.
-- Plain words, active voice, one instruction per sentence (ASD-STE100).
-- Last line carries the next action, or the bottom line.
-- Before sending: read ONLY your first and last line. If those two do not
-  say what to DO and what HAPPENED, the middle is padding."""
-
 DOCS_RULES = """Documentation naming rules:
 - UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
 - Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ dir; plans/ only as .claude/plans/ (plan mode's directory, where ship records live)
@@ -193,7 +185,6 @@ def main():
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        emit(STYLE_RULES)
         sys.exit(0)
 
     parts = []
@@ -205,10 +196,6 @@ def main():
     ):
         parts.append(SOLVE_NUDGE)
 
-    # Every turn. The style is in the system prompt and dilutes there; this is
-    # the copy that arrives next to the user's message.
-    parts.append(STYLE_RULES)
-
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
@@ -219,7 +206,8 @@ def main():
     elif matched:
         parts.append(f'info: Invoke {matched}.')
 
-    emit('\n\n'.join(parts))
+    if parts:
+        emit('\n\n'.join(parts))
 
     sys.exit(0)
 
