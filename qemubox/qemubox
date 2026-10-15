@@ -773,7 +773,8 @@ mount_host_paths() {
     for i in "${!mount_tags[@]}"; do
         tag="${mount_tags[$i]}"
         dest="${mount_dests[$i]}"
-        opts="trans=virtio,version=9p2000.L,msize=104857600"
+        # cache=mmap: SQLite WAL needs a shared mmap of its -shm file
+        opts="trans=virtio,version=9p2000.L,msize=104857600,cache=mmap"
         [ "${mount_modes[$i]}" = ro ] && opts="$opts,ro"
         setup_mount_path "$name" "$dest"
         ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
