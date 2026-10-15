@@ -17,7 +17,8 @@ Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 - Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 25+.
 - Lists: ≤5 bullets; a longer set splits into "do now" vs "later". Multi-step work is numbered, one bounded action per item ("1. Open X. 2. Run tests.").
 
-Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ ceiling; first and last line alone say what to DO and what HAPPENED.
+Before any final answer or tool-delivered message, ALWAYS check Budget, Shape, and the selected surface's Length.
+Apply the stricter limit. Revise before delivery. Preserve material evidence, supported conclusions, and meaningful uncertainty.
 
 ## Shape — chat only
 

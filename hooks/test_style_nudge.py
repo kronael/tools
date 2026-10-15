@@ -162,9 +162,12 @@ def test_missing_canonical_budget_fails_silent(monkeypatch, capsys, tmp_path: Pa
     assert run(monkeypatch, capsys, tmp_path, 'UserPromptSubmit') is None
 
 
-def test_arizuko_mode_adds_the_selected_surface_length(tmp_path: Path) -> None:
+def test_arizuko_mode_renders_the_surface_delivery_check(tmp_path: Path) -> None:
+    """The canonical style renders a pre-delivery check with the selected Length."""
     install_style(tmp_path, selected='discord-channel')
     styles = tmp_path / '.claude' / 'output-styles'
+    root = Path(__file__).resolve().parent.parent
+    (styles / 'caveman.md').write_text((root / 'output-styles' / 'caveman.md').read_text())
     (styles / 'discord-channel.md').write_text(
         '# Discord\n\n## Length\n\nDefault ceiling: ~500 chars.\n\n## Tone\n\nBrief.\n'
     )
@@ -173,6 +176,12 @@ def test_arizuko_mode_adds_the_selected_surface_length(tmp_path: Path) -> None:
     assert '## Budget — chat only' in reminder
     assert '## Shape — chat only' in reminder
     assert '## Length\n\nDefault ceiling: ~500 chars.' in reminder
+    assert (
+        'Before any final answer or tool-delivered message, ALWAYS check Budget, '
+        "Shape, and the selected surface's Length.\n"
+        'Apply the stricter limit. Revise before delivery. Preserve material '
+        'evidence, supported conclusions, and meaningful uncertainty.'
+    ) in reminder
 
 
 def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
