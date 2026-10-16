@@ -279,12 +279,24 @@ done
 
 # -g and -n combine in either order; without -g, rip and rif use git's own
 # remote, and rif is a plain fetch of origin.
-true_ 'rip -n -g equals rip -g -n' \
-    '[[ $(cd "$tmp/gh" && rip -n -g abc:refs/heads/x) == "$(ripg_ -n abc:refs/heads/x)" ]]'
-true_ 'rif -n -g equals rif -g -n' \
-    '[[ $(cd "$tmp/gh" && rif -n -g master) == "$(rifg_ -n master)" ]]'
+push_want="git $helper $pin push --no-follow-tags $gh_url abc:refs/heads/x "
+fetch_one_want="git $helper $pin fetch $gh_url master "
+true_ 'rip -n -g prints the same push as rip -g -n' \
+    '[[ $(cd "$tmp/gh" && rip -n -g abc:refs/heads/x) == "$push_want" ]]'
+true_ 'rif -n -g prints the same fetch as rif -g -n' \
+    '[[ $(cd "$tmp/gh" && rif -n -g master) == "$fetch_one_want" ]]'
 true_ 'rip -g -h prints the gh help' '[[ $(ripg_ -h) == Usage:\ rip\ -g* ]]'
 true_ 'rif -g -h prints the gh help' '[[ $(rifg_ -h) == Usage:\ rip\ -g* ]]'
+for name in p push; do
+    true_ "rig $name -g -n prints the one-off HTTPS push" \
+        '[[ $(cd "$tmp/gh" && rig $name -g -n abc:refs/heads/x) == "$push_want" ]]'
+done
+for name in f fetch; do
+    true_ "rig $name -g -n prints the one-off HTTPS fetch" \
+        '[[ $(cd "$tmp/gh" && rig $name -g -n master) == "$fetch_one_want" ]]'
+    true_ "rig $name -n prints a plain fetch of origin" \
+        '[[ $(cd "$tmp/gh" && rig $name -n master) == "git fetch origin master " ]]'
+done
 true_ 'rip -n without -g stays on the plain origin push' \
     '[[ $(cd "$tmp/gh" && rip -n main:abc) == "git push origin abc:refs/heads/main --tags" ]]'
 true_ 'rif -n prints a plain fetch of origin' \
