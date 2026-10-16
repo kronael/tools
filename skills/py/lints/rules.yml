@@ -28,7 +28,8 @@ language: python
 severity: warning
 rule:
     pattern: '@property'
-message: NEVER @property / @setter / __getattr__ (except mocks or adapting external APIs) — use a plain method. See skill:py.
+message: NEVER @property / @setter / __getattr__ (except mocks, adapting external APIs, or a record's value derived from its own fields) — use a plain method.
+    See skill:py.
 note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
 ---
 id: py-bool-fn-prefix
