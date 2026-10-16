@@ -40,7 +40,7 @@ echo '{"prompt": "thecontinueword"}' | python3 ~/.claude/hooks/local.py
 echo '{"prompt": "recap_session"}'   | python3 ~/.claude/hooks/local.py
 ```
 
-Expected: exit 0, no `systemMessage` in output.
+Expected: exit 0, no `additionalContext` in output.
 
 ## 4. Prompt Routing (exact match)
 
@@ -58,16 +58,16 @@ Expected: all five print `✓ PASS`.
 
 ```bash
 # Should NOT inject rules
-echo '{"prompt": "dont continue"}'  | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
-echo "{\"prompt\": \"don't continue\"}" | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
-echo '{"prompt": "never recap"}'    | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✗ FAIL" || echo "✓ PASS"
+echo '{"prompt": "dont continue"}'  | python3 ~/.claude/hooks/local.py | grep -q "additionalContext" && echo "✗ FAIL" || echo "✓ PASS"
+echo "{\"prompt\": \"don't continue\"}" | python3 ~/.claude/hooks/local.py | grep -q "additionalContext" && echo "✗ FAIL" || echo "✓ PASS"
+echo '{"prompt": "never recap"}'    | python3 ~/.claude/hooks/local.py | grep -q "additionalContext" && echo "✗ FAIL" || echo "✓ PASS"
 ```
 
 ## 6. Normal Injection
 
 ```bash
-echo '{"prompt": "continue with implementation"}' | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
-echo '{"prompt": "where were we"}'                | python3 ~/.claude/hooks/local.py | grep -q "systemMessage" && echo "✓ PASS"
+echo '{"prompt": "continue with implementation"}' | python3 ~/.claude/hooks/local.py | grep -q "additionalContext" && echo "✓ PASS"
+echo '{"prompt": "where were we"}'                | python3 ~/.claude/hooks/local.py | grep -q "additionalContext" && echo "✓ PASS"
 ```
 
 ## Hook-by-Hook Smoke
