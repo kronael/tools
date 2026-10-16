@@ -42,12 +42,11 @@ Every body goes through three passes before it is posted.
 
 1. **Draft** the finding with its evidence, wherever you are keeping notes.
 2. **Distill** to one line naming the defect plus one optional line giving the
-   fix, then **de-slop** it: load the `humanize` skill and apply it. Cut em
-   dashes, hedges, passive voice, "it is worth noting", significance padding
-   and rule-of-three phrasing. Speak in the `caveman` register: maximum
-   signal per token, no preamble, no recap. Cap the result at 240
-   chars (the lint's cap); if it will not fit, the finding is two findings or
-   the evidence belongs in the report.
+   fix, then **de-slop** it with the `humanize` skill: no em dashes, hedges,
+   passive voice, "it is worth noting", padding or rule-of-three phrasing;
+   the `caveman` register, no preamble, no recap. Cap the result at 240 chars
+   (the lint's cap); past it, the finding is two findings or the evidence
+   belongs in the report.
 3. **Review on WISDOM** (WISDOM § Git), with § Rules below as the shape
    checklist, then run `python3 ~/.claude/hooks/gh_text_lint.py comment <file>`
    until it prints `ok:` — the hook refuses what fails.
@@ -103,9 +102,10 @@ ALWAYS submit ONLY when the user asks for the submit in their own words;
 approval of the text, "post" and an answer to another question are not that
 ask. The hook marks the submit call `permissionDecision: ask`: Claude Code
 shows the exact command in the permission dialog and the user approves or
-denies it there. Where no dialog can show — Codex, a headless run, a background
-job — the hook denies: leave the review PENDING, report its id and show the
-user the exact command. The one path: `POST /pulls/<PR>/reviews/<id>/events`,
+denies it there; a background subagent's dialog surfaces in the main session.
+Where none can show — Codex, where the hook denies; a headless run, where
+Claude Code denies the ask — leave the review PENDING, report its id and show
+the user the exact command. The one path: `POST /pulls/<PR>/reviews/<id>/events`,
 `--input -`, heredoc `{"event":"COMMENT","body":""}` — NEVER `gh pr review`.
 
 ## Fallback: general comment

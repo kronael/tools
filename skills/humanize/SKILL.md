@@ -42,10 +42,10 @@ Always show the rewrite to the user. For file edits, show a diff or the changed 
 
 ## Scope for informational and technical prose
 
-ALWAYS read and follow the Language section of
-`~/.claude/output-styles/caveman.md` for informational and technical prose.
-Those rules take precedence over personality, fragments, idioms, and slang
-suggested below. ALWAYS preserve technical names, code, and quotations.
+ALWAYS read and follow the `writing` skill § Language for informational and
+technical prose. Those rules take precedence over personality, fragments,
+idioms, and slang suggested below. ALWAYS preserve technical names, code, and
+quotations.
 Override for rewrites: ALWAYS preserve factual claims and uncertainty from
 the input. NEVER invent measurements, sources, interviews, or personal
 experiences to add voice — ALWAYS change the wording using the supplied facts.

@@ -101,7 +101,7 @@ defines them:
 1. DISTILL — the first draft is never the deliverable. Cut every word that
    does not change the claim.
 2. `humanize` — the finishing pass, draft and audit kept internal. For the
-   claim tweets the Language section outranks the personality it suggests.
+   claim tweets `writing` § Language outranks the personality it suggests.
 3. REVIEW-ON-WISDOM — re-read the result against: every number traced in the
    source notes; no absolute the source does not state; the caveat visible to
    the reader; no marketing word, markdown, hashtag or teaser; the link out
