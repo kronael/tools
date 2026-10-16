@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.4.45] — 20261016
+## [v0.4.47] — 20261016
 
-> kronael v0.4.45 — haiku and luna join the tiers, dispatch holds the table
+> kronael v0.4.47 — haiku and luna join the tiers, dispatch holds the table
 >
 > Haiku is a subagent tier again, Luna is its Codex counterpart, and one dispatch table names every tier's lane, pin and cap.
 >
