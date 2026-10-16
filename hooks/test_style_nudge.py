@@ -1,251 +1,168 @@
-from __future__ import annotations
-
+# pyright: basic
 import io
 import json
-import os
-import shlex
-import subprocess
-from pathlib import Path
 
 import pytest
-from style_nudge import main
-from style_nudge import output_for
-from style_nudge import read_reminder
+import style_nudge
+from style_nudge import find_miss
+from style_nudge import measure
+from style_nudge import on_prompt
+from style_nudge import on_stop
+from style_nudge import on_tool
+from style_nudge import visible
+
+SESSION = {'session_id': 'sess', 'cwd': '/repo'}
+SHORT = 'Done. The test passes.'
+LONG = '\n'.join(f'Line {n} of a reply that runs past the budget.' for n in range(30))
 
 
-def install_style(home: Path, selected: str = 'caveman') -> None:
-    claude = home / '.claude'
-    (claude / 'output-styles').mkdir(parents=True)
-    (claude / 'settings.json').write_text(json.dumps({'outputStyle': selected}))
-    (claude / 'output-styles' / 'caveman.md').write_text(
-        '# Caveman\n\n## Budget — chat only\n\nKeep replies short.\n\n'
-        '## Shape — chat only\n\nLead with the answer.\n\n## Language\n\nPlain.\n'
-    )
+def stop(message, **extra):
+    return on_stop({**SESSION, 'last_assistant_message': message, **extra})
 
 
-def run(monkeypatch, capsys, home: Path, event: str, **data) -> dict | None:
-    monkeypatch.setenv('HOME', str(home))
-    payload = {'hook_event_name': event, **data}
-    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
-    main()
-    text = capsys.readouterr().out.strip()
-    return json.loads(text) if text else None
+def state(fake_kvs):
+    return json.loads(fake_kvs.value('caveman', 'sess', '/repo'))
 
 
-def test_reader_uses_the_selected_caveman_file(tmp_path: Path) -> None:
-    install_style(tmp_path)
-    reminder = read_reminder(tmp_path)
-    assert reminder == (
-        '<caveman-reminder>\n## Budget — chat only\n\nKeep replies short.\n\n'
-        '## Shape — chat only\n\nLead with the answer.\n</caveman-reminder>'
-    )
+def test_visible_strips_silent_blocks_and_code_fences() -> None:
+    message = '<status>working</status>Answer.\n```py\nx = 1\ny = 2\n```\nEnd.'
+    assert visible(message) == 'Answer.\n\nEnd.'
 
 
-def test_reader_is_silent_for_another_selected_style(tmp_path: Path) -> None:
-    install_style(tmp_path, selected='concise')
-    assert read_reminder(tmp_path) is None
+def test_measure_counts_rendered_lines_lists_and_bullet_sentences() -> None:
+    text = 'x' * 170 + '\n\n- One. Two. Three.\n- Four.\n\n1. a\n2. b\n3. c\n4. d\n5. e\n6. f'
+    assert measure(text) == {'lines': 13, 'bullets': 6, 'sentences': 3}
 
 
-@pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse'])
-def test_context_events_reach_the_model(event: str) -> None:
-    rendered = {'text': 'style', 'characterBudget': None}
-    assert output_for(event, rendered, {}) == {
-        'hookSpecificOutput': {'hookEventName': event, 'additionalContext': 'style'}
-    }
-
-
-def test_compaction_uses_session_start_context() -> None:
-    rendered = {'text': 'style', 'characterBudget': None}
-    assert output_for('SessionStart', rendered, {}) == {
-        'hookSpecificOutput': {
-            'hookEventName': 'SessionStart',
-            'additionalContext': 'style',
-        }
-    }
-
-
-def test_precompact_emits_no_discarded_context() -> None:
-    assert output_for('PreCompact', {'text': 'style'}, {}) is None
-
-
-def test_stop_requests_one_revision_after_an_actual_overrun() -> None:
-    rendered = {
-        'text': 'style',
-        'characterBudget': 20,
-    }
-    output = output_for(
-        'Stop',
-        rendered,
-        {'last_assistant_message': 'This answer is longer than twenty characters.'},
-    )
-    context = output['hookSpecificOutput']['additionalContext']
-    assert '20' in context
-    assert 'Revise only the final answer.' in context
-
-
-def test_stop_accepts_text_within_the_declared_budget() -> None:
-    rendered = {
-        'text': 'style',
-        'characterBudget': 20,
-    }
-    assert (
-        output_for(
-            'Stop',
-            rendered,
-            {'last_assistant_message': 'Within budget.'},
-        )
-        is None
-    )
-
-
-def test_stop_active_bounds_feedback_to_one_revision() -> None:
-    rendered = {
-        'text': 'style',
-        'characterBudget': 5,
-    }
-    assert (
-        output_for(
-            'Stop',
-            rendered,
-            {
-                'last_assistant_message': 'This answer exceeds the budget.',
-                'stop_hook_active': True,
-            },
-        )
-        is None
-    )
-
-
-def test_stop_uses_the_canonical_self_check_without_a_character_budget(
-    monkeypatch, capsys, tmp_path: Path
-) -> None:
-    install_style(tmp_path)
-    output = run(
-        monkeypatch,
-        capsys,
-        tmp_path,
-        'Stop',
-        last_assistant_message='A useful answer.',
-    )
-    context = output['hookSpecificOutput']['additionalContext']
-    assert '## Budget — chat only' in context
-    assert '## Shape — chat only' in context
+def test_measure_ignores_periods_inside_code() -> None:
+    assert measure('- Run `a.b.c` once.')['sentences'] == 1
 
 
 @pytest.mark.parametrize(
-    'data',
+    ('measured', 'cap', 'expected'),
     [
-        {'last_assistant_message': ''},
-        {'last_assistant_message': '<think>silent</think>'},
-        {'last_assistant_message': 'too long to accept', 'stop_hook_active': True},
+        ({'lines': 27, 'bullets': 0, 'sentences': 0}, 20, {'lines': 27, 'cap': 20}),
+        ({'lines': 22, 'bullets': 0, 'sentences': 0}, 25, None),
+        ({'lines': 5, 'bullets': 6, 'sentences': 1}, 20, {'bullets': 6, 'cap': 5}),
+        ({'lines': 5, 'bullets': 2, 'sentences': 3}, 20, {'sentences': 3, 'cap': 2}),
+        ({'lines': 20, 'bullets': 5, 'sentences': 2}, 20, None),
     ],
 )
-def test_stop_skips_empty_silent_and_second_attempts(
-    monkeypatch, capsys, tmp_path: Path, data: dict
-) -> None:
-    install_style(tmp_path)
-    assert run(monkeypatch, capsys, tmp_path, 'Stop', **data) is None
+def test_find_miss_names_the_first_broken_rule(measured, cap, expected) -> None:
+    assert find_miss(measured, cap) == expected
 
 
-@pytest.mark.parametrize('event', ['UserPromptSubmit', 'PostToolUse', 'SessionStart'])
-def test_installed_hook_emits_on_each_lifecycle_path(
-    monkeypatch, capsys, tmp_path: Path, event: str
-) -> None:
-    install_style(tmp_path)
-    output = run(monkeypatch, capsys, tmp_path, event)
-    assert output is not None
-    assert 'caveman-reminder' in json.dumps(output)
+def test_stop_only_records_a_miss(fake_kvs) -> None:
+    assert stop(LONG) is None
+    assert state(fake_kvs) == {'level': 1, 'miss': 1, 'ok': 0, 'lines': 30, 'cap': 20}
 
 
-def test_missing_canonical_budget_fails_silent(monkeypatch, capsys, tmp_path: Path) -> None:
-    install_style(tmp_path)
-    (tmp_path / '.claude' / 'output-styles' / 'caveman.md').write_text(
-        '# Caveman\n\n## Shape — chat only\n\nLead with the answer.\n'
+def test_stop_backs_off_on_a_compliant_reply(fake_kvs) -> None:
+    stop(LONG)
+    stop(LONG)
+    assert state(fake_kvs)['level'] == 2
+    stop(SHORT)
+    recorded = state(fake_kvs)
+    assert recorded['level'] == 1
+    assert recorded['ok'] == 1
+    assert recorded['lines'] == 30
+    stop(SHORT)
+    assert state(fake_kvs)['level'] == 0
+    stop(SHORT)
+    assert state(fake_kvs)['level'] == 0
+
+
+def test_level_stops_at_three(fake_kvs) -> None:
+    for _ in range(5):
+        stop(LONG)
+    assert state(fake_kvs)['level'] == 3
+    assert state(fake_kvs)['miss'] == 5
+
+
+def test_report_after_tool_work_gets_the_wider_cap(fake_kvs) -> None:
+    text = '\n'.join(f'Line {n}.' for n in range(23))
+    on_prompt(SESSION)
+    for _ in range(4):
+        on_tool(SESSION)
+    assert stop(text) is None
+    assert state(fake_kvs)['level'] == 0
+    on_prompt(SESSION)
+    stop(text)
+    assert state(fake_kvs) == {'level': 1, 'miss': 1, 'ok': 1, 'lines': 23, 'cap': 20}
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_prompt_pointer_appears_after_one_miss_and_names_the_measurement() -> None:
+    assert on_prompt(SESSION) is None
+    stop(LONG)
+    assert on_prompt(SESSION) == '<reminder skill="caveman" rule="budget" lines="30" cap="20"/>'
+
+
+def test_tool_pointer_needs_level_two(fake_kvs) -> None:
+    stop(LONG)
+    assert on_tool(SESSION) is None
+    stop(LONG)
+    assert on_tool(SESSION) == '<reminder skill="caveman" rule="budget" lines="30" cap="20"/>'
+    assert fake_kvs.value('tools', 'sess', '/repo') == '2'
+
+
+def test_prompt_resets_the_tool_count(fake_kvs) -> None:
+    on_tool(SESSION)
+    on_tool(SESSION)
+    on_prompt(SESSION)
+    assert fake_kvs.value('tools', 'sess', '/repo') == '0'
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_revision_request_only_at_level_three_for_a_gross_miss() -> None:
+    gross = '\n'.join(f'Line {n}.' for n in range(45))
+    assert stop(gross) is None
+    assert stop(gross) is None
+    assert stop(gross) == (
+        '<reminder skill="caveman" rule="budget" lines="45" cap="20">'
+        'revise the final answer to the cap; keep the evidence and the uncertainty</reminder>'
     )
-    assert run(monkeypatch, capsys, tmp_path, 'UserPromptSubmit') is None
+    assert stop(LONG) is None
 
 
-def test_surface_mode_renders_the_surface_delivery_check(tmp_path: Path) -> None:
-    """The canonical style renders a pre-delivery check with the selected Length."""
-    install_style(tmp_path, selected='discord-channel')
-    styles = tmp_path / '.claude' / 'output-styles'
-    root = Path(__file__).resolve().parent.parent
-    (styles / 'caveman.md').write_text((root / 'output-styles' / 'caveman.md').read_text())
-    (styles / 'discord-channel.md').write_text(
-        '# Discord\n\n## Length\n\nDefault ceiling: ~500 chars.\n\n## Tone\n\nBrief.\n'
-    )
-    reminder = read_reminder(tmp_path, portable=False)
-    assert reminder is not None
-    assert '## Budget — chat only' in reminder
-    assert '## Shape — chat only' in reminder
-    assert '## Length\n\nDefault ceiling: ~500 chars.' in reminder
-    assert (
-        'Before any final answer or tool-delivered message, ALWAYS check Budget, '
-        "Shape, and the selected surface's Length.\n"
-        'Apply the stricter limit. Revise before delivery. Preserve material '
-        'evidence, supported conclusions, and meaningful uncertainty.'
-    ) in reminder
+def test_revision_stop_is_not_measured(fake_kvs) -> None:
+    assert stop(LONG, stop_hook_active=True) is None
+    assert fake_kvs.value('caveman', 'sess', '/repo') is None
 
 
-@pytest.mark.parametrize('harness', ['claude', 'codex'])
-@pytest.mark.parametrize('selected', ['caveman', 'concise', 'missing'])
-def test_prompt_wiring_delivers_one_canonical_reminder_per_prompt(
-    tmp_path: Path, harness: str, selected: str
-) -> None:
-    """Both configured harnesses deliver style through their shared prompt hook."""
-    if selected != 'missing':
-        install_style(tmp_path, selected=selected)
-    root = Path(__file__).resolve().parent.parent
-    (tmp_path / '.claude').mkdir(exist_ok=True)
-    (tmp_path / '.claude' / 'hooks').symlink_to(root / 'hooks', target_is_directory=True)
-    config = 'codex-hooks.json' if harness == 'codex' else 'settings-recommended.json'
-    groups = json.loads((root / config).read_text())['hooks']['UserPromptSubmit']
-    commands = [hook['command'] for group in groups for hook in group['hooks']]
-    env = {**os.environ, 'HOME': str(tmp_path), 'KRONAEL_HOOK_STATE': str(tmp_path / 'state')}
-    for prompt in ['add an endpoint', 'now wire it', 'debug the hook']:
-        payload = {
-            'hook_event_name': 'UserPromptSubmit',
-            'prompt': prompt,
-            'session_id': 'session',
-            'cwd': str(tmp_path),
+def test_empty_or_silent_message_is_not_measured(fake_kvs) -> None:
+    assert stop('<status>thinking</status>') is None
+    assert on_stop({**SESSION, 'last_assistant_message': None}) is None
+    assert fake_kvs.value('caveman', 'sess', '/repo') is None
+
+
+def run_main(monkeypatch, capsys, payload):
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    style_nudge.main()
+    out = capsys.readouterr().out.strip()
+    return json.loads(out) if out else None
+
+
+@pytest.mark.usefixtures('no_kvs')
+def test_main_is_silent_without_kvs(monkeypatch, capsys) -> None:
+    payload = {**SESSION, 'hook_event_name': 'Stop', 'last_assistant_message': LONG}
+    assert run_main(monkeypatch, capsys, payload) is None
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_main_emits_the_tool_pointer_as_context(monkeypatch, capsys) -> None:
+    stop(LONG)
+    stop(LONG)
+    out = run_main(monkeypatch, capsys, {**SESSION, 'hook_event_name': 'PostToolUse'})
+    assert out == {
+        'hookSpecificOutput': {
+            'hookEventName': 'PostToolUse',
+            'additionalContext': '<reminder skill="caveman" rule="budget" lines="30" cap="20"/>',
         }
-        outputs = {}
-        for command in commands:
-            result = subprocess.run(
-                [arg.replace('~/', str(tmp_path) + '/') for arg in shlex.split(command)],
-                input=json.dumps(payload),
-                text=True,
-                capture_output=True,
-                env=env,
-                check=True,
-            )
-            output = json.loads(result.stdout) if result.stdout.strip() else {}
-            outputs[command] = output.get('hookSpecificOutput', {}).get('additionalContext', '')
-        canonical = next(text for command, text in outputs.items() if 'prompt_nudge' in command)
-        expected = int(selected == 'caveman')
-        assert canonical.count('<caveman-reminder>') == expected
-        assert sum(text.count('<caveman-reminder>') for text in outputs.values()) == expected
+    }
 
 
-def test_bundle_source_and_lifecycle_wiring_stay_connected() -> None:
-    root = Path(__file__).resolve().parent.parent
-    raw = (root / 'output-styles' / 'caveman.md').read_text()
-    assert '## Budget — chat only' in raw
-    assert '## Shape — chat only' in raw
-    assert (root / 'skills' / 'caveman' / 'reminder.py').is_file()
-
-    settings = json.loads((root / 'settings-recommended.json').read_text())
-    hooks = settings['hooks']
-    prompt = [hook['command'] for group in hooks['UserPromptSubmit'] for hook in group['hooks']]
-    assert prompt.count('python3 ~/.claude/hooks/prompt_nudge.py') == 1
-    assert 'python3 ~/.claude/hooks/style_nudge.py' not in prompt
-    posttool = [hook['command'] for group in hooks['PostToolUse'] for hook in group['hooks']]
-    assert 'python3 ~/.claude/hooks/style_nudge.py' in posttool
-    compact = [group for group in hooks['SessionStart'] if group['matcher'] == 'compact']
-    assert len(compact) == 1
-    commands = [hook['command'] for hook in compact[0]['hooks']]
-    assert 'python3 ~/.claude/hooks/style_nudge.py' in commands
-    precompact = [hook['command'] for group in hooks['PreCompact'] for hook in group['hooks']]
-    assert 'python3 ~/.claude/hooks/style_nudge.py' not in precompact
-    stop = [hook['command'] for group in hooks['Stop'] for hook in group['hooks']]
-    assert stop.count('python3 ~/.claude/hooks/style_nudge.py') == 1
+def test_main_stop_emits_nothing_on_an_ordinary_miss(fake_kvs, monkeypatch, capsys) -> None:
+    payload = {**SESSION, 'hook_event_name': 'Stop', 'last_assistant_message': LONG}
+    assert run_main(monkeypatch, capsys, payload) is None
+    assert state(fake_kvs)['level'] == 1

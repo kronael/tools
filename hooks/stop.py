@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Stop hook: nudge commit and diary when either is due.
+"""Stop: point at `commit` when the tree is dirty and at `diary` when today's
+entry is missing or stale. PostToolUse: the same check every 100 tool calls or
+10 minutes, as advisory context.
 
 Silent in a ship child that judges rather than builds: SHIP_ROLE set to
-anything but a worker. Workers keep the nudges; the commit nudge is what
-makes them commit.
+anything but a worker. Workers keep the nudges; the commit nudge is what makes
+them commit.
 """
 
 import json
@@ -14,29 +16,22 @@ import sys
 from datetime import UTC
 from datetime import datetime
 
+from lib import kvs
+from lib.reminder import block
+from lib.reminder import context
+from lib.reminder import emit
+from lib.reminder import reminder
+from lib.state import hook_event
+
 NUDGE_INTERVAL = 600
+PERIODIC_CALLS = 100
+DIARY_STALE = 3600
 
 
 def git_run(cwd, *args, timeout=5):
     return subprocess.run(
         args, capture_output=True, text=True, timeout=timeout, cwd=cwd, check=False
     )
-
-
-def git_dir(cwd):
-    """Absolute git dir, or None outside a repo or on failure."""
-    r = git_run(cwd, 'git', 'rev-parse', '--git-dir')
-    if r.returncode != 0:
-        return None
-    gd = r.stdout.strip()
-    if not os.path.isabs(gd):
-        gd = os.path.join(cwd, gd)
-    return gd
-
-
-def git_path(cwd, name):
-    gd = git_dir(cwd)
-    return None if gd is None else os.path.join(gd, name)
 
 
 def main_tree(cwd):
@@ -62,91 +57,37 @@ def diary_file(main, now):
     )
 
 
-def write_stamp(path, text):
-    try:
-        with open(path, 'w') as f:
-            f.write(text)
-    except OSError:
-        pass
-
-
-def nudge_due(stamp, now):
-    if stamp is None or not os.path.exists(stamp):
-        return True
-    return now.timestamp() - os.path.getmtime(stamp) >= NUDGE_INTERVAL
-
-
-def hook_event(data):
-    env_event = os.environ.get('KRONAEL_HOOK_EVENT')
-    if env_event:
-        return env_event
-    for key in 'hook_event', 'hook_event_name', 'hookEventName':
-        value = data.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ''
-
-
-def emit(parts, data):
-    reason = '\n'.join(parts)
-    if hook_event(data) == 'PostToolUse':
-        print(
-            json.dumps(
-                {
-                    'hookSpecificOutput': {
-                        'hookEventName': 'PostToolUse',
-                        'additionalContext': reason,
-                    },
-                }
-            )
+def commit_nudge(cwd):
+    r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
+    if r.returncode != 0:
+        if main_tree(cwd) is None:
+            return None
+        return reminder(
+            'commit', text='git status failed: ' + (r.stderr.strip() or f'exit {r.returncode}')
         )
-        return
-    print(json.dumps({'decision': 'block', 'reason': reason}))
+    files = len(r.stdout.strip().splitlines())
+    if not files:
+        return None
+    if kvs.BINARY and not kvs.set('commit-nudged', 1, cwd=cwd, ttl=NUDGE_INTERVAL, if_old=''):
+        return None
+    return reminder('commit', text='uncommitted changes; commit in coherent chunks', files=files)
+
+
+def diary_nudge(cwd, now):
+    main = main_tree(cwd)
+    if main is None:
+        return None
+    path = diary_file(main, now)
+    if not os.path.exists(path):
+        return reminder('diary', text='no diary entry today')
+    age = now.timestamp() - os.path.getmtime(path)
+    if age > DIARY_STALE:
+        return reminder('diary', text='diary not updated', age=f'{int(age // 3600)}h')
+    return None
 
 
 def nudges(cwd, now):
-    parts = []
-
-    stamp = git_path(cwd, 'claude-commit-nudge')
-    r = git_run(cwd, 'git', 'status', '--porcelain', '-uno')
-    if stamp is not None and r.returncode != 0:
-        parts.append(
-            'git status failed — cannot tell whether the tree is dirty:\n'
-            + (r.stderr.strip() or f'exit {r.returncode}')
-        )
-    elif r.returncode == 0 and r.stdout.strip() and nudge_due(stamp, now):
-        diff = git_run(cwd, 'git', 'diff', '--stat')
-        msg = 'Uncommitted changes detected.'
-        if diff.stdout.strip():
-            msg += '\n' + diff.stdout.strip()
-        msg += (
-            '\nCommit your work — but split it into coherent chunks: one '
-            'commit per logical change, related files together, '
-            'unrelated work in separate commits. Not one mega-commit, not '
-            'premature fragments. Run /commit.\n'
-            'Rules: "type(scope): Message" (scope optional), subject <= 72 chars '
-            '(overflow -> second '
-            '-m body); NEVER add -A, -a, --amend, push, Co-Authored-By, '
-            '--no-verify; squash unpushed commits only, via /squash.'
-        )
-        parts.append(msg)
-        if stamp is not None:
-            write_stamp(stamp, now.isoformat())
-
-    # Diary freshness (missing today or stale > 1h) — only inside a git repo.
-    # The diary lives under ~/.claude, keyed on the main tree (skills/diary).
-    main = main_tree(cwd)
-    if main is not None:
-        path = diary_file(main, now)
-        hhmm = now.strftime('%H:%M %Y-%m-%d')
-        if not os.path.exists(path):
-            parts.append(f'No diary entry for today (now {hhmm}). Run /diary.')
-        elif now.timestamp() - os.path.getmtime(path) > 3600:
-            parts.append(
-                f'Diary not updated in over an hour (now {hhmm}). '
-                'Run /diary deliberately if there is work to record.'
-            )
-    return parts
+    return [line for line in (commit_nudge(cwd), diary_nudge(cwd, now)) if line]
 
 
 def is_ship_judge():
@@ -154,22 +95,32 @@ def is_ship_judge():
     return bool(role) and not role.startswith('worker')
 
 
+def periodic_due(cwd):
+    """Every PERIODIC_CALLS tool calls, and the first call of each NUDGE_INTERVAL window."""
+    calls = kvs.incr('tool-calls', cwd=cwd, ttl=NUDGE_INTERVAL)
+    return calls is not None and (calls == 1 or calls % PERIODIC_CALLS == 0)
+
+
 def main():
     try:
         data = json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError, ValueError):  # fmt: skip
-        sys.exit(0)
-
-    if not isinstance(data, dict) or os.environ.get('CLAUDE_EVAL'):
-        sys.exit(0)
-    if is_ship_judge():
-        sys.exit(0)
-
+    except (json.JSONDecodeError, EOFError, ValueError):
+        return
+    if not isinstance(data, dict) or os.environ.get('CLAUDE_EVAL') or is_ship_judge():
+        return
+    if data.get('stop_hook_active'):
+        return
     cwd = data.get('cwd', '.')
-    now = datetime.now(tz=UTC)
-    parts = [] if data.get('stop_hook_active') else nudges(cwd, now)
-    if parts:
-        emit(parts, data)
+    event = hook_event(data)
+    if event == 'PostToolUse':
+        if periodic_due(cwd):
+            lines = nudges(cwd, datetime.now(tz=UTC))
+            if lines:
+                emit(context(event, *lines))
+        return
+    lines = nudges(cwd, datetime.now(tz=UTC))
+    if lines:
+        emit(block(*lines))
 
 
 if __name__ == '__main__':

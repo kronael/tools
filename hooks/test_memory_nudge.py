@@ -1,101 +1,77 @@
+# pyright: basic
 import io
 import json
 
 import memory_nudge
 import pytest
+from memory_nudge import due
+
+SESSION = {'session_id': 'sess', 'cwd': '/repo'}
 
 
-def run(monkeypatch, capsys, data):
-    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
-    with pytest.raises(SystemExit):
-        memory_nudge.main()
+def test_first_stop_is_silent_and_records_the_start(fake_kvs) -> None:
+    assert due(SESSION, 1000.0) is False
+    assert fake_kvs.value('memory:started', 'sess', '/repo') == '1000'
+    assert fake_kvs.value('memory:stops', 'sess', '/repo') == '1'
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_short_session_fires_on_the_third_stop() -> None:
+    assert due(SESSION, 1000.0) is False
+    assert due(SESSION, 1010.0) is False
+    assert due(SESSION, 1020.0) is True
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_fires_once_then_stays_silent() -> None:
+    for now in (1000.0, 1010.0, 1020.0):
+        due(SESSION, now)
+    assert due(SESSION, 1030.0) is False
+    assert due(SESSION, 9000.0) is False
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_wall_clock_fires_before_the_count() -> None:
+    assert due(SESSION, 1000.0) is False
+    assert due(SESSION, 1000.0 + memory_nudge.SESSION_THRESHOLD) is True
+
+
+@pytest.mark.usefixtures('fake_kvs')
+def test_sessions_do_not_share_state() -> None:
+    other = {'session_id': 'other', 'cwd': '/repo'}
+    for now in (1000.0, 1010.0):
+        due(SESSION, now)
+    assert due(other, 1020.0) is False
+
+
+@pytest.mark.usefixtures('no_kvs')
+def test_without_kvs_nothing_is_due() -> None:
+    assert due(SESSION, 1000.0) is False
+
+
+def run_main(monkeypatch, capsys, payload):
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    memory_nudge.main()
     out = capsys.readouterr().out.strip()
     return json.loads(out) if out else None
 
 
-@pytest.fixture(autouse=True)
-def state_root(tmp_path, monkeypatch):
-    root = tmp_path / 'state'
-    monkeypatch.setenv('KRONAEL_HOOK_STATE', str(root))
-    return root
-
-
-def base(tmp_path, event, **extra):
-    return {
-        'hook_event': event,
-        'cwd': str(tmp_path),
-        'session_id': 'sess',
-        **extra,
-    }
-
-
-def test_precompact_emits_and_marks_done(tmp_path, monkeypatch, capsys, state_root):
-    out = run(monkeypatch, capsys, base(tmp_path, 'PreCompact'))
-
-    assert out == {'ok': True, 'systemMessage': memory_nudge.NUDGE_TEXT}
-    assert (state_root / 'memory-nudge-done-sess').exists()
-
-
-def test_precompact_suppresses_later_stop(tmp_path, monkeypatch, capsys):
-    run(monkeypatch, capsys, base(tmp_path, 'PreCompact'))
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-
-    assert out is None
-
-
-def test_first_stop_is_silent_and_records(tmp_path, monkeypatch, capsys, state_root):
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-
-    assert out is None
-    started, count = memory_nudge.read_start(str(state_root / 'memory-nudge-start-sess'))
-    assert started is not None
-    assert count == 1
-
-
-def test_short_session_fires_on_count_threshold(tmp_path, monkeypatch, capsys):
-    # Three rapid Stops (never near 30 min) still yield exactly one nudge.
-    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
-    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-
+@pytest.mark.usefixtures('fake_kvs')
+def test_main_emits_the_learn_pointer_on_stop(monkeypatch, capsys) -> None:
+    payload = {**SESSION, 'hook_event_name': 'Stop'}
+    assert run_main(monkeypatch, capsys, payload) is None
+    assert run_main(monkeypatch, capsys, payload) is None
+    out = run_main(monkeypatch, capsys, payload)
     assert out['hookSpecificOutput']['hookEventName'] == 'Stop'
-    assert out['hookSpecificOutput']['additionalContext'] == memory_nudge.NUDGE_TEXT
+    assert out['hookSpecificOutput']['additionalContext'].startswith('<reminder skill="learn">')
 
 
-def test_fires_once_then_silent(tmp_path, monkeypatch, capsys):
-    for _ in range(memory_nudge.STOP_COUNT_THRESHOLD):
-        run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-    # Next Stop after the done marker stays silent.
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-
-    assert out is None
-
-
-def test_wall_clock_path_fires_before_count(tmp_path, monkeypatch, capsys, state_root):
-    # Seed a start well past the wall-clock threshold with a low count; the
-    # next Stop should fire via elapsed time, not the count gate.
-    start = state_root / 'memory-nudge-start-sess'
-    start.parent.mkdir(parents=True)
-    memory_nudge.write_start(
-        str(start), 100.0, 1
-    )  # started long ago; time.time() >> 100 + threshold
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-
-    assert out['hookSpecificOutput']['additionalContext'] == memory_nudge.NUDGE_TEXT
-
-
-def test_stop_hook_active_bails(tmp_path, monkeypatch, capsys):
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop', stop_hook_active=True))
-
-    assert out is None
-
-
-def test_cwd_change_does_not_reset_once_per_session(tmp_path, monkeypatch, capsys):
-    """The guard is session-keyed: cd'ing between repos must not re-nudge."""
-    for _ in range(memory_nudge.STOP_COUNT_THRESHOLD):
-        run(monkeypatch, capsys, base(tmp_path, 'Stop'))
-    elsewhere = tmp_path / 'other-repo'
-    elsewhere.mkdir()
-    out = run(monkeypatch, capsys, base(elsewhere, 'Stop'))
-
-    assert out is None
+def test_main_bails_on_a_revision_stop_and_other_events(fake_kvs, monkeypatch, capsys) -> None:
+    assert (
+        run_main(
+            monkeypatch, capsys, {**SESSION, 'hook_event_name': 'Stop', 'stop_hook_active': True}
+        )
+        is None
+    )
+    assert run_main(monkeypatch, capsys, {**SESSION, 'hook_event_name': 'PreCompact'}) is None
+    assert fake_kvs.calls == []

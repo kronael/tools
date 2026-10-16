@@ -4,7 +4,6 @@ import io
 import json
 import os
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -164,18 +163,38 @@ def test_process(payload: object, expected_skill: str | None) -> None:
         assert result is not None
         assert result['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
         context = result['hookSpecificOutput']['additionalContext']
-        assert f'follow {expected_skill} conventions.' in context
+        assert context == f'<skill name="{expected_skill.lstrip("/")}"/>'
 
 
-@pytest.mark.parametrize(('path', 'skill'), SKILL_CASES)
-def test_process_names_code_md_for_code_skills(path: str, skill: str | None) -> None:
-    result = process({'tool_name': 'Edit', 'tool_input': {'file_path': path}})
-    if skill is None:
-        assert result is None
-        return
-    context = result['hookSpecificOutput']['additionalContext']
-    named = 'software/code.md' in context
-    assert named == (skill not in ('/ops', '/wisdom'))
+def test_main_points_once_per_session_and_file(monkeypatch, capsys, fake_kvs) -> None:
+    def run(session, path):
+        payload = {
+            'tool_name': 'Edit',
+            'session_id': session,
+            'cwd': '/repo',
+            'tool_input': {'file_path': path},
+        }
+        monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+        main()
+        return capsys.readouterr().out
+
+    pointer = '<skill name=\\"py\\"/>'
+    assert pointer in run('s1', '/repo/a.py')
+    assert run('s1', '/repo/a.py') == ''
+    assert pointer in run('s1', '/repo/b.py')
+    assert pointer in run('s2', '/repo/a.py')
+    assert fake_kvs.value('pointed:/py:/repo/a.py', 's1', '/repo') == '1'
+
+
+@pytest.mark.usefixtures('no_kvs')
+def test_main_points_every_time_without_kvs(monkeypatch, capsys) -> None:
+    payload = json.dumps(
+        {'tool_name': 'Edit', 'session_id': 's1', 'tool_input': {'file_path': '/repo/a.py'}}
+    )
+    for _ in range(2):
+        monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+        main()
+        assert '<skill name=\\"py\\"/>' in capsys.readouterr().out
 
 
 @pytest.mark.parametrize('command', BLOCK_CASES)
@@ -421,44 +440,4 @@ def test_main_routes_post_tool_use_to_the_formatter_only(tmp_path, monkeypatch, 
         payload = {**post_tool_payload(script), 'hook_event_name': event}
         monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
         main()
-        assert ('follow /py conventions' in capsys.readouterr().out) is nudged, event
-
-
-def run_post_tool_nudge(tmp_path: Path, doc: Path) -> subprocess.CompletedProcess[str]:
-    """The bash entry resolves ~/.claude/hooks, so a fake home links there."""
-    home = tmp_path / 'home'
-    (home / '.claude').mkdir(parents=True)
-    (home / '.claude' / 'hooks').symlink_to(HOOKS_DIR)
-    return subprocess.run(
-        ['bash', str(HOOKS_DIR / 'post_tool_nudge.sh')],
-        input=json.dumps(post_tool_payload(doc)),
-        capture_output=True,
-        text=True,
-        cwd=doc.parent,
-        env={'HOME': str(home), 'PATH': '/usr/bin:/bin'},
-        check=False,
-    )
-
-
-def test_post_tool_nudge_feeds_a_markdown_write_through_the_installed_hook(tmp_path) -> None:
-    repo = tmp_path / 'repo'
-    repo.mkdir()
-    doc = opted_in_repo(repo)
-    run = run_post_tool_nudge(tmp_path, doc)
-    assert (run.returncode, run.stdout, run.stderr) == (0, '', '')
-    assert doc.read_text() == 'wrapped\n'
-
-
-def test_post_tool_nudge_prints_a_note_as_its_only_output(tmp_path) -> None:
-    repo = tmp_path / 'repo'
-    repo.mkdir()
-    doc = opted_in_repo(repo, 'echo "Config error: bad .rumdl.toml" >&2\nexit 2\n')
-    run = run_post_tool_nudge(tmp_path, doc)
-    assert (run.returncode, run.stderr) == (0, '')
-    assert json.loads(run.stdout) == {
-        'hookSpecificOutput': {
-            'hookEventName': 'PostToolUse',
-            'additionalContext': 'rumdl exited 2 on docs/a.md: Config error: bad .rumdl.toml',
-        },
-    }
-    assert doc.read_text() == LONG_LINE
+        assert ('<skill name=\\"py\\"/>' in capsys.readouterr().out) is nudged, event

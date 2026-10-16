@@ -9,7 +9,8 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-from stop import emit
+from stop import commit_nudge
+from stop import periodic_due
 from stop import project_slug
 
 HOOK = Path(__file__).with_name('stop.py')
@@ -19,6 +20,7 @@ ENV = {
     if k not in ('KRONAEL_HOOK_EVENT', 'KRONAEL_IN_CODEX', 'CLAUDE_EVAL', 'SHIP_ROLE')
 }
 ENV.update(
+    PATH='/usr/bin:/bin',
     GIT_CONFIG_GLOBAL='/dev/null',
     GIT_AUTHOR_NAME='t',
     GIT_AUTHOR_EMAIL='t@t',
@@ -109,33 +111,27 @@ def test_project_slug_replaces_every_non_alphanumeric() -> None:
     assert project_slug('/home/U/App.x_1') == '-home-U-App-x-1'
 
 
-def test_emit_keeps_stop_block(capsys) -> None:
-    emit(['commit first'], {'hook_event': 'Stop'})
+def test_commit_nudge_is_throttled_by_kvs(tmp_path, home, fake_kvs) -> None:
+    repo = make_repo(tmp_path, home)
+    (repo / 'a.txt').write_text('one\ntwo\n')
 
-    output = json.loads(capsys.readouterr().out)
-    assert output == {'decision': 'block', 'reason': 'commit first'}
-
-
-def test_emit_post_tool_nudge_is_context(capsys) -> None:
-    emit(['commit soon'], {'hook_event_name': 'PostToolUse'})
-
-    output = json.loads(capsys.readouterr().out)
-    assert 'decision' not in output
-    assert output == {
-        'hookSpecificOutput': {
-            'hookEventName': 'PostToolUse',
-            'additionalContext': 'commit soon',
-        },
-    }
+    assert commit_nudge(str(repo)) == (
+        '<reminder skill="commit" files="1">uncommitted changes; commit in coherent chunks</reminder>'
+    )
+    assert commit_nudge(str(repo)) is None
+    assert fake_kvs.value('commit-nudged', cwd=str(repo)) == '1'
 
 
-def test_emit_post_tool_env_is_context(capsys, monkeypatch) -> None:
-    monkeypatch.setenv('KRONAEL_HOOK_EVENT', 'PostToolUse')
-    emit(['commit soon'], {})
+def test_periodic_check_is_due_on_the_first_call_of_a_window_and_every_hundredth(fake_kvs) -> None:
+    assert periodic_due('/repo') is True
+    assert not any(periodic_due('/repo') for _ in range(98))
+    assert periodic_due('/repo') is True
+    assert fake_kvs.value('tool-calls', cwd='/repo') == '100'
 
-    output = json.loads(capsys.readouterr().out)
-    assert 'decision' not in output
-    assert output['hookSpecificOutput']['hookEventName'] == 'PostToolUse'
+
+@pytest.mark.usefixtures('no_kvs')
+def test_periodic_check_needs_kvs() -> None:
+    assert periodic_due('/repo') is False
 
 
 def test_dirty_tree_blocks(tmp_path, home) -> None:
@@ -145,8 +141,7 @@ def test_dirty_tree_blocks(tmp_path, home) -> None:
     out = run_hook(repo)
 
     assert out['decision'] == 'block'
-    assert out['reason'].startswith('Uncommitted changes detected.\na.txt | 1 +')
-    assert 'Run /commit.' in out['reason']
+    assert out['reason'].startswith('<reminder skill="commit" files="1">uncommitted changes')
     assert 'systemMessage' not in out
 
 
@@ -158,7 +153,7 @@ def test_broken_git_status_blocks_instead_of_reading_clean(tmp_path, home) -> No
     out = run_hook(repo)
 
     assert out['decision'] == 'block'
-    assert out['reason'].startswith('git status failed')
+    assert out['reason'].startswith('<reminder skill="commit">git status failed')
     assert 'fatal:' in out['reason']
     assert 'systemMessage' not in out
 
@@ -179,7 +174,7 @@ def test_ship_worker_keeps_nudges(tmp_path, home) -> None:
 
     out = run_hook(repo, env={'SHIP_ROLE': 'worker-w0'})
 
-    assert 'Run /commit.' in out['reason']
+    assert '<reminder skill="commit"' in out['reason']
 
 
 def test_outside_a_git_repo_is_silent(tmp_path) -> None:
@@ -189,7 +184,7 @@ def test_outside_a_git_repo_is_silent(tmp_path) -> None:
 def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path, home) -> None:
     repo = make_repo(tmp_path, home)
     assert run_hook(repo) is None
-    assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
+    assert run_hook(repo, hook_event_name='PostToolUse') is None
 
 
 def test_missing_diary_warns_without_writing_a_file(tmp_path, home) -> None:
@@ -198,7 +193,7 @@ def test_missing_diary_warns_without_writing_a_file(tmp_path, home) -> None:
 
     out = run_hook(tmp_path)
 
-    assert 'Run /diary.' in out['reason']
+    assert '<reminder skill="diary">no diary entry today</reminder>' in out['reason']
     assert not diary_path(home, tmp_path).parent.exists()
     assert not (tmp_path / '.diary').exists()
 
@@ -212,7 +207,7 @@ def test_stale_diary_warns_without_touching_the_file(tmp_path, home) -> None:
 
     out = run_hook(repo)
 
-    assert 'Diary not updated in over an hour' in out['reason']
+    assert '<reminder skill="diary" age="2h">diary not updated</reminder>' in out['reason']
     assert diary.read_text() == before
 
 
@@ -224,7 +219,7 @@ def test_diary_in_the_repo_does_not_count(tmp_path) -> None:
 
     out = run_hook(tmp_path)
 
-    assert out['reason'].startswith('No diary entry for today')
+    assert out['reason'] == '<reminder skill="diary">no diary entry today</reminder>'
 
 
 def test_main_tree_diary_silences_linked_worktree(tmp_path, home) -> None:
@@ -247,8 +242,8 @@ def test_diary_keyed_on_a_linked_worktree_does_not_count(tmp_path, home) -> None
     out = run_hook(linked)
 
     assert out['decision'] == 'block'
-    assert out['reason'].startswith('No diary entry for today')
-    assert 'Run /diary.' in out['reason']
+    assert out['reason'] == '<reminder skill="diary">no diary entry today</reminder>'
+    assert '<reminder skill="diary">no diary entry today</reminder>' in out['reason']
 
 
 def make_submodule(tmp_path):

@@ -1,81 +1,76 @@
 #!/usr/bin/env python3
+"""UserPromptSubmit: point at the skills a prompt calls for.
+
+Every line is a pointer (lib/reminder.py): the first prompt of a session gets
+`solve` and the host-local LOCAL.md files, a prompt that names a skill's
+keyword gets that skill, "commit" gets `commit`, a document mention gets
+`readme`, and the caveman pointer comes from style_nudge when the last reply
+missed its budget.
+"""
+
 import json
 import os
 import re
 import sys
-from pathlib import Path
 
-from lib.state import session_state
-from style_nudge import read_reminder
-
-DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
-- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dir: plans and ship records live under ~/.claude/ (ship skill § Work record), never in the repo
-- NEVER use lowercase for root documentation files (todo.md, readme.md)"""
-
-COMMIT_RULES = """Commit rules:
-- Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
-- ALWAYS commit in detached HEAD - NEVER on or creating a branch
-- NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash a pushed commit (unpushed ones only via /squash)
-- NEVER skip pre-commit hooks
-- Pre-commit reformats on first run - ALWAYS retry commit once
-Invoke /commit skill."""
-
-SOLVE_NUDGE = (
-    'New task (first prompt this session): run /solve before acting — it '
-    'loads diary + memory context and routes to the right skill. Skip only '
-    'if this prompt is a direct continuation of work already in context.'
-)
+import style_nudge
+from lib import kvs
+from lib.reminder import context
+from lib.reminder import emit
+from lib.reminder import file
+from lib.reminder import reminder
+from lib.reminder import skill
 
 SKILL_KEYWORDS = {
-    'architecture': '/specs',
-    'background': '/dispatch',
-    'bugs': '/bugs',
-    'ceo': '/eval',
-    'cont': '/continue',
-    'continue': '/continue',
-    'create': '/create',
-    'cto': '/eval',
-    'design': '/specs',
-    'diagram': '/diagrams',
-    'diary': '/diary',
-    'dispatch': '/dispatch',
-    'draft': '/pr-draft',
-    'eval': '/eval',
-    'fin': '/fin',
-    'fix': '/fix',
-    'flowchart': '/diagrams',
-    'humanize': '/humanize',
-    'inline': '/gh-comment',
-    'merge': '/merge',
-    'microcopy': '/writing',
-    'novice': '/eval',
-    'pentest': '/eval',
-    'recall': '/recall-memories',
-    'refine': '/refine',
-    'release': '/release',
-    'roi': '/eval',
-    'scavenge': '/scavenge',
-    'security': '/eval',
-    'ship': '/ship',
-    'sonnet': '/sonnet',
-    'spec': '/specs',
-    'specs': '/specs',
-    'test': '/software',
-    'testing': '/software',
-    'thread': '/tweet',
-    'tooltip': '/writing',
-    'tweet': '/tweet',
-    'ux': '/eval',
-    'usability': '/eval',
-    'walkthrough': '/eval',
-    'wisdom': '/wisdom',
-    'writing': '/writing',
-    'readme': '/readme',
-    'improve': '/improve',
-    'visual': '/visual',
-    'distill': '/distill',
-    'review': '/review',
-    'browse': '/browse',
+    'architecture': 'specs',
+    'background': 'dispatch',
+    'bugs': 'bugs',
+    'ceo': 'eval',
+    'cont': 'continue',
+    'continue': 'continue',
+    'create': 'create',
+    'cto': 'eval',
+    'design': 'specs',
+    'diagram': 'diagrams',
+    'diary': 'diary',
+    'dispatch': 'dispatch',
+    'draft': 'pr-draft',
+    'eval': 'eval',
+    'fin': 'fin',
+    'fix': 'fix',
+    'flowchart': 'diagrams',
+    'humanize': 'humanize',
+    'inline': 'gh-comment',
+    'merge': 'merge',
+    'microcopy': 'writing',
+    'novice': 'eval',
+    'pentest': 'eval',
+    'recall': 'recall-memories',
+    'refine': 'refine',
+    'release': 'release',
+    'roi': 'eval',
+    'scavenge': 'scavenge',
+    'security': 'eval',
+    'ship': 'ship',
+    'sonnet': 'sonnet',
+    'spec': 'specs',
+    'specs': 'specs',
+    'test': 'software',
+    'testing': 'software',
+    'thread': 'tweet',
+    'tooltip': 'writing',
+    'tweet': 'tweet',
+    'ux': 'eval',
+    'usability': 'eval',
+    'walkthrough': 'eval',
+    'wisdom': 'wisdom',
+    'writing': 'writing',
+    'readme': 'readme',
+    'improve': 'improve',
+    'visual': 'visual',
+    'distill': 'distill',
+    'review': 'review',
+    'browse': 'browse',
 }
 
 CODEX_PATTERNS = [
@@ -84,19 +79,21 @@ CODEX_PATTERNS = [
     r'\bsecond\s+opinion\b',
 ]
 
-TIER_ROUTES = {
-    'fable': '/fable',
-    'haiku': '/haiku',
-    'luna': '/luna',
-    'opus': '/opus',
-    'terra': '/terra',
-}
-TIERS = '|'.join(TIER_ROUTES)
-
+TIERS = ('fable', 'haiku', 'luna', 'opus', 'terra')
+TIER_PATTERN = '|'.join(TIERS)
 ESCALATION_PATTERNS = [
-    (rf'(?<!\S)/({TIERS})\b', TIER_ROUTES),
-    (rf'\b(?:use|spawn|run|invoke|switch to)\s+({TIERS})\b', TIER_ROUTES),
+    rf'(?<!\S)/({TIER_PATTERN})\b',
+    rf'\b(?:use|spawn|run|invoke|switch to)\s+({TIER_PATTERN})\b',
 ]
+
+META_PATTERNS = [
+    r'\bhook\b',
+    r'\bagent\b.*\b(check|fix|issue)',
+    r'\b(check|fix|debug)\b.*(hook|agent|nudge|settings)',
+    r'invoke.*agent',
+]
+
+LOCAL_FILES = ('~/.claude/LOCAL.md', 'LOCAL.md')
 
 
 def exact_match(word, keywords):
@@ -110,118 +107,74 @@ def exact_match(word, keywords):
     return None
 
 
-META_PATTERNS = [
-    r'\bhook\b',
-    r'\bagent\b.*\b(check|fix|issue)',
-    r'\b(check|fix|debug)\b.*(hook|agent|nudge|settings)',
-    r'invoke.*agent',
-]
-
-
-# Claude Code spellings only. codex_hook.py rewrites `/name` to Codex's
-# `@name`, and a spelling written here instead never reaches that rewriter.
 def explicit_route(prompt, harness=None):
+    """The skill a prompt names, or None. Codex never gets routed to itself."""
     lower = prompt.lower()
     if harness != 'codex':
-        # A leading slash command only: "use astra" is as likely the vector DB
-        # as the skill, and "/astra/data" a path.
         if re.match(r'\s*/astra(?![\w/.-])', lower):
-            return '/astra'
+            return 'astra'
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
-                return '/astra'
-    for pattern, routes in ESCALATION_PATTERNS:
+                return 'astra'
+    for pattern in ESCALATION_PATTERNS:
         match = re.search(pattern, lower)
         if match:
-            return routes.get(match.group(1))
-    words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
-    for word in words:
+            return match.group(1)
+    for word in re.findall(r'\b[a-zA-Z]{2,}\b', prompt):
         matched = exact_match(word, SKILL_KEYWORDS)
         if matched:
             return matched
     return None
 
 
-def first_prompt_of_session(session_id):
-    """True the first time a session submits a prompt, recording a marker so
-    later prompts stay silent. False when the marker exists or cannot be
-    written, so an unwritable state dir never turns the nudge into per-prompt
-    spam."""
-    marker = session_state('solve-nudge', session_id)
-    if marker is None or os.path.exists(marker):
-        return False
-    try:
-        open(marker, 'w').close()
-    except OSError:
-        return False
-    return True
+def is_first_prompt(data):
+    return kvs.set('prompted', 1, data.get('session_id'), data.get('cwd'), if_old='')
 
 
-def emit(text):
-    # additionalContext is the only UserPromptSubmit field the model reads;
-    # systemMessage renders in the transcript for the user and never reaches
-    # the model.
-    print(
-        json.dumps(
-            {
-                'hookSpecificOutput': {
-                    'hookEventName': 'UserPromptSubmit',
-                    'additionalContext': text,
-                },
-            }
-        )
-    )
+def local_pointers(cwd):
+    lines = []
+    for name in LOCAL_FILES:
+        path = os.path.expanduser(name) if name.startswith('~') else os.path.join(cwd or '.', name)
+        if os.path.isfile(path):
+            lines.append(file(name if name.startswith('~') else path))
+    return lines
+
+
+def lines_for(prompt, data):
+    if any(re.search(pattern, prompt, re.IGNORECASE) for pattern in META_PATTERNS):
+        pointer = style_nudge.on_prompt(data)
+        return [pointer] if pointer else []
+    lines = []
+    if prompt.strip() and is_first_prompt(data):
+        if not re.search(r'/solve\b', prompt):
+            lines.append(reminder('solve', text='first prompt: route the task before acting'))
+        lines.extend(local_pointers(data.get('cwd')))
+    pointer = style_nudge.on_prompt(data)
+    if pointer:
+        lines.append(pointer)
+    if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
+        lines.append(skill('readme'))
+    matched = explicit_route(prompt, data.get('harness'))
+    if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
+        lines.append(skill('commit'))
+    elif matched and skill(matched) not in lines:
+        lines.append(skill(matched))
+    return lines
 
 
 def main():
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError, ValueError):
-        sys.exit(0)
-
+        return
     if not isinstance(data, dict):
-        sys.exit(0)
-
+        return
     prompt = data.get('prompt') or ''
     if not isinstance(prompt, str):
-        sys.exit(0)
-
-    try:
-        reminder = read_reminder(Path.home())
-    except (OSError, TypeError, ValueError):
-        reminder = None
-
-    if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        if reminder:
-            emit(reminder)
-        sys.exit(0)
-
-    parts = []
-
-    if (
-        prompt.strip()
-        and first_prompt_of_session(data.get('session_id'))
-        and not re.search(r'/solve\b', prompt)
-    ):
-        parts.append(SOLVE_NUDGE)
-
-    if reminder:
-        parts.append(reminder)
-
-    if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
-        parts.append(DOCS_RULES)
-
-    matched = explicit_route(prompt, data.get('harness'))
-
-    if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
-        parts.append(COMMIT_RULES)
-    elif matched:
-        parts.append(f'info: Invoke {matched}.')
-
-    if parts:
-        emit('\n\n'.join(parts))
-
-    sys.exit(0)
+        return
+    lines = lines_for(prompt, data)
+    if lines:
+        emit(context('UserPromptSubmit', *lines))
 
 
 if __name__ == '__main__':

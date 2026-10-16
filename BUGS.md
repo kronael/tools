@@ -312,12 +312,6 @@
   `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
 
-- **RECLAUDE-TMP-BAN-VS-SYNC-RUN-DIR** (LOW, docs) — owner decision, no test
-  — docs. `RECLAUDE.md:4` "NEVER use `/tmp` — ALWAYS `./tmp`" is re-injected
-  at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
-  `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
-  rule wins inside a sync; RECLAUDE scopes project work.
-
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
   test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
   non-obvious why" — a general why comment that none of the three in-body
@@ -430,14 +424,6 @@
   and `hooks/test_codex_hook.py:91` to `$`; (b) keep `@`. **Default if nothing
   is decided:** (b).
 
-- **CODEX-PRECOMPACT-ENTRIES-NO-OP** (LOW, config) — owner decision, no test
-  — config. `codex-hooks.json:58-74` wires `local` and `reclaude` on Codex
-  `PreCompact`, but `hooks/codex_hook.py:155-162` returns nothing for any
-  non-block PreCompact output, so both entries spawn a process whose output is
-  discarded; the only effect left is `local.py`'s `local-{sid}` stamp.
-  **Options:** (a) drop the two entries; (b) keep them for when the adapter
-  can carry context. **Default if nothing is decided:** (b).
-
 ## Hooks
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
@@ -459,30 +445,6 @@
   `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
   call — wire it to an event, or drop it.
 
-- **SMOKE-SUITE-TESTS-THE-INSTALL** (LOW, tests) — CONFIRMED at HEAD 2026-09-25.
-  `hooks/test_hooks.py` resolves its subjects under `Path.home()/'.claude'/
-  'hooks'` (`:20`), so it exercises whatever is installed rather than the tree
-  it ships in, and its docstring and cases name `nudge.py`, which no longer
-  exists — the file split into `prompt_nudge.py` and `pretool_nudge.py`. It is
-  also absent from the Makefile's `TEST_FILES`, and pytest collects nothing from
-  it (`pytest -q test_hooks.py` → "no tests ran"), so nothing runs it either
-  way. Reproduce: `ls hooks/nudge.py` → no such file. **Fix:** the maintainer's
-  call — point it at the repo tree and rename the subjects, or drop it.
-
-- **HOOKS-SYSTEMMESSAGE-NEVER-REACHES-MODEL** (MED, correctness) — CONFIRMED.
-  `local.py`, `reclaude.py` and `memory_nudge.py` emit `systemMessage`, the
-  channel defect `prompt_nudge` had. `hook_system_message` maps to no API
-  message in Claude Code 2.1.261 (`hook_system_message:()=>[]` in the
-  attachment table; the docs define `systemMessage` as "a message shown to the
-  user in the transcript"). Measured: 2409 `hook_system_message` attachments
-  across all transcripts, 0 model-visible copies. So `local.py`'s LOCAL.md
-  injection and its RULES re-injection on UserPromptSubmit never reach the
-  model. The PreCompact paths (`local.py`, `reclaude.py`, `memory_nudge.py`)
-  are the same field; whether Claude Code carries a PreCompact `systemMessage`
-  across compaction is not measured. **Fix:** for UserPromptSubmit,
-  `hookSpecificOutput.additionalContext` as in `prompt_nudge.emit`; PreCompact
-  needs its own measurement first.
-
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which
@@ -494,26 +456,6 @@
   the clause and its `hooks/ARCHITECTURE.md` mention; (b) keep it for an
   external runner that sets `CLAUDE_EVAL` itself. **Default if nothing is
   decided:** (b); no test — config.
-
-- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
-  stamps per session are named at their call sites — `local-`
-  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:150`),
-  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:105-113`)
-  — plus a second per-session store `pretool_nudge.py:285-292` keeps at
-  `~/.claude/tmp/extnudge/{sid}.txt`, and no hook deletes one or expires a
-  session id, so `~/.claude/state` gains up to four files per session.
-  Harmless in bytes; the question is whether stamps should self-prune on
-  write past N days. **Options:** (a) prune on write past N days; (b) leave.
-  **Default if nothing is decided:** (b). No test — design.
-
-- **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:79-87` defines its own `hook_event`: the same
-  three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:80-82`, set by `post_tool_nudge.sh:33`). `stop.py` imports
-  nothing from `lib.state`, so a spelling added to one reader misses the
-  other. **Fix:** import `hook_event` from `lib.state` and keep the override
-  in `stop.py`, or fold the override into the shared reader; no test —
-  duplication.
 
 - **DIARY-SLUG-EDGES** (LOW, design) — proposed, no fix without the owner.
   The diary slug (`hooks/stop.py:50-52`, `skills/diary/SKILL.md` § Where it
@@ -676,29 +618,26 @@
   **Fix:** compare against the draft below its title line, or require a
   real cut ratio (the `ok:` line already prints one).
 
-- **STYLE-RULES-NUDGE-RESTATES-CAVEMAN** (LOW, duplication) — owner
-  decision, no test — duplication. `hooks/prompt_nudge.py:9-15`
-  `STYLE_RULES` is emitted on every prompt (`:204`, meta prompts too,
-  `:190`) and restates `output-styles/caveman.md` with one line cap (~17,
-  max 20) where caveman has tiers (`:15`) and "no tables or headers" where
-  caveman allows them for tabular content (`:26`); neither `hooks/README.md`
-  nor `hooks/ARCHITECTURE.md` names it. `COMMIT_RULES` (`:21-27`),
-  `stop.py:122-131` and `local.py:11-16` `RULES` restate WISDOM § Git and
-  `code.md`. **Default if nothing is decided:** as written — the nudges are
-  deliberate re-injection.
+- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-16, no
+  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py` and read
+  by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py`) appears in no doc.
+  **Fix:** drop the first; name the second in `hooks/ARCHITECTURE.md`.
 
-- **RECLAUDE-KEYWORD-PATH-UNWIRED** (LOW, dead code) — CONFIRMED 2026-10-10.
-  `hooks/reclaude.py:33-41` carries a continue/recap keyword path (the same
-  two regexes as `local.py:61-62`); the wiring runs the hook on PreCompact
-  only (`settings-recommended.json`, `codex-hooks.json`), no test names the
-  path, and `hooks/ARCHITECTURE.md` says it is unwired. **Fix:** the
-  maintainer's call — delete it with the ARCHITECTURE lines, or wire it.
+- **RECLAUDE-MD-UNREAD** (LOW, dead file) — proposal, needs sign-off. No hook
+  reads `RECLAUDE.md`: Claude Code discards a PreCompact hook's
+  `systemMessage` (hooks reference, PreCompact) and the hook that injected it
+  is gone, yet the file stays in the bundle because `kronael/sync/SKILL.md`
+  § Steps 0 and `reference.md` § Classify and § Swap name it as a bundle path.
+  **Proposal:** drop `RECLAUDE.md` from the repo, the sync's bundle list, the
+  classify loop and the swap tar in one commit; the sync then moves the live
+  copy to `RUN/old`.
 
-- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-10, no
-  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:19` and
-  read by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py:111`) and
-  `KRONAEL_HOOK_STATE` (`lib/state.py:10`) appear in no doc. **Fix:** drop
-  the first; name the other two in `hooks/ARCHITECTURE.md`.
+- **KVS-SESSIONS-NEVER-PRUNED** (LOW, design) — needs sign-off. Every hook
+  session leaves its keys (`prompted`, `caveman`, `memory:*`, `pointed:*`)
+  in `kvs` for good; only TTL keys expire. `kvs sessions` lists them, nothing
+  removes a session whose Claude Code transcript is gone. **Options:** (a) a
+  `kvs` sweep of sessions older than N days; (b) leave; the rows are small.
+  **Default if nothing is decided:** (b).
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs

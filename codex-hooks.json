@@ -5,12 +5,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/codex_hook.py UserPromptSubmit local",
-            "timeout": 5,
-            "statusMessage": "Loading Kronael local context"
-          },
-          {
-            "type": "command",
             "command": "python3 ~/.claude/hooks/codex_hook.py UserPromptSubmit prompt_nudge",
             "timeout": 5,
             "statusMessage": "Checking Kronael prompt nudges"
@@ -36,9 +30,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse post_tool_nudge",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse pretool_nudge",
             "timeout": 10,
-            "statusMessage": "Updating Kronael tool counters"
+            "statusMessage": "Reflowing Kronael Markdown"
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/codex_hook.py PostToolUse stop",
+            "timeout": 10,
+            "statusMessage": "Checking Kronael commit and diary"
           }
         ]
       }
@@ -51,24 +51,6 @@
             "command": "python3 ~/.claude/hooks/codex_hook.py Stop stop",
             "timeout": 10,
             "statusMessage": "Checking Kronael stop nudges"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/codex_hook.py PreCompact local",
-            "timeout": 5,
-            "statusMessage": "Reloading Kronael local context"
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/codex_hook.py PreCompact reclaude",
-            "timeout": 5,
-            "statusMessage": "Reloading Kronael rules"
           }
         ]
       }

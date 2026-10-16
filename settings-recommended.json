@@ -37,27 +37,10 @@
     "defaultMode": "default"
   },
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "compact",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/style_nudge.py",
-            "timeout": 500
-          }
-        ]
-      }
-    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/local.py",
-            "timeout": 500
-          },
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/prompt_nudge.py",
@@ -84,13 +67,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/post_tool_nudge.sh",
+            "command": "python3 ~/.claude/hooks/pretool_nudge.py",
+            "timeout": 1000
+          },
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/stop.py",
             "timeout": 1000
           },
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/style_nudge.py",
-            "timeout": 500
+            "timeout": 1000
           }
         ]
       }
@@ -107,34 +95,12 @@
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/memory_nudge.py",
-            "timeout": 500
+            "timeout": 1000
           },
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/style_nudge.py",
-            "timeout": 500
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/local.py",
-            "timeout": 500
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/reclaude.py",
-            "timeout": 500
-          },
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/memory_nudge.py",
-            "timeout": 500
+            "timeout": 1000
           }
         ]
       }

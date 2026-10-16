@@ -13,15 +13,12 @@ from typing import Any
 
 HOOKS_DIR = Path.home() / '.claude' / 'hooks'
 TARGETS = {
-    'local': ['python3', str(HOOKS_DIR / 'local.py')],
     'prompt_nudge': ['python3', str(HOOKS_DIR / 'prompt_nudge.py')],
     'pretool_nudge': ['python3', str(HOOKS_DIR / 'pretool_nudge.py')],
-    'post_tool_nudge': ['bash', str(HOOKS_DIR / 'post_tool_nudge.sh')],
-    'reclaude': ['python3', str(HOOKS_DIR / 'reclaude.py')],
     'stop': ['python3', str(HOOKS_DIR / 'stop.py')],
 }
 CONTEXT_EVENTS = {'UserPromptSubmit', 'PreToolUse', 'PostToolUse'}
-NUDGE_TARGETS = {'prompt_nudge', 'pretool_nudge', 'post_tool_nudge', 'stop'}
+NUDGE_TARGETS = frozenset(TARGETS)
 SKILLS_DIR = Path.home() / '.claude' / 'skills'
 
 

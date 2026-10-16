@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 
 import pytest
+from codex_hook import NUDGE_TARGETS
+from codex_hook import TARGETS
 from codex_hook import normalize
 from codex_hook import translate_output
 
@@ -143,3 +145,8 @@ def test_translate_output_keeps_precompact_block_for_codex() -> None:
         'PreCompact',
     )
     assert json.loads(output) == {'decision': 'block', 'reason': 'finish summary first'}
+
+
+def test_targets_are_the_three_hooks_codex_wires() -> None:
+    assert set(TARGETS) == {'prompt_nudge', 'pretool_nudge', 'stop'}
+    assert frozenset(TARGETS) == NUDGE_TARGETS

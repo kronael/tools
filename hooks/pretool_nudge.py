@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """PreToolUse hook: deny an unsafe command and unlinted GitHub text, raise the
-permission dialog on a review submit, and emit per-language file nudges.
+permission dialog on a review submit, and point at the language skill of a
+touched file once per session and file (kvs remembers; without kvs every
+touch points).
 
-PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when its
-repository opted in with a root .rumdl.toml.
+PostToolUse: reflow a written Markdown file when its repository opted in with
+a root .rumdl.toml.
 
 Silent on any error, except that an unsafe command is denied and the GitHub
 text gate denies on its own error.
@@ -22,6 +24,9 @@ import sys
 from gh_text_lint import Decision
 from gh_text_lint import Permission
 from gh_text_lint import command_decision
+from lib import kvs
+from lib.reminder import context
+from lib.reminder import skill
 from lib.state import hook_event
 
 MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
@@ -65,7 +70,6 @@ EXT_SKILLS = {
     '.j2': '/htmx',
     '.heex': '/htmx',
 }
-CODE_SKILLS = frozenset({*EXT_SKILLS.values(), '/mk'})
 
 
 def skill_for(path: str) -> str | None:
@@ -170,17 +174,10 @@ def process(data: object) -> dict | None:
 
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
         return None
-    path = extract_path(data)
-    skill = skill_for(path)
-    if not skill:
+    matched = skill_for(extract_path(data))
+    if not matched:
         return None
-    code = ' Read ~/.claude/skills/software/code.md first.' if skill in CODE_SKILLS else ''
-    return {
-        'hookSpecificOutput': {
-            'hookEventName': 'PreToolUse',
-            'additionalContext': f'Editing/reading {os.path.basename(path)} — follow {skill} conventions.{code}',
-        },
-    }
+    return context('PreToolUse', skill(matched.lstrip('/')))
 
 
 def permission_output(decision: Decision) -> dict:
@@ -219,9 +216,7 @@ def find_rumdl(root: str) -> str | None:
 
 
 def post_tool_context(text: str) -> dict:
-    return {
-        'hookSpecificOutput': {'hookEventName': 'PostToolUse', 'additionalContext': text},
-    }
+    return context('PostToolUse', text)
 
 
 def format_markdown(data: object) -> dict | None:
@@ -266,21 +261,6 @@ def format_markdown(data: object) -> dict | None:
     return None
 
 
-def already_seen(cache_file: str, key: str) -> bool:
-    """Side-effecting: True if key is in cache. Silent on OSError."""
-    try:
-        with open(cache_file, encoding='utf-8', errors='replace') as fh:
-            return key in {line.rstrip('\n') for line in fh}
-    except OSError:
-        return False
-
-
-def remember(cache_file: str, key: str) -> None:
-    """Side-effecting: append key to cache. Silent on OSError."""
-    with contextlib.suppress(OSError), open(cache_file, 'a', encoding='utf-8') as fh:
-        fh.write(key + '\n')
-
-
 def main() -> None:
     try:
         data = json.load(sys.stdin)
@@ -301,16 +281,9 @@ def main() -> None:
         return
 
     path = extract_path(data)
-    skill = skill_for(path) or ''
-    session = str(data.get('session_id') or 'default').replace('/', '_').replace('\\', '_')
-    cache_dir = os.path.expanduser('~/.claude/tmp/extnudge')
-    cache_file = os.path.join(cache_dir, f'{session}.txt')
-    key = f'{skill}\t{path}'
-    with contextlib.suppress(OSError):
-        os.makedirs(cache_dir, exist_ok=True)
-    if already_seen(cache_file, key):
+    key = f'pointed:{skill_for(path)}:{path}'
+    if kvs.BINARY and not kvs.set(key, 1, data.get('session_id'), data.get('cwd'), if_old=''):
         return
-    remember(cache_file, key)
     with contextlib.suppress(OSError, ValueError):
         print(json.dumps(result))
 
