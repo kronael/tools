@@ -43,7 +43,7 @@ comments, design and the boring-code rules. Below are SQL-specific additions.
 - ALWAYS store a closed set of values (status, outcome, channel) as `SMALLINT`
   with an `IntEnum` in the code, and pass the enum — NEVER a `TEXT` column of
   string literals such as `'done'`/`'dead'`.
-- Function names mirror SQL verbs: `select`, `insert`, `update`, `delete`
+- Function names mirror SQL verbs plus what they return or change: `select_message_url`, `insert_observations`, `update_checked_at`, `delete_finished` — NEVER a bare noun like `url_of` or `sent`
 - `update` does upsert when logic requires it
 - Deviate only for multi-op patterns (e.g. `get_or_create`)
 - `$1, $2` for simple queries (1-3 params), `sql()` helper for dicts/inserts
