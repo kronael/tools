@@ -17,13 +17,27 @@ below. Paths are relative to this directory.
 The owner's name for a violation of any rule here is "AI slop"; "fix the slop"
 routes here. Prose tells with worked fixes are the `humanize` catalogue.
 
-ALWAYS read the Language section of `~/.claude/output-styles/caveman.md` before
-writing informational or technical prose. It owns the shared language rules;
-its chat budget does not apply to documents. For creative work, ALWAYS follow
-an explicitly requested voice or style.
+## Language — ASD-STE100 Simplified Technical English
 
-ALWAYS preserve technical names, code, and quotations; a needed technical
-term stays and gets explained — that Language section owns the rule.
+These rules apply to every informational or technical document, page, README
+and description; the caveman output style carries the same list for chat,
+word for word. For creative work, ALWAYS follow an explicitly requested voice
+or style. ASD-STE100 is guidance here: NEVER claim compliance without checking
+the standard and its approved dictionary (53 writing rules and a ~900-word
+dictionary, Issue 9, 2025, asd-ste100.org).
+
+- One word, one meaning: pick the familiar word and use it every time. "Start" stays "start", never "kick off", "spin up" or "fire".
+- Every term a project's docs use comes from its Glossary, the project's dictionary. A needed technical term stays, with its meaning stated at first use.
+- No metaphor, idiom, slang or drama: "the test failed", not "the test blew up".
+- Active voice with a named actor: "the router drops the field", not "the field is dropped". Subject, verb, object, or a direct imperative.
+- Simple tenses only: present, past, future. NEVER "has been", "would have", "is being".
+- One main clause per sentence, plus at most one short if, when or because clause. NEVER nest clauses or insert asides: split them into sentences.
+- A warning or a condition comes before the action it controls, NEVER after it.
+- One instruction per sentence: at most 20 words in a step, 25 in a description.
+- Noun stacks of at most 3 words: "container spawn timeout" is the limit.
+- ALWAYS keep articles and full grammar: "run the test", not "run test".
+- ALWAYS repeat the noun where "it", "this" or "they" could point at more than one thing.
+- ALWAYS keep technical names, code and quotations as written, and keep the technical meaning and every stated uncertainty when you split or rewrite a sentence.
 
 ## Rules
 

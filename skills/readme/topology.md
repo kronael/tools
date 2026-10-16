@@ -51,7 +51,9 @@ This order; cut a section with nothing true to say. Under 150 lines.
 1. The title, then what it is and who it is for, in one plain sentence.
 2. The link to the study page, naming what it answers.
 3. Any status that changes whether to use it (unaudited, not for real funds).
-4. **The words** — each domain term defined before its first use.
+4. **Glossary** — the project's dictionary: one entry per domain term, each
+   defined before its first use, and every term the docs use comes from it
+   (`writing` § Language).
 5. **What it gives you** — one bullet per capability that works today.
 6. **What it does not give you** — each limit with its `BUGS.md` id.
 7. **Packages** — directory, package name, one line, a link to its README; in

@@ -36,25 +36,25 @@ Keep the active surface format. Preserve any stricter response budget.
 
 ## Language: ASD-STE100 Simplified Technical English
 
-ALWAYS apply these language rules to informational and technical prose in chat,
-documentation, READMEs, and descriptions. For creative work, ALWAYS follow an
-explicitly requested voice or style. The chat budget does not limit artifacts.
-These rules use ASD-STE100 as guidance; NEVER claim full compliance without
-checking the standard and its approved dictionary.
+The `writing` skill § Language owns these rules for documents, pages and every
+other written artifact; this copy shapes chat and stays equal to it word for
+word. ALWAYS apply them to informational and technical prose. For creative
+work, ALWAYS follow an explicitly requested voice or style. These rules use
+ASD-STE100 as guidance; NEVER claim full compliance without checking the
+standard and its approved dictionary.
 
-- One word, one meaning. Pick familiar words and use the same word every time. "Start" stays "start" — never "kick off", "spin up", "fire". ALWAYS keep a needed technical term and explain its meaning.
-- No metaphor, idiom, slang, or drama. Write "the test failed", not "the test blew up" / "poisoned" / "landmine".
-- Active voice. Name the actor: "the router drops the field", not "the field is dropped". ALWAYS use subject → verb → object where applicable, or a direct imperative.
-- Simple tenses only — present, past, future. Avoid "has been", "would have", "is being".
-- ALWAYS use one main clause per sentence. Add at most one short if, when, or because clause. Put a condition before the action it controls. NEVER nest clauses or insert asides — ALWAYS split them into separate sentences.
-- ALWAYS make noun and pronoun references clear. Repeat the noun when "it", "this", or "they" could refer to more than one thing.
-- One instruction per sentence. Max 20 words in a step, 25 in description.
-- Keep articles and full grammar. Write "run the test", not "run test".
-- ALWAYS check new or edited prose before sending or finishing: replace unnecessary jargon and shorthand with clear, complete sentences. ALWAYS preserve the technical meaning and uncertainty. When splitting a sentence, ALWAYS keep every condition attached to the action it controls.
-- Noun stacks: 3 words maximum. "container spawn timeout" is the limit.
-- Put the warning before the action it guards, never after.
-
-Standard: 53 writing rules + ~900-word approved dictionary, ASD-STE100 Issue 9 (2025), asd-ste100.org.
+- One word, one meaning: pick the familiar word and use it every time. "Start" stays "start", never "kick off", "spin up" or "fire".
+- Every term a project's docs use comes from its Glossary, the project's dictionary. A needed technical term stays, with its meaning stated at first use.
+- No metaphor, idiom, slang or drama: "the test failed", not "the test blew up".
+- Active voice with a named actor: "the router drops the field", not "the field is dropped". Subject, verb, object, or a direct imperative.
+- Simple tenses only: present, past, future. NEVER "has been", "would have", "is being".
+- One main clause per sentence, plus at most one short if, when or because clause. NEVER nest clauses or insert asides: split them into sentences.
+- A warning or a condition comes before the action it controls, NEVER after it.
+- One instruction per sentence: at most 20 words in a step, 25 in a description.
+- Noun stacks of at most 3 words: "container spawn timeout" is the limit.
+- ALWAYS keep articles and full grammar: "run the test", not "run test".
+- ALWAYS repeat the noun where "it", "this" or "they" could point at more than one thing.
+- ALWAYS keep technical names, code and quotations as written, and keep the technical meaning and every stated uncertainty when you split or rewrite a sentence.
 
 <!-- Multi-turn / low-cognitive-load patterns (restate progress, cap-5 + do-now/later,
      minute estimates, one-thread, first/last-line check, action-first) adapted from
