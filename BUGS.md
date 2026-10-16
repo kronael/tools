@@ -780,6 +780,58 @@
   **Fix:** delete the script, or cut it to the cases no listed test covers and
   list it. No test — dead code.
 
+- **HOOKS-PRECOMPACT-HAS-NO-CONTEXT-CHANNEL** (HIGH, correctness) — needs
+  sign-off. `local.py` (compaction branch), `reclaude.py:177` and
+  `memory_nudge.py:227` answer PreCompact with `{"ok": true, "systemMessage":
+  ...}`. The hooks reference gives PreCompact only `decision: "block"` and
+  `reason`, lists `hookSpecificOutput.additionalContext` for SessionStart,
+  UserPromptSubmit, the tool events, Stop and PostModelSwitch but not
+  PreCompact, and sends every other event's stdout to the debug log; so the
+  re-injection of LOCAL.md and RECLAUDE.md at compaction and the compaction
+  memory nudge reach neither the model nor the user. Worse, `memory_nudge.py:105`
+  then writes the `memory-nudge-done` marker, so the Stop fallback (`:128`)
+  stays silent for the rest of any session that compacted. `codex_hook.py
+  PreCompact local|reclaude` prints nothing either, so the two Codex PreCompact
+  entries are no-ops. `hooks/test_local.py` and `hooks/test_memory_nudge.py:35`
+  pin the discarded shape. **Options:** (a) move the three to a SessionStart
+  hook with matcher `compact`, which the reference says reads
+  `additionalContext` and plain stdout; (b) drop the PreCompact entries and the
+  claims in `hooks/README.md` and `hooks/ARCHITECTURE.md`. Either way the
+  PreCompact branch stops writing the `done` marker. **Default if nothing is
+  decided:** as written, with this entry as the warning. Measured by hand with
+  the PreCompact payload; no test asserts delivery.
+
+- **HOOKS-PRETOOL-BLOCK-USES-TOP-LEVEL-DECISION** (MED, correctness) — open
+  (record only). `pretool_nudge.py:152,157,277` block an unsafe command or a
+  failing GitHub text with top-level `{"decision": "block", "reason"}`; the
+  hooks reference documents PreToolUse control as
+  `hookSpecificOutput.permissionDecision` (`allow|deny|ask|defer`) with
+  `permissionDecisionReason`, and the top-level pair only as a deprecated alias
+  that maps `block` to `deny`. The gate works while the alias lives. **Fix:**
+  emit the `hookSpecificOutput` form and update the `decision` check and the
+  tests; Codex accepts both.
+
+- **HOOKS-CODEX-APPLY-PATCH-READS-PATCH-KEY** (MED, correctness) — open
+  (record only), unverified live. `pretool_nudge.py:106` reads
+  `tool_input["patch"]` for `apply_patch`, and `test_codex_hook.py:43-50` and
+  `test_pretool_nudge.py:73-104` fixture the same key; the Codex hooks
+  reference says `Bash` and `apply_patch` carry `tool_input.command`. A Codex
+  patch payload with `command` produces no nudge. **Fix:** read `command`,
+  keep `patch` while a Codex build still sends it, fixture both; one probe hook
+  under a throwaway `CODEX_HOME` settles which key arrives.
+
+- **HOOKS-STATE-TWO-PATHS** (LOW, duplication) — open (record only).
+  `pretool_nudge.py:284-286` keeps its once-per-session cache at
+  `~/.claude/tmp/extnudge/<sid>.txt` and ignores `lib/state.py` and
+  `KRONAEL_HOOK_STATE`, which the other hooks use; `stop.py:79-87` re-implements
+  `hook_event`. A test that sets `KRONAEL_HOOK_STATE` still writes under the
+  real home. **Fix:** `session_state('extnudge', sid)` and `lib.state.hook_event`.
+
+- **HOOKS-UNWRITABLE-STATE-DEFAULTS-DIFFER** (LOW, correctness) — open (record
+  only). With an unwritable state dir `local.py:50` treats every prompt as the
+  first and injects LOCAL.md each time, while `prompt_nudge.py:152` stays
+  silent. **Fix:** one rule for both; injecting every prompt is the loud one.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
