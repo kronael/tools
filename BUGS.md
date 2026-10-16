@@ -439,9 +439,8 @@
 
 - **LEARN-HOOK-WIRED-NOWHERE** (LOW, dead code) — CONFIRMED at HEAD 2026-09-25.
   `hooks/learn.py` is a complete lifecycle hook that no event invokes:
-  `settings-recommended.json` wires `local.py`, `prompt_nudge.py`,
-  `pretool_nudge.py`, `post_tool_nudge.sh`, `stop.py`, `memory_nudge.py` and
-  `reclaude.py`, and none of them is it. Reproduce:
+  `settings-recommended.json` wires `prompt_nudge.py`, `pretool_nudge.py`,
+  `style_nudge.py`, `stop.py` and `memory_nudge.py`, and none of them is it. Reproduce:
   `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
   call — wire it to an event, or drop it.
 
