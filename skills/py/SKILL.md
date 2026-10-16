@@ -72,7 +72,7 @@ Python-specific additions and deltas.
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
 - ALWAYS asyncpg direct, NEVER SQLAlchemy
-- ALWAYS dataclasses over Pydantic unless validation/coercion is needed
+- ALWAYS dataclasses over Pydantic unless validation/coercion is needed (external API JSON, HTTP bodies, config) — NEVER `TypedDict` for a structured value and NEVER dacite; decode and encode through the project's lib helpers
 
 ## Named Data Structures
 - ALWAYS use dataclasses for nontrivial heterogeneous records, including return values, parameter bundles and queued work items.
