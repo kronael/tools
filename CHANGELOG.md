@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.48] — 20261016
+
+> kronael v0.4.48 — hooks point at skills and remember misses in kvs
+>
+> Hooks point at skills in one XML line and remember misses in kvs, so the caveman reminder stops flooding the context.
+>
+> • kvs — a key-value store CLI on one SQLite file, with sessions, CAS, incr and a flock-style lock.
+> • Hooks — every injection is one XML pointer to a skill; Stop measures the reply and never asks for a rewrite.
+> • Caveman — self-contained chat rules that name STE in one line; reminders escalate only on repeated misses.
+> • Conventions — user programs keep state under XDG; refine asks the redesign question for workaround code.
+> • Codex — the footer config ships with the tools, and skill parity is checked.
+
 ## [v0.4.47] — 20261016
 
 > kronael v0.4.47 — the review submit asks in the permission dialog
