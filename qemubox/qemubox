@@ -24,6 +24,7 @@ docker_remote=""
 persist_builds=""
 eph_no_tmpfs=""
 tmp_session=""
+mount_sensitive=""
 new_session=""
 gcloud_creds=""
 gpg_forward=""
@@ -78,6 +79,10 @@ Options:
     -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
                (guest tmpfs, lost at power-off); VM name tmp unless -n;
                implies -N
+    --mount-sensitive
+               Mount a sensitive path: /, a top-level dir, \$HOME, an
+               ancestor of \$HOME or a hidden dir in \$HOME. Without it, such
+               a path is an error, and a run from one with no dir acts as -T
     -N         New Claude session: skip the resume picker
     -H         Egress kill-switch: disable the guest's outbound network
     -U         Untrusted: inject NO host config/credentials, force network off,
@@ -143,6 +148,14 @@ box_name() {
 
 box_dir() {
     printf '%s/%s' "$ROOT" "$(box_name "$1")"
+}
+
+is_sensitive() {
+    local path home
+    path=$(realpath -m -- "$1")
+    home=$(realpath -m -- "$HOME")
+    [[ "$path" = / || "$path" =~ ^/[^/]+$ || "$home" = "$path" ||
+        "$home" = "$path"/* || ( "${path%/*}" = "$home" && "${path##*/}" = .* ) ]]
 }
 
 port_for() {
@@ -1248,6 +1261,7 @@ read_rc() {
 }
 
 project_rc() {
+    [ ! "$1/.qemuboxrc" -ef "$HOME/.qemuboxrc" ] || return 0
     read_rc "$1/.qemuboxrc"
     OPTIND=1
     while getopts ":n:d:x:e:v:HKUADgGPBTSN" opt "${rc_tokens[@]}"
@@ -1456,6 +1470,7 @@ for a in "$@"; do
     case "$a" in
         --no-ephemeral) persist_builds=1 ;;
         --untrusted) untrusted=1; network="" ;;
+        --mount-sensitive) mount_sensitive=1 ;;
         *) _args+=("$a") ;;
     esac
 done
@@ -1487,6 +1502,23 @@ for arg in "$@"; do
         *) args+=("$arg") ;;
     esac
 done
+
+if [ -z "$mount_sensitive" ]
+then
+    for dir in "${dirs[@]}" "${extra_dirs[@]}"
+    do
+        if is_sensitive "$dir"
+        then
+            echo "qemubox: refusing to mount sensitive path $dir; pass --mount-sensitive to mount it" >&2
+            exit 2
+        fi
+    done
+    if [ -z "$tmp_session" ] && [ "${#dirs[@]}" -eq 0 ] && is_sensitive "$(pwd)"
+    then
+        warnings+=("$(pwd) is a sensitive path; starting a scratch box as -T does (pass the dir and --mount-sensitive to mount it)")
+        tmp_session=1
+    fi
+fi
 
 if [ -n "$tmp_session" ]
 then

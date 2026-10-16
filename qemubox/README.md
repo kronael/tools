@@ -73,6 +73,13 @@ session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
 The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
 dir argument is an error, and `-T` implies `-N`.
 
+qemubox does not mount a sensitive path: `/`, a top-level dir such as `/etc`
+or `/home`, `$HOME`, an ancestor of `$HOME`, or a hidden dir directly in
+`$HOME`. A project dir or `-v` path of that kind is an error. A run from such
+a dir with no dir argument starts a scratch VM, as `-T` does. The guest home
+then stays the guest's own, so the guest shell uses only the image's `/etc`
+defaults and not the host dotfiles. `--mount-sensitive` mounts the path.
+
 Management:
 
 ```sh
