@@ -84,6 +84,10 @@ Python-specific additions and deltas.
 - ALWAYS decode and encode external payloads through the project's one codec (its lib
   `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
   structurer drifts from the first.
+- ALWAYS put a constructor that only derives a record from its own inputs on the record as a
+  classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
+  NEVER a method that does I/O, reads config or uses another layer's types; that stays a
+  plain function beside the layer that owns the rule.
 - ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
