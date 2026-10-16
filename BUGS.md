@@ -3,10 +3,11 @@
 ## Bundle
 
 - **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
-  2026-10-14. `make skills-frontmatter` warns `skills/global/SKILL.md:
-  [skill-length] body is 206 lines (> 200)`; the body passed 200 with the
-  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3) and the warn is
-  not a failure, so every commit carries it. **Fix:** push a section's
+  2026-10-16. `make skills-frontmatter` warns `skills/global/SKILL.md:
+  [skill-length] body is 209 lines (> 200)`; the body passed 200 with the
+  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3, 209 with the
+  `haiku` and `luna` lines) and the warn is not a failure, so every commit
+  carries it. **Fix:** push a section's
   overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
   body), after a subtraction pass over the always-loaded rules; no test —
   the lint already reports it.
@@ -158,16 +159,24 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
-- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
-  design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
-  sub, while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
-  (`qemubox/qemubox:1280`) start an interactive Claude Code session on
-  `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
-  `qemubox/test-parity.sh:21` pin the alias in both. **Options:** (a) drop the
-  `haiku` alias from both launchers, their usage text, qemubox's README and
-  the two tests; (b) keep it as a typed model flag the rule does not govern —
-  the user picks it, no skill routes to it. **Default if nothing is
-  decided:** (b).
+- **BOX-HAIKU-PIN-BEHIND-AGENT-PIN** (LOW, config) — CONFIRMED at HEAD
+  2026-10-16, no test — config. `agents/haiku.md` pins the `haiku` alias,
+  which Claude Code resolves to the latest Haiku (`claude-haiku-5-5` in
+  2.1.301), while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
+  (`qemubox/qemubox:1280`) start Claude Code on the dated previous model
+  `claude-haiku-4-5-20251001`; `dockbox/test.sh:383`, `tests/drift_test.sh:22`
+  and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
+  take `claude-haiku-5-5` and the three tests follow.
+
+- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
+  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
+  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
+  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
+  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
+  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
+  effort; (b) keep the mapping by role — a second opinion is review-grade
+  work and takes the scarcer slot. **Default if nothing is decided:** (b),
+  the text as written.
 
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
