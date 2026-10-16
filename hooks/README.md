@@ -39,8 +39,22 @@ stamp `solve-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) so
 continuations stay silent. A prompt that already invokes `/solve` suppresses it.
 
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
-Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
-with its own maintenance.
+Both harnesses get the canonical portable style reminder through this hook
+on every prompt. Meta prompts (hook/agent debugging) skip routing and task
+nudges while keeping that reminder.
+
+### style_nudge.py (Claude context hooks)
+
+When caveman is selected, this hook renders the canonical `Budget` and `Shape`
+sections from `output-styles/caveman.md`. It adds that reminder through
+`PostToolUse` and `SessionStart` with the `compact` matcher; `prompt_nudge.py`
+uses the same reader for `UserPromptSubmit` in both harnesses.
+On `Stop`, it requests one same-query revision after a declared character
+budget overrun. A style without that declaration gets one Budget and Shape
+self-check. Empty output and the revision Stop stay silent. This feedback does
+not change a message already delivered through `reply` or `send`.
+Recommended settings wire these events; install them through the normal bundle
+sync.
 
 ### pretool_nudge.py (PreToolUse)
 
@@ -76,10 +90,11 @@ transcript — Codex, a payload without the field — refuses too: the user
 submits by hand. Posting the review without `event` stays PENDING and needs
 no ask. The lint is WISDOM § Git
 made checkable: `🤖 ` before the first word and the robot nowhere else, none
-of the harness footer, the `**TL;DR:**` lead with nothing after it but
-`Closes #N` lines, and no bullet, header, table, rule, checkbox or code block
-in a PR body, the 240-char cap on a comment, the size caps (400 chars for a
-PR, 3,000 for an issue), marketing words, shortened hashes. By hand: `python3
+of the harness footer, the `**TL;DR:**` lead with nothing after it but up to
+three review bullets and `Closes #N` lines, and no header, table, rule,
+checkbox or code block in a PR body, the 240-char cap on a comment, the size
+caps (1,800 chars for a PR, 3,000 for an issue), marketing words, shortened
+hashes. By hand: `python3
 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with `--draft` and
 `--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run it as their
 completion criterion.

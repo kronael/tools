@@ -20,6 +20,24 @@ TS = '2026-09-20T10:00:00.000Z'
 MID = '2026-09-20T10:30:00.000Z'
 LATER = '2026-09-20T11:00:00.000Z'
 RECALL_CMD = 'python3 ~/.claude/skills/recall-memories/recall.py results make test'
+
+
+@pytest.mark.parametrize('metadata', ['', '{', '[]', 'null'])
+def test_read_label_rejects_malformed_metadata(tmp_path, capsys, metadata):
+    path = tmp_path / 'agent.jsonl'
+    path.with_suffix('.meta.json').write_text(metadata)
+    assert recall.read_label(path) == ''
+    assert 'skipped malformed agent metadata' in capsys.readouterr().err
+
+
+def test_read_label_reads_agent_metadata(tmp_path):
+    path = tmp_path / 'agent.jsonl'
+    path.with_suffix('.meta.json').write_text(
+        json.dumps({'agentType': 'worker', 'description': 'finish the sync'})
+    )
+    assert recall.read_label(path) == 'worker: finish the sync'
+
+
 PREFIX = (
     '[SYSTEM NOTIFICATION - NOT USER INPUT]\n'
     'This is an automated background-task event, NOT a message from the user.\n'

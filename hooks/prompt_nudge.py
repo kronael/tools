@@ -3,16 +3,10 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 from lib.state import session_state
-
-STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
-- Lead with the answer. No preamble, no recap of what the diff already shows.
-- ~17 lines, hard max 20. No tables or headers in a normal reply.
-- Plain words, active voice, one instruction per sentence (ASD-STE100).
-- Last line carries the next action, or the bottom line.
-- Before sending: read ONLY your first and last line. If those two do not
-  say what to DO and what HAPPENED, the middle is padding."""
+from style_nudge import read_reminder
 
 DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
 - Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dir: plans and ship records live under ~/.claude/ (ship skill § Work record), never in the repo
@@ -192,8 +186,14 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
+    try:
+        reminder = read_reminder(Path.home())
+    except (OSError, TypeError, ValueError):
+        reminder = None
+
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        emit(STYLE_RULES)
+        if reminder:
+            emit(reminder)
         sys.exit(0)
 
     parts = []
@@ -205,9 +205,8 @@ def main():
     ):
         parts.append(SOLVE_NUDGE)
 
-    # Every turn. The style is in the system prompt and dilutes there; this is
-    # the copy that arrives next to the user's message.
-    parts.append(STYLE_RULES)
+    if reminder:
+        parts.append(reminder)
 
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
@@ -219,7 +218,8 @@ def main():
     elif matched:
         parts.append(f'info: Invoke {matched}.')
 
-    emit('\n\n'.join(parts))
+    if parts:
+        emit('\n\n'.join(parts))
 
     sys.exit(0)
 

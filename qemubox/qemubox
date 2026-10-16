@@ -728,7 +728,7 @@ start_box() {
         -device virtio-balloon-pci,free-page-reporting=on \
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2,discard=unmap,detect-zeroes=unmap" \
         -kernel "$ROOT/base/$image_id.vmlinuz" -initrd "$ROOT/base/$image_id.initrd" \
-        -append "root=/dev/vda rw console=ttyS0 noresume" \
+        -append "root=/dev/vda rw console=ttyS0 noresume loglevel=5" \
         -virtfs "local,path=$dir/config,mount_tag=qbxcfg,security_model=none,readonly=on" \
         "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
@@ -1522,7 +1522,8 @@ done
 }
 enter_session
 env_file="/dev/shm/qemubox-env.$sid"
-envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target)
+envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target
+    CODEX_SQLITE_HOME=/tmp/codex-sqlite)
 send_envs
 
 for warning in "${warnings[@]}"; do

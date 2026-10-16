@@ -57,6 +57,7 @@ STUB
         [ "$GH_TOKEN" = 'zzsecret-gh $x' ]
         [ "$MYSECRET" = 'zzsecret-my $x' ]
         [ "$CLAUDE_SANDBOX:$CARGO_TARGET_DIR" = qemubox:/tmp/cargo-target ]
+        [ "$CODEX_SQLITE_HOME" = /tmp/codex-sqlite ]
     )
     if grep -q -- ' -t ' "$STUB/ssh.log"; then exit 1; fi
     [ "$(ls "$STUB/sess")" = $$ ]

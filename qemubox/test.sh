@@ -181,7 +181,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
-    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume' "$fixture/qemu.args"
+    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
     if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi

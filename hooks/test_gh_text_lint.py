@@ -14,11 +14,12 @@ from gh_text_lint import lint
 ROBOT = '\U0001f916'
 FOOTER = f'{ROBOT} Generated with [Claude Code](https://claude.com/claude-code)'
 CLOSE = 'Closes #12'
+POINTERS = '- Start at the role.\n- The unit renders once.\n- The smoke test restarts it.'
 GOOD_PR = (
     f'{ROBOT} **TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
     f'{CLOSE}\n'
 )
-PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
+PR_PAD_AT_CAP = 1800 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
 GOOD_ISSUE = f'{ROBOT} `gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n'
 GOOD_COMMENT = (
     f'{ROBOT} \U0001f534 Charges `sold_qty`, the retained piece.\nFix: use the sale leg here.\n'
@@ -44,10 +45,19 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), 'horizontal rule'),
     (Kind.PR, GOOD_PR.replace(CLOSE, '| a | b |\n|---|---|\n'), 'table'),
     (Kind.PR, GOOD_PR.replace(CLOSE, '- [ ] run the tests\n'), 'checkbox'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '+ [ ] run the tests\n'), 'checkbox'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- ## Ansible'), 'header'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- ![unit](https://example.test/u.png)'), 'image'),
+    (Kind.PR, GOOD_PR.replace('web1', '`vec![1]` on web1'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'The role renders the unit.'), 'text after the lead'),
     (Kind.PR, GOOD_PR.replace(CLOSE, '1. Stop the service.'), 'text after the lead'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '- One path: the role renders the unit.'), 'bullet'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '* One path: the role renders the unit.'), 'bullet'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, POINTERS + '\n\n' + CLOSE), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, POINTERS + '\n- One more.'), 'at most three bullets'),
+    (
+        Kind.PR,
+        GOOD_PR.replace(CLOSE, POINTERS.replace('- ', '* ') + '\n* One more.'),
+        'at most three bullets',
+    ),
     (
         Kind.PR,
         GOOD_PR.replace(CLOSE, 'Known, deferred: the unit is not restarted.'),
@@ -81,7 +91,7 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace('web1', 'commit deadbeef...cafe'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('web1', 'vault 7xKXtg...gAsU'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('web1', '0x12ab…'), 'write it in full'),
-    (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
+    (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 1800'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', '- [x] 3.11\n- [ ] 3.12\n\nRepro:'), None),

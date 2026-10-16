@@ -111,7 +111,9 @@ ignored on re-entry — use `-n <name>` for a separately-mounted box.
 The per-VM lock covers setup, session markers, shutdown and removal.
 A new session waits for full guest readiness before it runs.
 `QEMUBOX_READY_TIMEOUT` sets the wait limit in seconds (default 180);
-a timeout prints the serial log tail. HUP and TERM remove the session marker.
+a timeout prints the serial log tail. The kernel uses `loglevel=5` to keep
+warnings and errors visible without routine boot messages. Guest setup errors
+still reach the serial log. HUP and TERM remove the session marker.
 Dead host PID markers are removed under the lock. A failed marker listing
 keeps the VM up and reports an error.
 
@@ -159,7 +161,13 @@ they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
 in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
-Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target`.
+Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
+`CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
+guest `/tmp`, because 9p gives the guest no shared mmap and no lock shared
+with the host. A `sqlite_home` key in `~/.codex/config.toml` overrides the
+variable. At shutdown the databases disappear with any prompts still queued in
+them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
+start.
 
 Guest disk build data survives boots until removal. `/tmp` data disappears at
 shutdown. A failed mount stops launch.

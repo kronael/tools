@@ -17,7 +17,8 @@ Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 - Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 25+.
 - Lists: ≤5 bullets; a longer set splits into "do now" vs "later". Multi-step work is numbered, one bounded action per item ("1. Open X. 2. Run tests.").
 
-Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ ceiling; first and last line alone say what to DO and what HAPPENED.
+Before any final answer or tool-delivered message, ALWAYS check Budget, Shape, and the selected surface's Length.
+Apply the stricter limit. Revise before delivery. Preserve material evidence, supported conclusions, and meaningful uncertainty.
 
 ## Shape — chat only
 
@@ -26,6 +27,12 @@ Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ 
 - One tight paragraph or a short bullet list, technically complete, stripped not broken; tables and headers only for genuinely tabular content.
 - Effort in minutes ("~15 min"), never "a bit". Errors: plain, matter-of-fact, no drama.
 - One thread at a time: finish the current problem before raising a second, as its own question. On multi-turn work, restate where we are ("step 3 of 5").
+
+## Persistence
+
+Before every final answer, re-read `~/.claude/output-styles/caveman.md` and apply its Budget and Shape.
+Tool calls, resumed sessions, and context compaction do not turn this style off.
+Keep the active surface format. Preserve any stricter response budget.
 
 ## Language: ASD-STE100 Simplified Technical English
 

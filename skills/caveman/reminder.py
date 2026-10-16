@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+import json
+import re
+import sys
+from pathlib import Path
+
+STYLE_NAME = 'caveman'
+SILENT_BLOCK = re.compile(r'<(?:status|think)>[\s\S]*?</(?:status|think)>')
+
+
+def section(raw: str, heading: str) -> str | None:
+    matched = re.search(
+        rf'^## {re.escape(heading)}\n(?P<body>.*?)(?=^## |\Z)',
+        raw,
+        re.MULTILINE | re.DOTALL,
+    )
+    if not matched:
+        return None
+    body = matched.group('body').strip()
+    return f'## {heading}\n\n{body}' if body else None
+
+
+def character_budget(length: str | None) -> int | None:
+    if not length:
+        return None
+    matched = re.search(r'(?P<count>[\d,]+)\s*(?:chars?|characters?)\b', length, re.IGNORECASE)
+    return int(matched.group('count').replace(',', '')) if matched else None
+
+
+def render_reminder(home: Path, portable: bool = True) -> dict[str, str | int | None] | None:
+    claude = home / '.claude'
+    settings = json.loads((claude / 'settings.json').read_text())
+    selected = settings.get('outputStyle')
+    if portable and selected != STYLE_NAME:
+        return None
+
+    styles = claude / 'output-styles'
+    raw = (styles / f'{STYLE_NAME}.md').read_text()
+    parts = [section(raw, 'Budget — chat only'), section(raw, 'Shape — chat only')]
+    if any(part is None for part in parts):
+        return None
+
+    length = None
+    if isinstance(selected, str) and selected not in {'', 'default', STYLE_NAME}:
+        length = section((styles / f'{selected}.md').read_text(), 'Length')
+        if length:
+            parts.append(length)
+
+    text = (
+        '<caveman-reminder>\n'
+        + '\n\n'.join(part for part in parts if part)
+        + '\n</caveman-reminder>'
+    )
+    return {
+        'text': text,
+        'selectedStyle': selected if isinstance(selected, str) else None,
+        'characterBudget': character_budget(length),
+    }
+
+
+def render_feedback(rendered: dict[str, str | int | None], data: object) -> str | None:
+    if not isinstance(data, dict) or data.get('stop_hook_active'):
+        return None
+    message = data.get('last_assistant_message')
+    if not isinstance(message, str):
+        return None
+    visible = SILENT_BLOCK.sub('', message).strip()
+    if not visible:
+        return None
+
+    budget = rendered['characterBudget']
+    if isinstance(budget, int):
+        if len(visible) <= budget:
+            return None
+        check = f'The answer has {len(visible)} characters. The selected budget is {budget}.'
+    else:
+        check = 'Check the answer against the canonical Budget and Shape rules:\n' + str(
+            rendered['text']
+        )
+    return (
+        '<caveman-feedback>\n'
+        + check
+        + '\nRevise only the final answer. Keep its material evidence, conclusions, '
+        'and uncertainty. Do not repeat tool calls, external actions, or status '
+        'updates. Return only the revised final answer.\n</caveman-feedback>'
+    )
+
+
+def main() -> None:
+    portable = '--always' not in sys.argv[1:]
+    as_json = '--json' in sys.argv[1:]
+    feedback = '--feedback' in sys.argv[1:]
+    args = [arg for arg in sys.argv[1:] if arg not in {'--always', '--feedback', '--json'}]
+    home = Path(args[0]) if args else Path.home()
+    try:
+        rendered = render_reminder(home, portable)
+        if feedback and rendered:
+            rendered_feedback = render_feedback(rendered, json.load(sys.stdin))
+    except (json.JSONDecodeError, OSError, TypeError, ValueError):  # fmt: skip
+        return
+    if not rendered:
+        return
+    if feedback:
+        if rendered_feedback:
+            sys.stdout.write(rendered_feedback + '\n')
+        return
+    sys.stdout.write(json.dumps(rendered) if as_json else str(rendered['text']))
+    sys.stdout.write('\n')
+
+
+if __name__ == '__main__':
+    main()

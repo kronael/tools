@@ -23,6 +23,41 @@
 - `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
 - `BUGS.md`: box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model, not a cap bucket.
 
+## [v0.4.46] — 20261015
+
+> kronael v0.4.46 — Shared style reminders, quieter guest boot
+>
+> Claude and Codex receive the same per-prompt style reminder, and qemubox reduces boot console output.
+>
+> • Caveman — one canonical reminder across prompt, tool and compaction hooks.
+> • Codex and Claude — each prompt receives one reminder when the style is selected.
+> • qemubox — `loglevel=5` reduces console work while preserving guest diagnostics.
+> • Recall — memory searches keep the intended project scope.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The canonical style supplies the reply budget and delivery self-check; model compliance remains imperfect.
+- qemubox retains its q35 machine and existing image format.
+
+## [v0.4.45] — 20261015
+
+> kronael v0.4.45 — Codex starts inside qemubox, PR bodies get review pointers
+>
+> Codex now starts in a qemubox VM, and a PR body can point reviewers to the code and test that matter.
+>
+> • qemubox — sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`, so Codex opens its SQLite state.
+> • Host and guest Codex stop sharing database files that 9p cannot lock between them.
+> • Guest databases disappear at shutdown; Codex rebuilds its thread list from the shared sessions.
+> • PR bodies — up to three review-pointer bullets after the TL;DR, and up to 1800 chars.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`; a `sqlite_home` config key wins.
+- `qemubox`: guest Codex databases disappear at shutdown, queued prompts included.
+- `pr-draft`: a PR body may add up to three review-pointer bullets; the cap is 1800 chars.
+- `gh_text_lint`: refuses a `+ [ ]` checkbox, a header in a bullet and an image in a PR body.
+- `BUGS.md`: a guest Codex with memories on can delete memory files the host wrote.
+
 ## [v0.4.44] — 20261015
 
 > kronael v0.4.44 — only shared libraries go to fable, Rust imports stay bare
