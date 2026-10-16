@@ -58,7 +58,7 @@ qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
 qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
-qemubox -T bash            # scratch VM: no project mount, works in /tmp/work
+qemubox -T bash            # new scratch VM: no project mount, works in /tmp/work
 qemubox -N                 # new Claude session, no resume picker
 ```
 
@@ -70,8 +70,10 @@ through untouched. The default VM name is the project dir basename; `-n name` gi
 
 `-T` starts a temporary session: qemubox mounts no project dir, and the
 session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
-The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
-dir argument is an error, and `-T` implies `-N`.
+Each `-T` run gets a new random VM name, such as `qemubox-brave_turing`,
+unless `-n` names it. `-v` still adds host paths, a dir argument is an error,
+and `-T` implies `-N`. Scratch VMs stay on disk after power-off: `qemubox ls`
+lists them and `qemubox rm` or `qemubox prune` removes them.
 
 qemubox does not mount a sensitive path: `/`, a top-level dir such as `/etc`
 or `/home`, `$HOME`, an ancestor of `$HOME`, or a hidden dir directly in
