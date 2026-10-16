@@ -22,6 +22,10 @@ are clearer than one 4-line macro called three times.
 
 Direct rule of thumb: if the indirection requires `$$$$` to work, it's too clever.
 
+A Makefile that builds 1-3 files names them in plain rules: NEVER generic
+per-host or per-target machinery (`foreach`, computed targets, a host variable)
+for that few.
+
 ## N similar targets — per-target variables + one pattern rule
 
 This is the idiomatic Make answer. Each target carries its own URL, SHA, EXTRACT
@@ -83,29 +87,20 @@ CI pipelines call these targets by name — keep them consistent across componen
 
 ## .PHONY
 
-- For non-file targets only: `help`, `lint`, `test`, `install`, `clean`, etc.
+- For non-file targets only: `lint`, `test`, `install`, `clean`, etc.
 - NEVER `.PHONY` a target that produces a file on disk. It defeats caching.
 
-## help target
+## No help target
 
-The help target uses `@echo "    target      description"` with aligned
-double-quoted strings. **NEVER** regex-collapse multiple spaces in Makefiles
-— `re.sub(r'  +', ' ', ...)` or equivalent will silently destroy this
-alignment. When removing a target, delete only its lines; never post-process
-the whole file.
-
-```makefile
-help:
-	@echo "Usage:"
-	@echo "    prepare      installs dependencies"
-	@echo "    right        type check (pyright)"
-	@echo "    test         fast unit tests"
-```
-
-Double quotes in `@echo "..."` are correct Make syntax — do NOT convert them
-to single quotes (yamlfmt single-quote convention applies only to `.yml` files).
+- NEVER a `help` target, a `.DEFAULT_GOAL := help` or `##` descriptions beside
+  targets: the target names say what runs, and the README's Commands section
+  carries the one-line descriptions (`readme/topology.md` § README.md).
+- NEVER regex-collapse runs of spaces in a Makefile — aligned recipe text
+  breaks silently. When removing a target, delete only its lines.
 
 ## Echo
 
 - ALWAYS let make echo what ran — NEVER `@`-prefix a recipe line beyond the
-  few whose echo is noise, such as `@echo` in `help`.
+  few whose echo is noise, such as an `@echo` of a result line.
+- Double quotes in `@echo "..."` are correct Make syntax — NEVER convert them
+  to single quotes (yamlfmt's single-quote convention applies only to `.yml`).

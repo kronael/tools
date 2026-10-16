@@ -29,7 +29,7 @@ echo '<diagram>' | udfix
 
 - ALWAYS run output through `udfix` before finalising
 - ALWAYS use `►` / `◄` / `▲` / `▼` for arrows, not `->` or `<-`
-- ALWAYS label boxes with short noun phrases, not verbs
+- ALWAYS label boxes with short noun phrases, not verbs, in the project glossary's terms (`writing` § Language)
 - ALWAYS left-align content — ASCII diagrams look bad centred
 
 ## NEVER

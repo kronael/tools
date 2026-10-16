@@ -1,19 +1,6 @@
 # Changelog
 
-## [v0.4.42] — 20261016
-
-> kronael v0.4.42 — the gh token push moves into rip
->
-> `rip -g` and `rif -g` replace ghpush and ghfetch, and the Python and SQL skills gain rules for records and db functions.
->
-> • rig — `rip -g` pushes and `rif -g` fetches with the gh token; `ghpush` and `ghfetch` are gone.
-> • Settings — a `rip` or `rig` command that names master or main asks first.
-> • py — a dataclass for every structured value; pydantic at the boundary; no TypedDict or dacite.
-> • py — `<Verb>able`/`<Noun>Like` protocols; a record builds from its SQL row as `Record(**row)`.
-> • sql — a closed set is a SMALLINT behind an IntEnum; a db function names its verb and result.
-> • code — `_loop` runs for the process's life, `do_` tries once; a timeout is never retried.
->
-> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 ### Added
 
@@ -31,6 +18,137 @@
 
 - `rig`: `ghpush` and `ghfetch` are removed and `rig install` deletes their links.
 - WISDOM § Git and the skills name `rip -g` and `rif -g` as the agent's push and fetch.
+- Hooks, `output-styles/caveman.md`, `pr-draft` and `gh-comment` stay as in v0.4.41.
+- Not in this line: the v0.4.42–v0.4.48 hook pointer redesign (`style_nudge`, `lib/reminder`, `kvs` memory), the 1800-character PR cap and the STE move out of `caveman.md`; `kvs` ships as a standalone tool.
+
+## [v0.4.48] — 20261016
+
+> kronael v0.4.48 — hooks point at skills and remember misses in kvs
+>
+> Hooks point at skills in one XML line and remember misses in kvs, so the caveman reminder stops flooding the context.
+>
+> • kvs — a key-value store CLI on one SQLite file, with sessions, CAS, incr and a flock-style lock.
+> • Hooks — every injection is one XML pointer to a skill; Stop measures the reply and never asks for a rewrite.
+> • Caveman — self-contained chat rules that name STE in one line; reminders escalate only on repeated misses.
+> • Conventions — user programs keep state under XDG; refine asks the redesign question for workaround code.
+> • Codex — the footer config ships with the tools, and skill parity is checked.
+
+## [v0.4.47] — 20261016
+
+> kronael v0.4.47 — the review submit asks in the permission dialog
+>
+> The review submit asks in the permission dialog, haiku and luna join the tiers, and the owner's corrections land in their skills.
+>
+> • Review submit — the hook asks in the permission dialog, which shows the exact command to approve.
+> • Codex — a submit is denied there and the agent hands the user the exact command to run.
+> • /haiku and /luna — the fan-out tier in Claude and Codex; dispatch § Tiers lists every lane.
+> • Writing — the ASD-STE100 rules live in the writing skill; a README carries the project Glossary.
+> • Code and docs — a library returns Result, a comment is a few words, one home per doc section.
+> • WISDOM — the global file's overlapping bullets merge, 210 to 196 lines, no rule cut.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge`: a review submit gets `permissionDecision: ask`; the typed `SUBMIT REVIEW` gate is gone.
+- `pretool_nudge`: under Codex a submit is denied with the command for the user; every decision is
+  `hookSpecificOutput.permissionDecision` with its reason.
+- `gh-comment` § Submit, `review`: the submit runs on the user's ask, approved in the permission dialog.
+- WISDOM § Agents: caps are 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable`; `luna` counts as `haiku`.
+- `haiku`, `luna`: Haiku 5.5 and `gpt-6-luna` at medium take fan-out and bounded edits; lanes: `dispatch` § Tiers.
+- Prompt nudge: `haiku`, `luna` and `terra` route on the explicit form only (`use X`, `/X`).
+- `writing` § Language: the ASD-STE100 rules; `caveman` keeps the same bullets for chat (`tests/drift_test.sh`).
+- `readme`: README item 4 is the Glossary; one home per doc section; one diagram beside its list; an
+  example file says why it exists. `writing`: a list keeps the reader's order in every doc.
+- `code.md`, `rs`: library code returns an error and only `main` or a test panics, with clippy denies;
+  an allowed comment is a few words; a field is validated once against the value the code derives.
+- `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
+- `mk`: no `help` target, `.DEFAULT_GOAL := help` or `##` descriptions; 1-3 files get plain rules.
+- WISDOM: overlapping bullets merged, body 210 → 196 lines; `BUGS.md` closes GLOBAL-SKILL-BODY-OVER-CAP and
+  records MK-REPO-MAKEFILES-KEEP-HELP-TARGETS; box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model.
+
+## [v0.4.46] — 20261015
+
+> kronael v0.4.46 — Shared style reminders, quieter guest boot
+>
+> Claude and Codex receive the same per-prompt style reminder, and qemubox reduces boot console output.
+>
+> • Caveman — one canonical reminder across prompt, tool and compaction hooks.
+> • Codex and Claude — each prompt receives one reminder when the style is selected.
+> • qemubox — `loglevel=5` reduces console work while preserving guest diagnostics.
+> • Recall — memory searches keep the intended project scope.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The canonical style supplies the reply budget and delivery self-check; model compliance remains imperfect.
+- qemubox retains its q35 machine and existing image format.
+
+## [v0.4.45] — 20261015
+
+> kronael v0.4.45 — Codex starts inside qemubox, PR bodies get review pointers
+>
+> Codex now starts in a qemubox VM, and a PR body can point reviewers to the code and test that matter.
+>
+> • qemubox — sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`, so Codex opens its SQLite state.
+> • Host and guest Codex stop sharing database files that 9p cannot lock between them.
+> • Guest databases disappear at shutdown; Codex rebuilds its thread list from the shared sessions.
+> • PR bodies — up to three review-pointer bullets after the TL;DR, and up to 1800 chars.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`; a `sqlite_home` config key wins.
+- `qemubox`: guest Codex databases disappear at shutdown, queued prompts included.
+- `pr-draft`: a PR body may add up to three review-pointer bullets; the cap is 1800 chars.
+- `gh_text_lint`: refuses a `+ [ ]` checkbox, a header in a bullet and an image in a PR body.
+- `BUGS.md`: a guest Codex with memories on can delete memory files the host wrote.
+
+## [v0.4.44] — 20261015
+
+> kronael v0.4.44 — only shared libraries go to fable, Rust imports stay bare
+>
+> Two rules: only a globally shared library goes to fable, and Rust code imports an item or writes its full path.
+>
+> • Agents — fable takes a library other repos import; a project's own crate gets the regular path.
+> • Rust — `use` the item bare or write its full path, never a partial one like `types::X`.
+> • Rust — a short module prefix stays only where it carries meaning the bare name loses.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: only a library other repositories or teams import goes to `fable` or `astra`.
+- WISDOM § Agents: a project's own library takes an `opus` plan, then `sonnet` or `opus` steps.
+- `rs`: prefer a `use` of the item or its full path over a partial module path such as `types::X`.
+- `rs`: keep a short module prefix only where it carries meaning the bare name loses.
+
+## [v0.4.43] — 20261014
+
+> kronael v0.4.43 — qemubox sees a paused VM
+>
+> qemubox now reports a VM that qemu paused on a full host disk, and VM disks shrink when the guest frees space.
+>
+> • Paused VMs — `ls` and `status` show `paused:io-error`, and a launch into one fails at once.
+> • Stop — `qemubox stop` resumes a paused guest before its shutdown; `-f` quits qemu over QMP.
+> • Disk space — guest discards reach the overlay, and `stop` trims the guest disk.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: each VM gets a QMP socket in its owner-only state dir; the host needs `python3`.
+- `qemubox`: `ls` and `status` show `paused:<reason>`; a launch into a paused VM fails at once.
+- `qemubox stop`: resumes a paused guest, trims its disk, then powers off; `-f` quits over QMP.
+- `qemubox`: the disk passes guest discards through, so space the guest frees leaves the overlay.
+- A VM that is running now gets the socket and the discard pass-through at its next boot.
+- `BUGS.md`: guest `/etc/group` breaks when qemu stops hard soon after boot.
+
+## [v0.4.42] — 20261014
+
+> kronael v0.4.42 — fable asks before astra, Rust keeps one path per item
+>
+> Two rules: a fable limit asks the user before astra takes over, and Rust crates stop re-exporting other crates.
+>
+> • Fable — a usage or spend limit now asks the user before the same brief runs on astra.
+> • Rust — a crate re-exports only its own types; callers import another crate's items from that crate.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `fable`: on a usage or spend limit, ask the user before switching to astra; never switch silently.
+- `rs`: re-export only the crate's own types, never another crate's items.
 
 ## [v0.4.41] — 20261014
 

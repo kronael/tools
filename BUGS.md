@@ -2,14 +2,13 @@
 
 ## Bundle
 
-- **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
-  2026-10-14. `make skills-frontmatter` warns `skills/global/SKILL.md:
-  [skill-length] body is 206 lines (> 200)`; the body passed 200 with the
-  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3) and the warn is
-  not a failure, so every commit carries it. **Fix:** push a section's
-  overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
-  body), after a subtraction pass over the always-loaded rules; no test —
-  the lint already reports it.
+- **MK-REPO-MAKEFILES-KEEP-HELP-TARGETS** (LOW, docs) — owner decision.
+  `skills/mk/SKILL.md` § No help target bans a `help` target,
+  `.DEFAULT_GOAL := help` and `##` descriptions, and this repo's own
+  `Makefile:52` and `hooks/Makefile:11` keep `help` targets with `@echo`
+  descriptions. **Fix:** drop both targets and let `README.md` § Commands carry
+  the one-line descriptions, or exempt the toolkit in the skill; no test — the
+  skill text and the Makefiles.
 
 - **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
@@ -89,7 +88,10 @@
   the parent plan, and `skills/ship/SKILL.md:113` sends a step to `opus` when
   the plan leaves a design call open. `skills/fable/SKILL.md:12` sends every
   spec, architecture or skill text to `fable`, while `:19` forbids `fable`
-  whenever `opus` can do the work, which covers an ordinary spec. **Options:**
+  whenever `opus` can do the work, which covers an ordinary spec. `:210-211`
+  of the global file sends a project's own library to an `opus` plan, then
+  `sonnet` or `opus` steps, an `opus` step that its own `:203-204` rules out.
+  **Options:**
   (a) WISDOM names the parent-plans and `opus`-step exceptions, and `fable`
   `:19` exempts the tasks `:11-14` list; (b) the skills drop the exceptions.
   **Default if nothing is decided:** (a). No test — skill text.
@@ -155,16 +157,24 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
-- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
-  design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
-  sub, while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
-  (`qemubox/qemubox:1202`) start an interactive Claude Code session on
-  `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
-  `qemubox/test-parity.sh:18` pin the alias in both. **Options:** (a) drop the
-  `haiku` alias from both launchers, their usage text, qemubox's README and
-  the two tests; (b) keep it as a typed model flag the rule does not govern —
-  the user picks it, no skill routes to it. **Default if nothing is
-  decided:** (b).
+- **BOX-HAIKU-PIN-BEHIND-AGENT-PIN** (LOW, config) — CONFIRMED at HEAD
+  2026-10-16, no test — config. `agents/haiku.md` pins the `haiku` alias,
+  which Claude Code resolves to the latest Haiku (`claude-haiku-5-5` in
+  2.1.301), while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
+  (`qemubox/qemubox:1280`) start Claude Code on the dated previous model
+  `claude-haiku-4-5-20251001`; `dockbox/test.sh:383`, `tests/drift_test.sh:22`
+  and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
+  take `claude-haiku-5-5` and the three tests follow.
+
+- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
+  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
+  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
+  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
+  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
+  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
+  effort; (b) keep the mapping by role — a second opinion is review-grade
+  work and takes the scarcer slot. **Default if nothing is decided:** (b),
+  the text as written.
 
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
@@ -302,12 +312,6 @@
   `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
 
-- **RECLAUDE-TMP-BAN-VS-SYNC-RUN-DIR** (LOW, docs) — owner decision, no test
-  — docs. `RECLAUDE.md:4` "NEVER use `/tmp` — ALWAYS `./tmp`" is re-injected
-  at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
-  `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
-  rule wins inside a sync; RECLAUDE scopes project work.
-
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
   test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
   non-obvious why" — a general why comment that none of the three in-body
@@ -438,6 +442,17 @@
 
 ## Codex bridge
 
+- **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
+  no test — config. `codex/config.toml:2` selects the closest native fields
+  to `hooks/statusline.py:27-38`: model, context used, five-hour and weekly quota.
+  Codex CLI 0.162.1 shows quota remaining, without reset times or Claude's compact
+  model names, labels and separators. Its status line accepts built-in identifiers,
+  with no command renderer for the shared Python logic. **Fix:** requires upstream
+  support for reset fields or a command renderer; use `/status` for reset times.
+  Sources: [config reference](https://developers.openai.com/codex/config-reference#tui-status_line),
+  [schema](https://developers.openai.com/codex/config-schema.json),
+  [built-in items](https://developers.openai.com/codex/cli/slash-commands#configure-footer-items-with-statusline).
+
 - **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
   docs. Codex's own skill instructions say a user names a skill "with
   `$SkillName` or plain text" (the `codex` 0.162.0 binary's prompt text),
@@ -450,14 +465,6 @@
   through the plain-text path. **Options:** (a) switch the docs, the rewrite
   and `hooks/test_codex_hook.py:91` to `$`; (b) keep `@`. **Default if nothing
   is decided:** (b).
-
-- **CODEX-PRECOMPACT-ENTRIES-NO-OP** (LOW, config) — owner decision, no test
-  — config. `codex-hooks.json:58-74` wires `local` and `reclaude` on Codex
-  `PreCompact`, but `hooks/codex_hook.py:155-162` returns nothing for any
-  non-block PreCompact output, so both entries spawn a process whose output is
-  discarded; the only effect left is `local.py`'s `local-{sid}` stamp.
-  **Options:** (a) drop the two entries; (b) keep them for when the adapter
-  can carry context. **Default if nothing is decided:** (b).
 
 ## Hooks
 
@@ -474,35 +481,10 @@
 
 - **LEARN-HOOK-WIRED-NOWHERE** (LOW, dead code) — CONFIRMED at HEAD 2026-09-25.
   `hooks/learn.py` is a complete lifecycle hook that no event invokes:
-  `settings-recommended.json` wires `local.py`, `prompt_nudge.py`,
-  `pretool_nudge.py`, `post_tool_nudge.sh`, `stop.py`, `memory_nudge.py` and
-  `reclaude.py`, and none of them is it. Reproduce:
+  `settings-recommended.json` wires `prompt_nudge.py`, `pretool_nudge.py`,
+  `style_nudge.py`, `stop.py` and `memory_nudge.py`, and none of them is it. Reproduce:
   `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
   call — wire it to an event, or drop it.
-
-- **SMOKE-SUITE-TESTS-THE-INSTALL** (LOW, tests) — CONFIRMED at HEAD 2026-09-25.
-  `hooks/test_hooks.py` resolves its subjects under `Path.home()/'.claude'/
-  'hooks'` (`:20`), so it exercises whatever is installed rather than the tree
-  it ships in, and its docstring and cases name `nudge.py`, which no longer
-  exists — the file split into `prompt_nudge.py` and `pretool_nudge.py`. It is
-  also absent from the Makefile's `TEST_FILES`, and pytest collects nothing from
-  it (`pytest -q test_hooks.py` → "no tests ran"), so nothing runs it either
-  way. Reproduce: `ls hooks/nudge.py` → no such file. **Fix:** the maintainer's
-  call — point it at the repo tree and rename the subjects, or drop it.
-
-- **HOOKS-SYSTEMMESSAGE-NEVER-REACHES-MODEL** (MED, correctness) — CONFIRMED.
-  `local.py`, `reclaude.py` and `memory_nudge.py` emit `systemMessage`, the
-  channel defect `prompt_nudge` had. `hook_system_message` maps to no API
-  message in Claude Code 2.1.261 (`hook_system_message:()=>[]` in the
-  attachment table; the docs define `systemMessage` as "a message shown to the
-  user in the transcript"). Measured: 2409 `hook_system_message` attachments
-  across all transcripts, 0 model-visible copies. So `local.py`'s LOCAL.md
-  injection and its RULES re-injection on UserPromptSubmit never reach the
-  model. The PreCompact paths (`local.py`, `reclaude.py`, `memory_nudge.py`)
-  are the same field; whether Claude Code carries a PreCompact `systemMessage`
-  across compaction is not measured. **Fix:** for UserPromptSubmit,
-  `hookSpecificOutput.additionalContext` as in `prompt_nudge.emit`; PreCompact
-  needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
@@ -515,26 +497,6 @@
   the clause and its `hooks/ARCHITECTURE.md` mention; (b) keep it for an
   external runner that sets `CLAUDE_EVAL` itself. **Default if nothing is
   decided:** (b); no test — config.
-
-- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
-  stamps per session are named at their call sites — `local-`
-  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:150`),
-  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:105-113`)
-  — plus a second per-session store `pretool_nudge.py:285-292` keeps at
-  `~/.claude/tmp/extnudge/{sid}.txt`, and no hook deletes one or expires a
-  session id, so `~/.claude/state` gains up to four files per session.
-  Harmless in bytes; the question is whether stamps should self-prune on
-  write past N days. **Options:** (a) prune on write past N days; (b) leave.
-  **Default if nothing is decided:** (b). No test — design.
-
-- **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:79-87` defines its own `hook_event`: the same
-  three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:80-82`, set by `post_tool_nudge.sh:33`). `stop.py` imports
-  nothing from `lib.state`, so a spelling added to one reader misses the
-  other. **Fix:** import `hook_event` from `lib.state` and keep the override
-  in `stop.py`, or fold the override into the shared reader; no test —
-  duplication.
 
 - **DIARY-SLUG-EDGES** (LOW, design) — proposed, no fix without the owner.
   The diary slug (`hooks/stop.py:50-52`, `skills/diary/SKILL.md` § Where it
@@ -697,29 +659,26 @@
   **Fix:** compare against the draft below its title line, or require a
   real cut ratio (the `ok:` line already prints one).
 
-- **STYLE-RULES-NUDGE-RESTATES-CAVEMAN** (LOW, duplication) — owner
-  decision, no test — duplication. `hooks/prompt_nudge.py:9-15`
-  `STYLE_RULES` is emitted on every prompt (`:204`, meta prompts too,
-  `:190`) and restates `output-styles/caveman.md` with one line cap (~17,
-  max 20) where caveman has tiers (`:15`) and "no tables or headers" where
-  caveman allows them for tabular content (`:26`); neither `hooks/README.md`
-  nor `hooks/ARCHITECTURE.md` names it. `COMMIT_RULES` (`:21-27`),
-  `stop.py:122-131` and `local.py:11-16` `RULES` restate WISDOM § Git and
-  `code.md`. **Default if nothing is decided:** as written — the nudges are
-  deliberate re-injection.
+- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-16, no
+  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py` and read
+  by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py`) appears in no doc.
+  **Fix:** drop the first; name the second in `hooks/ARCHITECTURE.md`.
 
-- **RECLAUDE-KEYWORD-PATH-UNWIRED** (LOW, dead code) — CONFIRMED 2026-10-10.
-  `hooks/reclaude.py:33-41` carries a continue/recap keyword path (the same
-  two regexes as `local.py:61-62`); the wiring runs the hook on PreCompact
-  only (`settings-recommended.json`, `codex-hooks.json`), no test names the
-  path, and `hooks/ARCHITECTURE.md` says it is unwired. **Fix:** the
-  maintainer's call — delete it with the ARCHITECTURE lines, or wire it.
+- **RECLAUDE-MD-UNREAD** (LOW, dead file) — proposal, needs sign-off. No hook
+  reads `RECLAUDE.md`: Claude Code discards a PreCompact hook's
+  `systemMessage` (hooks reference, PreCompact) and the hook that injected it
+  is gone, yet the file stays in the bundle because `kronael/sync/SKILL.md`
+  § Steps 0 and `reference.md` § Classify and § Swap name it as a bundle path.
+  **Proposal:** drop `RECLAUDE.md` from the repo, the sync's bundle list, the
+  classify loop and the swap tar in one commit; the sync then moves the live
+  copy to `RUN/old`.
 
-- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-10, no
-  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:19` and
-  read by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py:111`) and
-  `KRONAEL_HOOK_STATE` (`lib/state.py:10`) appear in no doc. **Fix:** drop
-  the first; name the other two in `hooks/ARCHITECTURE.md`.
+- **KVS-SESSIONS-NEVER-PRUNED** (LOW, design) — needs sign-off. Every hook
+  session leaves its keys (`prompted`, `caveman`, `memory:*`, `pointed:*`)
+  in `kvs` for good; only TTL keys expire. `kvs sessions` lists them, nothing
+  removes a session whose Claude Code transcript is gone. **Options:** (a) a
+  `kvs` sweep of sessions older than N days; (b) leave; the rows are small.
+  **Default if nothing is decided:** (b).
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs
@@ -970,9 +929,9 @@
   document, or test and close.
 
 - **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:76,80` and `qemubox/qemubox:1200,1204` launch the
+  `dockbox/dockbox:76,80` and `qemubox/qemubox:1278,1282` launch the
   `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:318`, `qemubox:57,62`, `qemubox/README.md:65`) and
+  (`dockbox:318`, `qemubox:58,62`, `qemubox/README.md:66`) and
   `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
   v0.3.35: the launcher matches the opus subagent) contradicts
   `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
@@ -1013,20 +972,20 @@
 ## qemubox
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
-  `qemubox/README.md:208-214` states the gap plainly — live `~/.claude` /
+  `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
   and "the path for exfiltration is open". `-H` is all-or-nothing: an agent
   that needs `api.anthropic.com` gets the whole internet with it. An in-guest
   sandbox cannot close this: the guest mounts agent config read-write at
-  the host paths (`qemubox/README.md:155-160`) and the guest user has
-  passwordless sudo (`:217`), so anything in the guest can widen its own
+  the host paths (`qemubox/README.md:174-179`) and the guest user has
+  passwordless sudo (`:236`), so anything in the guest can widen its own
   limits. Only a host-side wall holds, and qemubox already sits on one: slirp,
-  with `restrict=on` at `qemubox:654`. **Fix (proposal):** a fixed-at-boot
+  with `restrict=on` at `qemubox:713`. **Fix (proposal):** a fixed-at-boot
   flag `-p host1,host2` alongside `-H`: start a host proxy on
   `127.0.0.1:$pport` with the allowlist, add
   `,restrict=on,guestfwd=tcp:10.0.2.100:3128-tcp:127.0.0.1:$pport` to the
-  `-nic` at `qemubox:675`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
-  `envs` so `send_envs` (`qemubox:1248-1254`) carries them.
+  `-nic` at `qemubox:734`, and put `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` into
+  `envs` so `send_envs` (`qemubox:1326-1332`) carries them.
   Claude Code honours those variables. `stop_box` kills the pid, `remove_box`
   removes the files. Roughly 40-60 lines of shell plus docs and three parse
   assertions in `test.sh`. Under `restrict=on` the guest cannot reach slirp's
@@ -1042,14 +1001,14 @@
   serial tail. A stop blocked by a launch that holds the lock while it waits
   on a wedged guest gets that message, which names the wrong cause, and exits
   1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:327`) takes the lock the same way, so a check blocked for
+  `qemubox/qemubox:386`) takes the lock the same way, so a check blocked for
   180 s writes the same `ready_error` into `idle.log` and ends, where a failed
   session count retries. **Fix:** `lock_box` reports the lock wait
   itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
   `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
 
 - **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:363`) backgrounds the idle check with `&`
+  `linger_box` (`qemubox/qemubox:422`) backgrounds the idle check with `&`
   from the leaving session's shell, which runs without job control, so the
   check keeps the session's process group: a shell that sourced the script
   and called `linger_box` saw the check report that shell's PGID. `trap ''
@@ -1059,32 +1018,32 @@
   check under `setsid` so it owns its session and process group; test: the
   check's PGID differs from the launcher's. No test — design.
 
-- **QEMUBOX-PAUSED-ON-HOST-ENOSPC** (MED, ops) — proposed. The `-drive` at
-  `qemubox/qemubox:670` sets no `werror=`, and qemu's default `werror=enospc`
-  pauses the guest when the host filesystem under `disk.qcow2` fills. The
-  launcher passes no `-qmp` or `-monitor` socket, so nothing can see the
-  paused state or send `cont`: `qemubox status` reports `process=running`
-  and `ssh=open` while every SSH connect ends in "Connection timed out
-  during banner exchange", and `stop` reaches SIGKILL after its 90 s and
-  10 s waits (seen 2026-10-12 after the host disk filled; no clean
-  shutdown). **Options:** (a) `-qmp unix:$dir/qmp,server,nowait` at launch,
-  `status_box` reports `query-status`, `stop_box` sends `cont` before the
-  poweroff and `quit` on `-f`; (b) `werror=report` on the drive so the guest
-  gets EIO and keeps running; (c) document the limit. **Default if nothing
-  is decided:** (c). No test — ops.
+- **QEMUBOX-GUEST-GROUP-NOT-CRASH-SAFE** (MED, ops) — open (record only), no
+  test — ops; CONFIRMED 2026-10-14 on a scratch box. `qemubox-init`
+  (`dockbox/Dockerfile`, the `vm` stage) rewrites `/etc/group` on every boot
+  in one loop over the host groups: for each, `sed -i` deletes its line and
+  `printf >>` appends the new one. A qemu stop
+  without a guest shutdown (`qemubox stop -f`, or the escalation after the
+  90 s wait) soon after boot loses the appended data but keeps the file
+  size, so `/etc/group` ends in NUL bytes (28 on the scratch box). The next
+  boot fails at `getent group "$user_gid"`: `qemubox-init` exits, `ssh` never
+  starts, and the launch ends in "not ready" after `QEMUBOX_READY_TIMEOUT`.
+  A boot after a longer uptime recovers once the appends reach the disk.
+  **Fix:** write the whole new `/etc/group` (and `/etc/passwd`, `/etc/shadow`)
+  to a temp file, `sync` it, and `mv` it into place.
 
 - **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1413`) lingers like any other: after its session exits,
+  (`qemubox/qemubox:1491`) lingers like any other: after its session exits,
   `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
   seconds (default 1200), and a second `qemubox -T` in that window joins the
-  VM and finds the earlier scratch files, while `qemubox/README.md:70-73`
+  VM and finds the earlier scratch files, while `qemubox/README.md:71-74`
   says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
   for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
   window in README § Usage. **Default if nothing is decided:** (b). No test
   — design.
 
 - **QEMUBOX-TMP-STACKED-TMPFS** (LOW, ops) — open (record only), no test —
-  ops. `setup_guest_tmp` (`qemubox/qemubox:532-535`) mounts a tmpfs over
+  ops. `setup_guest_tmp` (`qemubox/qemubox:591-594`) mounts a tmpfs over
   `/tmp` on every boot, and systemd's `tmp.mount` already mounted one there,
   so guest `/tmp` is two stacked tmpfs mounts and the first is hidden.
   Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
@@ -1093,11 +1052,23 @@
 
 - **QEMUBOX-POWEROFF-LEAVES-READY-NOT-STOPPED** (LOW, ops) — open (record
   only), no test — ops. After a guest poweroff, `leave_session` only reports
-  it (`qemubox/qemubox:394`). A later `stop_box` returns early because the VM
-  is not running (`:776`), so `ready` and `pid` stay and `stopped` (`:802`)
+  it (`qemubox/qemubox:453`). A later `stop_box` returns early because the VM
+  is not running (`:836`), so `ready` and `pid` stay and `stopped` (`:877`)
   is never written. `prune` then dates the box from the directory mtime
-  (`:1044`), not from the poweroff. **Fix:** record the stop in the poweroff
+  (`:1122`), not from the poweroff. **Fix:** record the stop in the poweroff
   branch of `leave_session`.
+
+- **QEMUBOX-CODEX-MEMORIES-PRIVATE-DB** (MED, correctness) — open (record
+  only), unverified, no test — correctness. Each session sets
+  `CODEX_SQLITE_HOME=/tmp/codex-sqlite` (`qemubox/qemubox`, where `envs` is
+  built), so a guest Codex reads a private `memories_1.sqlite` but writes the
+  memory files in the shared `~/.codex/memories`. With Codex memories
+  enabled, consolidation syncs those files to its own database and deletes
+  summaries the database lacks (Codex 0.162.0,
+  `codex-rs/memories/write/src/storage.rs`), so a guest can delete memories
+  the host wrote. Inert while memories are off: no `config.toml` key enables
+  them and `~/.codex/memories` is empty. **Fix:** turn memories off for the
+  guest Codex, or keep its memory files on the guest disk too.
 
 ## bhctl
 

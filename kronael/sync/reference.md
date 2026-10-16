@@ -133,13 +133,12 @@ RETIRED = {  # names the bundle shipped and dropped
         'create-sketch', 'create-video-render', 'create-video-script', 'cto-eval',
         'data-reports', 'design-eval', 'doc-topology', 'docs-audit', 'eval-all', 'explore', 'eye-13yo',
         'finalize-crate',
-        'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'haiku', 'hiring-eval', 'later', 'markdown-converter',
+        'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'hiring-eval', 'later', 'markdown-converter',
         'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
         'software-engineering', 'speed-demo', 'sub', 'sync-tools-skills', 'testing',
         'trader', 'typescript', 'useless',
     )),
-    'agents/haiku.md',
     'commands/improve.md', 'commands/learn.md', 'commands/readme.md', 'commands/refine.md',
     'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
@@ -534,11 +533,13 @@ project `.codex/` config and enabled plugins — Kronael writes
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
 - Native footer in `~/.codex/config.toml`: ALWAYS set the sync-owned
-  `tui.status_line` to this array, replacing any existing array, including `[]`.
+  `tui.status_line` from `$SRC/codex/config.toml`, replacing any existing array,
+  including `[]`.
   ALWAYS merge only this key into the existing `[tui]` table, or create that
   table once if absent. NEVER append a duplicate `[tui]` on repeat syncs.
   ALWAYS preserve unrelated keys and tables, including model settings,
   credentials, hooks and other TUI settings.
+  The shipped configuration contains:
 
   ```toml
   [tui]
@@ -549,6 +550,12 @@ project `.codex/` config and enabled plugins — Kronael writes
   shows quota used. Codex omits quota windows when their data is unavailable.
   The native setting accepts an item array, not a command or custom format.
   The footer has no reset times; `/status` shows resets.
+  `BUGS.md` § Codex bridge records the remaining differences.
+  Other built-in items include model with reasoning, directories, git branch,
+  token counts, session ID and Codex version; `/statusline` selects and orders them.
+  Sources: [configuration reference](https://developers.openai.com/codex/config-reference#tui-status_line),
+  [configuration schema](https://developers.openai.com/codex/config-schema.json),
+  [status-line picker](https://developers.openai.com/codex/cli/slash-commands#configure-footer-items-with-statusline).
 - Projects: the fallback key covers a project that keeps its instructions in
   `CLAUDE.md`. Codex loads one
   instruction file per directory, so a project with `AGENTS.md` never gets its
@@ -566,6 +573,11 @@ project `.codex/` config and enabled plugins — Kronael writes
     never an installed-only overlay; a name already taken by something else
     is reported and left alone;
   - anything else → conflict.
+
+  The plugin manifest exposes only `kronael-sync`; shared skills need no manifest entries.
+  ALWAYS verify every `$SRC/skills/*/SKILL.md` except `global` resolves through the bridge,
+  including `haiku` and `luna`. Report missing or conflicting names.
+  `global` supplies `~/.claude/CLAUDE.md`; it is not an installed skill.
 
   ```sh
   A="$HOME/.agents/skills" C="$HOME/.claude/skills"
@@ -727,6 +739,7 @@ one toolchain is missing — report that tool skipped and continue.
 |------|---------|-------|
 | `rig` | `cd rig && make install` | git helpers: rig + rip/rif/rco/rir/rim; `rip -g` and `rif -g` push and fetch over HTTPS with the `gh` token |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
+| `kvs` | `cd kvs && make install` | key-value store on one SQLite file for scripts (`kvs/README.md`); needs a Go toolchain |
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |

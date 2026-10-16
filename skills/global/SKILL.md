@@ -11,9 +11,8 @@ known drifts. If a blank agent would do it anyway, it does not belong here.
 
 ## Continuity
 
-Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD with every non-alphanumeric character → `-`),
-memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it
-lives. Newest by mtime.
+Transcripts `~/.claude/projects/<slug>/*.jsonl` (slug = CWD, every non-alphanumeric char → `-`),
+memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; newest by mtime.
 
 - ALWAYS read the 2-3 newest diary entries before answering — and on a new task
   too, not only at session start (`/recall-memories <topic>`). MEMORY.md arrives
@@ -27,8 +26,7 @@ lives. Newest by mtime.
 
 ## Response style
 
-- The output style sets the line cap and answer-first shape; the cap lifts
-  when asked to generate content, show planning or walk through a root cause.
+- The output style sets the line cap; it lifts for generated content, planning or a root-cause walk.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is
@@ -43,8 +41,7 @@ lives. Newest by mtime.
 
 - `sudo` is available — use `sudo docker ...` for docker you run via Bash; in
   committed scripts parameterize privilege instead (see the `sh` skill).
-- Run `/solve` to pick the skill for a task — it also reconciles work already
-  produced under the wrong one.
+- Run `/solve` to pick the skill for a task; it also reconciles work done under the wrong one.
 - Code style, naming, layout, design and comments live in `software` (`code.md`),
   the base of every language skill. It is COLD: ALWAYS load it (`/solve` or a
   language skill) BEFORE writing or reviewing code; skipping hides the rules.
@@ -55,20 +52,21 @@ lives. Newest by mtime.
 
 ## House conventions
 
-- Data: `${PREFIX:-/srv}/data/<project_name>/`
+- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A program a
+  user runs keeps state, settings, cache and data in `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>`
+  (`~/.local/state/<name>` and so on), each overridable by one flag or env var.
 - Config: prefer flags + env vars for anything simple — a short flag where a
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second
-- `make` for build/lint/test/clean, debug builds
+- `make` for build/lint/test/clean and debug builds: `make test` = fast unit
+  (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
+  production data
 - NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build/temp
   path, and NEVER move a build between target directories — each switch costs a
   full rebuild and splits the cache across mounts. If the configured directory is
   out of space, SAY so and stop; freeing or resizing it is the maintainer's call
-- `make test` = fast unit (<5s); `make test-all` = unit + integration, what CI
-  runs; `make smoke` = production data
-- Pre-commit reformats on first run — ALWAYS retry the commit (2 attempts).
-  NEVER skip the checks
+- Pre-commit reformats on first run: ALWAYS retry the commit once, NEVER skip the checks
 
 ## Bug triage
 
@@ -159,21 +157,18 @@ PR body with the robot. These win.
 - NEVER recursive removal (`rm -r`, `-rf`, `-R`, or a wrapper) — delete
   explicitly named files, or leave cleanup to the user. One lift: `git worktree
   remove --force` after the checks in `worktree` § Removing a worktree.
-- NEVER kill a process you did not start, not even to free a port; kill your
-  own by PID.
-- NEVER hit an external API per request, and NEVER re-fetch what is already on
-  disk — cache it, continue from last state.
+- NEVER kill a process you did not start, not even to free a port; kill your own by PID.
+- NEVER call an external API per request or re-fetch what is on disk: cache it, continue from state.
 - NEVER use the `SendFeedback` tool, NEVER draft Claude Code product or model
   feedback, and NEVER suggest `/feedback` — banned outright, and say nothing
   about feedback even when a "high-signal moment" seems to arise.
 
 ## Documentation
 
-- ALWAYS read `readme` → `topology.md` before adding, moving or splitting a doc
-  file or top-level dir. NEVER `todos/` or `plans/`: plans and work records
-  live under `~/.claude/` (`ship` § Work record), never in a repo.
-- NEVER write an unrequested summary/report/analysis `.md` — the report belongs
-  in the reply.
+- ALWAYS read `readme` → `topology.md` before adding, moving, splitting or
+  repeating a doc section, file or top-level dir. NEVER `todos/` or `plans/`:
+  plans and work records live under `~/.claude/` (`ship` § Work record).
+- NEVER write an unrequested summary, report or analysis `.md` — the report belongs in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",
   backwards-compat framing, or a one-off backfill inside a permanent file. State
@@ -183,30 +178,27 @@ PR body with the robot. These win.
   verbatim and NEVER re-litigate the wording, in review or in an eval report.
 - ALWAYS write every address, signature and hash in full — in docs, code
   comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
-- NEVER publish to claude.ai hosting — no Artifact tool, no uploads. Produce
-  local files (HTML, MD) the user opens themselves.
+- NEVER publish to claude.ai hosting (Artifact tool, uploads): local HTML/MD files the user opens.
 
 ## Agents
 
-- NEVER run more than 2 `sonnet` and 1 `opus` or `fable` subagent at once.
-  Codex workers are subagents under every rule here: `terra` counts as
-  `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the owner lifts the cap —
-  explicitly, for one named task, after seeing what would be spawned — and the
-  lift ends with that task.
-- Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
-  code-editing subs in parallel on a shared tree — they interleave, one reverts
-  another, reviewers read half-edited files.
-- Brief a subagent by GOAL, not numbered steps — models degrade on
-  over-prescription. Give the goal, the context it needs, what is out of bounds
-  and what "done" looks like, then let it choose the path.
+- NEVER run more than 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable` subagent
+  at once. Codex workers are subagents under every rule here: `luna` counts as
+  `haiku`, `terra` as `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the
+  owner lifts the cap — explicitly, for one named task, after seeing what would
+  be spawned — and the lift ends with that task.
+- Parallel is for READ-ONLY subs or fully isolated worktrees; NEVER code-editing
+  subs on one shared tree — they interleave, one reverts another.
+- Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
+  "done" looks like — NEVER numbered steps: models degrade on over-prescription.
 - ALWAYS run implementation — a comprehensive or multi-file change, autonomous
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
   step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. `fable` takes
-  specs, architecture, WISDOM and skill writing, algorithmic solutions, and red
-  reviews or deep audits — NEVER implementation, with one exception: a change
-  to a shared library other components import goes to `fable` or `astra`,
-  never `sonnet` or `opus`. Haiku is batch-only, NEVER a sub — light work
-  goes to `sonnet` or the main thread.
-- ALWAYS check the diff or output a subagent produced before repeating its
-  report — they overclaim, and occasionally report work they did not do.
+  specs, architecture, WISDOM and skill writing, algorithms and red reviews,
+  NEVER implementation except a globally shared library; `haiku` takes
+  read-only fan-out and bounded mechanical edits, NEVER multi-step reasoning.
+  Every lane, pin and Codex counterpart: `dispatch` § Tiers.
+- ALWAYS read the diff or output a subagent produced before repeating its
+  report or pushing it — they overclaim, report work they did not do, and add
+  the comments `code.md` § Comments bans: read every added comment.

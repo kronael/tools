@@ -31,11 +31,11 @@ System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils openssh-client tar libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 libarchive-tools e2fsprogs docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base openssh tar libarchive e2fsprogs docker
+sudo pacman -S qemu-base openssh tar python libarchive e2fsprogs docker
 # Fedora
-sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
 ```
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
@@ -111,21 +111,36 @@ ignored on re-entry — use `-n <name>` for a separately-mounted box.
 The per-VM lock covers setup, session markers, shutdown and removal.
 A new session waits for full guest readiness before it runs.
 `QEMUBOX_READY_TIMEOUT` sets the wait limit in seconds (default 180);
-a timeout prints the serial log tail. HUP and TERM remove the session marker.
+a timeout prints the serial log tail. The kernel uses `loglevel=5` to keep
+warnings and errors visible without routine boot messages. Guest setup errors
+still reach the serial log. HUP and TERM remove the session marker.
 Dead host PID markers are removed under the lock. A failed marker listing
 keeps the VM up and reports an error.
 
-`qemubox stop <name>` powers a running VM off and keeps its disk: it asks
-the guest to shut down and waits up to 90 s, then sends qemu SIGTERM and,
-10 s later, SIGKILL, printing a line before each wait. `-f` skips the guest
-shutdown and signals qemu at once. Both take the VM lock, so a session that
+`qemubox stop <name>` powers a running VM off and keeps its disk: it resumes
+a paused guest, runs `fstrim /` in the guest, asks it to shut down and waits
+up to 90 s, then asks qemu to quit over QMP and, 10 s later, sends SIGKILL,
+printing a line before each wait. qemu gets SIGTERM in place of the quit when
+the VM has no QMP socket or the quit fails. `-f` skips the resume, trim and
+guest shutdown and stops qemu at once. Both take the VM lock, so a session that
 holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
 match as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
 space allocated on the host (both sizes in KiB); a VM waiting out
-`QEMUBOX_LINGER` is `running idle`. `rm` accepts several names
-or globs, with or without the `qemubox-` prefix, and fails if removal fails.
+`QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails
+because the host filesystem under the overlay is full; other write errors go
+to the guest. `ls` and `status` then show `paused:` and qemu's reason, such as
+`paused:io-error`, and a launch into that VM fails with that state rather than
+waiting. Free host space, then `qemubox stop` it. Each VM has a QMP control
+socket, `qmp` in its state dir. The state dir is owner-only.
+
+The overlay passes guest discards through, and `stop` trims the guest disk,
+so space freed in the guest leaves the overlay on the host. A guest that
+powers itself off skips the trim; the first `stop` after its next boot does it.
+
+`rm` accepts several names or globs, with or without the `qemubox-` prefix,
+and fails if removal fails.
 `prune [hours]` removes stopped VMs after that many hours (default 2160).
 Running VMs with no sessions stop after four hours since readiness; their disks
 stay until the stopped age rule applies. Prune also removes base sets that no
@@ -146,7 +161,13 @@ they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
 in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
-Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target`.
+Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
+`CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
+guest `/tmp`, because 9p gives the guest no shared mmap and no lock shared
+with the host. A `sqlite_home` key in `~/.codex/config.toml` overrides the
+variable. At shutdown the databases disappear with any prompts still queued in
+them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
+start.
 
 Guest disk build data survives boots until removal. `/tmp` data disappears at
 shutdown. A failed mount stops launch.

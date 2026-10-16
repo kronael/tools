@@ -1,12 +1,17 @@
 {
   "name": "kronael",
-  "version": "0.4.42",
+  "version": "0.4.48",
   "description": "Sync bridge for the Kronael Claude Code toolkit.",
   "author": {
     "name": "Ondrej Vostal"
   },
   "license": "Unlicense",
-  "keywords": ["codex", "claude-code", "skills", "hooks"],
+  "keywords": [
+    "codex",
+    "claude-code",
+    "skills",
+    "hooks"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Kronael",
@@ -14,7 +19,9 @@
     "longDescription": "Runs the canonical sync, deploys the Claude Code bundle into ~/.claude/, and exposes installed skills and lifecycle hooks to Codex through ~/.agents/skills and ~/.codex/hooks.json.",
     "developerName": "Ondrej Vostal",
     "category": "Productivity",
-    "capabilities": ["Write"],
+    "capabilities": [
+      "Write"
+    ],
     "defaultPrompt": [
       "Use $kronael-sync to sync Kronael.",
       "Use $kronael-sync to bridge CLAUDE.md, .claude/skills, and hooks into Codex."

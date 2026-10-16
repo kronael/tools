@@ -24,8 +24,13 @@ page's craft: `page.md`. Prose: `writing`.
 | `CLAUDE.md`, `<dir>/CLAUDE.md` or `AGENTS.md` | What must an editor not break? |
 | `LICENSE`, `NOTICE` | Under what terms? Copyright in `LICENSE`; provenance and third-party terms in `NOTICE`. |
 
-- ALWAYS put a fact in the file whose question it answers and link it from the
-  others — NEVER a second copy; copies drift apart unnoticed.
+- ALWAYS put a fact or a section in the one file whose question it answers —
+  README, ARCHITECTURE, a package README and a diagram never repeat a section
+  — and link it from the others in one line; NEVER a second copy, copies drift
+  apart unnoticed.
+- ALWAYS draw what can be drawn — a flow, a layout, the roles and their rights
+  — as one diagram (`diagrams`) beside the list it illustrates; every other
+  file links to it, NEVER redraws it.
 - One tree beside the code: the root README and ARCHITECTURE hold the overview,
   a short section per concept with one link down. ALWAYS say at each level only
   what the level above does not, and name each file one level down in one line.
@@ -51,7 +56,9 @@ This order; cut a section with nothing true to say. Under 150 lines.
 1. The title, then what it is and who it is for, in one plain sentence.
 2. The link to the study page, naming what it answers.
 3. Any status that changes whether to use it (unaudited, not for real funds).
-4. **The words** — each domain term defined before its first use.
+4. **Glossary** — the project's dictionary: one entry per domain term, each
+   defined before its first use, and every term the docs use comes from it
+   (`writing` § Language).
 5. **What it gives you** — one bullet per capability that works today.
 6. **What it does not give you** — each limit with its `BUGS.md` id.
 7. **Packages** — directory, package name, one line, a link to its README; in
@@ -189,6 +196,9 @@ ALWAYS wire these into `make lint`, so a stale doc fails the build:
   the same result without the project ("Plain transaction?": Yes / Yes,
   weaker / No), with every value defined in a list ABOVE the table. NEVER a
   verdict the reader decodes by guessing.
+- An example file whose flow the tests and the CLI already run opens by
+  saying why it exists, and says in those lines that it sends nothing when it
+  sends nothing.
 - The why section, the Why page on a docs site, names the obvious wrong
   reason to adopt and refutes it with a number ("many calls in one
   transaction is not the reason: thirty transfers already fit in one"),

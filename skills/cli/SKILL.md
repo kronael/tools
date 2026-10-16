@@ -46,7 +46,8 @@ Two methods: `make link` (dev, symlink debug binary) and `make install` (system,
 ## Pitfalls
 
 - NEVER write secrets to logs
-- NEVER hardcode paths (use ${PREFIX})
+- NEVER hardcode paths (use ${PREFIX}); a user program's state, settings, cache and
+  data live under the XDG dirs (WISDOM § House conventions), `/srv/data` is for services
 - ALWAYS document env vars in --help
 - ALWAYS validate config on load, BEFORE any operations
 - Fixture data in cfg/test/, NEVER use production configs in tests

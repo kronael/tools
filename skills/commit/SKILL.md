@@ -50,7 +50,7 @@ Format shapes:
 
 Subject: ≤ 72 chars, imperative mood, capitalize first word after the colon. Test: "If applied, this commit will: _____"
 
-Body (second `-m`): explain *why* — the diff shows what.
+Body (second `-m`): explain *why* — the diff shows what. Both follow `writing` § Language.
 `git commit -m "subj" -m "why" -- files`
 
 Breaking changes: `feat!:` / `fix!:` + footer `BREAKING CHANGE: what breaks and migration path`

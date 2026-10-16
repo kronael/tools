@@ -2,9 +2,9 @@
 
 A local artifact that helps the user understand a concept or mechanism, or
 review work. Project documentation belongs to `readme`, not this mode.
-ALWAYS use the installed `caveman` output style as the language authority;
+ALWAYS take the artifact's language from the `writing` skill § Language;
 NEVER copy its STE rules here. Artifact length follows the teaching need;
-the chat reply budget stays in that output style. ALWAYS keep the substantive
+the chat reply keeps the output style's budget. ALWAYS keep the substantive
 answer in chat when the artifact supplements an answer; NEVER make the user
 open a file to learn the main result. An explicit artifact request sets the
 deliverable.

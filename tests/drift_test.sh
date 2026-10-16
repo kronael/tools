@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Guards against qemubox and dockbox diverging on the shared model-alias table
-# (the UX most likely to drift). Reads both scripts as text -- the tools stay
-# fully independent, with no shared sourced code -- and compares, per alias
-# (claude is the bare default), the model id and effort each maps to.
+# Guards two copies that must stay equal: qemubox and dockbox share the
+# model-alias table (the UX most likely to drift). Both scripts are read as
+# text -- the tools stay fully independent, with no shared sourced code -- and
+# compared, per alias (claude is the bare default), on the model id and effort
+# each maps to.
 set -uo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"

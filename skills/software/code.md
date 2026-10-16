@@ -89,6 +89,8 @@ your diff against every `##` heading here before calling an edit done.
   an `unsafe` block (`rs`), and the WHY on its own line above a deliberately
   unhandled error — a Go error suppression (`go`), a Rust `.unwrap()` (`rs`).
   NEVER anything else, and NEVER one trailing a code line.
+- ALWAYS keep an allowed comment to a few words — four is the aim — that name
+  the reason; the full why goes in the commit message, NEVER in the comment.
 - NEVER count a machine-read marker as a comment: a `// #region <name>` doc
   include anchor (`readme` skill) or a lint or type pragma (`//nolint:`,
   `# noqa`, `# type: ignore`, `// @ts-expect-error`) is read by a tool, so it
@@ -134,7 +136,13 @@ your diff against every `##` heading here before calling an edit done.
   `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
   state or inject dependencies — functions compose better and leak less.
-- ALWAYS validate input before it reaches persistence.
+- ALWAYS validate input before it reaches persistence, and ALWAYS compare a
+  field once, against the value the code itself derives for it; NEVER a second
+  check against a constant that repeats the first — the two drift apart.
+- ALWAYS return an error from library code — a crate, a package, a module
+  another program imports — and let only the top level, `main` or a test,
+  decide to crash: a panic inside a library takes every caller down. Enforce
+  it with the language's lints where they exist (`rs` § Unwrap Safety).
 - ALWAYS handle SIGINT and SIGTERM in anything long-running — a service,
   daemon, worker or watch loop: stop taking new work, finish or cancel what is
   in flight, flush, and exit.

@@ -18,4 +18,7 @@ NEVER send implementation to /fable — multi-file or autonomous code generation
 - ALWAYS use `subagent_type: "fable"`, NEVER `model: "fable"`: `agents/fable.md` pins Fable at effort `xhigh`, and a sub without the agent type inherits the parent's effort.
 - NEVER reach for `/fable` when `/opus` or the `sonnet` plan loop can do the work — ALWAYS use those first; fable is the most expensive tier.
 - NEVER set effort with prompt text ("Think deeply") — ALWAYS rely on the agent file's pin.
+- When fable refuses on a usage or spend limit, ALWAYS ask the user before switching: offer `astra`
+  (the codex `gpt-6-astra` worker, `astra` skill) for the same brief, and launch it only on their yes —
+  NEVER switch to astra or downgrade to opus silently.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.

@@ -105,7 +105,7 @@ re-litigate a resolved thread.
 Present the report and WAIT. On "post", hand the survivors to `gh-comment`,
 which owns the distill and review-on-wisdom phases, the gate, batching,
 out-of-diff fallback and the `🤖` prefix — a whole-PR summary body included.
-The post leaves the review PENDING, and it stays so until the user's own
-latest message says `SUBMIT REVIEW` (`gh-comment` § Submit): "yes", "post"
-and an answer to another question are not that, and the hook refuses the
-submit without it.
+The post leaves the review PENDING, and it stays so until the user asks for
+the submit; the hook then raises the permission dialog on the exact submit
+command (`gh-comment` § Submit). "post" and an answer to another question are
+not that ask.
