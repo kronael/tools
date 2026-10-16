@@ -1,6 +1,19 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.49] — 20261016
+
+> kronael v0.4.49 — rip -g pushes, the v0.4.41 hooks stay
+>
+> `rip -g`/`rif -g` replace ghpush and ghfetch, Python and SQL gain record rules, and the hooks return to their v0.4.41 shape.
+>
+> • rig — `rip -g` pushes and `rif -g` fetches with the gh token; `ghpush` and `ghfetch` are gone.
+> • Settings — a `rip` or `rig` command that names master or main asks first.
+> • py — a dataclass for every value, pydantic at the boundary, `Record(**row)` from own SQL rows.
+> • sql — a closed set is a SMALLINT behind an IntEnum; a db function names its verb and result.
+> • code — `_loop` runs for the process's life, `do_` tries once; a timeout is never retried.
+> • Hooks — the v0.4.41 hooks and caveman stay, LOCAL.md reaches the model; the redesign is out.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
 
@@ -19,7 +32,16 @@
 - `rig`: `ghpush` and `ghfetch` are removed and `rig install` deletes their links.
 - WISDOM § Git and the skills name `rip -g` and `rif -g` as the agent's push and fetch.
 - Hooks, `output-styles/caveman.md`, `pr-draft` and `gh-comment` stay as in v0.4.41.
-- Not in this line: the v0.4.42–v0.4.48 hook pointer redesign (`style_nudge`, `lib/reminder`, `kvs` memory), the 1800-character PR cap and the STE move out of `caveman.md`; `kvs` ships as a standalone tool.
+- Not in this release: the v0.4.42–v0.4.48 hook redesign (`style_nudge`, `lib/reminder`, `kvs`).
+- Not in this release: the 1800-character PR cap and the STE move out of `caveman.md`.
+- `kvs` ships as a standalone tool; the hooks do not use it.
+- The prompt hook's caveman summary repeats the style's tiers, bullet cap and table rule.
+
+### Fixed
+
+- `hooks/local.py`: LOCAL.md and the continuation rules reach the model as UserPromptSubmit context.
+- `hooks/gh_text_lint.py`: an image in a PR body is refused, as `pr-draft` states.
+- `codex-hooks.json`: the PreToolUse matcher names `Bash`, so the command gates run under Codex.
 
 ## [v0.4.48] — 20261016
 
