@@ -8,8 +8,7 @@ user-invocable: true
 # Tweet
 
 A tweet is a verified claim with a hook, read by a peer who scrolls past
-marketing. Voice and vocabulary come from the `writing` skill, which
-points at the Language section of `~/.claude/output-styles/caveman.md`; its
+marketing. Voice and vocabulary come from the `writing` skill § Language; its
 one-clause sentences and named actors are also what fits in 280 characters.
 An explicitly requested voice wins over both.
 

@@ -20,8 +20,7 @@ routes here. Prose tells with worked fixes are the `humanize` catalogue.
 ## Language — ASD-STE100 Simplified Technical English
 
 These rules apply to every informational or technical document, page, README
-and description; the caveman output style carries the same list for chat,
-word for word. For creative work, ALWAYS follow an explicitly requested voice
+and description. For creative work, ALWAYS follow an explicitly requested voice
 or style. ASD-STE100 is guidance here: NEVER claim compliance without checking
 the standard and its approved dictionary (53 writing rules and a ~900-word
 dictionary, Issue 9, 2025, asd-ste100.org).
