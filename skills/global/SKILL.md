@@ -188,11 +188,11 @@ PR body with the robot. These win.
 
 ## Agents
 
-- NEVER run more than 2 `sonnet` and 1 `opus` or `fable` subagent at once.
-  Codex workers are subagents under every rule here: `terra` counts as
-  `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the owner lifts the cap —
-  explicitly, for one named task, after seeing what would be spawned — and the
-  lift ends with that task.
+- NEVER run more than 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable` subagent
+  at once. Codex workers are subagents under every rule here: `luna` counts as
+  `haiku`, `terra` as `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the
+  owner lifts the cap — explicitly, for one named task, after seeing what would
+  be spawned — and the lift ends with that task.
 - Parallel is for READ-ONLY subs, or fully isolated worktrees. NEVER run
   code-editing subs in parallel on a shared tree — they interleave, one reverts
   another, reviewers read half-edited files.
@@ -208,7 +208,8 @@ PR body with the robot. These win.
   to a globally shared library — one that other repositories or teams import,
   published or org-wide — goes to `fable` or `astra`, never `sonnet` or
   `opus`. A library inside one project (its own SDK crate, say) takes the
-  regular path: an `opus` plan, then `sonnet` or `opus` steps. Haiku is batch-only, NEVER a sub — light work
-  goes to `sonnet` or the main thread.
+  regular path: an `opus` plan, then `sonnet` or `opus` steps. `haiku` takes
+  read-only fan-out and a bounded mechanical edit with a clear spec, NEVER
+  multi-step reasoning; every lane, pin and Codex counterpart: `dispatch` § Tiers.
 - ALWAYS check the diff or output a subagent produced before repeating its
   report — they overclaim, and occasionally report work they did not do.

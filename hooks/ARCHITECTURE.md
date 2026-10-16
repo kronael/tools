@@ -75,7 +75,8 @@ model; `systemMessage` reaches only the user.
 4. In Claude only, route a prompt that starts with `/astra`, and the phrases
    `ask codex`, `ask astra`, `oracle`, and `second opinion`, to `/astra`.
 5. Match model escalation only when explicit: `/fable`, `use fable`,
-   `spawn fable`, `/opus`, etc.
+   `spawn fable`, and the same forms for every name in `TIER_ROUTES`
+   (`opus`, `haiku`, `luna`, `terra`); a bare name from that set never routes.
 6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.
 7. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the

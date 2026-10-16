@@ -42,7 +42,7 @@ from writing under `~/.claude/`.
 name: <name>
 description: <what this agent does, when to spawn>
 tools: <comma list or *>
-model: <opus/sonnet>           # optional
+model: <opus/sonnet/haiku>     # optional
 ---
 
 # <name> Agent

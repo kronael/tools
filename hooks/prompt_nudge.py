@@ -90,12 +90,18 @@ CODEX_PATTERNS = [
     r'\bsecond\s+opinion\b',
 ]
 
+TIER_ROUTES = {
+    'fable': '/fable',
+    'haiku': '/haiku',
+    'luna': '/luna',
+    'opus': '/opus',
+    'terra': '/terra',
+}
+TIERS = '|'.join(TIER_ROUTES)
+
 ESCALATION_PATTERNS = [
-    (r'(?<!\S)/(fable|opus)\b', {'fable': '/fable', 'opus': '/opus'}),
-    (
-        r'\b(?:use|spawn|run|invoke|switch to)\s+(fable|opus)\b',
-        {'fable': '/fable', 'opus': '/opus'},
-    ),
+    (rf'(?<!\S)/({TIERS})\b', TIER_ROUTES),
+    (rf'\b(?:use|spawn|run|invoke|switch to)\s+({TIERS})\b', TIER_ROUTES),
 ]
 
 

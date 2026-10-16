@@ -82,10 +82,23 @@ def test_route_is_always_a_claude_code_spelling() -> None:
     assert explicit_route('use fable for this', harness='codex') == '/fable'
 
 
-def test_fable_requires_explicit_escalation() -> None:
-    assert explicit_route('fable nudge is bad') is None
-    assert explicit_route('use fable for this') == '/fable'
-    assert explicit_route('/fable handle this') == '/fable'
+@pytest.mark.parametrize('tier', sorted(prompt_nudge.TIER_ROUTES))
+def test_tiers_require_explicit_escalation(tier) -> None:
+    assert explicit_route(f'{tier} nudge is bad') is None
+    assert explicit_route(f'use {tier} for this') == f'/{tier}'
+    assert explicit_route(f'/{tier} handle this') == f'/{tier}'
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'the LUNA feed froze at $0.10',
+        'terra classic depegged in may',
+        'a haiku about the borrow checker',
+    ],
+)
+def test_bare_tier_words_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
 
 
 def test_continue_routes_to_continue_skill() -> None:
