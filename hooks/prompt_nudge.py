@@ -8,7 +8,8 @@ from lib.state import session_state
 
 STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
 - Lead with the answer. No preamble, no recap of what the diff already shows.
-- ~17 lines, hard max 20. No tables or headers in a normal reply.
+- Tiers: a fact 1-3 lines, an action ≤12, an explanation ≤20, the hard ceiling.
+- ≤5 bullets of ≤2 sentences; tables and headers only for genuinely tabular content.
 - Plain words, active voice, one instruction per sentence (ASD-STE100).
 - Last line carries the next action, or the bottom line.
 - Before sending: read ONLY your first and last line. If those two do not
