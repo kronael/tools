@@ -1,6 +1,6 @@
 ---
 name: dispatch
-description: /dispatch — launch a background subagent at default model; § Tiers is the one table of every model tier, Claude and Codex. NOT for tasks the main thread needs results from inline; NOT for model-specific work (the tier skill § Tiers names).
+description: /dispatch — launch a background subagent at default model; § Tiers is the one table of every model tier, Claude and Codex. NOT for tasks the main thread needs results from inline; NOT for model-specific work (use the tier skill § Tiers names).
 when_to_use: "sub, do this in a sub, spin up a sub, do this in the background, run this separately, do X while I do Y, dispatch this, background agent, which model, which tier, which sub, model routing, pick a tier, claude sub or codex worker"
 user-invocable: true
 ---
@@ -16,7 +16,7 @@ Report what was launched. Continue immediately without waiting.
 
 ## Tiers
 
-One lane per tier. WISDOM § Agents owns the lanes and the caps; `skills/CLAUDE.md` § Subagent effort defaults owns the pins this table quotes. A Claude tier launches with `subagent_type: "<tier>"`, so `agents/<tier>.md` pins its model and effort; a Codex tier runs from its skill, through the codex CLI or a native Codex worker, and counts against the cap of the Claude tier in its row.
+One lane per tier, and this table is the one place every lane is written. WISDOM § Agents owns the caps and the routes between tiers; `agents/<tier>.md` and the Codex skills own the pins this table quotes, kept in step by `skills/CLAUDE.md` § Subagent effort defaults. A Claude tier launches with `subagent_type: "<tier>"`, so `agents/<tier>.md` pins its model and effort; a Codex tier runs from its skill, through the codex CLI or a native Codex worker, and counts against the cap of the Claude tier in its row.
 
 | Lane | Claude tier | Codex tier |
 |---|---|---|

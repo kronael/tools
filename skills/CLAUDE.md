@@ -91,9 +91,10 @@ skills it replaces.
   skill that quotes it — its launcher and `dispatch` § Tiers — in one commit.
 - ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md` and
   `luna`'s GPT-6 Luna medium pin in `skills/luna/SKILL.md`.
-- `global` § Agents owns each tier's lane and the caps; `dispatch` § Tiers is
-  the one table that quotes them with the pins. A launcher states its own lane
-  and its neighbours' NOT-for clauses; NEVER describe every tier anywhere else.
+- `global` § Agents owns the caps and the routes between tiers; `dispatch`
+  § Tiers is the one table of every lane with its pin. A launcher states its
+  own lane and its neighbours' NOT-for clauses; NEVER describe every tier
+  anywhere else.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 
