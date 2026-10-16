@@ -169,6 +169,12 @@ to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
   first pass sets the size (release step 1.5).
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
+- ALWAYS ask the redesign question before polishing when the code shows one of
+  three signals: a local closure or helper that only builds an error from an
+  input, the same parse or validation repeated at several call sites, or an
+  `expect`/`panic` on a state the types allow but "cannot happen". Each says the
+  interface sits at the wrong layer: parse at the boundary into a type that
+  cannot hold the bad state.
 - NEVER read an empty result as a finding until that same query has produced a
   non-empty one where one belongs.
 - NEVER print a verdict or an "(empty = none)" gloss beside a command — a label

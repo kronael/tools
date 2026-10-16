@@ -52,7 +52,9 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
 
 ## House conventions
 
-- Data: `${PREFIX:-/srv}/data/<project_name>/`
+- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A program a
+  user runs keeps state, settings, cache and data in `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>`
+  (`~/.local/state/<name>` and so on), each overridable by one flag or env var.
 - Config: prefer flags + env vars for anything simple — a short flag where a
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
