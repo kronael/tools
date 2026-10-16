@@ -31,3 +31,6 @@ capture.png
 /specs/
 /plans/
 /todos/
+
+# Go build output (go skill: dist/ per tool)
+**/dist/

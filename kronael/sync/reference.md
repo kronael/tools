@@ -726,6 +726,7 @@ one toolchain is missing — report that tool skipped and continue.
 |------|---------|-------|
 | `rig` | `cd rig && make install` | git helpers: rig + rip/rco/rir/rim, and ghpush/ghfetch for HTTPS with the `gh` token |
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
+| `kvs` | `cd kvs && make install` | the hooks' memory (`hooks/ARCHITECTURE.md` § State); needs a Go toolchain; without it the hooks forget between calls |
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
