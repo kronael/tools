@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
+when_to_use: editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
 ---
 
 # Python
@@ -30,7 +30,7 @@ Python-specific additions and deltas.
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
-- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
+- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 
 ## Naming
 `software/code.md` § Naming owns names. Python additions:
@@ -72,10 +72,18 @@ Python-specific additions and deltas.
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
 - ALWAYS asyncpg direct, NEVER SQLAlchemy
-- ALWAYS dataclasses over Pydantic unless validation/coercion is needed (external API JSON, HTTP bodies, config) — NEVER `TypedDict` for a structured value and NEVER dacite; decode and encode through the project's lib helpers
 
 ## Named Data Structures
-- ALWAYS use dataclasses for nontrivial heterogeneous records, including return values, parameter bundles and queued work items.
+- ALWAYS a `dataclass` for every structured value — record, return value, parameter bundle,
+  queued work item, decoded message. NEVER declare a `TypedDict`: at runtime it is a plain
+  dict, so a payload cast to it is never checked and a missing key fails at the read, not at
+  the boundary.
+- ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
+  external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
+  the program: the validation costs and catches nothing there.
+- ALWAYS decode and encode through the project's one codec (its lib `from_dict`/`to_dict`) —
+  NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second structurer drifts from
+  the first.
 - NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
