@@ -440,6 +440,29 @@
   before step 6; a line behind `origin/<default head>` stops for `merge`
   before the version bump. No test — docs.
 
+- **HOOKS-UPSTREAM-REDESIGN-HELD-BACK** (MED, design) — owner decision. Upstream
+  v0.4.42–v0.4.48 rebuilt the hook layer: `hooks/lib/reminder.py` emits one XML
+  pointer shape, `hooks/lib/kvs.py` and the `kvs` tool hold session memory,
+  `hooks/style_nudge.py` measures each reply against the caveman budget and
+  escalates, `local.py`, `reclaude.py` and `post_tool_nudge.sh` are gone, and
+  `gh_text_lint.command_decision` asks before a review submit with a PR cap of
+  1800 (`skills/pr-draft`, `skills/gh-comment` follow). This line keeps the
+  v0.4.41 hooks, wiring, gate and skills on the owner's word that the caveman
+  style and its hooks stay as refined here; the merge commit names every path.
+  The redesign lives at `origin/master` 3f4c9be77383943d79eaea51c3bff4858a431807.
+  **Options:** (a) adopt the redesign with this line's `caveman.md` as the
+  measured source (`style_nudge` caps 20/5/2 already match; drop its 25-line
+  report tier); (b) stay on the v0.4.41 hooks. **Default if nothing is
+  decided:** (b). No test — design.
+
+- **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
+  `skills/writing/SKILL.md` § Language (upstream) and
+  `output-styles/caveman.md` § Language both carry the ASD-STE100 rule list;
+  v0.4.41's `writing` pointed at caveman instead. Two copies drift. The owner
+  keeps the rules in `caveman.md`. **Options:** (a) `writing` points at
+  caveman again; (b) caveman points at `writing`. **Default if nothing is
+  decided:** both stand. No test — docs.
+
 ## Codex bridge
 
 - **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
@@ -824,6 +847,17 @@
   `https://github.com/.git`, so `rip -g -u` prints a URL no push can use and
   `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
   `path` after the `case`, with the "not a GitHub remote" error.
+
+## kvs
+
+- **KVS-PARALLEL-INCR-SQLITE-BUSY** (MED, correctness) — CONFIRMED at HEAD
+  2026-10-16. `kvs/main_test.go::TestParallelIncrLosesNoUpdate` runs 16
+  processes doing 25 `incr` each; 1 run in 4 here fails with `kvs: database is
+  locked (5) (SQLITE_BUSY)` (exit 9) and `make test` goes red with it; upstream
+  CI passed one run at v0.4.48. **Fix:** the store waits on `SQLITE_BUSY` (a
+  busy timeout or a retry around the write in `kvs/store.go`) so parallel
+  writers queue instead of failing. Measured:
+  `kvs/main_test.go::TestParallelIncrLosesNoUpdate`.
 
 ## spec-lint
 
