@@ -81,9 +81,12 @@ Python-specific additions and deltas.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
-- ALWAYS decode and encode through the project's one codec (its lib `from_dict`/`to_dict`) —
-  NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second structurer drifts from
-  the first.
+- ALWAYS decode and encode external payloads through the project's one codec (its lib
+  `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
+  structurer drifts from the first.
+- ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
+  its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
+  missing or extra column.
 - NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
