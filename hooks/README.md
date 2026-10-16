@@ -82,13 +82,15 @@ required body that is absent (`--fill`, `--web`) are refused too, and an
 exception inside the lint refuses rather than allows. A review submit — `gh pr
 review`, `gh api` on `/reviews/<id>/events`, a `/reviews` POST whose `--input`
 JSON or `-f`/`-F` field carries `event`, or the `submitPullRequestReview`
-mutation — is refused unless the newest message the user typed contains
-`SUBMIT REVIEW`; the hook reads it from the tail of the payload's
-`transcript_path`, skipping tool results, hook feedback (`isMeta`), task
-notifications (`origin.kind`) and a subagent's thread (`isSidechain`). No
-transcript — Codex, a payload without the field — refuses too: the user
-submits by hand. Posting the review without `event` stays PENDING and needs
-no ask. The lint is WISDOM § Git
+mutation — passes the lint, then gets `permissionDecision: ask`: Claude Code
+shows the user the permission dialog with the exact command and the hook's
+reason, in `bypassPermissions` mode too, and a headless run with nobody to
+answer denies the call and hands Claude the reason. Codex does not implement
+a hook's `ask` and would run the command, so there the hook denies and tells
+the agent to show the user the exact command to run. Posting the review
+without `event` stays PENDING and raises no dialog. Every decision is
+`hookSpecificOutput.permissionDecision` with its `permissionDecisionReason`:
+a deny's reason reaches Claude, an ask's reason the user. The lint is WISDOM § Git
 made checkable: `🤖 ` before the first word and the robot nowhere else, none
 of the harness footer, the `**TL;DR:**` lead with nothing after it but up to
 three review bullets and `Closes #N` lines, and no header, table, rule,

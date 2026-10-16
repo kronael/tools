@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-# PreToolUse hook: block unsafe commands, unlinted GitHub text and an unasked review submit, and emit per-language file nudges.
-# PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
-# its repository opted in with a root .rumdl.toml.
-# Production: silent-fail on any error, except an unsafe command is blocked and the GitHub text gate refuses on its own error.
+"""PreToolUse hook: deny an unsafe command and unlinted GitHub text, raise the
+permission dialog on a review submit, and emit per-language file nudges.
+
+PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when its
+repository opted in with a root .rumdl.toml.
+
+Silent on any error, except that an unsafe command is denied and the GitHub
+text gate denies on its own error.
+"""
+
 from __future__ import annotations
 
 import contextlib
@@ -13,7 +19,9 @@ import shutil
 import subprocess
 import sys
 
-from gh_text_lint import command_reason
+from gh_text_lint import Decision
+from gh_text_lint import Permission
+from gh_text_lint import command_decision
 from lib.state import hook_event
 
 MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
@@ -34,9 +42,11 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
     (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
-    # Any recursive removal, not only -rf: -r, -R and --recursive delete
-    # trees just as thoroughly, and the deny rules ban all three.
     (r'(?<!\S)rm\s+(?:-[a-zA-Z]*[rR]|--recursive)', 'recursive rm'),
+)
+CODEX_CANNOT_ASK = (
+    '; Codex cannot raise the permission dialog: leave the review PENDING, report its id'
+    ' and show the user this exact command to run'
 )
 
 EXT_SKILLS = {
@@ -148,14 +158,15 @@ def process(data: object) -> dict | None:
         command = extract_command(data)
         reason = unsafe_command_reason(command, data.get('harness'))
         if reason:
-            return {
-                'decision': 'block',
-                'reason': f'block: unsafe command blocked ({reason}).',
-            }
-        refused = command_reason(command, data.get('cwd'), data.get('transcript_path'))
-        if refused:
-            return {'decision': 'block', 'reason': f'block: {refused}'}
-        return None
+            return permission_output(
+                Decision(Permission.DENY, f'unsafe command blocked ({reason}).')
+            )
+        decision = command_decision(command, data.get('cwd'))
+        if decision is None:
+            return None
+        if decision.permission is Permission.ASK and data.get('harness') == 'codex':
+            decision = Decision(Permission.DENY, decision.reason + CODEX_CANNOT_ASK)
+        return permission_output(decision)
 
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
         return None
@@ -170,6 +181,20 @@ def process(data: object) -> dict | None:
             'additionalContext': f'Editing/reading {os.path.basename(path)} — follow {skill} conventions.{code}',
         },
     }
+
+
+def permission_output(decision: Decision) -> dict:
+    return {
+        'hookSpecificOutput': {
+            'hookEventName': 'PreToolUse',
+            'permissionDecision': decision.permission.value,
+            'permissionDecisionReason': decision.reason,
+        },
+    }
+
+
+def has_permission_decision(result: dict) -> bool:
+    return 'permissionDecision' in result.get('hookSpecificOutput', {})
 
 
 def find_repo_root(path: str) -> str | None:
@@ -270,11 +295,7 @@ def main() -> None:
     result = process(data)
     if not result:
         return
-
-    # A block is a ban and must fire on EVERY unsafe command. The dedup cache
-    # below keys on (skill, path); a Bash call carries neither, so all of them
-    # share one key and the second unsafe command in a session goes through.
-    if result.get('decision') == 'block':
+    if has_permission_decision(result):
         with contextlib.suppress(OSError, ValueError):
             print(json.dumps(result))
         return

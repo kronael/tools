@@ -92,18 +92,17 @@ git -C "$d" init -q
 echo "{\"cwd\": \"$d\"}" | python3 ~/.claude/hooks/stop.py
 ```
 
-### pretool_nudge.py — a review submit needs SUBMIT REVIEW in the user's newest message
+### pretool_nudge.py — a review submit asks in Claude Code and is denied under Codex
 
 ```bash
-t=$(mktemp)
-printf '%s\n' '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"yes, go"}}' > "$t"
-printf '{"tool_name":"Bash","transcript_path":"%s","tool_input":{"command":"gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT"}}' "$t" | python3 ~/.claude/hooks/pretool_nudge.py
-printf '%s\n' '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"SUBMIT REVIEW"}}' >> "$t"
-printf '{"tool_name":"Bash","transcript_path":"%s","tool_input":{"command":"gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT"}}' "$t" | python3 ~/.claude/hooks/pretool_nudge.py
+p='{"tool_name":"Bash","tool_input":{"command":"gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT"}}'
+printf '%s' "$p" | python3 ~/.claude/hooks/pretool_nudge.py
+printf '%s' "$p" | python3 ~/.claude/hooks/codex_hook.py PreToolUse pretool_nudge
 ```
 
-Expected: the first call prints a `block` with `review submit refused`, the
-second prints nothing.
+Expected: the first call prints `"permissionDecision": "ask"` with the reason
+the permission dialog shows, the second `"permissionDecision": "deny"` with a
+reason that hands the command to the user.
 
 ### post_tool_nudge.sh — reflows a Markdown write only in an opted-in repo
 

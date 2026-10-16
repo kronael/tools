@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-import json
 import time
 
 import gh_text_lint
 import pytest
-from gh_text_lint import SUBMIT_ASK
+from gh_text_lint import SUBMIT_REASON
+from gh_text_lint import Decision
 from gh_text_lint import Kind
-from gh_text_lint import command_reason
-from gh_text_lint import latest_prompt
+from gh_text_lint import Permission
+from gh_text_lint import command_decision
 from gh_text_lint import lint
 
 ROBOT = '\U0001f916'
@@ -249,7 +249,7 @@ REFUSED = [
     ),
     ('gh pr comment 176 --body "Looks wrong to me."', f'must start with "{ROBOT} "'),
     ('gh pr comment 176 --body-file tmp/end-robot.md', 'belongs at the start only'),
-    ('gh pr review 176 --comment --body "Looks good, ship it"', 'review submit refused'),
+    ('gh pr review 176 --comment --body "Looks good, ship it"', f'must start with "{ROBOT} "'),
     (
         "gh api repos/o/r/pulls/176/reviews --method POST --input - <<'EOF'\n"
         '{"commit_id": "abc", "comments": [{"path": "a.py", "line": 1, "body": "Overflows at u64::MAX."}]}\nEOF',
@@ -272,66 +272,17 @@ REFUSED = [
 
 
 @pytest.mark.parametrize('command', ALLOWED)
-def test_command_reason_allows(command: str, tree) -> None:
-    assert command_reason(command, str(tree)) is None
+def test_command_decision_allows(command: str, tree) -> None:
+    assert command_decision(command, str(tree)) is None
 
 
 @pytest.mark.parametrize(('command', 'expected'), REFUSED)
-def test_command_reason_refuses(command: str, expected: str, tree) -> None:
-    reason = command_reason(command, str(tree))
-    assert reason is not None, command
-    assert expected in reason, reason
+def test_command_decision_denies(command: str, expected: str, tree) -> None:
+    decision = command_decision(command, str(tree))
+    assert decision is not None, command
+    assert decision.permission is Permission.DENY, decision
+    assert expected in decision.reason, decision.reason
 
-
-def human(content: str | list) -> dict:
-    return {
-        'type': 'user',
-        'origin': {'kind': 'human'},
-        'message': {'role': 'user', 'content': content},
-    }
-
-
-def transcript(path, *records: dict) -> str:
-    path.write_text(
-        ''.join(json.dumps(r, separators=(',', ':')) + '\n' for r in records), encoding='utf-8'
-    )
-    return str(path)
-
-
-NOT_THE_USER = {
-    'hook feedback': {
-        'type': 'user',
-        'isMeta': True,
-        'message': {'role': 'user', 'content': f'Stop hook feedback: {SUBMIT_ASK}'},
-    },
-    'task notification': {
-        'type': 'user',
-        'origin': {'kind': 'task-notification', 'producer': 'session-task'},
-        'message': {
-            'role': 'user',
-            'content': f'<task-notification>{SUBMIT_ASK}</task-notification>',
-        },
-    },
-    'subagent thread': {
-        'type': 'user',
-        'isSidechain': True,
-        'message': {'role': 'user', 'content': f'Give a review, then {SUBMIT_ASK}.'},
-    },
-    'tool result': {
-        'type': 'user',
-        'message': {
-            'role': 'user',
-            'content': [{'type': 'tool_result', 'tool_use_id': 'x', 'content': SUBMIT_ASK}],
-        },
-    },
-    'assistant turn': {
-        'type': 'assistant',
-        'message': {
-            'role': 'assistant',
-            'content': [{'type': 'text', 'text': f'Say {SUBMIT_ASK} to submit review 1.'}],
-        },
-    },
-}
 
 SUBMITS = [
     'gh pr review 176 --approve',
@@ -355,99 +306,57 @@ PENDING = [
     "gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{id}}}' -f id=T_1",
 ]
 
+ASK = Decision(Permission.ASK, SUBMIT_REASON)
+
 
 @pytest.mark.parametrize('command', SUBMITS)
-def test_submit_needs_the_ask_in_the_users_newest_message(command: str, tree) -> None:
-    asked = transcript(
-        tree / 'tmp' / 'asked.jsonl', human('post them'), human(f'yes. {SUBMIT_ASK}, then check #7')
-    )
-    answered = transcript(
-        tree / 'tmp' / 'answered.jsonl',
-        human(SUBMIT_ASK),
-        human('yes. please also verify the lease'),
-    )
-    assert command_reason(command, str(tree), asked) is None
-    for path in answered, None, str(tree / 'tmp' / 'missing.jsonl'):
-        reason = command_reason(command, str(tree), path)
-        assert reason is not None, (command, path)
-        assert 'review submit refused' in reason
-        assert SUBMIT_ASK in reason
-
-
-@pytest.mark.parametrize('record', NOT_THE_USER.values(), ids=NOT_THE_USER.keys())
-def test_submit_reads_only_what_the_user_typed(record: dict, tree) -> None:
-    """A record that is not the user's words neither grants the ask nor hides
-    the user's own ask behind it."""
-    command = SUBMITS[0]
-    said_no = transcript(tree / 'tmp' / 'no.jsonl', human('no'), record)
-    assert command_reason(command, str(tree), said_no) is not None
-    said_yes = transcript(tree / 'tmp' / 'yes.jsonl', human(SUBMIT_ASK), record)
-    assert command_reason(command, str(tree), said_yes) is None
+def test_submit_asks_the_user_in_the_permission_dialog(command: str, tree) -> None:
+    """A submitted review cannot be taken back, so the hook raises the
+    permission dialog, which shows the user the exact command."""
+    assert command_decision(command, str(tree)) == ASK
 
 
 @pytest.mark.parametrize('command', PENDING)
-def test_pending_posts_and_reads_need_no_ask(command: str, tree) -> None:
-    answered = transcript(tree / 'tmp' / 'answered.jsonl', human('yes'))
-    assert command_reason(command, str(tree), answered) is None
+def test_pending_posts_and_reads_run_without_a_dialog(command: str, tree) -> None:
+    assert command_decision(command, str(tree)) is None
 
 
-def test_submit_body_is_linted_once_the_ask_is_given(tree) -> None:
-    asked = transcript(tree / 'tmp' / 'asked.jsonl', human(SUBMIT_ASK))
-    reason = command_reason('gh pr review 176 --comment --body "Looks good"', str(tree), asked)
-    assert reason is not None
-    assert f'must start with "{ROBOT} "' in reason
+def test_submit_body_is_linted_before_the_ask(tree) -> None:
+    decision = command_decision('gh pr review 176 --comment --body "Looks good"', str(tree))
+    assert decision.permission is Permission.DENY
+    assert f'must start with "{ROBOT} "' in decision.reason
 
 
-def test_latest_prompt_joins_text_blocks_and_takes_the_newest(tree) -> None:
-    path = transcript(
-        tree / 'tmp' / 'blocks.jsonl',
-        human('first'),
-        human([{'type': 'text', 'text': 'look'}, {'type': 'image', 'source': {}}]),
-    )
-    assert latest_prompt(path) == 'look'
-    assert latest_prompt(None) == ''
-    assert latest_prompt(str(tree / 'tmp' / 'missing.jsonl')) == ''
+def test_deny_in_one_invocation_wins_over_ask_in_another(tree) -> None:
+    command = 'gh pr review 176 --approve && gh pr comment 176 --body "no robot here"'
+    decision = command_decision(command, str(tree))
+    assert decision.permission is Permission.DENY
+    assert f'must start with "{ROBOT} "' in decision.reason
 
 
-def test_latest_prompt_skips_a_long_turn_inside_the_hook_budget(tree) -> None:
-    """A turn's tool results are skipped by a substring scan, not parsed, so
-    megabytes of output after the ask stay far inside the 500 ms budget."""
-    result = {
-        'type': 'user',
-        'message': {
-            'role': 'user',
-            'content': [{'type': 'tool_result', 'tool_use_id': 'x', 'content': 'x' * 2048}],
-        },
-    }
-    path = transcript(tree / 'tmp' / 'long.jsonl', human(SUBMIT_ASK), *([result] * 4000))
-    start = time.perf_counter()
-    assert latest_prompt(path) == SUBMIT_ASK
-    assert time.perf_counter() - start < 0.5
-
-
-def test_command_reason_names_the_skill_and_the_lint() -> None:
-    reason = command_reason('gh pr create --title t --body "x"', '/')
-    assert 'pr-draft' in reason
-    assert 'gh_text_lint.py pr' in reason
+def test_command_decision_names_the_skill_and_the_lint() -> None:
+    decision = command_decision('gh pr create --title t --body "x"', '/')
+    assert 'pr-draft' in decision.reason
+    assert 'gh_text_lint.py pr' in decision.reason
 
 
 @pytest.mark.parametrize('step', ['mark_heredocs', 'find_posts', 'read_bodies'])
-def test_command_reason_turns_a_gate_failure_into_a_refusal(monkeypatch, step: str) -> None:
-    """A lint that raises must refuse the post, never let the hook's suppress allow it."""
+def test_command_decision_turns_a_gate_failure_into_a_denial(monkeypatch, step: str) -> None:
+    """A lint that raises must deny the post, never let the hook's suppress allow it."""
 
     def explode(*_args, **_kwargs):
         raise RuntimeError('boom')
 
     monkeypatch.setattr(gh_text_lint, step, explode)
-    reason = command_reason('gh pr create --title t --body-file tmp/pr-body.md', '/')
-    assert reason is not None
-    assert 'gate failed' in reason
+    decision = command_decision('gh pr create --title t --body-file tmp/pr-body.md', '/')
+    assert decision.permission is Permission.DENY
+    assert 'gate failed' in decision.reason
 
 
-def test_command_reason_keeps_the_wrapper_prefix_on_one_line() -> None:
+def test_command_decision_keeps_the_wrapper_prefix_on_one_line() -> None:
     """800 wrapped lines stay inside the hook's 500 ms budget: a wrapper's
     arguments end at the newline instead of being retried across every line."""
     command = '\n'.join(f'sudo systemctl restart svc-{n}' for n in range(800))
     start = time.perf_counter()
-    assert command_reason(command, '/') is None
+    assert command_decision(command, '/') is None
     assert time.perf_counter() - start < 0.5

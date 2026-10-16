@@ -2,9 +2,9 @@
 """Lint text bound for GitHub: a PR body, an issue body or a review comment.
 
 WISDOM § Git and the posting skill's Format section are the rules; this is
-the part of them a program can check. pretool_nudge.py calls `command_reason`
-to refuse a `gh` command whose body fails, and a review submit the newest
-message the user typed did not ask for with the words SUBMIT REVIEW.
+the part of them a program can check. pretool_nudge.py calls
+`command_decision` to deny a `gh` command whose body fails and to raise the
+permission dialog on a review submit, which cannot be taken back.
 
     python3 gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'
     python3 gh_text_lint.py issue tmp/issue-body.md
@@ -37,6 +37,20 @@ class Problem:
 
     line: int
     text: str
+
+
+class Permission(str, Enum):
+    DENY = 'deny'
+    ASK = 'ask'
+
+
+@dataclass(frozen=True)
+class Decision:
+    """What a gh command needs before it runs: `deny` with the reason Claude
+    reads, or `ask` with the reason the permission dialog shows the user."""
+
+    permission: Permission
+    reason: str
 
 
 ROBOT = '\U0001f916'
@@ -88,7 +102,9 @@ POSTS = (
     (re.compile(API + r'\bpulls/\d+(?![\w/]))'), Kind.PR, False),
     (re.compile(API + r'\bissues/\d+(?![\w/]))'), Kind.ISSUE, False),
 )
-SUBMIT_ASK = 'SUBMIT REVIEW'
+SUBMIT_REASON = (
+    'Submits the review: it reaches the PR at once and cannot be taken back (gh-comment § Submit)'
+)
 ARGS = r'[^\n|;&]*'
 SUBMITS = (
     re.compile(r'^gh\s+pr\s+review\b'),
@@ -97,13 +113,6 @@ SUBMITS = (
 )
 REVIEWS = re.compile(r'^gh\s+api\b' + ARGS + r'/reviews(?![\w/])')
 EVENT_FLAG = re.compile(r'(?:-f|-F|--field|--raw-field)[ =]["\']?event=')
-USER = b'"user"'
-TOOL_RESULT = b'"content":[{"type":"tool_result"'
-SUBMIT_REFUSED = (
-    f'review submit refused: the newest message the user typed does not say {SUBMIT_ASK}.'
-    ' A submitted review cannot be taken back: leave it PENDING, report its id and ask'
-    f' the user to say {SUBMIT_ASK} (gh-comment § Submit)'
-)
 HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?:\n|$)', re.DOTALL)
 CONTINUATION = re.compile(r'\\\n')
 MARK = '\x00'
@@ -399,65 +408,6 @@ def is_submit(segment: str, docs: list[str], cwd: str) -> bool:
     return text is not None and has_event(text)
 
 
-def iter_lines_reversed(path: str, chunk: int = 1 << 16):
-    with open(path, 'rb') as fh:
-        fh.seek(0, os.SEEK_END)
-        pos = fh.tell()
-        tail = b''
-        while pos > 0:
-            step = min(chunk, pos)
-            pos -= step
-            fh.seek(pos)
-            lines = (fh.read(step) + tail).split(b'\n')
-            tail = lines[0]
-            yield from reversed(lines[1:])
-        yield tail
-
-
-def prompt_text(line: bytes) -> str | None:
-    """The text of a transcript record the user typed, else None: a tool
-    result, hook feedback (isMeta), a subagent's thread (isSidechain) and a
-    task notification (origin.kind) are not the user's words."""
-    if USER not in line or TOOL_RESULT in line:
-        return None
-    try:
-        record = json.loads(line)
-    except ValueError:
-        return None
-    if not isinstance(record, dict) or record.get('type') != 'user':
-        return None
-    if record.get('isMeta') or record.get('isSidechain'):
-        return None
-    origin = record.get('origin')
-    if isinstance(origin, dict) and origin.get('kind') != 'human':
-        return None
-    message = record.get('message')
-    content = message.get('content') if isinstance(message, dict) else None
-    if isinstance(content, str):
-        return content
-    if not isinstance(content, list):
-        return None
-    blocks = [b for b in content if isinstance(b, dict)]
-    if any(b.get('type') == 'tool_result' for b in blocks):
-        return None
-    return '\n'.join(str(b.get('text', '')) for b in blocks if b.get('type') == 'text')
-
-
-def latest_prompt(transcript_path: str | None) -> str:
-    """The newest message the user typed, read from the end of the session
-    transcript; '' when there is none or the transcript cannot be read."""
-    if not transcript_path:
-        return ''
-    try:
-        for line in iter_lines_reversed(transcript_path):
-            text = prompt_text(line)
-            if text is not None:
-                return text
-    except OSError:
-        return ''
-    return ''
-
-
 def describe(problems: list[Problem]) -> str:
     shown = '; '.join(
         f'L{p.line} {p.text}' if p.line else p.text for p in problems[:SHOWN_PROBLEMS]
@@ -475,20 +425,8 @@ def find_posts(code: str) -> list[tuple[int, Kind, bool]]:
     return [(at, *hits[at]) for at in sorted(hits)]
 
 
-def segment_reason(
-    segment: str,
-    docs: list[str],
-    cwd: str,
-    kind: Kind,
-    required: bool,
-    transcript_path: str | None = None,
-) -> str | None:
-    try:
-        if is_submit(segment, docs, cwd) and SUBMIT_ASK not in latest_prompt(transcript_path):
-            return SUBMIT_REFUSED
-        bodies = read_bodies(segment, docs, cwd)
-    except OSError as err:
-        return str(err)
+def refusal(segment: str, docs: list[str], cwd: str, kind: Kind, required: bool) -> str | None:
+    bodies = read_bodies(segment, docs, cwd)
     if not bodies:
         if not required:
             return None
@@ -507,31 +445,46 @@ def segment_reason(
     return None
 
 
-def command_reason(
-    command: str, cwd: str | None = None, transcript_path: str | None = None
-) -> str | None:
-    """Why a gh command that posts text must not run, or None when it may: a
-    body that fails the lint, or a review submit the newest message the user
-    typed (in the transcript at `transcript_path`) did not ask for."""
+def segment_decision(
+    segment: str, docs: list[str], cwd: str, kind: Kind, required: bool
+) -> Decision | None:
+    try:
+        refused = refusal(segment, docs, cwd, kind, required)
+        submits = is_submit(segment, docs, cwd)
+    except OSError as err:
+        return Decision(Permission.DENY, str(err))
+    if refused:
+        return Decision(Permission.DENY, refused)
+    if submits:
+        return Decision(Permission.ASK, SUBMIT_REASON)
+    return None
+
+
+def command_decision(command: str, cwd: str | None = None) -> Decision | None:
+    """What a gh command that posts text needs before it runs, or None when it
+    may run: `deny` for a body that fails the lint or cannot be read, `ask` for
+    a review submit. A deny in any gh invocation of the command wins over an
+    ask in another."""
+    asked = None
     try:
         code, docs = mark_heredocs(command)
         code = CONTINUATION.sub('', code)
         posts = find_posts(code)
         ends = [at for at, _, _ in posts[1:]] + [len(code)]
         for (at, kind, required), end in zip(posts, ends):
-            reason = segment_reason(
-                code[at:end],
-                docs,
-                effective_cwd(code[:at], cwd or os.getcwd()),
-                kind,
-                required,
-                transcript_path,
+            decision = segment_decision(
+                code[at:end], docs, effective_cwd(code[:at], cwd or os.getcwd()), kind, required
             )
-            if reason:
-                return reason
+            if decision is not None and decision.permission is Permission.DENY:
+                return decision
+            if asked is None:
+                asked = decision
     except Exception as err:
-        return f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first'
-    return None
+        return Decision(
+            Permission.DENY,
+            f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first',
+        )
+    return asked
 
 
 def main() -> int:

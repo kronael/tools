@@ -179,11 +179,11 @@ def test_process_names_code_md_for_code_skills(path: str, skill: str | None) -> 
 
 
 @pytest.mark.parametrize('command', BLOCK_CASES)
-def test_process_blocks_unsafe_commands(command: str) -> None:
+def test_process_denies_unsafe_commands(command: str) -> None:
     result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
     assert result is not None
-    assert result['decision'] == 'block'
-    assert 'unsafe command blocked' in result['reason']
+    assert permission(result) == 'deny'
+    assert 'unsafe command blocked' in reason(result)
 
 
 @pytest.mark.parametrize('command', NONBLOCK_CASES)
@@ -193,6 +193,18 @@ def test_process_allows_safe_commands(command: str) -> None:
 
 ROBOT = '\U0001f916'
 GOOD_PR = f'{ROBOT} **TL;DR:** Deploys the collector through the service list.\n'
+SUBMIT = {
+    'tool_name': 'Bash',
+    'tool_input': {'command': 'gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT'},
+}
+
+
+def permission(result: dict) -> str:
+    return result['hookSpecificOutput']['permissionDecision']
+
+
+def reason(result: dict) -> str:
+    return result['hookSpecificOutput']['permissionDecisionReason']
 
 
 def test_process_refuses_a_pr_body_that_fails_the_github_text_lint(tmp_path) -> None:
@@ -207,9 +219,9 @@ def test_process_refuses_a_pr_body_that_fails_the_github_text_lint(tmp_path) -> 
     }
     result = process(payload)
     assert result is not None
-    assert result['decision'] == 'block'
-    assert 'banned attribution' in result['reason']
-    assert 'pr-draft' in result['reason']
+    assert permission(result) == 'deny'
+    assert 'banned attribution' in reason(result)
+    assert 'pr-draft' in reason(result)
 
 
 def test_process_allows_a_pr_body_that_passes_the_github_text_lint(tmp_path) -> None:
@@ -222,22 +234,22 @@ def test_process_allows_a_pr_body_that_passes_the_github_text_lint(tmp_path) -> 
     assert process(payload) is None
 
 
-def test_process_refuses_a_review_submit_the_user_did_not_ask_for(tmp_path) -> None:
-    transcript = tmp_path / 'transcript.jsonl'
-    payload = {
-        'tool_name': 'Bash',
-        'tool_input': {'command': 'gh api repos/o/r/pulls/1/reviews/2/events -f event=COMMENT'},
-        'cwd': str(tmp_path),
-        'transcript_path': str(transcript),
-    }
-    record = '{"type":"user","origin":{"kind":"human"},"message":{"role":"user","content":"%s"}}\n'
-    transcript.write_text(record % 'yes. please also verify the lease', encoding='utf-8')
-    result = process(payload)
+def test_process_asks_before_a_review_submit() -> None:
+    """Claude Code shows the hook's ask in the permission dialog, with the command."""
+    result = process(SUBMIT)
     assert result is not None
-    assert result['decision'] == 'block'
-    assert 'review submit refused' in result['reason']
-    transcript.write_text(record % 'SUBMIT REVIEW', encoding='utf-8')
-    assert process(payload) is None
+    assert permission(result) == 'ask'
+    assert 'cannot be taken back' in reason(result)
+
+
+def test_process_denies_a_review_submit_inside_codex() -> None:
+    """Codex ignores a hook's ask and runs the command, so the hook denies and
+    hands the command to the user."""
+    result = process({**SUBMIT, 'tool_name': 'exec_command', 'harness': 'codex'})
+    assert result is not None
+    assert permission(result) == 'deny'
+    assert 'cannot be taken back' in reason(result)
+    assert 'Codex cannot raise the permission dialog' in reason(result)
 
 
 def test_process_blocks_recursive_codex_inside_codex() -> None:
@@ -245,8 +257,8 @@ def test_process_blocks_recursive_codex_inside_codex() -> None:
         {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
     )
     assert result is not None
-    assert result['decision'] == 'block'
-    assert 'recursive codex' in result['reason']
+    assert permission(result) == 'deny'
+    assert 'recursive codex' in reason(result)
 
 
 @pytest.mark.parametrize(
@@ -259,11 +271,11 @@ def test_process_blocks_recursive_codex_inside_codex() -> None:
         'echo done && rm -r tmp',
     ],
 )
-def test_process_blocks_recursive_removal_without_force(command: str) -> None:
-    """Recursive removal deletes a tree with or without -f, so -r alone blocks."""
+def test_process_denies_recursive_removal_without_force(command: str) -> None:
+    """Recursive removal deletes a tree with or without -f, so -r alone is denied."""
     result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
     assert result is not None, command
-    assert result['decision'] == 'block'
+    assert permission(result) == 'deny'
 
 
 @pytest.mark.parametrize(
@@ -273,11 +285,11 @@ def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
 
-def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> None:
-    """A block is a ban, not a nudge: the dedup cache must never swallow it.
+def test_main_denies_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> None:
+    """A permission decision is not a nudge: the dedup cache must never swallow it.
 
     A Bash call carries no file path, so every one shares a single dedup key.
-    Routing blocks through that cache disarmed the ban after the first hit.
+    Routing decisions through that cache disarmed the ban after the first hit.
     """
     monkeypatch.setenv('HOME', str(tmp_path))
     payload = json.dumps(
@@ -290,7 +302,7 @@ def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> 
     for attempt in range(3):
         monkeypatch.setattr('sys.stdin', io.StringIO(payload))
         main()
-        assert '"block"' in capsys.readouterr().out, f'attempt {attempt + 1} not blocked'
+        assert '"deny"' in capsys.readouterr().out, f'attempt {attempt + 1} not denied'
 
 
 def opted_in_repo(root: Path, rumdl_script: str = 'printf "wrapped\\n" > "$3"\n') -> Path:

@@ -6,7 +6,7 @@
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
                                  ──> local.py        (LOCAL.md on first prompt)
 
-Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
+Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe deny / GitHub text gate / submit ask)
           ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
                                                   pretool_nudge.py; periodic
                                                   commit/diary nudge)
@@ -93,11 +93,11 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 ### pretool_nudge.py (PreToolUse; PostToolUse via post_tool_nudge.sh)
 
 **Input:** JSON with `tool_name`, `tool_input` (`file_path`, `notebook_path`,
-`command`, `cmd`, or `apply_patch` patch text), `session_id`,
-`transcript_path`, and the event (`hook_event_name`, read via
-`lib/state.py`).
-**Output:** `{"decision": "block", "reason": "..."}`,
-`hookSpecificOutput.additionalContext`, or silent.
+`command`, `cmd`, or `apply_patch` patch text), `session_id`, `harness`
+(`codex` when `codex_hook.py` relayed the call), and the event
+(`hook_event_name`, read via `lib/state.py`).
+**Output:** `hookSpecificOutput.permissionDecision` (`deny` or `ask`) with
+`permissionDecisionReason`, `hookSpecificOutput.additionalContext`, or silent.
 
 **PostToolUse flow** (`format_markdown`):
 1. Not a `Write`/`Edit`/`MultiEdit` of an existing `.md` → silent.
@@ -114,16 +114,17 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    bytes back.
 
 **PreToolUse flow:**
-1. For shell tools (`Bash`, Codex `exec_command`), block the commands
+1. For shell tools (`Bash`, Codex `exec_command`), deny the commands
    `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names, and recursive Codex
    execution inside Codex. Then
-   `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
-   PR body, an issue body or a comment is blocked when the body it carries
-   fails the lint, cannot be read, or is required and absent. The reason names
-   the failing lines and the skill that owns the text. A segment that submits
-   a review (`is_submit`) is blocked unless `latest_prompt(transcript_path)`
-   — the newest record the user typed, read from the transcript's tail —
-   contains `SUBMIT REVIEW`; no transcript blocks.
+   `gh_text_lint.command_decision`: each `gh` invocation in the call that
+   posts a PR body, an issue body or a comment is denied when the body it
+   carries fails the lint, cannot be read, or is required and absent. The
+   reason names the failing lines and the skill that owns the text. A segment
+   that submits a review (`is_submit`) and passed the lint gets `ask`, which
+   Claude Code turns into the permission dialog; a deny in one invocation wins
+   over an ask in another. Under Codex (`harness`), which ignores a hook's
+   `ask`, the ask becomes a deny whose reason hands the command to the user.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -140,8 +141,9 @@ Codex sees `<skill>` as `@py`, `@go`, etc.
 
 **Input:** a text kind (`pr`, `issue`, `comment`) and the text, or a shell
 command plus its `cwd`.
-**Output:** `lint` returns `Problem(line, text)` records; `command_reason`
-returns the block reason for a posting command, or None; the CLI prints
+**Output:** `lint` returns `Problem(line, text)` records; `command_decision`
+returns a `Decision` (`deny` or `ask`, with its reason) for a posting
+command, or None; the CLI prints
 `<file>:<line>: <problem>` lines and exits 1, or `ok: <kind> <chars> chars`.
 
 The rules are WISDOM § Git and the Format section of the posting skill, kept
@@ -154,12 +156,10 @@ the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
 `-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
 `$(cat <path>)`); a `$VAR` path, stdin, a missing or undecodable file,
 unparsable JSON or a command substitution is an OSError the gate reports, and
-any other exception becomes the block reason. `is_submit` recognises the
+any other exception becomes the deny reason. `is_submit` recognises the
 submitting forms (`SUBMITS`, and a `/reviews` POST with `event` in its
-`--input` JSON or `-f`/`-F` field); `latest_prompt` walks the transcript
-backwards in 64 KiB chunks, skips tool-result lines before parsing, and
-returns the first `type: user` record that is not `isMeta`, not `isSidechain`
-and whose `origin.kind` is `human` or absent. Imported by `pretool_nudge.py`;
+`--input` JSON or `-f`/`-F` field), which get `ask` once their body passed
+the lint. Imported by `pretool_nudge.py`;
 run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 `gh-comment`.
 
