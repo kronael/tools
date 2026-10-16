@@ -405,6 +405,22 @@
   **Fix:** cut two lines — the owner's
   wording, so the owner's call which.
 
+- **PY-RECORD-ROW-KEEPS-SMALLINT-INT** (MED, docs) — owner decision. Three
+  rules are jointly unsatisfiable: `skills/py/SKILL.md:91` builds a record from
+  its own SQL row as `Record(**row)`; `skills/sql/SKILL.md:43` stores a closed
+  set as `SMALLINT` behind an `IntEnum` and passes the enum;
+  `skills/py/SKILL.md:32` compares enum members with `is`. A dataclass does not
+  coerce, so the field holds the row's `int`: for `Record(**{'status': 1})`,
+  `r.status is Status.DONE` is `False` while `== Status.DONE` is `True`
+  (`python3 -c` over a two-line `IntEnum` and a frozen dataclass). No rule names
+  the place where the int becomes the enum. **Options:** (a) the db function
+  that runs the SELECT converts each enum column before the record:
+  `Record(**row | {'status': Status(row['status'])})`; (b) the record converts
+  in `__post_init__` (`object.__setattr__` on a frozen dataclass); (c) the
+  project's one codec (`from_dict`) takes own rows too and the `Record(**row)`
+  rule goes. **Default if nothing is decided:** as written; a reader compares an
+  enum column from a row with `==` until the owner picks. No test — docs.
+
 ## Codex bridge
 
 - **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
@@ -731,7 +747,9 @@
   unguarded, and the trailing `*` makes `refs/heads/master-fix` ask (a dated
   `refs/heads/20261013_master-fix` does not match). (iii) `rip -g
   v1:refs/tags/v1`, the tag push `skills/release/SKILL.md:131` calls the
-  publication, matches no ask rule. **Options:** (a) add `allow` rules for
+  publication, matches no ask rule. (iv) The permissions docs state a Bash rule matches the
+  command text as written, after wrapper stripping, so `~/.local/bin/rip -g …`
+  or `env X=1 rip -g …` meets no rule either. **Options:** (a) add `allow` rules for
   `Bash(rip -g *)` and `Bash(gh pr create*)`, an `ask` rule for `rip -g
   *refs/tags/*`, and the default-head rule per repo in project settings;
   (b) leave the rules and let the WISDOM text say the settings default
@@ -765,7 +783,8 @@
 
 - **RIG-HELP-EXITS-1** (LOW, ux) — CONFIRMED 2026-10-10. `rig/rig:353`
   routes `-h|--help|help` to `usage()`, which ends in `exit 1` (`:321`), so
-  `rig --help` fails in a pipeline. **Fix:** exit 0 on an explicit help
+  `rig --help` fails in a pipeline, and the unknown-command error (`rig/rig:389`)
+  goes to stdout, not stderr. **Fix:** exit 0 on an explicit help
   request.
 
 - **RIG-MAKEFILE-STALE-NAME-CLEANUP** (LOW, dead code) — owner decision.
@@ -790,6 +809,47 @@
   `git ls-remote --get-url <url>` applies `insteadOf` only: it printed the
   unrewritten HTTPS URL in the same setup, so the push side needs
   `git remote get-url --push` against a remote set to the URL.
+
+- **RIG-FETCH-G-REFSPEC-UNCHECKED** (LOW, design) — owner decision. The refspec
+  shape check in `cmd_gh_op` runs only for push (`rig/rig:272`), so `rif -g`
+  forwards any refspec: `rif -g -n ':refs/heads/x'`, `'+refs/heads/*:refs/heads/*'`
+  and `''` all print a fetch command and exit 0, and `git fetch <url> :refs/heads/x`
+  creates a local branch, which WISDOM § Git forbids. `GH_HELP` (`rig/rig:242-251`)
+  says both commands refuse "deletes", which reads as the refspec form but means
+  the `-d`/`--delete` flags; `rig/README.md` § Push and fetch with the gh token
+  states the push-only shape check correctly. **Options:** (a) `rif -g` refuses an
+  empty source and a destination outside `refs/remotes/`; (b) keep fetch open and
+  reword `GH_HELP` to "the force, --tags, --all, --mirror and delete flags".
+  **Default if nothing is decided:** (b), the wording. No test — design.
+
+- **RIG-INSTALL-REPORTS-FAILED-LINK** (LOW, correctness) — open (record only).
+  `cmd_install` (`rig/rig:303-322`) has no `set -e` and echoes after each
+  `ln -sf` (`:306`) and `rm -f --` (`:319`) whatever they returned. In a directory
+  made read-only, `rig install` printed `installed 24 symlinks` and `removed
+  <dir>/ghpush` beside 25 `Permission denied` lines and exited 0, with the stale
+  link still present. **Fix:** fail loud — exit non-zero on the first failed
+  `ln`/`rm`, and echo only after success. Measured by hand; the test is still
+  to write.
+
+- **RIG-INSTALL-CLEANUP-TARGET-SHAPES** (LOW, correctness) — open (record
+  only). The stray-link sweep (`rig/rig:313-321`) matches a link only when
+  `readlink` returns exactly `rig` or `$dir/rig`: links written as `./rig`,
+  `../<dir>/rig`, `rig/`, or through a symlinked parent directory survive, while
+  any unlisted link to rig is deleted — a user's own `rig2 -> rig` too — and
+  neither `rig/README.md` nor the help says so (`README.md` § How It Works says
+  only that `rig install` owns the symlink list). The comments at `rig/rig:310`
+  and `rig/test.sh:321` narrate history ("leftovers of a dropped alias", "no
+  longer ships") where WISDOM § Documentation wants the present rule. **Fix:**
+  compare `readlink -f "$l"` with `readlink -f "$dir/rig"`, document that every
+  unlisted link to rig in the install dir is removed, and reword the two
+  comments. `rig/test.sh` covers the relative and the absolute shape only.
+
+- **RIG-URL-EMPTY-PATH** (LOW, correctness) — open (record only).
+  `github_https_url` (`rig/rig:218-234`) accepts an origin whose path is empty:
+  `git@github.com:` and `ssh://git@github.com:22/` both yield
+  `https://github.com/.git`, so `rip -g -u` prints a URL no push can use and
+  `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
+  `path` after the `case`, with the "not a GitHub remote" error.
 
 ## spec-lint
 
