@@ -1,5 +1,28 @@
 # Changelog
 
+## [v0.4.45] — 20261016
+
+> kronael v0.4.45 — haiku and luna join the tiers, dispatch holds the table
+>
+> Haiku is a subagent tier again, Luna is its Codex counterpart, and one dispatch table names every tier's lane, pin and cap.
+>
+> • /haiku — Haiku 5.5 at medium takes read-only fan-out and bounded mechanical edits.
+> • /luna — gpt-6-luna at medium, the Codex counterpart of /haiku, native worker or CLI.
+> • dispatch § Tiers — one table of every Claude and Codex tier; the launchers point at it.
+> • Nudge — "use haiku", "/luna" and "spawn terra" route to their skills; the bare words never do.
+> • Rust — an item used in a body is imported, never a long crate:: path; macro bodies keep $crate::.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: caps are 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable`; `luna` counts as `haiku`.
+- `haiku`: `agents/haiku.md` pins Haiku 5.5 at medium; `/haiku` takes fan-out and bounded edits.
+- `luna`: `/luna` runs `gpt-6-luna` at medium, the Codex counterpart of `/haiku`.
+- `dispatch` § Tiers: the one table of every tier's lane, pin and Codex counterpart.
+- `sonnet` § Plan: an `opus` sub plans, as WISDOM § Agents requires.
+- Prompt nudge: `haiku`, `luna` and `terra` route on the explicit form only (`use X`, `/X`).
+- `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
+- `BUGS.md`: box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model, not a cap bucket.
+
 ## [v0.4.44] — 20261015
 
 > kronael v0.4.44 — only shared libraries go to fable, Rust imports stay bare
