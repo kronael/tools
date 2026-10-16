@@ -15,6 +15,13 @@ your diff against every `##` heading here before calling an edit done.
   after the program it runs; `run_process` is the generic form: a helper
   around `xz` is `run_xz()`, NEVER `compress()` or `store_file()`. The name
   says a subprocess starts; an effect name hides it.
+- ALWAYS name a function that runs for the life of the process or of a
+  connection `<what>_loop` (`consume_loop`, `seed_loop`), and one that does an
+  operation once and classifies how it ended — returns, raises a retryable or a
+  permanent error, records the outcome — `do_<what>` (`do_run`, `do_fetch`),
+  with no retry inside: a retry wraps the `do_` call. NEVER `run`, `handle` or
+  `_attempt` for either; the name tells the reader the function never returns,
+  or that it is the one place a failure is sorted.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.
