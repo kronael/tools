@@ -421,6 +421,21 @@
   rule goes. **Default if nothing is decided:** as written; a reader compares an
   enum column from a row with `==` until the owner picks. No test — docs.
 
+- **RELEASE-COLLISION-CHECK-READS-LOCAL-TAGS** (MED, docs) — CONFIRMED at HEAD
+  2026-10-16. `skills/release/SKILL.md` step 6 calls a version taken when
+  `git rev-parse -q --verify vX.Y.Z` succeeds, which reads local tags only, and
+  no step fetches `origin` first (WISDOM § Git: read the remote through its
+  tracking refs after `git fetch origin`). A release cut on a line that has not
+  fetched mints a version another host already published: a session tagged
+  `v0.4.42` locally while `origin` carried `v0.4.42` through `v0.4.48` on 56
+  commits past the shared `v0.4.41`. The CLAUDE.md § Release leak scan runs
+  over `git diff <last tag>..HEAD`, which the same stale view misreads.
+  **Fix:** step 1 fetches `origin` (SSH, else `rif -g
+  '+refs/heads/*:refs/remotes/origin/*'`, whose default tag auto-follow also
+  brings the remote's tags) and checks `git ls-remote --tags` for the version
+  before step 6; a line behind `origin/<default head>` stops for `merge`
+  before the version bump. No test — docs.
+
 ## Codex bridge
 
 - **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
