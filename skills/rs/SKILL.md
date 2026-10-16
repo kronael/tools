@@ -121,16 +121,19 @@ fn main() -> eyre::Result<()> {
 ```
 
 ## Unwrap Safety
-- NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`; the one
-  exception is a `//` reason on the line directly above (§ Lints)
-- `.expect()` ok at startup (fail-fast) or on documented invariants; otherwise propagate
-- Prefer propagating to panicking: if the fn already returns `Result` (and the
-  caller has a retry/backoff/supervisor), `?` the error — don't `.expect()`. A
-  socket bind, PG connect, etc. can fail TRANSIENTLY; fail-fast-panic is only for
-  truly unrecoverable config. "It's at startup" is not a reason to panic if
-  startup is re-entered (e.g. a re-entrant `run_main` on demote/restart).
-- `.expect("msg")`: put the REASON in the message; do NOT prefix a `// SAFETY:`
-  comment (see Unsafe).
+- In a library crate NEVER `.unwrap()`, `.expect()`, `panic!`, `unreachable!`
+  or an index that can panic: return `Result` and let `main` or a test decide
+  to crash (`software/code.md` § Design). Enforce it at the crate root with
+  `#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic,
+  clippy::indexing_slicing)]`, allowed again only in `main.rs` and test
+  modules — NEVER per call site.
+- In a binary NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`;
+  the one exception is a `//` reason on the line directly above (§ Lints)
+- In a binary `.expect()` is for truly unrecoverable config at startup, with
+  the REASON in its message (§ Unsafe owns `// SAFETY:`); a fn that returns
+  `Result` under a retry, backoff or supervisor `?`s the error instead — a
+  socket bind or a PG connect fails TRANSIENTLY, and a re-entered startup
+  (`run_main` on demote/restart) is no startup.
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
 ## Unsafe

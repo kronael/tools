@@ -53,6 +53,9 @@ dictionary, Issue 9, 2025, asd-ste100.org).
 - ALWAYS introduce a program, account, role or term before the prose uses it —
   a plain definition at first use in a doc, its own box on a page — and ALWAYS
   use one name for it throughout; NEVER cycle synonyms (humanize #11).
+- ALWAYS order a list the way the reader meets its items — by index, in the
+  user's flow — and keep one order for the same items, the roles or the steps,
+  in every doc.
 - NEVER use jargon when a 13yo could read the plain version. ALWAYS test: would
   a smart non-expert understand this in one read?
 - NEVER preamble ("It is important to note that…", "This section shows…") —

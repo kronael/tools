@@ -2,15 +2,13 @@
 
 ## Bundle
 
-- **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
-  2026-10-16. `make skills-frontmatter` warns `skills/global/SKILL.md:
-  [skill-length] body is 209 lines (> 200)`; the body passed 200 with the
-  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3, 209 with the
-  `haiku` and `luna` lines) and the warn is not a failure, so every commit
-  carries it. **Fix:** push a section's
-  overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
-  body), after a subtraction pass over the always-loaded rules; no test —
-  the lint already reports it.
+- **MK-REPO-MAKEFILES-KEEP-HELP-TARGETS** (LOW, docs) — owner decision.
+  `skills/mk/SKILL.md` § No help target bans a `help` target,
+  `.DEFAULT_GOAL := help` and `##` descriptions, and this repo's own
+  `Makefile:52` and `hooks/Makefile:11` keep `help` targets with `@echo`
+  descriptions. **Fix:** drop both targets and let `README.md` § Commands carry
+  the one-line descriptions, or exempt the toolkit in the skill; no test — the
+  skill text and the Makefiles.
 
 - **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
