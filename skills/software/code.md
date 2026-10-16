@@ -159,6 +159,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS hold every change to WISDOM § System-change discipline: amend the
   original, fail loud to the user, retry only the transient, fix the cause,
   redesign only after sign-off.
+- ALWAYS retry inside a job or request only a failure that returns fast —
+  refused or reset connection, a cut body, a rate-limit answer — on short
+  delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
+  there: it fails the unit of work, and the outer retry (the next claim, the
+  caller) tries again. A test proves a timeout makes exactly one attempt.
 - **An external contract is the provider's published spec.** ALWAYS build and
   re-check a client of another team's service against the provider's
   integrator guide or API spec at its default head, fetched fresh before you
