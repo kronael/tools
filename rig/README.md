@@ -179,10 +179,12 @@ A push refspec is `<src>:refs/heads/<branch>` or `<src>:refs/tags/<tag>`:
 one colon, a non-empty source and a non-empty name; only the stated tags
 travel. With `-g`, both commands refuse `-f`, `--force`, `--force-with-lease`,
 `--force-if-includes`, `--tags`, `--all`, `--mirror`, `-d`, `--delete` and any
-other flag but `-n`, `-u` and `-h`; `rip -g` also refuses a `+` refspec, a wildcard,
-a delete (`:<dst>`) and any other destination. `-u` takes no refspec. `-g` is
-read as a leading flag, with `-n` in either order (`rip -n -g`). Without `-g`,
-`rip` pushes and `rif` fetches through git's own `origin`, and `rif` passes its
+other flag but `-n`, `-u` (`--url`) and `-h` (`--help`); `rip -g` also refuses a `+`
+refspec, a wildcard, a delete (`:<dst>`) and any other destination. `-u` takes no
+refspec. `-g` is read as a leading flag, with `-n` in either order (`rip -n -g`).
+rig reads its own flags (`-n`, `-g`, `-h`) only while they lead; after another
+argument they pass to git (`rif --depth=1 -n` sends `-n` to `git fetch`). Without
+`-g`, `rip` pushes and `rif` fetches through git's own `origin`, and `rif` passes its
 other arguments to `git fetch origin`. A token without the `workflow` scope cannot
 push a change under `.github/workflows` — GitHub refuses the push; report it
 rather than working around it.
