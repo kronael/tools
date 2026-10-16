@@ -759,6 +759,27 @@
   **Fix:** a numbered example, or a non-spec path such as `docs/setup.md`
   alone.
 
+- **GH-GATE-SUBMIT-REVIEW-READS-CLAUDE-TRANSCRIPTS-ONLY** (LOW, correctness) —
+  open (record only). `prompt_text` in `hooks/gh_text_lint.py` accepts only a
+  Claude Code transcript record (`type: user`, `message.content` text blocks),
+  so under Codex a review submit is refused even after the user typed SUBMIT
+  REVIEW: a Codex `response_item` record with `payload.role: user` and
+  `input_text` content yields `None`, and `command_reason` answers `review
+  submit refused`. Upstream v0.4.42–v0.4.48 replaced the transcript read with a
+  permission dialog (`command_decision`, see HOOKS-UPSTREAM-REDESIGN-HELD-BACK).
+  **Fix:** read the Codex record shape too, keeping the newest-message check;
+  or adopt the dialog with the redesign. Measured by hand with
+  `iter_lines_reversed` stubbed to one Codex record; the test is still to write.
+
+- **HOOKS-TEST-HOOKS-PY-STALE** (LOW, dead code) — CONFIRMED at HEAD 2026-10-16.
+  `hooks/test_hooks.py` is a standalone script, not in `hooks/Makefile`
+  `TEST_FILES`, so `make -C hooks test` never runs it; run by hand it ends
+  16/27 with 11 `nudge.py` cases failing because `hooks/nudge.py` is a retired
+  name (`kronael/sync/reference.md` § Classify `RETIRED`). Its `local.py`
+  cases pass and `hooks/test_local.py` now covers that hook in the suite.
+  **Fix:** delete the script, or cut it to the cases no listed test covers and
+  list it. No test — dead code.
+
 ## rig
 
 - **RIG-DEMO-GIF-STALE** (LOW, docs) — CONFIRMED 2026-10-01. `rig/demo/demo.gif`
