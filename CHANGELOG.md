@@ -2,26 +2,35 @@
 
 ## [v0.4.47] — 20261016
 
-> kronael v0.4.47 — haiku and luna join the tiers, dispatch holds the table
+> kronael v0.4.47 — the review submit asks in the permission dialog
 >
-> Haiku is a subagent tier again, Luna is its Codex counterpart, and one dispatch table names every tier's lane, pin and cap.
+> The review submit asks in the permission dialog, haiku and luna join the tiers, and the owner's corrections land in their skills.
 >
-> • /haiku — Haiku 5.5 at medium takes read-only fan-out and bounded mechanical edits.
-> • /luna — gpt-6-luna at medium, the Codex counterpart of /haiku, native worker or CLI.
-> • dispatch § Tiers — one table of every Claude and Codex tier; the launchers point at it.
-> • Nudge — "use haiku", "/luna" and "spawn terra" route to their skills; the bare words never do.
-> • Rust — an item used in a body is imported, never a long crate:: path; macro bodies keep $crate::.
+> • Review submit — the hook asks in the permission dialog, which shows the exact command to approve.
+> • Codex — a submit is denied there and the agent hands the user the exact command to run.
+> • /haiku and /luna — the fan-out tier in Claude and Codex; dispatch § Tiers lists every lane.
+> • Writing — the ASD-STE100 rules live in the writing skill; a README carries the project Glossary.
+> • Code and docs — a library returns Result, a comment is a few words, one home per doc section.
+> • WISDOM — the global file's overlapping bullets merge, 210 to 196 lines, no rule cut.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
+- `pretool_nudge`: a review submit gets `permissionDecision: ask`; the typed `SUBMIT REVIEW` gate is gone.
+- `pretool_nudge`: under Codex a submit is denied with the command for the user; every decision is
+  `hookSpecificOutput.permissionDecision` with its reason.
+- `gh-comment` § Submit, `review`: the submit runs on the user's ask, approved in the permission dialog.
 - WISDOM § Agents: caps are 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable`; `luna` counts as `haiku`.
-- `haiku`: `agents/haiku.md` pins Haiku 5.5 at medium; `/haiku` takes fan-out and bounded edits.
-- `luna`: `/luna` runs `gpt-6-luna` at medium, the Codex counterpart of `/haiku`.
-- `dispatch` § Tiers: the one table of every tier's lane, pin and Codex counterpart.
-- `sonnet` § Plan: an `opus` sub plans, as WISDOM § Agents requires.
+- `haiku`, `luna`: Haiku 5.5 and `gpt-6-luna` at medium take fan-out and bounded edits; lanes: `dispatch` § Tiers.
 - Prompt nudge: `haiku`, `luna` and `terra` route on the explicit form only (`use X`, `/X`).
+- `writing` § Language: the ASD-STE100 rules; `caveman` keeps the same bullets for chat (`tests/drift_test.sh`).
+- `readme`: README item 4 is the Glossary; one home per doc section; one diagram beside its list; an
+  example file says why it exists. `writing`: a list keeps the reader's order in every doc.
+- `code.md`, `rs`: library code returns an error and only `main` or a test panics, with clippy denies;
+  an allowed comment is a few words; a field is validated once against the value the code derives.
 - `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
-- `BUGS.md`: box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model, not a cap bucket.
+- `mk`: no `help` target, `.DEFAULT_GOAL := help` or `##` descriptions; 1-3 files get plain rules.
+- WISDOM: overlapping bullets merged, body 210 → 196 lines; `BUGS.md` closes GLOBAL-SKILL-BODY-OVER-CAP and
+  records MK-REPO-MAKEFILES-KEEP-HELP-TARGETS; box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model.
 
 ## [v0.4.46] — 20261015
 
