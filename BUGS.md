@@ -417,6 +417,17 @@
 
 ## Codex bridge
 
+- **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
+  no test — config. `codex/config.toml:2` selects the closest native fields
+  to `hooks/statusline.py:27-38`: model, context used, five-hour and weekly quota.
+  Codex CLI 0.162.1 shows quota remaining, without reset times or Claude's compact
+  model names, labels and separators. Its status line accepts built-in identifiers,
+  with no command renderer for the shared Python logic. **Fix:** requires upstream
+  support for reset fields or a command renderer; use `/status` for reset times.
+  Sources: [config reference](https://developers.openai.com/codex/config-reference#tui-status_line),
+  [schema](https://developers.openai.com/codex/config-schema.json),
+  [built-in items](https://developers.openai.com/codex/cli/slash-commands#configure-footer-items-with-statusline).
+
 - **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
   docs. Codex's own skill instructions say a user names a skill "with
   `$SkillName` or plain text" (the `codex` 0.162.0 binary's prompt text),
