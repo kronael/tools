@@ -1,5 +1,37 @@
 # Changelog
 
+## [v0.4.42] — 20261016
+
+> kronael v0.4.42 — the gh token push moves into rip
+>
+> `rip -g` and `rif -g` replace ghpush and ghfetch, and the Python and SQL skills gain rules for records and db functions.
+>
+> • rig — `rip -g` pushes and `rif -g` fetches with the gh token; `ghpush` and `ghfetch` are gone.
+> • Settings — a `rip` or `rig` command that names master or main asks first.
+> • py — a dataclass for every structured value; pydantic at the boundary; no TypedDict or dacite.
+> • py — `<Verb>able`/`<Noun>Like` protocols; a record builds from its SQL row as `Record(**row)`.
+> • sql — a closed set is a SMALLINT behind an IntEnum; a db function names its verb and result.
+> • code — `_loop` runs for the process's life, `do_` tries once; a timeout is never retried.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `rig`: `rif` fetches origin; `rip -g` and `rif -g` push and fetch over HTTPS with the `gh` token.
+- `settings-recommended.json`: `ask` for a `rip` or `rig` command that names `master` or `main`.
+- `py` § Named Data Structures: a dataclass for every value; pydantic at the boundary; one codec.
+- `py`: `Record(**row)` from own SQL rows; pure classmethod constructors and properties on a record.
+- `py`: a `Protocol` is named `<Verb>able` or `<Noun>Like`.
+- `py`: the property ban and `py-no-property` name a record's derived value as an exception.
+- `sql`: closed sets as `SMALLINT` with an `IntEnum`; db functions name verb plus result.
+- `sql`: each statement sits directly above the one function that runs it.
+- `software/code.md`: `<what>_loop` and `do_<what>` names; in-job retry only for fast failures.
+
+### Changed
+
+- `rig`: `ghpush` and `ghfetch` are removed and `rig install` deletes their links.
+- WISDOM § Git and the skills name `rip -g` and `rif -g` as the agent's push and fetch.
+
 ## [v0.4.41] — 20261014
 
 > kronael v0.4.41 — the robot opens every GitHub text
