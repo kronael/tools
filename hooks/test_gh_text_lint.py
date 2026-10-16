@@ -64,6 +64,13 @@ LINT_CASES = [
         GOOD_PR.replace(CLOSE, '![order panel](https://x.test/a.png)'),
         'text after the lead',
     ),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- ![unit](https://example.test/u.png)'), 'image'),
+    (
+        Kind.PR,
+        GOOD_PR.replace('Deploys', 'Deploys ![x](https://example.test/x.png)'),
+        'image: link it instead',
+    ),
+    (Kind.PR, GOOD_PR.replace('Deploys', 'Deploys [the log](https://example.test/x.png)'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, ''), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'Fixes #12\n\nCloses #13'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'Closes #12.'), None),

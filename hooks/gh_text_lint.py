@@ -64,6 +64,7 @@ HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
+IMAGE = re.compile(r'!\[[^\]]*\]\(')
 BULLET = re.compile(r'^\s*[-*+]\s')
 CLOSER = re.compile(r'^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
@@ -207,6 +208,8 @@ def lint_pr(lines: list[str]) -> list[Problem]:
             problems.append(Problem(n, 'checkbox: no test plan or checklist'))
         if THIS_PR.search(line):
             problems.append(Problem(n, '"this PR": name what the change does instead'))
+        if IMAGE.search(line):
+            problems.append(Problem(n, 'image: link it instead'))
     prose = []
     for n, line in split_prose(lines):
         if HEADER.match(line):
