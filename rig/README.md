@@ -143,11 +143,11 @@ selection when detection fails.
 ### Push and fetch with the gh token (rip -g, rif -g)
 
 ```bash
-rip -g <sha>:refs/heads/20260101_topic   # one-off HTTPS push, remote URL untouched
-rip -g v1.2.3:refs/tags/v1.2.3           # a tag, the same way
-rip -g -n <sha>:refs/heads/x             # print the git command
-rip -g -u                                # print the HTTPS URL
-rif -g <branch>                          # read over HTTPS the same way, into FETCH_HEAD
+rip -g <sha>:refs/heads/20260101_my_topic  # one-off HTTPS push, remote URL untouched
+rip -g v1.2.3:refs/tags/v1.2.3              # a tag, the same way
+rip -g -n <sha>:refs/heads/x                # print the git command
+rip -g -u                                   # print the HTTPS URL
+rif -g <branch>                             # read over HTTPS the same way, into FETCH_HEAD
 rif -g '+refs/heads/*:refs/remotes/origin/*'   # refresh the tracking refs
 rif                                      # plain: git fetch origin
 ```
