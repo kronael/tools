@@ -123,8 +123,8 @@ PR body with the robot. These win.
   those end at the local commit or tag. ALWAYS state the exact refspec first and
   push only that, by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
-  — NEVER write an HTTPS URL into any remote (`set-url`, `remote add`) or store
-  the token, and NEVER `--force` in any form. A token without the `workflow`
+  — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
+  (`set-url`, `remote add`) or store the token, and NEVER `--force` in any form. A token without the `workflow`
   scope cannot push a change under `.github/workflows`: report GitHub's
   refusal, NEVER work around it. Where the SSH origin refuses a fetch,
   `rif -g <refspec>` reads it the same way.
