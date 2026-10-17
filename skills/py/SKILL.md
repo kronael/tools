@@ -126,7 +126,6 @@ Python-specific additions and deltas.
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
 - NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name. An f-string a reader has to decode is a gross code smell, and it hides the bug it just caused
-- NEVER edit source by running a script that string-replaces it — ALWAYS edit the file directly, so the change is read as it is written instead of after a blind substitution has landed
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code

@@ -180,6 +180,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS check a formula derived from that spec against the spec's own worked
   examples; a derivation can drop a term the examples carry.
 - ALWAYS build/test/lint every ~50 lines — errors cascade.
+- NEVER edit source by running a script or `sed -i` that string-replaces it —
+  ALWAYS edit the file directly, so the change is read as it is written and
+  not after a blind substitution has landed. AST tools (`ruff --fix`, LibCST,
+  ast-grep, a language server's rename) rewrite syntax nodes, not strings, and
+  are not this.
 
 ## Layout and formatting
 
