@@ -28,6 +28,8 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
+- NEVER widen an annotation to `object` or `Any` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
+- NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
 
 ## Naming
 - ALWAYS name functions and methods as verbs: `get_programs()`, `build_index()`, `compute_pnl()`
@@ -94,6 +96,8 @@ hypothesis, pytest-memray, TSan). Below are Python-specific additions and deltas
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
+- NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name. An f-string a reader has to decode is a gross code smell, and it hides the bug it just caused
+- NEVER edit source by running a script that string-replaces it — ALWAYS edit the file directly, so the change is read as it is written instead of after a blind substitution has landed
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code
