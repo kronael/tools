@@ -9,7 +9,7 @@ locations in the home directory, not pasted into sessions. Not started.
 Python library for Discord, Telegram, Slack, email and about 100 more services. Each target is one
 URL (`discord://webhook_id/webhook_token`, `tgram://bot_token/chat_id`). With no `--config`, the
 CLI reads `~/.config/apprise/apprise.yaml` (and `~/.apprise*`, `~/.config/apprise.conf`). A tag
-on each URL lets one command post to a named group (`apprise -t news -b "..."`).
+on each URL lets one command post to a named group (`apprise -g news -b "..."`).
 
 **Open decisions:**
 
@@ -23,4 +23,4 @@ on each URL lets one command post to a named group (`apprise -t news -b "..."`).
   webhook per channel is the choice.
 
 **Done when:** a `post` skill names the config path, the tag convention and the approval gate, and
-`apprise --dry-run -t <tag>` resolves each configured target on this host.
+`apprise --dry-run -g <tag>` resolves each configured target on this host.
