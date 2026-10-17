@@ -116,6 +116,7 @@ PR body with the robot. These win.
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
   `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
   `git status`'s "up to date" without a fetch — it compares with the last one.
+- NEVER write an HTTPS URL into a git remote; remotes stay SSH.
 - Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
   dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
 - ONLY push when the user asked for a push in that message — NEVER on your own
