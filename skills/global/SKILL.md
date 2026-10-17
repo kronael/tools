@@ -124,9 +124,9 @@ PR body with the robot. These win.
   push only that, by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
   — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
-  (`set-url`, `remote add`) or store the token, and NEVER `--force` in any form. A token without the `workflow`
-  scope cannot push a change under `.github/workflows`: report GitHub's
-  refusal, NEVER work around it. Where the SSH origin refuses a fetch,
+  (`set-url`, `remote add`) or store the token, and NEVER `--force` in any
+  form. A token without the `workflow` scope cannot push a change under
+  `.github/workflows`: report GitHub's refusal, NEVER work around it. Where the SSH origin refuses a fetch,
   `rif -g <refspec>` reads it the same way.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
