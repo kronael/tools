@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.50] — 20261017
+
+> kronael v0.4.50 — SSH remotes, plainer py rules
+>
+> Agents keep git remotes on SSH, and Python gets rules against annotations that switch the type checker off.
+>
+> • Git — no HTTPS URL goes into a remote; `rip -g` stays the token push path.
+> • py — no widening to `object` or `Any` to quiet the checker; take `Mapping`/`Sequence` instead.
+> • py — an f-string never contorts around its own quotes; bind the value to a local first.
+> • code — no scripted string-replace edits; AST tools such as `ruff --fix` stay allowed.
+> • astra — a second opinion never launches the model you already run on.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Git: NEVER write an HTTPS URL into any remote (`set-url`, `remote add`).
+- `py`: bans dodge annotations, invariance widening and contorted f-strings.
+- `software/code.md` owns the no-scripted-edit rule; `lsp.md` points to it.
+- `astra`: the self-call rule covers second opinions only.
+
 ## [v0.4.49] — 20261016
 
 > kronael v0.4.49 — rip -g pushes, the v0.4.41 hooks stay
