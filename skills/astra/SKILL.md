@@ -17,8 +17,8 @@ Astra route.
 
 ## Invoke
 
-When already running on the requested model, ALWAYS perform the assigned
-work directly. NEVER invoke another copy of yourself through this launcher.
+A second opinion from the model you are running on is none: when already on
+the requested model, ALWAYS answer directly and NEVER launch this CLI for it.
 
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model and the session: see § Sol.
