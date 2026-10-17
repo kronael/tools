@@ -8,7 +8,8 @@ default — drop the clutter, make git do what you want.
 Local branches are the wrong default. They drift, accumulate, need
 tracking config, and pile up as stale refs. Detached HEAD is the
 honest state: you have a commit, the remote has a branch, push when
-ready. Reflog keeps everything for 90 days — no work is ever lost.
+ready. Reflog keeps everything for 30 days
+(`gc.reflogExpireUnreachable`) — no work is ever lost.
 
 Mental model: **you commit to a SHA, not a branch**. The branch is
 just a label that lives upstream.
@@ -20,8 +21,9 @@ hidden dir inside the repo root (WISDOM § Git, installed as
 `~/.claude/CLAUDE.md`).
 
 The `rig` recipes below are the human's hand tool. An agent follows
-WISDOM § Git: no force-push, no squash, and a push only when asked, by
-SHA.
+WISDOM § Git: no force-push, no squash of a pushed commit, and a push only
+when asked, by SHA, through `rip -g` — the `gh` token over HTTPS, with the
+SSH remote left as it is ([rig/README.md](rig/README.md)).
 
 ## Start work on a feature
 
@@ -78,8 +80,8 @@ Use `gco refs/heads/main` to detach at that local branch explicitly.
 
 ## Recover work after "I lost my commit"
 
-You didn't lose it. Detached HEAD commits stay in the reflog for 90
-days.
+You didn't lose it. Detached HEAD commits stay in the reflog for 30
+days (`gc.reflogExpireUnreachable`).
 
 ```bash
 git reflog            # find the SHA
@@ -140,14 +142,16 @@ not security isolation.
 ## Polish before PR
 
 ```bash
-/refine                    # @improve + @readme + commit [refined]
+/refine                    # review by context, settle claims, commit
 /pr-draft                  # draft PR description
 rip feature                # push
 ```
 
-`/refine` validates build/test, delegates code improvement to
-`@improve` and docs to `@readme`, then commits. Never does
-improvement work itself — pure orchestration.
+`/refine` runs in the main thread. It builds and tests, cuts the
+change into contexts and sends one read-only subagent per context.
+It then checks every finding again itself. Subagents that load the
+`improve` skill apply the fixes, the `readme` agent updates the
+docs, and the pass commits `refa: Apply refinements`.
 
 ## End of session
 
@@ -156,16 +160,17 @@ diary entry for today.
 
 ```bash
 /commit                    # cohesive type(scope): commit
-/diary                     # append `## HH:MM` to .diary/YYYYMMDD.md
+/diary                     # append `## HH:MM` to the day's diary file
 ```
 
-Commit and diary are local-only — no automatic push. `rip` is
+Commits are local-only — no automatic push. `rip` is
 explicit, always.
 
 ## Bash shortcuts
 
-`rig install` creates `rco`, `gco`, `rip`, `rir`, `rim`, and the
-git aliases (`gif`, `gib`, and others); `rig aliases` lists them all.
+`rig install` creates `rco`, `gco`, `rip`, `rif`, `rir`, `rim`,
+and the git aliases (`gif`, `gib`, and others); `rig aliases`
+lists them all.
 Add the install directory to PATH.
 
 ```bash

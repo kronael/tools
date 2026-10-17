@@ -1,58 +1,48 @@
 # Doc page — one HTML explainer with diagrams
 
 A self-contained HTML page under `docs/` that explains how a system works to
-someone who will use or change the code: sections, inline SVG flow diagrams,
-claims backed by the repository's tests, source and notes. Craft as
-`onepager.md` § Rules — one file, inline CSS and SVG, one font, one accent,
-measure ≤70ch, dark-mode-safe. Prose follows the `writing` skill; the
-finishing pass is `humanize`. ALWAYS render the page and read the pixels
-before handing over (`visual` agent) — an unfinished layout shows only there.
+someone who will use or change the code, good enough to present from and to
+study from: sections, inline SVG flow diagrams, claims backed by the
+repository's tests, source and notes. It is NEVER a record of the work.
 
-## Evidence
+How it reads and looks — headers, boxes, layout, density, sources and links,
+diagrams, contrast, the checklist before handing over — is the `writing`
+skill: ALWAYS read `writing/page.md` in full before writing one or stripping
+the generated look from one.
 
-- ALWAYS put the link on the words of the claim it proves (`writing`) and
-  NEVER a provenance badge on every line: when the apparatus outweighs the
-  content the page reads as a dashboard, not an explanation.
-- ALWAYS mark only what is NOT proven, in words ("not yet run on the copy");
-  a proven claim carries its link and nothing else. A legend of status kinds
-  means the marking has outgrown the content — cut the kinds, keep the words.
-- ALWAYS fold each section's evidence list into one closed `<details>`;
-  NEVER an always-open ledger in every section.
-- An error name and code appears ONCE — beside its evidence or in one table —
-  NEVER chained through a caption, callout or diagram box, and NEVER the same
-  code explained twice in one section.
+## What it holds — ALWAYS in this order
 
-## Headings and navigation
+1. One claim that answers the question the page was asked, then what the
+   thing is and its state today.
+2. How the parts fit: one architecture figure with every actor, then who can
+   do what, roles first — so the limits below can name them.
+3. The limits and gaps, before any flow detail. A limit that changes a
+   decision stays; the rest is a `BUGS.md` entry. Each is one plain claim:
+   who is affected, what stops it, the link.
+4. Each flow or finding as its own block — the result, its figure, its
+   evidence. NEVER a status paragraph or a list of step ids.
+5. A decide section last: whether the design holds, what the evidence
+   supports, what is open, where the built design differs from `PLAN.md` and
+   why, and for each design choice what it buys, not only the problem it
+   solves. The page restates a decision; `PLAN.md` owns it
+   (`topology.md`), so it is not re-argued here.
 
-- ALWAYS name the topic plainly (humanize #31), in h2–h4, card titles and SVG
-  `<title>` alike.
-- ALWAYS make a nav label the heading it jumps to, word for word.
+ALWAYS describe the design that exists. NEVER "either/or" or a rejected
+option in the body — a comparison gets one section of its own, design options
+the design doc.
 
-## Sections
+ALWAYS run the `eval` skill's CEO, CTO and novice lenses on a page meant for
+a decision, verify each finding, and fix the page defects within the asked
+scope; a product defect goes to `BUGS.md` (WISDOM § Bug triage), NEVER into
+the page pass. A CTO condition stays only when the project's own `BUGS.md`,
+incidents or users justify it.
 
-- ALWAYS let the content set a section's shape. NEVER one skeleton — intro,
-  figure, caption, callout, evidence — stamped on every section.
-- A callout holds one point in under 40 words. Settings, keys, refusals and
-  limits are a table, NEVER a callout that grows into prose.
-- NEVER a legend wall before the first content — a legend sits at the diagram
-  that needs it, and a swatch's label covers every use of that colour.
-
-## Diagrams
-
-- One colour means one actor across the whole page (design-eval rubric #8).
-- NEVER draw an edge label over an arrowhead — ALWAYS beside the edge.
-- NEVER a lone box in a row built for three — fill the row or give the box
-  its own; a box is sized to its text, NEVER a large empty bottom.
-- A wide and a narrow variant of one diagram carry the same edge labels.
-
-## Contrast
-
-- ALWAYS measure every text colour on every background it sits on, in BOTH
-  themes, against WCAG AA 4.5:1 (design-eval rubric #3) — a status colour that
-  reads on dark fails on white, and a heading colour on its own tinted callout
-  is a pair too. Prose is the primary ink, NEVER the muted token.
+When the owner asks "what is X?" about the page, ALWAYS answer in the reply
+and put the answer where the question arose — the figure, when that is where
+— NEVER hand it to a sub to "lay out somewhere".
 
 ## Keeping it true
 
 A page is checked when written; the repo moves on. ALWAYS run the fact pass
-first on every later refine (`refine` lens `readme.md`).
+first on every later refine (`refine` lens `readme.md`); when to update the
+page is `topology.md` § The study page.

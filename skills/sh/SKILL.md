@@ -6,8 +6,8 @@ when_to_use: editing .sh files or writing shell scripts
 
 # Bash Style
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are shell-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — naming, comments,
+design and the boring-code rules live there. Below are shell-specific additions.
 
 ## Structure
 - ALWAYS `set -Eeuo pipefail` at top, NEVER rely on `set -e` alone for pipelines
@@ -15,8 +15,8 @@ rules. Below are shell-specific additions.
 - ALWAYS iterate `find` output with `while IFS= read -r -d ''` < <(find ... -print0) or `mapfile -t arr < <(cmd)`; NEVER `for f in $(find ...)` or `for f in $(ls)`
 - `do`/`then`/`else` on own line, NEVER after `;` or `&&`
 - Functions for repeated logic, plain sequence otherwise
-- ALWAYS a fixed working directory and simple relative paths; NEVER `basename
-  $0`, `__dirname` or other gymnastics to resolve the script's own location
+- Script location: `../software/code.md` § Layout and formatting (fixed
+  working directory, NEVER `basename $0`)
 
 ## Variables
 - `"${VAR:-default}"` for optional, `"${VAR:?msg}"` for required
@@ -36,17 +36,7 @@ rules. Below are shell-specific additions.
 - `trap 'cleanup' INT TERM` for graceful shutdown
 - `wait` after backgrounding
 
-## Fallback Patterns
-```bash
-SEED="/preferred/path"
-[ -d "$SEED" ] || SEED="fallback/path"
-```
-
-## Heredocs
-- `cat <<EOF` for multi-line output
-- `<<'EOF'` for no expansion
-
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
-- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per the `ops` skill.
+- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per WISDOM § Environment.

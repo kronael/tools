@@ -8,8 +8,7 @@ user-invocable: true
 # Tweet
 
 A tweet is a verified claim with a hook, read by a peer who scrolls past
-marketing. Voice and vocabulary come from the `writing` skill, which
-points at the Language section of `~/.claude/output-styles/caveman.md`; its
+marketing. Voice and vocabulary come from the `writing` skill § Language; its
 one-clause sentences and named actors are also what fits in 280 characters.
 An explicitly requested voice wins over both.
 
@@ -39,7 +38,7 @@ An explicitly requested voice wins over both.
   kernel") and let the reader draw the consequence.
 - NEVER a superlative or marketing word — the number and the consequence
   carry the impact, and an adjective marks the claim that is missing. The
-  word list is `humanize` § 4 and § 7.
+  word list is `humanize` → `patterns.md` § 4 and § 7.
 
 ## Hook
 
@@ -86,9 +85,9 @@ A thread, 4–8 tweets, one new fact per tweet:
 - NEVER lean on the Premium long-post allowance — the timeline folds it
   behind "Show more", so the hook still has to land within 280.
 - NEVER hashtags or decorative emoji — both read as a bot to the reader.
-- Attribution for Claude's authorship, when the user wants it shown, is a
-  bare `🤖` closing the last tweet (WISDOM § Git) — NEVER "Generated with
-  Claude Code", a claude.ai link, a session URL or a hashtag.
+- Attribution for Claude's authorship, when the user wants it shown, is `🤖 `
+  opening the first tweet (WISDOM § Git) — NEVER "Generated with Claude
+  Code", a claude.ai link, a session URL or a hashtag.
 - An image or GIF for the post: the `create` skill's social-image mode for a
   meme or code-shot, the `demo` skill for a terminal recording. The tweet
   text never describes the image.
@@ -101,7 +100,7 @@ defines them:
 1. DISTILL — the first draft is never the deliverable. Cut every word that
    does not change the claim.
 2. `humanize` — the finishing pass, draft and audit kept internal. For the
-   claim tweets the Language section outranks the personality it suggests.
+   claim tweets `writing` § Language outranks the personality it suggests.
 3. REVIEW-ON-WISDOM — re-read the result against: every number traced in the
    source notes; no absolute the source does not state; the caveat visible to
    the reader; no marketing word, markdown, hashtag or teaser; the link out

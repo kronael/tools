@@ -1,6 +1,6 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase, or cherry-pick and drive it to completion; merge origin — bring a detached line up to date with origin's default head (fetch, merge, resolve). NOT for ambiguous semantic conflicts (resolve manually), NOT for syncing ~/.claude with the bundle repo (use kronael/sync).
+description: Resolve conflicts in a git merge, rebase or cherry-pick and finish it; merge origin — bring a detached line up to origin's default head. NOT for ambiguous semantic conflicts (resolve manually) or syncing ~/.claude with the bundle repo (use kronael/sync).
 when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date, update a pushed PR branch, merge the base forward, PR diff ballooned after a squash merge"
 user-invocable: true
 ---
@@ -13,7 +13,7 @@ Resolve all merge conflicts in the working tree. Run directly in main context (n
 
 This section is "merge origin", a git operation. "Sync" in this bundle means
 only `kronael/sync`: files between `~/.claude/` and the bundle repo, no git
-history. Vendoring skills into another project is `sync-tools-skills`.
+history.
 
 1. `git fetch origin`, then size it against `origin/<default head>` (WISDOM
    § Git names the head):
@@ -40,7 +40,9 @@ history. Vendoring skills into another project is `sync-tools-skills`.
 4. Verify green (the repo's `make test` and lint), stage the resolved files
    by name, commit
    `merge: origin/<default head> <tag> into <what the local line is>` with a
-   body naming each resolution decision.
+   body naming each resolution decision. A repo whose commit-msg gate rejects
+   `merge:` keeps git's default `Merge …` subject with the same body
+   (`commit` § Format).
    Completion criterion:
    `git rev-list --left-right --count HEAD...origin/<default head>` prints
    `N 0` — ahead only, 0 behind.
@@ -122,10 +124,7 @@ Detect the operation FIRST; it decides the finish command AND which side is "our
 
 ## 2. Find all conflicts
 
-```bash
-grep -rln "<<<<<<< HEAD" <project_dirs>/
-grep -n "<<<<<<\|=======\|>>>>>>>" <file>   # per-file
-```
+`git diff --name-only --diff-filter=U`, then `grep -n '^<<<<<<<\|^=======\|^>>>>>>>' <file>` per file.
 
 ## 3. Classify each conflict
 
@@ -173,7 +172,7 @@ After resolving all conflicts:
 
 Stage resolutions (`git add <resolved files>`), then finish per step 1's operation:
 
-- **merge**: `git commit -m "merge: <summary>"` (the repo's `type(scope):` form; a merge has no scope).
+- **merge**: `git commit -m "merge: <summary>"` (the repo's `type(scope):` form; a merge has no scope). A gate that rejects `merge:` keeps git's default `Merge …` subject (`commit` § Format).
 - **rebase**: `GIT_EDITOR=true git rebase --continue` (GIT_EDITOR avoids the
   message editor; a `pick` reuses its original message). This is a **LOOP** — a
   rebase replays many commits, so the next may conflict immediately: re-run
@@ -189,7 +188,7 @@ Escape hatches (per replayed patch):
 - `git rebase --abort` / `cherry-pick --abort` / `git merge --abort` to bail
   entirely to the pre-op state. NEVER leave a half-finished rebase.
 
-If pre-commit reformats (merge only), retry once. NEVER `--amend` / `--no-verify`.
+If pre-commit reformats (merge only), retry once.
 
 ## Priority rule (when user says "prioritize HEAD / feature branch")
 

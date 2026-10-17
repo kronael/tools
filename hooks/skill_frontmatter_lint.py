@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Lint SKILL.md: frontmatter YAML (autofix) plus wisdom-skill body rules.
+"""Lint SKILL.md: frontmatter YAML (autofix) plus wisdom-skill body rules, and
+scan every .md under the paths given for leaked home paths and secrets.
 
 Body rules are sourced verbatim from the `wisdom` skill (the skill-authoring
 spec). Each rule names itself and points back at wisdom so a failure teaches.
@@ -12,10 +13,14 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
+import subprocess
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
+from fnmatch import fnmatch
 from pathlib import Path
 
 import yaml
@@ -59,6 +64,30 @@ LONG_SKILLS = frozenset({'ship'})
 # text at this many characters (its skillListingMaxDescChars default); a
 # keyword past the cap never reaches the model.
 LISTING_CAP = 1536
+# Claude Code preloads SKILL.md and loads a directory's CLAUDE.md and AGENTS.md on its own.
+# Every other sibling is cold until a chain of names reaches it.
+PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md', 'AGENTS.md'})
+# A written `.md` path, whole: `flavors/manim.md` is one token, so it cannot
+# stand for a root `manim.md`. The lookbehind keeps `contexts.md` from yielding
+# `ts.md`; it admits `/` so a path still starts after `../` or `~/`.
+PATH_TOKEN = re.compile(r'(?<![\w.-])[\w-][\w.-]*(?:/[\w.-]+)*\.md')
+# A home path naming a real account leaks the authoring machine. A one-character
+# account segment is this bundle's placeholder for an illustrative path
+# (`/home/u/app/x` teaches the project-slug transform), so it stays. So do
+# `/home/dockbox` and `/home/claude`: the HOME of this repo's own container
+# user (dockbox/README.md, CHANGELOG.md), which names no authoring machine.
+# Only the whole segment is exempt; `/home/dockbox-2` is somebody's account.
+LOCAL_PATH = re.compile(r'/(?:home|Users)/(?!(?:dockbox|claude)(?![\w.-]))[A-Za-z0-9._-]{2,}')
+SECRET = re.compile(
+    r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
+)
+# CLAUDE.md bans org-specific refs too. Nothing here checks them: a pattern
+# would have to name the org, which is the ref it exists to keep out.
+# A file whose point is a real-looking path (what to strip, where a slug comes
+# from) opts out of the path rule with this marker on a line of its own, so
+# quoting it in prose documents it without disarming the file. A fenced block
+# holding that line still disarms; nothing parses fences. Secrets have no opt-out.
+ALLOW_LOCAL_PATH = '<!-- lint: allow skill-local-path -->'
 
 
 class Severity(Enum):
@@ -73,14 +102,90 @@ class Finding:
     message: str
 
 
+def run_git_ls_files(root: Path) -> set[Path]:
+    absolute = root.absolute()
+    ancestors = absolute, *absolute.parents
+    top = next((ancestor for ancestor in ancestors if (ancestor / '.git').exists()), None)
+    if top is None:
+        return set()
+    listing = subprocess.run(
+        [
+            'git',
+            '-C',
+            str(top),
+            'ls-files',
+            '-z',
+            '--others',
+            '--ignored',
+            '--exclude-standard',
+            '--directory',
+        ],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    ignored: set[Path] = set()
+    for entry in listing.stdout.split('\0'):
+        path = top / entry.rstrip('/')
+        if entry and path.is_relative_to(absolute):
+            ignored.add(root / path.relative_to(absolute))
+    return ignored
+
+
+def visible_files(root: Path, pattern: str) -> list[Path]:
+    """Files under `root` matching `pattern`, skipping hidden directories and
+    what git ignores: they hold state such as `.cache/`, the `.git` store and
+    `tmp/` scratch, not source.
+    """
+    ignored = run_git_ls_files(root)
+    found: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        directory = Path(dirpath)
+        dirnames[:] = [
+            d for d in dirnames if not d.startswith('.') and directory / d not in ignored
+        ]
+        found.extend(
+            directory / name
+            for name in filenames
+            if fnmatch(name, pattern) and directory / name not in ignored
+        )
+    return found
+
+
+def nearest_skill(directory: Path) -> Path | None:
+    """The SKILL.md that owns `directory`: the closest one at or above it,
+    looking no higher than the repository root.
+    """
+    for ancestor in directory, *directory.parents:
+        if (ancestor / 'SKILL.md').is_file():
+            return ancestor / 'SKILL.md'
+        if (ancestor / '.git').exists():
+            return None
+    return None
+
+
 def skill_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
-        if path.is_file() and path.name == 'SKILL.md':
+        if path.is_dir():
+            files.extend(visible_files(path, 'SKILL.md'))
+        elif path.name == 'SKILL.md':
             files.append(path)
-        elif path.is_dir():
-            files.extend(path.glob('**/SKILL.md'))
+        else:
+            owner = nearest_skill(path.parent)
+            if owner is not None:
+                files.append(owner)
     return sorted(set(files))
+
+
+def leak_docs(paths: list[Path]) -> list[Path]:
+    docs: list[Path] = []
+    for path in paths:
+        if path.is_file() and path.suffix == '.md':
+            docs.append(path)
+        elif path.is_dir():
+            docs.extend(visible_files(path, '*.md'))
+    return sorted(set(docs))
 
 
 def frontmatter(text: str) -> tuple[str, str] | None:
@@ -132,7 +237,7 @@ def fix_frontmatter(text: str) -> str:
 
 def check_keys(path: Path, meta: dict | None) -> list[Finding]:
     if meta is None:
-        return []  # unparseable YAML — the frontmatter check owns that failure
+        return []
     findings: list[Finding] = []
     missing = [key for key in REQUIRED_KEYS if not str(meta.get(key, '')).strip()]
     if missing:
@@ -244,19 +349,87 @@ def check_length(path: Path, body: str) -> list[Finding]:
 
 
 def check_router(path: Path) -> list[Finding]:
-    for ancestor in path.parent.parents:
-        if (ancestor / 'SKILL.md').is_file():
-            return [
-                Finding(
-                    Severity.WARN,
-                    'skill-router',
-                    f'{path}: [skill-router] nested under {ancestor / "SKILL.md"} — wisdom: '
-                    'NEVER name a data file SKILL.md (it preloads); rename it (warn)',
+    enclosing = nearest_skill(path.parent.parent)
+    if enclosing is None:
+        return []
+    return [
+        Finding(
+            Severity.WARN,
+            'skill-router',
+            f'{path}: [skill-router] nested under {enclosing} — wisdom: '
+            'NEVER name a data file SKILL.md (it preloads); rename it (warn)',
+        )
+    ]
+
+
+def sibling_docs(root: Path) -> set[str]:
+    return {p.relative_to(root).as_posix() for p in root.rglob('*.md') if p.name not in PRELOADED}
+
+
+def suffixes(rel: str) -> list[str]:
+    parts = Path(rel).parts
+    return ['/'.join(parts[i:]) for i in range(len(parts))]
+
+
+def name_forms(docs: set[str]) -> dict[str, set[str]]:
+    """Forms that name each doc: its path from the skill root, plus every
+    shorter path suffix no other doc under the skill shares. A bare basename
+    therefore counts only while it is unique; a doc whose every suffix is
+    shared is named by its full path alone.
+    """
+    counts = Counter(form for rel in docs for form in suffixes(rel))
+    return {rel: {rel, *(form for form in suffixes(rel) if counts[form] == 1)} for rel in docs}
+
+
+def check_reachable(path: Path) -> list[Finding]:
+    root = path.parent
+    pending = sibling_docs(root)
+    forms = name_forms(pending)
+    frontier = [path]
+    while frontier and pending:
+        tokens = set(PATH_TOKEN.findall(frontier.pop().read_text()))
+        for rel in sorted(pending):
+            if forms[rel] & tokens:
+                pending.discard(rel)
+                frontier.append(root / rel)
+    return [
+        Finding(
+            Severity.ERROR,
+            'skill-orphan',
+            f'{root / rel}: [skill-orphan] no chain of names from SKILL.md reaches it '
+            '— wisdom: only SKILL.md preloads, so an unnamed sibling is dead weight; '
+            'add a dispatch row (a path, when another file shares the basename) or '
+            'delete the file',
+        )
+        for rel in sorted(pending)
+    ]
+
+
+def check_leaks(doc: Path) -> list[Finding]:
+    text = doc.read_text()
+    rules = [('skill-secret', SECRET, 'a credential shape')]
+    if ALLOW_LOCAL_PATH not in text.splitlines():
+        rules.append(
+            (
+                'skill-local-path',
+                LOCAL_PATH,
+                'an absolute home path (an illustrative one takes a one-character '
+                f'account, or the file opts out with {ALLOW_LOCAL_PATH} on a line of its own)',
+            )
+        )
+    findings: list[Finding] = []
+    for offset, line in enumerate(text.splitlines(), start=1):
+        for rule, pattern, why in rules:
+            if pattern.search(line):
+                findings.append(
+                    Finding(
+                        Severity.ERROR,
+                        rule,
+                        f'{doc}:{offset}: [{rule}] {why} — CLAUDE.md: NEVER ship local '
+                        'paths or secrets; they belong in ~/.claude/LOCAL.md',
+                    )
                 )
-            ]
-        if (ancestor / '.git').exists():
-            break
-    return []
+    return findings
 
 
 def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Finding]:
@@ -269,6 +442,7 @@ def check_body(path: Path, text: str, meta: dict | None, body: str) -> list[Find
         *check_should(path, body, body_line0),
         *check_length(path, body),
         *check_router(path),
+        *check_reachable(path),
     ]
 
 
@@ -290,13 +464,12 @@ def process(path: Path, write: bool) -> int:
         text = f'---\n{fixed}---\n\n{body}'
         path.write_text(text)
         print(f'fixed: {path}')
-        meta, status = fixed, 1
+        meta = fixed
+        status = 1
     elif error is not None:
         print(f'needs fix: {path} ({error})')
         status = 1
 
-    # A repaired file still has to conform; fixing the YAML says nothing about
-    # the name, the keys or the listing budget.
     for finding in check_body(path, text, parse_meta(meta), body):
         print(finding.message, file=sys.stderr)
         if finding.severity is Severity.ERROR:
@@ -310,6 +483,9 @@ def main() -> int:
     parser.add_argument('--write', action='store_true')
     parser.add_argument('--fail-on-write', action='store_true')
     args = parser.parse_args()
+    missing = [path for path in args.paths if not path.exists()]
+    if missing:
+        parser.error(f'no such file or directory: {", ".join(map(str, missing))}')
 
     status = 0
     for path in skill_files(args.paths):
@@ -317,6 +493,10 @@ def main() -> int:
         if result == 1 and args.write and not args.fail_on_write:
             result = 0
         status = max(status, result)
+    for doc in leak_docs(args.paths):
+        for finding in check_leaks(doc):
+            print(finding.message, file=sys.stderr)
+            status = max(status, 2)
     return status
 
 

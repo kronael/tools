@@ -1,15 +1,14 @@
 ---
 name: squash
-description: Reorganize the UNPUSHED commits on a detached tip into a clean, logical, PR-review-friendly history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
-when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, reorganize commits, group related commits into one, collapse churn, drop an add-then-revert pair, combine incremental dependency bumps, rebase -i alternative, prepare branch for review, non-interactive rebase, rewrite local history"
+description: Reorganize the UNPUSHED commits on a detached tip into a reviewable history. NOT for resolving conflicts (use merge), a single commit (use commit), or rewriting anything already pushed to origin.
+when_to_use: "squash commits, clean up commit history, tidy the stack before a PR, collapse churn, rebase -i alternative"
 user-invocable: true
 ---
 
 # Squash
 
-The SANCTIONED exception to WISDOM's "NEVER squash commits" — like `/refine` and
-`/ship` committing by design. It applies ONLY to a **local, UNPUSHED** tip being
-prepared for PR review, on explicit user invocation. Nothing already on `origin/*`
+Reorganizes a **local, UNPUSHED** tip for PR review, on explicit user invocation —
+the one path WISDOM § Git allows a squash through. Nothing already on `origin/*`
 is ever rewritten. Method is a NON-INTERACTIVE rewrite via `reset --soft` — simpler
 and safer than `git rebase -i` (which needs a scripted `GIT_SEQUENCE_EDITOR`, per-commit
 message editors, and mid-rebase conflict handling): one reset, then re-commit in groups.
@@ -47,24 +46,34 @@ Read `git log --stat "$BASE"..HEAD` and the diffs. Group into logical commits:
 - Put a test WITH the change it covers, not in a separate commit.
 - Give each new commit a conventional-commit message (`type(scope): subject`, imperative — see the `commit` skill).
 
-## 3. Approval gate — show, then confirm
+## 3. Print the mapping, then rebuild
 
-History rewrite is destructive. BEFORE running any reset, print the proposed mapping
-and WAIT for an explicit go-ahead:
+The invocation is the go-ahead and `OLD` is the undo, so NEVER stop to ask —
+print the mapping and continue to step 4.
+
+ALWAYS print the mapping, and the final stack, so it reads in a 40-column terminal
+(a phone): one block per new commit — its subject, then the old commits indented
+under it. NEVER a side-by-side old → new layout; it wraps into noise. A full SHA
+goes on a line of its own.
 
 ```
-OLD tip: <OLD>   BASE: <BASE>
-old: abc111 wip parser      ┐
-old: abc222 fix parser typo ┼→ new: fix(parser): Handle empty input
-old: abc333 test parser     ┘
-old: def444 bump serde 1.1  ┐
-old: def555 bump serde 1.2  ┼→ new: chore(deps): Bump serde to 1.3
-old: def666 bump serde 1.3  ┘
-old: aaa777 add debug print ┐
-old: aaa888 remove it       ┴→ (dropped — churn cancels)
-```
+OLD tip:
+<OLD>
+BASE:
+<BASE>
 
-ALWAYS get the go-ahead here. NEVER reset before the user approves the mapping.
+1. fix(parser): Handle empty input
+   abc111 wip parser
+   abc222 fix parser typo
+   abc333 test parser
+2. chore(deps): Bump serde to 1.3
+   def444 bump serde 1.1
+   def555 bump serde 1.2
+   def666 bump serde 1.3
+x. dropped, churn cancels
+   aaa777 add debug print
+   aaa888 remove it
+```
 
 ## 4. Rebuild — non-interactive `reset --soft` (primary)
 
@@ -112,8 +121,7 @@ new tip; it must still pass. Ideally each new commit builds: spot-check with
 
 ## Rules
 
-- ALWAYS record `OLD` and print the mapping for approval BEFORE the first reset. NEVER reset unasked.
+- ALWAYS record `OLD` and print the mapping BEFORE the first reset — NEVER wait for approval; the invocation already gave it.
 - ALWAYS treat `git diff "$OLD" HEAD` being empty as the correctness gate; on any diff, `reset --hard "$OLD"` and retry.
 - NEVER rewrite a commit that any `origin/*` head holds — fetch first; the `BASE` floor and its STOP checks enforce this.
-- NEVER skip pre-commit hooks. Hooks do NOT fire in a worktree — run fmt/clippy/lint by hand there before committing.
 - NEVER squash to hit a commit count; group by WHY. A three-commit stack that is already logical is left alone.

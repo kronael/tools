@@ -3,8 +3,9 @@
 Real isolation with zero ceremony — **security that gets out of your way.**
 
 A QEMU VM runs a coding agent with its own kernel. Project files and agent
-config are shared with the host. The last session powers the VM off; its disk
-and guest home survive the next launch. `qemubox rm` deletes the disk.
+config are shared with the host. The VM powers off twenty minutes after its
+last session exits; its disk and guest home survive the next launch.
+`qemubox rm` deletes the disk.
 Build tmpfs mounts last for one boot. Files written to host shares remain.
 
 **qemubox vs dockbox** — same idea, different wall between guest and host:
@@ -24,22 +25,23 @@ make install
 
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
-`qemubox build-base --force` refreshes the agent CLI build layer.
+`qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
 
 System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils openssh-client tar libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 libarchive-tools e2fsprogs docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base openssh tar libarchive e2fsprogs docker
+sudo pacman -S qemu-base openssh tar python libarchive e2fsprogs docker
 # Fedora
-sudo dnf install qemu openssh-clients tar bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
 ```
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
 `mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
-that support before it starts. Allow about 20 GB free in `/tmp` and 11 GB
+that support before it starts. Debian installs `mke2fs` in `/usr/sbin`, which a
+non-root PATH omits, so the build adds it. Allow about 20 GB free in `/tmp` and 11 GB
 per base on the state filesystem.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
@@ -56,7 +58,8 @@ qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
 qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
-qemubox -N bash            # empty VM, no project mount
+qemubox -T bash            # scratch VM: no project mount, works in /tmp/work
+qemubox -N                 # new Claude session, no resume picker
 ```
 
 `qemubox [tool] [dirs] [args]`. The first bare (non-path) argument is the tool:
@@ -65,11 +68,18 @@ Claude models, `codex` / `gpt` / `mini` / `spark` for Codex, `bash` / `zsh` for
 a login shell, or any binary in the VM. `exec <cmd>` passes every later argument
 through untouched. The default VM name is the project dir basename; `-n name` gives a separate box.
 
+`-T` starts a temporary session: qemubox mounts no project dir, and the
+session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
+The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
+dir argument is an error, and `-T` implies `-N`.
+
 Management:
 
 ```sh
 qemubox ls               # list NAME STATUS USE RAM DISK PATH
 qemubox status repo      # readiness of one VM (process/ssh/boot) without a shell
+qemubox stop repo        # power one VM off, keep its disk (-f: signal qemu at once)
+qemubox stop -a          # power every running VM off
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
 qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
@@ -79,8 +89,16 @@ qemubox build-base       # (re)bake the prebuilt base image
 
 ## Lifecycle
 
-A box starts on first use and powers off when the **last** session exits
-(counted by session markers). The disk stays on the host; the next launch
+A box starts on first use. When the **last** session exits (counted by
+session markers) the VM stays up for `QEMUBOX_LINGER` seconds (default 1200,
+twenty minutes), so the next launch joins it without a boot. A detached check
+then takes the VM lock and powers it off, provided no session is running and
+none has exited since: each last-session exit writes a fresh token into the
+box's `idle` stamp and starts its own check, and only the check whose token
+the stamp still holds acts. A check that cannot count sessions retries every
+`QEMUBOX_LINGER` seconds until four hours after the last exit, then gives up.
+The check logs to `idle.log` in the box's state dir. `QEMUBOX_LINGER=0` powers
+off as the last session exits. The disk stays on the host; the next launch
 boots that disk and keeps files in the guest home. `qemubox rm` deletes it.
 A missing recorded base image refuses launch with a `qemubox rm` hint.
 Each disk records trusted or `-U` mode. A mismatch or missing trust record
@@ -99,9 +117,30 @@ still reach the serial log. HUP and TERM remove the session marker.
 Dead host PID markers are removed under the lock. A failed marker listing
 keeps the VM up and reports an error.
 
+`qemubox stop <name>` powers a running VM off and keeps its disk: it resumes
+a paused guest, runs `fstrim /` in the guest, asks it to shut down and waits
+up to 90 s, then asks qemu to quit over QMP and, 10 s later, sends SIGKILL,
+printing a line before each wait. qemu gets SIGTERM in place of the quit when
+the VM has no QMP socket or the quit fails. `-f` skips the resume, trim and
+guest shutdown and stops qemu at once. Both take the VM lock, so a session that
+holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
+match as for `rm`; a stopped box is reported and skipped.
+
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
-space allocated on the host (both sizes in KiB). `rm` accepts several names
-or globs, with or without the `qemubox-` prefix, and fails if removal fails.
+space allocated on the host (both sizes in KiB); a VM waiting out
+`QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails
+because the host filesystem under the overlay is full; other write errors go
+to the guest. `ls` and `status` then show `paused:` and qemu's reason, such as
+`paused:io-error`, and a launch into that VM fails with that state rather than
+waiting. Free host space, then `qemubox stop` it. Each VM has a QMP control
+socket, `qmp` in its state dir. The state dir is owner-only.
+
+The overlay passes guest discards through, and `stop` trims the guest disk,
+so space freed in the guest leaves the overlay on the host. A guest that
+powers itself off skips the trim; the first `stop` after its next boot does it.
+
+`rm` accepts several names or globs, with or without the `qemubox-` prefix,
+and fails if removal fails.
 `prune [hours]` removes stopped VMs after that many hours (default 2160).
 Running VMs with no sessions stop after four hours since readiness; their disks
 stay until the stopped age rule applies. Prune also removes base sets that no
@@ -109,16 +148,29 @@ VM references, keeping the `current` base.
 
 ## Build directories
 
-`node_modules`, `.next`, `.turbo` and `.cache` directories found under each
-project become empty tmpfs mounts owned by the guest user. Discovery stops at
+`node_modules`, `.venv`, `.next`, `.turbo` and `.cache` directories found under each
+project become empty bind mounts owned by the guest user. Discovery stops at
 depth 4 and prunes each match, so nested dependency trees get one mount.
 Only directories present at launch are overmounted.
 
 `-P` / `--no-ephemeral` keeps project build directories on the host.
-`-T` mounts directories backed by the guest disk, keyed by canonical path.
-Both modes keep `/tmp` and `/tmp/cargo-target` on tmpfs, with
-`CARGO_TARGET_DIR=/tmp/cargo-target` in each session. Guest disk build data
-survives boots until removal; tmpfs data disappears at shutdown. A failed mount stops launch.
+`-B` backs them with the guest disk, keyed by canonical path. Without `-B`
+they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
+
+`/tmp` is a tmpfs capped at 75% of guest RAM, 48 GiB at the default 64 GiB.
+Without `-B`, the build directories, `/tmp/cargo-target` and every other file
+in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
+guest. Process memory is not counted against the cap.
+Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
+`CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
+guest `/tmp`, because 9p gives the guest no shared mmap and no lock shared
+with the host. A `sqlite_home` key in `~/.codex/config.toml` overrides the
+variable. At shutdown the databases disappear with any prompts still queued in
+them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
+start.
+
+Guest disk build data survives boots until removal. `/tmp` data disappears at
+shutdown. A failed mount stops launch.
 
 ## What crosses into the VM
 
@@ -126,12 +178,21 @@ Default host access includes:
 
 1. **Your project dir(s)** — 9p-mounted at their real host paths, read-write,
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
-   read-write one. `-N` runs an empty VM with no project mount.
+   read-write one. `-T` mounts no project dir.
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
    all project histories) are mounted read-write at their host paths; `~/.claude/plugins`
    read-only; `~/.claude/sessions` is a private guest tmpfs, so VMs and the host never list or
-   message each other's Claude sessions. Guest edits reach the host, and absolute skill links
-   resolve because the guest has the host username, UID, GID and home path.
+   message each other's Claude sessions. Guest edits reach the host. The guest has the host
+   username, UID, GID and home path, so an absolute skill link resolves when its target is
+   mounted too.
+3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
+   when set on the host, reach each session's environment, as in dockbox.
+
+Every session variable — the agent tokens, `-g`'s `GH_TOKEN`/`GITHUB_TOKEN`, `-D`'s
+`DOCKER_HOST`, each `-e VAR` — travels over SSH stdin into a per-session file in the guest's
+`/dev/shm` (mode 0600, guest tmpfs outside every 9p mount). The session sources and deletes it
+before it starts the tool, so no value reaches an SSH command line, which every host user can
+read in `/proc`.
 
 Other home paths require an explicit mount or forwarding flag.
 `~/.gitconfig` and gpg **public** keyrings are staged read-only.
@@ -154,8 +215,9 @@ default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TO
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
 (or `--untrusted`) goes further — it injects **no** host config or credentials
-and forces the network off. Project dirs and explicit `-v` paths remain mounted,
-so they must not contain credentials you want to withhold. The agent can't authenticate with
+(the agent tokens and `GH_TOKEN`/`GITHUB_TOKEN`/`DOCKER_HOST` are dropped, even from
+a `.qemuboxrc` `-e`) and forces the network off. Project dirs and explicit `-v` paths
+remain mounted, so they must not contain credentials you want to withhold. The agent can't authenticate with
 no credentials, so `-U` is for `bash`/build/test, not for running the agent.
 
 ## Security posture
@@ -171,7 +233,8 @@ What qemubox gives you:
 What it does **not** give you — do **not** run genuinely hostile code here:
 
 - **Your real agent credentials are shared read-write.** Like dockbox, qemubox
-  shares your live `~/.claude` / `~/.codex` (tokens included).
+  shares your live `~/.claude` / `~/.codex` (tokens included) and the agent
+  token variables.
   Guest code can read, change and exfiltrate those tokens and config files.
 - **Outbound network is on by default.** Pass `-H` (egress kill-switch) to
   disable it, or `-U` for a credential-free, network-off inspection mode.
@@ -185,22 +248,39 @@ What it does **not** give you — do **not** run genuinely hostile code here:
 `~/.qemuboxrc` supplies default flags, one per line, with blank lines and
 `#` comments ignored. Command-line flags override these defaults.
 The project `.qemuboxrc` applies its safe flags after command-line parsing,
-as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-n`, `-d` and `-x`.
+as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and `-x`.
 Files contain whitespace-separated tokens, never shell code. Project rc files
 are masked read-only inside the guest.
 
 Git worktrees also mount their common git directory at its host path.
-Claude opens its session selector when the project has JSONL history;
+Claude opens its session selector when the project has JSONL history
+(`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-5.6-sol`/`xhigh`. SSH allocates a tty only if stdin and stdout are terminals.
+Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
+the tool name replaces the alias's model and effort. SSH allocates a tty only
+if stdin and stdout are terminals.
 
 Guest setup disables guest NTP and syncs the clock from the host before
-the first session of each boot. The guest also uses the host time zone.
+the first session of each boot. The guest runs in UTC.
 PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
 New mount parent directories belong to the user; existing parents keep their owner.
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
-pid, and serial log. `QEMUBOX_SOURCE` selects the tools source repository.
+pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+`QEMUBOX_QEMU` selects the qemu binary, default `qemu-system-x86_64`.
+
+## Memory
+
+A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
+host memory only once the guest touches it, and the VM's virtio-balloon
+device reports freed pages back to the host, so a VM costs what the guest
+holds, not its size: a `cargo clean` or a removed tmpfs file returns its
+pages. If the host has swap, cold guest pages go there when host RAM runs
+short. The guest itself has no swap, so the `/tmp` cap under Build directories
+keeps a large build from exhausting guest memory.
+
+The guest boots with `noresume`. A Docker-built initramfs can detect host
+swap, and the VM must not wait for it.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.

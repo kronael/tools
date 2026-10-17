@@ -54,7 +54,8 @@ base_test() {
     prune_boxes
     for suffix in qcow2 vmlinuz initrd; do
         [ ! -e "$ROOT/base/stale.$suffix" ]
-        [ -f "$ROOT/base/fixture.$suffix" ] && [ -f "$ROOT/base/used.$suffix" ]
+        [ -f "$ROOT/base/fixture.$suffix" ]
+        [ -f "$ROOT/base/used.$suffix" ]
     done
 }
 regression "prune removes only unused noncurrent base sets" base_test
@@ -98,7 +99,7 @@ plugins_test() {
 regression "plugins have a readonly 9p export" plugins_test
 
 rc_test() {
-    reset_mounts; dirs=("$PROJ"); no_copy=""
+    reset_mounts; dirs=("$PROJ")
     ssh_plain_box() { echo "$2" >> "$fixture/rc-commands"; }
     mount_host_paths vm
     grep -F -- "$PROJ/.qemuboxrc" "$fixture/rc-commands" | grep -q 'remount,bind,ro'
@@ -130,6 +131,8 @@ metadata_test() {
     mkdir -p "$ROOT/vm"
     touch "$ROOT/vm/seed.iso" "$ROOT/vm/user-data" "$ROOT/vm/meta-data"
     if remove_box vm; then exit 1; fi
-    [ -f "$ROOT/vm/seed.iso" ] && [ -f "$ROOT/vm/user-data" ] && [ -f "$ROOT/vm/meta-data" ]
+    [ -f "$ROOT/vm/seed.iso" ]
+    [ -f "$ROOT/vm/user-data" ]
+    [ -f "$ROOT/vm/meta-data" ]
 }
 regression "removal leaves unowned cloud metadata alone" metadata_test

@@ -1,6 +1,6 @@
 ---
 name: solve
-description: Universal entry point — invoke BEFORE any domain skill. Classifies the request, recalls context, then picks the best-matching skill from every skill's frontmatter instead of the first fit. NOT for first-time skill authoring (use wisdom).
+description: Universal entry point — invoke BEFORE any domain skill to pick the best-matching skill from every skill's frontmatter. NOT for skill authoring (use wisdom).
 when_to_use: "which skill, what should I use, start of task, before acting, route this request, new task, first message, no skill matched"
 user-invocable: true
 ---
@@ -22,8 +22,8 @@ If unsure, treat as new task.
 
 ## 2. Recall (new task only)
 
-- First task of the session: read the 2-3 newest `<cwd>/.diary/*.md` and
-  `~/.claude/projects/<slug>/memory/MEMORY.md` (slug = CWD with `/` → `-`).
+- First task of the session: the diary read WISDOM § Continuity
+  requires.
 - The user references prior work, a name you do not recognize, or "what
   we decided": `/recall-memories <term>` — it greps the session
   transcripts. NEVER answer from diary + memory alone.

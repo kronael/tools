@@ -1,13 +1,14 @@
 ---
 name: ts
 description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files, writing TypeScript; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino
+when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino; rename, move a file, ts-morph, codemod
 ---
 
 # TypeScript Style
 
-Requires the `software` skill's `code.md` for shared naming, style, comments, and design
-rules. Below are TypeScript-specific additions and deltas.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are TypeScript-specific
+additions and deltas.
 
 Read on demand, in this directory:
 - `node-cluster.md` — running one CPU-bound Node/NestJS service as N workers
@@ -17,6 +18,10 @@ Read on demand, in this directory:
   megamorphism with `%HaveSameMap` and `--log-ic`, isolating the phase before
   profiling, and when to stop.
 ## Runtime and packages
+- ALWAYS write JavaScript-family tooling in TypeScript and run it with Bun.
+  NEVER author plain JavaScript tooling (`.js`, `.mjs`, `.cjs`).
+- ALWAYS keep reusable checkers in the global tools project with project-local
+  configuration. NEVER copy shared tooling into each application.
 - ALWAYS the newest Bun as package manager, in every JS/TS project: `bun
   install`, `bun.lock` committed, `bunx` for one-offs. NEVER a second
   lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`) beside it
@@ -60,8 +65,9 @@ Read on demand, in this directory:
 - NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
 
 ## Types
-- NEVER annotate a return type or a const's type that inference already produces — exported or not.
-- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
+- NEVER annotate a return type or a const's type that inference already produces — exported or not. ALWAYS judge every line a change adds or rewrites, including one that predates the change.
+- ALWAYS keep the annotation only where inference cannot reach it: recursion, overloads, a type predicate, an empty `[]`, a `let x!` with no initializer, a return type that types the parameters of the function it returns, one value fed by several literals of a discriminated union (one `: T` beats a `satisfies` per site), a value that must widen (`const mode: Mode = "fast"`), and exports under `isolatedDeclarations`.
+- ALWAYS swap the annotation on a single literal that must stay narrow for `satisfies T` — `({ phase: "idle" }) satisfies State`, `[...] as const satisfies readonly T[]`. NEVER keep `: T` only to stop one literal widening.
 - ALWAYS `satisfies T` over `as T` to validate without widening. NEVER `as` to escape a type error.
 - ALWAYS brand domain IDs (`type UserId = string & {__brand:'UserId'}`) when two string IDs would otherwise be interchangeable.
 - ALWAYS use discriminated unions for mutually exclusive state; NEVER force a union onto independent results — ALWAYS use a named result object with one field per result
@@ -88,9 +94,42 @@ Read on demand, in this directory:
 - NEVER trust external APIs/user input with `as Type`
 - Nested objects: `@Type(() => NestedClass)` + `@ValidateNested()`
 
+## Refactor tools
+- ALWAYS rename with ts-morph `rename()`, which runs the TypeScript language
+  service — NEVER grep-and-edit, and NEVER Serena. Same script shape as the
+  move below: `getFunctionOrThrow("old").rename("new")` on the declaring file.
+- In a monorepo whose packages import each other through `dist/*.d.ts`,
+  ALWAYS load every package's tsconfig into one `Project`
+  (`addSourceFilesFromTsConfig`) and set in-memory `compilerOptions.paths`
+  from each workspace package name to its `src/index.ts`. Without it the
+  rename stops at the declaring package: 3 of 25 references in one pnpm
+  monorepo.
+- ALWAYS check a monorepo rename by rebuilding the declaring package
+  (`tsc --build --force packages/<pkg>`), then `tsc --noEmit -p` on every
+  package that uses it — NEVER `pnpm -r build`: its stale incremental state
+  exits 0 on a broken rename.
+- ALWAYS move a file with ts-morph, which rewrites every import of it —
+  NEVER by hand, and NEVER jscodeshift for a rename or move: it sees syntax,
+  not symbols. Write the script in a scratch dir with no `node_modules`
+  above it, where `bun <script>.ts` auto-installs ts-morph — NEVER add it to
+  the project's `package.json` for a one-off:
+  ```ts
+  import { Project } from "ts-morph"
+  const p = new Project({ tsConfigFilePath: "/home/u/app/tsconfig.json" })
+  p.getSourceFileOrThrow("/home/u/app/src/a.ts").move("lib/a.ts")
+  for (const f of p.getSourceFiles())
+    if (!f.isSaved())
+      console.log(`// ${f.getFilePath()}\n${f.getFullText()}`)
+  ```
+  A relative target resolves from the moved file's own directory:
+  `src/a.ts` with `move("lib/a.ts")` lands at `src/lib/a.ts`. Read the
+  rewritten text it prints — the files on disk still hold the old text —
+  then append `await p.save()` and run it again.
+
 ## Lints
 - Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
-  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations).
+  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations),
+  `ts-bool-fn-prefix` (`software/code.md` § Naming).
 - Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
   existing project already runs, plus tsc. ast-grep only fills the
   kronael-specific gap; NEVER duplicate a Biome or eslint rule here.

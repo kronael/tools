@@ -11,11 +11,11 @@
 
 ## Scope
 - NEVER improve beyond what's asked
-- NEVER fix bugs found during a general check unless explicitly asked — log to `bugs.md`
+- NEVER fix bugs found during a general check unless explicitly asked — log to `BUGS.md`
 
 ## Writing
 - NEVER marketing prose, NEVER "this helps you…", NEVER past-state apologies
-- NEVER comments about past state or backwards compat — use `.diary/`
+- NEVER comments about past state or backwards compat — use the diary
 
 ## Tasks
 - NEVER leave a task incomplete — finish it or report the exact blocker

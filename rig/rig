@@ -135,19 +135,28 @@ cmd_branch_op(){
 }
 
 cmd_push(){
+    local dryrun= gh=
     while [[ "${1:-}" =~ ^- ]]; do
         case "$1" in
-            -n) local dryrun=1; shift ;;
+            -n) dryrun=1; shift ;;
+            -g) gh=1; shift ;;
             -h|--help)
+                [[ $gh ]] && break
                 cat <<EOF
 Usage: rig push [-n] [branch|?] [commit] [git-push-flags]
        (branch and commit are order-independent; branch:commit also works)
-Flags: -n dry-run, ? pick branch interactively
+       rig push -g [-n] <src>:refs/heads/<branch>|<src>:refs/tags/<tag> ...
+Flags: -n dry-run, ? pick branch interactively,
+       -g push the stated refspecs over HTTPS with the gh token (rig push -g -h)
 EOF
                 exit 0 ;;
             *) break ;;
         esac
     done
+    if [[ $gh ]]; then
+        cmd_gh_op push ${dryrun:+-n} "$@"
+        return
+    fi
 
     # Select branch + commit from up to two positional args, in either order:
     # a branch (or ? to pick interactively) and a commit (HEAD^, a sha, ...).
@@ -180,7 +189,115 @@ EOF
     if [[ ${dryrun:-} ]]; then echo "${cmd[*]}"; else "${cmd[@]}"; fi
 }
 
-symlinks=(rco rip rir rim gl gis gig gitg gp gpc gpa gw
+cmd_fetch(){
+    local dryrun= gh=
+    while [[ "${1:-}" =~ ^- ]]; do
+        case "$1" in
+            -n) dryrun=1; shift ;;
+            -g) gh=1; shift ;;
+            -h|--help)
+                [[ $gh ]] && break
+                cat <<EOF
+Usage: rig fetch [-n] [git-fetch-args]
+       rig fetch -g [-n] [refspec ...]
+Flags: -n dry-run,
+       -g fetch the stated refspecs over HTTPS with the gh token (rig fetch -g -h)
+EOF
+                exit 0 ;;
+            *) break ;;
+        esac
+    done
+    if [[ $gh ]]; then
+        cmd_gh_op fetch ${dryrun:+-n} "$@"
+        return
+    fi
+    local cmd=(git fetch origin "$@")
+    if [[ $dryrun ]]; then printf '%q ' "${cmd[@]}"; printf '\n'; else "${cmd[@]}"; fi
+}
+
+github_https_url(){
+    local url path
+    url=$(git remote get-url "$@" origin 2>/dev/null) || {
+        echo "error: no origin remote" >&2; return 1
+    }
+    case "$url" in
+        git@github.com:*)                   path=${url#git@github.com:} ;;
+        ssh://git@github.com/*)             path=${url#ssh://git@github.com/} ;;
+        ssh://git@github.com:[0-9]*/*)      path=${url#ssh://git@github.com:*/} ;;
+        ssh://git@ssh.github.com:[0-9]*/*)  path=${url#ssh://git@ssh.github.com:*/} ;;
+        https://github.com/*)               path=${url#https://github.com/} ;;
+        https://*@github.com/*)             path=${url#https://*@github.com/} ;;
+        *) echo "error: origin is not a GitHub remote: ${url/\/\/*@/\/\/}" >&2; return 1 ;;
+    esac
+    path=${path%/}
+    echo "https://github.com/${path%.git}.git"
+}
+
+is_push_refspec(){
+    local src=${1%%:*} dst=${1#*:}
+    [[ $1 == *:* && $dst != *:* && -n $src && $src != +* && $1 != *\** ]] &&
+        [[ $dst == refs/heads/?* || $dst == refs/tags/?* ]]
+}
+
+GH_HELP="Usage: rip -g [-n] <src>:refs/heads/<branch>|<src>:refs/tags/<tag> ...
+       rif -g [-n] [refspec ...]
+       rip -g -u | rif -g -u
+Push the stated refspecs to origin's GitHub push URL (or fetch them from its
+URL) over HTTPS with the gh token, leaving the remote URL (SSH for the human)
+untouched; a url.<base>.insteadOf or pushInsteadOf rule on a shorter base
+cannot turn it back into SSH. -n prints the git command, -u prints the HTTPS
+URL and takes no refspec. Both refuse force in any form, --tags, --all,
+--mirror and deletes; rip -g also refuses wildcards and a destination outside
+refs/heads/ and refs/tags/. A token without the workflow scope cannot push
+.github/workflows changes: report that refusal, never work around it."
+
+cmd_gh_op(){
+    local op=$1; shift
+    local dryrun= url_only= refspecs=() url spec
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -n) dryrun=1 ;;
+            -u|--url) url_only=1 ;;
+            -h|--help) echo "$GH_HELP"; exit 0 ;;
+            -f|--force|--force-with-lease*|--force-if-includes|--tags|--all|--mirror|-d|--delete)
+                echo "error: $1 is refused: -g takes the stated refspecs only" >&2; exit 1 ;;
+            -*) echo "error: unknown flag: $1" >&2; exit 1 ;;
+            *) refspecs+=("$1") ;;
+        esac
+        shift
+    done
+    if [[ $url_only && ${#refspecs[@]} -gt 0 ]]; then
+        echo "error: -u takes no refspec: ${refspecs[*]}" >&2; exit 1
+    fi
+    if [[ $op == push && ! $url_only ]]; then
+        [[ ${#refspecs[@]} -gt 0 ]] || {
+            echo "error: a refspec is required: rip -g <sha>:refs/heads/<branch>" >&2; exit 1
+        }
+        for spec in "${refspecs[@]}"; do
+            is_push_refspec "$spec" || {
+                echo "error: $spec: a refspec is <src>:refs/heads/<branch> or" \
+                     "<src>:refs/tags/<tag>: no +force, delete or wildcard" >&2
+                exit 1
+            }
+        done
+    fi
+    local get_url=()
+    [[ $op == push ]] && get_url=(--push)
+    url=$(github_https_url "${get_url[@]}") || exit 1
+    [[ $url_only ]] && { echo "$url"; return; }
+    local flags=()
+    [[ $op == push ]] && flags=(--no-follow-tags)
+    local cmd=(git -c credential.helper= -c 'credential.helper=!gh auth git-credential'
+               -c "url.$url.insteadOf=$url" -c "url.$url.pushInsteadOf=$url"
+               "$op" "${flags[@]}" "$url" "${refspecs[@]}")
+    if [[ $dryrun ]]; then
+        printf '%q ' "${cmd[@]}"; printf '\n'
+    else
+        GIT_TERMINAL_PROMPT=0 "${cmd[@]}"
+    fi
+}
+
+symlinks=(rco rip rif rir rim gl gis gig gitg gp gpc gpa gw
           gif gifs gss gsp gsl grec grea gres gco gib gitsu)
 
 cmd_install(){
@@ -210,6 +327,9 @@ rig - ripgit: git tools
 
   rig co [ref|pattern] Fetch + detached checkout (rco)
   rig p [branch]     Push to origin (rip)
+  rig p -g <refspec> Push over HTTPS with the gh token, remote untouched (rip -g)
+  rig f [args]       Fetch from origin (rif)
+  rig f -g [refspec] Fetch over HTTPS with the gh token (rif -g)
   rig r [pattern]    Rebase -i origin (rir)
   rig m [pattern]    Merge origin (rim)
   rig install        Create symlinks
@@ -242,6 +362,7 @@ dispatch(){
         co|checkout|rco) shift; cmd_branch_op checkout "$@" ;;
         gco)            shift; cmd_branch_op gco "$@" ;;
         p|push|rip)      shift; cmd_push "$@" ;;
+        f|fetch|rif)     shift; cmd_fetch "$@" ;;
         r|rebase|rir)    shift; cmd_branch_op rebase "$@" ;;
         m|merge|rim)     shift; cmd_branch_op merge "$@" ;;
         gl)   shift; git --no-pager log --oneline -20 "$@" ;;

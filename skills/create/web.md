@@ -396,13 +396,15 @@ Avoid common AI design sludge:
 - glassmorphism by default
 - emoji unless the brand uses them
 - generic SaaS cards with icons everywhere
-- left-border accent callout cards
 - fake dashboards filled with arbitrary numbers
 - stock-photo hero sections
 - oversized rounded rectangles as a substitute for hierarchy
 - rainbow palettes
 - vague labels like “Insights,” “Growth,” “Scale,” “Optimize” without content
 - decorative SVG illustrations pretending to be product imagery
+
+The owner's document and page rules apply on top of this list: ALWAYS read
+`~/.claude/skills/writing/page.md` before shaping a card, box, header, citation or link.
 
 Minimal is not automatically good. Dense is not automatically cluttered. Choose intentionally.
 

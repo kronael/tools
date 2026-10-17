@@ -16,6 +16,17 @@ RULES = """Development reminders:
 - NEVER use git commit --amend - make new commits"""
 
 
+def output(is_compaction, text):
+    if is_compaction:
+        return {'ok': True, 'systemMessage': text}
+    return {
+        'hookSpecificOutput': {
+            'hookEventName': 'UserPromptSubmit',
+            'additionalContext': text,
+        },
+    }
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -68,7 +79,7 @@ def main():
         parts.append(RULES)
 
     if parts:
-        print(json.dumps({'ok': True, 'systemMessage': '\n\n'.join(parts)}))
+        print(json.dumps(output(is_compaction, '\n\n'.join(parts))))
 
     sys.exit(0)
 

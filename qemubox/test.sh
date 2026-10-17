@@ -40,7 +40,7 @@ regression_setup() {
     mkdir -p "$ROOT/base"
     echo fixture > "$ROOT/base/current"
     for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
-    dirs=(); no_copy=1
+    dirs=()
     qemu-img() { touch "$dir/disk.qcow2"; }
     bsdtar() { :; }
     mke2fs() { :; }
@@ -52,8 +52,8 @@ eq "box_name default" "$(box_name)" "default"
 
 false_ "rm empty pattern matches nothing"    'rm_matches anything ""'
 true_  "rm '\''*'\'' matches all"                 'rm_matches anything "*"'
-true_  "rm exact match"                      'rm_matches staking-rewards staking-rewards'
-false_ "rm exact does not substring-match"   'rm_matches staking-rewards-facade staking-rewards'
+true_  "rm exact match"                      'rm_matches web-api web-api'
+false_ "rm exact does not substring-match"   'rm_matches web-api-facade web-api'
 true_  "rm glob star"                        'rm_matches repo-1 "repo-*"'
 false_ "rm glob non-match"                   'rm_matches other "repo-*"'
 
@@ -77,13 +77,23 @@ eq "-U disables network" "$network" ""
 eq "-U sets untrusted"   "$untrusted" "1"
 
 ssh_agent=1; docker_sock=/x; docker_remote=/y; gpg_forward=1; gcloud_creds=1
-envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep"); warnings=()
+envs=("GH_TOKEN=t" "DOCKER_HOST=unix://y" "MYVAR=keep" "CLAUDE_CODE_OAUTH_TOKEN=o"
+    "OPENAI_API_KEY=a" "CODEX_API_KEY=c"); warnings=()
 apply_untrusted
 eq "-U clears ssh_agent"   "$ssh_agent" ""
 eq "-U clears docker_sock" "$docker_sock" ""
 eq "-U clears gpg_forward" "$gpg_forward" ""
 eq "-U clears gcloud"      "$gcloud_creds" ""
-eq "-U drops cred envs, keeps the rest" "${envs[*]}" "MYVAR=keep"
+eq "-U drops cred envs and agent tokens, keeps the rest" "${envs[*]}" "MYVAR=keep"
+for tool in codex opus; do
+    cmd=(); tool_cmd "$tool"; warnings=(); apply_untrusted
+    true_ "-U warns that $tool cannot authenticate" \
+        'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+done
+cmd=(); tool_cmd bash; warnings=(); apply_untrusted
+false_ "-U does not warn for a shell" \
+    'printf "%s\n" "${warnings[@]}" | grep -q "cannot authenticate"'
+cmd=()
 
 p1="$(port_for foo)"; p2="$(port_for foo)"; p3="$(port_for bar)"
 eq "port deterministic" "$p1" "$p2"
@@ -96,15 +106,33 @@ source "$here/test-mounts.sh"
 
 ## guest note ---------------------------------------------------------------
 run_assemble
-network=1; gout="$(guest_note myhost)"
+persist_builds=""; eph_no_tmpfs=""; stage_ephemeral "$eph"
+network=1; gout="$(guest_note myhost "$eph")"
 true_ "note names the sandbox"     '[[ "$gout" == *CLAUDE_SANDBOX=qemubox* ]]'
 true_ "note names the host"        '[[ "$gout" == *"host \`myhost\`"* ]]'
 true_ "note: network on"           '[[ "$gout" == *"Outbound network: on."* ]]'
 true_ "note marks the project rw"  '[[ "$gout" == *"- $PROJ (rw) <- same path"* ]]'
 true_ "note maps config to host"   '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
 true_ "note lists shared history" '[[ "$gout" == *"- $HOME/.claude (rw) <- same path"* ]]'
-network=""; gout="$(guest_note myhost)"
+true_ "note lists the empty dependency dirs" \
+    '[[ "$gout" == *"empty box-only mounts."*"  - $PROJ/server/.venv"* ]]'
+false_ "note omits a dependency dir absent at launch" '[[ "$gout" == *"$PROJ/.turbo"* ]]'
+network=""; gout="$(guest_note myhost "$eph")"
 true_ "note: network off"          '[[ "$gout" == *"Outbound network: off."* ]]'
+false_ "note names no tmpfs workdir without -T" '[[ "$gout" == *"working dir"* ]]'
+for flag in P B; do
+    run_assemble
+    persist_builds=""; eph_no_tmpfs=""; apply_flag "$flag"
+    stage_ephemeral "$eph"; gout="$(guest_note myhost "$eph")"
+    false_ "-$flag note claims no empty dependency dir" '[[ "$gout" == *box-only* ]]'
+done
+persist_builds=""; eph_no_tmpfs=""
+dirs=(); apply_flag T
+stage_ephemeral "$eph"; gout="$(guest_note myhost "$eph")"
+false_ "-T note claims no empty dependency dir" '[[ "$gout" == *box-only* ]]'
+true_ "-T note names the tmpfs workdir" \
+    '[[ "$gout" == *"working dir /tmp/work is guest tmpfs"* ]]'
+tmp_session=""
 
 ## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
@@ -113,7 +141,7 @@ true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
-eq "default RAM" "$MEM" "16384"
+eq "default RAM" "$MEM" "65536"
 eq "default CPUs" "$CPUS" "4"
 eq "default disk" "$DISK" "40G"
 eq "guest user matches host" "$GUEST_USER" "$(id -un)"
@@ -142,12 +170,11 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     setup_guest_builds() { :; }
     setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
     setup_guest_sessions() { :; }
-    setup_guest_auth() { :; }
     setup_guest_limits() { :; }
     sync_guest_clock() { :; }
     start_box identitybox
     [ -f "$ROOT/identitybox/ready" ]
-    ! flock -n "$ROOT/.locks/identitybox" true
+    if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
     echo retained > "$ROOT/identitybox/disk.qcow2"
     ensure_box identitybox
@@ -155,8 +182,9 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
+    grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    ! grep -q 'seed.iso' "$fixture/qemu.args"
+    if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
 rm -f "$ROOT/base/fixture.vmlinuz"

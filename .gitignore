@@ -25,5 +25,12 @@ session.json
 settings.json
 capture.png
 .codex
-/.diary/
 /.ship/
+
+# Specs, plans and ship records live under ~/.claude/projects/<slug>/
+/specs/
+/plans/
+/todos/
+
+# Go build output (go skill: dist/ per tool)
+**/dist/

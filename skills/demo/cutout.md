@@ -87,11 +87,11 @@ anyway, not just enough to cover the zero-rotation case. Bleeding re-paints
 the SAME source photo over the gap, so it's invisible at rest and only a
 few-px ghost at the worst rotation — far less visible than an open seam.
 Verify across the FULL rotation range the two pieces actually use, not just
-frame 0 (see SKILL.md § Publication-grade bar).
+frame 0 (see `composed.md` § Publication-grade bar).
 
 ## The closer stays in the same paper world — reuse the rig, don't re-scene it
 
-A narrative cutout short must end INSIDE the paper world (see SKILL.md § One
+A narrative cutout short must end INSIDE the paper world (see `composed.md` § One
 themed world, entered once, exited once) — never cut to a flat title-card in
 a different visual language for the payoff. The cheapest way to guarantee the
 closer matches the opener's grade/grain/ink/shadow exactly is to not build a

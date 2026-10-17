@@ -1,13 +1,14 @@
 ---
 name: rs
 description: Rust development. NOT for non-Rust code (use go, py, ts, tsx, or sh).
-when_to_use: editing .rs files or writing Rust code
+when_to_use: editing .rs files or writing Rust code; rename a Rust symbol, rust-analyzer ssr
 ---
 
 # Rust
 
-Requires `software/code.md` (naming, style, comments, design) and
-`software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Also requires
+`../software/dynamic-analysis.md` (test-target checkers: Miri, `-Zsanitizer`, loom,
 cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 
 ## Imports
@@ -15,25 +16,21 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - NEVER `use super::`, NEVER local `use` inside function bodies
   (exception: tests/main where scoping demands it)
 - ALWAYS `use crate::` for absolute paths
-- NEVER rename — full path or canonical name; renaming erases origin
-- **Common types in scope, rare types full-path — consistently project-wide.**
-  A type a crate uses pervasively (`Arc`, the project's main error type, common
-  wire/record types) gets a top-of-file single-line `use` so it reads bare
-  (`Arc<str>`, not `std::sync::Arc<str>`). A type used once or twice gets a full
-  inline path (`std::time::Duration`, `std::sync::atomic::AtomicU64`) instead of
-  a `use`. Pick the SAME side project-wide: if `Arc` is `use`d where it's common,
-  `use` it everywhere it's common — do NOT scatter bare `Arc` in some files and
-  `std::sync::Arc::...` full paths in others. Reduces import churn + makes every
-  file read the same way.
+- **Common items bare, rare items prefixed — the same way project-wide.**
+  An item a crate uses often (`Arc`, its main error type, common wire types)
+  gets a top-of-file `use` and reads bare. A rare std or external item may
+  stay a full inline path (`std::time::Duration`). A rare item of this crate
+  goes through its imported module: `use crate::store;` then `store::open(..)`.
+  NEVER `crate::` inside a body (a macro body needs `$crate::` paths; that is
+  the exception), and NEVER a generic prefix (`types::`, `args::`,
+  `accounts::`) that hides which module is meant; keep a prefix only where it
+  carries meaning (`postgres::connect` beside `redis::connect`).
 - Keep files small enough to hold in one mental context; small files + uniform
   imports make any file quick to reason about. Split a file that outgrows that.
 
 ## Naming
-- ALWAYS verb-based function names unless trivially a constructor
-  - `collect_tx_summaries()` not `tx_summaries()`; nouns ok for `new()`, `from_str()`
-- Function params: full names for multi-word concepts; short OK in closures (`v`, `k`, `n` in `.map(|v| ...)`)
-- Short vars OK: `n`, `k`, `i`, `j`, `x`, `y`, `z`, `m`, `g`, `f`, `h`; doubled (`kk`, `vv`) for nested/plural; short descriptive (`data`, `msg`) fine
-- NEVER visually ambiguous singles: `o`, `O`, `I`, `l` (look like `0` or `1`)
+`software/code.md` § Naming owns names. Rust additions:
+- Constructors (`new()`, `from_str()`) are nouns; every other API-visible function is a verb phrase.
 - Macro meta-variables: shortcuts OK (`$a`, `$val`, `$ty`); meaningful names for semantic roles (`$state`, `$key`)
 
 ## Code Style
@@ -124,15 +121,19 @@ fn main() -> eyre::Result<()> {
 ```
 
 ## Unwrap Safety
-- NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`
-- `.expect()` ok at startup (fail-fast) or on documented invariants; otherwise propagate
-- Prefer propagating to panicking: if the fn already returns `Result` (and the
-  caller has a retry/backoff/supervisor), `?` the error — don't `.expect()`. A
-  socket bind, PG connect, etc. can fail TRANSIENTLY; fail-fast-panic is only for
-  truly unrecoverable config. "It's at startup" is not a reason to panic if
-  startup is re-entered (e.g. a re-entrant `run_main` on demote/restart).
-- `.expect("msg")`: put the REASON in the message; do NOT prefix a `// SAFETY:`
-  comment (see Unsafe).
+- In a library crate NEVER `.unwrap()`, `.expect()`, `panic!`, `unreachable!`
+  or an index that can panic: return `Result` and let `main` or a test decide
+  to crash (`software/code.md` § Design). Enforce it at the crate root with
+  `#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic,
+  clippy::indexing_slicing)]`, allowed again only in `main.rs` and test
+  modules — NEVER per call site.
+- In a binary NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`;
+  the one exception is a `//` reason on the line directly above (§ Lints)
+- In a binary `.expect()` is for truly unrecoverable config at startup, with
+  the REASON in its message (§ Unsafe owns `// SAFETY:`); a fn that returns
+  `Result` under a retry, backoff or supervisor `?`s the error instead — a
+  socket bind or a PG connect fails TRANSIENTLY, and a re-entered startup
+  (`run_main` on demote/restart) is no startup.
 - Mutex: `.lock().unwrap_or_else(|e| e.into_inner())` to recover poison
 
 ## Unsafe
@@ -173,7 +174,9 @@ tokio::spawn(fetch_and_process(client));
 ## Crate Organization
 - Crate-per-concern: types/, common/, clients/, engine/
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
-- Re-export key types at crate root
+- ALWAYS re-export the crate's own key types at its root — NEVER re-export another crate's items
+  (`pub use other_crate::X`, a `pub use solana_pubkey::Pubkey`): a caller depends on the crate that
+  defines `X` and imports it from there, so one item has one path and the dependency is visible.
 - When the project draws a domain/adapter boundary, keep `Serialize`/`Deserialize` on adapter-layer DTOs, not on core domain entities
 
 ## Non-Workspace Repos
@@ -181,12 +184,19 @@ tokio::spawn(fetch_and_process(client));
 
 ## Lints
 - ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
-  `rs-no-from-value-clone`, `rs-no-anon-spawn`. clippy owns the rest — NEVER
-  duplicate a clippy lint here.
+  `rs-no-from-value-clone`, `rs-no-anon-spawn`, `rs-bool-fn-prefix`
+  (`software/code.md` § Naming). clippy owns the rest — NEVER duplicate a
+  clippy lint here.
 - `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
-  carrying a `//` justification comment on the line directly above — NEVER
-  `// SAFETY:` (reserved for `unsafe`); a plain reason comment is the sanctioned
-  form.
+  carrying a `//` reason on the line directly above — one of the in-body
+  comments `software/code.md` § Comments allows. NEVER `// SAFETY:` for it;
+  that marker is reserved for `unsafe`.
+
+## Refactor tools
+- ALWAYS rename with the `serena` skill, then its check for code behind a
+  disabled cargo feature — NEVER grep-and-edit.
+- NEVER `rust-analyzer ssr` — it rewrites files in place with no preview.
+  ALWAYS a scoped `ast-grep scan` rule instead (`astgrep` skill).
 
 ## Development Workflow
 - `cargo check` fastest for error checking (no codegen)

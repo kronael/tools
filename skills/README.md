@@ -1,7 +1,7 @@
 # Skills
 
 Auto-activating context for Claude Code. Each `<name>/SKILL.md` loads
-when its description matches the current task. Some are user-invocable
+on dispatch (`/solve`, `/<name>`) or on a description match. Some are user-invocable
 as slash commands (`/refine`, `/diary`, ...).
 
 ## Why these exist
@@ -20,11 +20,11 @@ Each skill in this directory addresses one of five problems:
 
 LLMs have no memory between conversations. Three pieces cover this:
 
-- **memory** (instruction-based, defined in `~/.claude/CLAUDE.md`):
-  durable facts about the user, project, feedback rules. Types:
-  `user`, `feedback`, `project`, `reference`. There is no separate
-  `facts` skill — memory subsumes it.
-- **diary**: chronological work log at `<cwd>/.diary/YYYYMMDD.md`.
+- **memory** (Claude Code's auto-memory under
+  `~/.claude/projects/<slug>/memory/`): durable facts about the user,
+  project and feedback rules; `learn` owns the types and the file format.
+- **diary**: chronological work log under `~/.claude/` (`diary` § Where
+  it lives).
   Different from memory: diary is *what happened today*, memory is
   *what's true forever*.
 - **recall-memories**: explicit search across diary + memory + Claude
@@ -41,14 +41,14 @@ comments, inconsistent naming, broken imports, stale doc counts.
 Refinement is a deliberate second pass that re-reads the rules with
 the diff visible.
 
-- **improve**: DO → CRITICIZE → EVALUATE → IMPROVE on changed code
+- **improve**: DO → CRITICIZE → EVALUATE → IMPROVE → VERIFY → REPEAT on changed code
 - **readme**: sync README/ARCHITECTURE/CHANGELOG with what shipped
 - **refine**: orchestrates both, validates build/test, commits `refa: …`
 
 Reach for these when: about to PR, after a feature lands, after a
 long generation pass.
 
-## Shortcuts (fin, dispatch)
+## Shortcuts
 
 Macros for instructions you'd otherwise type out every time:
 
@@ -59,14 +59,14 @@ Macros for instructions you'd otherwise type out every time:
 - **continue**: "resume every interrupted/paused task; if none, confirm the session is clean, suggest /recall-memories, and present where to go next"
 - **sweep**: "dispatch a background audit for one bug category across the whole repo, filing each hit in BUGS.md"
 
-These don't add new behavior — they're aliases. The win is muscle
+Most add no behavior — they're aliases. The win is muscle
 memory: `/fin` is faster than retyping the rule.
 
 ## Discovery nudging (hooks, not skills)
 
 Skills auto-activate by description match, but in practice the LLM
 often misses the right one. Hooks add explicit nudges: keyword →
-skill/agent routing on prompt submit, file extension → language skill
+skill routing on prompt submit, file extension → language skill
 on file touch, commit/diary checks on stop. Without them the LLM picks
 the wrong skill or none. With them, common workflows surface
 automatically. The hook list and wiring live in `../hooks/README.md`.
@@ -80,30 +80,33 @@ the authoritative entry. The categories:
 
 - **Languages** (`go`, `py`, `rs`, `sh`, `sql`, `ts`, `tsx`) —
   codestyle only: naming, idioms, test layout, build flags.
-- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `trader`, `solana`,
-  `browse`, `diagrams`, `show-me`, `astgrep`, `demo`, `markdown-converter`,
-  `emacs`) —
+- **Domain** (e.g. `cli`, `service`, `data`, `ops`, `solana`,
+  `browse`, `diagrams`, `show-me`, `astgrep`, `codemap`, `serena`, `demo`,
+  `ingest`, `emacs`) —
   patterns for a kind of program or tool. They compose with language skills: a
   Rust CLI loads `rs` + `cli`; a structural codemod loads `astgrep` + the target
-  language. `markdown-converter` (any file → Markdown via `uvx markitdown`) and
-  `media-ingest` (URL → transcript/audio/video via `yt-dlp`) are adapted from
+  language. `ingest` (any file → Markdown via `uvx markitdown`; URL →
+  transcript/audio/video via `yt-dlp`) is adapted from
   [steipete/agent-scripts](https://github.com/steipete/agent-scripts). `show-me`
   (opt-in `/show-me` — pseudocode/call-tree/mermaid/diff/local-HTML for the
   current conversation topic, distinct from `diagrams`' permanent ASCII docs)
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `sync-tools-skills`, `astra`, `terra`, `sol`, `pi`) — triage, multi-pass
-  refinement, git flow, memory, scaffolding, second opinions, codifying
-  public best practice, vendoring this bundle's skills into another project.
-- **Escalation** (`haiku`, `sonnet`, `opus`, `fable`, `dispatch`, `fin`) — model
-  routing and macro aliases. Each model tier has its own skill; `dispatch` is
-  fire-and-forget at default model.
-- **Evaluation lenses** (e.g. `cto-eval`, `ceo-eval`, `red-eval`,
-  `create-eval`, `13yo-eval`, `assess`) — judge a codebase or practice from a
-  fixed perspective.
+  `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
+  memory, scaffolding, second opinions, codifying public best practice.
+- **Escalation** (`haiku`, `luna`, `sonnet`, `terra`, `opus`, `fable`,
+  `oracle`, `dispatch`, `fin`) — model routing and macro aliases. Each model
+  tier has its own skill; `dispatch` is fire-and-forget at default model and
+  holds the one tier table (`dispatch` § Tiers). `luna` and `terra` run the
+  Codex fan-out and workhorse models through a native subagent or the CLI.
+  Model and effort pins follow
+  [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
+- **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
+  UX, hiring, or every lens at once) — judge a product, codebase, UI or
+  engineer from a fixed perspective.
 - **Routers** (`create/`, `software/`, `specs/`, `readme/`, `review/`,
-  `research/`) — one preloaded
+  `research/`, `writing/`, `eval/`) — one preloaded
   `SKILL.md` dispatching to cold data files read on demand. `create/` holds the
   creative artifact generators (HTML, SVG, ASCII, video), mostly ported
   from
@@ -111,17 +114,20 @@ the authoritative entry. The categories:
   and **local-only** — generators needing paid APIs, cloud accounts, or
   external apps were dropped; local CLI deps (ffmpeg, manim) are fine.
   `software/` holds engineering runbooks for code, tests, CI, typing, deploys,
-  and observability; `specs/` the design record; `readme/` syncs docs after
+  observability, and the attribution/NOTICE practice for ported work
+  (`credits.md`); `specs/` the design record; `readme/` syncs docs after
   shipping and holds the doc file topology, single-page shape and the HTML
   pages (onepager, doc page); `review/` gives or takes a code review;
   `research/` holds the quantitative-research runbooks: method (evidence),
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`, `credits`, `caveman`) —
-  `writing`/`humanize` are copy rules and the de-slop pass, cited by `tweet`,
-  `pr-draft`, `readme`, `diary`; `credits` is ambient attribution/licensing
-  context, loaded as context, not a judgment lens; `caveman` is the pointer
-  to the response style loaded before any reply.
+- **Shared references** (`writing`, `humanize`) —
+  `writing` owns the prose rules and, in its cold `page.md`, how a document or
+  page is laid out; `humanize` is the AI-tells catalogue it finishes with.
+  `writing` is cited by `create`, `diary`, `gh-issue`, `pr-draft`, `readme`,
+  `tweet` and `visual`; `humanize` by `create`, `gh-comment`, `tweet` and
+  `writing`. The response style itself is `../output-styles/caveman.md`,
+  applied or reverted per session by `../commands/caveman.md`.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 
@@ -132,17 +138,17 @@ Side-channels (escalation, communication) fire at any stage.
 
 ┌─ orientation ───────────────┐
 │ solve recall-memories       │
-│ explore                     │
+│ ans                         │
 └──────────────┬──────────────┘
                │
 ┌─ planning ───▼──────────────┐
 │ specs ship                  │
 └──────────────┬──────────────┘
                │
-┌─ coding ─────▼──────────────┐
-│ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data trader         ├────────►│ haiku sonnet opus   │
-└──────────────┬──────────────┘         │ fable dispatch fin  │
+┌─ coding ─────▼──────────────┐         ┌─ escalation ────────┐
+│ go rs py ts tsx sh sql cli  │         │ haiku luna sonnet   │
+│ service data                ├────────►│ terra opus fable    │
+└──────────────┬──────────────┘         │ dispatch fin        │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review improve              │
@@ -155,13 +161,13 @@ Side-channels (escalation, communication) fire at any stage.
 └─────────────────────────────┘         └─────────────────────┘
 
 **orientation** — load context before acting. `solve` is the universal entry point;
-`recall-memories` searches diary/memory/sessions; `explore` answers without modifying.
+`recall-memories` searches diary/memory/sessions; `ans` answers without modifying.
 
 **planning** — `specs` for design docs; `ship` to drive a change end to end, mostly unattended.
 Skip for one-off tasks.
 
 **coding** — language skills (go, rs, py, ts, tsx, sh, sql) carry per-language rules;
-shape skills (cli, service, data, trader) carry patterns for what you're building.
+shape skills (cli, service, data) carry patterns for what you're building.
 They compose: a Rust CLI loads `rs` + `cli`.
 
 **quality** — `review` covers the whole loop: `review give` produces findings
@@ -177,14 +183,12 @@ patterns; `bugs` for the record-don't-fix queue.
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. `/haiku` → `/sonnet` → `/opus` → `/fable`
-for increasing capability. `/dispatch` for fire-and-forget at default model. `fin` for no-confirmation runs.
+**escalation** — route to the right model/mode from any stage. `/haiku` →
+`/sonnet` → `/opus` → `/fable` increases the Claude tier; `/luna` and `/terra`
+select the Codex fan-out and workhorse models. `/dispatch` uses the default
+model and holds the tier table. `fin` runs without confirmation stops.
 
 ## Working with skills
 
-- Each `SKILL.md` has YAML frontmatter (`name`, `description`,
-  optional `when_to_use`, `user-invocable`)
-- Every skill is a `/<name>` slash command by default; `user-invocable: false`
-  hides it from the `/` menu
-- Auto-activation matches `description` + `when_to_use` — make them specific
-- See `wisdom/SKILL.md` for the writing rules
+- Frontmatter, body and listing-budget rules: `wisdom/SKILL.md`.
+- `user-invocable: false` hides a skill from the `/` menu; Claude can still invoke it.

@@ -12,13 +12,19 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 | `web.md` | Claude Design process/taste + § Sketch (2-3 throwaway variants) | create-claude-design, create-sketch |
 | `web/design-md.md` + `web/design-md/` | Google DESIGN.md token specs | create-design-md |
 | `web/popular-web-designs.md` + `web/popular-web-designs/templates/` | 54 brand design systems | create-popular-web-designs |
+| `web/code-presentation.md` | reveal.js code-talk slides from a feature-work doc | house |
 | `video.md` | short-form video script writing | create-video-script |
 | `video/render.md` + `video/render/{flavors,examples}/` | script→mp4 engine index | create-video-render |
 | `video/manim.md` + `video/manim/` | Manim CE pipeline | create-manim-video |
+| `video/collage.md` | collage motion from real material, judged by an external critic: memes, promo loops | house |
 | `art.md` | static ASCII art (pyfiglet, cowsay, boxes) | create-ascii-art |
+| `art/logo.md` | logo, emblem, badge, favicon design method | house |
 | `art/ascii-video.md` + `art/ascii-video/` | ASCII video pipeline | create-ascii-video |
 | `art/p5js.md` + `art/p5js/` | p5.js generative art pipeline | create-p5js |
 | `art/pretext.md` + `art/pretext/` | pretext text-layout demos | create-pretext |
+| `social.md` | social image for the X feed: meme PNG, looping GIF, code-shot explainer | house |
+| `divergence.md` | divergence funnel: 4 independent versions per stage, select, iterate | house |
+| `form.md` | measurable form checks for a finished HTML page: layout, type, contrast, figures, headless at two widths | house |
 | `diagram/excalidraw.md` + `diagram/excalidraw/` | Excalidraw JSON diagrams | create-excalidraw |
 | `diagram/architecture-diagram.md` + `diagram/architecture-diagram/` | dark SVG infra diagrams | create-architecture-diagram |
 
@@ -30,8 +36,12 @@ file; everything else is cold data. Convention: `../CLAUDE.md`.
 - Paths inside `<mode>/<slug>.md` are prefixed with `<slug>/`
   (e.g. `p5js/references/core-api.md`); paths inside the subtree stay
   subtree-relative. Keep that invariant when editing.
+- A ported tree's own `README.md` stays at `<mode>/<slug>/README.md` and is
+  named from `<mode>/<slug>.md` by a `<slug>/README.md` row, like its
+  `references/`; the orphan lint reports it otherwise.
 - Ported files keep their frontmatter (author/license) — attribution;
-  `../../NOTICE` points at it. Update NOTICE when adding/removing a port.
+  `../../NOTICE` points at it. Update NOTICE when adding/removing a port;
+  its format and the header-retention rules are `../software/credits.md`.
 - Only port generators that run locally — no paid APIs, no cloud accounts;
   local CLI/lib deps (ffmpeg, manim, pyfiglet) are fine.
-- `humanize` and `create-eval` are NOT in this router — leave them flat.
+- `humanize` is NOT in this router — leave it flat.

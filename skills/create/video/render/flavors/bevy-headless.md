@@ -1,6 +1,6 @@
 # Flavor: Bevy headless (Rust ECS → mp4)
 
-**Pick when**: the video should be driven by a *real* agent simulation, not a mock. Bevy's ECS *is* an agent-orchestration model — one entity per agent/container, systems for the coordination logic. You render the actual sim's state, frame by frame. Highest niche × ceiling for an orchestration theme like arizuko.
+**Pick when**: the video should be driven by a *real* agent simulation, not a mock. Bevy's ECS *is* an agent-orchestration model — one entity per agent/container, systems for the coordination logic. You render the actual sim's state, frame by frame. Highest niche × ceiling for an agent-orchestration theme.
 
 ## How it renders headless
 

@@ -1,28 +1,28 @@
 ---
 name: sonnet
-description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, and the steps of a written plan. NOT for mapping or mechanical edits (use /haiku), or a design call the plan leaves open (use /opus)."
-when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, find bugs, pre-review, flagging, find simplification, survey codebase, read-only analysis"
+description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, read-only audits, and the steps of a written plan. NOT for mapping or a bounded mechanical edit (use /haiku), a design call the plan leaves open (use /opus), or multi-file code without a written plan (plan it with /opus first)."
+when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, pre-review, flagging, find simplification, read-only audit"
 user-invocable: true
 ---
 
 With a prompt after /sonnet: launch it as a background agent (`run_in_background: true`, `subagent_type: "sonnet"`), report what was launched, and continue without waiting. For work too big for one sub, run § Plan, then execute — it launches one sub per delegated step.
 
 ALWAYS reach for /sonnet without being asked when the task is:
-- A bug hunt, a pre-review sweep, or a read-only survey or audit.
-- One step of a written plan whose design the plan settles (a `ship` step goes to `/opus`).
+- A bug hunt, a pre-review sweep, or a read-only audit that needs judgment.
+- One step of a written plan whose design the plan settles (a `ship` step goes here).
 
 - ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
-- NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin, and take lighter work to `/haiku`.
+- NEVER set effort with prompt text ("Effort: low") — ALWAYS rely on the agent file's pin.
 - ALWAYS brief per `dispatch`: a self-contained prompt with paths, errors, scope, out-of-bounds, and what to return.
-- ALWAYS send mapping and mechanical edits to `/haiku`, and a design call or a step that failed twice to `/opus`.
+- NEVER reach for `/sonnet` on a task `/haiku` can do — ALWAYS send mapping, grep surveys and a bounded mechanical edit to `/haiku`, and a design call or a step that failed twice to `/opus`; a codemod stays in the parent (§ Plan).
 
 ## Plan, then execute
 
-For work too big for one pass — a feature across packages, a refactor, a change at many call sites — the parent (the main thread) plans, a sonnet sub executes each delegated step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
+For work too big for one pass — a feature across packages, a refactor, a change at many call sites — an `/opus` sub plans (WISDOM § Agents), a sonnet sub executes each delegated step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
 
 NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make it in the parent.
 
-1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file (scratchpad or `.claude/plans/`) with a status and a snapshot SHA per step; a plan held only in context is lost at compaction.
+1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file in `~/.claude/plans/` with a status and a snapshot SHA per step; a plan held only in context is lost at compaction.
    - ALWAYS plan top-down: the end state (what is true when done, the choices the user sees), then the design, then the steps; each level discards bad solutions before the next one builds on them. ALWAYS show the end state to the user when it holds a choice that is theirs. A change the design already pins needs no step list — its one step is "implement this design".
    - ALWAYS settle every cross-cutting choice in the plan: names, signatures, data shapes, the error convention, which existing mechanism to extend. A choice left to the executors gets a different answer in each step.
    - ALWAYS make each step one coherent behaviour change that leaves the tree green and stays readable in one pass (≤ ~1,000 changed lines). A step that must break the build says so, and its repair step comes next.

@@ -1,87 +1,205 @@
-# Documentation topology
+# Repository and documentation layout
 
-Great docs aren't one long file — they're a small set of files, **each answering
-exactly one question**, cross-linked by a "how to read this" index. Mixing the
-questions ("what is it" tangled with "how is it built" tangled with "why not the
-simpler thing") is what makes docs unreadable. ALWAYS split by question first,
-write second.
+The house layout, defined here and nowhere else — WISDOM and every other skill
+point to this file. A doc set is a few files, each answering ONE question, read
+in a stated order (with a docs site, by its sidebar and the README hub below), with every behaviour tied to a test and every number to the
+command that produced it. Section order inside one file: `shape.md`. The HTML
+page's craft: `page.md`. Prose: `writing`.
 
-This is the *which file* axis. For the order of sections *inside* one file —
-an integration guide or API-reference page an external reader works through
-end to end — see `shape.md`.
+## Files
 
-## One question per file
+| Path | The one question it answers |
+|---|---|
+| `docs/<name>.html` | What is it, who can do what, how does it behave? The study page for a newcomer. |
+| `README.md` | What is in the repository, and how do I start? |
+| `PLAN.md` | Why is it split this way, and which decisions must stay true? |
+| `ARCHITECTURE.md` | Where does each piece live, and how does each flow run? |
+| `FEATURES.md` | What does it do today, and which test proves it? |
+| `BUGS.md` | What is open: defects, deliberate limits, decisions owed? Format: `bugs`. |
+| `TODO.md` | What is deferred and not yet a spec? Format: `next` § Later. |
+| `specs/<NN>-<topic>.md` | What change is in flight, and why? No row above links it. Format: `specs`. |
+| `<dir>/README.md` | What does this directory implement, and how is it used? |
+| `test/research/README.md`, `test/research/<project>.md` | What else does this job, and how does this differ? |
+| `test/research/verified.md` | Where does each number in these documents come from? |
+| `CLAUDE.md`, `<dir>/CLAUDE.md` or `AGENTS.md` | What must an editor not break? |
+| `LICENSE`, `NOTICE` | Under what terms? Copyright in `LICENSE`; provenance and third-party terms in `NOTICE`. |
 
-| File | The one question | Holds |
-|---|---|---|
-| `README.md` | What is this, why use it, how do I start | elevator pitch (line 2, one sentence), plain-English glossary before any jargon, "How fast" (benched number + repro command + caveat) if perf matters, "Why this exists" (the gap), "What it gives you" (bullet per capability — no removed/dead features), "Quick start" (runnable, links a real example), "Guarantees", "When NOT to use this", requirements/assumptions, lineage/acknowledgments, "How to read this" index |
-| `ARCHITECTURE.md` | How is it built internally | module/file table (one-line purpose each), ASCII data-flow/layout diagrams, algorithm walk-throughs, trust model + invariants, edge cases, "Architectural Decisions" (each names the *rejected* alternative and why) |
-| `notes/*.md` (or `WHY.md`) | Why this design, not a simpler one | one file per non-obvious decision, each **Problem → Fix → Cost-it-removes**, cited sources, a trade-off, no "measured" numbers (those live in README/ARCHITECTURE), a through-line paragraph naming the pattern across the fixes |
-| `compare/*.md` | How it stacks up vs named alternatives | one file per competitor, cited lineage, generous not dismissive |
-| `facts/*.md` | Dated, sourced numeric claims | YAML frontmatter `date:`/`sources:`/`status:` so numbers can't silently rot |
-| crate-local `CLAUDE.md` | Doc *conventions* for this component | which file answers which question, a "keeper sections — don't regress" list, an update checklist |
+- ALWAYS put a fact or a section in the one file whose question it answers —
+  README, ARCHITECTURE, a package README and a diagram never repeat a section
+  — and link it from the others in one line; NEVER a second copy, copies drift
+  apart unnoticed.
+- ALWAYS draw what can be drawn — a flow, a layout, the roles and their rights
+  — as one diagram (`diagrams`) beside the list it illustrates; every other
+  file links to it, NEVER redraws it.
+- One tree beside the code: the root README and ARCHITECTURE hold the overview,
+  a short section per concept with one link down. ALWAYS say at each level only
+  what the level above does not, and name each file one level down in one line.
+- ALWAYS open each file with its question in one sentence and links to the
+  files that answer the neighbouring questions.
+- ALWAYS add a file only once its question outgrows one section of the file
+  above — NEVER an empty stub. Root docs are UPPERCASE; a concept gets its
+  `<dir>/README.md`, with its diagram, in the directory that implements it —
+  NEVER a page under `docs/`, which holds the study page and the site.
+- NEVER create `todos/`, `notes/`, `facts/`, `compare/` or `WHY.md` — each
+  one's content has a row above. NEVER `plans/`: plans and work records live
+  under `~/.claude/` (`ship` § Work record).
+- NEVER create `CHANGELOG.md` unless the project publishes versions to outside
+  consumers (crates.io, npm, PyPI, a plugin) — history lives in git and
+  the diary. A repo that keeps one keeps it; `release` writes it.
+- In a repo laid out otherwise, ALWAYS put a new fact where its question already
+  lives — NEVER migrate the layout unasked.
 
-ALWAYS state the split explicitly — end the README with a **"How to read this"**
-section naming which file answers which question.
+## README.md
 
-## Repo layout (house)
+This order; cut a section with nothing true to say. Under 150 lines.
 
-- UPPERCASE at root: CLAUDE.md, README.md, ARCHITECTURE.md, SPEC.md, PLAN.md,
-  TODO.md. CLAUDE.md under 200 lines: shocking patterns and project layout.
-- `specs/` for design docs (`specs/index.md` the master index), `docs/` for
-  project documentation, `.claude/plans/` — plan mode's directory — for plans
-  and shipping artifacts (flat, type in the filename, ephemeral; `ship` § Work
-  record owns the setting and the ignore step), `.diary/YYYYMMDD.md` for the
-  shipping log. NO `todos/`, NO `plans/` outside `.claude/`.
-- ALWAYS root-anchor the gitignore rules for local working dirs:
-  `/.claude/plans/`, `/.diary/`, `/specs/`, `/BUGS.md`. The bare `specs/` form
-  matches at every depth and swallows a real `src/specs/`; `/.claude/plans/`
-  keeps the committed `.claude/` files (settings, commands, skills) tracked.
+1. The title, then what it is and who it is for, in one plain sentence.
+2. The link to the study page, naming what it answers.
+3. Any status that changes whether to use it (unaudited, not for real funds).
+4. **Glossary** — the project's dictionary: one entry per domain term, each
+   defined before its first use, and every term the docs use comes from it
+   (`writing` § Language).
+5. **What it gives you** — one bullet per capability that works today.
+6. **What it does not give you** — each limit with its `BUGS.md` id.
+7. **Packages** — directory, package name, one line, a link to its README; in
+   a one-package repo, a quick start that runs and prints something instead.
+8. **Commands** — every `make` target with a one-line comment.
+9. **How to read this**, last — a table of order, file and the question it
+   answers, the study page first, `LICENSE`/`NOTICE` unnumbered.
 
-## notes/ — the "why" layer
+- ALWAYS state what adopting costs by `sync.md` § Rules; with a docs site the
+  README links to the Why page that states it.
+- NEVER put deployment (Dockerfile, CI, k8s, deploy steps) in the README —
+  that belongs to the ops repo.
 
-Tribal design-rationale rots unless it's written down. Each note:
+## README as a docs-site hub
 
-1. **Restate the domain term in plain English before using it** ("An order book
-   is the live list of resting bids and asks…"). NEVER assume the reader knows.
-2. **Problem** — what the naive/simpler approach costs, *quantified* ("allocates
-   a node per level, O(log n) per update").
-3. **Fix** — the actual mechanism, prose + one code/ASCII sketch.
-4. **Cost it removes** — tie back to the budget the fix protects.
-5. **Through-line** — a closing paragraph naming the *pattern* across the notes.
-6. **Cite** prior art with links (papers, crates, blog posts you borrowed from).
+When a docs site exists, ALWAYS make the README its front door, NEVER a
+second copy of the site:
 
-## Numbers: a source-of-truth chain
+- The link row and the status line, in the order `sync.md` step 3 sets, and
+  a link to the cost on the Why page.
+- Each capability bullet links to the guide page of the same title.
+- The one README example comes from a compiled guide region (`sync.md`
+  § Rules) and links to the guide page that holds its imports, other
+  languages and the code that runs it — NEVER a README-only example nothing
+  compiles.
+- A closing "Repository layout" names each top directory. The link row plus
+  "Repository layout" replace "How to read this".
 
-Doc rot lives in stale numbers. Chain them: **the benchmark is authoritative →
-a dated `facts/*.md` records the number with its source/date → README and
-ARCHITECTURE *quote* from facts and cite the bench name + repro command.** NEVER
-inline a raw number that has no bench behind it. Every perf claim gets a caveat:
-loopback ≠ production, single-core ≠ cross-process, closed-loop ≠ real workload —
-and ALWAYS cite the honest cross-process number next to the flattering microbench.
+## PLAN.md and ARCHITECTURE.md
 
-## Anti-marketing discipline
+- PLAN.md holds the purpose and boundaries (which package owns what), the
+  model, the decisions that must stay true and the deferred scope. ALWAYS name
+  the alternative a decision rejected and why.
+- ARCHITECTURE.md is for an engineer changing the code: NEVER re-explain what
+  the thing is. ALWAYS give it a package-flow diagram, a repository map (path
+  → what it owns), a data-ownership table (data, source of truth, consumers)
+  and one diagram per concept, flows drawn in order; a concept in prose alone
+  is undocumented. Draw with `diagrams`. Under 300 lines.
+- A concept, here or in its `<dir>/README.md`, is its intent — what it is for,
+  the constraint it keeps, how its parts relate — in its diagram plus a few
+  concrete sentences, the WHY of the structure beside it. NEVER narrate what
+  the code does; point at the file. A WHY that outlives the structure is a
+  PLAN.md decision; link it.
 
-High-quality docs read *earned*, not sold:
+## FEATURES.md
 
-- Every superlative is immediately backed by a number + its bench name.
-- The "When NOT to use this" / "Limitations" section is as long as the pitch.
-- Alternatives are cited *generously* ("if this doesn't fit you, no problem"),
-  never strawmanned.
-- Assumptions and trust model are stated as flat non-negotiable bullets, not
-  buried in prose.
-- No badges, no adjectives ("blazing", "powerful"), no roadmap-as-feature.
+- One row per behaviour: feature, current behaviour, evidence. The evidence is
+  one `` `path::exact test name` `` or `` untested — `<BUG-ID>` `` — NEVER a
+  wildcard, a bare file or a source symbol.
+- Today's behaviour only; planned work is a `specs/` draft or a PLAN.md
+  deferred-scope line.
 
-## The failure mode this prevents
+## Numbers — one ledger
 
-A later editor "cleans up" a good README into something shorter but worse — gutting
-the caveats, the alternatives, the "why". The crate-local `CLAUDE.md`'s "keeper
-sections" list and this topology are the guard: brevity is not the goal, *one
-question cleanly answered per file* is.
+- Every measured number in the README, FEATURES.md, the directory READMEs and
+  the page comes from `test/research/verified.md`: one section per
+  measurement, the command in a fenced block, its output, the date and the
+  toolchain. The docs quote it.
+- ALWAYS change a value only by re-running its command — a stale number is
+  worse than none.
+- ALWAYS name, in the CLAUDE.md of the directory whose change moves a number,
+  which ledger section that change re-runs (`test/CLAUDE.md`: a new test
+  re-runs the test count).
+- A performance number is labelled and caveated per `release` → `library.md` § 3b–3c.
+- With a docs build, ALWAYS generate counts and measured tables from the
+  artifact that produces them — a build-time data loader reading the fixture
+  (VitePress `*.data.ts`), or a script that rewrites the block between marker
+  comments (`<!-- benchmark:name -->` to `<!-- /benchmark -->`). NEVER type a
+  count or a measured table into a page. A single measured figure from a tested
+  run, such as a cost or a size, may be typed when the page names the test that
+  produced it. A repo without a docs build keeps its measured figures in the
+  ledger.
 
----
+## The study page
 
-*Source: distilled from the `rsx-cast` and `rsx-book` crates, whose READMEs,
-ARCHITECTURE, `notes/`, `facts/`, and crate-local `CLAUDE.md` files exemplify
-this topology. Themselves derived in part from the `rtrb` crate's README
-conventions.*
+- `docs/<name>.html` comes first in the reading order and is linked from the
+  README's second paragraph; it restates the decisions, features and limits
+  for its reader.
+- ALWAYS update it in the same commit as the PLAN.md decision, FEATURES.md row,
+  `BUGS.md` entry or ledger number it restates.
+
+## What `make lint` checks
+
+ALWAYS wire these into `make lint`, so a stale doc fails the build:
+
+- every FEATURES.md row's test exists at its path, and every `untested` id
+  exists in `BUGS.md`;
+- every path the ARCHITECTURE.md repository map names exists;
+- every `<dir>/README.md` is linked from the nearest README or ARCHITECTURE
+  above it, every `<dir>/CLAUDE.md` or `AGENTS.md` from the one above it;
+- every page claim's link carries `data-evidence="path::exact test name"` or
+  `data-evidence="BUGS.md::<BUG-ID>"`, checked the same way;
+- every number of two or more digits in the README, FEATURES.md, the directory
+  READMEs and the page's visible text appears in the ledger. This proves
+  membership, not meaning; a changed meaning re-runs the command;
+- the checker first refuses a planted fake citation and finds a planted real
+  test, so a parser that matches nothing cannot pass;
+- every item `writing/page.md` § Before handing over marks `keeper`, each
+  with its planted failure and a stated pass condition;
+- every Markdown file passes `rumdl check .` — wrapped at the width, every
+  relative link resolving (MD057) and clean on the enabled rules
+  (`software/code.md` § Layout and formatting names the config and the hook
+  that runs it on each write).
+
+## Instruction files
+
+- ONE per directory, under 200 lines: `CLAUDE.md`, or where a repo keeps
+  `AGENTS.md` canonical, `AGENTS.md` plus `CLAUDE.md` as the single line
+  `@AGENTS.md`; NEVER rules in both. Content: `wisdom` § CLAUDE.md (project).
+- A rule that holds only in a subtree lives in that subtree's file, NEVER the
+  parent; the parent names its subtree files in one line. NEVER a reading order
+  or which-file index in one — the README's "How to read this" holds it.
+
+## Tracked and local
+
+- Every file above but `specs/` is tracked, `BUGS.md` included — it is in the
+  reading order.
+- Local, root-anchored in `.gitignore`: `/specs/`, `/tmp/`. ALWAYS root-anchor
+  them — a bare `specs/` matches at every depth and swallows a real
+  `src/specs/`. A repo that already tracks `specs/` keeps tracking it.
+- A repo carries no diary (`diary` § Where it lives).
+
+## Keeping it
+
+- NEVER shorten a doc by cutting its limits, its alternatives or its why —
+  the goal is one question answered per file, not brevity.
+- ALWAYS cite alternatives generously and accurately enough that their authors
+  would not object; a superlative carries its ledger number; a roadmap item is
+  never listed as a feature.
+- ALWAYS give "What it does not give you" the length of the pitch — a limits
+  section shorter than the sell is a sell.
+- ALWAYS state assumptions and the trust model as flat bullets, NEVER buried in
+  prose.
+- An examples index carries a verdict column saying whether the reader gets
+  the same result without the project ("Plain transaction?": Yes / Yes,
+  weaker / No), with every value defined in a list ABOVE the table. NEVER a
+  verdict the reader decodes by guessing.
+- An example file whose flow the tests and the CLI already run opens by
+  saying why it exists, and says in those lines that it sends nothing when it
+  sends nothing.
+- The why section, the Why page on a docs site, names the obvious wrong
+  reason to adopt and refutes it with a number ("many calls in one
+  transaction is not the reason: thirty transfers already fit in one"),
+  before the real reason.

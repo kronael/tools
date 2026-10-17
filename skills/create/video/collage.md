@@ -25,10 +25,6 @@ tournament and let it decide (below).
     stage  -> flat paper card + subject + Impact-style caption, 3-4s loop
     render -> deterministic renderFrame(f) + headless capture -> gif/mp4
 
-Reference implementation (all four steps, ~450 lines total):
-`solve/demo/collage_fetch.py`, `cutout_lib.py`, `collage.assets.py`,
-`collage.html`, `collage.build.sh`.
-
 Practicalities that cost real time to learn:
 - Downscale sources to ~1200px before grabCut; it is superlinear in pixels and a
   4000px painting takes minutes per piece for no visible gain.
@@ -65,8 +61,6 @@ plan dies cheap.
    against character animation no matter how good it is: 19/19 losses in one run
    cited "character animation" as the reason. Judge like against like, or the
    verdict measures genre.
-
-Reference implementation: `solve/demo/eval/{clipkit,judge,report}.py`.
 
 ## Content
 

@@ -6,16 +6,23 @@ import sys
 
 from lib.state import session_state
 
-DOCS_RULES = """Documentation naming rules:
-- UPPERCASE files in root: CLAUDE.md, README.md, ARCHITECTURE.md, TODO.md, CHANGELOG.md, SPEC.md
-- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ dir; plans/ only as .claude/plans/ (plan mode's directory, where ship records live)
-- Root standalone files use UPPERCASE (SPECv1.md, TODO_1.md)
+STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
+- Lead with the answer. No preamble, no recap of what the diff already shows.
+- Tiers: a fact 1-3 lines, an action ≤12, an explanation ≤20, the hard ceiling.
+- ≤5 bullets of ≤2 sentences; tables and headers only for genuinely tabular content.
+- Plain words, active voice, one instruction per sentence (ASD-STE100).
+- Last line carries the next action, or the bottom line.
+- Before sending: read ONLY your first and last line. If those two do not
+  say what to DO and what HAPPENED, the middle is padding."""
+
+DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
+- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dir: plans and ship records live under ~/.claude/ (ship skill § Work record), never in the repo
 - NEVER use lowercase for root documentation files (todo.md, readme.md)"""
 
 COMMIT_RULES = """Commit rules:
 - Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
 - ALWAYS commit in detached HEAD - NEVER on or creating a branch
-- NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash
+- NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash a pushed commit (unpushed ones only via /squash)
 - NEVER skip pre-commit hooks
 - Pre-commit reformats on first run - ALWAYS retry commit once
 Invoke /commit skill."""
@@ -26,38 +33,36 @@ SOLVE_NUDGE = (
     'if this prompt is a direct continuation of work already in context.'
 )
 
-AGENT_KEYWORDS = {
+SKILL_KEYWORDS = {
     'architecture': '/specs',
     'background': '/dispatch',
     'bugs': '/bugs',
-    'ceo': '/ceo-eval',
+    'ceo': '/eval',
     'cont': '/continue',
     'continue': '/continue',
     'create': '/create',
-    'cto': '/cto-eval',
+    'cto': '/eval',
     'design': '/specs',
     'diagram': '/diagrams',
     'diary': '/diary',
     'dispatch': '/dispatch',
     'draft': '/pr-draft',
-    'eval': '/create-eval',
-    'explore': '/explore',
+    'eval': '/eval',
     'fin': '/fin',
     'fix': '/fix',
     'flowchart': '/diagrams',
-    'haiku': '/haiku',
     'humanize': '/humanize',
     'inline': '/gh-comment',
     'merge': '/merge',
     'microcopy': '/writing',
-    'novice': '/13yo-eval',
-    'pentest': '/red-eval',
+    'novice': '/eval',
+    'pentest': '/eval',
     'recall': '/recall-memories',
     'refine': '/refine',
     'release': '/release',
-    'roi': '/ceo-eval',
+    'roi': '/eval',
     'scavenge': '/scavenge',
-    'security': '/red-eval',
+    'security': '/eval',
     'ship': '/ship',
     'sonnet': '/sonnet',
     'spec': '/specs',
@@ -67,16 +72,15 @@ AGENT_KEYWORDS = {
     'thread': '/tweet',
     'tooltip': '/writing',
     'tweet': '/tweet',
-    'ux': '/13yo-eval',
-    'usability': '/13yo-eval',
-    'walkthrough': '/13yo-eval',
+    'ux': '/eval',
+    'usability': '/eval',
+    'walkthrough': '/eval',
     'wisdom': '/wisdom',
     'writing': '/writing',
-    'readme': '@readme',
-    'learn': '@learn',
-    'improve': '@improve',
-    'visual': '@visual',
-    'distill': '@distill',
+    'readme': '/readme',
+    'improve': '/improve',
+    'visual': '/visual',
+    'distill': '/distill',
     'review': '/review',
     'browse': '/browse',
 }
@@ -120,11 +124,10 @@ META_PATTERNS = [
 def explicit_route(prompt, harness=None):
     lower = prompt.lower()
     if harness != 'codex':
-        # A leading slash command only: "use sol" is as likely the Solana token
-        # as the skill, and "/sol/data" a path.
-        match = re.match(r'\s*/(astra|sol)(?![\w/.-])', lower)
-        if match:
-            return '/' + match.group(1)
+        # A leading slash command only: "use astra" is as likely the vector DB
+        # as the skill, and "/astra/data" a path.
+        if re.match(r'\s*/astra(?![\w/.-])', lower):
+            return '/astra'
         for pattern in CODEX_PATTERNS:
             if re.search(pattern, lower):
                 return '/astra'
@@ -134,7 +137,7 @@ def explicit_route(prompt, harness=None):
             return routes.get(match.group(1))
     words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
     for word in words:
-        matched = exact_match(word, AGENT_KEYWORDS)
+        matched = exact_match(word, SKILL_KEYWORDS)
         if matched:
             return matched
     return None
@@ -185,6 +188,7 @@ def main():
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        emit(STYLE_RULES)
         sys.exit(0)
 
     parts = []
@@ -196,6 +200,10 @@ def main():
     ):
         parts.append(SOLVE_NUDGE)
 
+    # Every turn. The style is in the system prompt and dilutes there; this is
+    # the copy that arrives next to the user's message.
+    parts.append(STYLE_RULES)
+
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
@@ -206,8 +214,7 @@ def main():
     elif matched:
         parts.append(f'info: Invoke {matched}.')
 
-    if parts:
-        emit('\n\n'.join(parts))
+    emit('\n\n'.join(parts))
 
     sys.exit(0)
 

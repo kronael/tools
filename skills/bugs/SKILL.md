@@ -1,25 +1,22 @@
 ---
 name: bugs
-description: >
-  The `BUGS.md` open-issues queue — the record-don't-fix policy, its two
-  sections (open defects, and what was ruled not a defect), entry format,
-  pruning. NOT for resolved-bug history (that lives in git and /diary), NOT
-  for feature backlog (use TODO.md/specs).
-when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now"
+description: The `BUGS.md` open-issues queue — record-don't-fix policy, entry format, pruning. NOT for resolved-bug history (git and /diary) or a feature backlog (use TODO.md/specs).
+when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now, deliberate limit, decision the owner owes, needs sign-off entry, ruled not a defect"
 ---
 
 # Bugs
 
 `BUGS.md` at the project root holds exactly two things:
 
-1. **Defects that are still true of the code.**
+1. **What is open** — defects still true of the code, and the decisions the
+   owner still owes (a redesign, a deliberate limit, a licence or product call).
 2. **Things that were reported as defects and are not** — so the next audit
    does not re-report them.
 
 Nothing else. It is NOT a log of audits, reviews, sessions or sweeps: no
 "Status — <date> — <what I checked>" blocks, no lead paragraphs describing a
 review pass, no counts of what was verified. That narrative belongs in
-`.diary/`. A reader opens `BUGS.md` to learn what is broken, not what someone
+the diary. A reader opens `BUGS.md` to learn what is broken, not what someone
 did.
 
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
@@ -27,10 +24,8 @@ project already has.)
 
 ## Bug Triage Protocol — record, don't fix
 
-- When debugging or auditing a system, RECORD bugs in `BUGS.md` at project root
-- NEVER fix bugs immediately just because you found them during a general check
-- Only fix when the user explicitly asks for a fix (e.g. "fix it", "fix the vhosts")
-- `BUGS.md` is the review queue — log it, move on, let the user prioritise
+WISDOM § Bug triage owns it: a bug found during any check is recorded here
+and fixed only when the user asks.
 
 ## When NOT to record
 
@@ -63,7 +58,8 @@ the file needs no dated scaffolding around it.
 ## Entry format
 
 One **bullet** per bug: bold UPPERCASE-KEBAB id, a `(SEVERITY, type)` tag, an
-em-dash, then the body.
+em-dash, then the body. An existing `BUGS.md` in another shape keeps it: ALWAYS
+add entries in the file's own format, NEVER convert it, and NEVER ask to.
 
 ```markdown
 - **COMPONENT-SHORT-NAME** (SEVERITY, type) — <what's broken>, at `file:line`;
@@ -82,11 +78,16 @@ em-dash, then the body.
 - **test** — cites the failing test that proves it:
   `Measured: <file>::<test-name>`. Omit only for a carve-out type (see below).
 - **status** — inline, as a clause: `CONFIRMED at HEAD <date>`,
-  `open (record only)`, `deferred — <why>`, `needs sign-off`. A fix that
-  changes behaviour says so, with what was measured.
-- A redesign proposal (new contract, changed control flow, cross-cutting)
-  is an entry with `needs sign-off` and the options sketched; the user
-  signs off on the approach BEFORE it is built.
+  `open (record only)`, `deferred — <why>`, `needs sign-off`,
+  `owner decision`. A fix that changes behaviour says so, with what was
+  measured.
+- A redesign proposal (new contract, changed control flow, cross-cutting) or
+  any other call the owner owes is an entry whose status is `needs sign-off`
+  or `owner decision`. ALWAYS give it `**Options:** (a) …; (b) …` and
+  `**Default if nothing is decided:** …` — what applies until the owner
+  answers, so the queue never stalls on silence. A gate the entry holds is
+  one more clause: `blocks go-live`, `blocks publication`. The user signs off
+  on the approach BEFORE it is built.
 
 ## Pin it with a failing test
 
@@ -106,8 +107,8 @@ existing ignored/skipped test and match it; never invent a second convention.
 - ALWAYS put the entry id in the skip/ignore reason next to the mechanism
   (`"<ENTRY-ID>: <mechanism>"`) — either side greps straight to the other.
 - NEVER let writing this test become writing the fix. The test asserts correct
-  behavior and stays red; producing it is recording, exactly the CLAUDE.md Bug
-  Triage Protocol's "record, don't fix" — the assertion, never the code that
+  behavior and stays red; producing it is recording, exactly WISDOM § Bug
+  triage's "record, don't fix" — the assertion, never the code that
   makes it pass.
 
 **Carve-out — no test required:** `docs`, `ops`, `config`, `design`,

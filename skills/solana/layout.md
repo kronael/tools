@@ -45,11 +45,11 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
   error:
 
   ```rust
-  pub const ID: Pubkey = pubkey!("J9Rve…6F25");   // in the state crate
+  pub const ID: Pubkey = pubkey!("<program id>");   // in the state crate
 
   #[test]                                          // in the program crate
   fn state_crate_names_this_program() {
-      assert_eq!(crate::ID, limit_program_state::ID);
+      assert_eq!(crate::ID, market_program_state::ID);
   }
   ```
 
@@ -58,7 +58,7 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
   must forward into the state crate:
 
   ```toml
-  idl-build = ["anchor-lang/idl-build", "limit-program-state/idl-build"]  # program
+  idl-build = ["anchor-lang/idl-build", "market-program-state/idl-build"]  # program
   idl-build = ["anchor-lang/idl-build"]                                   # state
   ```
 
@@ -67,13 +67,9 @@ Three mechanics, each verified in the anchor 1.1.2 macro sources:
 
 ### Where the test-module declarations go
 
-`rs` puts unit tests in `src/<module>_test.rs`, declared with
-`#[cfg(test)] mod <module>_test;`. In a multi-file program that declaration
-cannot sit in the module it tests: `mod price_test;` inside `src/price.rs`
-resolves to `src/price/price_test.rs` and fails with `E0583`. Declare them in
-`lib.rs` (or in the directory's `mod.rs`, where `mod deposit_accounts_test;`
-does resolve to a sibling file) and leave a one-line note saying why they are not
-next to their subject.
+Unit tests follow `rs` § Testing: `src/<module>_test.rs` beside its subject,
+declared at the top of the module it tests with `#[path]`. That section owns
+the rule.
 
 ### Module names
 
@@ -85,7 +81,7 @@ and the file stops fitting in one mental context.
 
 ### Where invariants live
 
-`rs`'s abstraction rules hold, with one on-chain corollary: a per-account
+`software/code.md` § Design's abstraction rules hold, with one on-chain corollary: a per-account
 invariant belongs as a method on the account type in the state crate, not as a
 free function taking that account as its first argument. Signer seeds, an
 open-item counter, an entry lookup:
@@ -108,8 +104,8 @@ struct that owns the arrays and carries `as_seeds()`.
 Name the program crate for what it does, then keep five names in sync: the
 package name, the `[lib] name`, the `#[program]` module, the `Anchor.toml`
 `[programs.*]` key, and the built `.so`. Cargo derives the lib target from the
-package name with dashes turned to underscores (`limit-program` →
-`limit_program`), and the artifact filename is the lib name — so a rename that
+package name with dashes turned to underscores (`market-program` →
+`market_program`), and the artifact filename is the lib name — so a rename that
 misses one of the five still builds, and silently deploys under the old name.
 
 ## Cargo profiles: declare only what is not already the default

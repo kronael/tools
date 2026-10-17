@@ -38,7 +38,7 @@ Session ended or compacted. Review for patterns:
 3. What errors occurred?
 4. What could be automated?
 
-## For Learn Agent
+## Next step
 
 Run `/learn` to analyze this session and extract patterns into skills.
 

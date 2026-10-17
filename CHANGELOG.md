@@ -1,6 +1,661 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.49] — 20261016
+
+> kronael v0.4.49 — rip -g pushes, the v0.4.41 hooks stay
+>
+> `rip -g`/`rif -g` replace ghpush and ghfetch, Python and SQL gain record rules, and the hooks return to their v0.4.41 shape.
+>
+> • rig — `rip -g` pushes and `rif -g` fetches with the gh token; `ghpush` and `ghfetch` are gone.
+> • Settings — a `rip` or `rig` command that names master or main asks first.
+> • py — a dataclass for every value, pydantic at the boundary, `Record(**row)` from own SQL rows.
+> • sql — a closed set is a SMALLINT behind an IntEnum; a db function names its verb and result.
+> • code — `_loop` runs for the process's life, `do_` tries once; a timeout is never retried.
+> • Hooks — the v0.4.41 hooks and caveman stay, LOCAL.md reaches the model; the redesign is out.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `rig`: `rif` fetches origin; `rip -g` and `rif -g` push and fetch over HTTPS with the `gh` token.
+- `settings-recommended.json`: `ask` for a `rip` or `rig` command that names `master` or `main`.
+- `py` § Named Data Structures: a dataclass for every value; pydantic at the boundary; one codec.
+- `py`: `Record(**row)` from own SQL rows; pure classmethod constructors and properties on a record.
+- `py`: a `Protocol` is named `<Verb>able` or `<Noun>Like`.
+- `py`: the property ban and `py-no-property` name a record's derived value as an exception.
+- `sql`: closed sets as `SMALLINT` with an `IntEnum`; db functions name verb plus result.
+- `sql`: each statement sits directly above the one function that runs it.
+- `software/code.md`: `<what>_loop` and `do_<what>` names; in-job retry only for fast failures.
+
+### Changed
+
+- `rig`: `ghpush` and `ghfetch` are removed and `rig install` deletes their links.
+- WISDOM § Git and the skills name `rip -g` and `rif -g` as the agent's push and fetch.
+- Hooks, `output-styles/caveman.md`, `pr-draft` and `gh-comment` stay as in v0.4.41.
+- Not in this release: the v0.4.42–v0.4.48 hook redesign (`style_nudge`, `lib/reminder`, `kvs`).
+- Not in this release: the 1800-character PR cap and the STE move out of `caveman.md`.
+- `kvs` ships as a standalone tool; the hooks do not use it.
+- The prompt hook's caveman summary repeats the style's tiers, bullet cap and table rule.
+
+### Fixed
+
+- `hooks/local.py`: LOCAL.md and the continuation rules reach the model as UserPromptSubmit context.
+- `hooks/gh_text_lint.py`: an image in a PR body is refused, as `pr-draft` states.
+- `codex-hooks.json`: the PreToolUse matcher names `Bash`, so the command gates run under Codex.
+
+## [v0.4.48] — 20261016
+
+> kronael v0.4.48 — hooks point at skills and remember misses in kvs
+>
+> Hooks point at skills in one XML line and remember misses in kvs, so the caveman reminder stops flooding the context.
+>
+> • kvs — a key-value store CLI on one SQLite file, with sessions, CAS, incr and a flock-style lock.
+> • Hooks — every injection is one XML pointer to a skill; Stop measures the reply and never asks for a rewrite.
+> • Caveman — self-contained chat rules that name STE in one line; reminders escalate only on repeated misses.
+> • Conventions — user programs keep state under XDG; refine asks the redesign question for workaround code.
+> • Codex — the footer config ships with the tools, and skill parity is checked.
+
+## [v0.4.47] — 20261016
+
+> kronael v0.4.47 — the review submit asks in the permission dialog
+>
+> The review submit asks in the permission dialog, haiku and luna join the tiers, and the owner's corrections land in their skills.
+>
+> • Review submit — the hook asks in the permission dialog, which shows the exact command to approve.
+> • Codex — a submit is denied there and the agent hands the user the exact command to run.
+> • /haiku and /luna — the fan-out tier in Claude and Codex; dispatch § Tiers lists every lane.
+> • Writing — the ASD-STE100 rules live in the writing skill; a README carries the project Glossary.
+> • Code and docs — a library returns Result, a comment is a few words, one home per doc section.
+> • WISDOM — the global file's overlapping bullets merge, 210 to 196 lines, no rule cut.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge`: a review submit gets `permissionDecision: ask`; the typed `SUBMIT REVIEW` gate is gone.
+- `pretool_nudge`: under Codex a submit is denied with the command for the user; every decision is
+  `hookSpecificOutput.permissionDecision` with its reason.
+- `gh-comment` § Submit, `review`: the submit runs on the user's ask, approved in the permission dialog.
+- WISDOM § Agents: caps are 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable`; `luna` counts as `haiku`.
+- `haiku`, `luna`: Haiku 5.5 and `gpt-6-luna` at medium take fan-out and bounded edits; lanes: `dispatch` § Tiers.
+- Prompt nudge: `haiku`, `luna` and `terra` route on the explicit form only (`use X`, `/X`).
+- `writing` § Language: the ASD-STE100 rules; `caveman` keeps the same bullets for chat (`tests/drift_test.sh`).
+- `readme`: README item 4 is the Glossary; one home per doc section; one diagram beside its list; an
+  example file says why it exists. `writing`: a list keeps the reader's order in every doc.
+- `code.md`, `rs`: library code returns an error and only `main` or a test panics, with clippy denies;
+  an allowed comment is a few words; a field is validated once against the value the code derives.
+- `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
+- `mk`: no `help` target, `.DEFAULT_GOAL := help` or `##` descriptions; 1-3 files get plain rules.
+- WISDOM: overlapping bullets merged, body 210 → 196 lines; `BUGS.md` closes GLOBAL-SKILL-BODY-OVER-CAP and
+  records MK-REPO-MAKEFILES-KEEP-HELP-TARGETS; box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model.
+
+## [v0.4.46] — 20261015
+
+> kronael v0.4.46 — Shared style reminders, quieter guest boot
+>
+> Claude and Codex receive the same per-prompt style reminder, and qemubox reduces boot console output.
+>
+> • Caveman — one canonical reminder across prompt, tool and compaction hooks.
+> • Codex and Claude — each prompt receives one reminder when the style is selected.
+> • qemubox — `loglevel=5` reduces console work while preserving guest diagnostics.
+> • Recall — memory searches keep the intended project scope.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The canonical style supplies the reply budget and delivery self-check; model compliance remains imperfect.
+- qemubox retains its q35 machine and existing image format.
+
+## [v0.4.45] — 20261015
+
+> kronael v0.4.45 — Codex starts inside qemubox, PR bodies get review pointers
+>
+> Codex now starts in a qemubox VM, and a PR body can point reviewers to the code and test that matter.
+>
+> • qemubox — sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`, so Codex opens its SQLite state.
+> • Host and guest Codex stop sharing database files that 9p cannot lock between them.
+> • Guest databases disappear at shutdown; Codex rebuilds its thread list from the shared sessions.
+> • PR bodies — up to three review-pointer bullets after the TL;DR, and up to 1800 chars.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: sessions set `CODEX_SQLITE_HOME=/tmp/codex-sqlite`; a `sqlite_home` config key wins.
+- `qemubox`: guest Codex databases disappear at shutdown, queued prompts included.
+- `pr-draft`: a PR body may add up to three review-pointer bullets; the cap is 1800 chars.
+- `gh_text_lint`: refuses a `+ [ ]` checkbox, a header in a bullet and an image in a PR body.
+- `BUGS.md`: a guest Codex with memories on can delete memory files the host wrote.
+
+## [v0.4.44] — 20261015
+
+> kronael v0.4.44 — only shared libraries go to fable, Rust imports stay bare
+>
+> Two rules: only a globally shared library goes to fable, and Rust code imports an item or writes its full path.
+>
+> • Agents — fable takes a library other repos import; a project's own crate gets the regular path.
+> • Rust — `use` the item bare or write its full path, never a partial one like `types::X`.
+> • Rust — a short module prefix stays only where it carries meaning the bare name loses.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: only a library other repositories or teams import goes to `fable` or `astra`.
+- WISDOM § Agents: a project's own library takes an `opus` plan, then `sonnet` or `opus` steps.
+- `rs`: prefer a `use` of the item or its full path over a partial module path such as `types::X`.
+- `rs`: keep a short module prefix only where it carries meaning the bare name loses.
+
+## [v0.4.43] — 20261014
+
+> kronael v0.4.43 — qemubox sees a paused VM
+>
+> qemubox now reports a VM that qemu paused on a full host disk, and VM disks shrink when the guest frees space.
+>
+> • Paused VMs — `ls` and `status` show `paused:io-error`, and a launch into one fails at once.
+> • Stop — `qemubox stop` resumes a paused guest before its shutdown; `-f` quits qemu over QMP.
+> • Disk space — guest discards reach the overlay, and `stop` trims the guest disk.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `qemubox`: each VM gets a QMP socket in its owner-only state dir; the host needs `python3`.
+- `qemubox`: `ls` and `status` show `paused:<reason>`; a launch into a paused VM fails at once.
+- `qemubox stop`: resumes a paused guest, trims its disk, then powers off; `-f` quits over QMP.
+- `qemubox`: the disk passes guest discards through, so space the guest frees leaves the overlay.
+- A VM that is running now gets the socket and the discard pass-through at its next boot.
+- `BUGS.md`: guest `/etc/group` breaks when qemu stops hard soon after boot.
+
+## [v0.4.42] — 20261014
+
+> kronael v0.4.42 — fable asks before astra, Rust keeps one path per item
+>
+> Two rules: a fable limit asks the user before astra takes over, and Rust crates stop re-exporting other crates.
+>
+> • Fable — a usage or spend limit now asks the user before the same brief runs on astra.
+> • Rust — a crate re-exports only its own types; callers import another crate's items from that crate.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `fable`: on a usage or spend limit, ask the user before switching to astra; never switch silently.
+- `rs`: re-export only the crate's own types, never another crate's items.
+
+## [v0.4.41] — 20261014
+
+> kronael v0.4.41 — the robot opens every GitHub text
+>
+> Every PR body, issue and comment Claude posts starts with 🤖, and the gate refuses it anywhere else.
+>
+> • GitHub text — a PR body, issue, comment or reply opens with `🤖 `; the robot appears nowhere else.
+> • Gate — the hook refuses a body with the robot last or missing, and the lint names the line.
+> • Skills — pr-draft, gh-issue and tweet state the opener and override the harness's last-line robot.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Git: attribution is `🤖 ` before the first word of every GitHub text, nowhere else.
+- `hooks/gh_text_lint.py`: one opener check for PR, issue and comment; a second robot is refused.
+- `pr-draft`, `gh-issue`, `tweet`, `hooks/README.md`: the opener replaces the last-line robot.
+- WISDOM § Agents: the shared-library rule names no project.
+- `BUGS.md`: the wisdom body over its cap, REST create routes unchecked, the reminder's last robot.
+
+## [v0.4.40] — 20261013
+
+> kronael v0.4.40 — Codex shows its limits in the footer
+>
+> Sync sets the Codex footer to the model, context and the 5-hour and weekly limits.
+>
+> • Codex — the footer shows model, context used, and 5-hour and weekly quota left.
+> • Sync — the Codex bridge sets that footer and keeps every other Codex setting.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `sync` § Codex bridge: `tui.status_line` = model, context, 5-hour and weekly limit; reset times stay in `/status`.
+- `hooks/test_statusline.py`: the bridge's TOML array is tested.
+
+## [v0.4.39] — 20261013
+
+> kronael v0.4.39 — the status line shows, and sync reports settings it left out
+>
+> Sync now always wires the status line, and it lists every recommended setting that still differs.
+>
+> • Status line — one compact line: model, context, 5-hour and weekly use with their reset times.
+> • Sync — the status line joins the settings that every sync applies.
+> • Sync — each run lists the recommended settings keys that still differ from the live file.
+> • Agents — codex workers count as subagents: terra as sonnet, sol as opus, astra as fable.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/statusline.py`: `O5.5 · c 38% · 5h 17% → 20:50 · w 89% → Sun 18. 11:00`.
+- `sync` step 5: `statusLine` joins the always-apply set; declining the asked keys never skips it.
+- `sync` step 5 and step 8: the differing-keys list is written down and reported.
+- WISDOM § Agents: codex workers follow every sub rule and share the caps.
+
+## [v0.4.38] — 20261013
+
+> kronael v0.4.38 — opus plans, sonnet builds, pages pruned
+>
+> Implementation runs as an opus plan with one sonnet step at a time, and page rules cut repeats.
+>
+> • Agents — opus plans implementation, sonnet runs each step, fable never writes the code.
+> • Agents — fable takes specs, architecture, skill text, algorithms and red reviews.
+> • Pages — a prune pass per section cuts what the heading, a figure or the obvious already says.
+> • Pages — a wire format the page is about is drawn as a packet diagram, never a table.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Agents: implementation is an `opus` plan, then one `sonnet` sub per step, each diff read.
+- `fable`: specs, architecture, skill text, algorithms and red reviews; never implementation.
+- `ship`: plans on `opus`, steps on `sonnet`; the CLI runs on its default `sonnet`.
+- `writing`: page.md prunes each section before handover and drops statements of the obvious.
+- `writing`: page.md draws a wire format as a packet diagram, exempt from the mechanics ban.
+
+## [v0.4.37] — 20261013
+
+> kronael v0.4.37 — spec-lint on PATH, pushes through the gh token
+>
+> spec-lint runs from any repo, and agents push to GitHub with the gh token while the SSH remote stays yours.
+>
+> • spec-lint — on PATH for any repo; a pointer resolves repo-wide, so `name.py:12` is not stale.
+> • spec-lint — new checks: length, links, history words, jargon, option lists, open questions.
+> • ghpush — a stated refspec over HTTPS with the gh token; force and remote rewrites are refused.
+> • Subagents — at most 2 sonnet plus 1 opus or fable at once.
+> • Asks — only before approving a PR, merging one or pushing to the default head.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `spec-lint/`: the spec linter is a standalone CLI tool, stdlib only; the sync installs it.
+- `spec-lint`: a pointer resolves up to the repo root, then by a unique trailing path in the repo.
+- `spec-lint`: a path with a slash is a pointer, extension or not; `..` paths and dirs are not.
+- `spec-lint`: a `<phase>/index.md` the root index links carries rows; `specs/CLAUDE.md` is no spec.
+- `spec-lint`: new rules spec-link, spec-table-owner, spec-length, spec-history, spec-wording.
+- `spec-lint`: new rules spec-options, spec-open-questions, spec-checklist, spec-no-pointer.
+- `spec-lint`: spec-naming fails a shared number; spec-pointer warns past the end of a file.
+- `spec-lint`: a quoted or line-broken `CREATE TABLE` is an owner; a link with parentheses resolves.
+- `spec-lint`: skips an unreadable directory; a broken symlink or a dir named `*.md` is no spec.
+- `spec-lint`: reads specs as UTF-8 with or without a BOM and prints under any locale.
+- `spec-lint`: exit 0 clean, 1 errors, 2 bad path; findings on stdout; `--help` lists every rule.
+- `specs`: format.md adds definition first, one owner per table, proposed vs existing, no history.
+- `specs`: format.md names the judgements no lint makes: the Contract, numbers with their commit.
+- `rig`: `ghpush` pushes stated refspecs to origin's GitHub push URL over HTTPS with the gh token.
+- `rig`: `ghpush` keeps HTTPS under `url.*.insteadOf`; a refspec names `refs/heads` or `refs/tags`.
+- `rig`: `ghfetch <refspec>` fetches the same way when SSH refuses; `ghpush -u` prints the URL.
+- `rig`: `ghpush`/`ghfetch` read `ssh://git@github.com:<port>/` and `ssh.github.com` remotes.
+- WISDOM § Git: agents push and fetch through `ghpush`; only a push to `master` or `main` asks.
+- WISDOM § Git: PR approval, a merge and a default-head push ask first; opening a PR does not.
+- WISDOM § Agents: at most 2 `sonnet` and 1 `opus` or `fable` subagent at once.
+- Settings: `gh pr review --approve` and `ghpush` to master or main ask; `gh pr create` does not.
+
+## [v0.4.36] — 20261013
+
+> kronael v0.4.36 — bigger qemubox /tmp, one release review pass
+>
+> qemubox VMs get 64 GiB of RAM and a 48 GiB /tmp, and they return freed memory to the host.
+>
+> • qemubox memory — `QEMUBOX_MEM` defaults to 65536; freed guest pages go back to the host.
+> • qemubox /tmp — one tmpfs at 75% of RAM holds cargo builds and build dirs; full means ENOSPC.
+> • Model flags — `--model` or `-m` after an alias replaces its model and effort in both boxes.
+> • Release — one first review pass sizes the refine, with no second-opinion pass.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox: `QEMUBOX_MEM` default 65536; a virtio-balloon device returns freed guest pages to the host.
+- qemubox: guest `/tmp` is one tmpfs at 75% of RAM; cargo builds and tmpfs build dirs sit on it.
+- qemubox, dockbox: `--model` or `-m` after an alias replaces the alias's model and effort.
+- dockbox: `-d codex` and `-x` keep the alias defaults; box settings drop the top-level `defaultMode`.
+- qemubox: a guest poweroff in a session reports "powered off"; first boot drops systemctl noise.
+- Removed: qemubox `destroy` (use `rm`) and `build-base rebuild` (use `build-base -f`).
+- `release`: one first pass sizes the refine, no second-opinion pass; this repo runs it on Astra.
+- `squash`: prints the mapping and rebuilds without an approval stop.
+
+## [v0.4.35] — 20261013
+
+> kronael v0.4.35 — qemubox waits before power-off, weekly use on screen
+>
+> A qemubox VM now stays up 20 minutes after its last session, and the status line shows weekly plan use in whole percent.
+>
+> • `qemubox stop <name>` — powers a VM off; `-f` skips the guest shutdown wait, `-a` stops all.
+> • Idle stop — the VM powers off after `QEMUBOX_LINGER` seconds (default 1200) with no session.
+> • Status line — model, context, 5-hour and weekly limits, each in whole percent.
+> • AGENTS.md — Claude Code loads it beside CLAUDE.md; a directory may keep AGENTS.md canonical.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox: `stop <name|glob>... [-f|-a]`; each wait step prints a line before it waits.
+- qemubox: `QEMUBOX_LINGER` (seconds, default 1200, `0` powers off at once); log in the box's `idle.log`.
+- Settings: `statusLine` runs `hooks/statusline.py`; `pluginConfigs` loads AGENTS.md beside CLAUDE.md.
+- `readme`, `wisdom`: one instruction file per directory, `CLAUDE.md` or `AGENTS.md` with a `@AGENTS.md` shim.
+- `specs`: no doc or code links a spec; a shipped spec MAY be deleted once the docs hold its state.
+- Removed from the repo: `specs/`, `research/`, `evals/` and the spec-lint pre-commit hook.
+
+## [v0.4.34] — 20261012
+
+> kronael v0.4.34 — temporary boxes and new Claude sessions
+>
+> dockbox and qemubox can start a temporary session with no project mounted, and can start Claude without the resume picker.
+>
+> • `-T` — temporary session: no project mount, work in `/tmp/work`, gone when the box exits.
+> • `-N` — start a new Claude session instead of the resume picker.
+> • `-B` — build dirs on disk instead of RAM; this was `-T`, so update rc files.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dockbox, qemubox: `-T` mounts no project dir and starts in tmpfs `/tmp/work`, box `tmp`.
+- dockbox, qemubox: `-N` skips `claude --resume`; `-T` implies it.
+- BREAKING: disk-backed build-dir overmounts move from `-T` to `-B`; change `-T` to `-B` in rc files.
+- BREAKING: qemubox `-N` no longer skips the project mount; use `-T`.
+- A project rc ignores `-T` and accepts `-B` and `-N`.
+
+## [v0.4.33] — 20261012
+
+> kronael v0.4.33 — reviews wait for the owner, worktrees can go
+>
+> A PR review now stays pending until the owner types SUBMIT REVIEW, and a finished worktree can be removed after two checks.
+>
+> • Review gate — a review submit needs `SUBMIT REVIEW` in the user's newest message.
+> • Worktrees — `git worktree remove --force` runs once HEAD is kept and changes are shown.
+> • dockbox — manim builds, renders `MathTex` and starts without a bytecode recompile.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh-comment`, `review`: a posted review stays PENDING; § Submit runs only on `SUBMIT REVIEW`.
+- Hooks: `gh pr review`, `/reviews/<id>/events` and a `/reviews` POST with `event` need it.
+- Hooks: a payload without `transcript_path` (Codex) refuses the submit; the user submits by hand.
+- `worktree` § Removing a worktree and WISDOM § Shell: the one lift of the recursive-removal ban.
+- dockbox: `texlive-latex-extra`, cairo/pango headers; manim and serena compile bytecode at build.
+
+## [v0.4.32] — 20261012
+
+> kronael v0.4.32 — pages that come out finished
+>
+> The writing and readme skills now carry the page rules an owner used to type by hand, plus a trial form audit.
+>
+> • Writing — a 15-item handover checklist; the mechanical items become keeper checks in `make lint`.
+> • Pages — answer first, then how the parts fit, limits before flow detail, the decide section last.
+> • Lenses — a study page runs the CEO, CTO and novice reads before handover.
+> • Form audit (trial) — a headless browser measures layout, type, contrast and figures at two widths.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `writing/page.md`: page-finishing rules (box fill and even rows, one fact once, word and font budgets with a counting rule, glossary, no mechanics, a conditional brand block, faithful flow and refusal figures, linked identifiers) and a 15-item handover checklist scoped to standalone pages, with the keeper-checkable items marked.
+- `readme/page.md`: what a study page holds and in what order — the answer first, how the parts fit, limits before flow detail, each flow its own block, the decide section last — plus the CEO, CTO and novice lenses before handover.
+- `readme/onepager.md`: the problem section leads with the reader's cost today and the change the project makes.
+- `readme/topology.md`: the `writing/page.md` keeper items wire into `make lint`; the study page carries an update rule.
+- `create/form.md`: a trial form audit — a headless browser measures layout, type, contrast and figures at 1440 and 375, light and dark — reached by a `create` dispatch row.
+
+## [v0.4.31] — 20261012
+
+> kronael v0.4.31 — Code maps and language-server renames on demand
+>
+> Two new skills map a codebase and rename symbols through the language server, and both run only when called.
+>
+> • codemap — ripwire overview, task lookup, callers, blast radius, and graphs drawn from the code.
+> • serena — one-shot Python and Rust rename, plus a check for code behind disabled cargo features.
+> • Renames — each language names its tool: serena, gopls rename, or ts-morph with workspace paths.
+> • Skills — one file owns each rule; long reference moved to files read on demand.
+> • Lint — the skill lint skips git-ignored paths, so scratch checkouts no longer fail it.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `codemap`: ripwire maps, `--for`, callers, uses, impact, Mermaid and HTML call graphs; goda, pydeps.
+- `serena`: `call.py` runs Serena for one call over stdio; it is never an MCP server.
+- Renames: Python and Rust through `serena`, Go through `gopls rename`, TypeScript through ts-morph.
+- Install: ripwire is binary-only and never an MCP server; Serena sets `web_dashboard: false`.
+- Skills: repeated rules point at one owner; port-to-go, browse and wisdom overflow moved to siblings.
+- `make skills-frontmatter`: skips git-ignored paths and no longer crashes on a root inside one.
+
+## [v0.4.30] — 20261010
+
+> kronael v0.4.30 — Diary out of repos, one owner per rule
+>
+> The diary moves to ~/.claude like ship records, and a full refine pass cuts repeated rules from the bundle.
+>
+> • diary — entries go to ~/.claude/projects/<slug>/diary/; no repo carries a .diary/ dir.
+> • Stop hook — checks the new diary path, keyed on the main tree's resolved path.
+> • recall — reads the home diary first, then a repo's older .diary/ when one exists.
+> • sync — the settings merge keeps your cleanupPeriodDays and your other hook events.
+> • Docs — each rule lives in one file, and the other files point at it.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `diary`: entries go to `~/.claude/projects/<slug>/diary/`, keyed on the resolved main tree.
+- No repo carries a `.diary/` dir or an ignore line for one; this repo's tracked diary is removed.
+- Stop hook: checks the new path; it stays silent outside git.
+- `recall-memories`: reads the home diary first, then a repo's `.diary/`, read-only.
+- `ship`: the record slug uses the resolved path; outside git, `pwd -P`.
+- Sync: the settings merge keeps `cleanupPeriodDays` and other hook events.
+- Codex plugin manifest declares the Unlicense.
+- Bundle docs: one owner file per rule; refine and topology overflow moved to sibling files.
+
+## [v0.4.29] — 20261010
+
+> kronael v0.4.29 — Records out of repos, Bun tooling
+>
+> Ship records and plans live under ~/.claude, and JavaScript-family tooling is TypeScript run by Bun.
+>
+> • ship — records go to ~/.claude/projects/<slug>/ship/; plans stay in ~/.claude/plans/.
+> • Repos — no plansDirectory, .claude/plans/ or .ship/ is created; nothing to gitignore.
+> • ts — tooling scripts are TypeScript on Bun; shared checkers live in one global tools project.
+> • sweep — worktree isolation and reconciliation follow the worktree skill.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship`: the record dir is `~/.claude/projects/<slug>/ship/`; plans stay in `~/.claude/plans/`.
+- No repo carries `plansDirectory`, `.claude/plans/` or `.ship/`; no record needs an ignore line.
+- `ship` CLI: `DATA_DIR` goes under the record dir; its trace log still lands in `.ship/` (BUGS.md).
+- `ts`: JavaScript-family tooling is TypeScript run by Bun; no `.js`/`.mjs`/`.cjs` tooling.
+- `ts`: reusable checkers stay in the global tools project with project-local config.
+- `sweep`: parallel fixes and their reconciliation defer to the `worktree` skill.
+- Merge: origin's v0.4.26 and v0.4.27 join this line; the v0.4.27 section is origin's.
+
+## [v0.4.28] — 20261010
+
+> kronael v0.4.28 — PR bodies are a TL;DR
+>
+> A PR body is now a TL;DR of one to three sentences, with no bullets, and the naming rules no longer list languages.
+>
+> • pr-draft — a body is the TL;DR lead, `Closes #N` lines and 🤖; nothing the title or diff shows.
+> • GitHub gate — a body over 400 chars, a bullet, a second paragraph or a code block fails.
+> • code.md — naming rules stated for all code; the sh skill points there.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pr-draft`: a body is the `**TL;DR:**` lead, optional `Closes`/`Fixes #N` lines and `🤖`.
+- GitHub gate: a PR body over 400 chars, a bullet, text after the lead or a code block is refused.
+- WISDOM § Git: DISTILL names the TL;DR as the whole PR body.
+- `code.md`: the `is_`/`has_` and `run_<command>` rules name no language; `sh` only points at `code.md`.
+
+## [v0.4.27] — 20261010
+
+> kronael v0.4.27 — Worktrees follow explicit choices
+>
+> Agents share one checkout by default, while separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+>
+> • Default checkout — routine editing workers share one tree with one writer at a time.
+> • Worktree opt-ins — Ship and creative exploration keep their required worktrees.
+> • Shared resources — isolated workers still coordinate services, ports and caches.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Routine editing workers use one shared checkout with one writer at a time.
+- Separate PRs, owner requests and explicit skill opt-ins permit detached worktrees.
+- Worktrees still share services, ports and caches.
+
+## [v0.4.26] — 20261010
+
+> kronael v0.4.26 — GitHub text gate, Python rules, subagent cap
+>
+> PR, issue and comment text is linted before it posts, Python gains async and typing rules, and subagents are capped per tier.
+>
+> • GitHub gate — a PR, issue or comment whose text fails the lint is refused before it posts.
+> • pr-draft, gh-issue, gh-comment — each runs the lint before its sign-off gate.
+> • py — short file I/O inline, one shared thread helper, subprocesses reaped by one context manager.
+> • Typing — one project-wide pyright strict mode; a test file opts down with `# pyright: basic`.
+> • Agents — at most 3 sonnet, 1 fable and 2 opus subagents at once; only the owner lifts the cap.
+> • refine — a Python lens; a worktree is removed only once its HEAD is on a remote ref.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `gh` PR, issue, comment and review posts whose body fails the WISDOM lint are refused.
+- `python3 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>` lints a body by hand.
+- `pr-draft` distills until the lint prints `ok:`; `gh-comment` and `gh-issue` lint before posting.
+- Settings: `attribution.pr` `"🤖"` and `attribution.sessionUrl` `false` always apply.
+- Skill lint: a sibling `.md` lints its owner; the opt-out marker counts only on its own line.
+- `py`: short file I/O inline, one shared `to_thread` helper, subprocesses reaped by one manager.
+- Typing: one project-wide pyright `strict`; a test file opts down with `# pyright: basic`.
+- `refine`: a Python lens; a worktree is removed only when its HEAD is on a remote ref and clean.
+- Agents: at most 3 `sonnet`, 1 `fable` and 2 `opus` subagents at once; only the owner lifts it.
+- `release`: a changelog bullet is one sentence, at most 100 characters, user-visible change only.
+- `software/code.md`: a function wrapping one external command is named `run_<command>`.
+- `wisdom`: XML tags are labels, not loaders; conditional loading is `.claude/rules/*.md` `paths`.
+- `BUGS.md`: a gh gate proposal, two gate gaps, four skill-lint gaps and five rule conflicts.
+
+## [v0.4.25] — 20261008
+
+> kronael v0.4.25 — Sol 6.1 workers and defaults
+>
+> Terra delegates coding work to GPT-6.1 Sol, and the Codex box launchers select the same model.
+>
+> • /terra — GPT-6.1 Sol at high effort, through a native Codex worker or the CLI.
+> • Box defaults — dockbox codex and qemubox codex use GPT-6.1 Sol at xhigh effort.
+> • Explicit Sol opinions — oracle selects GPT-6.1 Sol at high effort.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `/terra` selects GPT-6.1 Sol/high through independent native workers or ephemeral CLI sessions.
+  CLI permissions follow the task. Editing workers use their own worktree.
+- `dockbox codex` and `qemubox codex` select GPT-6.1 Sol/xhigh.
+  Explicit Sol second opinions through `astra` and `oracle` select GPT-6.1 Sol/high.
+- Known box limits: duplicate model flags fail. Explicit dockbox Codex routes omit the defaults.
+  `BUGS.md` records both configuration defects.
+
+## [v0.4.24] — 20261008
+
+> kronael v0.4.24 — Markdown reflow joins the tool hooks
+>
+> The rumdl pass is a branch of the existing tool hooks, with no hook, settings entry or Codex target of its own.
+>
+> • One hook less — post_tool_nudge.sh hands a .md write to pretool_nudge.py, which runs rumdl.
+> • Quieter — silent when rumdl ran; one line when it is missing, fails or times out.
+> • Narrower — only a Write or Edit of a .md in a repository whose root holds `.rumdl.toml`.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge.py` § `format_markdown`, fed by `post_tool_nudge.sh` on a PostToolUse payload that names a `.md`: a `Write`/`Edit`/`MultiEdit` is reflowed by the repository's `node_modules/.bin/rumdl`, else `rumdl` on PATH, run as `rumdl fmt` from the repository root (the nearest `.git`) when that root holds `.rumdl.toml`, so the config's `exclude` applies. Silent when rumdl ran — Claude Code reports a file a hook changed, and an Edit over a reflowed line fails instead of applying to stale text; one line when rumdl is missing, exits non-zero or times out, and a timed-out run gets the written bytes back. A repository without the config, a file outside any repository and a clone nested in an opted-in tree are never touched.
+- `hooks/md_format.py`, its `Write|Edit|MultiEdit` settings entry and its Codex `md_format` target are removed; the uvx fallback, `rumdl.toml` and `pyproject.toml` detection, leftover parsing and the re-read note go with them.
+- `software/code.md` § Layout and formatting: `exclude` patterns are written `.name/`; a root-anchored `/.*/` does not match a file named on the command line (rumdl 0.2.78).
+
+## [v0.4.23] — 20261008
+
+> kronael v0.4.23 — Markdown wraps itself, Haiku leaves the workflows
+>
+> Agents stop hand-wrapping Markdown: a hook runs rumdl on each .md they write in an opted-in repo, and Haiku is batch-only.
+>
+> • md_format hook — each .md an agent writes is rewrapped; tables, fences and links stay.
+> • Opt in per repo — `.rumdl.toml` and a pinned rumdl; `make fmt` wraps, `make lint` checks.
+> • Agents — no haiku skill, agent or keyword; light work runs on sonnet or in the main thread.
+> • readme — topology.md defines the repo layout: one question per file, one numbers ledger.
+> • bugs, release — an owed decision carries options and a default; a CHANGELOG only if published.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/md_format.py` (PostToolUse on `Write|Edit|MultiEdit`; Codex `apply_patch`, every file it names): runs `rumdl fmt` on the written `.md` from its own directory when a directory up to the repository root holds `.rumdl.toml`, `rumdl.toml` or `[tool.rumdl]`; the binary is the repo's `node_modules/.bin/rumdl`, else PATH, else `uvx rumdl@0.2.78`. It tells Claude to re-read a file it changed and reports what rumdl could not fix or a failed run. Never blocks; a repo with no config is never touched.
+- `software/code.md` § Layout and formatting owns the rule — the config (`line-length = 100`, `reflow`, tables and fenced blocks exempt), the pin, `make fmt` and `make lint`; `readme/topology.md` lists the lint gate.
+- rumdl was chosen over dprint, prettier and mdformat on a real doc set: those three pad table columns and refill every paragraph; rumdl reflows only lines over the width and leaves tables, fences, frontmatter, HTML and links as they are.
+- `solana/layout.md` agrees with `rs`: unit tests live in `src/<module>_test.rs`, declared beside their subject with `#[path]`.
+- `global` § Agents: Haiku is batch-only, never a sub; read-only fan-out and mechanical edits go to `sonnet` or stay in the main thread. `skills/haiku`, `agents/haiku.md` and the `haiku` nudge keyword are removed and `kronael/sync` retires the installed copies; `sonnet`, `opus`, `dispatch`, `skills/CLAUDE.md`, both READMEs and `scavenge/shapes.md` drop the tier. The `dockbox`/`qemubox` `haiku` aliases stay pending BUGS.md `BOX-HAIKU-ALIAS-VS-BATCH-ONLY`.
+- `readme/topology.md`: the house layout in one file — which file answers which question (README, PLAN, ARCHITECTURE, FEATURES, BUGS, the study page, `test/research/verified.md`, root and package CLAUDE.md), the README order, the numbers ledger, what `make lint` checks, what is tracked and what stays local. `agents/readme.md`, `finalize-crate`, `diary`, `wisdom`, `refine/brief.md`, `readme/shape.md`, the doc-naming hook and `global` § Documentation point to it.
+- `bugs`: an owed decision has status `needs sign-off` or `owner decision` and carries `**Options:**` and `**Default if nothing is decided:**`; a gate is one more clause (`blocks go-live`, `blocks publication`). `next` § Later sends an owed decision to `bugs`.
+- `release`: CHANGELOG.md is created only when the project publishes versions to outside consumers; otherwise step 3.5 writes the release text from `git log <last>..HEAD`.
+- `sonnet`: `when_to_use` takes mapping and grep-and-report work and drops the find/replace and find-bugs phrases that race `astgrep` and `review`.
+
+## [v0.4.22] — 20261007
+
+> kronael v0.4.22 — code rules you can scan, and lints that check them
+>
+> The code rules are now short ALWAYS/NEVER bullets, every code edit points at them, and a lint flags misnamed predicates.
+>
+> • code.md — rules as ALWAYS/NEVER bullets, most-broken first; the code-file nudge names it.
+> • Lints — Rust, Python and TypeScript flag a bool function without an is_/has_/can_/should_ prefix.
+> • Docs rules — status line first, stated cost, code from tested files, a guide-and-reference site.
+> • Codex reads the project's .claude/CLAUDE.md as well.
+> • Rule pruning — a clean room with no setup at all, and a rule is cut only on observed behaviour.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/code.md`: every rule an ALWAYS/NEVER bullet, sections ordered by how often sessions break them; it owns naming, comments (machine-read markers such as `// #region` and lint pragmas are not comments), shutdown on SIGINT/SIGTERM and build cadence. `rs`, `py`, `go` and the other language skills keep only their additions and ALWAYS read `code.md` first; the pretool nudge names it for code skills.
+- Lints `rs-bool-fn-prefix`, `py-bool-fn-prefix`, `ts-bool-fn-prefix` (warnings): test code, trait and interface implementations, overrides, getters and dunders are exempt, each proven by a fixture. `lints/check.py` fails when ast-grep fails and requires the rule to fire in every block of a bad fixture. `refine/software.md` runs them and hunts what they cannot see.
+- `readme` and `writing`: README order (what, link row, status, why, how), one status line worded the same everywhere, cost as a formula with a worked figure, doc code from compiled regions, an example-page shape ending in what has been tested, a guide-and-reference site layout, the README as a hub, one name per page, explicit anchors. A reader-question heading is allowed in a doc set with navigation when its first sentence answers it.
+- `global`: rules `code.md` or the harness carry are dropped; "NEVER kill a process you did not start, not even to free a port".
+- `wisdom`: one clean room, `clean-room.sh` (empty home and config, no tools, no skills, pinned model), which proves isolation from the run's own transcript; `subtraction.md` runs the whole-bundle pass; a rule is cut only on behavioural evidence, never on a model's self-report.
+- `codex/AGENTS.md`: Codex reads the project's `.claude/CLAUDE.md`; its fallback file names never load that path.
+- Project names and a local path are gone from skill text; `should_` counts as a predicate prefix.
+
+## [v0.4.21] — 20261007
+
+> kronael v0.4.21 — the skill lint catches dead files and leaked paths
+>
+> The skill lint now fails a commit that leaves a skill file unreachable or ships an absolute home path.
+>
+> • `make skills-frontmatter` — errors on an unreachable skill file, a leaked home path, or a token.
+> • Four files nothing could reach are named, including `port-to-go/java.md` at 1016 cold lines.
+> • Tests — no expectation computed by the code under test; run an artifact instead of grepping it.
+> • ship — a Gate carries its expected result; repairs stop when each fix moves the defect elsewhere.
+> • BUGS.md — three proposals for the holes the new lint still has.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `hooks/skill_frontmatter_lint.py`: two error-level checks. `skill-orphan` walks the chain of names out of `SKILL.md` and reports every `.md` under the skill that no chain reaches, exempting `CLAUDE.md` at any depth; `skill-local-path` and `skill-secret` report an absolute home path or a credential shape. An illustrative path takes a one-character account segment (`/home/u/app/x`) — `skills/CLAUDE.md` states the convention.
+- `port-to-go/java.md`, `refine/ts.md`, `refine/tsx.md` and `create/web/design-md/templates/starter.md` were unreachable; each owning `SKILL.md` now names it.
+- `software/testing.md` § What an assertion proves: never derive the expected value from the code under test, and assert an artifact's output rather than its source text.
+- `ship/runtime.md`: when each repair reveals a defect elsewhere the architecture is wrong — stop whatever the attempt count and route the redesign through Stage 3 sign-off. `ship/prompt.md`: the plan's `Gate` field and the worker brief both carry the expected result.
+- `review/take.md` § 2: name which findings are still unclear after re-verification and wait, since a partial reading misfixes the items you did understand.
+- `NOTICE`: credits obra/superpowers © 2025 Jesse Vincent (MIT) for the three adapted sections.
+- `BUGS.md`: `SKILL-LINT-GATE-SKIPS-SIBLING-EDITS` (pre-commit and CI lint nothing on a sibling-only commit), `SKILL-LINT-BASENAME-HIDES-ORPHANS` (a duplicate basename satisfies the check; three `README.md` files still ship unreached), `SKILL-LINT-LEAK-SCAN-MISSES-THE-TREE` (the scan reads only `*.md` beside a `SKILL.md`) — all `proposed`, none built. Plus the earlier proposal to move `ship` into this repo as a step runner.
+
+## [v0.4.20] — 20261006
+
+> kronael v0.4.20 — the ship program runs on fable
+>
+> The ship skill keeps planning specs on fable; when you choose the ship program, it launches on fable because its tasks run unread.
+>
+> • ship CLI — launch with MODEL=fable TIMEOUT_SCALE=3; no diff is read before the next task.
+> • ship -k — the validator is read-only and writes only ship's own state under .ship/.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ship/cli.md`: a fable sub writes and re-verifies the specs; the ship program launches with `MODEL=fable TIMEOUT_SCALE=3`, since its worker takes the next task at once and WISDOM puts unread code generation on fable (the scale covers fable's ~215 s validator against the fixed 180 s).
+- `ship/cli.md`: `ship -k` runs a validator restricted to `Read`, `Glob` and `Grep`; it cannot touch the repo and writes only `.ship/` state and logs.
+
+## [v0.4.19] — 20261006
+
+> kronael v0.4.19 — org skills install as plugins
+>
+> Org-specific skills now install as Claude Code plugins, so they load in dockbox and qemubox, where a symlinked skill dangles.
+>
+> • Org overlays — add the org marketplace from its git source, then install its plugin.
+> • Boxes mount `~/.claude/plugins`, so a plugin's skills load in every box started after the install.
+> • sync — settings merge never drops an `enabledPlugins` entry you added.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `ARCHITECTURE.md` § Org overlays: install an org skill set as a Claude Code plugin from a marketplace added by git source; a local-path marketplace loads in place from the checkout, so boxes miss it. Limits: a qemubox under `-U` mounts no plugins, and a dockbox created before the install keeps its creation-time `settings.json`. Codex installs the plugin separately.
+- `kronael/sync`: step 5 adds the recommended `enabledPlugins` entries and never drops one; the keep-list section points at § Org overlays.
+- dockbox README and `--help` list the `~/.claude/plugins` mount; `CLAUDE.md` and `ARCHITECTURE.md` route org overlays to plugins and private skills to the keep-list.
+
+## [v0.4.18] — 20261006
+
+> kronael v0.4.18 — fewer skills, qemubox logs in
+>
+> The bundle drops from 88 to 69 skills, and Claude Code in a qemubox VM starts logged in with the host's account.
+>
+> • eval — one router holds the CEO, CTO, red, design, novice, hiring and all-lenses evaluations.
+> • Skill agents now load their skill, and nine small skills fold into their neighbours.
+> • qemubox — session variables and agent tokens reach the VM over ssh stdin, never a command line.
+> • sync — symlinked skills stay without a keep-list line, and edited retired skills are asked about.
+> • Boxes — each box gets its own `.venv` and gcc, and dockbox points the agent at GitHub over HTTPS.
+>
+> Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `eval` router replaces `ceo-eval`, `cto-eval`, `red-eval`, `design-eval`, `13yo-eval`, `hiring-eval` and `eval-all`; `assess` folds its four extra roles in; `create-eval` is removed. Nudge words route to `/eval`.
+- Folded: `speed-demo` → `demo/speed.md`, `credits` → `software/credits.md`, `markdown-converter` + `media-ingest` → `ingest`, `sol` → `astra` § Sol, `finalize-crate` → `release/library.md`, `go-gl` → `go/gl.md`, `trader` → `data/trader.md`, `later` → `next` § Later. Dropped: `caveman` (the output style and command carry it), `explore`, `agent-browser` (`browse`). Every retired name is in the sync's `RETIRED` list.
+- `visual`, `readme`, `improve`, `refine`, `learn`, `distill` agents only load the same-named skill, and the skills launch them; `skills/CLAUDE.md` § Agent definitions owns the rule. The five `commands/` files their skills shadowed are removed. The prompt nudge routes to `/skill`, and a test proves every route names a bundled skill.
+- `writing` is a router whose `page.md` owns how a document or page reads and looks; `humanize` keeps its workflow and moves the catalogue to `patterns.md`.
+- `global` § Git: squashing unpushed commits through `/squash` is allowed; a pushed commit is never squashed. `commit` reads the repo's commit-msg gate first.
+- qemubox: `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY` join the session env when set. Every env value (`-e`, `-g`, the tokens) goes over ssh stdin into a per-session 0600 file in the guest's `/dev/shm`, which the session sources and deletes. `-U` drops the tokens, even from a project `.qemuboxrc`.
+- Boxes: a per-box `.venv` and gcc for sdists. The sandbox notes name the empty dependency dirs only when the box overmounts them, and the dockbox note gives the HTTPS form for GitHub (needs `-g`). The qemubox base build reuses dockbox's TZ argument and cache.
+- sync: a symlink directly under a bundle dir is kept without a line, and a deeper one is asked about. The keep-list file is `~/.claude/.keep`, and a leftover `kronael-keep.txt` stops the sync. A live-edited file under a retired name is asked about.
 
 ## [v0.4.17] — 20261005
 
@@ -1167,7 +1822,7 @@ file answers to that name.
 
 - `qemubox`: prebuilt base image — `build-base` (run once by `make install`, non-fatal without KVM/network) bakes the guest apt layer into `provisioned.qcow2` via a throwaway `.build` box; new boxes overlay it and skip first-boot apt.
 - `qemubox`: ref-counted lifecycle — a per-session marker in `/run/qemubox/sess` (dropped right after boot, before provisioning); the VM is torn down when the last session exits, concurrent sessions keep it up. `stop_box` escalates poweroff→SIGTERM→SIGKILL (90s systemd wait) so a wedged VM is killed not orphaned, and `remove_box` never deletes a live VM's disk.
-- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm staking-rewards` also removed `staking-rewards-facade`).
+- `qemubox` + `dockbox`: `rm` matches box names exactly; a pattern with `*` or `?` is treated as a glob (was substring `grep -F`, so `rm web-api` also removed `web-api-facade`).
 - `qemubox`: provisioning/guest output streams behind a dim `>` gutter, distinct from the `>>>` script voice; both ASCII, TTY-guarded (plain text when piped).
 - `qemubox` + `dockbox`: rewritten READMEs with an ELI13 section and an honest security-posture statement — the tools confine host-filesystem blast radius and give a disposable env, but inject real agent credentials and leave outbound network on, so they are not a boundary against hostile code. Tracked hardening (network kill-switch, gpg opt-in, `--untrusted` mode, behavioral tests) is in `BUGS.md`.
 

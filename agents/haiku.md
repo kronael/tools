@@ -1,5 +1,6 @@
 ---
 name: haiku
 model: haiku
-description: Haiku — fast, cheap model for mechanical tasks (renaming, single-file edits, simple lookups).
+effort: medium
+description: Haiku 5.5 at medium effort — read-only fan-out (mapping, grep surveys, one-file lookups) and bounded mechanical edits with a clear spec.
 ---

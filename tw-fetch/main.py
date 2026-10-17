@@ -68,9 +68,6 @@ def inject_cookies(driver, cookies):
 class _Strip(HTMLParser):
     def __init__(self):
         super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
         self.buf = StringIO()
 
     def handle_data(self, d):

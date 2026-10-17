@@ -7,8 +7,8 @@ user-invocable: false
 
 # Make Style
 
-ALWAYS read the `software` baseline (`software/code.md`) first for shared naming,
-style, and design rules. Below are Make-specific additions.
+ALWAYS Read `../software/code.md` before the first edit — it owns naming,
+comments, design and the boring-code rules. Below are Make-specific additions.
 
 ## Indirection has a much higher bar in Make than in code
 
@@ -21,6 +21,10 @@ Repeat yourself before reaching for indirection. Three near-identical 4-line rec
 are clearer than one 4-line macro called three times.
 
 Direct rule of thumb: if the indirection requires `$$$$` to work, it's too clever.
+
+A Makefile that builds 1-3 files names them in plain rules: NEVER generic
+per-host or per-target machinery (`foreach`, computed targets, a host variable)
+for that few.
 
 ## N similar targets — per-target variables + one pattern rule
 
@@ -63,9 +67,9 @@ $(TOOL_A): ; $(call DOWNLOAD,https://...,abc...,...)
 
 ## Tool downloads
 
-- Always pin SHA256 alongside URL.
+- ALWAYS pin SHA256 alongside URL.
 - Verify with `sha256sum -c --quiet` before extracting.
-- Use a file target (e.g. `.hooks/kustomize`), never `.PHONY`. Make's file-mtime
+- Use a file target (e.g. `.hooks/kustomize`), NEVER `.PHONY`. Make's file-mtime
   cache then naturally skips re-downloads.
 
 ## Canonical phony targets
@@ -83,31 +87,20 @@ CI pipelines call these targets by name — keep them consistent across componen
 
 ## .PHONY
 
-- For non-file targets only: `help`, `lint`, `test`, `install`, `clean`, etc.
-- Never `.PHONY` a target that produces a file on disk. It defeats caching.
+- For non-file targets only: `lint`, `test`, `install`, `clean`, etc.
+- NEVER `.PHONY` a target that produces a file on disk. It defeats caching.
 
-## help target
+## No help target
 
-The help target uses `@echo "    target      description"` with aligned
-double-quoted strings. **NEVER** regex-collapse multiple spaces in Makefiles
-— `re.sub(r'  +', ' ', ...)` or equivalent will silently destroy this
-alignment. When removing a target, delete only its lines; never post-process
-the whole file.
+- NEVER a `help` target, a `.DEFAULT_GOAL := help` or `##` descriptions beside
+  targets: the target names say what runs, and the README's Commands section
+  carries the one-line descriptions (`readme/topology.md` § README.md).
+- NEVER regex-collapse runs of spaces in a Makefile — aligned recipe text
+  breaks silently. When removing a target, delete only its lines.
 
-```makefile
-help:
-	@echo "Usage:"
-	@echo "    prepare      installs dependencies"
-	@echo "    right        type check (pyright)"
-	@echo "    test         fast unit tests"
-```
+## Echo
 
-Double quotes in `@echo "..."` are correct Make syntax — do NOT convert them
-to single quotes (yamlfmt single-quote convention applies only to `.yml` files).
-
-## Recipe shell escaping
-
-- `$$` to escape `$` for the shell. `$$(mktemp)` becomes `$(mktemp)` in shell.
-- `\` line continuations with `;` between commands. Each unjoined line runs in its
-  own shell — variables don't carry across.
-- `@` prefix suppresses echo. Use sparingly; usually you want to see what ran.
+- ALWAYS let make echo what ran — NEVER `@`-prefix a recipe line beyond the
+  few whose echo is noise, such as an `@echo` of a result line.
+- Double quotes in `@echo "..."` are correct Make syntax — NEVER convert them
+  to single quotes (yamlfmt's single-quote convention applies only to `.yml`).
