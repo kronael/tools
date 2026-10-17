@@ -125,7 +125,7 @@ Python-specific additions and deltas.
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
-- NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name. An f-string a reader has to decode is a gross code smell, and it hides the bug it just caused
+- NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name (PEP 701 permits the nesting; readability bans it)
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code
