@@ -16,6 +16,9 @@ explicitly asks for Astra or Codex or when `oracle` dispatches to the Astra rout
 
 ## Invoke
 
+When already running on the requested model, ALWAYS perform the assigned
+work directly. NEVER invoke another copy of yourself through this launcher.
+
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the session: see `sol` § Invoke.
 
@@ -69,7 +72,8 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Model — fixed by the calling skill
 
-- ALWAYS pin `gpt-6-astra` for Astra and `gpt-5.6-sol` for Sol. The calling
+- ALWAYS pin `gpt-6-astra` for Astra, `gpt-5.6-sol` for Sol, and
+  `gpt-5.6-terra` for Terra. The calling
   skill selects the slug; reading this shared runbook NEVER changes that choice.
 - ALWAYS confirm the selected slug exists with the check below before the
   call; exit 0 means present. NEVER pick the model by the configured default or by priority.
