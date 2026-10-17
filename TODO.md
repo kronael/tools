@@ -19,8 +19,8 @@ on each URL lets one command post to a named group (`apprise -g news -b "..."`).
 - Approval gate: a post is outward-facing, so the skill shows the exact text and target and waits
   for approval, the same way `gh-comment` does.
 - Discord keys exist today as `[discord] token` in morha `cfg/*/system_monitor.toml` and
-  `server_*.toml` (bot tokens, not webhooks). Apprise takes either form; one bot token or one
-  webhook per channel is the choice.
+  `server_*.toml` (bot tokens, not webhooks). Apprise's Discord plugin takes only a webhook
+  (`discord://webhook_id/webhook_token`), so each target channel needs a webhook created once.
 
 **Done when:** a `post` skill names the config path, the tag convention and the approval gate, and
 `apprise --dry-run -g <tag>` resolves each configured target on this host.
