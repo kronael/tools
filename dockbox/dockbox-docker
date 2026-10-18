@@ -1,0 +1,35 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+mkdir -p /run/dockbox/bin
+ln -s "$(command -v iptables-legacy)" /run/dockbox/bin/iptables
+ln -s "$(command -v ip6tables-legacy)" /run/dockbox/bin/ip6tables
+export PATH="/run/dockbox/bin:$PATH"
+
+iface=$(ip route show default | awk '/^default / {print $5; exit}')
+[[ -n "$iface" ]] || {
+    echo 'dockbox: nested Docker needs a default network route' >&2
+    exit 1
+}
+addr=$(ip -4 -o addr show dev "$iface" |
+    awk '{split($4, parts, "/"); print parts[1]; exit}')
+mtu=$(ip -o link show dev "$iface" |
+    sed -n 's/.*mtu \([0-9]*\).*/\1/p')
+[[ -n "$addr" && "$mtu" =~ ^[0-9]+$ ]] || {
+    echo 'dockbox: cannot determine the nested Docker network address and MTU' >&2
+    exit 1
+}
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o "$iface" -j SNAT --to-source "$addr" -p tcp
+iptables -t nat -A POSTROUTING -o "$iface" -j SNAT --to-source "$addr" -p udp
+
+group=$(getent group "$DOCKBOX_GID" | cut -d: -f1)
+version=$(dockerd --version)
+flags=()
+if [[ "$version" =~ version\ ([0-9]+) && "${BASH_REMATCH[1]}" -ge 29 ]]
+then
+    flags+=(--feature=containerd-snapshotter=false)
+fi
+exec dockerd --host=unix:///var/run/docker.sock --group="$group" \
+    --storage-driver=overlay2 --iptables=false --ip6tables=false --mtu="$mtu" \
+    --exec-opt native.cgroupdriver=cgroupfs "${flags[@]}"

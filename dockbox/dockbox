@@ -1,9 +1,18 @@
 #!/bin/bash
-set -euo pipefail
+set -Eeuo pipefail
 
-IMAGE="dockbox"
-SECCOMP="$HOME/.local/share/dockbox/seccomp.json"
+IMAGE="${DOCKBOX_IMAGE:-dockbox}"
+RUNTIME=runsc-dockbox
 CAPS=(sys_nice ipc_lock sys_ptrace)
+read -ra docker_cmd <<< "${DOCKBOX_DOCKER-docker}"
+[[ ${#docker_cmd[@]} -gt 0 ]] || {
+    echo 'dockbox: DOCKBOX_DOCKER requires a command' >&2
+    exit 2
+}
+
+run_docker() {
+    "${docker_cmd[@]}" "$@"
+}
 
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
 TMP_WORKDIR=/tmp/work
@@ -21,9 +30,8 @@ MOUNTS=(
 dir_override=""
 entrypoint="claude"
 entrypoint_explicit=""
-network_arg=()
 ssh_agent=""
-docker_sock=""
+nested_docker=""
 grant_sudo=""
 gcloud_creds=""
 gpg_forward=""
@@ -47,9 +55,9 @@ apply_flag() {
         d|x) entrypoint="$2"; entrypoint_explicit=1 ;;
         e) extra_env+=(-e "$2") ;;
         v) extra_vols+=("$2") ;;
-        H) network_arg=(--network host) ;;
+        H) echo 'dockbox: -H is incompatible with the gVisor sandbox network; use bridge networking' >&2; exit 2 ;;
         A) ssh_agent=1 ;;
-        D) docker_sock=1 ;;
+        D) nested_docker=1 ;;
         K) gpg_forward=1 ;;
         S) grant_sudo=1 ;;
         P) persist_builds=1 ;;
@@ -124,16 +132,30 @@ tmpfs_used() {
 }
 
 box_use() {
-    awk '$2 == "PID" { next }
-        {
-            cmd = $8
-            for (i = 9; i <= NF; i++) cmd = cmd " " $i
-            n++
-            if (cmd != "/sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity" &&
-                cmd != "sleep infinity") busy = 1
+    awk '
+        function is_support(pid, cmd) {
+            cmd = cmds[pid]
+            if (cmd == "ps -eo pid=,ppid=,stat=,args=") return 1
+            if (cmd ~ /(^|\/)docker-init -- \/usr\/local\/bin\/dockbox-init sleep infinity$/) return 1
+            if (cmd ~ /^\/bin\/bash \/usr\/local\/bin\/dockbox-init sleep infinity$/) return 1
+            if (cmd == "sleep infinity") return is_support(parents[pid])
+            if (cmd ~ /^dockerd --host=unix:\/\/\/var\/run\/docker.sock /) return is_support(parents[pid])
+            if (cmd == "containerd --config /var/run/docker/containerd/containerd.toml") return is_support(parents[pid])
+            return 0
+        }
+        NF >= 4 {
+            pid = $1
+            parents[pid] = $2
+            states[pid] = $3
+            cmd = $4
+            for (i = 5; i <= NF; i++) cmd = cmd " " $i
+            cmds[pid] = cmd
         }
         END {
-            if (!n) exit 1
+            if (!length(cmds)) exit 1
+            for (pid in cmds) {
+                if (states[pid] !~ /^Z/ && !is_support(pid)) busy = 1
+            }
             print busy ? "busy" : "idle"
         }'
 }
@@ -186,8 +208,7 @@ You are inside dockbox, a Docker container started from host \`$host\`, not on
 the host itself. CLAUDE_SANDBOX=dockbox. The launcher writes this file at
 container start; a wrong line here is a dockbox launcher bug.
 
-- Host files are absent unless mounted below. Network: $net (-H gives \`host\`,
-  where host ports answer on localhost).
+- Host files are absent unless mounted below. Network: $net, through gVisor.
 - Survives the box: the bind mounts below; rw ones take edits. \`~/.claude\` is
   the HOST's own: skill, memory and settings edits here change the host. NEVER
   edit a \`server-*\` skill from here: it describes the host, not this box.
@@ -228,14 +249,14 @@ case "${1:-}" in
     ls)
         {
             printf 'NAMES\tSTATUS\tCREATED\tUSE\tTMPFS\tDISK\n'
-            docker container ls -a -s --filter "name=^dockbox-" \
+            run_docker container ls -a -s --filter "name=^dockbox-" \
                 --format "{{.Names}}\t{{.State}}\t{{.Status}}\t{{.RunningFor}}\t{{.Size}}" \
                 | while IFS=$'\t' read -r n state status created size; do
                 use="-"
                 tmpfs="-"
                 [[ "$state" == running ]] && {
-                    use=$(docker top "$n" | box_use) || use="?"
-                    tmpfs=$(docker exec "$n" sh -c \
+                    use=$(run_docker exec "$n" ps -eo pid=,ppid=,stat=,args= | box_use) || use="?"
+                    tmpfs=$(run_docker exec "$n" sh -c \
                         'set -f; IFS=:; set -- /tmp /tmp/cargo-target /dev/shm
                         for p in $DOCKBOX_EPH_PATHS; do
                             [ -e "$p" ] && set -- "$@" "$p"
@@ -259,7 +280,7 @@ case "${1:-}" in
                 *) patterns+=("$p") ;;
             esac
         done
-        names=$(docker container ls -a --filter "name=^dockbox-" \
+        names=$(run_docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}")
         rc=0
         targets=()
@@ -274,7 +295,7 @@ case "${1:-}" in
             [[ -z "$matched" ]] && { echo "dockbox rm: no match for '$p'" >&2; rc=1; }
         done
         for n in "${targets[@]}"; do
-            if docker rm -f -v "$n" >/dev/null; then
+            if run_docker rm -f -v "$n" >/dev/null; then
                 echo "removed $n"
             else
                 rc=1
@@ -287,7 +308,7 @@ case "${1:-}" in
         now=$(date +%s)
         cutoff=$((now - 10#$hours * 3600))
         grace=$((now - 4 * 3600))
-        rows=$(docker container ls -a --filter "name=^dockbox-" \
+        rows=$(run_docker container ls -a --filter "name=^dockbox-" \
             --format "{{.Names}}\t{{.State}}\t{{.CreatedAt}}")
         rc=0
         while IFS=$'\t' read -r n state created; do
@@ -296,10 +317,10 @@ case "${1:-}" in
                 ts=$(date -j -f "%Y-%m-%d %H:%M:%S %z" "${created% *}" +%s)
             use="-"
             if [[ "$state" == running && "$ts" -le "$grace" ]]; then
-                use=$(docker top "$n" | box_use) || use="?"
+                use=$(run_docker exec "$n" ps -eo pid=,ppid=,stat=,args= | box_use) || use="?"
             fi
             if [[ "$use" == idle || ( "$state" == exited && "$ts" -lt "$cutoff" ) ]]; then
-                if docker rm -f -v "$n" >/dev/null; then
+                if run_docker rm -f -v "$n" >/dev/null; then
                     echo "removed $n"
                 else
                     rc=1
@@ -346,21 +367,18 @@ Options:
     -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
                (tmpfs, lost with the box); box name tmp unless -n; implies -N
     -N         New Claude session: skip the resume picker
-    -H         Use host network
+    -H         Unsupported with the gVisor sandbox network
     -A         Forward SSH agent
-    -D         Mount Docker socket
+    -D         Start an independent Docker daemon inside the sandbox
     -K         Forward gpg-agent (commit signing); off by default
     -S         Grant passwordless sudo to the runtime user (apt install at runtime)
     -g         Forward GH_TOKEN / GITHUB_TOKEN (whichever is set)
     -G         Mount ~/.config/gcloud ro (forward gcloud credentials)
 
-Kernel:
-    io_uring works: boxes run moby's default seccomp profile plus the
-    io_uring syscalls, which make seccomp puts at
-        $SECCOMP
+Runtime:
+    New boxes require the runsc-dockbox gVisor runtime.
     Sessions in a box created with ${CAPS[*]^^} hold them as
-    ambient caps, so nice, realtime priorities, mlock and ptrace attach
-    work as your user.
+    ambient capabilities inside the gVisor sandbox.
 
 Ephemeral builds (default):
     Build artifact dirs found under workdir become fresh empty mounts inside
@@ -405,7 +423,7 @@ Examples:
 Re-entry: if a dockbox for the project is already running, the command
 runs inside that live container (shared HOME, mounts, processes) instead
 of starting a new one. Tool/model/effort and env flags (-e, -g) apply to the
-session; mount/network flags (-v, -H, -D) don't — they're fixed when the
+session; mounts and nested Docker are fixed when the
 container is created. Use -n <name> to force a separate, fully-provisioned box.
 
 Mounts: ~/.claude (rw; ~/.claude/sessions is a private tmpfs, so boxes and
@@ -417,7 +435,12 @@ Mounts: ~/.claude (rw; ~/.claude/sessions is a private tmpfs, so boxes and
 DNS:    A bridge box gets a resolver listening on the bridge gateway (e.g.
         systemd-resolved with DNSStubListenerExtra=172.17.0.1), which follows
         the host across network changes; without one Docker copies the current
-        network's servers into the box once, at creation. -H uses the host's.
+        network's servers into the box once, at creation.
+
+Image:  DOCKBOX_IMAGE selects the image (default: dockbox).
+        -D uses a 2 GiB executable tmpfs for nested Docker storage.
+Docker: DOCKBOX_DOCKER selects the host command (default: docker).
+        Space-separated arguments, e.g. 'sudo -n docker'; no shell syntax.
 
 Sandbox note: /etc/claude-code/CLAUDE.md (generated, ro) tells the agent it
         is boxed and what survives; CLAUDE_SANDBOX=dockbox is set.
@@ -525,23 +548,38 @@ CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
 
 enter_session() {
     trap '' TSTP
-    local rc=0 owner have c caps="" cap_opts=()
-    owner=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER_NAME" \
-        | sed -n 's/^DOCKBOX_UID=//p')
+    local rc=0 owner config have c caps="" cap_opts=() terminal=(-i)
+    [[ "$(run_docker inspect -f '{{.HostConfig.Runtime}}' "$CONTAINER_NAME")" == "$RUNTIME" ]] || {
+        echo "dockbox: $CONTAINER_NAME does not use $RUNTIME; remove it with 'dockbox rm $CONTAINER_NAME'" >&2
+        exit 1
+    }
+    config=$(run_docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$CONTAINER_NAME")
+    owner=$(sed -n 's/^DOCKBOX_UID=//p' <<< "$config")
     [[ -z "$owner" || "$owner" == "$(id -u)" ]] || {
         echo "dockbox: $CONTAINER_NAME belongs to UID $owner -- use -n <name> for a box of your own" >&2
         exit 1
     }
-    have=$(docker inspect -f '{{join .HostConfig.CapAdd ","}}' "$CONTAINER_NAME")
+    if [[ -n "$nested_docker" ]]; then
+        if ! grep -qx DOCKBOX_NESTED_DOCKER=1 <<< "$config" ||
+            ! run_docker exec "$CONTAINER_NAME" docker -H unix:///var/run/docker.sock info >/dev/null 2>&1
+        then
+            echo "dockbox: $CONTAINER_NAME has no ready nested Docker daemon; use -n <name> -D for a new box" >&2
+            exit 1
+        fi
+    fi
+    have=$(run_docker inspect -f '{{join .HostConfig.CapAdd ","}}' "$CONTAINER_NAME")
+    have=${have^^}
+    have=${have//CAP_/}
     for c in "${CAPS[@]}"; do
-        [[ ",$have," == *",CAP_${c^^},"* ]] && caps+="${caps:+,}+$c"
+        [[ ",$have," == *",${c^^},"* ]] && caps+="${caps:+,}+$c"
     done
     [[ -n "$caps" ]] && cap_opts=(--inh-caps="$caps" --ambient-caps="$caps")
-    docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$$" 2>/dev/null
+    run_docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$$" 2>/dev/null
     trap leave_session EXIT
     trap 'exit 129' HUP
     trap 'exit 143' TERM
-    docker exec -it -u 0:0 -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" \
+    [[ ! -t 0 || ! -t 1 ]] || terminal=(-it)
+    run_docker exec "${terminal[@]}" -u 0:0 -e TERM "${extra_env[@]}" "$@" "$CONTAINER_NAME" \
         setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups \
         "${cap_opts[@]}" -- "${cmd[@]}" || rc=$?
     exit "$rc"
@@ -549,19 +587,20 @@ enter_session() {
 
 leave_session() {
     local left
-    left=$(docker exec "$CONTAINER_NAME" sh -c \
+    left=$(run_docker exec "$CONTAINER_NAME" sh -c \
         "rm -f /run/dockbox/sess/$$; ls /run/dockbox/sess" 2>/dev/null) || return 0
     if [[ -z "$left" ]]; then
-        docker rm -f -v "$CONTAINER_NAME" >/dev/null || true
+        run_docker rm -f -v "$CONTAINER_NAME" >/dev/null || true
     fi
 }
 
-if [[ -n "$(docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
+if [[ -n "$(run_docker ps -q -f "name=^${CONTAINER_NAME}$" 2>/dev/null)" ]]; then
     enter_session
 fi
 
-[[ -f "$SECCOMP" ]] || {
-    echo "dockbox: no seccomp profile at $SECCOMP -- run 'make seccomp' in the dockbox source dir" >&2
+runtime=$(run_docker info --format '{{range $name, $runtime := .Runtimes}}{{println $name}}{{end}}')
+grep -qx "$RUNTIME" <<< "$runtime" || {
+    echo "dockbox: Docker runtime $RUNTIME is unavailable; install the dockbox gVisor runtime first" >&2
     exit 1
 }
 
@@ -576,14 +615,12 @@ for m in "${MOUNTS[@]}"; do
 done
 
 dns_args=()
-if [[ ${#network_arg[@]} -eq 0 ]]; then
-    gw=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
-    if [[ -n "$gw" ]] && command -v ss >/dev/null \
-        && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
-        dns_args=(--dns "$gw")
-    elif loopback_resolver /etc/resolv.conf; then
-        echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
-    fi
+gw=$(run_docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+if [[ -n "$gw" ]] && command -v ss >/dev/null \
+    && ss -ulnH 'sport = :53' | resolver_on "$gw"; then
+    dns_args=(--dns "$gw")
+elif loopback_resolver /etc/resolv.conf; then
+    echo "dockbox: no resolver on ${gw:-the bridge gateway}:53 -- the box keeps this network's DNS servers after a network change; see README § Roaming" >&2
 fi
 
 _settings=$(mktemp)
@@ -598,12 +635,6 @@ d['sandbox'] = {'enabled': False}
 print(json.dumps(d))
 " > "$_settings"
 mounts+=(-v "$_settings:/home/dockbox/.claude/settings.json:ro")
-
-docker_gid_arg=()
-if [[ -n "$docker_sock" && -S /var/run/docker.sock ]]; then
-    mounts+=(-v "/var/run/docker.sock:/var/run/docker.sock")
-    docker_gid_arg=(--group-add "$(stat -c %g /var/run/docker.sock)")
-fi
 
 gpg_sock=$(gpgconf --list-dirs agent-socket 2>/dev/null)
 if [[ -n "$gpg_forward" ]]; then
@@ -659,6 +690,11 @@ cap_args=()
 for c in "${CAPS[@]}"; do
     cap_args+=(--cap-add "$c")
 done
+if [[ -n "$nested_docker" ]]; then
+    cap_args+=(--cap-add sys_admin --cap-add net_admin)
+    extra_env+=(-e DOCKBOX_NESTED_DOCKER=1)
+    mounts+=(--tmpfs /var/lib/docker:rw,exec,size=2g)
+fi
 
 mounts+=(--tmpfs /home/dockbox:rw,exec,mode=1777)
 
@@ -709,22 +745,19 @@ mounts+=(-v "/tmp/capture.png:$workdir/capture.png:ro")
     mounts+=(-v "/dev/null:$workdir/.dockboxrc:ro")
 
 _note=$(mktemp)
-_net=bridge
-[[ ${#network_arg[@]} -gt 0 ]] && _net=host
-sandbox_note "$HOSTNAME" "$_net" "${mounts[@]}" > "$_note"
+sandbox_note "$HOSTNAME" bridge "${mounts[@]}" > "$_note"
 mounts+=(-v "$_note:/etc/claude-code/CLAUDE.md:ro")
 
-docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
+run_docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
 
-docker run -d --init \
+run_docker run -d --init \
     --name "$CONTAINER_NAME" \
+    --runtime "$RUNTIME" \
+    --log-driver json-file --log-opt max-size=1m --log-opt max-file=1 \
     --entrypoint /usr/local/bin/dockbox-init \
     --user 0:0 \
-    --security-opt "seccomp=$SECCOMP" \
     "${cap_args[@]}" \
-    "${network_arg[@]}" \
     "${dns_args[@]}" \
-    "${docker_gid_arg[@]}" \
     -e HOME=/home/dockbox \
     -e CLAUDE_SANDBOX=dockbox \
     -e TERM \
@@ -740,13 +773,13 @@ docker run -d --init \
 
 ready=""
 for _ in $(seq 1 100); do
-    docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && { ready=1; break; }
-    up=$(docker ps -q -f "name=^${CONTAINER_NAME}$") || exit 1
+    run_docker exec "$CONTAINER_NAME" test -f /run/dockbox/ready 2>/dev/null && { ready=1; break; }
+    up=$(run_docker ps -q -f "name=^${CONTAINER_NAME}$") || exit 1
     [[ -n "$up" ]] || \
-        { echo "Container exited during startup" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
+        { echo "Container exited during startup" >&2; run_docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
     sleep 0.1
 done
 [[ -n "$ready" ]] || \
-    { echo "Container not ready after the startup wait" >&2; docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
+    { echo "Container not ready after the startup wait" >&2; run_docker logs "$CONTAINER_NAME" 2>&1 | tail -20; exit 1; }
 
 enter_session -w "$workdir"

@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-# Tests for dockbox without a docker daemon. Sources the script with
-# DOCKBOX_LIB=1 so the CLI never runs and no container is created; asserts the
-# rm matcher, the tmpfs_used total, the box_use classifier, the -n name guard
-# shared with qemubox, the -K flag and the seccomp profile, then runs ls,
-# prune, rm, a box start and sessions against a stub docker on PATH.
 set -uo pipefail
+unset DOCKBOX_DOCKER
 
 here="$(cd "$(dirname "$0")" && pwd)"
 
@@ -20,7 +16,7 @@ false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
 tmp=$(mktemp -d)
-trap 'rm -rf -- "$tmp"' EXIT
+trap 'echo "fast tests: retained fixture data: $tmp"' EXIT
 
 false_ "rm empty pattern matches nothing"  'rm_matches dockbox-repo ""'
 true_  "rm '\''*'\'' matches all"               'rm_matches dockbox-repo "*"'
@@ -47,16 +43,31 @@ true_ "tmpfs keys the whole target, spaces included" \
     '[ "$(printf "h\ntmpfs 1024 /w/a b\ntmpfs 2048 /w/a c\n" | tmpfs_used)" = 3M ]'
 
 cat > "$tmp/top-idle" <<'EOF'
-UID          PID    PPID  C STIME TTY          TIME CMD
-root        4101    4080  0 09:00 ?        00:00:00 /sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity
-1000        4150    4101  0 09:00 ?        00:00:00 sleep infinity
+1 0 Ss /sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity
+2 1 S sleep infinity
+3 0 R ps -eo pid=,ppid=,stat=,args=
 EOF
 { cat "$tmp/top-idle"
-  echo "1000        4200    4180  3 Sep28 pts/0    00:01:02 claude --model claude-opus-5-5"
+  echo "4 0 S claude --model claude-opus-5-5"
 } > "$tmp/top-busy"
 true_  "use idle when only the keepers run"   '[ "$(box_use < "$tmp/top-idle")" = idle ]'
 true_  "use busy with any other process"      '[ "$(box_use < "$tmp/top-busy")" = busy ]'
-false_ "use fails when top lists no process"  'head -1 "$tmp/top-idle" | box_use'
+false_ "use fails when ps lists no process"  ': | box_use'
+cat > "$tmp/top-docker-idle" <<'EOF'
+1 0 Ss /sbin/docker-init -- /usr/local/bin/dockbox-init sleep infinity
+2 1 S /bin/bash /usr/local/bin/dockbox-init sleep infinity
+3 2 S dockerd --host=unix:///var/run/docker.sock --group=users
+4 3 S containerd --config /var/run/docker/containerd/containerd.toml
+5 2 S sleep infinity
+6 0 R ps -eo pid=,ppid=,stat=,args=
+7 4 Z [containerd-shim] <defunct>
+EOF
+true_ "use ignores an idle nested daemon" \
+    '[ "$(box_use < "$tmp/top-docker-idle")" = idle ]'
+true_ "use counts a nested workload as busy" \
+    '[ "$( { cat "$tmp/top-docker-idle"; echo "8 4 S /bin/httpd -f"; } | box_use)" = busy ]'
+true_ "use counts a session sleeping forever as busy" \
+    '[ "$( { cat "$tmp/top-idle"; echo "8 0 S sleep infinity"; } | box_use)" = busy ]'
 
 true_  "resolver on the gateway address" \
     'printf "UNCONN 0 0 172.17.0.1:53 0.0.0.0:*\n" | resolver_on 172.17.0.1'
@@ -79,9 +90,6 @@ true_  "a stub-only resolv.conf is loopback"      'loopback_resolver "$tmp/stub.
 false_ "a resolv.conf with an uplink server is not" 'loopback_resolver "$tmp/mixed.conf"'
 false_ "an empty resolv.conf is not"              'loopback_resolver "$tmp/empty.conf"'
 
-true_ "the profile allows the three io_uring syscalls" \
-    '[ "$(grep -Ec "^[[:space:]]+\"io_uring_(setup|enter|register)\",$" "$here/seccomp.json")" = 3 ]'
-
 # The stub serves the boxes in $STUB/boxes (name, state, age in seconds, use,
 # size) through each --format template, answers `top` from the fixtures above,
 # runs the session-marker snippets against $STUB/run and the ls probe against
@@ -96,6 +104,10 @@ log="$tmp/log"
 cat > "$tmp/docker" <<'STUB'
 #!/bin/bash
 echo "$*" >> "$STUB/log"
+if [[ "${DOCKBOX_ARGV_TEST:-}" == 1 ]]
+then
+    echo observed > "$STUB/argv"
+fi
 box_sh=$(command -v dash || command -v sh)
 use_of() { awk -F'\t' -v n="$1" '$1 == n { print $4 }' "$STUB/boxes"; }
 case "$1" in
@@ -119,11 +131,20 @@ case "$1" in
         cat "$STUB/top-$(use_of "$2")" 2>/dev/null || { echo "Error: top failed" >&2; exit 1; } ;;
     exec)
         case "$*" in
-            *" -it "*)
+            *" -i "*|*" -it "*)
                 [ -n "${STUB_WIPE:-}" ] && rm -f "$STUB"/run/sess/* && rmdir "$STUB/run/sess"
+                if [ -n "${STUB_EXECUTE:-}" ]; then
+                    while [ "$1" != -- ]; do shift; done
+                    shift
+                    exec "$@"
+                fi
                 exit "${STUB_RC:-0}" ;;
             */run/dockbox/ready)
                 [ -n "${STUB_UNREADY:-}" ] && exit 1 ;;
+            *"ps -eo pid=,ppid=,stat=,args=")
+                cat "$STUB/top-$(use_of "$2")" 2>/dev/null || exit 1 ;;
+            *"docker -H unix:///var/run/docker.sock info")
+                [ -z "${STUB_NODOCKER:-}${STUB_DOCKERDOWN:-}" ] || exit 1 ;;
             */run/dockbox/sess*)
                 script="${*: -1}"
                 exec "$box_sh" -c "${script//"/run/dockbox"/$STUB/run}" ;;
@@ -134,9 +155,15 @@ case "$1" in
         esac ;;
     inspect)
         case "$*" in
+            *HostConfig.Runtime*) echo "${STUB_RUNTIME:-runsc-dockbox}" ;;
             *CapAdd*) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
-            *) echo "DOCKBOX_UID=${STUB_OWNER:-$(id -u)}" ;;
+            *)
+                echo "DOCKBOX_UID=${STUB_OWNER:-$(id -u)}"
+                if [ -z "${STUB_NODOCKER:-}" ]; then echo DOCKBOX_NESTED_DOCKER=1; fi ;;
         esac ;;
+    info)
+        [ -n "${STUB_DOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
+        echo "${STUB_RUNTIMES-runsc-dockbox}" ;;
     ps)
         [ -n "${STUB_PSDOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
         [ -z "${STUB_FRESH:-}" ] || { [ -n "${STUB_STAYS:-}" ] && grep -q '^run ' "$STUB/log"; } &&
@@ -246,6 +273,11 @@ exits 1 'dockbox rm stuck' "rm exits 1 when docker rm fails"
 
 mkdir -p "$tmp/home"
 cd "$tmp/home" || exit 1
+exits 2 'DOCKBOX_DOCKER="" dockbox ls' "an empty Docker command fails"
+exits 2 'DOCKBOX_DOCKER="   " dockbox ls' "a whitespace Docker command fails"
+DOCKBOX_DOCKER="env DOCKBOX_ARGV_TEST=1 docker" dockbox ls >/dev/null 2>&1; rc=$?
+true_ "the host command accepts an argument array" \
+    '[ "$rc" = 0 ] && [ "$(cat "$STUB/argv")" = observed ]'
 HOME="$tmp/home" STUB_RC=3 dockbox -n sess exec false >/dev/null 2>&1; rc=$?
 true_  "a failed session exits with its status"   '[ "$rc" = 3 ]'
 true_  "a failed session still tears the box down" 'grep -qx "rm -f -v dockbox-sess" "$log"'
@@ -255,30 +287,54 @@ false_ "a session leaves the box to a live sibling" 'grep -q "^rm " "$log"'
 rm -f "$tmp/run/sess/4242"
 HOME="$tmp/home" STUB_WIPE=1 dockbox -n sess exec true >/dev/null 2>&1
 false_ "a session keeps the box when markers can't be listed" 'grep -q "^rm " "$log"'
+output=$(printf 'session input\n' | HOME="$tmp/home" STUB_EXECUTE=1 dockbox -n sess exec cat)
+true_ "a noninteractive command receives stdin and returns stdout" \
+    '[ "$output" = "session input" ]'
+false_ "a noninteractive command requests no terminal" \
+    'grep -q "^exec -it " "$log"'
+output=$(HOME="$tmp/home" STUB_EXECUTE=1 dockbox -n sess exec \
+    sh -c 'printf command-output; printf command-error >&2; exit 7' 2>"$tmp/err"); rc=$?
+true_ "a command failure preserves stdout, stderr, and status" \
+    '[ "$rc" = 7 ] && [ "$output" = command-output ] && [ "$(cat "$tmp/err")" = command-error ]'
+true_ "a noninteractive failure still cleans the last session" \
+    'grep -qx "rm -f -v dockbox-sess" "$log"'
 cd "$here" || exit 1
 
-share="$tmp/home/.local/share/dockbox"
 sess="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups"
 sess="$sess --inh-caps=+sys_nice,+ipc_lock,+sys_ptrace"
 sess="$sess --ambient-caps=+sys_nice,+ipc_lock,+sys_ptrace -- true"
 cd "$tmp/home" || exit 1
-HOME="$tmp/home" STUB_FRESH=1 dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
-true_  "a new box without the profile fails"            '[ "$rc" = 1 ]'
-true_  "the missing-profile error names the fix"        'grep -q "make seccomp" "$tmp/err"'
-false_ "a missing profile stops before any box change"  'grep -Eq "^(rm|run) " "$log"'
+HOME="$tmp/home" STUB_FRESH=1 STUB_RUNTIMES=runc \
+    dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_  "a new box without gVisor fails" '[ "$rc" = 1 ]'
+true_  "the missing-runtime error names the runtime" \
+    'grep -q "runsc-dockbox is unavailable" "$tmp/err"'
+false_ "a missing runtime stops before any box change" \
+    'grep -Eq "^(rm|run) " "$log"'
 HOME="$tmp/home" dockbox -n sess exec true >/dev/null 2>&1; rc=$?
-true_  "re-entry needs no profile"                      '[ "$rc" = 0 ]'
+true_  "gVisor re-entry succeeds" '[ "$rc" = 0 ]'
 true_  "a re-entered session drops through setpriv" \
-    'grep -qx "exec -it -u 0:0 -e TERM dockbox-sess $sess" "$log"'
+    'grep -qx "exec -i -u 0:0 -e TERM dockbox-sess $sess" "$log"'
+HOME="$tmp/home" STUB_CAPS=sys_nice,ipc_lock,sys_ptrace \
+    dockbox -n sess exec true >/dev/null 2>&1; rc=$?
+true_ "Docker's lowercase capability names reach setpriv" \
+    '[ "$rc" = 0 ] && grep -q "$sess$" "$log"'
 HOME="$tmp/home" STUB_CAPS= dockbox -n sess exec true >/dev/null 2>&1; rc=$?
 old="setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups -- true"
 true_  "a box created without the caps still enters" \
-    '[ "$rc" = 0 ] && grep -qx "exec -it -u 0:0 -e TERM dockbox-sess $old" "$log"'
+    '[ "$rc" = 0 ] && grep -qx "exec -i -u 0:0 -e TERM dockbox-sess $old" "$log"'
 HOME="$tmp/home" STUB_OWNER=4321 dockbox -n sess exec true >/dev/null 2>"$tmp/err"; rc=$?
 true_  "another user's box refuses entry and names -n" \
-    '[ "$rc" = 1 ] && grep -q "use -n" "$tmp/err" && ! grep -q "^exec -it" "$log"'
-mkdir -p "$share"
-cp "$here/seccomp.json" "$share/"
+    '[ "$rc" = 1 ] && grep -q "use -n" "$tmp/err" && ! grep -q "^exec -i" "$log"'
+HOME="$tmp/home" STUB_RUNTIME=runc dockbox -n legacy exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_ "legacy re-entry fails before a session starts" \
+    '[ "$rc" = 1 ] && grep -q "does not use runsc-dockbox" "$tmp/err" && ! grep -q "^exec " "$log"'
+HOME="$tmp/home" STUB_NODOCKER=1 dockbox -D -n sess exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_ "-D refuses an existing box without a nested daemon" \
+    '[ "$rc" = 1 ] && grep -q "no ready nested Docker" "$tmp/err" && ! grep -q "^exec -i" "$log"'
+HOME="$tmp/home" STUB_DOCKERDOWN=1 dockbox -D -n sess exec true >/dev/null 2>"$tmp/err"; rc=$?
+true_ "-D refuses re-entry when the nested API fails" \
+    '[ "$rc" = 1 ] && grep -q "no ready nested Docker" "$tmp/err" && ! grep -q "^exec -i" "$log"'
 # Start a fresh box with the given flags; leaves its run line in $run and
 # removes the merged-settings temp file the launch left behind.
 fresh() {
@@ -299,8 +355,9 @@ true_  "a new box gets a private session registry" 'grep -q -- " $sessions " <<<
 true_  "the host registry dir exists for the overmount" '[ -d "$tmp/home/.claude/sessions" ]'
 STUB_DNS=172.17.0.1 fresh -n fresh
 true_  "a gateway resolver becomes the box's DNS" 'grep -q -- " --dns 172.17.0.1 " <<< "$run"'
-STUB_DNS=172.17.0.1 fresh -n fresh -H
-false_ "a host-network box takes no --dns" 'grep -q -- " --dns " <<< "$run"'
+fresh -n fresh -H
+true_ "-H fails before creating a box" \
+    '[ "$rc" = 2 ] && grep -q "incompatible with the gVisor" "$tmp/err" && ! grep -q "^run " "$log"'
 HOME="$tmp/home" STUB_FRESH=1 STUB_DOWN=1 \
     dockbox -n fresh exec true >/dev/null 2>"$tmp/err"; rc=$?
 true_  "an unreachable daemon fails the launch with docker's error" \
@@ -310,7 +367,7 @@ true_  "a box that exits before it is ready fails the launch" \
     '[ "$rc" = 1 ] && grep -qx "Container exited during startup" "$tmp/err"'
 STUB_UNREADY=1 STUB_STAYS=1 fresh -n fresh
 true_  "a box that never becomes ready fails the launch, not enters" \
-    '[ "$rc" = 1 ] && grep -qx "Container not ready after the startup wait" "$tmp/err" && ! grep -q "^exec -it" "$log"'
+    '[ "$rc" = 1 ] && grep -qx "Container not ready after the startup wait" "$tmp/err" && ! grep -q "^exec -i" "$log"'
 out=$(HOME="$tmp/home" STUB_FRESH=1 STUB_UNREADY=1 STUB_STAYS=1 dockbox -n fresh exec true 2>/dev/null)
 settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' "$log")
 [ -n "$settings" ] && rm -f -- "$settings"
@@ -320,12 +377,33 @@ STUB_UNREADY=1 STUB_PSDOWN=1 fresh -n fresh
 true_  "a daemon that dies during startup reports docker's error, exit 1" \
     '[ "$rc" = 1 ] && grep -q "Cannot connect to the Docker" "$tmp/err" && ! grep -q "exited during startup" "$tmp/err"'
 fresh -n fresh
-true_  "a new box runs the io_uring seccomp profile" \
-    'grep -q -- " --security-opt seccomp=$share/seccomp.json " <<< "$run"'
+true_  "a new box runs the required gVisor runtime" \
+    'grep -q -- " --runtime runsc-dockbox " <<< "$run"'
+false_ "a new box has no host seccomp profile" \
+    'grep -q -- " --security-opt seccomp=" <<< "$run"'
 true_  "a new box adds the session caps" \
     'grep -q -- " --cap-add sys_nice --cap-add ipc_lock --cap-add sys_ptrace " <<< "$run"'
 true_  "its first session drops through setpriv in the workdir" \
-    'grep -q "^exec -it -u 0:0 -e TERM .* -w $tmp/home dockbox-fresh $sess$" "$log"'
+    'grep -q "^exec -i -u 0:0 -e TERM .* -w $tmp/home dockbox-fresh $sess$" "$log"'
+false_ "a plain box starts no nested daemon" \
+    'grep -q -- "DOCKBOX_NESTED_DOCKER=1" <<< "$run"'
+fresh -n fresh -D
+true_ "-D enables the local daemon" \
+    'grep -q -- "DOCKBOX_NESTED_DOCKER=1" <<< "$run"'
+true_ "-D grants sandbox administration capabilities" \
+    'grep -q -- " --cap-add sys_admin --cap-add net_admin " <<< "$run"'
+true_ "-D uses bounded executable tmpfs storage" \
+    'grep -q -- " --tmpfs /var/lib/docker:rw,exec,size=2g " <<< "$run"'
+false_ "-D forwards no host Docker socket" \
+    'grep -q -- " -v /var/run/docker.sock:" <<< "$run"'
+true_ "nested daemon logs remain available on the host" \
+    'grep -q -- " --log-driver json-file --log-opt max-size=1m --log-opt max-file=1 " <<< "$run"'
+STUB_UNREADY=1 fresh -n fresh -D
+true_ "an unready nested daemon stops the launcher before entry" \
+    '[ "$rc" = 1 ] && ! grep -q "^exec -i" "$log"'
+DOCKBOX_IMAGE=custom:test fresh -n fresh
+true_ "DOCKBOX_IMAGE selects the image without changing containment" \
+    'grep -q -- " -- custom:test sleep infinity" <<< "$run" && grep -q -- " --runtime runsc-dockbox " <<< "$run"'
 cd "$here" || exit 1
 
 mkdir -p "$tmp/repo_with.dot+space name"
@@ -356,7 +434,7 @@ run=$(grep "^run " "$log")
 true_  "project rc --no-ephemeral persists builds" \
     '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 true_  "project rc --no-ephemeral passes no -- to claude" \
-    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
 printf -- '--no-ephemeral' > "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
@@ -368,7 +446,7 @@ rm -f -- "$proj/.dockboxrc"
 # Without a project .dockboxrc the project-rc pass has no words to read; the
 # tool flags after the tool name reach the tool, not dockbox's own parser.
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2>"$tmp/err"
-claude_line=$(sed -n "s/^exec -it .* -- claude //p" "$log")
+claude_line=$(sed -n "s/^exec -i .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
     '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
 
@@ -377,19 +455,19 @@ true_  "no project rc leaves the tool flags to the tool" \
 bypass="--dangerously-bypass-approvals-and-sandbox"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d codex "$proj" >/dev/null 2>"$tmp/err"
 true_  "-d codex takes the codex alias defaults" \
-    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -x haiku "$proj" >/dev/null 2>"$tmp/err"
 true_  "-x haiku runs claude on the haiku model" \
-    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex --model gpt-6-astra "$proj" >/dev/null 2>"$tmp/err"
 true_  "a session --model replaces the codex alias model and effort" \
-    '[ "$(sed -n "s/^exec -it .* -- codex //p" "$log")" = "$bypass --model gpt-6-astra" ]'
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass --model gpt-6-astra" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --model claude-sonnet-5-5 "$proj" >/dev/null 2>"$tmp/err"
 true_  "a session --model replaces the claude alias model and effort" \
-    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus -p "explain the -m flag" "$proj" >/dev/null 2>"$tmp/err"
 true_  "a model flag inside a prompt keeps the alias model" \
-    '[ "$(sed -n "s/^exec -it .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
 true_  "-d bash is the login shell the bash argument gives" \
     'grep -q -- " -- /bin/bash -l$" "$log"'
@@ -428,7 +506,7 @@ false_ "-T overmounts no project build dir" 'grep -q -- "$proj/node_modules" <<<
 mkdir -p "$tmp/home/.claude/projects/-tmp-work"
 touch "$tmp/home/.claude/projects/-tmp-work/session.jsonl"
 HOME="$tmp/home" dockbox -T >/dev/null 2>&1
-true_  "-T re-enters its own box"         'grep -q "^exec -it .* dockbox-tmp setpriv " "$log"'
+true_  "-T re-enters its own box"         'grep -q "^exec -i .* dockbox-tmp setpriv " "$log"'
 false_ "-T starts a new session"          'grep -q "claude --resume" "$log"'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -T claude "$proj" >/dev/null 2>"$tmp/err"; rc=$?
 true_  "-T refuses a project dir, starting no box" \

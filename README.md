@@ -6,7 +6,7 @@ Command-line utilities and Claude Code configuration.
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [kvs](kvs/) — key-value store on one SQLite file for scripts and hooks: get, set, incr, del, ls, sessions and a flock-style `lock`, scoped by project and session
-- [dockbox](dockbox/) — dockerized Claude Code or Codex sandbox
+- [dockbox](dockbox/) — gVisor sandbox for Claude Code or Codex; requires `runsc-dockbox`
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
 - [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`rip -g`, `rif -g`); git aliases (`gco`, `gif`, `gib`, and more)
