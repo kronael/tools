@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.4.51] — 20261018
+
+> kronael v0.4.51 — Docker inside the sandbox
+>
+> Dockbox requires gVisor and runs nested Docker without sharing the host daemon.
+>
+> • Runtime — every new box uses gVisor; unsafe re-entry fails visibly.
+> • Docker — `-D` starts an independent daemon inside the sandbox.
+> • Sessions — SSH/GPG forwarding and optional sudo work through the dedicated runtime.
+> • Cleanup — failed startup and nested-daemon death remove boxes and anonymous volumes.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Dockbox requires the `runsc-dockbox` runtime and rejects incompatible existing boxes.
+- `-D` provides ephemeral Docker storage; `-H` is unavailable.
+- `DOCKBOX_DOCKER` selects the host Docker command without changing the caller's identity.
+- Failed boxes retain visible diagnostics and exit status before container and volume removal.
+
+### Operator note
+
+Install the complete gVisor bundle and configure `runsc-dockbox` with all four
+runtime arguments in [dockbox installation](dockbox/README.md#install).
+Reload Docker after preserving the daemon's other settings. Recreate existing
+boxes before re-entry. `-D` uses a separate ephemeral daemon and grants no host
+Docker socket. Forwarded sockets retain their host authority. `-H` is rejected.
+Where Docker requires sudo, set `DOCKBOX_DOCKER='sudo -n docker'`.
+
 ## [v0.4.50] — 20261017
 
 > kronael v0.4.50 — SSH remotes, plainer py rules
