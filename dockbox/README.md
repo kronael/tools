@@ -139,8 +139,7 @@ at least 4 hours old and never a busy one.
 A new box that exits before `dockbox-init` marks it ready (after registering
 your user) fails the launch: dockbox prints `Container exited during
 startup` and the last 20 lines of the box's log, exits 1 and opens no
-session. The stopped box stays for `docker logs` until `dockbox rm <name>`
-or the next launch replaces it.
+session. Dockbox then removes its failed new box and anonymous build volumes.
 
 ### Re-entry into a running box
 

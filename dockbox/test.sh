@@ -156,6 +156,8 @@ case "$1" in
     inspect)
         case "$*" in
             *HostConfig.Runtime*) echo "${STUB_RUNTIME:-runsc-dockbox}" ;;
+            *State.Running*) echo "${STUB_RUNNING:-true}" ;;
+            *'{{.Id}}'*) echo c0ffee ;;
             *CapAdd*) echo "${STUB_CAPS-CAP_IPC_LOCK,CAP_SYS_NICE,CAP_SYS_PTRACE}" ;;
             *)
                 echo "DOCKBOX_UID=${STUB_OWNER:-$(id -u)}"
@@ -169,6 +171,16 @@ case "$1" in
         [ -z "${STUB_FRESH:-}" ] || { [ -n "${STUB_STAYS:-}" ] && grep -q '^run ' "$STUB/log"; } &&
             echo c0ffee ;;
     logs) seq -f "boot line %g" 1 25 ;;
+    run)
+        while [[ $# -gt 0 ]]
+        do
+            if [[ "$1" == --cidfile && -z "${STUB_NOCID:-}" ]]
+            then
+                echo c0ffee > "$2"
+            fi
+            shift
+        done
+        [[ -z "${STUB_RUNFAIL:-}" ]] || exit "$STUB_RUNFAIL" ;;
     rm) [ "$(use_of "${*: -1}")" = fail ] && { echo "Error: rm failed" >&2; exit 1; } ;;
     network)
         [ -n "${STUB_DOWN:-}" ] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
@@ -287,6 +299,10 @@ false_ "a session leaves the box to a live sibling" 'grep -q "^rm " "$log"'
 rm -f "$tmp/run/sess/4242"
 HOME="$tmp/home" STUB_WIPE=1 dockbox -n sess exec true >/dev/null 2>&1
 false_ "a session keeps the box when markers can't be listed" 'grep -q "^rm " "$log"'
+HOME="$tmp/home" STUB_WIPE=1 STUB_RUNNING=false STUB_RC=137 \
+    dockbox -n sess exec true >/dev/null 2>&1; rc=$?
+true_ "a stopped session removes its container without changing its status" \
+    '[ "$rc" = 137 ] && grep -qx "rm -f -v c0ffee" "$log"'
 output=$(printf 'session input\n' | HOME="$tmp/home" STUB_EXECUTE=1 dockbox -n sess exec cat)
 true_ "a noninteractive command receives stdin and returns stdout" \
     '[ "$output" = "session input" ]'
@@ -365,9 +381,19 @@ true_  "an unreachable daemon fails the launch with docker's error" \
 STUB_UNREADY=1 fresh -n fresh
 true_  "a box that exits before it is ready fails the launch" \
     '[ "$rc" = 1 ] && grep -qx "Container exited during startup" "$tmp/err"'
+true_ "a failed startup removes its created container and volumes" \
+    'grep -qx "rm -f -v c0ffee" "$log"'
+STUB_RUNFAIL=125 fresh -n fresh
+true_ "a failed Docker start removes its created container" \
+    '[ "$rc" = 1 ] && grep -qx "rm -f -v c0ffee" "$log"'
+STUB_RUNFAIL=125 STUB_NOCID=1 fresh -n fresh
+false_ "a failed creation removes no unowned container ID" \
+    'grep -qx "rm -f -v c0ffee" "$log"'
 STUB_UNREADY=1 STUB_STAYS=1 fresh -n fresh
 true_  "a box that never becomes ready fails the launch, not enters" \
     '[ "$rc" = 1 ] && grep -qx "Container not ready after the startup wait" "$tmp/err" && ! grep -q "^exec -i" "$log"'
+true_ "a readiness timeout removes its created container" \
+    'grep -qx "rm -f -v c0ffee" "$log"'
 out=$(HOME="$tmp/home" STUB_FRESH=1 STUB_UNREADY=1 STUB_STAYS=1 dockbox -n fresh exec true 2>/dev/null)
 settings=$(sed -n 's|.* -v \([^ ]*\):/home/dockbox/.claude/settings.json:ro .*|\1|p' "$log")
 [ -n "$settings" ] && rm -f -- "$settings"

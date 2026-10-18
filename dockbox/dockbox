@@ -545,6 +545,19 @@ if [[ "$entrypoint" != exec ]]; then
 fi
 
 CONTAINER_NAME="dockbox-${dir_override:-${_primary_dir##*/}}"
+cid_dir=""
+
+cleanup_startup() {
+    local rc=$? cid=""
+    if [[ -s "$cid_dir/id" ]]
+    then
+        cid=$(< "$cid_dir/id")
+        run_docker rm -f -v "$cid" >/dev/null || true
+    fi
+    rm -f "$cid_dir/id"
+    rmdir "$cid_dir" || true
+    return "$rc"
+}
 
 enter_session() {
     trap '' TSTP
@@ -574,8 +587,14 @@ enter_session() {
         [[ ",$have," == *",${c^^},"* ]] && caps+="${caps:+,}+$c"
     done
     [[ -n "$caps" ]] && cap_opts=(--inh-caps="$caps" --ambient-caps="$caps")
+    CONTAINER_ID=$(run_docker inspect -f '{{.Id}}' "$CONTAINER_NAME")
     run_docker exec "$CONTAINER_NAME" sh -c "mkdir -p /run/dockbox/sess; : > /run/dockbox/sess/$$" 2>/dev/null
     trap leave_session EXIT
+    if [[ -n "$cid_dir" ]]
+    then
+        rm -f "$cid_dir/id"
+        rmdir "$cid_dir"
+    fi
     trap 'exit 129' HUP
     trap 'exit 143' TERM
     [[ ! -t 0 || ! -t 1 ]] || terminal=(-it)
@@ -586,9 +605,15 @@ enter_session() {
 }
 
 leave_session() {
-    local left
+    local left running
     left=$(run_docker exec "$CONTAINER_NAME" sh -c \
-        "rm -f /run/dockbox/sess/$$; ls /run/dockbox/sess" 2>/dev/null) || return 0
+        "rm -f /run/dockbox/sess/$$; ls /run/dockbox/sess" 2>/dev/null) || {
+        running=$(run_docker inspect -f '{{.State.Running}}' "$CONTAINER_ID") || return 0
+        [[ "$running" == false ]] || return 0
+        run_docker logs "$CONTAINER_ID" 2>&1 | tail -20 || true
+        run_docker rm -f -v "$CONTAINER_ID" >/dev/null || true
+        return 0
+    }
     if [[ -z "$left" ]]; then
         run_docker rm -f -v "$CONTAINER_NAME" >/dev/null || true
     fi
@@ -749,9 +774,12 @@ sandbox_note "$HOSTNAME" bridge "${mounts[@]}" > "$_note"
 mounts+=(-v "$_note:/etc/claude-code/CLAUDE.md:ro")
 
 run_docker rm -f -v "$CONTAINER_NAME" 2>/dev/null || true
+cid_dir=$(mktemp -d)
+trap cleanup_startup EXIT
 
 run_docker run -d --init \
     --name "$CONTAINER_NAME" \
+    --cidfile "$cid_dir/id" \
     --runtime "$RUNTIME" \
     --log-driver json-file --log-opt max-size=1m --log-opt max-file=1 \
     --entrypoint /usr/local/bin/dockbox-init \

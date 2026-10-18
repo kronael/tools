@@ -309,22 +309,32 @@ HOME="$tmp/home" "$here/dockbox" ls | tee "$tmp/list.log"
 awk -v box="$box" '$1 == box { found=1; if ($0 !~ / busy /) exit 1 }
     END { if (!found) exit 1 }' "$tmp/list.log"
 run_docker exec "$box" docker rm -f native-active
+run_docker rm -f -v "$box" >/dev/null
 
 echo 'native: post-ready daemon death fails the active session'
-launch -D exec sh -c 'touch death-ready; exec sleep 60' > "$tmp/death.log" 2>&1 &
-death_pid=$!
-pids+=("$death_pid")
-wait_file "$tmp/project/death-ready"
+start_session -D -B
+mapfile -t death_volumes < <(run_docker inspect "$box" --format \
+    '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' |
+    sed '/^$/d')
+[[ ${#death_volumes[@]} -gt 0 ]] || fail 'daemon death fixture has no build volume'
+volumes+=("${death_volumes[@]}")
 run_docker exec "$box" sh -c 'kill "$(pidof dockerd)"'
 set +e
-wait "$death_pid"
+wait "$session_pid"
 status=$?
 set -e
-[[ "$status" != 0 ]] || fail 'daemon death returned success'
-run_docker logs "$box" > "$tmp/daemon.log" 2>&1
-grep -q 'dockbox: nested Docker exited' "$tmp/daemon.log"
-tail -8 "$tmp/daemon.log"
-run_docker rm -f -v "$box" >/dev/null
+exec 9>&-
+[[ "$status" == 137 ]] || fail "daemon death status: $status"
+assert_removed
+for volume in "${death_volumes[@]}"
+do
+    if run_docker volume inspect "$volume" >/dev/null 2>&1
+    then
+        fail 'daemon death retained an anonymous volume'
+    fi
+done
+grep -q 'dockbox: nested Docker exited' "$tmp/session.log"
+tail -8 "$tmp/session.log"
 
 echo 'native: controlled daemon startup failure is visible'
 name="native-$$-failure"
@@ -333,19 +343,40 @@ mkdir "$tmp/project/fail-bin"
 cat > "$tmp/project/fail-bin/dockerd" <<'EOF'
 #!/bin/sh
 echo invoked >> daemon-calls
+while ! test -f daemon-release
+do
+    sleep 0.1
+done
 echo native-daemon-failure >&2
 exit 73
 EOF
 chmod +x "$tmp/project/fail-bin/dockerd"
+launch -D -B -e "PATH=$tmp/project/fail-bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    exec true > "$tmp/startup.log" 2>&1 &
+failure_pid=$!
+pids+=("$failure_pid")
+wait_file "$tmp/project/daemon-calls"
+mapfile -t startup_volumes < <(run_docker inspect "$box" --format \
+    '{{range .Mounts}}{{if eq .Type "volume"}}{{println .Name}}{{end}}{{end}}' |
+    sed '/^$/d')
+[[ ${#startup_volumes[@]} -gt 0 ]] || fail 'startup fixture has no build volume'
+volumes+=("${startup_volumes[@]}")
+touch "$tmp/project/daemon-release"
 set +e
-launch -D -e "PATH=$tmp/project/fail-bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
-    exec true > "$tmp/startup.log" 2>&1
+wait "$failure_pid"
 status=$?
 set -e
 cat "$tmp/startup.log"
-[[ "$status" != 0 ]] || fail 'startup failure returned success'
+[[ "$status" == 1 ]] || fail "startup failure status: $status"
 grep -qx invoked "$tmp/project/daemon-calls"
 grep -q native-daemon-failure "$tmp/startup.log"
 grep -q 'Container exited during startup' "$tmp/startup.log"
-run_docker rm -f -v "$box" >/dev/null
+assert_removed
+for volume in "${startup_volumes[@]}"
+do
+    if run_docker volume inspect "$volume" >/dev/null 2>&1
+    then
+        fail 'startup failure retained an anonymous volume'
+    fi
+done
 echo 'native: all checks passed'
