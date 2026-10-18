@@ -33,6 +33,10 @@ cleanup() {
         kill "$pid" 2>/dev/null || true
         wait "$pid" 2>/dev/null || true
     done
+    if [[ -d "$tmp/gnupg" ]]
+    then
+        GNUPGHOME="$tmp/gnupg" gpgconf --kill gpg-agent
+    fi
     for volume in "${volumes[@]}"
     do
         if run_docker volume inspect "$volume" >/dev/null 2>&1
@@ -58,7 +62,7 @@ wait_file() {
     local path=$1
     for ((i = 0; i < 200; i++))
     do
-        [[ ! -f "$path" ]] || return 0
+        [[ ! -e "$path" ]] || return 0
         sleep 0.1
     done
     fail "file did not appear: $path"
@@ -159,6 +163,10 @@ launch exec sh -eu -c '
     test "$(id -un)" = "$3"
     test "$(awk "/CapAmb/ { print \$2 }" /proc/self/status)" = 0000000000884000
     test ! -S /var/run/docker.sock
+    if sudo -n true >/dev/null 2>&1
+    then
+        exit 1
+    fi
     test -L "$HOME/.agents/skills"
     cmp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"
     test "$(jq -r .sandbox.enabled "$HOME/.claude/settings.json")" = false
@@ -186,6 +194,49 @@ assert_removed
 [[ "$(cat node_modules/host)" == host-dependency ]] || fail 'host dependency'
 [[ ! -e node_modules/inside ]] || fail 'dependency write escaped'
 [[ "$(cat written)" == writable ]] || fail 'project write failed'
+
+echo 'native: forwarded SSH/GPG signing and optional sudo'
+ssh-keygen -q -t ed25519 -C fixture -N '' -f "$tmp/ssh-key"
+ssh-agent -D -a "$tmp/ssh-agent.sock" > "$tmp/ssh-agent.log" 2>&1 &
+pids+=("$!")
+wait_file "$tmp/ssh-agent.sock"
+SSH_AUTH_SOCK="$tmp/ssh-agent.sock" ssh-add "$tmp/ssh-key"
+cp "$tmp/ssh-key.pub" "$tmp/project/ssh-key.pub"
+export GNUPGHOME="$tmp/gnupg"
+mkdir -m 700 "$GNUPGHOME"
+agent_socket=$(gpgconf --list-dirs agent-socket)
+launcher_socket=$(HOME="$tmp/home" gpgconf --list-dirs agent-socket)
+[[ "$agent_socket" == "$launcher_socket" ]] ||
+    fail 'task GPG socket changes with launcher HOME'
+gpg --batch --pinentry-mode loopback --passphrase '' --quick-generate-key \
+    'Dockbox Fixture <fixture@example.invalid>' ed25519 sign 0 \
+    > "$tmp/gpg-key.log" 2>&1
+fingerprint=$(gpg --batch --with-colons --list-secret-keys |
+    awk -F: '$1 == "fpr" {print $10; exit}')
+[[ -n "$fingerprint" ]] || fail 'task GPG signing key is missing'
+mkdir -m 700 "$tmp/home/.gnupg"
+cp "$GNUPGHOME/pubring.kbx" "$tmp/home/.gnupg/pubring.kbx"
+printf 'forwarded agent signature\n' > "$tmp/project/message"
+SSH_AUTH_SOCK="$tmp/ssh-agent.sock" start_session -A -K -S
+set +e
+launch exec ssh-add -T "$tmp/project/ssh-key.pub" > "$tmp/ssh.log" 2>&1
+ssh_status=$?
+launch exec gpg --batch --yes --local-user "$fingerprint" \
+    --output "$tmp/project/signature" --detach-sign "$tmp/project/message" \
+    > "$tmp/gpg.log" 2>&1
+gpg_status=$?
+launch exec sudo -n id -u > "$tmp/sudo.log" 2>&1
+sudo_status=$?
+set -e
+cat "$tmp/ssh.log" "$tmp/gpg.log" "$tmp/sudo.log"
+echo "native: feature status ssh=$ssh_status gpg=$gpg_status sudo=$sudo_status"
+[[ "$ssh_status" == 0 ]] || fail 'forwarded SSH agent cannot sign'
+[[ "$gpg_status" == 0 ]] || fail 'forwarded GPG agent cannot sign'
+gpg --batch --verify "$tmp/project/signature" "$tmp/project/message"
+[[ "$sudo_status" == 0 && "$(cat "$tmp/sudo.log")" == 0 ]] ||
+    fail 'optional sudo did not become root'
+finish_session
+assert_removed
 
 echo 'native: worktree backing mount and anonymous volume cleanup'
 git -C "$tmp/repo" init -q

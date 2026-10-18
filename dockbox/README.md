@@ -20,6 +20,8 @@ Trust boundaries:
   credentials and change writable configuration on the host.
 - Explicit `-v` mounts grant access to the named host path. A Docker socket or
   another sensitive mount can grant control beyond the sandbox.
+- Mounted sockets carry host authority. `-A` permits SSH-agent operations, and
+  `-K` permits GPG-agent operations with the host agent's keys.
 - Network access remains available. The runtime enables raw packet operations
   for nested Docker. gVisor does not make shared data or network peers safe.
 
@@ -60,22 +62,28 @@ Register the dedicated runtime with the official installer:
 
 ```sh
 sudo /usr/local/bin/runsc install --runtime=runsc-dockbox --clobber=false -- \
-  --net-raw --allow-packet-socket-write
+  --net-raw --allow-packet-socket-write --host-uds=open --allow-suid
 ```
 
 Preserve all other Docker daemon settings and runtime entries. If the dedicated
-entry exists, review its `runtimeArgs` for both flags. The required entry is:
+entry exists, review its `runtimeArgs` for all four flags. The required entry is:
 
 ```json
 {
   "runtimes": {
     "runsc-dockbox": {
       "path": "/usr/local/bin/runsc",
-      "runtimeArgs": ["--net-raw", "--allow-packet-socket-write"]
+      "runtimeArgs": [
+        "--net-raw", "--allow-packet-socket-write", "--host-uds=open", "--allow-suid"
+      ]
     }
   }
 }
 ```
+
+`--host-uds=open` permits connections to mounted host sockets, including
+forwarded SSH and GPG agents. `--allow-suid` permits setuid elevation inside
+the sandbox so `-S` can grant sudo access.
 
 Merge that entry into the existing configuration; do not replace the file with
 this fragment. Review the diff, then run `sudo systemctl reload docker`.
@@ -410,6 +418,8 @@ make smoke            # native checks against the existing production image
 
 The native gate uses the real launcher and the production init, daemon, and
 Codex bridge scripts. It supplies fake configuration and no real credentials.
+Host OpenSSH and GnuPG tools create task agents for SSH and GPG signing checks.
+The gate also checks sudo access with `-S` and its absence without `-S`.
 It checks UID/GID, mounts, worktrees, ephemeral storage, sessions, nested builds,
 networking, daemon failures, containment, and cleanup. Its inspect guard rejects
 runtime and host-socket mutations before privileged nested payloads run.
