@@ -152,13 +152,9 @@ Python-specific additions and deltas.
 
 ## Build
 - uv for packages, pyright for types
-- NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`) —
-  ALWAYS the source build (`psycopg2`, `psycopg[c]`): the wheel bundles its own libpq
-  and libssl, which system upgrades skip and whose libssl can segfault beside Python's
-  `ssl` under concurrency (psycopg's install guide).
-- ALWAYS give a builder that lacks the headers — a slim image, a bare CI runner — the
-  dev package the source build needs (`libpq-dev` for `pg_config`); NEVER switch to
-  the wheel to make a failing install pass.
+- NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`): its
+  bundled libssl segfaults beside `ssl` — ALWAYS the source build, the builder given the
+  dev headers (`libpq-dev`).
 - ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
   `basic` default with a per-file `strict` list. Every test file opts down with
   `# pyright: basic` on its first line.
