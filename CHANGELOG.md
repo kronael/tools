@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.52] — 20261019
+
+> kronael v0.4.52 — Subtraction before additions
+>
+> Engineering and review skills require subtraction and simpler data models before adding code.
+>
+> • Engineering — preserve required behavior while removing mechanisms and simplifying state.
+> • Refine — additions need a measured requirement that simpler code cannot satisfy.
+> • Guidance — engineering rules live in their owning skills; Git approval safeguards stay intact.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Prefer subtraction and simpler models, views and state handling before adding mechanisms.
+- Require evidence for additions during refine; preserve required behavior.
+- Keep engineering rules in their owning skills and retain Git approval safeguards.
+
 ## [v0.4.51] — 20261018
 
 > kronael v0.4.51 — Docker inside the sandbox
