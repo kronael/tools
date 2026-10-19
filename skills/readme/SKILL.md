@@ -10,6 +10,12 @@ user-invocable: true
 Only this file preloads. ALWAYS read exactly ONE matched file below.
 Paths are relative to this directory.
 ALWAYS load the `writing` skill before drafting or editing prose in any mode.
+In every mode, ALWAYS draw each flow a page describes — events, data, a run,
+the roles — as one figure with the `diagrams` skill beside its prose; a flow
+in prose alone is undocumented (`topology.md` § Files). ALWAYS end with the
+`writing/page.md` § Density prune and the `humanize` pass: the shortest page
+that stays complete and true, no limit, alternative or why cut
+(`topology.md` § Keeping it).
 
 | If you need | Read |
 |---|---|
