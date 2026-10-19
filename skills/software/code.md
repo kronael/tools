@@ -108,13 +108,12 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER call an abstraction simpler when it brings concepts the call sites do
   not have — function pointers, closures, generics, combinator chains. It has
   to cut TOTAL complexity; judge by cognitive overhead, not diff size.
-- ALWAYS reframe before adding a branch, a fallback or a config knob: check
-  whether an existing parameter, path or environment variable makes the edge
-  case normal. Branch only when no existing mechanism can express it — one code
-  path beats ten.
-- ALWAYS prefer a simple solution that is mostly right over a complex one that
-  is fully correct — the simple one spreads and evolves, embedded complexity
-  never leaves.
+- ALWAYS try subtraction first: remove unnecessary mechanisms, then simplify
+  data models, views and state handling.
+- ALWAYS preserve required behavior. Fewer lines alone do not prove a simpler
+  solution.
+- ALWAYS add code only for a measured unmet requirement that subtraction and
+  those simplifications cannot satisfy.
 - NEVER braid components: if A cannot be understood without tracking B's
   state, separate them — braided code grows combinatorially, separated code
   composes linearly. ALWAYS minimise state and make what remains explicit; an
@@ -164,9 +163,22 @@ your diff against every `##` heading here before calling an edit done.
 
 ## System changes
 
-- ALWAYS hold every change to WISDOM § System-change discipline: amend the
-  original, fail loud to the user, retry only the transient, fix the cause,
-  redesign only after sign-off.
+- ALWAYS grep for the existing mechanism (guard, helper, table, log site,
+  config) before adding one, and extend the ORIGINAL. NEVER a parallel second
+  path — two paths drift. If the original is wrong, fix it or say so; NEVER
+  route around it.
+- ALWAYS fail loud, to the user: an error on a user-facing path MUST surface
+  (thrown, non-2xx, delivered), not just logged. NEVER swallow it, and NEVER
+  add retry/fallback/best-effort as "robustness" — that turns a visible failure
+  into an invisible one. Retry ONLY the transient: network, DB busy/locked.
+  When the MECHANISM swallows — a fire-and-forget submit nobody collects, a
+  detached task, a bare catch — replace it with one that propagates; NEVER keep
+  it and bolt on counters and collectors to recover the drops: more code, less
+  reported.
+- ALWAYS prefer the cause fix to the loud log — make the bad state impossible
+  by construction.
+- A redesign (new contract, changed control flow, cross-cutting) ships only
+  after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
@@ -212,6 +224,20 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
   NEVER a file log handler or a log-file path passed through application code;
   the supervisor, container runtime, CI or top-level runner persists them.
+
+## House conventions
+
+- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A
+  program a user runs keeps state, settings, cache and data in
+  `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>` (`~/.local/state/<name>` and so
+  on), each overridable by one flag or env var.
+- Config: prefer flags + env vars for anything simple — a short flag where a
+  human types it (`-u`), a long name with an env var where the deploy sets it
+  (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
+  first CLI param, api keys as second.
+- `make` for build/lint/test/clean and debug builds: `make test` = fast unit
+  (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
+  production data.
 
 ## Grug rules
 

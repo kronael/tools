@@ -61,7 +61,7 @@ Fixup: `fixup: <exact HEAD subject>` — correction to the immediately preceding
 
 1. `git status` + `git diff` + `git log --oneline -5`
 2. Commit: `git commit -m "msg" -- file1 file2`
-3. If pre-commit reformats, retry once
+3. If pre-commit reformats, retry once; NEVER skip the checks (`--no-verify`)
 4. If index.lock: `rm -f .git/index.lock`, retry once
 
 ## Rules

@@ -42,8 +42,9 @@ reads to pick the agent type.
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
   config knob the change adds — `rg -n '<name>'`. One or two sites is a
   finding: inline it (§ Boring code).
-- ALWAYS check each new branch, fallback or flag for an existing parameter,
-  path or environment variable that already expresses the edge case.
+- ALWAYS test each added mechanism against § Boring code: identify the unmet
+  requirement and why subtraction or model, view and state simplification
+  cannot satisfy it. Missing evidence is a finding.
 - ALWAYS grep for function-typed struct fields the change adds (`func(` inside
   a Go struct, `Box<dyn Fn`, a `Callable` attribute) and run § Design's
   five-second test on each.
@@ -59,7 +60,7 @@ reads to pick the agent type.
 - ALWAYS grep the tree for the mechanism each new guard, helper, table, log
   site or config key duplicates — same verb, same table, same env var. A
   second path where the original could be extended is a finding
-  (WISDOM § System-change discipline).
+  (`software/code.md` § System changes).
 - ALWAYS check a fix that changes a contract or control flow across modules
   for its `BUGS.md` proposal; none is a finding, routed to `BUGS.md`, never
   applied.
@@ -70,7 +71,7 @@ reads to pick the agent type.
   with no else, `except …: pass` or log-and-continue, an empty `catch`,
   `.ok()`/`unwrap_or_default()`/`?? []` on a user-facing path, a fallback
   `None`/`[]`/`0` the caller proceeds on. Each must reach the user
-  (WISDOM § System-change discipline).
+  (`software/code.md` § System changes).
 - ALWAYS read every retry loop's body: anything but a network call or DB
   busy/locked inside it — a parse, a config read, a precondition — is a
   finding.

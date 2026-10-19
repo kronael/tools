@@ -256,7 +256,7 @@
   test — design. `skills/rs/SKILL.md:101-122` prescribes a `main()` loop
   that sleeps and restarts on any `Err`; `skills/service/SKILL.md:14` says
   "use last available data when current unavailable"; `skills/data/SKILL.md:44`
-  "Retry with exponential backoff" — WISDOM § System-change discipline
+  "Retry with exponential backoff" — `software/code.md` § System changes
   retries ONLY the transient. **Options:** (a) scope each to transient
   errors; (b) state the supervised-binary exception in `rs`. **Default if
   nothing is decided:** (b).

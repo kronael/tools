@@ -101,12 +101,12 @@ code extension and still carries every claim the reviewer will trust.
    → each finding is confirmed, corrected with the command that corrected it,
    or dropped as unverifiable.
 
-8. **Triage and apply** — DROP a finding that adds an abstraction, targets
-   unused code (grep first), conflicts with the ask, or survived step 7 only as
+8. **Triage and apply** — DROP a finding that targets unused code (grep first),
+   conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (WISDOM § System-change discipline); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest serially, one
-   context at a time, briefed from `brief.md`: `simplify` →
+   (WISDOM § Bug triage); NEVER build one without sign-off.
+   ALWAYS apply code findings under `software/code.md` § Boring code. Apply
+   serially, one context at a time, briefed from `brief.md`: `simplify` →
    `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
