@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
+when_to_use: editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module, ruff --fix
 ---
 
 # Python
@@ -152,6 +152,13 @@ Python-specific additions and deltas.
 
 ## Build
 - uv for packages, pyright for types
+- NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`) —
+  ALWAYS the source build (`psycopg2`, `psycopg[c]`): the wheel bundles its own libpq
+  and libssl, which system upgrades skip and whose libssl can segfault beside Python's
+  `ssl` under concurrency (psycopg's install guide).
+- ALWAYS give a builder that lacks the headers — a slim image, a bare CI runner — the
+  dev package the source build needs (`libpq-dev` for `pg_config`); NEVER switch to
+  the wheel to make a failing install pass.
 - ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
   `basic` default with a per-file `strict` list. Every test file opts down with
   `# pyright: basic` on its first line.
