@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.54] — 20261020
+
+> kronael v0.4.54 — VMs that leave the host some memory
+>
+> qemubox VMs start with 24 GiB instead of 64 GiB, and `ls` shows where guest memory goes.
+>
+> • qemubox — new VMs get 24 GiB; set `QEMUBOX_MEM` for more.
+> • qemubox — `ls` adds guest USED, CACHE and TMPFS columns next to host RAM.
+> • qemubox — `ls` accepts only numbers from the guest, so a guest cannot run host code.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox default RAM is 24 GiB (`QEMUBOX_MEM=24576`); running VMs keep their size until restart.
+- `qemubox ls` shows guest used, page cache and tmpfs memory for running VMs.
+- Security: `qemubox ls` no longer evaluates guest output in shell arithmetic.
+
 ## [v0.4.53] — 20261020
 
 > kronael v0.4.53 — Disk cleanup that cannot touch your work
