@@ -135,7 +135,7 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     session_markers() { echo 123; }
     output=$(list_boxes)
     [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'DISK$'\t'PATH* ]]
-    [[ "$output" = *$'running\tbusy\t'*KiB* ]]
+    [[ "$output" = *$'running\tbusy\t'*[0-9KMG]* ]]
     session_markers() { :; }
     [[ "$(list_boxes)" = *$'running\tidle\t'* ]]
     session_markers() { return 1; }

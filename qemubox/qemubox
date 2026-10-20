@@ -1039,10 +1039,17 @@ list_boxes() {
             disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
         fi
         unlock_box
-        printf "qemubox-%s\t%s\t%s\t%sKiB\t%sKiB\t%s\n" \
-            "$name" "$state" "$use" "${ram// /}" "$disk" "$dir"
+        printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" "$use" \
+            "$(human_kib "${ram// /}")" "$(human_kib "$disk")" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
+}
+
+human_kib() {
+    case $1 in
+        *[!0-9]*|"") echo "$1" ;;
+        *) numfmt --from-unit=1024 --to=iec "$1" ;;
+    esac
 }
 
 match_boxes() {

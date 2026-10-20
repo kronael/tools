@@ -136,7 +136,7 @@ holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
 match as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
-space allocated on the host (both sizes in KiB); a VM waiting out
+space allocated on the host (sizes in K, M or G); a VM waiting out
 `QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails
 because the host filesystem under the overlay is full; other write errors go
 to the guest. `ls` and `status` then show `paused:` and qemu's reason, such as
