@@ -1223,6 +1223,16 @@
   them and `~/.codex/memories` is empty. **Fix:** turn memories off for the
   guest Codex, or keep its memory files on the guest disk too.
 
+## diskclean
+
+- **DISKCLEAN-LINKED-TOOLCHAIN** (HIGH, data loss) — level 2 uninstalls a
+  linked rustup toolchain whose name starts with a version. The filter
+  `^[0-9.]+-[^ ]+$` in `level2` (`diskclean/diskclean`) matches a toolchain
+  such as `1.89.0-sbpf-<vendor>-v1.54`, which is a symlink into another
+  tool's install; `rustup toolchain uninstall` then breaks that tool.
+  **Fix:** skip every toolchain whose dir under `$(rustup show home)/toolchains`
+  is a symlink (`-L`), and cover it in `test.sh` with a symlinked fixture.
+
 ## bhctl
 
 - **BHCTL-HELP-NEEDS-PAIRED-DEVICE** (LOW, ux) — CONFIRMED 2026-10-10. The
