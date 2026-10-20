@@ -1082,6 +1082,18 @@
 
 ## qemubox
 
+- **QEMUBOX-HOSTKEY-PER-BOOT** (MED) — `qemubox-init` deletes and regenerates
+  the guest SSH host keys at every boot (`dockbox/Dockerfile` vm stage,
+  `rm -f /etc/ssh/ssh_host_*`), while `known_hosts` is written only at VM start.
+  A guest reboot (e.g. a kernel panic) changes the key, every qemubox SSH
+  call fails host-key verification, and `rm`, `stop` and attach wait.
+  **Fix:** generate host keys once per VM disk (skip when present).
+
+- **QEMUBOX-PANIC-REBOOTS** (MED) — QEMU runs without `-no-reboot`, so a guest
+  panic reboots the guest in place instead of ending the QEMU process;
+  qemubox still sees it as running. **Fix:** add `-no-reboot` (and
+  `panic=-1` on the kernel command line) so a panic stops the VM.
+
 - **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
   When the host disk fills, QEMU pauses the guest with `io-error`.
   `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
