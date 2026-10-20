@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.53] — 20261020
+
+> kronael v0.4.53 — Disk cleanup that cannot touch your work
+>
+> A new diskclean tool frees space from build output and caches, stalest first, and never touches project data.
+>
+> • diskclean — `-1` empties proven project caches unused for 30 days; `-2` adds toolchains and tool caches.
+> • qemubox — the base image is zstd-compressed (13G to 4.2G) and old bases are removed after rebuilds.
+> • qemubox — `prune` never deletes a VM; `rm --stopped <hours>` does, on request.
+> • Sandboxes — the first `git` or `ssh` to github.com no longer stops on a host-key prompt.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `diskclean`: two levels, a proof per cache kind, `-k` kinds, `-o` age, `-l` list only; sync installs it.
+- diskclean never enters `.git`, `.claude`, `.codex`, `.agents`, `.diary`, `specs`, `plans`, `docs` or hidden home dirs.
+- qemubox refuses sensitive mounts unless `--mount-sensitive`, also from a project `.qemuboxrc`.
+- qemubox `-T` gives each scratch VM a random hyphenated name; `ls` prints sizes in K, M or G.
+- **Breaking:** `qemubox prune` takes no argument and never deletes VMs; use `qemubox rm --stopped <hours>`.
+- dockbox and qemubox images pin GitHub's SSH host keys.
+
 ## [v0.4.52] — 20261019
 
 > kronael v0.4.52 — Subtraction before additions
