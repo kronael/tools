@@ -235,6 +235,13 @@ RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
 RUN apt-get update && apt-get install -y --no-install-recommends docker-cli gcc \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
+# GitHub's published host keys, so the first git or ssh to github.com does not
+# stop on an unknown-host prompt.
+RUN printf '%s\n' \
+    'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' \
+    'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' \
+    >> /etc/ssh/ssh_known_hosts
+
 FROM dockbox AS vm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
