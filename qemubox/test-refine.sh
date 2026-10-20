@@ -60,6 +60,24 @@ base_test() {
 }
 regression "prune removes only unused noncurrent base sets" base_test
 
+no_current_test() {
+    regression_setup
+    rm "$ROOT/base/current"
+    prune_bases
+    [ -f "$ROOT/base/fixture.qcow2" ]
+}
+regression "prune_bases without a current base does nothing" no_current_test
+
+random_name_test() {
+    regression_setup
+    a=$(random_name)
+    [ -d "$ROOT/$a" ]
+    mkdir() { [ "$1" = -p ] || return 1; command mkdir "$@"; }
+    if random_name 2> "$fixture/name-error"; then exit 1; fi
+    grep -q 'no free random name' "$fixture/name-error"
+}
+regression "random_name reserves its dir and gives up when none is free" random_name_test
+
 pid_test() {
     regression_setup
     mkdir -p "$ROOT/vm"

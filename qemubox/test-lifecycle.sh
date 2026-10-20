@@ -136,6 +136,25 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     [ "$(cat "$fixture/rm-stopped.removed")" = old ]
 ) > "$fixture/rm-stopped.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/rm-stopped.log"; bad "rm --stopped removes only VMs stopped over the age"; }
+(
+    set -e
+    ROOT="$fixture/rm-stopped-race"
+    mkdir -p "$ROOT"/{old,restarted,flipped,base}
+    touch -d '3 hours ago' "$ROOT"/{old,restarted,flipped}/stopped
+    up=""
+    running() { [ "$1" = "$up" ]; }
+    lock_box() {
+        case "$1" in
+            restarted) touch "$ROOT/restarted/stopped" ;;
+            flipped) up=flipped ;;
+        esac
+    }
+    unlock_box() { :; }
+    remove_box() { echo "$1" >> "$fixture/rm-stopped-race.removed"; }
+    remove_boxes --stopped 2 > /dev/null 2>&1
+    [ "$(cat "$fixture/rm-stopped-race.removed")" = old ]
+) > "$fixture/rm-stopped-race.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/rm-stopped-race.log"; bad "rm --stopped rechecks running and age under the lock"; }
 exits 2 'remove_boxes --stopped' "rm --stopped requires hours"
 exits 2 'remove_boxes --stopped bad' "rm --stopped rejects invalid hours"
 exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"

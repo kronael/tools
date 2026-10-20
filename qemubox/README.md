@@ -71,7 +71,7 @@ through untouched. The default VM name is the project dir basename; `-n name` gi
 
 `-T` starts a temporary session: qemubox mounts no project dir, and the
 session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
-Each `-T` run gets a new random VM name, such as `qemubox-brave_turing`,
+Each `-T` run gets a new random VM name, such as `qemubox-brave-turing`,
 unless `-n` names it. `-v` still adds host paths, a dir argument is an error,
 and `-T` implies `-N`. Scratch VMs stay on disk after power-off: `qemubox ls`
 lists them and `qemubox rm` removes them.

@@ -159,13 +159,19 @@ random_name() {
     local names=(babbage backus berners cerf church curie dijkstra hamilton hopper
         kay knuth liskov lovelace mccarthy noether pike ritchie shannon stallman
         thompson torvalds turing wirth wozniak)
-    local n
-    while :
+    local n tries
+    mkdir -p "$ROOT"
+    for tries in {1..100}
     do
-        n="${adjectives[RANDOM % ${#adjectives[@]}]}_${names[RANDOM % ${#names[@]}]}"
-        [ -e "$(box_dir "$n")" ] || break
+        n="${adjectives[RANDOM % ${#adjectives[@]}]}-${names[RANDOM % ${#names[@]}]}"
+        if mkdir "$(box_dir "$n")" 2>/dev/null
+        then
+            printf '%s' "$n"
+            return 0
+        fi
     done
-    printf '%s' "$n"
+    echo "qemubox: no free random name after 100 tries; pass -n <name>" >&2
+    return 1
 }
 
 is_sensitive() {
@@ -1072,17 +1078,22 @@ match_boxes() {
     [ -n "$matched" ]
 }
 
+is_stopped_over() {
+    local dir ts
+    dir="$(box_dir "$1")"
+    ! running "$1" || return 1
+    ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || return 1
+    [ "$ts" -lt $(($(date +%s) - 10#$2 * 3600)) ]
+}
+
 stopped_boxes() {
-    local cutoff dir name ts
-    cutoff=$(($(date +%s) - 10#$1 * 3600))
+    local dir name
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
         name=${dir##*/}
         [ "$name" = base ] && continue
-        running "$name" && continue
-        ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || continue
-        [ "$ts" -lt "$cutoff" ] || continue
+        is_stopped_over "$name" "$1" || continue
         echo "qemubox-$name"
         targets+=("$name")
     done
@@ -1115,9 +1126,9 @@ remove_boxes() {
     for name in "${targets[@]}"
     do
         lock_box "$name" || { rc=1; continue; }
-        if [ -n "$hours" ] && running "$name"
+        if [ -n "$hours" ] && ! is_stopped_over "$name" "$hours"
         then
-            note "qemubox-$name is running again; keeping it"
+            note "qemubox-$name is no longer stopped over $hours hours; keeping it"
         else
             remove_box "$name" || rc=1
         fi
@@ -1192,6 +1203,7 @@ prune_bases() (
     [ -d "$ROOT/base" ] || exit 0
     exec 8>"$ROOT/base/.lock"
     flock 8
+    [ -f "$ROOT/base/current" ] || exit 0
     current=$(cat "$ROOT/base/current") || exit 1
     for base in "$ROOT/base/"*.qcow2
     do
@@ -1557,14 +1569,6 @@ done
 
 if [ -z "$mount_sensitive" ]
 then
-    for dir in "${dirs[@]}" "${extra_dirs[@]}"
-    do
-        if is_sensitive "$dir"
-        then
-            echo "qemubox: refusing to mount sensitive path $dir; pass --mount-sensitive to mount it" >&2
-            exit 2
-        fi
-    done
     if [ -z "$tmp_session" ] && [ "${#dirs[@]}" -eq 0 ] && is_sensitive "$(pwd)"
     then
         warnings+=("$(pwd) is a sensitive path; starting a scratch box as -T does (pass the dir and --mount-sensitive to mount it)")
@@ -1585,6 +1589,17 @@ else
     [ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
     primary="${dirs[-1]}"
     project_rc "$primary"
+fi
+if [ -z "$mount_sensitive" ]
+then
+    for dir in "${dirs[@]}" "${extra_dirs[@]}"
+    do
+        if is_sensitive "$dir"
+        then
+            echo "qemubox: refusing to mount sensitive path $dir; pass --mount-sensitive to mount it" >&2
+            exit 2
+        fi
+    done
 fi
 if [ "$entrypoint" != exec ]
 then
