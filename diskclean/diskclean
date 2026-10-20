@@ -381,9 +381,9 @@ remove_candidate() {
     case $1 in
         rustup) rustup toolchain uninstall "${2##*/}" ;;
         target) find "$2" -mindepth 1 -maxdepth 1 ! -name deploy \
-            -exec rm -rf -- {} + ;;
-        gomod) chmod -R u+w -- "$2" && rm -rf -- "$2" ;;
-        *) rm -rf -- "$2" ;;
+            -exec rm -rf --one-file-system -- {} + ;;
+        gomod) chmod -R u+w -- "$2" && rm -rf --one-file-system -- "$2" ;;
+        *) rm -rf --one-file-system -- "$2" ;;
     esac
 }
 

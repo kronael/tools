@@ -402,6 +402,19 @@ check "failed rm is reported" has "Failed: $work/fail/a/node_modules" "$out"
 check "failed rm exits 1" test "$status" = 1
 check "run continues after a failed rm" test ! -e "$work/fail/b/node_modules"
 
+rmstub=$(mktemp -d)
+printf '#!/bin/sh\necho "$*" >> "%s/rm.log"\nexec /bin/rm "$@"\n' \
+    "$rmstub" > "$rmstub/rm"
+chmod +x "$rmstub/rm"
+mk_node "$work/mnt/a"
+mk_node "$work/mnt/b"
+age_tree "$work/mnt" 400
+out=$(echo y | PATH=$rmstub:$PATH ./diskclean "$work/mnt" 2>&1)
+check "removal runs rm within one filesystem" \
+    test "$(grep -c -- '-rf --one-file-system' "$rmstub/rm.log")" = 2
+rm -- "$rmstub/rm" "$rmstub/rm.log"
+rmdir -- "$rmstub"
+
 mk_aged() {
     mk_node "$1"
     head -c $(( $3 * 1024 )) /dev/zero > "$1/node_modules/x/blob"
