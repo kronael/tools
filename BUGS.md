@@ -1092,6 +1092,22 @@
   waiting; below it, print the free and needed space and exit. Same check in
   `qemubox ls`/`status` so a paused VM shows how to recover.
 
+- **QEMUBOX-9P-TO-VIRTIOFS** (MED, design) — needs sign-off.
+  Host paths reach the guest over 9p (`qemubox/qemubox:596`, `:761`,
+  mount at `:805-808`). 9p is slow on many small files and weak on locks and
+  mmap, so the Codex SQLite DB must live in the guest `/tmp`. virtiofs fixes
+  both; `virtiofsd` is installed here at `/usr/lib/virtiofsd`. **Fix
+  (proposal):** per share, start one `virtiofsd --socket-path=<box>/<tag>.sock
+  --shared-dir=<src>` (plus `--readonly` for ro), add
+  `-chardev socket,id=<tag>,path=<sock> -device vhost-user-fs-pci,chardev=<tag>,tag=<tag>`,
+  and back guest RAM with `-object memory-backend-memfd,id=mem,size=$MEM,share=on
+  -numa node,memdev=mem` (vhost-user needs shared memory); the guest mounts
+  `-t virtiofs <tag> <dest>`. `stop_box` kills the daemons; the base kernel
+  needs `CONFIG_VIRTIO_FS`. Open: the guest identity mapping that
+  `security_model=none` gives 9p, and memfd with a 64 GiB guest.
+  Mac: QEMU's virtiofs needs `virtiofsd`, which is Linux-only (unverified);
+  on macOS virtiofs comes from Virtualization.framework, a second backend.
+
 - **QEMUBOX-NO-SERVICE-MANAGER** (MED, design) — needs sign-off.
   A VM lives as a detached QEMU process that qemubox starts on first attach;
   nothing restarts it after a pause, a crash or a reboot, and stop/start go
