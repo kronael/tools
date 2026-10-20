@@ -50,7 +50,8 @@ usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
        qemubox ls | status <name> | stop <name|glob|-a>... [-f]
-       qemubox rm <name|glob|-a>... | prune [hours] | build-base [-f|--force]
+       qemubox rm <name|glob|-a>... | rm --stopped <hours> | prune
+       qemubox build-base [-f|--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
 
@@ -136,8 +137,9 @@ Lifecycle: the VM stays up QEMUBOX_LINGER=1200 seconds after the last session
 Stop: qemubox stop resumes a paused guest, trims its disk, asks it to power
       off and waits up to 90s before stopping qemu; -f stops qemu at once
       (quit over QMP or SIGTERM, then SIGKILL).
-Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
-       Reclaim unreferenced bases except current.
+Prune: stop running VMs idle past 4 hours; never removes a VM. Reclaim
+       unreferenced bases except current.
+Remove: rm --stopped <hours> removes VMs stopped for over that many whole hours.
 State: $ROOT
 EOF
 }
@@ -1070,12 +1072,38 @@ match_boxes() {
     [ -n "$matched" ]
 }
 
+stopped_boxes() {
+    local cutoff dir name ts
+    cutoff=$(($(date +%s) - 10#$1 * 3600))
+    for dir in "$ROOT"/*
+    do
+        [ -d "$dir" ] || continue
+        name=${dir##*/}
+        [ "$name" = base ] && continue
+        running "$name" && continue
+        ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || continue
+        [ "$ts" -lt "$cutoff" ] || continue
+        echo "qemubox-$name"
+        targets+=("$name")
+    done
+}
+
 remove_boxes() {
-    local pat name rc=0 targets=()
+    local pat name rc=0 hours="" targets=()
     [ "$#" -gt 0 ] || {
         echo "qemubox rm: a name or glob is required (-a for all)" >&2
         return 2
     }
+    if [ "$1" = --stopped ]
+    then
+        hours=${2:-}
+        [[ "$#" -eq 2 && "$hours" =~ ^[0-9]+$ ]] || {
+            echo "qemubox rm: --stopped takes whole hours and nothing else" >&2
+            return 2
+        }
+        stopped_boxes "$hours"
+        set --
+    fi
     for pat in "$@"
     do
         case "$pat" in
@@ -1087,7 +1115,12 @@ remove_boxes() {
     for name in "${targets[@]}"
     do
         lock_box "$name" || { rc=1; continue; }
-        remove_box "$name" || rc=1
+        if [ -n "$hours" ] && running "$name"
+        then
+            note "qemubox-$name is running again; keeping it"
+        else
+            remove_box "$name" || rc=1
+        fi
         unlock_box
     done
     return "$rc"
@@ -1127,14 +1160,8 @@ stop_boxes() {
 }
 
 prune_boxes() {
-    local hours="${1:-2160}" now cutoff grace dir name ts markers rc=0
-    [[ "$hours" =~ ^[0-9]+$ ]] || {
-        echo "qemubox prune: hours must be a whole number, got '$hours'" >&2
-        return 2
-    }
-    now=$(date +%s)
-    cutoff=$((now - 10#$hours * 3600))
-    grace=$((now - 4 * 3600))
+    local grace dir name ts markers rc=0
+    grace=$(($(date +%s) - 4 * 3600))
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
@@ -1154,11 +1181,6 @@ prune_boxes() {
                     rc=1
                 fi
             fi
-        else
-            ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || {
-                unlock_box; continue;
-            }
-            [ "$ts" -ge "$cutoff" ] || remove_box "$name" || rc=1
         fi
         unlock_box
     done
@@ -1473,7 +1495,12 @@ case "${1:-}" in
         status_box "$2"; exit 0 ;;
     rm) shift; rc=0; remove_boxes "$@" || rc=$?; prune_bases || rc=1; exit "$rc" ;;
     stop) shift; stop_boxes "$@"; exit $? ;;
-    prune) prune_boxes "${2:-2160}"; exit $? ;;
+    prune)
+        [ "$#" -eq 1 ] || {
+            echo "qemubox prune: takes no argument; use qemubox rm --stopped <hours>" >&2
+            exit 2
+        }
+        prune_boxes; exit $? ;;
     build-base)
         force=""
         case "${2:-}" in

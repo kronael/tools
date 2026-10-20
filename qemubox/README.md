@@ -74,7 +74,7 @@ session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
 Each `-T` run gets a new random VM name, such as `qemubox-brave_turing`,
 unless `-n` names it. `-v` still adds host paths, a dir argument is an error,
 and `-T` implies `-N`. Scratch VMs stay on disk after power-off: `qemubox ls`
-lists them and `qemubox rm` or `qemubox prune` removes them.
+lists them and `qemubox rm` removes them.
 
 qemubox does not mount a sensitive path: `/`, a top-level dir such as `/etc`
 or `/home`, `$HOME`, an ancestor of `$HOME`, or a hidden dir directly in
@@ -93,7 +93,8 @@ qemubox stop -a          # power every running VM off
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
 qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
-qemubox prune [hours]    # remove old stopped VMs; stop running idle VMs past 4h
+qemubox rm --stopped 72  # remove VMs stopped for over 72 whole hours
+qemubox prune            # stop running idle VMs past 4h; reclaim unused bases
 qemubox build-base       # (re)bake the prebuilt base image
 ```
 
@@ -151,10 +152,11 @@ powers itself off skips the trim; the first `stop` after its next boot does it.
 
 `rm` accepts several names or globs, with or without the `qemubox-` prefix,
 and fails if removal fails.
-`prune [hours]` removes stopped VMs after that many hours (default 2160).
-Running VMs with no sessions stop after four hours since readiness; their disks
-stay until the stopped age rule applies. Prune also removes base sets that no
-VM references, keeping the `current` base.
+`rm --stopped <hours>` lists the VMs stopped for over that many whole hours
+(the `stopped` marker age, else the directory age), then removes them. `prune`
+takes no argument and never removes a VM: it stops running VMs with no sessions
+four hours after readiness, and removes base sets that no VM references,
+keeping the `current` base. Their disks stay until `rm`.
 
 ## Build directories
 
@@ -238,7 +240,7 @@ What qemubox gives you:
   it can only touch the project dir(s) you mount and its own persistent disk.
   Host paths outside the shares stay inaccessible unless explicitly forwarded.
 - **Persistent guest storage.** The qcow2 overlay keeps installs and guest
-  files across boots. `qemubox rm` or age-based prune deletes it.
+  files across boots. `qemubox rm` deletes it.
 
 What it does **not** give you — do **not** run genuinely hostile code here:
 
