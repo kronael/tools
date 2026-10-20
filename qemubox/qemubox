@@ -1048,8 +1048,14 @@ list_boxes() {
             "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo")
         then
             read -r -d '' t a c sh <<< "$mem" || true
-            used=$(human_kib $((t - a))); cache=$(human_kib $((c - sh)))
-            tmpfs=$(human_kib "$sh")
+            # Guest output is untrusted: bash arithmetic runs command
+            # substitutions in array indexes, so accept digits only.
+            if [[ "$t$a$c$sh" =~ ^[0-9]+$ && -n "$t" && -n "$a" && -n "$c" && -n "$sh" ]]
+            then
+                used=$(human_kib $((10#$t - 10#$a)))
+                cache=$(human_kib $((10#$c - 10#$sh)))
+                tmpfs=$(human_kib "$sh")
+            fi
         fi
         disk=0
         if [ -f "$dir/disk.qcow2" ]

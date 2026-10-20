@@ -167,6 +167,12 @@ exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
     echo disk > "$ROOT/vm/disk.qcow2"
     running() { return 0; }
     session_markers() { echo 123; }
+    ssh_plain_box() { printf '%s\n' 'x[$(touch "$fixture/pwned")0]' 1 1 1; }
+    list_boxes > /dev/null
+    [ ! -e "$fixture/pwned" ]
+    ssh_plain_box() { printf '%s\n' 100 40 30 10; }
+    [[ "$(list_boxes)" = *$'\t60K\t20K\t10K\t'* ]]
+    unset -f ssh_plain_box
     output=$(list_boxes)
     [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'USED$'\t'CACHE$'\t'TMPFS$'\t'DISK$'\t'PATH* ]]
     [[ "$output" = *$'running\tbusy\t'*[0-9KMG]* ]]
