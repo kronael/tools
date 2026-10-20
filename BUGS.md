@@ -1082,6 +1082,26 @@
 
 ## qemubox
 
+- **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
+  When the host disk fills, QEMU pauses the guest with `io-error`.
+  `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
+  qemubox stop", so the owner must stop the VM and start it again by hand,
+  even after space is back. `stop_box` already resumes over QMP
+  (`qemubox:873`). **Fix (proposal):** in `wait_ready`, on `paused:io-error`
+  check free space under `$ROOT`; above a margin, send QMP `cont` and keep
+  waiting; below it, print the free and needed space and exit. Same check in
+  `qemubox ls`/`status` so a paused VM shows how to recover.
+
+- **QEMUBOX-NO-SERVICE-MANAGER** (MED, design) — needs sign-off.
+  A VM lives as a detached QEMU process that qemubox starts on first attach;
+  nothing restarts it after a pause, a crash or a reboot, and stop/start go
+  through the qemubox CLI only. **Fix (proposal):** a systemd user template
+  `qemubox@.service` (`ExecStart` = qemubox boot-only for `%i`, `ExecStop` =
+  `qemubox stop %i`, `Restart=on-failure`), plus `qemubox enable|disable
+  <name>`; the CLI attach then only connects over SSH. A path or timer unit
+  could resume `io-error` guests when free space returns. Open: the 4h idle
+  prune must not fight a unit that restarts the VM.
+
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
