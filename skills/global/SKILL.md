@@ -41,7 +41,7 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
 
 - `sudo` is available — use `sudo docker ...` for docker you run via Bash; in
   committed scripts parameterize privilege instead (see the `sh` skill).
-- Run `/solve` to pick the skill for a task; it also reconciles work done under the wrong one.
+- Run `/solve` at every new task, mid-session ones included; it also reconciles work done under the wrong one.
 - Code style, naming, layout, design, comments, system-change discipline and
   house conventions live in `software` (`code.md`), the base of every language
   skill. It is COLD: ALWAYS load it (`/solve` or a language skill) BEFORE
