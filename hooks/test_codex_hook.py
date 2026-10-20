@@ -91,6 +91,31 @@ def test_translate_output_never_rewrites_codex_ref_recursively(skill) -> None:
     assert f'@{skill}' not in parsed['hookSpecificOutput']['additionalContext']
 
 
+def test_subagent_start_is_wired_to_prompt_nudge_and_keeps_its_event(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    wiring = json.loads((Path(__file__).parent.parent / 'codex-hooks.json').read_text())
+    command = wiring['hooks']['SubagentStart'][0]['hooks'][0]['command']
+    assert command.endswith('codex_hook.py SubagentStart prompt_nudge')
+    install_skills(monkeypatch, tmp_path, 'solve')
+    output = translate_output(
+        json.dumps(
+            {
+                'hookSpecificOutput': {
+                    'hookEventName': 'SubagentStart',
+                    'additionalContext': 'run /solve on the brief.',
+                },
+            }
+        ),
+        'SubagentStart',
+        'prompt_nudge',
+    )
+    assert json.loads(output)['hookSpecificOutput'] == {
+        'hookEventName': 'SubagentStart',
+        'additionalContext': 'run @solve on the brief.',
+    }
+
+
 def test_translate_output_rewrites_pretool_refs_for_codex(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

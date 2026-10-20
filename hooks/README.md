@@ -10,6 +10,12 @@ step. Codex wiring is `../codex-hooks.json`; it installs to
 `~/.codex/hooks.json` and calls `codex_hook.py` before delegating to the same
 hook scripts.
 
+Codex 0.163 fires `UserPromptSubmit` and `SubagentStart` the way Claude Code does,
+so `prompt_nudge.py` serves both harnesses and a Codex worker, native or
+`codex exec`, receives the `/solve` nudge. A new or changed command hook in
+`hooks.json` runs only after the owner trusts it in `/hooks`; until then Codex
+skips it without a message.
+
 `statusline.py` is the status-line command `settings-recommended.json` sets:
 model, context use, and the 5-hour and weekly limits in whole percent.
 
