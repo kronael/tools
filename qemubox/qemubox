@@ -1016,16 +1016,17 @@ build_base() (
 )
 
 list_boxes() {
-    local dir name state use ram disk markers found=""
+    local dir name state use ram disk markers found="" mem used cache tmpfs
     mkdir -p "$ROOT"
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
         [ "${dir##*/}" = base ] && continue
-        [ -n "$found" ] || printf "NAME\tSTATUS\tUSE\tRAM\tDISK\tPATH\n"
+        [ -n "$found" ] ||
+            printf "NAME\tSTATUS\tUSE\tRAM\tUSED\tCACHE\tTMPFS\tDISK\tPATH\n"
         found=1
         name="${dir##*/}"
-        use=idle; ram=0
+        use=idle; ram=0; used=-; cache=-; tmpfs=-
         lock_box "$name" || return 1
         state=$(run_state "$name")
         if [ "$state" != stopped ]
@@ -1041,14 +1042,24 @@ list_boxes() {
                 use="?"
             fi
         fi
+        # Guest view: used = total - available, cache = page cache without
+        # tmpfs, tmpfs = shmem; the host RAM column is QEMU's resident size.
+        if [ "$state" = running ] && mem=$(ssh_plain_box "$name" \
+            "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo")
+        then
+            read -r -d '' t a c sh <<< "$mem" || true
+            used=$(human_kib $((t - a))); cache=$(human_kib $((c - sh)))
+            tmpfs=$(human_kib "$sh")
+        fi
         disk=0
         if [ -f "$dir/disk.qcow2" ]
         then
             disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
         fi
         unlock_box
-        printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" "$use" \
-            "$(human_kib "${ram// /}")" "$(human_kib "$disk")" "$dir"
+        printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" \
+            "$use" "$(human_kib "${ram// /}")" "$used" "$cache" "$tmpfs" \
+            "$(human_kib "$disk")" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
 }

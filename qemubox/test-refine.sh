@@ -97,7 +97,7 @@ half_box_test() {
     mkdir -p "$ROOT/half"
     list_boxes > "$fixture/half-list" 2> "$fixture/half-error"
     [ ! -s "$fixture/half-error" ]
-    grep -q $'stopped\tidle\t0\t0' "$fixture/half-list"
+    grep -q $'stopped\tidle\t0\t-\t-\t-\t0' "$fixture/half-list"
 }
 regression "ls accepts an unfinished box without du errors" half_box_test
 

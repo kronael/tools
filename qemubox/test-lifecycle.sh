@@ -168,7 +168,7 @@ exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
     running() { return 0; }
     session_markers() { echo 123; }
     output=$(list_boxes)
-    [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'DISK$'\t'PATH* ]]
+    [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'USED$'\t'CACHE$'\t'TMPFS$'\t'DISK$'\t'PATH* ]]
     [[ "$output" = *$'running\tbusy\t'*[0-9KMG]* ]]
     session_markers() { :; }
     [[ "$(list_boxes)" = *$'running\tidle\t'* ]]
