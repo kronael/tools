@@ -3,7 +3,9 @@ import json
 import os
 import re
 import sys
+import time
 
+from lib.state import hook_event
 from lib.state import session_state
 
 STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
@@ -32,6 +34,24 @@ SOLVE_NUDGE = (
     'loads diary + memory context and routes to the right skill. Skip only '
     'if this prompt is a direct continuation of work already in context.'
 )
+
+IDLE_MINUTES = 30
+
+IDLE_NUDGE = (
+    'New task? This prompt follows an idle gap: run /solve before acting '
+    'unless it continues the work already in context.'
+)
+
+SUBAGENT_NUDGE = (
+    'New task (subagent brief): run /solve before acting — it routes the '
+    'brief to the skill that owns it.'
+)
+
+HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})
+
+COMMIT = re.compile(r'\bcommit\b', re.IGNORECASE)
+
+RESUMED_SESSION = re.compile(r'\s*This session is being continued from a previous conversation')
 
 SKILL_KEYWORDS = {
     'architecture': '/specs',
@@ -158,7 +178,31 @@ def first_prompt_of_session(session_id):
     return True
 
 
-def emit(text):
+def minutes_since_prompt(session_id):
+    """Minutes since this session's previous prompt, stamping this one so the
+    next call measures from it. None before the first prompt or when the
+    state dir is unusable, so an unwritable dir never nudges every prompt."""
+    marker = session_state('solve-nudge', session_id)
+    if marker is None:
+        return None
+    try:
+        previous = os.stat(marker).st_mtime
+        os.utime(marker, None)
+    except OSError:
+        return None
+    return (time.time() - previous) / 60
+
+
+def is_routed(prompt, matched):
+    return bool(
+        matched
+        or prompt.lstrip().startswith('/')
+        or COMMIT.search(prompt)
+        or RESUMED_SESSION.match(prompt)
+    )
+
+
+def emit(event, text):
     # additionalContext is the only UserPromptSubmit field the model reads;
     # systemMessage renders in the transcript for the user and never reaches
     # the model.
@@ -166,7 +210,7 @@ def emit(text):
         json.dumps(
             {
                 'hookSpecificOutput': {
-                    'hookEventName': 'UserPromptSubmit',
+                    'hookEventName': event,
                     'additionalContext': text,
                 },
             }
@@ -183,22 +227,31 @@ def main():
     if not isinstance(data, dict):
         sys.exit(0)
 
+    if hook_event(data) == 'SubagentStart':
+        if data.get('agent_type') not in HARNESS_AGENTS:
+            emit('SubagentStart', SUBAGENT_NUDGE)
+        sys.exit(0)
+
     prompt = data.get('prompt') or ''
     if not isinstance(prompt, str):
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        emit(STYLE_RULES)
+        emit('UserPromptSubmit', STYLE_RULES)
         sys.exit(0)
 
     parts = []
+    matched = explicit_route(prompt, data.get('harness'))
+    session_id = data.get('session_id')
 
-    if (
-        prompt.strip()
-        and first_prompt_of_session(data.get('session_id'))
-        and not re.search(r'/solve\b', prompt)
-    ):
-        parts.append(SOLVE_NUDGE)
+    if prompt.strip():
+        if first_prompt_of_session(session_id):
+            if not re.search(r'/solve\b', prompt):
+                parts.append(SOLVE_NUDGE)
+        else:
+            idle = minutes_since_prompt(session_id)
+            if idle is not None and idle >= IDLE_MINUTES and not is_routed(prompt, matched):
+                parts.append(IDLE_NUDGE)
 
     # Every turn. The style is in the system prompt and dilutes there; this is
     # the copy that arrives next to the user's message.
@@ -207,14 +260,12 @@ def main():
     if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
         parts.append(DOCS_RULES)
 
-    matched = explicit_route(prompt, data.get('harness'))
-
-    if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
+    if COMMIT.search(prompt):
         parts.append(COMMIT_RULES)
     elif matched:
         parts.append(f'info: Invoke {matched}.')
 
-    emit('\n\n'.join(parts))
+    emit('UserPromptSubmit', '\n\n'.join(parts))
 
     sys.exit(0)
 

@@ -3,8 +3,11 @@
 ## Overview
 
 ```
-User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent)
+User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent;
+                                                      /solve on a new task)
                                  ──> local.py        (LOCAL.md on first prompt)
+
+Subagent ──> SubagentStart ──> prompt_nudge.py (/solve for the brief)
 
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
           ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
@@ -58,18 +61,26 @@ imports nothing from it: it carries its own `hook_event`, which checks
 This keeps the business logic in one hook implementation while allowing Codex
 and Claude to use different lifecycle wiring.
 
-### prompt_nudge.py (UserPromptSubmit)
+### prompt_nudge.py (UserPromptSubmit + SubagentStart)
 
-**Input:** JSON with `prompt` field.
-**Output:** `{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit",
+**Input:** JSON with `prompt` field; on `SubagentStart`, `agent_type` and the
+parent's `session_id` instead.
+**Output:** `{"hookSpecificOutput": {"hookEventName": "<event>",
 "additionalContext": "..."}}` or silent exit. `additionalContext` reaches the
 model; `systemMessage` reaches only the user.
 
 **Flow:**
+0. On `SubagentStart`, emit `SUBAGENT_NUDGE` (run `/solve` on the brief) and
+   stop; silent for `HARNESS_AGENTS`. The parent's first-prompt stamp is not
+   touched.
 1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
 2. On the first non-empty prompt of a session, prepend `SOLVE_NUDGE` (run
    `/solve` to triage before acting), unless the prompt already invokes
-   `/solve`. Continuations stay silent.
+   `/solve`. On a later prompt, prepend `IDLE_NUDGE` when `IDLE_MINUTES` have
+   passed since the previous prompt and `is_routed` is false — no keyword
+   route, no `commit`, no slash command, not a resumed session's summary.
+   Every later prompt restamps the gap, routed or not. Other continuations
+   stay silent.
 3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
    append `DOCS_RULES`.
 4. In Claude only, route a prompt that starts with `/astra`, and the phrases
@@ -82,9 +93,9 @@ model; `systemMessage` reaches only the user.
    first exact route as `info`.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
-`~/.claude/state` (`lib/state.py`) marks that a session's first prompt has
-been seen. An unwritable state dir falls back to silence,
-never a per-prompt nudge.
+`~/.claude/state` (`lib/state.py`): its presence marks that a session's first
+prompt has been seen, its mtime is the previous prompt's time. An unwritable
+state dir falls back to silence, never a per-prompt nudge.
 
 **Routes:** `SKILL_KEYWORDS` dict in the source.
 Codex sees matched Kronael routes as `@skill` instead of `/skill`.

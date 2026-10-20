@@ -21,7 +21,7 @@ here, or `spec-lint specs` by hand in a project before a spec commit
 
 ## The hooks
 
-### prompt_nudge.py (UserPromptSubmit)
+### prompt_nudge.py (UserPromptSubmit + SubagentStart)
 
 Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
 telling Claude to invoke the matching skill. That field is the one
@@ -33,10 +33,19 @@ suppressed inside Codex so it never nudges Codex to invoke itself. `learn` is de
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
 
-On the first non-empty prompt of a session it also prepends a `/solve` nudge
-(triage + diary/memory load before acting), tracked by the session-keyed
-stamp `solve-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) so
-continuations stay silent. A prompt that already invokes `/solve` suppresses it.
+It also nudges `/solve` at the three points where a new task starts that a
+hook can see. The first non-empty prompt of a session (triage + diary/memory
+load before acting); a prompt that already invokes `/solve` suppresses it. A
+prompt after `IDLE_MINUTES` (30) without one, unless it is already routed — a
+keyword route, `commit`, a slash command, or the summary a resumed session
+opens with: measured over twelve sessions, a prompt after that pause was a new
+task twice as often as a continuation, while no opener word or length
+separates the two, so there is deliberately no per-prompt nudge. Both read the
+session-keyed stamp `solve-nudge-{session_id}` in `~/.claude/state`
+(`lib/state.py`): its presence marks the first prompt, its mtime the previous
+one. And `SubagentStart`, where the brief is a new task by construction: the
+nudge lands before the subagent's first prompt, except for the harness's own
+agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
 Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
 Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
