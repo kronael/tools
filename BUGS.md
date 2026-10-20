@@ -1115,8 +1115,14 @@
   `qemubox@.service` (`ExecStart` = qemubox boot-only for `%i`, `ExecStop` =
   `qemubox stop %i`, `Restart=on-failure`), plus `qemubox enable|disable
   <name>`; the CLI attach then only connects over SSH. A path or timer unit
-  could resume `io-error` guests when free space returns. Open: the 4h idle
-  prune must not fight a unit that restarts the VM.
+  could resume `io-error` guests when free space returns. With
+  QEMUBOX-9P-TO-VIRTIOFS, each share becomes `qemubox-fs@<box>-<tag>.service`
+  (one `virtiofsd`) that `qemubox@<box>` Requires and orders After, so
+  systemd starts and stops the daemons with the VM and qemubox drops its PID
+  and kill logic; a `-v` share on a running VM goes through
+  `systemd-run --user`. Open: the 4h idle prune and `qemubox stop` must stop
+  the unit, never kill the process, or systemd restarts the VM. Linux only;
+  a Mac port would need launchd.
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
