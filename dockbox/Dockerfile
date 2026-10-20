@@ -353,7 +353,6 @@ RUN printf '%s\n' \
     'chmod 700 "$home_dir/.ssh"' \
     'install -m 600 -o "$user_uid" -g "$user_gid" \' \
     '    /run/qemubox/config/authorized_keys "$home_dir/.ssh/authorized_keys"' \
-    'rm -f /etc/ssh/ssh_host_*' \
     'ssh-keygen -A' \
     'ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf' \
     'resize2fs /dev/vda' \
