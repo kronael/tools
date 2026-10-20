@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
-MEM="${QEMUBOX_MEM:-65536}"
+MEM="${QEMUBOX_MEM:-24576}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
 LINGER="${QEMUBOX_LINGER:-1200}"
@@ -121,7 +121,7 @@ list or message each other's Claude sessions.
 Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
 is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 
-Environment: QEMUBOX_MEM=65536 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
+Environment: QEMUBOX_MEM=24576 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
 Memory: the host backs guest RAM as the guest touches it and takes freed pages
         back (virtio-balloon free page reporting). Guest /tmp is a tmpfs capped

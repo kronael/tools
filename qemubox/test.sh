@@ -141,7 +141,7 @@ true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
 true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
-eq "default RAM" "$MEM" "65536"
+eq "default RAM" "$MEM" "24576"
 eq "default CPUs" "$CPUS" "4"
 eq "default disk" "$DISK" "40G"
 eq "guest user matches host" "$GUEST_USER" "$(id -un)"

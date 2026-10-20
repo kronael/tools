@@ -169,7 +169,7 @@ Only directories present at launch are overmounted.
 `-B` backs them with the guest disk, keyed by canonical path. Without `-B`
 they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 
-`/tmp` is a tmpfs capped at 75% of guest RAM, 48 GiB at the default 64 GiB.
+`/tmp` is a tmpfs capped at 75% of guest RAM, 18 GiB at the default 24 GiB.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
 in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
@@ -284,7 +284,7 @@ pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools sou
 
 ## Memory
 
-A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
+A VM starts with 24 GiB (`QEMUBOX_MEM=24576`). KVM backs a guest page with
 host memory only once the guest touches it, and the VM's virtio-balloon
 device reports freed pages back to the host, so a VM costs what the guest
 holds, not its size: a `cargo clean` or a removed tmpfs file returns its
