@@ -17,7 +17,7 @@ class HooksTestSuite:
         self.passed = 0
         self.failed = 0
         self.tests = []
-        self.hooks_dir = Path.home() / '.claude' / 'hooks'
+        self.hooks_dir = Path(__file__).resolve().parent
 
     def test(self, name, script, input_data, expect_crash=False, expect_output=None):
         script_path = self.hooks_dir / script
@@ -174,12 +174,24 @@ class HooksTestSuite:
             "local.py - 'continue' → inject rules",
             'local.py',
             json.dumps({'prompt': 'continue with implementation'}),
-            expect_output='systemMessage',
+            expect_output='additionalContext',
         )
         self.test(
             "local.py - 'where were we' → inject rules",
             'local.py',
             json.dumps({'prompt': 'where were we'}),
+            expect_output='additionalContext',
+        )
+        self.test(
+            'local.py - UserPromptSubmit → additionalContext for the model',
+            'local.py',
+            json.dumps({'hook_event_name': 'UserPromptSubmit', 'prompt': 'continue'}),
+            expect_output='"hookEventName": "UserPromptSubmit", "additionalContext"',
+        )
+        self.test(
+            'local.py - PreCompact → systemMessage',
+            'local.py',
+            json.dumps({'hook_event_name': 'PreCompact', 'prompt': ''}),
             expect_output='systemMessage',
         )
 

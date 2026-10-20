@@ -15,6 +15,13 @@ your diff against every `##` heading here before calling an edit done.
   after the program it runs; `run_process` is the generic form: a helper
   around `xz` is `run_xz()`, NEVER `compress()` or `store_file()`. The name
   says a subprocess starts; an effect name hides it.
+- ALWAYS name a function that runs for the life of the process or of a
+  connection `<what>_loop` (`consume_loop`, `seed_loop`), and one that does an
+  operation once and classifies how it ended — returns, raises a retryable or a
+  permanent error, records the outcome — `do_<what>` (`do_run`, `do_fetch`),
+  with no retry inside: a retry wraps the `do_` call. NEVER `run`, `handle` or
+  `_attempt` for either; the name tells the reader the function never returns,
+  or that it is the one place a failure is sorted.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.
@@ -82,6 +89,8 @@ your diff against every `##` heading here before calling an edit done.
   an `unsafe` block (`rs`), and the WHY on its own line above a deliberately
   unhandled error — a Go error suppression (`go`), a Rust `.unwrap()` (`rs`).
   NEVER anything else, and NEVER one trailing a code line.
+- ALWAYS keep an allowed comment to a few words — four is the aim — that name
+  the reason; the full why goes in the commit message, NEVER in the comment.
 - NEVER count a machine-read marker as a comment: a `// #region <name>` doc
   include anchor (`readme` skill) or a lint or type pragma (`//nolint:`,
   `# noqa`, `# type: ignore`, `// @ts-expect-error`) is read by a tool, so it
@@ -99,13 +108,12 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER call an abstraction simpler when it brings concepts the call sites do
   not have — function pointers, closures, generics, combinator chains. It has
   to cut TOTAL complexity; judge by cognitive overhead, not diff size.
-- ALWAYS reframe before adding a branch, a fallback or a config knob: check
-  whether an existing parameter, path or environment variable makes the edge
-  case normal. Branch only when no existing mechanism can express it — one code
-  path beats ten.
-- ALWAYS prefer a simple solution that is mostly right over a complex one that
-  is fully correct — the simple one spreads and evolves, embedded complexity
-  never leaves.
+- ALWAYS try subtraction first: remove unnecessary mechanisms, then simplify
+  data models, views and state handling.
+- ALWAYS preserve required behavior. Fewer lines alone do not prove a simpler
+  solution.
+- ALWAYS add code only for a measured unmet requirement that subtraction and
+  those simplifications cannot satisfy.
 - NEVER braid components: if A cannot be understood without tracking B's
   state, separate them — braided code grows combinatorially, separated code
   composes linearly. ALWAYS minimise state and make what remains explicit; an
@@ -127,7 +135,13 @@ your diff against every `##` heading here before calling an edit done.
   `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
   state or inject dependencies — functions compose better and leak less.
-- ALWAYS validate input before it reaches persistence.
+- ALWAYS validate input before it reaches persistence, and ALWAYS compare a
+  field once, against the value the code itself derives for it; NEVER a second
+  check against a constant that repeats the first — the two drift apart.
+- ALWAYS return an error from library code — a crate, a package, a module
+  another program imports — and let only the top level, `main` or a test,
+  decide to crash: a panic inside a library takes every caller down. Enforce
+  it with the language's lints where they exist (`rs` § Unwrap Safety).
 - ALWAYS handle SIGINT and SIGTERM in anything long-running — a service,
   daemon, worker or watch loop: stop taking new work, finish or cancel what is
   in flight, flush, and exit.
@@ -149,9 +163,27 @@ your diff against every `##` heading here before calling an edit done.
 
 ## System changes
 
-- ALWAYS hold every change to WISDOM § System-change discipline: amend the
-  original, fail loud to the user, retry only the transient, fix the cause,
-  redesign only after sign-off.
+- ALWAYS grep for the existing mechanism (guard, helper, table, log site,
+  config) before adding one, and extend the ORIGINAL. NEVER a parallel second
+  path — two paths drift. If the original is wrong, fix it or say so; NEVER
+  route around it.
+- ALWAYS fail loud, to the user: an error on a user-facing path MUST surface
+  (thrown, non-2xx, delivered), not just logged. NEVER swallow it, and NEVER
+  add retry/fallback/best-effort as "robustness" — that turns a visible failure
+  into an invisible one. Retry ONLY the transient: network, DB busy/locked.
+  When the MECHANISM swallows — a fire-and-forget submit nobody collects, a
+  detached task, a bare catch — replace it with one that propagates; NEVER keep
+  it and bolt on counters and collectors to recover the drops: more code, less
+  reported.
+- ALWAYS prefer the cause fix to the loud log — make the bad state impossible
+  by construction.
+- A redesign (new contract, changed control flow, cross-cutting) ships only
+  after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
+- ALWAYS retry inside a job or request only a failure that returns fast —
+  refused or reset connection, a cut body, a rate-limit answer — on short
+  delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
+  there: it fails the unit of work, and the outer retry (the next claim, the
+  caller) tries again. A test proves a timeout makes exactly one attempt.
 - **An external contract is the provider's published spec.** ALWAYS build and
   re-check a client of another team's service against the provider's
   integrator guide or API spec at its default head, fetched fresh before you
@@ -160,6 +192,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS check a formula derived from that spec against the spec's own worked
   examples; a derivation can drop a term the examples carry.
 - ALWAYS build/test/lint every ~50 lines — errors cascade.
+- NEVER edit source by running a script or `sed -i` that string-replaces it —
+  ALWAYS edit the file directly, so the change is read as it is written and
+  not after a blind substitution has landed. AST tools (`ruff --fix`, LibCST,
+  ast-grep, a language server's rename) rewrite syntax nodes, not strings, and
+  are not this.
 
 ## Layout and formatting
 
@@ -187,6 +224,20 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
   NEVER a file log handler or a log-file path passed through application code;
   the supervisor, container runtime, CI or top-level runner persists them.
+
+## House conventions
+
+- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A
+  program a user runs keeps state, settings, cache and data in
+  `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>` (`~/.local/state/<name>` and so
+  on), each overridable by one flag or env var.
+- Config: prefer flags + env vars for anything simple — a short flag where a
+  human types it (`-u`), a long name with an env var where the deploy sets it
+  (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
+  first CLI param, api keys as second.
+- `make` for build/lint/test/clean and debug builds: `make test` = fast unit
+  (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
+  production data.
 
 ## Grug rules
 

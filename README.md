@@ -5,17 +5,18 @@ Command-line utilities and Claude Code configuration.
 ## CLI tools
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
-- [dockbox](dockbox/) — dockerized Claude Code or Codex sandbox
+- [kvs](kvs/) — key-value store on one SQLite file for scripts and hooks: get, set, incr, del, ls, sessions and a flock-style `lock`, scoped by project and session
+- [dockbox](dockbox/) — gVisor sandbox for Claude Code or Codex; requires `runsc-dockbox`
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
-- [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`ghpush`, `ghfetch`); git aliases (`gco`, `gif`, `gib`, and more)
+- [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`rip -g`, `rif -g`); git aliases (`gco`, `gif`, `gib`, and more)
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 - [spec-lint](spec-lint/) — lint a `specs/` corpus: numbering, status vocabulary, index rows, links, wording, code pointers
 
-Makefile tools (`udfix`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`, `spec-lint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`, `spec-lint`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 

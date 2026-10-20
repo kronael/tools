@@ -14,10 +14,8 @@ refuses one that fails `gh_text_lint.py` (step 3), `--fill`, `--web` and a
 body file it cannot read — a body that posts through a direct gh call has
 passed the lint.
 
-ALWAYS lead with a short TL;DR. For a substantial change, ALWAYS follow it
-with up to three review pointers: where to start, what matters, and which
-test or complete scenario checks the behavior. For a small change, ALWAYS
-keep only the TL;DR when pointers add no useful direction.
+The body is a TL;DR. The reviewer reads the title, the diff and the commits;
+the body says only what they cannot.
 
 ## Workflow
 
@@ -45,16 +43,15 @@ keep only the TL;DR when pointers add no useful direction.
 3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, opening
    with `🤖 ` before `**TL;DR:**`. Cut until `wc -m tmp/pr-body.md` is under the cap, then
    keep cutting while a word says what the title, the diff or the commits
-   show: file inventories, values, results, history, a reason a reader would
-   guess, hedges, filler. ALWAYS keep a path when it directs a review and
-   says what to check. Then run
+   show: file lists, values, results, history, a reason a reader would guess,
+   hedges, filler. Then run
    ```
    python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'
    ```
    and fix every line it names until it prints `ok:`. It checks the part of
-   § Format a program can check: the `**TL;DR:**` lead, up to three review
-   bullets and `Closes`/`Fixes #N` lines; no header, table, rule, code block,
-   checkbox, "This PR", marketing word or shortened hash; 1800 chars in all;
+   § Format a program can check: the `**TL;DR:**` lead and nothing after it
+   but `Closes`/`Fixes #N` lines; no bullet, header, table, rule, code block,
+   checkbox, "This PR", marketing word or shortened hash; 400 chars in all;
    the title's length and a second "and"; `🤖 ` opening the body, the robot
    nowhere else, and none of the harness footer; and that the body is shorter
    than the draft.
@@ -103,25 +100,19 @@ when the branch or commits carry one; default `type(scope): outcome` with
 `fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
-**Body**, under 1800 chars in all (a ceiling, not a target — a one-line fix is
+**Body**, under 400 chars in all (a ceiling, not a target — a one-line fix is
 one sentence):
 
 - **Lead**: `🤖 **TL;DR:**` and one to three sentences — the outcome, its
   cause, and anything the reviewer must not miss (a wire-visible change, a
-  known gap). ALWAYS keep the lead to one paragraph. The robot opens the body
-  and appears nowhere else (WISDOM § Git): the harness reminder asks for it as
-  the last line, and its `Generated with [Claude Code]` line is the banned
-  footer with a robot in front of it; the lint and the hook refuse both.
-- **Review pointers**: ALWAYS use at most three short bullets when useful.
-  ALWAYS link the core implementation and a representative test or complete
-  scenario, and say what each checks. ALWAYS name the runtime and the run
-  command when that helps a reviewer reproduce the scenario. ALWAYS keep
-  coverage claims within the test's assertions. NEVER list every file —
-  ALWAYS point to the smallest useful review path.
+  known gap). The only paragraph. The robot opens the body and appears nowhere
+  else (WISDOM § Git): the harness reminder asks for it as the last line, and
+  its `Generated with [Claude Code]` line is the banned footer with a robot in
+  front of it; the lint and the hook refuse both.
 - **Closers**: `Closes #N` or `Fixes #N`, one line each, only when real.
 
-NEVER in a body: a header, table, rule, checkbox, code block or image;
-"This PR"; a file inventory, rename or value the diff shows; a test, lint or CI
+NEVER in a body: a bullet, header, table, rule, checkbox, code block or image;
+"This PR"; a file list, rename or value the diff shows; a test, lint or CI
 result; history (what was tried, earlier commits, reviews, pushes); a runbook.
 Prose follows the `writing` skill's copy rules. NEVER hard-wrap — GitHub
 renders the line.

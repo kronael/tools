@@ -165,8 +165,8 @@ the failure. Settings still confirm before applying.
    ask: SHOW the curl-pipe one-liner and let the user run it.
    Completion criterion: each tool is present, installed, or declined.
 
-8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix and
-   spec-lint always, dockbox on its own ask, from their dirs at `SRC` (else point to
+8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix, kvs
+   and spec-lint always, dockbox on its own ask, from their dirs at `SRC` (else point to
    `cd <tool> && make install` from a clone) — and write its CDPATH block into
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.

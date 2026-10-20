@@ -18,7 +18,7 @@ comments, design and the boring-code rules.
 ## Config Precedence
 
 CLI flags > env vars > config files > defaults. Fail fast on invalid config.
-The config file and API-keys positions: WISDOM § House conventions.
+The config file and API-keys positions: `software/code.md` § House conventions.
 
 ## Exit Codes
 
@@ -46,7 +46,8 @@ Two methods: `make link` (dev, symlink debug binary) and `make install` (system,
 ## Pitfalls
 
 - NEVER write secrets to logs
-- NEVER hardcode paths (use ${PREFIX})
+- NEVER hardcode paths (use ${PREFIX}); a user program's state, settings, cache and
+  data live under the XDG dirs (`software/code.md` § House conventions), `/srv/data` is for services
 - ALWAYS document env vars in --help
 - ALWAYS validate config on load, BEFORE any operations
 - Fixture data in cfg/test/, NEVER use production configs in tests

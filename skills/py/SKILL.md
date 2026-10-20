@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
+when_to_use: editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
 ---
 
 # Python
@@ -26,10 +26,13 @@ Python-specific additions and deltas.
 - NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
 - NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
+- ALWAYS name a `Protocol` `<Verb>able` when it promises one or a few methods and nothing else (`Runnable`: `run()`), and `<Noun>Like` when its structure matches the noun's — the same attributes, not only a method (`JobLike`: a job's `client` and `url`, plus `run()`)
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
-- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER add `TypedDict` + `Unpack` just to type a passthrough; the machinery costs more than the duplication it removes
+- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
+- NEVER widen an annotation to `object` or `Any` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
+- NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
 
 ## Naming
 `software/code.md` § Naming owns names. Python additions:
@@ -39,9 +42,10 @@ Python-specific additions and deltas.
 ## Properties and accessor overrides
 - NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
 - They hide computation behind attribute access, break "no surprises" reads, and make grep useless
-- Two legitimate exceptions:
+- Three legitimate exceptions:
   1. **Mocking / test doubles** — overriding attribute access on a stub
   2. **Adapting external/library code** — wrapping an API you don't own that requires property protocol
+  3. **A record's value derived from its own fields** — § Named Data Structures owns the rule
 - Instead: plain method (`def program_lookup(self)`) or compute once and store on the dataclass field
 
 ## getattr/setattr
@@ -71,10 +75,25 @@ Python-specific additions and deltas.
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
 - ALWAYS asyncpg direct, NEVER SQLAlchemy
-- ALWAYS dataclasses over Pydantic unless validation/coercion is needed
 
 ## Named Data Structures
-- ALWAYS use dataclasses for nontrivial heterogeneous records, including return values, parameter bundles and queued work items.
+- ALWAYS a `dataclass` for every structured value — record, return value, parameter bundle,
+  queued work item, decoded message. NEVER declare a `TypedDict`: at runtime it is a plain
+  dict, so a payload cast to it is never checked and a missing key fails at the read, not at
+  the boundary.
+- ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
+  external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
+  the program: the validation costs and catches nothing there.
+- ALWAYS decode and encode external payloads through the project's one codec (its lib
+  `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
+  structurer drifts from the first.
+- ALWAYS put a constructor that only derives a record from its own inputs on the record as a
+  classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
+  NEVER a method that does I/O, reads config or uses another layer's types; that stays a
+  plain function beside the layer that owns the rule.
+- ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
+  its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
+  missing or extra column.
 - NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
@@ -106,6 +125,7 @@ Python-specific additions and deltas.
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
+- NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name (PEP 701 permits the nesting; readability bans it)
 
 ## Package Structure
 - NEVER create `__init__.py` unless it contains actual code

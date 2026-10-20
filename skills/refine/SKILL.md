@@ -101,12 +101,12 @@ code extension and still carries every claim the reviewer will trust.
    → each finding is confirmed, corrected with the command that corrected it,
    or dropped as unverifiable.
 
-8. **Triage and apply** — DROP a finding that adds an abstraction, targets
-   unused code (grep first), conflicts with the ask, or survived step 7 only as
+8. **Triage and apply** — DROP a finding that targets unused code (grep first),
+   conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (WISDOM § System-change discipline); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest serially, one
-   context at a time, briefed from `brief.md`: `simplify` →
+   (WISDOM § Bug triage); NEVER build one without sign-off.
+   ALWAYS apply code findings under `software/code.md` § Boring code. Apply
+   serially, one context at a time, briefed from `brief.md`: `simplify` →
    `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
@@ -139,7 +139,7 @@ code extension and still carries every claim the reviewer will trust.
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
     here: list each with its thread id and fix SHA, and show the PR's own head
-    refspec, `ghpush <fix-sha>:refs/heads/<headRefName>`; resolve and
+    refspec, `rip -g <fix-sha>:refs/heads/<headRefName>`; resolve and
     request re-review through `gh-comment` once that push lands. A bot-authored
     thread resolves once replied (`gh-comment` § Resolve a thread). ONLY threads
     addressed this pass. Then the worktrees: one this run created goes by
@@ -153,7 +153,7 @@ code extension and still carries every claim the reviewer will trust.
     lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
     from here and why, and each step-1 instruction's outcome. NEVER push by
-    any command (`git push`, `ghpush`) without the user's ask (WISDOM § Git),
+    any command (`git push`, `rip -g`) without the user's ask (WISDOM § Git),
     and NEVER `gh pr merge` or `gh pr review`. The closing report follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
@@ -169,6 +169,12 @@ to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
   first pass sets the size (release step 1.5).
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
+- ALWAYS ask the redesign question before polishing when the code shows one of
+  three signals: a local closure or helper that only builds an error from an
+  input, the same parse or validation repeated at several call sites, or an
+  `expect`/`panic` on a state the types allow but "cannot happen". Each says the
+  interface sits at the wrong layer: parse at the boundary into a type that
+  cannot hold the bad state.
 - NEVER read an empty result as a finding until that same query has produced a
   non-empty one where one belongs.
 - NEVER print a verdict or an "(empty = none)" gloss beside a command — a label

@@ -43,12 +43,14 @@ def test_missing_rate_limits_leave_the_rest() -> None:
 
 
 def test_codex_bridge_configures_the_four_native_footer_items() -> None:
-    """The bridge's TOML sets only the four ordered native items under tui."""
+    """Shipped and documented fields match."""
     reference = Path(__file__).parents[1] / 'kronael/sync/reference.md'
     bridge = reference.read_text().split('## Codex bridge (step 6)\n', 1)[1]
     bridge = bridge.split('\n## ', 1)[0]
     fences = re.findall(r'```toml\n(.*?)```', bridge, re.DOTALL)
     assert len(fences) == 1, 'Expected one canonical Codex bridge TOML fence'
+    config = Path(__file__).parents[1] / 'codex/config.toml'
+    assert tomllib.loads(config.read_text()) == tomllib.loads(fences[0])
     assert tomllib.loads(fences[0]) == {
         'tui': {
             'status_line': [

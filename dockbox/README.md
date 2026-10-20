@@ -1,21 +1,29 @@
 # dockbox
 
 A sandbox that is actually useful — full credentials, no permission prompts,
-mounts whatever you point at. Docker provides working directory scoping and a clean
-environment. The boxed agent has full access to your tools, config, and
+mounts whatever you point at. gVisor provides a sandbox for the Docker container.
+The boxed agent has full access to your tools, config, and
 credentials — treat it as yourself in a container.
 
 ## ELI13
 
-A container is a lightweight box around a program: it gets its own filesystem
-view and process space but shares your computer's kernel. dockbox puts a coding
-agent (Claude Code or Codex) in one of those boxes, pointed at the folder you
-name, with your real tools and credentials handed in so it can actually work.
-It's fast and convenient, and it keeps builds and mess out of your host workdir
-— but because your live credentials are inside and the box shares your kernel,
-it is **not** a wall against hostile code. Treat the boxed agent as *yourself*
-working in a container. If you want a stronger host-filesystem wall — a full VM
-with a persistent disk — use [qemubox](../qemubox/) instead.
+Every box uses the dedicated `runsc-dockbox` gVisor runtime. gVisor handles
+application system calls in its userspace kernel. The agent sees the mounted
+project, its tools, and the credentials you share. `/tmp` and discovered build
+directories use temporary storage by default. A missing runtime stops the launch. Re-entry checks the
+runtime too. For a full VM with a persistent disk, use [qemubox](../qemubox/).
+
+Trust boundaries:
+
+- Project mounts are writable. The agent can change your source and git data.
+- Shared credentials and configuration carry your authority. The agent can use
+  credentials and change writable configuration on the host.
+- Explicit `-v` mounts grant access to the named host path. A Docker socket or
+  another sensitive mount can grant control beyond the sandbox.
+- Mounted sockets carry host authority. `-A` permits SSH-agent operations, and
+  `-K` permits GPG-agent operations with the host agent's keys.
+- Network access remains available. The runtime enables raw packet operations
+  for nested Docker. gVisor does not make shared data or network peers safe.
 
 ## Build
 
@@ -38,14 +46,55 @@ registry) only after `dockbox rm <name>` and a new launch.
 ## Install
 
 ```bash
-make install            # image, dockbox and its seccomp profile
-make seccomp            # the seccomp profile only, no image build
-make clean              # remove binary, profile and docker image
+make install            # build the image and install the launcher
+make clean              # remove the launcher and production image
 ```
 
-dockbox goes to `~/.local/bin`, the profile to
-`~/.local/share/dockbox/seccomp.json`. A new box does not start without the
-profile; dockbox names `make seccomp` when it is missing.
+dockbox goes to `~/.local/bin`. The host needs Linux, a local rootful Docker
+daemon, Python 3, Git, GnuPG, and the `runsc-dockbox` runtime.
+
+Install gVisor with its [official installation guide](https://gvisor.dev/docs/user_guide/install/).
+For a manual install, verify the complete release bundle's SHA-512 checksum
+before extraction. Keep `runsc` and its `gvisor-bin/` sidecars together in
+`/usr/local/bin`. Installing only the `runsc` binary is insufficient.
+
+Register the dedicated runtime with the official installer:
+
+```sh
+sudo /usr/local/bin/runsc install --runtime=runsc-dockbox --clobber=false -- \
+  --net-raw --allow-packet-socket-write --host-uds=open --allow-suid
+```
+
+Preserve all other Docker daemon settings and runtime entries. If the dedicated
+entry exists, review its `runtimeArgs` for all four flags. The required entry is:
+
+```json
+{
+  "runtimes": {
+    "runsc-dockbox": {
+      "path": "/usr/local/bin/runsc",
+      "runtimeArgs": [
+        "--net-raw", "--allow-packet-socket-write", "--host-uds=open", "--allow-suid"
+      ]
+    }
+  }
+}
+```
+
+`--host-uds=open` permits connections to mounted host sockets, including
+forwarded SSH and GPG agents. `--allow-suid` permits setuid elevation inside
+the sandbox so `-S` can grant sudo access.
+
+Merge that entry into the existing configuration; do not replace the file with
+this fragment. Review the diff, then run `sudo systemctl reload docker`.
+Docker supports [runtime configuration reload](https://docs.docker.com/reference/cli/dockerd/#configuration-reload-behavior).
+A daemon restart is unnecessary. Verify with `docker info` and
+`docker run --rm --runtime=runsc-dockbox busybox:1.37.0 uname -r`.
+
+`DOCKBOX_DOCKER` selects the host Docker command. It accepts space-separated
+arguments without shell quoting or expansion. For a host that requires sudo,
+use `DOCKBOX_DOCKER='sudo -n docker' dockbox`. The launcher still uses the
+invoker's UID/GID and home. `DOCKBOX_IMAGE` selects the image.
 
 ## Usage
 
@@ -60,6 +109,7 @@ dockbox -B                        # build-dir overmounts on anonymous Docker vol
 dockbox -T                        # scratch box: no project mount, works in /tmp/work
 dockbox -N                        # new Claude session, no resume picker
 dockbox -e GH_TOKEN               # forward env var into container
+dockbox -D                        # start an ephemeral Docker daemon inside gVisor
 dockbox -n mybox .                # key the box on mybox (dockbox-mybox)
 dockbox bash .                    # run bash instead
 dockbox exec make test            # run a command in the box
@@ -89,8 +139,7 @@ at least 4 hours old and never a busy one.
 A new box that exits before `dockbox-init` marks it ready (after registering
 your user) fails the launch: dockbox prints `Container exited during
 startup` and the last 20 lines of the box's log, exits 1 and opens no
-session. The stopped box stays for `docker logs` until `dockbox rm <name>`
-or the next launch replaces it.
+session. Dockbox then removes its failed new box and anonymous build volumes.
 
 ### Re-entry into a running box
 
@@ -111,35 +160,41 @@ box always mounts, not the directory this invocation runs from. The **command** 
 tool, `--model`, `--effort`, args — takes effect, and **env flags**
 (`-e`, `-g`) are forwarded into the session, so a box first started
 without `-g` still gets the token when a later `dockbox -g` re-enters
-it. **Mount/network flags** (`-v`, `-H`, `-D`) do not apply — they're
+it. **Mount flags and nested Docker** (`-v`, `-D`) do not apply — they're
 fixed when the container is created. Use `-n <name>` to key a
 separate, fully-provisioned container instead.
 
-## io_uring and capabilities
+## Nested Docker and runtime limits
 
-Docker's default seccomp profile denies io_uring, which Agave's
-`solana-test-validator` needs. dockbox starts every box with
-`--security-opt seccomp=~/.local/share/dockbox/seccomp.json`: the default
-profile from moby/profiles with `io_uring_setup`, `io_uring_enter` and
-`io_uring_register` added to its allow list. It is newer than the profile
-Docker 29.6.2 builds in (moby/profiles v0.2.3) and also denies a few legacy
-socket families (AX25, IPX, AppleTalk and others).
+`-D` starts a Unix-socket-only Docker daemon inside the sandbox. The daemon
+uses a 2 GiB executable tmpfs at `/var/lib/docker`. Images, containers, volumes,
+and build cache disappear with the box. The session user can access its socket.
+The host Docker socket is absent from default mounts. The outer container uses
+neither privileged mode, host devices, nor the host PID namespace.
 
-`seccomp.json` is `seccomp/default.json` from
-[moby/profiles](https://github.com/moby/profiles) at commit `a21872828a8e`,
-unchanged except for those three names after `io_submit`. It is Apache-2.0;
-the license ships as `seccomp.LICENSE` and installs beside the profile. To
-refresh it, fetch that file again and re-add them.
+Nested Docker supports build `RUN` instructions, containers, bridge networks,
+service DNS, and outbound HTTP. `SYS_ADMIN` and `NET_ADMIN` apply inside gVisor.
+The daemon uses overlay2, legacy iptables for network setup, and manual SNAT.
+Its startup failure stops the launch. Its death stops the box and fails active
+sessions. See the [upstream Docker guide](https://gvisor.dev/docs/tutorials/docker-in-gvisor/).
 
-Boxes also get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
+`-H` is unavailable because the dedicated runtime requires its own network
+namespace. Nested `docker run --network host` shares the **box's** network.
+It never selects the machine's host network. Nested published ports do not
+provide normal host port forwarding because the daemon disables iptables
+management. Use the box network for a nested service.
+
+gVisor implements a subset of Linux system calls and devices. Tools that need
+unsupported kernel features, kernel modules, KVM, or direct hardware access
+can fail. Removing a seccomp rule cannot add a missing gVisor operation.
+Check [application compatibility](https://gvisor.dev/docs/user_guide/compatibility/).
+The tool list below describes installed binaries, not universal compatibility.
+
+Boxes get `SYS_NICE`, `IPC_LOCK` and `SYS_PTRACE`. A capability added
 to the container does not reach a session started with `docker exec -u`, so
 each session enters as root and `setpriv` drops it to your UID/GID with the
 three held as ambient capabilities and the supplementary groups dockbox-init
-registered. `nice`/`renice` to a negative value, realtime scheduling (`chrt`),
-`mlock` past the memlock limit and ptrace attach to any process in the box
-work as your user. A box started by an older dockbox holds none of the three,
-and its sessions enter without them.
-Realtime priority and locked memory draw on the host's CPU and RAM.
+registered. The runtime determines which related operations work.
 
 ## Configuration
 
@@ -149,10 +204,10 @@ whitespace-separated, with lines starting `#` as comments.
 - `~/.dockboxrc` — global defaults, every flag. It is read ahead of the
   command line, so a command-line `-n`, `-d` or `-x` wins over it.
 - `.dockboxrc` in the project dir (the last dir named) — per-project
-  defaults. It takes `-e`, `-v`, `-H`, `-B`, `-g`, `-G`, `-N` and `-P` /
+  defaults. It takes `-e`, `-v`, `-B`, `-g`, `-G`, `-N` and `-P` /
   `--no-ephemeral`; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and
-  `-x` with a warning, so a cloned repo cannot grant itself sudo, the Docker
-  socket or your SSH/gpg agent, or switch the tool, box name or workdir. Put
+  `-x` with a warning, so a cloned repo cannot grant itself sudo, a Docker
+  daemon or your SSH/gpg agent, or switch the tool, box name or workdir. Put
   those in `~/.dockboxrc`.
 
 Both are optional. Global applies first, project appends. Neither file
@@ -190,10 +245,8 @@ the servers copied at its creation until it is recreated (`dockbox rm
 <name>`). Without a gateway resolver, when the host uses a loopback stub
 resolver, dockbox prints a one-line note at creation and the box keeps
 Docker's copy. The gateway detection reads the host's sockets with `ss`, so
-it assumes a rootful local Docker daemon. `-H` (host network) uses
-the host's resolver and sockets directly and has neither problem; it also
-has no NAT, so a box's connections survive a brief Wi-Fi drop exactly as the
-host's do.
+it assumes a rootful local Docker daemon. Recreate a box to refresh its resolver
+configuration when the host changes networks.
 
 ## Mounts
 
@@ -345,15 +398,35 @@ Uses `~/.claude/.credentials.json` from host (via mounted `~/.claude`).
 
 All Claude Code permission prompts are bypassed by
 `--dangerously-skip-permissions`, passed by the `claude` wrapper in the image.
-This is intentional — the use case is a trusted agent doing real work, not
-untrusted code execution. If you need security isolation, this is not the tool.
+This is intentional. The agent can act with the authority of every credential
+and writable path you share.
 
 Boxes are kept apart from each other and from the host's Claude sessions
 (private `~/.claude/sessions`, own `/tmp`, so no shared inbox socket), and the
-bundle's settings refuse inbound cross-session messages everywhere. `-D`
-undoes that: it hands the box the host's Docker socket, so its agent can
-`docker exec` into every other dockbox. Pass it only to a box you trust with
-all the others.
+bundle's settings refuse inbound cross-session messages everywhere. `-D` gives
+the box its own daemon. An explicit host socket mount grants host Docker access.
+
+## Verification
+
+```sh
+make test             # fast launcher tests, no Docker
+make integration      # bounded Debian fixture build and native checks
+make test-all         # fast tests plus the native fixture
+make smoke            # native checks against the existing production image
+```
+
+The native gate uses the real launcher and the production init, daemon, and
+Codex bridge scripts. It supplies fake configuration and no real credentials.
+Host OpenSSH and GnuPG tools create task agents for SSH and GPG signing checks.
+The gate also checks sudo access with `-S` and its absence without `-S`.
+It checks UID/GID, mounts, worktrees, ephemeral storage, sessions, nested builds,
+networking, daemon failures, containment, and cleanup. Its inspect guard rejects
+runtime and host-socket mutations before privileged nested payloads run.
+The gate retains its small fake-data directory and prints its path.
+
+The fixture omits the full agent and language toolchains. Passing the fixture
+does not verify the production image or installed agent commands. Build the
+production image and run `make smoke` before claiming production readiness.
 
 ## Cookbook
 

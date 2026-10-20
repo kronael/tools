@@ -42,7 +42,7 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 1800, Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_CHARS = {Kind.PR: 400, Kind.ISSUE: 3000, Kind.COMMENT: 240}
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
@@ -60,10 +60,10 @@ MARKETING = re.compile(
 THIS_PR = re.compile(r'\bthis (?:pr|pull request)\b', re.IGNORECASE)
 SHORTENED = re.compile(r'\w{4,}\.\.\.\w{2,}')
 ELLIPSIS = '…'
-HEADER = re.compile(r'^\s*(?:[-*+]\s+)?#{1,6}\s')
+HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
-CHECKBOX = re.compile(r'^\s*[-*+]\s+\[[ xX]\]')
+CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
 IMAGE = re.compile(r'!\[[^\]]*\]\(')
 BULLET = re.compile(r'^\s*[-*+]\s')
 CLOSER = re.compile(r'^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+')
@@ -230,18 +230,17 @@ def lint_pr(lines: list[str]) -> list[Problem]:
 
 def lint_elements(elements: list[Element]) -> list[Problem]:
     problems = []
-    bullets = 0
     for e in elements:
         if e.kind == 'bullet':
-            bullets += 1
-            if bullets > 3:
-                problems.append(Problem(e.line, 'review pointers: keep at most three bullets'))
+            problems.append(
+                Problem(e.line, 'bullet: the body is the TL;DR; fold the reason into it or cut it')
+            )
         elif e.kind == 'paragraph':
             problems.append(
                 Problem(
                     e.line,
-                    'text after the lead: use up to three review pointers;'
-                    ' fold other context into the TL;DR',
+                    'text after the lead: one paragraph only, then `Closes #N` lines;'
+                    ' fold what matters into the TL;DR',
                 )
             )
     return problems

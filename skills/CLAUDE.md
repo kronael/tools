@@ -86,37 +86,35 @@ skills it replaces.
 ## Subagent effort defaults
 
 - The agent files in `agents/` pin each tier, and the launcher skills quote
-  them: `sonnet` = Sonnet 5.5 at high, `opus` = Opus 5.5 at high, `fable` =
-  xhigh. ALWAYS change an agent file and every skill that quotes it in one
-  commit.
-- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md`.
-- `sonnet` runs investigations, bug hunts, pre-review, read-only surveys,
-  mechanical edits too wide for the parent, and the steps of a written plan
-  (`sonnet` § Plan, then execute). `opus` takes design calls, the plans for
-  implementation work and plan steps that need judgment. `fable` takes specs,
-  architecture, WISDOM and skill writing, algorithmic solutions, and red
-  reviews or deep audits — NEVER implementation.
-- No Haiku tier: Haiku is batch-only (`global` § Agents owns the rule) —
-  NEVER add an agent file, launcher skill or nudge keyword that pins it.
+  them: `haiku` = Haiku 5.5 at medium, `sonnet` = Sonnet 5.5 at high, `opus` =
+  Opus 5.5 at high, `fable` = xhigh. ALWAYS change an agent file and every
+  skill that quotes it — its launcher and `dispatch` § Tiers — in one commit.
+- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md` and
+  `luna`'s GPT-6 Luna medium pin in `skills/luna/SKILL.md`.
+- `global` § Agents owns the caps and the routes between tiers; `dispatch`
+  § Tiers is the one table of every lane with its pin. A launcher states its
+  own lane and its neighbours' NOT-for clauses; NEVER describe every tier
+  anywhere else.
 - NEVER rely on prompt text like "think harder" to set effort. Encode the
   intended model/effort in the launcher skill or agent definition.
 
 ## Agent definitions
 
-- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`,
+- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`, `haiku`,
   with no body — and thin skill agents whose body only loads the same-named
   skill. `visual`, `readme`, `improve` (pins Sonnet 5.5 at high), `learn` and
   `distill` are each launched from their skill's `## Where it runs`
   (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
   its agent serves only an explicit dispatch of a whole refine pass.
   Knowledge lives in the skill that owns the concern, NEVER in an agent body.
-- `terra` is the exception because it routes an OpenAI model. NEVER add an
-  `agents/terra.md`; Codex reads `skills/terra/SKILL.md` through the bridge.
+- `terra` and `luna` are the exceptions because they route OpenAI models. NEVER
+  add an `agents/terra.md` or `agents/luna.md`; Codex reads their skills
+  through the bridge.
 - This section owns the agents rule. ALWAYS point here in one line from any
   other file; NEVER restate the list.
 - A skill that needs isolation or a model says so in its own body (`## Where
   it runs`): ALWAYS its thin same-named agent where one fits, else
-  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`) told to
+  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
   load the skill. NEVER write a content-bearing agent definition, and NEVER reduce
   a skill body to one "launch agent X" line.
 

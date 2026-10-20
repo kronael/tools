@@ -22,8 +22,10 @@
       "Bash(gh release create*)",
       "Bash(gh repo create*)",
       "Bash(gh pr review --approve*)",
-      "Bash(ghpush *refs/heads/master*)",
-      "Bash(ghpush *refs/heads/main*)"
+      "Bash(rip *master*)",
+      "Bash(rip *main*)",
+      "Bash(rig *master*)",
+      "Bash(rig *main*)"
     ],
     "deny": [
       "Bash(rm -r*)",

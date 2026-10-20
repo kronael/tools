@@ -95,10 +95,12 @@ the authoritative entry. The categories:
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
   `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
   memory, scaffolding, second opinions, codifying public best practice.
-- **Escalation** (`sonnet`, `terra`, `opus`, `fable`, `oracle`, `dispatch`,
-  `fin`) — model routing and macro aliases. Each model tier has its own skill; `dispatch` is
-  fire-and-forget at default model. `terra` runs the Codex workhorse through
-  a native subagent or the CLI. Model and effort pins follow
+- **Escalation** (`haiku`, `luna`, `sonnet`, `terra`, `opus`, `fable`,
+  `oracle`, `dispatch`, `fin`) — model routing and macro aliases. Each model
+  tier has its own skill; `dispatch` is fire-and-forget at default model and
+  holds the one tier table (`dispatch` § Tiers). `luna` and `terra` run the
+  Codex fan-out and workhorse models through a native subagent or the CLI.
+  Model and effort pins follow
   [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
 - **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
   UX, hiring, or every lens at once) — judge a product, codebase, UI or
@@ -143,10 +145,10 @@ Side-channels (escalation, communication) fire at any stage.
 │ specs ship                  │
 └──────────────┬──────────────┘
                │
-┌─ coding ─────▼──────────────┐
-│ go rs py ts tsx sh sql cli  │         ┌─ escalation ────────┐
-│ service data                ├────────►│ sonnet terra opus   │
-└──────────────┬──────────────┘         │ fable dispatch fin  │
+┌─ coding ─────▼──────────────┐         ┌─ escalation ────────┐
+│ go rs py ts tsx sh sql cli  │         │ haiku luna sonnet   │
+│ service data                ├────────►│ terra opus fable    │
+└──────────────┬──────────────┘         │ dispatch fin        │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review improve              │
@@ -181,10 +183,10 @@ patterns; `bugs` for the record-don't-fix queue.
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. `/sonnet` →
-`/opus` → `/fable` increases the Claude tier. `/terra` selects the
-Codex workhorse. `/dispatch` uses the default model. `fin` runs without
-confirmation stops.
+**escalation** — route to the right model/mode from any stage. `/haiku` →
+`/sonnet` → `/opus` → `/fable` increases the Claude tier; `/luna` and `/terra`
+select the Codex fan-out and workhorse models. `/dispatch` uses the default
+model and holds the tier table. `fin` runs without confirmation stops.
 
 ## Working with skills
 

@@ -2,14 +2,13 @@
 
 ## Bundle
 
-- **GLOBAL-SKILL-BODY-OVER-CAP** (LOW, wisdom) — CONFIRMED at HEAD
-  2026-10-14. `make skills-frontmatter` warns `skills/global/SKILL.md:
-  [skill-length] body is 206 lines (> 200)`; the body passed 200 with the
-  v0.4.40 Agents additions (203 at v0.4.40, 205 at 0c585c3) and the warn is
-  not a failure, so every commit carries it. **Fix:** push a section's
-  overflow into a sibling file the wisdom points at (`wisdom` § SKILL.md
-  body), after a subtraction pass over the always-loaded rules; no test —
-  the lint already reports it.
+- **MK-REPO-MAKEFILES-KEEP-HELP-TARGETS** (LOW, docs) — owner decision.
+  `skills/mk/SKILL.md` § No help target bans a `help` target,
+  `.DEFAULT_GOAL := help` and `##` descriptions, and this repo's own
+  `Makefile:52` and `hooks/Makefile:11` keep `help` targets with `@echo`
+  descriptions. **Fix:** drop both targets and let `README.md` § Commands carry
+  the one-line descriptions, or exempt the toolkit in the skill; no test — the
+  skill text and the Makefiles.
 
 - **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
   2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
@@ -158,16 +157,24 @@
   reach for it, in the same shape as the existing layout pattern. Reproduce:
   `grep -i 'sequence\|swimlane\|state' skills/diagrams/SKILL.md` → no hits.
 
-- **BOX-HAIKU-ALIAS-VS-BATCH-ONLY** (LOW, design) — owner decision, no test —
-  design. `skills/global/SKILL.md` § Agents makes Haiku batch-only, NEVER a
-  sub, while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
-  (`qemubox/qemubox:1280`) start an interactive Claude Code session on
-  `claude-haiku-4-5-20251001`; `tests/drift_test.sh:22` and
-  `qemubox/test-parity.sh:21` pin the alias in both. **Options:** (a) drop the
-  `haiku` alias from both launchers, their usage text, qemubox's README and
-  the two tests; (b) keep it as a typed model flag the rule does not govern —
-  the user picks it, no skill routes to it. **Default if nothing is
-  decided:** (b).
+- **BOX-HAIKU-PIN-BEHIND-AGENT-PIN** (LOW, config) — CONFIRMED at HEAD
+  2026-10-16, no test — config. `agents/haiku.md` pins the `haiku` alias,
+  which Claude Code resolves to the latest Haiku (`claude-haiku-5-5` in
+  2.1.301), while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
+  (`qemubox/qemubox:1280`) start Claude Code on the dated previous model
+  `claude-haiku-4-5-20251001`; `dockbox/test.sh:383`, `tests/drift_test.sh:22`
+  and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
+  take `claude-haiku-5-5` and the three tests follow.
+
+- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
+  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
+  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
+  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
+  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
+  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
+  effort; (b) keep the mapping by role — a second opinion is review-grade
+  work and takes the scarcer slot. **Default if nothing is decided:** (b),
+  the text as written.
 
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
@@ -249,7 +256,7 @@
   test — design. `skills/rs/SKILL.md:101-122` prescribes a `main()` loop
   that sleeps and restarts on any `Err`; `skills/service/SKILL.md:14` says
   "use last available data when current unavailable"; `skills/data/SKILL.md:44`
-  "Retry with exponential backoff" — WISDOM § System-change discipline
+  "Retry with exponential backoff" — `software/code.md` § System changes
   retries ONLY the transient. **Options:** (a) scope each to transient
   errors; (b) state the supervised-binary exception in `rs`. **Default if
   nothing is decided:** (b).
@@ -304,12 +311,6 @@
   `oracle-critique.md` files that `scavenge:79` writes as
   `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
-
-- **RECLAUDE-TMP-BAN-VS-SYNC-RUN-DIR** (LOW, docs) — owner decision, no test
-  — docs. `RECLAUDE.md:4` "NEVER use `/tmp` — ALWAYS `./tmp`" is re-injected
-  at compaction; `kronael/sync/SKILL.md:34` puts the run dir under
-  `${TMPDIR:-/tmp}` by design. **Default if nothing is decided:** the sync
-  rule wins inside a sync; RECLAUDE scopes project work.
 
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
   test — docs. `skills/refine/py.md:41-42` keeps "one short clause only for a
@@ -404,11 +405,76 @@
   wisdom file to the cap. The body measures 195 lines at origin/master and 202
   at HEAD (`git show <rev>:skills/global/SKILL.md | awk 'n>=2 && (p || NF)
   {p=1; c++} /^---$/{n++} END{print c}'`); the range changed only § Git (the
-  ghpush bullet and the approval sentence) and § Agents (the cap wording).
+  `rip -g` bullet and the approval sentence) and § Agents (the cap wording).
   **Fix:** cut two lines — the owner's
   wording, so the owner's call which.
 
+- **PY-RECORD-ROW-KEEPS-SMALLINT-INT** (MED, docs) — owner decision. Three
+  rules are jointly unsatisfiable: `skills/py/SKILL.md:91` builds a record from
+  its own SQL row as `Record(**row)`; `skills/sql/SKILL.md:43` stores a closed
+  set as `SMALLINT` behind an `IntEnum` and passes the enum;
+  `skills/py/SKILL.md:32` compares enum members with `is`. A dataclass does not
+  coerce, so the field holds the row's `int`: for `Record(**{'status': 1})`,
+  `r.status is Status.DONE` is `False` while `== Status.DONE` is `True`
+  (`python3 -c` over a two-line `IntEnum` and a frozen dataclass). No rule names
+  the place where the int becomes the enum. **Options:** (a) the db function
+  that runs the SELECT converts each enum column before the record:
+  `Record(**row | {'status': Status(row['status'])})`; (b) the record converts
+  in `__post_init__` (`object.__setattr__` on a frozen dataclass); (c) the
+  project's one codec (`from_dict`) takes own rows too and the `Record(**row)`
+  rule goes. **Default if nothing is decided:** as written; a reader compares an
+  enum column from a row with `==` until the owner picks. No test — docs.
+
+- **RELEASE-COLLISION-CHECK-READS-LOCAL-TAGS** (MED, docs) — CONFIRMED at HEAD
+  2026-10-16. `skills/release/SKILL.md` step 6 calls a version taken when
+  `git rev-parse -q --verify vX.Y.Z` succeeds, which reads local tags only, and
+  no step fetches `origin` first (WISDOM § Git: read the remote through its
+  tracking refs after `git fetch origin`). A release cut on a line that has not
+  fetched mints a version another host already published: a session tagged
+  `v0.4.42` locally while `origin` carried `v0.4.42` through `v0.4.48` on 56
+  commits past the shared `v0.4.41`. The CLAUDE.md § Release leak scan runs
+  over `git diff <last tag>..HEAD`, which the same stale view misreads.
+  **Fix:** step 1 fetches `origin` (SSH, else `rif -g
+  '+refs/heads/*:refs/remotes/origin/*'`, whose default tag auto-follow also
+  brings the remote's tags) and checks `git ls-remote --tags` for the version
+  before step 6; a line behind `origin/<default head>` stops for `merge`
+  before the version bump. No test — docs.
+
+- **HOOKS-UPSTREAM-REDESIGN-HELD-BACK** (MED, design) — owner decision. Upstream
+  v0.4.42–v0.4.48 rebuilt the hook layer: `hooks/lib/reminder.py` emits one XML
+  pointer shape, `hooks/lib/kvs.py` and the `kvs` tool hold session memory,
+  `hooks/style_nudge.py` measures each reply against the caveman budget and
+  escalates, `local.py`, `reclaude.py` and `post_tool_nudge.sh` are gone, and
+  `gh_text_lint.command_decision` asks before a review submit with a PR cap of
+  1800 (`skills/pr-draft`, `skills/gh-comment` follow). This line keeps the
+  v0.4.41 hooks, wiring, gate and skills on the owner's word that the caveman
+  style and its hooks stay as refined here; the merge commit names every path.
+  The redesign lives at `origin/master` 3f4c9be77383943d79eaea51c3bff4858a431807.
+  **Options:** (a) adopt the redesign with this line's `caveman.md` as the
+  measured source (`style_nudge` caps 20/5/2 already match; drop its 25-line
+  report tier); (b) stay on the v0.4.41 hooks. **Default if nothing is
+  decided:** (b). No test — design.
+
+- **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
+  `skills/writing/SKILL.md` § Language (upstream) and
+  `output-styles/caveman.md` § Language both carry the ASD-STE100 rule list;
+  v0.4.41's `writing` pointed at caveman instead. Two copies drift. The owner
+  keeps the rules in `caveman.md`. **Options:** (a) `writing` points at
+  caveman again; (b) caveman points at `writing`. **Default if nothing is
+  decided:** both stand. No test — docs.
+
 ## Codex bridge
+
+- **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
+  no test — config. `codex/config.toml:2` selects the closest native fields
+  to `hooks/statusline.py:27-38`: model, context used, five-hour and weekly quota.
+  Codex CLI 0.162.1 shows quota remaining, without reset times or Claude's compact
+  model names, labels and separators. Its status line accepts built-in identifiers,
+  with no command renderer for the shared Python logic. **Fix:** requires upstream
+  support for reset fields or a command renderer; use `/status` for reset times.
+  Sources: [config reference](https://developers.openai.com/codex/config-reference#tui-status_line),
+  [schema](https://developers.openai.com/codex/config-schema.json),
+  [built-in items](https://developers.openai.com/codex/cli/slash-commands#configure-footer-items-with-statusline).
 
 - **CODEX-SKILL-SIGIL-AT-VS-DOLLAR** (LOW, docs) — owner decision, no test —
   docs. Codex's own skill instructions say a user names a skill "with
@@ -422,14 +488,6 @@
   through the plain-text path. **Options:** (a) switch the docs, the rewrite
   and `hooks/test_codex_hook.py:91` to `$`; (b) keep `@`. **Default if nothing
   is decided:** (b).
-
-- **CODEX-PRECOMPACT-ENTRIES-NO-OP** (LOW, config) — owner decision, no test
-  — config. `codex-hooks.json:58-74` wires `local` and `reclaude` on Codex
-  `PreCompact`, but `hooks/codex_hook.py:155-162` returns nothing for any
-  non-block PreCompact output, so both entries spawn a process whose output is
-  discarded; the only effect left is `local.py`'s `local-{sid}` stamp.
-  **Options:** (a) drop the two entries; (b) keep them for when the adapter
-  can carry context. **Default if nothing is decided:** (b).
 
 ## Hooks
 
@@ -446,35 +504,10 @@
 
 - **LEARN-HOOK-WIRED-NOWHERE** (LOW, dead code) — CONFIRMED at HEAD 2026-09-25.
   `hooks/learn.py` is a complete lifecycle hook that no event invokes:
-  `settings-recommended.json` wires `local.py`, `prompt_nudge.py`,
-  `pretool_nudge.py`, `post_tool_nudge.sh`, `stop.py`, `memory_nudge.py` and
-  `reclaude.py`, and none of them is it. Reproduce:
+  `settings-recommended.json` wires `prompt_nudge.py`, `pretool_nudge.py`,
+  `style_nudge.py`, `stop.py` and `memory_nudge.py`, and none of them is it. Reproduce:
   `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
   call — wire it to an event, or drop it.
-
-- **SMOKE-SUITE-TESTS-THE-INSTALL** (LOW, tests) — CONFIRMED at HEAD 2026-09-25.
-  `hooks/test_hooks.py` resolves its subjects under `Path.home()/'.claude'/
-  'hooks'` (`:20`), so it exercises whatever is installed rather than the tree
-  it ships in, and its docstring and cases name `nudge.py`, which no longer
-  exists — the file split into `prompt_nudge.py` and `pretool_nudge.py`. It is
-  also absent from the Makefile's `TEST_FILES`, and pytest collects nothing from
-  it (`pytest -q test_hooks.py` → "no tests ran"), so nothing runs it either
-  way. Reproduce: `ls hooks/nudge.py` → no such file. **Fix:** the maintainer's
-  call — point it at the repo tree and rename the subjects, or drop it.
-
-- **HOOKS-SYSTEMMESSAGE-NEVER-REACHES-MODEL** (MED, correctness) — CONFIRMED.
-  `local.py`, `reclaude.py` and `memory_nudge.py` emit `systemMessage`, the
-  channel defect `prompt_nudge` had. `hook_system_message` maps to no API
-  message in Claude Code 2.1.261 (`hook_system_message:()=>[]` in the
-  attachment table; the docs define `systemMessage` as "a message shown to the
-  user in the transcript"). Measured: 2409 `hook_system_message` attachments
-  across all transcripts, 0 model-visible copies. So `local.py`'s LOCAL.md
-  injection and its RULES re-injection on UserPromptSubmit never reach the
-  model. The PreCompact paths (`local.py`, `reclaude.py`, `memory_nudge.py`)
-  are the same field; whether Claude Code carries a PreCompact `systemMessage`
-  across compaction is not measured. **Fix:** for UserPromptSubmit,
-  `hookSpecificOutput.additionalContext` as in `prompt_nudge.emit`; PreCompact
-  needs its own measurement first.
 
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
@@ -487,26 +520,6 @@
   the clause and its `hooks/ARCHITECTURE.md` mention; (b) keep it for an
   external runner that sets `CLAUDE_EVAL` itself. **Default if nothing is
   decided:** (b); no test — config.
-
-- **HOOK-STATE-STAMPS-ACCUMULATE** (LOW, design) — needs sign-off. Four
-  stamps per session are named at their call sites — `local-`
-  (`local.py:36`), `solve-nudge-` (`prompt_nudge.py:150`),
-  `memory-nudge-start-` and `memory-nudge-done-` (`memory_nudge.py:105-113`)
-  — plus a second per-session store `pretool_nudge.py:285-292` keeps at
-  `~/.claude/tmp/extnudge/{sid}.txt`, and no hook deletes one or expires a
-  session id, so `~/.claude/state` gains up to four files per session.
-  Harmless in bytes; the question is whether stamps should self-prune on
-  write past N days. **Options:** (a) prune on write past N days; (b) leave.
-  **Default if nothing is decided:** (b). No test — design.
-
-- **STOP-DUPLICATES-HOOK-EVENT-READER** (LOW, duplication) — CONFIRMED at HEAD
-  2026-09-29. `hooks/stop.py:79-87` defines its own `hook_event`: the same
-  three-key loop as `hooks/lib/state.py:33-42`, behind a `KRONAEL_HOOK_EVENT`
-  override (`:80-82`, set by `post_tool_nudge.sh:33`). `stop.py` imports
-  nothing from `lib.state`, so a spelling added to one reader misses the
-  other. **Fix:** import `hook_event` from `lib.state` and keep the override
-  in `stop.py`, or fold the override into the shared reader; no test —
-  duplication.
 
 - **DIARY-SLUG-EDGES** (LOW, design) — proposed, no fix without the owner.
   The diary slug (`hooks/stop.py:50-52`, `skills/diary/SKILL.md` § Where it
@@ -669,29 +682,26 @@
   **Fix:** compare against the draft below its title line, or require a
   real cut ratio (the `ok:` line already prints one).
 
-- **STYLE-RULES-NUDGE-RESTATES-CAVEMAN** (LOW, duplication) — owner
-  decision, no test — duplication. `hooks/prompt_nudge.py:9-15`
-  `STYLE_RULES` is emitted on every prompt (`:204`, meta prompts too,
-  `:190`) and restates `output-styles/caveman.md` with one line cap (~17,
-  max 20) where caveman has tiers (`:15`) and "no tables or headers" where
-  caveman allows them for tabular content (`:26`); neither `hooks/README.md`
-  nor `hooks/ARCHITECTURE.md` names it. `COMMIT_RULES` (`:21-27`),
-  `stop.py:122-131` and `local.py:11-16` `RULES` restate WISDOM § Git and
-  `code.md`. **Default if nothing is decided:** as written — the nudges are
-  deliberate re-injection.
+- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-16, no
+  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py` and read
+  by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py`) appears in no doc.
+  **Fix:** drop the first; name the second in `hooks/ARCHITECTURE.md`.
 
-- **RECLAUDE-KEYWORD-PATH-UNWIRED** (LOW, dead code) — CONFIRMED 2026-10-10.
-  `hooks/reclaude.py:33-41` carries a continue/recap keyword path (the same
-  two regexes as `local.py:61-62`); the wiring runs the hook on PreCompact
-  only (`settings-recommended.json`, `codex-hooks.json`), no test names the
-  path, and `hooks/ARCHITECTURE.md` says it is unwired. **Fix:** the
-  maintainer's call — delete it with the ARCHITECTURE lines, or wire it.
+- **RECLAUDE-MD-UNREAD** (LOW, dead file) — proposal, needs sign-off. No hook
+  reads `RECLAUDE.md`: Claude Code discards a PreCompact hook's
+  `systemMessage` (hooks reference, PreCompact) and the hook that injected it
+  is gone, yet the file stays in the bundle because `kronael/sync/SKILL.md`
+  § Steps 0 and `reference.md` § Classify and § Swap name it as a bundle path.
+  **Proposal:** drop `RECLAUDE.md` from the repo, the sync's bundle list, the
+  classify loop and the swap tar in one commit; the sync then moves the live
+  copy to `RUN/old`.
 
-- **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-10, no
-  test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py:19` and
-  read by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py:111`) and
-  `KRONAEL_HOOK_STATE` (`lib/state.py:10`) appear in no doc. **Fix:** drop
-  the first; name the other two in `hooks/ARCHITECTURE.md`.
+- **KVS-SESSIONS-NEVER-PRUNED** (LOW, design) — needs sign-off. Every hook
+  session leaves its keys (`prompted`, `caveman`, `memory:*`, `pointed:*`)
+  in `kvs` for good; only TTL keys expire. `kvs sessions` lists them, nothing
+  removes a session whose Claude Code transcript is gone. **Options:** (a) a
+  `kvs` sweep of sessions older than N days; (b) leave; the rows are small.
+  **Default if nothing is decided:** (b).
 
 - **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs
@@ -724,7 +734,7 @@
 - **SETTINGS-ASK-RULES-VS-WISDOM-GIT-TEXT** (LOW, config) — owner decision,
   no test — config. (i) `skills/global/SKILL.md:131-138` gates a push to
   `<default head>`, a merge and an approval, and says opening a PR needs no
-  approval; `settings-recommended.json` has no `allow` rule for `ghpush` or
+  approval; `settings-recommended.json` has no `allow` rule for `rip -g` or
   `gh pr create`, and with `"defaultMode": "default"` (`:37`) any Bash command
   outside `allow` still prompts, so removing `gh pr create*` from `ask`
   changed nothing in that mode. (ii) The ask rules hard-code
@@ -732,10 +742,12 @@
   `<default head>` from `git ls-remote --symref origin HEAD`
   (`skills/global/SKILL.md:117`), so a repo whose default head is `trunk` is
   unguarded, and the trailing `*` makes `refs/heads/master-fix` ask (a dated
-  `refs/heads/20261013_master-fix` does not match). (iii) `ghpush
+  `refs/heads/20261013_master-fix` does not match). (iii) `rip -g
   v1:refs/tags/v1`, the tag push `skills/release/SKILL.md:131` calls the
-  publication, matches no ask rule. **Options:** (a) add `allow` rules for
-  `Bash(ghpush *)` and `Bash(gh pr create*)`, an `ask` rule for `ghpush
+  publication, matches no ask rule. (iv) The permissions docs state a Bash rule matches the
+  command text as written, after wrapper stripping, so `~/.local/bin/rip -g …`
+  or `env X=1 rip -g …` meets no rule either. **Options:** (a) add `allow` rules for
+  `Bash(rip -g *)` and `Bash(gh pr create*)`, an `ask` rule for `rip -g
   *refs/tags/*`, and the default-head rule per repo in project settings;
   (b) leave the rules and let the WISDOM text say the settings default
   prompts. **Default if nothing is decided:** as written.
@@ -746,6 +758,79 @@
   file against the `NN-topic.md` numbering in `skills/specs/format.md`.
   **Fix:** a numbered example, or a non-spec path such as `docs/setup.md`
   alone.
+
+- **GH-GATE-SUBMIT-REVIEW-READS-CLAUDE-TRANSCRIPTS-ONLY** (LOW, correctness) —
+  open (record only). `prompt_text` in `hooks/gh_text_lint.py` accepts only a
+  Claude Code transcript record (`type: user`, `message.content` text blocks),
+  so under Codex a review submit is refused even after the user typed SUBMIT
+  REVIEW: a Codex `response_item` record with `payload.role: user` and
+  `input_text` content yields `None`, and `command_reason` answers `review
+  submit refused`. Upstream v0.4.42–v0.4.48 replaced the transcript read with a
+  permission dialog (`command_decision`, see HOOKS-UPSTREAM-REDESIGN-HELD-BACK).
+  **Fix:** read the Codex record shape too, keeping the newest-message check;
+  or adopt the dialog with the redesign. Measured by hand with
+  `iter_lines_reversed` stubbed to one Codex record; the test is still to write.
+
+- **HOOKS-TEST-HOOKS-PY-STALE** (LOW, dead code) — CONFIRMED at HEAD 2026-10-16.
+  `hooks/test_hooks.py` is a standalone script, not in `hooks/Makefile`
+  `TEST_FILES`, so `make -C hooks test` never runs it; run by hand it ends
+  16/27 with 11 `nudge.py` cases failing because `hooks/nudge.py` is a retired
+  name (`kronael/sync/reference.md` § Classify `RETIRED`). Its `local.py`
+  cases pass and `hooks/test_local.py` now covers that hook in the suite.
+  **Fix:** delete the script, or cut it to the cases no listed test covers and
+  list it. No test — dead code.
+
+- **HOOKS-PRECOMPACT-HAS-NO-CONTEXT-CHANNEL** (HIGH, correctness) — needs
+  sign-off. `local.py` (compaction branch), `reclaude.py:177` and
+  `memory_nudge.py:227` answer PreCompact with `{"ok": true, "systemMessage":
+  ...}`. The hooks reference gives PreCompact only `decision: "block"` and
+  `reason`, lists `hookSpecificOutput.additionalContext` for SessionStart,
+  UserPromptSubmit, the tool events, Stop and PostModelSwitch but not
+  PreCompact, and sends every other event's stdout to the debug log; so the
+  re-injection of LOCAL.md and RECLAUDE.md at compaction and the compaction
+  memory nudge reach neither the model nor the user. Worse, `memory_nudge.py:105`
+  then writes the `memory-nudge-done` marker, so the Stop fallback (`:128`)
+  stays silent for the rest of any session that compacted. `codex_hook.py
+  PreCompact local|reclaude` prints nothing either, so the two Codex PreCompact
+  entries are no-ops. `hooks/test_local.py` and `hooks/test_memory_nudge.py:35`
+  pin the discarded shape. **Options:** (a) move the three to a SessionStart
+  hook with matcher `compact`, which the reference says reads
+  `additionalContext` and plain stdout; (b) drop the PreCompact entries and the
+  claims in `hooks/README.md` and `hooks/ARCHITECTURE.md`. Either way the
+  PreCompact branch stops writing the `done` marker. **Default if nothing is
+  decided:** as written, with this entry as the warning. Measured by hand with
+  the PreCompact payload; no test asserts delivery.
+
+- **HOOKS-PRETOOL-BLOCK-USES-TOP-LEVEL-DECISION** (MED, correctness) — open
+  (record only). `pretool_nudge.py:152,157,277` block an unsafe command or a
+  failing GitHub text with top-level `{"decision": "block", "reason"}`; the
+  hooks reference documents PreToolUse control as
+  `hookSpecificOutput.permissionDecision` (`allow|deny|ask|defer`) with
+  `permissionDecisionReason`, and the top-level pair only as a deprecated alias
+  that maps `block` to `deny`. The gate works while the alias lives. **Fix:**
+  emit the `hookSpecificOutput` form and update the `decision` check and the
+  tests; Codex accepts both.
+
+- **HOOKS-CODEX-APPLY-PATCH-READS-PATCH-KEY** (MED, correctness) — open
+  (record only), unverified live. `pretool_nudge.py:106` reads
+  `tool_input["patch"]` for `apply_patch`, and `test_codex_hook.py:43-50` and
+  `test_pretool_nudge.py:73-104` fixture the same key; the Codex hooks
+  reference says `Bash` and `apply_patch` carry `tool_input.command`. A Codex
+  patch payload with `command` produces no nudge. **Fix:** read `command`,
+  keep `patch` while a Codex build still sends it, fixture both; one probe hook
+  under a throwaway `CODEX_HOME` settles which key arrives.
+
+- **HOOKS-STATE-TWO-PATHS** (LOW, duplication) — open (record only).
+  `pretool_nudge.py:284-286` keeps its once-per-session cache at
+  `~/.claude/tmp/extnudge/<sid>.txt` and ignores `lib/state.py` and
+  `KRONAEL_HOOK_STATE`, which the other hooks use; `stop.py:79-87` re-implements
+  `hook_event`. A test that sets `KRONAEL_HOOK_STATE` still writes under the
+  real home. **Fix:** `session_state('extnudge', sid)` and `lib.state.hook_event`.
+
+- **HOOKS-UNWRITABLE-STATE-DEFAULTS-DIFFER** (LOW, correctness) — open (record
+  only). With an unwritable state dir `local.py:50` treats every prompt as the
+  first and injects LOCAL.md each time, while `prompt_nudge.py:152` stays
+  silent. **Fix:** one rule for both; injecting every prompt is the loud one.
 
 ## rig
 
@@ -768,7 +853,8 @@
 
 - **RIG-HELP-EXITS-1** (LOW, ux) — CONFIRMED 2026-10-10. `rig/rig:353`
   routes `-h|--help|help` to `usage()`, which ends in `exit 1` (`:321`), so
-  `rig --help` fails in a pipeline. **Fix:** exit 0 on an explicit help
+  `rig --help` fails in a pipeline, and the unknown-command error (`rig/rig:389`)
+  goes to stdout, not stderr. **Fix:** exit 0 on an explicit help
   request.
 
 - **RIG-MAKEFILE-STALE-NAME-CLEANUP** (LOW, dead code) — owner decision.
@@ -779,10 +865,10 @@
   **Default if nothing is decided:** keep until a host without the old names
   is confirmed.
 
-- **RIG-GHPUSH-USER-RULE-TIES-ON-FULL-URL** (LOW, correctness) — open
-  (record only). `ghpush` passes `-c url.<url>.insteadOf=<url> -c
-  url.<url>.pushInsteadOf=<url>` (`rig/rig:256`) and its help promises to beat
-  only a rule on a shorter base (`rig/rig:212`, `rig/README.md:172-174`). A
+- **RIG-PUSH-G-USER-RULE-TIES-ON-FULL-URL** (LOW, correctness) — open
+  (record only). `rip -g` passes `-c url.<url>.insteadOf=<url> -c
+  url.<url>.pushInsteadOf=<url>` (`rig/rig:291`) and its help promises to beat
+  only a rule on a shorter base (`rig/rig:247`, `rig/README.md:172-174`). A
   user rule whose base is the exact full HTTPS URL ties with them, and the
   user's rule wins. Measured: `GIT_CONFIG_GLOBAL` holding `[url
   "git@github.com:o/r.git"] pushInsteadOf = https://github.com/o/r.git`, origin
@@ -793,6 +879,62 @@
   `git ls-remote --get-url <url>` applies `insteadOf` only: it printed the
   unrewritten HTTPS URL in the same setup, so the push side needs
   `git remote get-url --push` against a remote set to the URL.
+
+- **RIG-FETCH-G-REFSPEC-UNCHECKED** (LOW, design) — owner decision. The refspec
+  shape check in `cmd_gh_op` runs only for push (`rig/rig:272`), so `rif -g`
+  forwards any refspec: `rif -g -n ':refs/heads/x'`, `'+refs/heads/*:refs/heads/*'`
+  and `''` all print a fetch command and exit 0, and `git fetch <url> :refs/heads/x`
+  creates a local branch, which WISDOM § Git forbids. `GH_HELP` (`rig/rig:242-251`)
+  says both commands refuse "deletes", which reads as the refspec form but means
+  the `-d`/`--delete` flags; `rig/README.md` § Push and fetch with the gh token
+  states the push-only shape check correctly. **Options:** (a) `rif -g` refuses an
+  empty source and a destination outside `refs/remotes/`; (b) keep fetch open and
+  reword `GH_HELP` to "the force, --tags, --all, --mirror and delete flags".
+  **Default if nothing is decided:** (b), the wording. No test — design.
+
+- **RIG-INSTALL-REPORTS-FAILED-LINK** (LOW, correctness) — open (record only).
+  `cmd_install` (`rig/rig:303-322`) has no `set -e` and echoes after each
+  `ln -sf` (`:306`) and `rm -f --` (`:319`) whatever they returned. In a directory
+  made read-only, `rig install` printed `installed 24 symlinks` and `removed
+  <dir>/ghpush` beside 25 `Permission denied` lines and exited 0, with the stale
+  link still present. **Fix:** fail loud — exit non-zero on the first failed
+  `ln`/`rm`, and echo only after success. Measured by hand; the test is still
+  to write.
+
+- **RIG-INSTALL-CLEANUP-TARGET-SHAPES** (LOW, correctness) — open (record
+  only). The stray-link sweep (`rig/rig:313-321`) matches a link only when
+  `readlink` returns exactly `rig` or `$dir/rig`: links written as `./rig`,
+  `../<dir>/rig`, `rig/`, or through a symlinked parent directory survive, while
+  any unlisted link to rig is deleted — a user's own `rig2 -> rig` too — and
+  neither `rig/README.md` nor the help says so (`README.md` § How It Works says
+  only that `rig install` owns the symlink list). The comments at `rig/rig:310`
+  and `rig/test.sh:321` narrate history ("leftovers of a dropped alias", "no
+  longer ships") where WISDOM § Documentation wants the present rule. **Fix:**
+  compare `readlink -f "$l"` with `readlink -f "$dir/rig"`, document that every
+  unlisted link to rig in the install dir is removed, and reword the two
+  comments. `rig/test.sh` covers the relative and the absolute shape only.
+
+- **RIG-URL-EMPTY-PATH** (LOW, correctness) — open (record only).
+  `github_https_url` (`rig/rig:218-234`) accepts an origin whose path is empty:
+  `git@github.com:` and `ssh://git@github.com:22/` both yield
+  `https://github.com/.git`, so `rip -g -u` prints a URL no push can use and
+  `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
+  `path` after the `case`, with the "not a GitHub remote" error.
+
+## kvs
+
+- **KVS-PARALLEL-INCR-SQLITE-BUSY** (MED, correctness) — CONFIRMED at HEAD
+  2026-10-16. `kvs/main_test.go::TestParallelIncrLosesNoUpdate` runs 16
+  processes doing 25 `incr` each; 3 runs in 8 here fail with `kvs: database is
+  locked (5) (SQLITE_BUSY)` (exit 9) and `make test` goes red with it; upstream
+  CI passed one run at v0.4.48. `TestTTL` (`main_test.go:174`) sets a key with
+  a 1 s TTL and reads it back after two more commands; under load (the race
+  detector plus other work on the host) the read came back absent once in 8
+  runs. **Fix:** the store waits on `SQLITE_BUSY` (a busy timeout or a retry
+  around the write in `kvs/store.go`) so parallel writers queue instead of
+  failing; the TTL test uses a margin wider than its command latency.
+  Measured: `kvs/main_test.go::TestParallelIncrLosesNoUpdate`,
+  `kvs/main_test.go::TestTTL`.
 
 ## spec-lint
 
@@ -929,11 +1071,11 @@
   `git -c credential.helper= -c credential.helper='!gh auth git-credential'
   <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>`,
   asserted by `dockbox/test.sh:468`. `skills/global/SKILL.md:122-130` names
-  `ghpush` and `ghfetch` (rig) as the agent's push and fetch, so the recipe is
+  `rip -g` and `rif -g` (rig) as the agent's push and fetch, so the recipe is
   a second push path in another form. It matches neither `Bash(git push*)`
-  (the command starts `git -c`) nor `Bash(ghpush *refs/heads/master*)`
+  (the command starts `git -c`) nor `Bash(rip -g *refs/heads/master*)`
   (`settings-recommended.json:18,25`), so a push to master through it meets
-  no ask rule. **Options:** (a) route the box at `ghpush`/`ghfetch`, which
+  no ask rule. **Options:** (a) route the box at `rip -g`/`rif -g`, which
   needs rig in the image (`grep -n -w rig dockbox/Dockerfile` is empty);
   (b) keep the recipe and add an ask rule for it. **Default if nothing is
   decided:** as written. No test — design.

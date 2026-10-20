@@ -50,9 +50,9 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks the
 unsafe shell commands `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names,
-and recursive Codex execution inside Codex. A push, `git push` or `ghpush`, is
+and recursive Codex execution inside Codex. A push, `git push` or `rip -g`, is
 NOT blocked here: `skills/global` § Git gates every push on the user's ask, and
-the settings `ask` rules gate `git push` and a `ghpush` to `master` or `main`.
+the settings `ask` rules gate `git push` and a `rip -g` to `master` or `main`.
 
 It also refuses a `gh` command that posts GitHub text whose body fails
 `gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr
@@ -76,11 +76,10 @@ transcript — Codex, a payload without the field — refuses too: the user
 submits by hand. Posting the review without `event` stays PENDING and needs
 no ask. The lint is WISDOM § Git
 made checkable: `🤖 ` before the first word and the robot nowhere else, none
-of the harness footer, the `**TL;DR:**` lead with nothing after it but up to
-three review bullets and `Closes #N` lines, and no header, table, rule,
-checkbox or code block in a PR body, the 240-char cap on a comment, the size
-caps (1,800 chars for a PR, 3,000 for an issue), marketing words, shortened
-hashes. By hand: `python3
+of the harness footer, the `**TL;DR:**` lead with nothing after it but
+`Closes #N` lines, and no bullet, header, table, rule, checkbox or code block
+in a PR body, the 240-char cap on a comment, the size caps (400 chars for a
+PR, 3,000 for an issue), marketing words, shortened hashes. By hand: `python3
 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with `--draft` and
 `--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run it as their
 completion criterion.

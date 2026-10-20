@@ -51,6 +51,9 @@ ALWAYS resolve the base to a commit SHA, then create the sub's checkout:
 git worktree add --detach <repo-root>/.<name> <sha>
 ```
 
+A hidden dir in the repo root, NEVER a sibling; a bare `worktree add` attaches
+a branch, so ALWAYS `--detach`.
+
 ALWAYS give the sub that path, the fork SHA and its owned files; require all
 edits there and verify `git -C <path> branch --show-current` prints nothing.
 ALWAYS reconcile and verify the diff before removing it (§ Removing a worktree).

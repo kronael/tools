@@ -1,5 +1,170 @@
 # Changelog
 
+## [v0.4.52] — 20261019
+
+> kronael v0.4.52 — Subtraction before additions
+>
+> Engineering and review skills require subtraction and simpler data models before adding code.
+>
+> • Engineering — preserve required behavior while removing mechanisms and simplifying state.
+> • Refine — additions need a measured requirement that simpler code cannot satisfy.
+> • Guidance — engineering rules live in their owning skills; Git approval safeguards stay intact.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Prefer subtraction and simpler models, views and state handling before adding mechanisms.
+- Require evidence for additions during refine; preserve required behavior.
+- Keep engineering rules in their owning skills and retain Git approval safeguards.
+
+## [v0.4.51] — 20261018
+
+> kronael v0.4.51 — Docker inside the sandbox
+>
+> Dockbox requires gVisor and runs nested Docker without sharing the host daemon.
+>
+> • Runtime — every new box uses gVisor; unsafe re-entry fails visibly.
+> • Docker — `-D` starts an independent daemon inside the sandbox.
+> • Sessions — SSH/GPG forwarding and optional sudo work through the dedicated runtime.
+> • Cleanup — failed startup and nested-daemon death remove boxes and anonymous volumes.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Dockbox requires the `runsc-dockbox` runtime and rejects incompatible existing boxes.
+- `-D` provides ephemeral Docker storage; `-H` is unavailable.
+- `DOCKBOX_DOCKER` selects the host Docker command without changing the caller's identity.
+- Failed boxes retain visible diagnostics and exit status before container and volume removal.
+
+### Operator note
+
+Install the complete gVisor bundle and configure `runsc-dockbox` with all four
+runtime arguments in [dockbox installation](dockbox/README.md#install).
+Reload Docker after preserving the daemon's other settings. Recreate existing
+boxes before re-entry. `-D` uses a separate ephemeral daemon and grants no host
+Docker socket. Forwarded sockets retain their host authority. `-H` is rejected.
+Where Docker requires sudo, set `DOCKBOX_DOCKER='sudo -n docker'`.
+
+## [v0.4.50] — 20261017
+
+> kronael v0.4.50 — SSH remotes, plainer py rules
+>
+> Agents keep git remotes on SSH, and Python gets rules against annotations that switch the type checker off.
+>
+> • Git — no HTTPS URL goes into a remote; `rip -g` stays the token push path.
+> • py — no widening to `object` or `Any` to quiet the checker; take `Mapping`/`Sequence` instead.
+> • py — an f-string never contorts around its own quotes; bind the value to a local first.
+> • code — no scripted string-replace edits; AST tools such as `ruff --fix` stay allowed.
+> • astra — a second opinion never launches the model you already run on.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Git: NEVER write an HTTPS URL into any remote (`set-url`, `remote add`).
+- `py`: bans dodge annotations, invariance widening and contorted f-strings.
+- `software/code.md` owns the no-scripted-edit rule; `lsp.md` points to it.
+- `astra`: the self-call rule covers second opinions only.
+
+## [v0.4.49] — 20261016
+
+> kronael v0.4.49 — rip -g pushes, the v0.4.41 hooks stay
+>
+> `rip -g`/`rif -g` replace ghpush and ghfetch, Python and SQL gain record rules, and the hooks return to their v0.4.41 shape.
+>
+> • rig — `rip -g` pushes and `rif -g` fetches with the gh token; `ghpush` and `ghfetch` are gone.
+> • Settings — a `rip` or `rig` command that names master or main asks first.
+> • py — a dataclass for every value, pydantic at the boundary, `Record(**row)` from own SQL rows.
+> • sql — a closed set is a SMALLINT behind an IntEnum; a db function names its verb and result.
+> • code — `_loop` runs for the process's life, `do_` tries once; a timeout is never retried.
+> • Hooks — the v0.4.41 hooks and caveman stay, LOCAL.md reaches the model; the redesign is out.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- `rig`: `rif` fetches origin; `rip -g` and `rif -g` push and fetch over HTTPS with the `gh` token.
+- `settings-recommended.json`: `ask` for a `rip` or `rig` command that names `master` or `main`.
+- `py` § Named Data Structures: a dataclass for every value; pydantic at the boundary; one codec.
+- `py`: `Record(**row)` from own SQL rows; pure classmethod constructors and properties on a record.
+- `py`: a `Protocol` is named `<Verb>able` or `<Noun>Like`.
+- `py`: the property ban and `py-no-property` name a record's derived value as an exception.
+- `sql`: closed sets as `SMALLINT` with an `IntEnum`; db functions name verb plus result.
+- `sql`: each statement sits directly above the one function that runs it.
+- `software/code.md`: `<what>_loop` and `do_<what>` names; in-job retry only for fast failures.
+
+### Changed
+
+- `rig`: `ghpush` and `ghfetch` are removed and `rig install` deletes their links.
+- WISDOM § Git and the skills name `rip -g` and `rif -g` as the agent's push and fetch.
+- Hooks, `output-styles/caveman.md`, `pr-draft` and `gh-comment` stay as in v0.4.41.
+- Not in this release: the v0.4.42–v0.4.48 hook redesign (`style_nudge`, `lib/reminder`, `kvs`).
+- Not in this release: the 1800-character PR cap and the STE move out of `caveman.md`.
+- `kvs` ships as a standalone tool; the hooks do not use it.
+- The prompt hook's caveman summary repeats the style's tiers, bullet cap and table rule.
+
+### Fixed
+
+- `hooks/local.py`: LOCAL.md and the continuation rules reach the model as UserPromptSubmit context.
+- `hooks/gh_text_lint.py`: an image in a PR body is refused, as `pr-draft` states.
+- `codex-hooks.json`: the PreToolUse matcher names `Bash`, so the command gates run under Codex.
+
+## [v0.4.48] — 20261016
+
+> kronael v0.4.48 — hooks point at skills and remember misses in kvs
+>
+> Hooks point at skills in one XML line and remember misses in kvs, so the caveman reminder stops flooding the context.
+>
+> • kvs — a key-value store CLI on one SQLite file, with sessions, CAS, incr and a flock-style lock.
+> • Hooks — every injection is one XML pointer to a skill; Stop measures the reply and never asks for a rewrite.
+> • Caveman — self-contained chat rules that name STE in one line; reminders escalate only on repeated misses.
+> • Conventions — user programs keep state under XDG; refine asks the redesign question for workaround code.
+> • Codex — the footer config ships with the tools, and skill parity is checked.
+
+## [v0.4.47] — 20261016
+
+> kronael v0.4.47 — the review submit asks in the permission dialog
+>
+> The review submit asks in the permission dialog, haiku and luna join the tiers, and the owner's corrections land in their skills.
+>
+> • Review submit — the hook asks in the permission dialog, which shows the exact command to approve.
+> • Codex — a submit is denied there and the agent hands the user the exact command to run.
+> • /haiku and /luna — the fan-out tier in Claude and Codex; dispatch § Tiers lists every lane.
+> • Writing — the ASD-STE100 rules live in the writing skill; a README carries the project Glossary.
+> • Code and docs — a library returns Result, a comment is a few words, one home per doc section.
+> • WISDOM — the global file's overlapping bullets merge, 210 to 196 lines, no rule cut.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `pretool_nudge`: a review submit gets `permissionDecision: ask`; the typed `SUBMIT REVIEW` gate is gone.
+- `pretool_nudge`: under Codex a submit is denied with the command for the user; every decision is
+  `hookSpecificOutput.permissionDecision` with its reason.
+- `gh-comment` § Submit, `review`: the submit runs on the user's ask, approved in the permission dialog.
+- WISDOM § Agents: caps are 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable`; `luna` counts as `haiku`.
+- `haiku`, `luna`: Haiku 5.5 and `gpt-6-luna` at medium take fan-out and bounded edits; lanes: `dispatch` § Tiers.
+- Prompt nudge: `haiku`, `luna` and `terra` route on the explicit form only (`use X`, `/X`).
+- `writing` § Language: the ASD-STE100 rules; `caveman` keeps the same bullets for chat (`tests/drift_test.sh`).
+- `readme`: README item 4 is the Glossary; one home per doc section; one diagram beside its list; an
+  example file says why it exists. `writing`: a list keeps the reader's order in every doc.
+- `code.md`, `rs`: library code returns an error and only `main` or a test panics, with clippy denies;
+  an allowed comment is a few words; a field is validated once against the value the code derives.
+- `rs`: body items are imported; a rare crate item goes through its module; macros keep `$crate::`.
+- `mk`: no `help` target, `.DEFAULT_GOAL := help` or `##` descriptions; 1-3 files get plain rules.
+- WISDOM: overlapping bullets merged, body 210 → 196 lines; `BUGS.md` closes GLOBAL-SKILL-BODY-OVER-CAP and
+  records MK-REPO-MAKEFILES-KEEP-HELP-TARGETS; box `haiku` aliases pin Haiku 4.5; `sol` and `terra` share a model.
+
+## [v0.4.46] — 20261015
+
+> kronael v0.4.46 — Shared style reminders, quieter guest boot
+>
+> Claude and Codex receive the same per-prompt style reminder, and qemubox reduces boot console output.
+>
+> • Caveman — one canonical reminder across prompt, tool and compaction hooks.
+> • Codex and Claude — each prompt receives one reminder when the style is selected.
+> • qemubox — `loglevel=5` reduces console work while preserving guest diagnostics.
+> • Recall — memory searches keep the intended project scope.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The canonical style supplies the reply budget and delivery self-check; model compliance remains imperfect.
+- qemubox retains its q35 machine and existing image format.
+
 ## [v0.4.45] — 20261015
 
 > kronael v0.4.45 — Codex starts inside qemubox, PR bodies get review pointers

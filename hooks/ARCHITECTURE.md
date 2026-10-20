@@ -183,7 +183,9 @@ otherwise silent. Always exits 0 — never blocks a tool call.
 
 **Input:** JSON with `prompt`, `session_id`, `cwd`, and hook event identity
 (`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
-**Output:** `{"ok": true, "systemMessage": "<content>"}` or silent.
+**Output:** on UserPromptSubmit `{"hookSpecificOutput": {"hookEventName":
+"UserPromptSubmit", "additionalContext": "<content>"}}`; on PreCompact
+`{"ok": true, "systemMessage": "<content>"}`; or silent.
 Codex runs this through `codex_hook.py`; PreCompact context output is
 suppressed there to avoid invalid Codex hook JSON.
 

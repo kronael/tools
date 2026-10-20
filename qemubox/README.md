@@ -120,7 +120,9 @@ ignored on re-entry — use `-n <name>` for a separately-mounted box.
 The per-VM lock covers setup, session markers, shutdown and removal.
 A new session waits for full guest readiness before it runs.
 `QEMUBOX_READY_TIMEOUT` sets the wait limit in seconds (default 180);
-a timeout prints the serial log tail. HUP and TERM remove the session marker.
+a timeout prints the serial log tail. The kernel uses `loglevel=5` to keep
+warnings and errors visible without routine boot messages. Guest setup errors
+still reach the serial log. HUP and TERM remove the session marker.
 Dead host PID markers are removed under the lock. A failed marker listing
 keeps the VM up and reports an error.
 

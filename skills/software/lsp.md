@@ -24,7 +24,7 @@ skill; listings and comment edits in `astgrep`.
   bytes (Python 7.4x, Go 3.1x).
 - One text change across many files that is no symbol (a config key, a log
   string): ALWAYS list every hit with `rg -n` before the edit and read `git
-  diff` after — NEVER a blind `sed -i`.
+  diff` after; `code` § System changes bans the scripted replace.
 
 ## The rule that bites
 

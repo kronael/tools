@@ -1,6 +1,6 @@
 ---
 name: terra
-description: "/terra — GPT-6.1 Sol workhorse subagent. NOT for second opinions (use /oracle) or design calls (use /opus)."
+description: "/terra — GPT-6.1 Sol workhorse subagent, the Codex counterpart of /sonnet. NOT for mapping or a bounded mechanical edit (use /luna), second opinions (use /oracle) or design calls (use /opus)."
 when_to_use: "terra, GPT-6.1 Sol worker, Codex workhorse, delegate to Sol, cross-model implementation, cross-model investigation, cross-model pre-review, cross-model plan step"
 user-invocable: true
 ---
@@ -37,8 +37,8 @@ codex exec --ephemeral --sandbox read-only -C "<worker directory>" \
 - ALWAYS ask the worker to return changed files, commands and outputs, and
   deviations. ALWAYS inspect its result before using it.
 - ALWAYS follow `worktree` for editing workers.
-- NEVER use Terra for a routine lookup or bounded mechanical edit. ALWAYS use
-  direct tools for those tasks.
+- NEVER use Terra for a routine lookup, a mapping sweep or a bounded mechanical
+  edit — ALWAYS a lookup in direct tools, the rest on `/luna`.
 
 ## Plan, then execute
 

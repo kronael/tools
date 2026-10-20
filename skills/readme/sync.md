@@ -40,7 +40,9 @@ runs inline. A subagent that loaded this skill runs the pass itself.
       states it. Without one, the README states it.
    5. How to start — a runnable copy-paste block that produces visible output.
    Every domain term that survives into the body gets a plain-English
-   definition at first use. Then Installation, Usage (copy-paste examples,
+   definition at first use, and a **Glossary** section holds them all: every
+   term the docs use comes from it (`writing` § Language). Then Installation,
+   Usage (copy-paste examples,
    or with a docs site the one example of `topology.md` § README as a
    docs-site hub), Running, Configuration (required only), and a closing
    **"How to read this"** section naming which file answers which question,

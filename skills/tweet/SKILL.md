@@ -8,8 +8,7 @@ user-invocable: true
 # Tweet
 
 A tweet is a verified claim with a hook, read by a peer who scrolls past
-marketing. Voice and vocabulary come from the `writing` skill, which
-points at the Language section of `~/.claude/output-styles/caveman.md`; its
+marketing. Voice and vocabulary come from the `writing` skill § Language; its
 one-clause sentences and named actors are also what fits in 280 characters.
 An explicitly requested voice wins over both.
 
@@ -101,7 +100,7 @@ defines them:
 1. DISTILL — the first draft is never the deliverable. Cut every word that
    does not change the claim.
 2. `humanize` — the finishing pass, draft and audit kept internal. For the
-   claim tweets the Language section outranks the personality it suggests.
+   claim tweets `writing` § Language outranks the personality it suggests.
 3. REVIEW-ON-WISDOM — re-read the result against: every number traced in the
    source notes; no absolute the source does not state; the caveat visible to
    the reader; no marketing word, markdown, hashtag or teaser; the link out

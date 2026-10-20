@@ -15,7 +15,7 @@ commands/                   bundle — slash commands (caveman)
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
 codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
 codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
-RECLAUDE.md                 template for ~/.claude/RECLAUDE.md (reclaude hook input)
+RECLAUDE.md                 bundle file installed as ~/.claude/RECLAUDE.md; no hook reads it (BUGS.md RECLAUDE-MD-UNREAD)
 AGENTS.md                   notes for non-Claude agents (Codex)
 COOKBOOK.md                 daily git recipes (detached HEAD with rig)
 BUGS.md                     open issues
@@ -25,7 +25,7 @@ lints/                      fixture harness for the ast-grep lint rules (make li
 tests/                      repo-level tests (qemubox/dockbox alias drift)
 .github/                    CI workflows, generated from .github/templates/
 sgconfig.yml                ast-grep config listing the skill lint rule dirs
-udfix/, dockbox/, rig/, ... standalone CLI tools (each independent; inventory in README.md)
+udfix/, kvs/, rig/, ...   standalone CLI tools (each independent; inventory in README.md)
 ```
 
 ## Sync paths, one source

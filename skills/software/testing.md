@@ -11,7 +11,7 @@
 - **unit**: fast, no external deps (<5s)
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
-- The `make test` / `test-all` / `smoke` tiers: WISDOM § House conventions.
+- The `make test` / `test-all` / `smoke` tiers: `code.md` § House conventions.
 - Unit tests live next to the code (`*_test.go`, `test_*.py`); integration
   tests in a dedicated `tests/` directory
 
