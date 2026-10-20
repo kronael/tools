@@ -26,6 +26,7 @@ make install
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
 `qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
+`build-base` and `rm` remove each base that is not current and that no VM uses.
 
 System packages:
 

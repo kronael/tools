@@ -1471,7 +1471,7 @@ case "${1:-}" in
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
-    rm) shift; remove_boxes "$@"; exit $? ;;
+    rm) shift; rc=0; remove_boxes "$@" || rc=$?; prune_bases || rc=1; exit "$rc" ;;
     stop) shift; stop_boxes "$@"; exit $? ;;
     prune) prune_boxes "${2:-2160}"; exit $? ;;
     build-base)
@@ -1480,7 +1480,9 @@ case "${1:-}" in
             ""|-f|--force) [ -n "${2:-}" ] && force=1 ;;
             *) echo "unknown build-base option: $2" >&2; exit 2 ;;
         esac
+        prune_bases
         build_base "$force"
+        prune_bases
         exit 0 ;;
     -h|--help|help) usage; exit 0 ;;
 esac
