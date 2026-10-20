@@ -771,7 +771,7 @@ start_box() {
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
         -serial "file:$dir/serial.log" \
         -qmp "unix:qmp,server=on,wait=off" \
-        -display none -daemonize -pidfile "$dir/pid" 9>&-)
+        -display none -no-reboot -daemonize -pidfile "$dir/pid" 9>&-)
     booted=1
     note "waiting for guest setup on 127.0.0.1:$port"
     wait_ready "$name" boot
