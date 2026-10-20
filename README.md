@@ -9,7 +9,7 @@ Command-line utilities and Claude Code configuration.
 - [dockbox](dockbox/) — gVisor sandbox for Claude Code or Codex; requires `runsc-dockbox`
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
-- [diskclean](diskclean/) — free disk space in three levels: build dirs and caches, old rustup toolchains, stopped VMs and unused docker images
+- [diskclean](diskclean/) — free disk space in two levels, stalest first, with a proof per kind: build dirs inside projects at level 1; toolchains, tool caches and unused docker images at level 2
 - [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`rip -g`, `rif -g`); git aliases (`gco`, `gif`, `gib`, and more)
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
