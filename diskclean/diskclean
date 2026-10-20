@@ -1,0 +1,135 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+usage() {
+    cat <<'EOF'
+usage: diskclean [-1|-2|-3] [dir...]
+
+Free disk space at level 1 (default), 2 or 3. Each level runs the levels
+below it first, lists what it removes and asks y/N.
+  -1  empty node_modules beside a package.json and target beside a
+      Cargo.toml under dir... (default ~), skipping hidden dirs and keeping
+      target/deploy; prune the pnpm, bun, pre-commit and yay caches and
+      dangling docker images
+  -2  uninstall numbered rustup toolchains such as 1.82.0-..., keeping
+      stable, nightly, linked ones and the default
+  -3  qemubox prune 0, dockbox prune 0, docker images no container uses,
+      anonymous docker volumes no container uses
+EOF
+}
+
+confirm() {
+    local answer
+    read -r -p "$1 [y/N] " answer
+    [[ $answer == [yY] ]]
+}
+
+run_installed() {
+    if command -v "$1" >/dev/null
+    then
+        "$@"
+    else
+        echo "skip: $1 not installed" >&2
+    fi
+}
+
+find_build_dirs() {
+    local dir manifest
+    while IFS= read -r -d '' dir
+    do
+        case ${dir##*/} in
+            node_modules) manifest=package.json ;;
+            target) manifest=Cargo.toml ;;
+        esac
+        if [[ -f ${dir%/*}/$manifest ]]
+        then
+            printf '%s\0' "$dir"
+        fi
+    done < <(find -H "$@" -xdev -mindepth 1 -name '.*' -prune -o \
+        -type d \( -name node_modules -o -name target \) -prune -print0)
+}
+
+level1() {
+    local dirs dir
+    mapfile -d '' -t dirs < <(find_build_dirs "$@")
+    if (( ${#dirs[@]} ))
+    then
+        du -shc -- "${dirs[@]}"
+    else
+        echo "no node_modules or target dirs under $*"
+    fi
+    echo "then: pnpm store prune, bun pm cache rm, pre-commit gc, yay -Sc," \
+        "docker image prune"
+    confirm "level 1: empty these dirs (keeping target/deploy) and prune?" ||
+        return 0
+    for dir in "${dirs[@]}"
+    do
+        find "$dir" -mindepth 1 -maxdepth 1 ! -name deploy -exec rm -rf -- {} +
+    done
+    run_installed pnpm store prune
+    run_installed bun pm cache rm
+    run_installed pre-commit gc
+    run_installed yay -Sc
+    run_installed docker image prune -f
+}
+
+level2() {
+    local toolchains
+    mapfile -t toolchains < <(run_installed rustup toolchain list |
+        grep -E '^[0-9.]+-[^ ]+$' || true)
+    if (( ! ${#toolchains[@]} ))
+    then
+        echo "no numbered rustup toolchains"
+        return 0
+    fi
+    printf '%s\n' "${toolchains[@]}"
+    confirm "level 2: uninstall these toolchains?" || return 0
+    rustup toolchain uninstall "${toolchains[@]}"
+}
+
+anonymous_volumes() {
+    run_installed docker volume ls -q -f dangling=true |
+        grep -Ex '[0-9a-f]{64}' || true
+}
+
+level3() {
+    run_installed qemubox ls
+    run_installed dockbox ls
+    run_installed docker system df
+    echo "anonymous volumes no container uses:"
+    anonymous_volumes
+    echo "dockbox and qemubox images need a rebuild after this"
+    confirm "level 3: prune VMs and boxes, remove unused images and volumes?" ||
+        return 0
+    run_installed qemubox prune 0
+    run_installed dockbox prune 0
+    run_installed docker image prune -a -f
+    anonymous_volumes | xargs -r docker volume rm
+}
+
+level=1
+case ${1:-} in
+    -h|--help) usage; exit 0 ;;
+    -[123]) level=${1#-}; shift ;;
+    -*) echo "diskclean: unknown option $1" >&2; usage >&2; exit 2 ;;
+esac
+for dir in "$@"
+do
+    [[ -d $dir ]] || { echo "diskclean: not a directory: $dir" >&2; exit 2; }
+done
+if (( ! $# ))
+then
+    set -- "$HOME"
+fi
+
+df -h / "$HOME"
+level1 "$@"
+if (( level >= 2 ))
+then
+    level2
+fi
+if (( level >= 3 ))
+then
+    level3
+fi
+df -h / "$HOME"
