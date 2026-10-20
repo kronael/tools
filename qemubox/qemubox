@@ -998,7 +998,7 @@ build_base() (
         note "creating ext4 base in /tmp"
         mke2fs -q -t ext4 -F -d "$tmp/rootfs.tar" "$tmp/rootfs.raw" 20G
         note "converting base to qcow2"
-        qemu-img convert -O qcow2 "$tmp/rootfs.raw" "$base.qcow2.tmp"
+        qemu-img convert -c -O qcow2 -o compression_type=zstd "$tmp/rootfs.raw" "$base.qcow2.tmp"
         mv "$base.vmlinuz.tmp" "$base.vmlinuz"
         mv "$base.initrd.tmp" "$base.initrd"
         mv "$base.qcow2.tmp" "$base.qcow2"
