@@ -1084,6 +1084,16 @@
 
 ## qemubox
 
+- **QEMUBOX-SSH-READS-TERMINAL** (LOW, ux) — open (record only), no test.
+  `ssh_plain_box` (`qemubox/qemubox:548`) runs `ssh` without `-n`, so every
+  helper SSH call reads the terminal. A `qemubox rm <box> &` job stops on
+  SIGTTIN at the `fstrim` call and looks like it waits for input until `fg`.
+  On 2026-10-21 both the `fstrim` and the `poweroff` SSH calls then failed,
+  cause not found, and `rm` sat the full 90 s guest wait before QMP `quit`.
+  Part 3 runs the shutdown as `ExecStop` with no terminal; the other helper
+  calls (`ls`, start-up) keep the read. **Fix:** `ssh -n` in `ssh_plain_box`,
+  except the calls that feed a heredoc.
+
 - **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
   When the host disk fills, QEMU pauses the guest with `io-error`.
   `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
