@@ -1084,6 +1084,14 @@
 
 ## qemubox
 
+- **QEMUBOX-DOCKER-MODE-PARITY** (MED, design) — owner decision, no test — design.
+  `-D` in `qemubox/qemubox` forwards the host Docker socket. Dockbox's `-D`
+  starts an isolated Docker daemon inside the box. The flag contract needs a
+  decision before dockbox removal. **Options:** (a) make `-D` start guest Docker
+  and expose host forwarding as `--host-docker`; (b) keep `-D` for host forwarding
+  and add an explicit guest Docker option. **Default if nothing is decided:**
+  keep the current flag contract and retain dockbox until parity passes.
+
 - **QEMUBOX-SSH-READS-TERMINAL** (LOW, ux) — open (record only), no test.
   `ssh_plain_box` (`qemubox/qemubox:548`) runs `ssh` without `-n`, so every
   helper SSH call reads the terminal. A `qemubox rm <box> &` job stops on
