@@ -38,7 +38,9 @@
   `~/.claude/projects/-/399a5e4c-d151-43d2-8aeb-292ba1c6b8a1.jsonl`, in a
   root-owned dir a session run as root from `/` left.
   Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
-  Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
+  Agent 'NEEDS TELLING'`. A dangling symlink to a subagent transcript in a
+  container home stops it the same way with `FileNotFoundError` (2026-10-21).
+  **Fix:** catch `OSError`, skip the file with one stderr line naming it.
 
 - **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED at
   HEAD 2026-10-06. `hooks/prompt_nudge.py` sends any prompt with
