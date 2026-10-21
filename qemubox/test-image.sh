@@ -4,6 +4,37 @@ awk '/^RUN printf/{block=$0;next} {block=block ORS $0}
     sed '1s/^RUN //; s|> /usr/local/bin/qemubox-init.*|> "$image_init"|' > "$fixture/extract-init"
 source "$fixture/extract-init"
 
+codex_wrapper_test() {
+    ssh_plain_box() { :; }
+    guest_note() { :; }
+    ssh_stream_box() {
+        printf '%s\n' "$2" |
+            sed -n '/^#!\/bin\/sh$/,/^EOF$/{/^EOF$/d;p;}' \
+                >> "$fixture/emitted-codex"
+    }
+    setup_guest_runtime vm
+    sed 's|/opt/dev-tools/bun/bin/codex|"$QEMUBOX_TEST_CODEX"|' \
+        "$fixture/emitted-codex" > "$fixture/codex-wrapper"
+    grep -Fq 'exec "$QEMUBOX_TEST_CODEX" ' "$fixture/codex-wrapper"
+    cat > "$fixture/fake-codex" <<'EOF'
+#!/bin/sh
+printf '%s\0' "$CODEX_HOME" "$CODEX_SQLITE_HOME" "$@" > "$QEMUBOX_TEST_ARGS"
+EOF
+    chmod +x "$fixture/fake-codex"
+    CODEX_HOME="$HOME/.codex" CODEX_SQLITE_HOME=/tmp/codex-sqlite \
+        QEMUBOX_TEST_CODEX="$fixture/fake-codex" \
+        QEMUBOX_TEST_ARGS="$fixture/codex-args" \
+        sh "$fixture/codex-wrapper" resume 'session with spaces' \
+            -c 'model_reasoning_effort="xhigh"' '' 'literal $HOME $(false)'
+    printf '%s\0' "$HOME/.codex" /tmp/codex-sqlite \
+        --no-daemon --dangerously-bypass-approvals-and-sandbox \
+        resume 'session with spaces' -c 'model_reasoning_effort="xhigh"' \
+        '' 'literal $HOME $(false)' > "$fixture/want-codex-args"
+    cmp "$fixture/want-codex-args" "$fixture/codex-args"
+}
+regression "guest Codex avoids the shared daemon and preserves user arguments" \
+    codex_wrapper_test
+
 sshd_test() {
     grep -q "'StreamLocalBindUnlink yes'" "$here/../dockbox/Dockerfile"
 }

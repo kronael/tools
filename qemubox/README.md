@@ -181,6 +181,9 @@ variable. At shutdown the databases disappear with any prompts still queued in
 them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
 start.
 
+The guest Codex wrapper sets `--no-daemon` to avoid the host's shared background
+server. The wrapper cannot run `codex agents`, `codex queue`, or `--remote` sessions.
+
 Guest disk build data survives boots until removal. `/tmp` data disappears at
 shutdown. A failed mount stops launch.
 

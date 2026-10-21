@@ -831,7 +831,8 @@ mkdir -p ~/.docker/run ~/.gnupg
 chmod 700 ~/.gnupg
 sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
 #!/bin/sh
-exec /opt/dev-tools/bun/bin/codex --dangerously-bypass-approvals-and-sandbox "$@"
+exec /opt/dev-tools/bun/bin/codex --no-daemon \
+    --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/codex'
     guest_note "$HOSTNAME" "$(box_dir "$name")/config/ephemeral" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
@@ -1042,14 +1043,10 @@ list_boxes() {
                 use="?"
             fi
         fi
-        # Guest view: used = total - available, cache = page cache without
-        # tmpfs, tmpfs = shmem; the host RAM column is QEMU's resident size.
         if [ "$state" = running ] && mem=$(ssh_plain_box "$name" \
             "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo")
         then
             read -r -d '' t a c sh <<< "$mem" || true
-            # Guest output is untrusted: bash arithmetic runs command
-            # substitutions in array indexes, so accept digits only.
             if [[ "$t$a$c$sh" =~ ^[0-9]+$ && -n "$t" && -n "$a" && -n "$c" && -n "$sh" ]]
             then
                 used=$(human_kib $((10#$t - 10#$a)))
