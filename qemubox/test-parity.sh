@@ -55,6 +55,23 @@ eq "missing rc is empty" "${#rc_tokens[@]}" 0
 [ "$?" -eq 0 ] && ok || { cat "$fixture/project-rc.log"; bad "project rc safe subset"; }
 rm -f "$PROJ/.qemuboxrc"
 
+project_persist_test() {
+    local paths
+    dirs=("$PROJ"); persist_builds=""; eph_no_tmpfs=""
+    mkdir -p "$PROJ/node_modules"
+    stage_ephemeral "$fixture/rc-builds"
+    mapfile -d '' -t paths < "$fixture/rc-builds"
+    [[ "${#paths[@]}" -gt 1 ]]
+    printf '%s\n' --no-ephemeral > "$PROJ/.qemuboxrc"
+    project_rc "$PROJ"
+    stage_ephemeral "$fixture/rc-builds"
+    mapfile -d '' -t paths < "$fixture/rc-builds"
+    [[ "${#paths[@]}" -eq 1 ]]
+}
+regression "project --no-ephemeral keeps build directories on the host" \
+    project_persist_test
+rm -f "$PROJ/.qemuboxrc"
+
 (
     set -e
     git init -q "$fixture/git-main"

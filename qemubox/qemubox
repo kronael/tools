@@ -1332,8 +1332,13 @@ read_rc() {
 }
 
 project_rc() {
+    local i
     [ ! "$1/.qemuboxrc" -ef "$HOME/.qemuboxrc" ] || return 0
     read_rc "$1/.qemuboxrc"
+    for i in "${!rc_tokens[@]}"
+    do
+        [[ "${rc_tokens[$i]}" != --no-ephemeral ]] || rc_tokens[$i]=-P
+    done
     OPTIND=1
     while getopts ":n:d:x:e:v:HKUADgGPBTSN" opt "${rc_tokens[@]}"
     do
