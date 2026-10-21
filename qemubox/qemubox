@@ -1518,7 +1518,7 @@ EOF
 [ -n "${QEMUBOX_LIB:-}" ] && return 0
 
 case "${1:-}" in
-    ls) list_boxes; exit 0 ;;
+    ls) list_boxes | column -t -s $'\t'; exit 0 ;;
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
