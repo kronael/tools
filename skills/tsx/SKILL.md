@@ -1,7 +1,7 @@
 ---
 name: tsx
 description: Frontend React/Next.js. NOT for plain TypeScript without JSX (use ts).
-when_to_use: editing .tsx files or writing React components with JSX
+when_to_use: editing .tsx files or writing React components with JSX; web app security, CSP, Content-Security-Policy, response headers, Trusted Types, dangerouslySetInnerHTML, cookie flags, SES lockdown, harden, Compartment, LavaMoat, supply chain, install scripts
 ---
 
 # Frontend (React / Next.js)
@@ -54,3 +54,57 @@ tooling — scaffold with `bunx create-next-app@latest --biome`, never `npx`.
 - `aria-label` on icon-only buttons
 - NEVER suppress focus outlines without replacement
 - Form inputs ALWAYS have labels
+
+## Security — a deployed app
+
+The browser never protects page code from the device owner: a client-side
+check is advice. Header values and the lockdown script order: `security.md`.
+A library ships no headers (its host app does); a prototype on localhost may
+skip lockdown and Trusted Types, never the first three rules.
+
+- ALWAYS check auth and access on the server, per request; NEVER let a
+  client check, a hidden route or an obfuscated bundle stand in for one
+- NEVER a secret in the bundle — every `VITE_*` / `NEXT_PUBLIC_*` value ships
+  to every visitor; the key lives in a server route (`ops` § Configuration)
+- ALWAYS the session in a `__Host-` cookie — `Path=/; Secure; HttpOnly;
+  SameSite=Lax`; NEVER a token in `localStorage` or a JS-readable cookie
+- ALWAYS send `Content-Security-Policy` as a response header from the server
+  that serves the bundle, NEVER `<meta http-equiv>` (`frame-ancestors` is
+  header-only): `script-src 'self'` for a static bundle, Next.js its
+  per-request nonce with `'strict-dynamic'`; NEVER `'unsafe-inline'` or
+  `'unsafe-eval'` in `script-src`
+- ALWAYS `require-trusted-types-for 'script'`; `dangerouslySetInnerHTML` takes
+  a `TrustedHTML` from a DOMPurify policy (`RETURN_TRUSTED_TYPE: true`), which
+  React ≥ 19.3 passes through — NEVER a raw string from outside the bundle
+- ALWAYS the rest of the header set with it: `X-Content-Type-Options`,
+  `Referrer-Policy`, `Cross-Origin-Opener-Policy`, `Permissions-Policy`, HSTS
+- NEVER a dependency a short local function replaces; NEVER a package in Bun
+  `trustedDependencies` or pnpm `allowBuilds` whose install script you did not
+  read; ALWAYS `minimumReleaseAge` (Bun `[install]`, seconds; pnpm, minutes)
+- NEVER a CDN script in production — bundle it; a cross-origin script that
+  must stay carries `integrity` and `crossorigin`
+- ALWAYS check `event.origin` against the one expected origin in a `message`
+  handler and name the target origin when posting; NEVER `'*'`
+- NEVER terser `unsafe*` options unless `lockdown()` is on; `unsafe_math` and
+  `unsafe_comps` stay off either way — floats and `valueOf`, not built-ins
+
+### Object capabilities (SES)
+
+Code has only the power of the references it is handed. A plain app needs
+none of this — CSP, few dependencies and the server-side check suffice.
+ALWAYS reach for it when the page runs third-party or plugin code, or holds
+a key or token a script could read:
+
+- `lockdown()` (`ses`) freezes the built-ins so no code can rewrite them;
+  your own classes and objects stay normal. ALWAYS the first script on the
+  page, before the bundle, then the whole test suite — a library that patches
+  a built-in breaks. NEVER hand-rolled `Object.freeze(Object.prototype)`: the
+  override mistake then throws on every assignment that shadows an inherited
+  property; `lockdown` repairs it (`overrideTaming`).
+- `harden(api)` freezes the object graph you hand to less-trusted code, so it
+  can call the API and not rewrite it.
+- `new Compartment(globals)` runs code with only the globals you pass — no
+  ambient `fetch` or `document`. LavaMoat does this per package on webpack or
+  browserify (no Vite plugin). A Worker or a sandboxed cross-origin iframe
+  isolates DOM-free work. NEVER count on ShadowRealm (TC39 stage 2.7) or Wasm
+  (its imports are JS the page supplies).
