@@ -1,6 +1,6 @@
 image_init="$fixture/image-init"
 awk '/^RUN printf/{block=$0;next} {block=block ORS $0}
-    / > \/usr\/local\/bin\/qemubox-init &&/{print block}' "$here/../dockbox/Dockerfile" |
+    / > \/usr\/local\/bin\/qemubox-init &&/{print block}' "$here/Dockerfile" |
     sed '1s/^RUN //; s|> /usr/local/bin/qemubox-init.*|> "$image_init"|' > "$fixture/extract-init"
 source "$fixture/extract-init"
 
@@ -36,12 +36,12 @@ regression "guest Codex avoids the shared daemon and preserves user arguments" \
     codex_wrapper_test
 
 sshd_test() {
-    grep -q "'StreamLocalBindUnlink yes'" "$here/../dockbox/Dockerfile"
+    grep -q "'StreamLocalBindUnlink yes'" "$here/Dockerfile"
 }
 regression "guest sshd replaces stale Unix sockets" sshd_test
 
 docker_cli_test() {
-    sed '/^FROM dockbox AS vm/,$d' "$here/../dockbox/Dockerfile" | grep -qw docker-cli
+    sed '/^FROM dockbox AS vm/,$d' "$here/Dockerfile" | grep -qw docker-cli
 }
 regression "both images install docker-cli" docker_cli_test
 
@@ -58,7 +58,7 @@ timezone_test() {
     export -f modprobe mount
     bash "$fixture/zone-init"
     [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
-    if grep -q '^RUN for key in TZ ' "$here/../dockbox/Dockerfile"; then exit 1; fi
+    if grep -q '^RUN for key in TZ ' "$here/Dockerfile"; then exit 1; fi
 }
 regression "identity and init set the UTC time zone" timezone_test
 

@@ -34,7 +34,9 @@ smoke:
 	DOCKBOX_TEST_AGENTS=1 DOCKBOX_IMAGE=$(IMAGE) DOCKBOX_DOCKER='$(DOCKBOX_DOCKER)' timeout 300s bash tests/native.sh
 
 image:
-	$(SUDO) docker build --target dockbox --build-arg AGENTS_CACHEBUST=$(shell date +%s) -t $(IMAGE) -f Dockerfile ..
+	$(SUDO) docker build --target dockbox \
+	    --build-arg AGENTS_CACHEBUST=$(shell date +%s) \
+	    -t $(IMAGE) -f ../qemubox/Dockerfile ..
 
 install: image
 	install -m 755 dockbox $(PREFIX)/

@@ -947,8 +947,8 @@ build_base() (
     set -Eeuo pipefail
     force="${1:-}"
     source_dir="${QEMUBOX_SOURCE:-$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")}"
-    [ -f "$source_dir/dockbox/Dockerfile" ] || {
-        echo "Set QEMUBOX_SOURCE to the tools repo containing dockbox/Dockerfile" >&2
+    [ -f "$source_dir/qemubox/Dockerfile" ] || {
+        echo "Set QEMUBOX_SOURCE to the tools repo containing qemubox/Dockerfile" >&2
         exit 1
     }
     read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
@@ -970,7 +970,7 @@ build_base() (
     build_args=()
     [ -z "$force" ] || build_args+=(--build-arg "AGENTS_CACHEBUST=$(date +%s)")
     "${docker_cmd[@]}" build --force-rm --target vm -t qemubox-vm \
-        "${build_args[@]}" -f "$source_dir/dockbox/Dockerfile" "$source_dir"
+        "${build_args[@]}" -f "$source_dir/qemubox/Dockerfile" "$source_dir"
     image_id=$("${docker_cmd[@]}" image inspect -f '{{.Id}}' qemubox-vm)
     image_id=${image_id#sha256:}
     [[ "$image_id" =~ ^[a-f0-9]{64}$ ]]

@@ -31,6 +31,9 @@ Trust boundaries:
 make image              # builds the (UID-agnostic) image; sessions run in UTC
 ```
 
+`make image` builds the `dockbox` target from
+[qemubox/Dockerfile](../qemubox/Dockerfile).
+
 The image has no baked user. At runtime, dockbox passes your host UID/GID
 to the container and `dockbox-init` registers you in `/etc/passwd` before
 dropping privilege. One image works for every host user — alice, bob, ondra
