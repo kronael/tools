@@ -25,6 +25,9 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS reuse the name the code, the schema, the domain and existing callers
   already give a thing — function, parameter, field, type, test helper,
   commit-message term. A new word claims that no existing name fits; earn it.
+  An endpoint is one word in its path, handler, module and model prefix:
+  `/v1/react` → `react()` in `react.py`, `ReactIn`; NEVER `react()` in
+  `reactions.py`, NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
 - ALWAYS name a parameter or local after its own type or the domain concept it
