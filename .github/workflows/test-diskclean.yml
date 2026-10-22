@@ -1,0 +1,17 @@
+---
+name: Test — diskclean
+
+on:
+    push:
+        paths: [diskclean/**]
+    pull_request:
+        branches: [master]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - run: make -C diskclean test
+            - run: bash tests/drift_test.sh

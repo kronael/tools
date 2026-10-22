@@ -1,5 +1,7 @@
 import io
 import json
+import os
+import time
 from pathlib import Path
 
 import prompt_nudge
@@ -103,7 +105,6 @@ def test_continue_routes_to_continue_skill() -> None:
         'novice',
         'pentest',
         'roi',
-        'security',
         'ux',
         'usability',
         'walkthrough',
@@ -116,6 +117,31 @@ def test_eval_lens_words_route_to_eval(word) -> None:
 def test_ship_phrasings_route_to_ship() -> None:
     for prompt in ('ship this', 'ship it', "let's ship", 'and ship it'):
         assert explicit_route(prompt) == '/ship', prompt
+
+
+def test_commit_routes_to_commit() -> None:
+    assert explicit_route('commit this') == '/commit'
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'fix the failing test',
+        'design the schema',
+        'create a config file',
+        'run it in the background',
+        'add the security headers',
+        'draft the email',
+        'the inline comment is wrong',
+    ],
+)
+def test_plain_verbs_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+def test_continuation_without_a_route_is_silent(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert run(monkeypatch, capsys, 'now wire it into main') == ''
 
 
 def test_output_reaches_the_model(monkeypatch, capsys) -> None:
@@ -169,3 +195,79 @@ def test_meta_first_prompt_is_transparent(monkeypatch, capsys) -> None:
 def test_nudge_is_keyed_by_session_not_cwd(monkeypatch, capsys) -> None:
     run(monkeypatch, capsys, 'add a feature', session_id='a')
     assert prompt_nudge.SOLVE_NUDGE in run(monkeypatch, capsys, 'add a feature', session_id='b')
+
+
+def age_previous_prompt(session_id='sess', minutes=prompt_nudge.IDLE_MINUTES + 1) -> None:
+    marker = prompt_nudge.session_state('solve-nudge', session_id)
+    old = time.time() - minutes * 60
+    os.utime(marker, (old, old))
+
+
+def test_prompt_after_idle_gap_nudges_solve(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    text = run(monkeypatch, capsys, 'study this library, could we use it?')
+    assert prompt_nudge.IDLE_NUDGE in text
+    assert prompt_nudge.SOLVE_NUDGE not in text
+
+
+def test_prompt_within_the_gap_is_silent(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt(minutes=prompt_nudge.IDLE_MINUTES - 1)
+    assert prompt_nudge.IDLE_NUDGE not in run(
+        monkeypatch, capsys, 'study this library, could we use it?'
+    )
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'cont and fin',
+        'commit this',
+        '/goal finish the migration',
+        'This session is being continued from a previous conversation that ran out of context.',
+    ],
+)
+def test_routed_prompt_after_idle_gap_is_silent(monkeypatch, capsys, prompt) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    assert prompt_nudge.IDLE_NUDGE not in run(monkeypatch, capsys, prompt)
+
+
+def test_every_prompt_restamps_the_gap(monkeypatch, capsys) -> None:
+    # A routed "cont" is silent but still the previous prompt: a task-shaped
+    # prompt one minute after it is inside the gap.
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    run(monkeypatch, capsys, 'cont')
+    assert prompt_nudge.IDLE_NUDGE not in run(monkeypatch, capsys, 'now study this library')
+
+
+def run_subagent_start(monkeypatch, capsys, agent_type, session_id='sess'):
+    data = {
+        'hook_event_name': 'SubagentStart',
+        'session_id': session_id,
+        'agent_id': 'agent-1',
+        'agent_type': agent_type,
+    }
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
+    with pytest.raises(SystemExit):
+        main()
+    out = capsys.readouterr().out.strip()
+    return json.loads(out) if out else None
+
+
+def test_subagent_start_nudges_solve(monkeypatch, capsys) -> None:
+    out = run_subagent_start(monkeypatch, capsys, 'sonnet')
+    assert out['hookSpecificOutput']['hookEventName'] == 'SubagentStart'
+    assert out['hookSpecificOutput']['additionalContext'] == prompt_nudge.SUBAGENT_NUDGE
+
+
+def test_subagent_start_does_not_consume_the_parent_first_prompt(monkeypatch, capsys) -> None:
+    # The payload carries the parent's session id.
+    run_subagent_start(monkeypatch, capsys, 'sonnet')
+    assert prompt_nudge.SOLVE_NUDGE in run(monkeypatch, capsys, 'add a feature')
+
+
+def test_harness_agent_start_is_silent(monkeypatch, capsys) -> None:
+    assert run_subagent_start(monkeypatch, capsys, 'Explore') is None

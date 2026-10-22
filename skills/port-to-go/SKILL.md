@@ -1,7 +1,7 @@
 ---
 name: port-to-go
-description: "Faithful into-Go transcode: port any source language to Go preserving behavior exactly, proven by differential traces. NOT for idiomatic Go rewrites (use go) or broad engineering runbooks (use software)."
-when_to_use: "port to Go, transcode to Go, into-Go port, faithful port, 1-to-1 translation, byte-for-byte parity, differential testing, differential harness, golden trace, language parity, Python to Go, TypeScript to Go, JS to Go, RNG desync, map iteration nondeterminism, bankers rounding, floating-point 1-ULP divergence, behavioral-fidelity seams, worktree oracle, refactor mirror, crash-vs-guard, scale and tier, N-way component parity"
+description: "Faithful into-Go transcode: port any source language to Go preserving behavior exactly, proven by differential traces. NOT for idiomatic Go rewrites (use go)."
+when_to_use: "port to Go, transcode to Go, faithful port, byte-for-byte parity, differential testing, golden trace, Python to Go, TypeScript to Go, RNG desync, map iteration nondeterminism, 1-ULP divergence, N-way component parity"
 ---
 
 # Faithful Into-Go Transcode

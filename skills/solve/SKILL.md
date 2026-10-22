@@ -1,7 +1,7 @@
 ---
 name: solve
 description: Universal entry point — invoke BEFORE any domain skill to pick the best-matching skill from every skill's frontmatter. NOT for skill authoring (use wisdom).
-when_to_use: "which skill, what should I use, start of task, before acting, route this request, new task, first message, no skill matched"
+when_to_use: "which skill, what should I use, start of task, new task, mid-session new task, prompt after a pause, subagent brief, first message, no skill matched"
 user-invocable: true
 ---
 
@@ -17,7 +17,11 @@ headings below or words like "Classification:". Wrap reasoning in
 reference to something just discussed). Skip steps 2 and 3: the skills
 that matched the prior turn still apply until the entity changes.
 
-**New task** — a distinct request, or the first message in the session.
+**New task** — a distinct request, the first message in the session, or
+the brief a subagent starts from. A prompt that names a new object of
+work — another bug, feature, file set, repo or deliverable — is a new
+task whatever opens it: `also`, `and`, `so` and `then` open new tasks as
+often as continuations, and two new tasks can arrive a minute apart.
 If unsure, treat as new task.
 
 ## 2. Recall (new task only)

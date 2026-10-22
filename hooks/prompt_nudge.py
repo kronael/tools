@@ -3,29 +3,10 @@ import json
 import os
 import re
 import sys
+import time
 
+from lib.state import hook_event
 from lib.state import session_state
-
-STYLE_RULES = """Output style — caveman, in full at ~/.claude/output-styles/caveman.md:
-- Lead with the answer. No preamble, no recap of what the diff already shows.
-- Tiers: a fact 1-3 lines, an action ≤12, an explanation ≤20, the hard ceiling.
-- ≤5 bullets of ≤2 sentences; tables and headers only for genuinely tabular content.
-- Plain words, active voice, one instruction per sentence (ASD-STE100).
-- Last line carries the next action, or the bottom line.
-- Before sending: read ONLY your first and last line. If those two do not
-  say what to DO and what HAPPENED, the middle is padding."""
-
-DOCS_RULES = """Documentation naming rules (layout: the readme skill's topology.md):
-- Organized in directories: use lowercase (specs/multi-tenancy.md, docs/setup.md); NO todos/ or plans/ dir: plans and ship records live under ~/.claude/ (ship skill § Work record), never in the repo
-- NEVER use lowercase for root documentation files (todo.md, readme.md)"""
-
-COMMIT_RULES = """Commit rules:
-- Format: "type(scope): Message" (scope optional), subject <= 72 chars (overflow -> second -m body)
-- ALWAYS commit in detached HEAD - NEVER on or creating a branch
-- NEVER git add -A, NEVER git commit -a, NEVER amend, NEVER push, NEVER squash a pushed commit (unpushed ones only via /squash)
-- NEVER skip pre-commit hooks
-- Pre-commit reformats on first run - ALWAYS retry commit once
-Invoke /commit skill."""
 
 SOLVE_NUDGE = (
     'New task (first prompt this session): run /solve before acting — it '
@@ -33,56 +14,62 @@ SOLVE_NUDGE = (
     'if this prompt is a direct continuation of work already in context.'
 )
 
+IDLE_MINUTES = 30
+
+IDLE_NUDGE = (
+    'New task? This prompt follows an idle gap: run /solve before acting '
+    'unless it continues the work already in context.'
+)
+
+SUBAGENT_NUDGE = (
+    'New task (subagent brief): run /solve before acting — it routes the '
+    'brief to the skill that owns it.'
+)
+
+HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})
+
+RESUMED_SESSION = re.compile(r'\s*This session is being continued from a previous conversation')
+
 SKILL_KEYWORDS = {
-    'architecture': '/specs',
-    'background': '/dispatch',
+    'browse': '/browse',
     'bugs': '/bugs',
     'ceo': '/eval',
+    'commit': '/commit',
     'cont': '/continue',
     'continue': '/continue',
-    'create': '/create',
     'cto': '/eval',
-    'design': '/specs',
     'diagram': '/diagrams',
     'diary': '/diary',
     'dispatch': '/dispatch',
-    'draft': '/pr-draft',
+    'distill': '/distill',
     'eval': '/eval',
     'fin': '/fin',
-    'fix': '/fix',
     'flowchart': '/diagrams',
     'humanize': '/humanize',
-    'inline': '/gh-comment',
+    'improve': '/improve',
     'merge': '/merge',
     'microcopy': '/writing',
     'novice': '/eval',
     'pentest': '/eval',
+    'readme': '/readme',
     'recall': '/recall-memories',
     'refine': '/refine',
     'release': '/release',
+    'review': '/review',
     'roi': '/eval',
     'scavenge': '/scavenge',
-    'security': '/eval',
     'ship': '/ship',
     'sonnet': '/sonnet',
     'spec': '/specs',
     'specs': '/specs',
-    'test': '/software',
-    'testing': '/software',
-    'thread': '/tweet',
     'tooltip': '/writing',
     'tweet': '/tweet',
-    'ux': '/eval',
     'usability': '/eval',
+    'ux': '/eval',
+    'visual': '/visual',
     'walkthrough': '/eval',
     'wisdom': '/wisdom',
     'writing': '/writing',
-    'readme': '/readme',
-    'improve': '/improve',
-    'visual': '/visual',
-    'distill': '/distill',
-    'review': '/review',
-    'browse': '/browse',
 }
 
 CODEX_PATTERNS = [
@@ -158,7 +145,26 @@ def first_prompt_of_session(session_id):
     return True
 
 
-def emit(text):
+def minutes_since_prompt(session_id):
+    """Minutes since this session's previous prompt, stamping this one so the
+    next call measures from it. None before the first prompt or when the
+    state dir is unusable, so an unwritable dir never nudges every prompt."""
+    marker = session_state('solve-nudge', session_id)
+    if marker is None:
+        return None
+    try:
+        previous = os.stat(marker).st_mtime
+        os.utime(marker, None)
+    except OSError:
+        return None
+    return (time.time() - previous) / 60
+
+
+def is_routed(prompt, matched):
+    return bool(matched or prompt.lstrip().startswith('/') or RESUMED_SESSION.match(prompt))
+
+
+def emit(event, text):
     # additionalContext is the only UserPromptSubmit field the model reads;
     # systemMessage renders in the transcript for the user and never reaches
     # the model.
@@ -166,7 +172,7 @@ def emit(text):
         json.dumps(
             {
                 'hookSpecificOutput': {
-                    'hookEventName': 'UserPromptSubmit',
+                    'hookEventName': event,
                     'additionalContext': text,
                 },
             }
@@ -183,38 +189,36 @@ def main():
     if not isinstance(data, dict):
         sys.exit(0)
 
+    if hook_event(data) == 'SubagentStart':
+        if data.get('agent_type') not in HARNESS_AGENTS:
+            emit('SubagentStart', SUBAGENT_NUDGE)
+        sys.exit(0)
+
     prompt = data.get('prompt') or ''
     if not isinstance(prompt, str):
         sys.exit(0)
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
-        emit(STYLE_RULES)
         sys.exit(0)
 
     parts = []
-
-    if (
-        prompt.strip()
-        and first_prompt_of_session(data.get('session_id'))
-        and not re.search(r'/solve\b', prompt)
-    ):
-        parts.append(SOLVE_NUDGE)
-
-    # Every turn. The style is in the system prompt and dilutes there; this is
-    # the copy that arrives next to the user's message.
-    parts.append(STYLE_RULES)
-
-    if re.search(r'\b(todo|readme|changelog|spec|architecture)\b|\.md\b', prompt, re.IGNORECASE):
-        parts.append(DOCS_RULES)
-
     matched = explicit_route(prompt, data.get('harness'))
+    session_id = data.get('session_id')
 
-    if re.search(r'\bcommit\b', prompt, re.IGNORECASE):
-        parts.append(COMMIT_RULES)
-    elif matched:
+    if prompt.strip():
+        if first_prompt_of_session(session_id):
+            if not re.search(r'/solve\b', prompt):
+                parts.append(SOLVE_NUDGE)
+        else:
+            idle = minutes_since_prompt(session_id)
+            if idle is not None and idle >= IDLE_MINUTES and not is_routed(prompt, matched):
+                parts.append(IDLE_NUDGE)
+
+    if matched:
         parts.append(f'info: Invoke {matched}.')
 
-    emit('\n\n'.join(parts))
+    if parts:
+        emit('UserPromptSubmit', '\n\n'.join(parts))
 
     sys.exit(0)
 

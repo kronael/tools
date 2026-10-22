@@ -63,11 +63,6 @@ Built on (other paths):
     patterns adapted from i-have-adhd © 2026 Ayoub Ghriss (@ayghri) (MIT)
     https://github.com/ayghri/i-have-adhd
 
-  dockbox/seccomp.json — seccomp/default.json from moby/profiles (Apache-2.0),
-  with the io_uring syscalls added
-    https://github.com/moby/profiles
-
-Sub-licenses are reproduced in skills/humanize/LICENSE, skills/show-me/LICENSE
-and dockbox/seccomp.LICENSE.
+Sub-licenses are reproduced in skills/humanize/LICENSE and skills/show-me/LICENSE.
 For all MIT and Apache-2.0 upstream works, copyright notices are retained
 in the respective data-file frontmatter where present.

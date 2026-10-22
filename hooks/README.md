@@ -1,6 +1,6 @@
 # Kronael Hooks
 
-Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
+Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
 unsafe-command blocks, a GitHub text gate, Markdown formatting, commit/diary
 stop checks and a session memory nudge. Scripts install to `~/.claude/hooks/`.
 
@@ -9,6 +9,12 @@ its `hooks` block is merged into `~/.claude/settings.json` by the install
 step. Codex wiring is `../codex-hooks.json`; it installs to
 `~/.codex/hooks.json` and calls `codex_hook.py` before delegating to the same
 hook scripts.
+
+Codex 0.163 fires `UserPromptSubmit` and `SubagentStart` the way Claude Code does,
+so `prompt_nudge.py` serves both harnesses and a Codex worker, native or
+`codex exec`, receives the `/solve` nudge. A new or changed command hook in
+`hooks.json` runs only after the owner trusts it in `/hooks`; until then Codex
+skips it without a message.
 
 `statusline.py` is the status-line command `settings-recommended.json` sets:
 model, context use, and the 5-hour and weekly limits in whole percent.
@@ -21,7 +27,7 @@ here, or `spec-lint specs` by hand in a project before a spec commit
 
 ## The hooks
 
-### prompt_nudge.py (UserPromptSubmit)
+### prompt_nudge.py (UserPromptSubmit + SubagentStart)
 
 Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
 telling Claude to invoke the matching skill. That field is the one
@@ -33,14 +39,25 @@ suppressed inside Codex so it never nudges Codex to invoke itself. `learn` is de
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
 
-On the first non-empty prompt of a session it also prepends a `/solve` nudge
-(triage + diary/memory load before acting), tracked by the session-keyed
-stamp `solve-nudge-{session_id}` in `~/.claude/state` (`lib/state.py`) so
-continuations stay silent. A prompt that already invokes `/solve` suppresses it.
+It also nudges `/solve` at the three points where a new task starts that a
+hook can see. The first non-empty prompt of a session (triage + diary/memory
+load before acting); a prompt that already invokes `/solve` suppresses it. A
+prompt after `IDLE_MINUTES` (30) without one, unless it is already routed — a
+keyword route, `commit`, a slash command, or the summary a resumed session
+opens with: measured over twelve sessions, a prompt after that pause was a new
+task twice as often as a continuation, while no opener word or length
+separates the two, so there is deliberately no per-prompt nudge. Both read the
+session-keyed stamp `solve-nudge-{session_id}` in `~/.claude/state`
+(`lib/state.py`): its presence marks the first prompt, its mtime the previous
+one. And `SubagentStart`, where the brief is a new task by construction: the
+nudge lands before the subagent's first prompt, except for the harness's own
+agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
-Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
-Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
-with its own maintenance.
+A prompt with no nudge and no route gets no output: the output style and the
+wisdom file sit in the system prompt already, and `SKILL_KEYWORDS` holds skill
+names and words that mean one skill only, never a plain verb such as `fix` or
+`test`. Meta prompts (hook/agent debugging) are skipped so the hook does not
+interfere with its own maintenance.
 
 ### pretool_nudge.py (PreToolUse)
 
@@ -127,9 +144,8 @@ forwards explicit `decision: block` responses.
 ### local.py (UserPromptSubmit + PreCompact)
 
 Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
-first prompt of a session and on pre-compaction. Re-injects a short
-`RULES` block on continue/recap keywords, respecting negation.
-State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
+first prompt of a session and on pre-compaction; every later prompt is
+silent. State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
 
 ### reclaude.py (PreCompact)
 
@@ -141,9 +157,9 @@ instructing the model to preserve the wisdom across the compact.
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
 -uno` shows uncommitted changes ("Run /commit"; Codex sees `@commit`) or
 today's diary entry is missing or >1h stale ("Run /diary"; Codex sees
-`@diary`). The commit nudge repeats at most every 10 minutes
-(`NUDGE_INTERVAL`); the diary nudge has no throttle: it repeats on every
-Stop until today's entry exists and is under an hour old. When called from
+`@diary`). Each nudge repeats at most every 10 minutes (`NUDGE_INTERVAL`),
+on its own stamp in the git dir, until the tree is committed or today's
+entry exists and is under an hour old. When called from
 periodic `PostToolUse`, the same checks emit advisory
 `hookSpecificOutput.additionalContext` and never block a tool call.
 

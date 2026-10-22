@@ -1,7 +1,7 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs), a one-file change (use /improve) or an inline audit (use /dispatch).
-when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
+description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs) or a one-file change (use /improve).
+when_to_use: "sweep for similar problems, find more like this across the codebase, other instances of this bug class, audit the whole repo for X pattern, fix all bugs, parity sweep"
 user-invocable: true
 ---
 

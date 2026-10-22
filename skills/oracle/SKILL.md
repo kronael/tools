@@ -1,7 +1,7 @@
 ---
 name: oracle
 description: One second-opinion router for code, planning, security/deep audit, and creative critique. NOT for routine lookups (use grep/read/recall-memories) or fire-and-forget work (use dispatch).
-when_to_use: "oracle, second opinion, sanity check, ask oracle, planning oracle, plan critique, code critique, creative critique, security audit critique, red team critique, disagreement after reasoning"
+when_to_use: "oracle, second opinion, sanity check, ask oracle, plan critique, code critique, creative critique, security audit critique, red team critique"
 user-invocable: true
 ---
 

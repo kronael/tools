@@ -133,19 +133,26 @@ def nudges(cwd, now):
         if stamp is not None:
             write_stamp(stamp, now.isoformat())
 
-    # Diary freshness (missing today or stale > 1h) — only inside a git repo.
-    # The diary lives under ~/.claude, keyed on the main tree (skills/diary).
+    # Diary freshness (missing today or stale > 1h) — only inside a git repo,
+    # at most once per NUDGE_INTERVAL on its own stamp. The diary lives under
+    # ~/.claude, keyed on the main tree (skills/diary).
     main = main_tree(cwd)
     if main is not None:
+        stamp = git_path(cwd, 'claude-diary-nudge')
         path = diary_file(main, now)
         hhmm = now.strftime('%H:%M %Y-%m-%d')
+        msg = None
         if not os.path.exists(path):
-            parts.append(f'No diary entry for today (now {hhmm}). Run /diary.')
+            msg = f'No diary entry for today (now {hhmm}). Run /diary.'
         elif now.timestamp() - os.path.getmtime(path) > 3600:
-            parts.append(
+            msg = (
                 f'Diary not updated in over an hour (now {hhmm}). '
                 'Run /diary deliberately if there is work to record.'
             )
+        if msg and nudge_due(stamp, now):
+            parts.append(msg)
+            if stamp is not None:
+                write_stamp(stamp, now.isoformat())
     return parts
 
 

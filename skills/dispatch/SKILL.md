@@ -1,7 +1,7 @@
 ---
 name: dispatch
-description: /dispatch — launch a background subagent at default model; § Tiers is the one table of every model tier, Claude and Codex. NOT for tasks the main thread needs results from inline; NOT for model-specific work (use the tier skill § Tiers names).
-when_to_use: "sub, do this in a sub, spin up a sub, do this in the background, run this separately, do X while I do Y, dispatch this, background agent, which model, which tier, which sub, model routing, pick a tier, claude sub or codex worker"
+description: /dispatch — launch a background subagent at default model; § Tiers is the one table of every model tier, Claude and Codex. NOT for results the main thread needs inline, nor model-specific work (use the tier skill § Tiers names).
+when_to_use: "sub, do this in a sub, do this in the background, run this separately, dispatch this, background agent, which model, which tier, pick a tier, claude sub or codex worker"
 user-invocable: true
 ---
 
@@ -10,6 +10,7 @@ Report what was launched. Continue immediately without waiting.
 
 - ALWAYS brief by GOAL, not numbered steps (WISDOM § Agents): the goal (what + why), the context it needs, what's out of bounds, and what "done" looks like — then let it choose the path. Shape: "I'm working on [larger task] for [who]. They need [what the output enables]. With that in mind: [request]." KEEP the verify-the-diff and evidence-backed-report nudges — those are load-bearing, not over-prompting.
 - NEVER pass a bare task — ALWAYS include scope (files/dirs), constraint ("don't touch X"), and what to return.
+- ALWAYS create a task for the run before launching and mark it complete once its result is read (WISDOM § Agents); a launched sub no task tracks is lost at compaction.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers. A written plan's decisions are not analysis — ALWAYS pass them to an executor as constraints (`sonnet` § Plan, then execute). ALWAYS quote the owner's latest decision verbatim, and NEVER keep an example that contradicts it — a sub follows the example over the words.
 - NEVER assume dispatch/`general-purpose` runs cheap — it has no effort pin, so it INHERITS the parent session's effort (xhigh under a Fable parent). ALWAYS use a tier skill (§ Tiers) when a specific effort is required; only accept dispatch when the parent's inherited effort is acceptable.
 - NEVER dispatch autonomous code generation here (WISDOM § Agents) — it goes to an `/opus` plan and one `/sonnet` sub per step.

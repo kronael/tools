@@ -1,7 +1,7 @@
 ---
 name: worktree
-description: Isolate a code-editing subagent when its change gets a separate PR, the user requests a worktree, or an applicable skill explicitly opts in. NOT for routine serial edits or read-only agents.
-when_to_use: change gets its own PR, user requests a worktree, applicable skill explicitly opts in, reconcile worktree commits, remove a worktree, stale or prunable worktree, worktree registered under a missing path
+description: Isolate a code-editing subagent when its change gets its own PR, the user asks for a worktree, or a skill opts in. NOT for serial edits or read-only agents.
+when_to_use: "change gets its own PR, user requests a worktree, reconcile worktree commits, remove a worktree, stale or prunable worktree, worktree registered under a missing path"
 ---
 
 # Worktree selection
@@ -50,6 +50,9 @@ ALWAYS resolve the base to a commit SHA, then create the sub's checkout:
 ```bash
 git worktree add --detach <repo-root>/.<name> <sha>
 ```
+
+A hidden dir in the repo root, NEVER a sibling; a bare `worktree add` attaches
+a branch, so ALWAYS `--detach`.
 
 ALWAYS give the sub that path, the fork SHA and its owned files; require all
 edits there and verify `git -C <path> branch --show-current` prints nothing.

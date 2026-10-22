@@ -1,7 +1,7 @@
 ---
 name: research
-description: Router for quantitative-research discipline — experiment layout and records, believable backtest and forecast scores, the silent wrong-number traps. NOT for engineering (use software), bot code (use data) or chart craft (use dataviz).
-when_to_use: "backtest, walk-forward, holdout, out-of-sample, train window, overfitting, t-stat, overlapping samples, Sharpe, proper scoring rule, Brier, QLIKE, unforecastable target, baseline, climatology, benchmark, HODL, beta, ex-market, round-trip cost, fees, slippage, edge in bp, null result, ablation, random gate, one knob, results log, run tag, experiment directory, report verdict, lineage, caveats, scratch vs report root, lookahead, right-labelled bars, header row eaten, unit bug, selector that never declines, rounded winner, mark-to-market PnL, code defaults as model"
+description: Router for quantitative-research discipline — experiment layout and records, believable backtest and forecast scores, the silent wrong-number traps. NOT for engineering (use software), bot code (use data) or charts (use dataviz).
+when_to_use: "backtest, walk-forward, holdout, out-of-sample, overfitting, t-stat, Sharpe, proper scoring rule, Brier, QLIKE, baseline, benchmark, HODL, ex-market, round-trip cost, slippage, edge in bp, null result, ablation, results log, run tag, experiment directory, report verdict, lookahead, unit bug, mark-to-market PnL"
 ---
 
 # Research — runbook router

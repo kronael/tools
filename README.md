@@ -6,9 +6,10 @@ Command-line utilities and Claude Code configuration.
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [kvs](kvs/) — key-value store on one SQLite file for scripts and hooks: get, set, incr, del, ls, sessions and a flock-style `lock`, scoped by project and session
-- [dockbox](dockbox/) — dockerized Claude Code or Codex sandbox
+- [dockbox](dockbox/) — gVisor sandbox for Claude Code or Codex; requires `runsc-dockbox`
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
+- [diskclean](diskclean/) — free disk space in two levels, stalest first, with a proof per kind: build dirs inside projects at level 1; toolchains, tool caches and unused docker images at level 2
 - [rig](rig/) — ripgit: detached checkout, push, rebase, merge; push and fetch over HTTPS with the `gh` token (`rip -g`, `rif -g`); git aliases (`gco`, `gif`, `gib`, and more)
 - [tw-fetch](tw-fetch/) — X archiver (cookie auth) plus a keyless post reader
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
@@ -16,7 +17,7 @@ Command-line utilities and Claude Code configuration.
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 - [spec-lint](spec-lint/) — lint a `specs/` corpus: numbering, status vocabulary, index rows, links, wording, code pointers
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `dockbox`, `qemubox`, `gloww`, `spec-lint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `dockbox`, `qemubox`, `gloww`, `spec-lint`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 

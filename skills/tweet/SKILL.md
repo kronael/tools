@@ -1,7 +1,7 @@
 ---
 name: tweet
-description: Write X/Twitter posts and threads about a project, a release or a finding. NOT for UI strings or doc prose (use writing), de-slopping an existing draft (use humanize), or the image or GIF for the post (use create or demo).
-when_to_use: "tweet, X post, Twitter thread, launch thread, release announcement on X, viral hook, numeric hook, banger, tweetstorm, make this shareable, promote this project on X"
+description: Write X/Twitter posts and threads about a project, a release or a finding. NOT for doc prose (use writing), de-slopping a draft (use humanize) or the image (use create or demo).
+when_to_use: "tweet, X post, Twitter thread, launch thread, release announcement on X, viral hook, banger, tweetstorm, promote this project on X"
 user-invocable: true
 ---
 

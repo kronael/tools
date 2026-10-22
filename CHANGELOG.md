@@ -1,18 +1,6 @@
 # Changelog
 
-## [v0.4.50] — 20261022
-
-> kronael v0.4.50 — skills launch tier agents, sharper rules
->
-> The six skill agents are gone so every sub runs at a pinned effort, and the broken rules are shorter and sharper.
->
-> • Agents — only fable, opus, sonnet and haiku remain; a skill names the tier that loads it.
-> • Code — one comment ban with a narrower exception; extend what exists before adding a module.
-> • SQL — one call per unit of work; PL/pgSQL functions in numbered files; tables-only migrations.
-> • Dispatch — a brief quotes the owner's latest decision verbatim, never an example against it.
-> • py — native dependencies build from source; bugs gains a long-term technical debt section.
->
-> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+## [Unreleased]
 
 ### Added
 
@@ -37,6 +25,104 @@
 - WISDOM § System-change discipline: a stage beside the original or a helper around it is parallel.
 - WISDOM § Git: dated branch heads join words with underscores (`20261017_<tag>`).
 - `py` and `data` point at the `sql` skill for database modules and locks.
+
+## [v0.4.54] — 20261020
+
+> kronael v0.4.54 — VMs that leave the host some memory
+>
+> qemubox VMs start with 24 GiB instead of 64 GiB, and `ls` shows where guest memory goes.
+>
+> • qemubox — new VMs get 24 GiB; set `QEMUBOX_MEM` for more.
+> • qemubox — `ls` adds guest USED, CACHE and TMPFS columns next to host RAM.
+> • qemubox — `ls` accepts only numbers from the guest, so a guest cannot run host code.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox default RAM is 24 GiB (`QEMUBOX_MEM=24576`); running VMs keep their size until restart.
+- `qemubox ls` shows guest used, page cache and tmpfs memory for running VMs.
+- Security: `qemubox ls` no longer evaluates guest output in shell arithmetic.
+
+## [v0.4.53] — 20261020
+
+> kronael v0.4.53 — Disk cleanup that cannot touch your work
+>
+> A new diskclean tool frees space from build output and caches, stalest first, and never touches project data.
+>
+> • diskclean — `-1` empties proven project caches unused for 30 days; `-2` adds toolchains and tool caches.
+> • qemubox — the base image is zstd-compressed (13G to 4.2G) and old bases are removed after rebuilds.
+> • qemubox — `prune` never deletes a VM; `rm --stopped <hours>` does, on request.
+> • Sandboxes — the first `git` or `ssh` to github.com no longer stops on a host-key prompt.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `diskclean`: two levels, a proof per cache kind, `-k` kinds, `-o` age, `-l` list only; sync installs it.
+- diskclean never enters `.git`, `.claude`, `.codex`, `.agents`, `.diary`, `specs`, `plans`, `docs` or hidden home dirs.
+- qemubox refuses sensitive mounts unless `--mount-sensitive`, also from a project `.qemuboxrc`.
+- qemubox `-T` gives each scratch VM a random hyphenated name; `ls` prints sizes in K, M or G.
+- **Breaking:** `qemubox prune` takes no argument and never deletes VMs; use `qemubox rm --stopped <hours>`.
+- dockbox and qemubox images pin GitHub's SSH host keys.
+
+## [v0.4.52] — 20261019
+
+> kronael v0.4.52 — Subtraction before additions
+>
+> Engineering and review skills require subtraction and simpler data models before adding code.
+>
+> • Engineering — preserve required behavior while removing mechanisms and simplifying state.
+> • Refine — additions need a measured requirement that simpler code cannot satisfy.
+> • Guidance — engineering rules live in their owning skills; Git approval safeguards stay intact.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Prefer subtraction and simpler models, views and state handling before adding mechanisms.
+- Require evidence for additions during refine; preserve required behavior.
+- Keep engineering rules in their owning skills and retain Git approval safeguards.
+
+## [v0.4.51] — 20261018
+
+> kronael v0.4.51 — Docker inside the sandbox
+>
+> Dockbox requires gVisor and runs nested Docker without sharing the host daemon.
+>
+> • Runtime — every new box uses gVisor; unsafe re-entry fails visibly.
+> • Docker — `-D` starts an independent daemon inside the sandbox.
+> • Sessions — SSH/GPG forwarding and optional sudo work through the dedicated runtime.
+> • Cleanup — failed startup and nested-daemon death remove boxes and anonymous volumes.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Dockbox requires the `runsc-dockbox` runtime and rejects incompatible existing boxes.
+- `-D` provides ephemeral Docker storage; `-H` is unavailable.
+- `DOCKBOX_DOCKER` selects the host Docker command without changing the caller's identity.
+- Failed boxes retain visible diagnostics and exit status before container and volume removal.
+
+### Operator note
+
+Install the complete gVisor bundle and configure `runsc-dockbox` with all four
+runtime arguments in [dockbox installation](dockbox/README.md#install).
+Reload Docker after preserving the daemon's other settings. Recreate existing
+boxes before re-entry. `-D` uses a separate ephemeral daemon and grants no host
+Docker socket. Forwarded sockets retain their host authority. `-H` is rejected.
+Where Docker requires sudo, set `DOCKBOX_DOCKER='sudo -n docker'`.
+
+## [v0.4.50] — 20261017
+
+> kronael v0.4.50 — SSH remotes, plainer py rules
+>
+> Agents keep git remotes on SSH, and Python gets rules against annotations that switch the type checker off.
+>
+> • Git — no HTTPS URL goes into a remote; `rip -g` stays the token push path.
+> • py — no widening to `object` or `Any` to quiet the checker; take `Mapping`/`Sequence` instead.
+> • py — an f-string never contorts around its own quotes; bind the value to a local first.
+> • code — no scripted string-replace edits; AST tools such as `ruff --fix` stay allowed.
+> • astra — a second opinion never launches the model you already run on.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- WISDOM § Git: NEVER write an HTTPS URL into any remote (`set-url`, `remote add`).
+- `py`: bans dodge annotations, invariance widening and contorted f-strings.
+- `software/code.md` owns the no-scripted-edit rule; `lsp.md` points to it.
+- `astra`: the self-call rule covers second opinions only.
 
 ## [v0.4.49] — 20261016
 

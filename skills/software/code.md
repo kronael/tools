@@ -83,21 +83,36 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Boring code
 
-- ALWAYS choose the boring solution: write simpler than you are capable of,
-  and take the construct with the least mental model when two are equivalent
-  (a combinator chain with a non-trivial body → a plain `for` loop).
+- ALWAYS choose the boring solution: debugging is twice as hard as writing, so
+  write simpler than you are capable of, clarity over cleverness.
+- ALWAYS pick the construct that takes the least mental model when two are
+  equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
+- ALWAYS copy a thing two or three times before you abstract it. Every line is
+  a liability, deletion lowers cost, and a premature abstraction freezes the
+  wrong shape in place. ALWAYS design for replaceability.
 - ALWAYS extend what exists before writing anything new — the runner, the
   helper, the parameter, the test that creates the database and reads the
-  result — and copy a thing two or three times before you abstract it. A new
-  module, stage, helper or knob is the plan's or the owner's decision, NEVER
-  the executor's; NEVER call an abstraction simpler when it brings concepts
-  the call sites lack (closures, generics, predicate parameters) — it has to
-  cut TOTAL complexity, judged by cognitive overhead, not diff size.
-- ALWAYS prefer a simple solution that is mostly right over a complex one that
-  is fully correct; NEVER braid components — if A cannot be understood without
-  B's state, separate them; ALWAYS hold information as plain data over
-  objects: encapsulate I/O, expose information.
-- NEVER spend an innovation token on fashion: a new technology is an unknown
+  result. A new module, stage, helper or knob is the plan's or the owner's
+  decision, NEVER the executor's.
+- NEVER call an abstraction simpler when it brings concepts the call sites do
+  not have — function pointers, closures, generics, combinator chains. It has
+  to cut TOTAL complexity; judge by cognitive overhead, not diff size.
+- ALWAYS try subtraction first: remove unnecessary mechanisms, then simplify
+  data models, views and state handling.
+- ALWAYS preserve required behavior. Fewer lines alone do not prove a simpler
+  solution.
+- ALWAYS add code only for a measured unmet requirement that subtraction and
+  those simplifications cannot satisfy.
+- NEVER braid components: if A cannot be understood without tracking B's
+  state, separate them — braided code grows combinatorially, separated code
+  composes linearly. ALWAYS minimise state and make what remains explicit; an
+  `f(x)` whose result changes over time leaks that complexity to every caller.
+- ALWAYS hold information as plain data over objects; encapsulate I/O, expose
+  information. Ten structures and ten functions give a hundred composable
+  operations; a hundred classes of ten methods give a thousand and no
+  composition.
+- NEVER spend an innovation token on fashion — there are roughly three, for
+  where they buy competitive advantage. Every new technology is an unknown
   failure mode; boring, documented tech is a solved one.
 
 ## Design
@@ -137,9 +152,24 @@ your diff against every `##` heading here before calling an edit done.
 
 ## System changes
 
-- ALWAYS hold every change to WISDOM § System-change discipline: amend the
-  original, fail loud to the user, retry only the transient, fix the cause,
-  redesign only after sign-off.
+- ALWAYS grep for the existing mechanism (guard, helper, runner, table, log
+  site, config) before adding one, and extend the ORIGINAL. NEVER a parallel
+  second path, a stage beside it or a helper around it — two paths drift. If
+  the original is wrong, fix it or say so; NEVER route around it.
+- ALWAYS fail loud, to the user: an error on a user-facing path MUST surface
+  (thrown, non-2xx, delivered), not just logged. NEVER swallow it, and NEVER
+  add retry/fallback/best-effort as "robustness" — that turns a visible failure
+  into an invisible one. Retry ONLY the transient: network, DB busy/locked.
+  When the MECHANISM swallows — a fire-and-forget submit nobody collects, a
+  detached task, a bare catch — replace it with one that propagates; NEVER keep
+  it and bolt on counters and collectors to recover the drops: more code, less
+  reported.
+- ALWAYS prefer the cause fix to the loud log — make the bad state impossible
+  by construction.
+- A redesign (new contract, changed control flow, cross-cutting) ships only
+  after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
+- NEVER improve beyond what the task asks — no drive-by cleanup, rename or
+  feature in the same change; park it (`next`, `bugs`).
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
@@ -153,6 +183,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS check a formula derived from that spec against the spec's own worked
   examples; a derivation can drop a term the examples carry.
 - ALWAYS build/test/lint every ~50 lines — errors cascade.
+- NEVER edit source by running a script or `sed -i` that string-replaces it —
+  ALWAYS edit the file directly, so the change is read as it is written and
+  not after a blind substitution has landed. AST tools (`ruff --fix`, LibCST,
+  ast-grep, a language server's rename) rewrite syntax nodes, not strings, and
+  are not this.
 
 ## Layout and formatting
 
@@ -180,6 +215,20 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
   NEVER a file log handler or a log-file path passed through application code;
   the supervisor, container runtime, CI or top-level runner persists them.
+
+## House conventions
+
+- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A
+  program a user runs keeps state, settings, cache and data in
+  `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>` (`~/.local/state/<name>` and so
+  on), each overridable by one flag or env var.
+- Config: prefer flags + env vars for anything simple — a short flag where a
+  human types it (`-u`), a long name with an env var where the deploy sets it
+  (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
+  first CLI param, api keys as second.
+- `make` for build/lint/test/clean and debug builds: `make test` = fast unit
+  (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
+  production data.
 
 ## Grug rules
 

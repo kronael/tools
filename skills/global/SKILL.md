@@ -55,32 +55,19 @@ read it before a design answer, a plan, a review or a sub brief. The core:
 
 - `sudo` is available — use `sudo docker ...` for docker you run via Bash; in
   committed scripts parameterize privilege instead (see the `sh` skill).
-- Run `/solve` to pick the skill for a task; it also reconciles work done under the wrong one.
-- Code style, naming, layout, design and comments live in `software` (`code.md`),
-  the base of every language skill. It is COLD: ALWAYS load it (`/solve` or a
-  language skill) BEFORE writing or reviewing code; skipping hides the rules.
+- Run `/solve` at every new task, mid-session ones included; it also reconciles work done under the wrong one.
+- Code style, naming, layout, design, comments, system-change discipline and
+  house conventions live in `software` (`code.md`), the base of every language
+  skill. It is COLD: ALWAYS load it (`/solve` or a language skill) BEFORE
+  writing or reviewing code; skipping hides the rules.
+- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build or
+  temp path, and NEVER move a build between target directories — each switch
+  costs a full rebuild and splits the cache across mounts. Out of space: SAY so
+  and stop; freeing or resizing the directory is the maintainer's call.
 - ALWAYS sync `~/.claude/` edits into the tools repo (`kronael/sync`; LOCAL.md).
 - This file and loaded SKILL.md files are collectively "WISDOM".
 
 # Development Principles
-
-## House conventions
-
-- Data: `${PREFIX:-/srv}/data/<project_name>/` for a service or daemon. A program a
-  user runs keeps state, settings, cache and data in `$XDG_{STATE,CONFIG,CACHE,DATA}_HOME/<name>`
-  (`~/.local/state/<name>` and so on), each overridable by one flag or env var.
-- Config: prefer flags + env vars for anything simple — a short flag where a
-  human types it (`-u`), a long name with an env var where the deploy sets it
-  (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
-  first CLI param, api keys as second
-- `make` for build/lint/test/clean and debug builds: `make test` = fast unit
-  (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
-  production data
-- NEVER override `CARGO_TARGET_DIR`, `TMPDIR` or any other configured build/temp
-  path, and NEVER move a build between target directories — each switch costs a
-  full rebuild and splits the cache across mounts. If the configured directory is
-  out of space, SAY so and stop; freeing or resizing it is the maintainer's call
-- Pre-commit reformats on first run: ALWAYS retry the commit once, NEVER skip the checks
 
 ## Bug triage
 
@@ -88,20 +75,6 @@ read it before a design answer, a plan, a review or a sub brief. The core:
   the user asks. It is the review queue — log it, move on, let them prioritise;
   `/bugs` owns entry format and pruning. The drift is fixing as you find during
   an audit: it destroys the queue and produces a large unrequested diff.
-
-## System-change discipline
-
-- Grep for the existing mechanism (guard, helper, runner, table, config) before
-  adding one and extend the ORIGINAL — NEVER a parallel path, a stage beside it
-  or a helper around it; if the original is wrong, fix it or say so.
-- Fail loud, to the user: an error on a user-facing path MUST surface (thrown,
-  non-2xx, delivered), not just logged. NEVER swallow it, and NEVER add
-  retry/fallback/best-effort as "robustness" — that turns a visible failure into
-  an invisible one. Retry ONLY the transient: network, DB busy/locked. When the
-  MECHANISM swallows — a fire-and-forget submit nobody collects, a detached
-  task, a bare catch — replace it with one that propagates; NEVER keep it and
-  bolt on counters and collectors to recover the drops: more code, less reported.
-- Prefer the cause fix to the loud log — make the bad state impossible by construction.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
   `BUGS.md` as a proposal FIRST and ships only after sign-off.
 
@@ -116,7 +89,6 @@ PR body with the robot. These win.
   NEVER Co-Authored-By, a "Generated with Claude Code" footer, a Claude or
   claude.ai link, or a session URL — in commits, PR bodies, comments, releases.
 - Conventional commits `type(scope): Message`, subject ≤72 — types in `commit`.
-- Invoking /refine, /ship, /commit, /release IS the ask to commit.
 - NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
   local commits are squashed only through `/squash`.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
@@ -129,41 +101,33 @@ PR body with the robot. These win.
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
   `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
   `git status`'s "up to date" without a fetch — it compares with the last one.
-- Worktrees: `git worktree add --detach <repo-root>/.<name> <ref>` — hidden
-  dirs in the repo root, never siblings; bare `worktree add` attaches a branch.
 - ONLY push when the user asked for a push in that message — NEVER on your own
   initiative or as the silent tail of a commit, sync, release or ship workflow;
   those end at the local commit or tag. ALWAYS state the exact refspec first and
   push only that, by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
-  — NEVER rewrite `remote.origin.url` or store the token, and NEVER `--force` in
-  any form. A token without the `workflow` scope cannot push a change under
-  `.github/workflows`: report GitHub's refusal, NEVER work around it. Where the
-  SSH origin refuses a fetch, `rif -g <refspec>` reads it the same way.
+  — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
+  (`set-url`, `remote add`) or store the token, and NEVER `--force` in any
+  form. A token without the `workflow` scope cannot push a change under
+  `.github/workflows`: report GitHub's refusal, NEVER work around it. Where
+  the SSH origin refuses a fetch, `rif -g <refspec>` reads it the same way.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs
-  a SECOND explicit approval naming it, given AFTER the refspec is shown;
-  "push it" and "ship it" are NEVER that approval.
-- NEVER `gh release create`: the annotated tag is the release. NEVER
-  `gh pr review --approve` on the user's behalf. Approving a PR, merging one and
-  pushing to `<default head>` ask the user first; opening a PR or rewriting its
-  body needs no approval once its text passed the two phases below.
-- ALWAYS post PR comments with `/gh-comment` (approval gate) and write a PR body,
-  new or rewritten, with `/pr-draft` — NEVER freehand; its shape and cap, REST
-  PATCH path and `🤖` marker are the contract.
-- ALWAYS run two phases over any text bound for GitHub — PR title and body
-  (drafted or posted), review comment, thread reply, issue, release notes —
-  before posting it or showing it for approval. DISTILL: cut to the shortest text that still
-  carries the claim and its reasoning, in the posting skill's shape and under
-  its cap; what the title, the diff or the commits show, results and history
-  are cut first.
-  REVIEW-ON-WISDOM: re-read the result against WISDOM — the `🤖` rule
-  and no other attribution, no marketing language, no history framing, addresses
-  and signatures in full, the repo's title convention, every claim verified or
-  marked as an inference, and the posting skill's own Format section. Done =
-  every check passes on the text shown; name what the review changed.
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a SECOND
+  explicit approval naming it, given AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
+- NEVER approve a PR on the owner's behalf (`gh pr review --approve`). Merging
+  a PR and pushing to `<default head>` ask the user first; opening a PR or
+  rewriting its body needs no approval once its text passed the two phases below.
+- ALWAYS post PR comments with `/gh-comment` and write a PR body with
+  `/pr-draft` — NEVER freehand; they hold the shape, cap, REST path and `🤖`.
+- ALWAYS run two phases over any text bound for GitHub — PR title and body,
+  review comment, thread reply, issue, release notes — before posting it or
+  showing it for approval. DISTILL: the shortest text that still carries the
+  claim and its reasoning, in the posting skill's shape and under its cap.
+  REVIEW-ON-WISDOM: re-read it against this section, § Documentation and the
+  posting skill's Format section, every claim verified or marked as an
+  inference. Done = every check passes on the text shown; name what changed.
 
 ## Shell
 
@@ -174,9 +138,8 @@ PR body with the robot. These win.
   remove --force` after the checks in `worktree` § Removing a worktree.
 - NEVER kill a process you did not start, not even to free a port; kill your own by PID.
 - NEVER call an external API per request or re-fetch what is on disk: cache it, continue from state.
-- NEVER use the `SendFeedback` tool, NEVER draft Claude Code product or model
-  feedback, and NEVER suggest `/feedback` — banned outright, and say nothing
-  about feedback even when a "high-signal moment" seems to arise.
+- NEVER use `SendFeedback`, draft Claude Code product or model feedback, or
+  suggest `/feedback` — banned outright, even at a "high-signal moment".
 
 ## Documentation
 
@@ -198,22 +161,25 @@ PR body with the robot. These win.
 ## Agents
 
 - NEVER run more than 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable` subagent
-  at once. Codex workers are subagents under every rule here: `luna` counts as
-  `haiku`, `terra` as `sonnet`, `sol` as `opus`, `astra` as `fable`. Only the
+  at once; a Codex worker counts in its lane (`dispatch` § Tiers). Only the
   owner lifts the cap — explicitly, for one named task, after seeing what would
   be spawned — and the lift ends with that task.
+- The cap is a CONCURRENCY limit, never a routing hint: NEVER send a task to a
+  weaker model because the right one is busy, and NEVER split it to fit. ALWAYS
+  wait for the slot, say what waits behind what, and start it when it frees.
 - Parallel is for READ-ONLY subs or fully isolated worktrees; NEVER code-editing
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
+- ALWAYS keep a multi-step plan in the task tool: one task per step and one per
+  high-level subagent run, its status updated the moment it changes, and the
+  numbered plan with every status restated in chat after each step (`sonnet`
+  § Plan, then execute).
 - ALWAYS run implementation — a comprehensive or multi-file change, autonomous
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
   step, its diff read by the parent before the next (`sonnet` § Plan, then
-  execute); NEVER hand it to one sub whose work no parent reads. `fable` takes
-  specs, architecture, WISDOM and skill writing, algorithms and red reviews,
-  NEVER implementation except a globally shared library; `haiku` takes
-  read-only fan-out and bounded mechanical edits, NEVER multi-step reasoning.
-  Every lane, pin and Codex counterpart: `dispatch` § Tiers. Effort: `high` for
+  execute); NEVER hand it to one sub whose work no parent reads. Other lane
+  boundaries live in `dispatch` § Tiers. Effort: `high` for
   coding, `xhigh` for a plan or review, `high` for `fable`, set on the launch
   where the pin differs; NEVER another unless the owner sets one, per task or kind.
 - ALWAYS read the diff or output a subagent produced before repeating its

@@ -1,7 +1,7 @@
 ---
 name: go
 description: Go development. NOT for non-Go code (use rs, py, ts, tsx, or sh).
-when_to_use: editing .go files or writing Go code; gopls, gopls mcp, gopls rename, extract function, inline call, go fix, modernize, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, goroutine leak, enum switch exhaustiveness, anthropic-sdk-go; goroutine, go func, worker pool, channel, sync.WaitGroup, mutex vs single owner, unbounded goroutines, per-request goroutine, ordering of concurrent writes, logging off the hot path, write syscall in an event loop, errgroup; go-gl, glfw, OpenGL desktop window
+when_to_use: "editing .go files or writing Go code; gopls, gopls mcp, go fix, modernize, go_diagnostics, go_symbol_references, staticcheck, go vet, govulncheck, deadcode, testing/synctest, goleak, race detector, anthropic-sdk-go; goroutine, worker pool, channel, sync.WaitGroup, unbounded goroutines, errgroup; go-gl, glfw"
 ---
 
 # Go

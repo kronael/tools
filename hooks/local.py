@@ -2,18 +2,10 @@
 import contextlib
 import json
 import os
-import re
 import sys
 
 from lib.state import hook_event
 from lib.state import session_state
-
-RULES = """Development reminders:
-- ALWAYS use make for build/lint/test/clean
-- ALWAYS build/test/lint every ~50 lines - errors cascade
-- NEVER improve beyond what's asked
-- NEVER use git add -A
-- NEVER use git commit --amend - make new commits"""
 
 
 def output(is_compaction, text):
@@ -67,16 +59,6 @@ def main():
         if first_prompt and state_file is not None:
             with contextlib.suppress(OSError):
                 open(state_file, 'w').close()
-
-    prompt_lower = prompt.lower()
-    if not re.search(r'\b(don\'?t|not|never)\s+\w*\s*(continue|recap)', prompt_lower) and re.search(
-        r'\b(continue|recap|where\s+were\s+we|what\'?s\s+next)\b',
-        prompt_lower,
-    ):
-        parts.append(RULES)
-
-    if is_compaction:
-        parts.append(RULES)
 
     if parts:
         print(json.dumps(output(is_compaction, '\n\n'.join(parts))))

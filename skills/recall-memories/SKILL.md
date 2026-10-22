@@ -1,7 +1,7 @@
 ---
 name: recall-memories
-description: Look up what prior sessions decided, tried, left open or already ran — session transcripts, tool and agent results, diary, memory, Codex history. NOT for writing entries (use diary).
-when_to_use: "what did we decide, what was the status, why did we choose, where did we discuss, did we already try this, did we already run this, do not rerun, last test run, simulation hash, earlier output, what did the agent find, subagent report, prior session, last session, last time, earlier, find context, recall, no prior context, what did codex say"
+description: Look up what prior sessions decided, tried, left open or already ran — transcripts, tool and agent results, diary, memory, Codex history. NOT for writing entries (use diary).
+when_to_use: "what did we decide, why did we choose, did we already try this, did we already run this, do not rerun, earlier output, what did the agent find, subagent report, prior session, last session, last time, recall, what did codex say"
 user-invocable: true
 argument-hint: "<question>"
 ---

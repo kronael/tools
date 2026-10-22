@@ -1,7 +1,7 @@
 ---
 name: ts
 description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino; rename, move a file, ts-morph, codemod
+when_to_use: "editing .ts files, writing TypeScript; tooling scripts, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, NestJS, Pino; rename, move a file, ts-morph, codemod"
 ---
 
 # TypeScript Style

@@ -31,17 +31,19 @@ def payload(event, prompt, tmp_path):
     )
 
 
-def test_user_prompt_submit_gives_the_model_additional_context(
-    monkeypatch, capsys, tmp_path
-) -> None:
+def test_first_prompt_gives_the_model_local_md_only(monkeypatch, capsys, tmp_path) -> None:
     code, out = run(monkeypatch, capsys, payload('UserPromptSubmit', 'continue', tmp_path))
     assert code == 0
     emitted = json.loads(out)
     assert set(emitted) == {'hookSpecificOutput'}
     assert emitted['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
-    context = emitted['hookSpecificOutput']['additionalContext']
-    assert 'LOCAL.md' in context
-    assert 'Development reminders' in context
+    assert emitted['hookSpecificOutput']['additionalContext'] == '# LOCAL.md\n\nsync paths'
+
+
+def test_later_prompts_are_silent(monkeypatch, capsys, tmp_path) -> None:
+    run(monkeypatch, capsys, payload('UserPromptSubmit', 'start', tmp_path))
+    for prompt in ('continue', 'recap', 'where were we'):
+        assert run(monkeypatch, capsys, payload('UserPromptSubmit', prompt, tmp_path)) == (0, '')
 
 
 def test_pre_compact_emits_system_message_only(monkeypatch, capsys, tmp_path) -> None:
@@ -49,8 +51,7 @@ def test_pre_compact_emits_system_message_only(monkeypatch, capsys, tmp_path) ->
     assert code == 0
     emitted = json.loads(out)
     assert 'hookSpecificOutput' not in emitted
-    assert 'LOCAL.md' in emitted['systemMessage']
-    assert 'Development reminders' in emitted['systemMessage']
+    assert emitted['systemMessage'] == '# LOCAL.md\n\nsync paths'
 
 
 @pytest.mark.parametrize('stdin', ['[]', '"continue"', '42', 'null', '{bad', ''])

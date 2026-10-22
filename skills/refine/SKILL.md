@@ -1,7 +1,7 @@
 ---
 name: refine
 description: Finalize a change before it is called done — the code good and every claim it makes true. NOT for a targeted fix (use improve) or a second opinion (use oracle).
-when_to_use: "refine this, polish this, final pass before shipping, tighten this before commit, finalize the PR, before I call the PR done, settle the claims, is that actually true, verify the numbers, check the counts and the cross-references, the subagent says it is done, run the acceptance criteria, docs-only PR, spec PR, refine the changes, clean up the diff, finalize a finished feature"
+when_to_use: "refine this, polish this, final pass before shipping, finalize the PR, settle the claims, is that actually true, verify the numbers, the subagent says it is done, run the acceptance criteria, clean up the diff"
 user-invocable: true
 ---
 
@@ -101,13 +101,13 @@ code extension and still carries every claim the reviewer will trust.
    → each finding is confirmed, corrected with the command that corrected it,
    or dropped as unverifiable.
 
-8. **Triage and apply** — DROP a finding that adds an abstraction, targets
-   unused code (grep first), conflicts with the ask, or survived step 7 only as
+8. **Triage and apply** — DROP a finding that targets unused code (grep first),
+   conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (WISDOM § System-change discipline); NEVER build one without sign-off.
-   Apply a finding only if the result is simpler. Apply the rest serially, one
-   context at a time, briefed from `brief.md`: `simplify` → `sonnet` loading
-   `improve`, `correctness` → `opus` loading `improve`.
+   (WISDOM § Bug triage); NEVER build one without sign-off.
+   ALWAYS apply code findings under `software/code.md` § Boring code. Apply
+   serially, one context at a time, briefed from `brief.md`: `simplify` →
+   `sonnet` loading `improve`, `correctness` → `opus` loading `improve`.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.

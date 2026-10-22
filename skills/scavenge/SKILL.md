@@ -1,7 +1,7 @@
 ---
 name: scavenge
-description: Codify public best practice into a durable, astra-tested artifact — skill, agent, guideline, runbook, checklist, review template, or spec. NOT for conversation-history patterns (use learn) or editing an existing artifact (use wisdom).
-when_to_use: "codify a best practice into a skill, write up our guideline for Y, draft a runbook for Z, make a checklist for W, codify our practice on X, produce a review template for Y, make an agent for Z, draft a spec for V, new methodology, repeatable workflow extraction"
+description: Codify public best practice into a durable, astra-tested artifact — skill, agent, guideline, runbook, checklist or spec. NOT for session-history patterns (use learn) or editing an existing artifact (use wisdom).
+when_to_use: "codify a best practice into a skill, write up our guideline, draft a runbook, make a checklist, produce a review template, make an agent for Z, new methodology"
 user-invocable: true
 ---
 

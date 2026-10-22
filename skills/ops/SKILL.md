@@ -30,7 +30,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 ## Storage
 
-- Config: `${PREFIX:-/srv}/key/`, Runtime: `${PREFIX:-/srv}/run/`; the data dir: WISDOM § House conventions
+- Config: `${PREFIX:-/srv}/key/`, Runtime: `${PREFIX:-/srv}/run/`; the data dir: `../software/code.md` § House conventions
 
 ## Anti-Patterns
 
@@ -44,7 +44,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 ## CI/CD
 
-- `make` for build/lint/test/clean and the build/temp-dir rule: WISDOM § House conventions — explicit targets: `make prepare`, `make image`, `make test`
+- `make` for build/lint/test/clean: `../software/code.md` § House conventions; the build/temp-dir rule: WISDOM § Environment — explicit targets: `make prepare`, `make image`, `make test`
 - ALWAYS debug builds locally (faster, better errors); NEVER run release builds locally, NEVER mix debug/release artifacts
 
 ## Runbooks (cold — read on demand)

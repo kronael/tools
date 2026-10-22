@@ -1,7 +1,7 @@
 ---
 name: create
-description: Router for creative artifact generation — CVs, web pages, explainers, videos, generative art, diagrams. NOT for code implementation (use language skills), Unicode box diagrams in docs (use diagrams) or de-AI-ing prose (use humanize).
-when_to_use: "interactive explainer, HTML explanation, narrated explainer, 3b1b, meme, promo loop, cutout collage, animate real photos, CV, resume, curriculum vitae, role-targeted application, logo, emblem, badge, brand mark, favicon, logo candidates sheet, landing page, HTML mockup, deck, reveal.js presentation, code talk slides, knowledge-session deck, sketch UI variants, wireframe, design tokens, DESIGN.md, make it look like Stripe/Linear/Vercel, video script, shorts/reel/TikTok, render video to MP4/GIF, Remotion, Motion Canvas, Manim, 3Blue1Brown math animation, p5.js, generative art, shaders, ASCII art, figlet, ASCII video, matrix effect, audio visualizer, pretext, kinetic typography, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, X image, timeline image, code-shot explainer, form audit, layout lint, page form checks, clipped text, empty card bottom, contrast check"
+description: Router for creative artifact generation — CVs, web pages, explainers, videos, generative art, diagrams. NOT for code (use language skills), box diagrams in docs (use diagrams) or de-AI-ing prose (use humanize).
+when_to_use: "interactive explainer, narrated explainer, 3b1b, meme, promo loop, CV, resume, logo, favicon, landing page, HTML mockup, deck, reveal.js, wireframe, design tokens, DESIGN.md, video script, shorts/reel, render video to MP4/GIF, Remotion, Manim, p5.js, generative art, shaders, ASCII art, figlet, audio visualizer, Excalidraw, architecture diagram, flowchart, SVG infra diagram, social image, form audit, layout lint"
 user-invocable: true
 ---
 

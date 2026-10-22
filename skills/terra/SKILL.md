@@ -1,7 +1,7 @@
 ---
 name: terra
 description: "/terra — GPT-6.1 Sol workhorse subagent, the Codex counterpart of /sonnet. NOT for mapping or a bounded mechanical edit (use /luna), second opinions (use /oracle) or design calls (use /opus)."
-when_to_use: "terra, GPT-6.1 Sol worker, Codex workhorse, delegate to Sol, cross-model implementation, cross-model investigation, cross-model pre-review, cross-model plan step"
+when_to_use: "terra, GPT-6.1 Sol worker, Codex workhorse, delegate to Sol, cross-model implementation, cross-model investigation, cross-model plan step"
 user-invocable: true
 ---
 

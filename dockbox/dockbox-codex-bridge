@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+[ -d "$HOME/.claude/skills" ] || exit 0
+mkdir -p "$HOME/.agents"
+[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"
+[ -f "$HOME/.claude/CLAUDE.md" ] || exit 0
+if [ -L "$HOME/.codex/AGENTS.md" ]
+then
+    case "$(readlink "$HOME/.codex/AGENTS.md")" in
+        */.claude/CLAUDE.md) ;;
+        *) exit 0 ;;
+    esac
+elif [ -e "$HOME/.codex/AGENTS.md" ]
+then
+    exit 0
+fi
+mkdir -p "$HOME/.codex"
+rm -f "$HOME/.codex/AGENTS.md"
+cp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"

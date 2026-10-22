@@ -1,7 +1,7 @@
 ---
 name: show-me
-description: Explain the current conversation topic with the smallest visual — pseudocode, call tree, component/file tree, mermaid, or a diff. NOT for permanent architecture docs (use diagrams), interactive or narrated explainer artifacts (use create), or CSS/UI implementation (use visual).
-when_to_use: "explain this code, show me, draw this, diagram this, visualize this, sketch this, explain visually, show the call tree, show the component tree, quick diagram mid-conversation"
+description: Explain the current topic with the smallest visual — pseudocode, call tree, file tree, mermaid or a diff. NOT for permanent docs (use diagrams), explainer artifacts (use create) or CSS/UI (use visual).
+when_to_use: "explain this code, show me, draw this, diagram this, visualize this, sketch this, show the call tree, quick diagram mid-conversation"
 user-invocable: true
 license: MIT
 metadata:

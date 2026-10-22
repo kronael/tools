@@ -1,7 +1,7 @@
 ---
 name: merge
-description: Resolve conflicts in a git merge, rebase or cherry-pick and finish it; merge origin — bring a detached line up to origin's default head. NOT for ambiguous semantic conflicts (resolve manually) or syncing ~/.claude with the bundle repo (use kronael/sync).
-when_to_use: "git merge conflicts, resolve conflicts, fix merge conflicts, continue/finish the rebase, rebase conflict, cherry-pick conflict, continue cherry-pick, rebase onto squash-merged main, rebase --onto, diverged after squash merge, merge origin, update from origin, catch up with origin, merge origin/master into HEAD, pull origin, ahead and behind origin, bring the line up to date, update a pushed PR branch, merge the base forward, PR diff ballooned after a squash merge"
+description: Resolve conflicts in a git merge, rebase or cherry-pick and finish it; merge origin — bring a detached line up to origin's default head. NOT for semantic conflicts or syncing ~/.claude (use kronael/sync).
+when_to_use: "merge conflicts, resolve conflicts, finish the rebase, cherry-pick conflict, rebase onto squash-merged main, rebase --onto, merge origin, update from origin, catch up with origin, ahead and behind origin, update a pushed PR branch, merge the base forward"
 user-invocable: true
 ---
 

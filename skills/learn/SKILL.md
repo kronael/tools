@@ -1,7 +1,7 @@
 ---
 name: learn
-description: /learn — turn session history into memory entries, skills, or lint rules. NOT for writing a skill from scratch (use wisdom). NOT triggered by the word "learn" in a prompt — only the slash command or the memory_nudge hook (PreCompact/Stop) invokes it.
-when_to_use: "learn from this session, save this pattern, extract reusable patterns, evaluate session for memory, session memory check, save memory, remember this, make this correction a rule"
+description: /learn — turn session history into memory entries, skills, or lint rules. NOT for writing a skill from scratch (use wisdom); the word "learn" in a prompt is no trigger.
+when_to_use: "learn from this session, save this pattern, extract reusable patterns, session memory check, save memory, remember this, make this correction a rule"
 user-invocable: true
 ---
 
