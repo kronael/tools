@@ -41,7 +41,8 @@ reads to pick the agent type.
 
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
   config knob the change adds — `rg -n '<name>'`. One or two sites is a
-  finding: inline it (§ Boring code).
+  finding: inline it (§ Boring code). Application code only: a `table_verb`
+  SQL function with one caller is the `sql` § Functions design.
 - ALWAYS check each new branch, fallback or flag for an existing parameter,
   path or environment variable that already expresses the edge case.
 - ALWAYS grep for function-typed struct fields the change adds (`func(` inside
