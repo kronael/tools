@@ -22,12 +22,11 @@ your diff against every `##` heading here before calling an edit done.
   with no retry inside: a retry wraps the `do_` call. NEVER `run`, `handle` or
   `_attempt` for either; the name tells the reader the function never returns,
   or that it is the one place a failure is sorted.
-- ALWAYS reuse the name the code, the schema, the domain and existing callers
-  already give a thing — function, parameter, field, type, test helper,
-  commit-message term. A new word claims that no existing name fits; earn it.
-  An endpoint is one word in its path, handler, module and model prefix:
-  `/v1/react` → `react()` in `react.py`, `ReactIn`; NEVER `react()` in
-  `reactions.py`, NEVER a `stream()` on `/v1/ws`.
+- ALWAYS reuse the name the code, the schema, the domain and the owner already
+  give a thing — function, parameter, field, type, file, commit term — and
+  carry one word through an endpoint's path, handler, module and model:
+  `/v1/react` → `react()` in `react.py`, `ReactIn`; NEVER `reactions.py`,
+  NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
 - ALWAYS name a parameter or local after its own type or the domain concept it
@@ -64,70 +63,41 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Comments
 
-- NEVER write a comment. Intent travels in names, types and structure; a
-  comment is no fallback for code that failed to carry it.
-- ALWAYS limit the one general exception to a doc comment on a PUBLIC API item
-  — exported function, type, struct, module — stating only what a caller cannot
-  see from the signature: contract, units, ownership, error conditions. NEVER
-  one on a private item, NEVER one on a line inside a body.
-- NEVER leave a comment whose content adjacent code already shows, a log, warn
-  or error message on a neighbouring line included — paraphrasing that message
-  above it is the canonical redundant comment:
-  `// load failed` over `error!("load failed")` → delete the comment.
-- ALWAYS sweep the WHOLE file you touch, not only the lines you edit: read
-  every comment standing there and delete the ones this section bans. One left
-  standing is a defect, not a no-op.
-- NEVER stack `//`, `#`, `///` or `/** */` lines inside a function body — the
-  ban is on the comment, not its length. A public-API doc comment MAY span
-  lines when the caller's contract needs the room.
-- NEVER a source line number or a diff-gutter number (`255 +`) in a comment —
-  point to a file or function: `see line 200` → `see parse_header`.
-- NEVER a ticket number or issue ID in a comment.
-- NEVER cite a spec or doc by handle (`spec 4/6`) — ALWAYS by its
-  repo-relative path (`specs/4/6-agents.md`). A path breaks loud in a link
-  check when the file moves; a handle rots silently.
-- ALWAYS confine comments inside a body to three narrow exceptions, each owned
-  by the skill that states it and valid only on the construct it names: a
-  test's scenario-to-outcome intro (`testing.md`), a `// SAFETY:` invariant on
-  an `unsafe` block (`rs`), and the WHY on its own line above a deliberately
-  unhandled error — a Go error suppression (`go`), a Rust `.unwrap()` (`rs`).
-  NEVER anything else, and NEVER one trailing a code line.
-- ALWAYS keep an allowed comment to a few words — four is the aim — that name
-  the reason; the full why goes in the commit message, NEVER in the comment.
-- NEVER count a machine-read marker as a comment: a `// #region <name>` doc
-  include anchor (`readme` skill) or a lint or type pragma (`//nolint:`,
-  `# noqa`, `# type: ignore`, `// @ts-expect-error`) is read by a tool, so it
-  stays.
+- NEVER write a comment or docstring; intent travels in names, types and
+  structure. ALWAYS sweep the WHOLE file you touch and delete every comment
+  this section bans — one left standing is a defect, not a no-op.
+- The one general exception: a doc comment on a PUBLIC API item stating what
+  the signature cannot — contract, units, ownership, error conditions — NEVER
+  what the body does: `"""The MD5 hex digest of repr(contents)."""` on
+  `digest(contents)` restates the body → delete it. NEVER one on a private
+  item.
+- Inside a body, three exceptions only, each on the construct its skill names:
+  a test's scenario-to-outcome intro (`testing.md`), `// SAFETY:` on `unsafe`
+  (`rs`), the WHY above a deliberately unhandled error (`go`, `rs`) — a few
+  words naming the reason; the full why goes in the commit message. NEVER one
+  trailing a code line, NEVER a line number, ticket id or spec handle — a
+  repo-relative path (`specs/4/6-agents.md`) when a pointer is needed.
+- A machine-read marker is not a comment: a `// #region <name>` doc anchor
+  (`readme` skill) and a lint or type pragma (`//nolint:`, `# noqa`,
+  `# type: ignore`, `// @ts-expect-error`) stay.
 
 ## Boring code
 
-- ALWAYS choose the boring solution: debugging is twice as hard as writing, so
-  write simpler than you are capable of, clarity over cleverness.
-- ALWAYS pick the construct that takes the least mental model when two are
-  equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
-- ALWAYS copy a thing two or three times before you abstract it. Every line is
-  a liability, deletion lowers cost, and a premature abstraction freezes the
-  wrong shape in place. ALWAYS design for replaceability.
-- NEVER call an abstraction simpler when it brings concepts the call sites do
-  not have — function pointers, closures, generics, combinator chains. It has
-  to cut TOTAL complexity; judge by cognitive overhead, not diff size.
-- ALWAYS reframe before adding a branch, a fallback or a config knob: check
-  whether an existing parameter, path or environment variable makes the edge
-  case normal. Branch only when no existing mechanism can express it — one code
-  path beats ten.
+- ALWAYS choose the boring solution: write simpler than you are capable of,
+  and take the construct with the least mental model when two are equivalent
+  (a combinator chain with a non-trivial body → a plain `for` loop).
+- ALWAYS extend what exists before writing anything new — the runner, the
+  helper, the parameter, the test that creates the database and reads the
+  result — and copy a thing two or three times before you abstract it. A new
+  module, stage, helper or knob is the plan's or the owner's decision, NEVER
+  the executor's; NEVER call an abstraction simpler when it brings concepts
+  the call sites lack (closures, generics, predicate parameters) — it has to
+  cut TOTAL complexity, judged by cognitive overhead, not diff size.
 - ALWAYS prefer a simple solution that is mostly right over a complex one that
-  is fully correct — the simple one spreads and evolves, embedded complexity
-  never leaves.
-- NEVER braid components: if A cannot be understood without tracking B's
-  state, separate them — braided code grows combinatorially, separated code
-  composes linearly. ALWAYS minimise state and make what remains explicit; an
-  `f(x)` whose result changes over time leaks that complexity to every caller.
-- ALWAYS hold information as plain data over objects; encapsulate I/O, expose
-  information. Ten structures and ten functions give a hundred composable
-  operations; a hundred classes of ten methods give a thousand and no
-  composition.
-- NEVER spend an innovation token on fashion — there are roughly three, for
-  where they buy competitive advantage. Every new technology is an unknown
+  is fully correct; NEVER braid components — if A cannot be understood without
+  B's state, separate them; ALWAYS hold information as plain data over
+  objects: encapsulate I/O, expose information.
+- NEVER spend an innovation token on fashion: a new technology is an unknown
   failure mode; boring, documented tech is a solved one.
 
 ## Design

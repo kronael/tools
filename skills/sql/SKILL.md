@@ -45,12 +45,12 @@ comments, design and the boring-code rules. Below are SQL-specific additions.
   with an `IntEnum` in the code, and pass the enum — NEVER a `TEXT` column of
   string literals such as `'done'`/`'dead'`.
 - Function names mirror SQL verbs plus what they return or change: `select_message_url`, `insert_observations`, `update_checked_at`, `delete_finished` — NEVER a bare noun like `url_of` or `sent`
-- ALWAYS make one system operation (a commit, a claim, a feed page) ONE
-  database call. Count round trips, not statements: one per operation, two or
-  three at the outside, a fixed number that does not grow with the batch. The
-  operation's statements go into one PL/pgSQL function (§ Functions) that the
-  code calls once — NEVER a code function that runs them one `execute` at a
-  time, NEVER `executemany` for what one statement can take.
+- ALWAYS count round trips, not statements: one call per unit of work — a
+  claim, one document's commit, a feed page — two or three at the outside,
+  never ten, and a number that does not grow with the batch. The unit's
+  statements go in one PL/pgSQL function (§ Functions); two units are two
+  functions called in turn — NEVER one function bundling every write a job
+  might make, NEVER one `execute` per statement in code.
 - ALWAYS take and return lists of the program's record types (`list[Document]`
   in, `list[Receipt]` out); a caller without a natural batch passes a list of
   one. NEVER a single-row twin beside the list function.

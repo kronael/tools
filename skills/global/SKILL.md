@@ -77,9 +77,9 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
 
 ## System-change discipline
 
-- Grep for the existing mechanism (guard, helper, table, log site, config)
-  before adding one, and extend the ORIGINAL. NEVER a parallel second path — two
-  paths drift. If the original is wrong, fix it or say so; NEVER route around it.
+- Grep for the existing mechanism (guard, helper, runner, table, config) before
+  adding one and extend the ORIGINAL — NEVER a parallel path, a stage beside it
+  or a helper around it; if the original is wrong, fix it or say so.
 - Fail loud, to the user: an error on a user-facing path MUST surface (thrown,
   non-2xx, delivered), not just logged. NEVER swallow it, and NEVER add
   retry/fallback/best-effort as "robustness" — that turns a visible failure into
