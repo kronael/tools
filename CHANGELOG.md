@@ -1,5 +1,41 @@
 # Changelog
 
+## [v0.4.54] — 20261020
+
+> kronael v0.4.54 — VMs that leave the host some memory
+>
+> qemubox VMs start with 24 GiB instead of 64 GiB, and `ls` shows where guest memory goes.
+>
+> • qemubox — new VMs get 24 GiB; set `QEMUBOX_MEM` for more.
+> • qemubox — `ls` adds guest USED, CACHE and TMPFS columns next to host RAM.
+> • qemubox — `ls` accepts only numbers from the guest, so a guest cannot run host code.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox default RAM is 24 GiB (`QEMUBOX_MEM=24576`); running VMs keep their size until restart.
+- `qemubox ls` shows guest used, page cache and tmpfs memory for running VMs.
+- Security: `qemubox ls` no longer evaluates guest output in shell arithmetic.
+
+## [v0.4.53] — 20261020
+
+> kronael v0.4.53 — Disk cleanup that cannot touch your work
+>
+> A new diskclean tool frees space from build output and caches, stalest first, and never touches project data.
+>
+> • diskclean — `-1` empties proven project caches unused for 30 days; `-2` adds toolchains and tool caches.
+> • qemubox — the base image is zstd-compressed (13G to 4.2G) and old bases are removed after rebuilds.
+> • qemubox — `prune` never deletes a VM; `rm --stopped <hours>` does, on request.
+> • Sandboxes — the first `git` or `ssh` to github.com no longer stops on a host-key prompt.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `diskclean`: two levels, a proof per cache kind, `-k` kinds, `-o` age, `-l` list only; sync installs it.
+- diskclean never enters `.git`, `.claude`, `.codex`, `.agents`, `.diary`, `specs`, `plans`, `docs` or hidden home dirs.
+- qemubox refuses sensitive mounts unless `--mount-sensitive`, also from a project `.qemuboxrc`.
+- qemubox `-T` gives each scratch VM a random hyphenated name; `ls` prints sizes in K, M or G.
+- **Breaking:** `qemubox prune` takes no argument and never deletes VMs; use `qemubox rm --stopped <hours>`.
+- dockbox and qemubox images pin GitHub's SSH host keys.
+
 ## [v0.4.52] — 20261019
 
 > kronael v0.4.52 — Subtraction before additions

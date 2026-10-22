@@ -741,6 +741,7 @@ one toolchain is missing — report that tool skipped and continue.
 | `udfix` | `cd udfix && make install` | needs a Go toolchain |
 | `kvs` | `cd kvs && make install` | key-value store on one SQLite file for scripts (`kvs/README.md`); needs a Go toolchain |
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
+| `diskclean` | `cd diskclean && make install` | frees disk space in two levels (`-1`, `-2`), each asks y/N; `-l` lists only; bash only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
 | `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
 

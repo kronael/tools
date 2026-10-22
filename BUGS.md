@@ -1082,6 +1082,60 @@
 
 ## qemubox
 
+- **QEMUBOX-HOSTKEY-PER-BOOT** (MED) — `qemubox-init` deletes and regenerates
+  the guest SSH host keys at every boot (`dockbox/Dockerfile` vm stage,
+  `rm -f /etc/ssh/ssh_host_*`), while `known_hosts` is written only at VM start.
+  A guest reboot (e.g. a kernel panic) changes the key, every qemubox SSH
+  call fails host-key verification, and `rm`, `stop` and attach wait.
+  **Fix:** generate host keys once per VM disk (skip when present).
+
+- **QEMUBOX-PANIC-REBOOTS** (MED) — QEMU runs without `-no-reboot`, so a guest
+  panic reboots the guest in place instead of ending the QEMU process;
+  qemubox still sees it as running. **Fix:** add `-no-reboot` (and
+  `panic=-1` on the kernel command line) so a panic stops the VM.
+
+- **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
+  When the host disk fills, QEMU pauses the guest with `io-error`.
+  `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
+  qemubox stop", so the owner must stop the VM and start it again by hand,
+  even after space is back. `stop_box` already resumes over QMP
+  (`qemubox:873`). **Fix (proposal):** in `wait_ready`, on `paused:io-error`
+  check free space under `$ROOT`; above a margin, send QMP `cont` and keep
+  waiting; below it, print the free and needed space and exit. Same check in
+  `qemubox ls`/`status` so a paused VM shows how to recover.
+
+- **QEMUBOX-9P-TO-VIRTIOFS** (MED, design) — needs sign-off.
+  Host paths reach the guest over 9p (`qemubox/qemubox:596`, `:761`,
+  mount at `:805-808`). 9p is slow on many small files and weak on locks and
+  mmap, so the Codex SQLite DB must live in the guest `/tmp`. virtiofs fixes
+  both; `virtiofsd` is installed here at `/usr/lib/virtiofsd`. **Fix
+  (proposal):** per share, start one `virtiofsd --socket-path=<box>/<tag>.sock
+  --shared-dir=<src>` (plus `--readonly` for ro), add
+  `-chardev socket,id=<tag>,path=<sock> -device vhost-user-fs-pci,chardev=<tag>,tag=<tag>`,
+  and back guest RAM with `-object memory-backend-memfd,id=mem,size=$MEM,share=on
+  -numa node,memdev=mem` (vhost-user needs shared memory); the guest mounts
+  `-t virtiofs <tag> <dest>`. `stop_box` kills the daemons; the base kernel
+  needs `CONFIG_VIRTIO_FS`. Open: the guest identity mapping that
+  `security_model=none` gives 9p, and memfd with a 64 GiB guest.
+  Mac: QEMU's virtiofs needs `virtiofsd`, which is Linux-only (unverified);
+  on macOS virtiofs comes from Virtualization.framework, a second backend.
+
+- **QEMUBOX-NO-SERVICE-MANAGER** (MED, design) — needs sign-off.
+  A VM lives as a detached QEMU process that qemubox starts on first attach;
+  nothing restarts it after a pause, a crash or a reboot, and stop/start go
+  through the qemubox CLI only. **Fix (proposal):** a systemd user template
+  `qemubox@.service` (`ExecStart` = qemubox boot-only for `%i`, `ExecStop` =
+  `qemubox stop %i`, `Restart=on-failure`), plus `qemubox enable|disable
+  <name>`; the CLI attach then only connects over SSH. A path or timer unit
+  could resume `io-error` guests when free space returns. With
+  QEMUBOX-9P-TO-VIRTIOFS, each share becomes `qemubox-fs@<box>-<tag>.service`
+  (one `virtiofsd`) that `qemubox@<box>` Requires and orders After, so
+  systemd starts and stops the daemons with the VM and qemubox drops its PID
+  and kill logic; a `-v` share on a running VM goes through
+  `systemd-run --user`. Open: the 4h idle prune and `qemubox stop` must stop
+  the unit, never kill the process, or systemd restarts the VM. Linux only;
+  a Mac port would need launchd.
+
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
@@ -1180,6 +1234,16 @@
   the host wrote. Inert while memories are off: no `config.toml` key enables
   them and `~/.codex/memories` is empty. **Fix:** turn memories off for the
   guest Codex, or keep its memory files on the guest disk too.
+
+## diskclean
+
+- **DISKCLEAN-LINKED-TOOLCHAIN** (HIGH, data loss) — level 2 uninstalls a
+  linked rustup toolchain whose name starts with a version. The filter
+  `^[0-9.]+-[^ ]+$` in `level2` (`diskclean/diskclean`) matches a toolchain
+  such as `1.89.0-sbpf-<vendor>-v1.54`, which is a symlink into another
+  tool's install; `rustup toolchain uninstall` then breaks that tool.
+  **Fix:** skip every toolchain whose dir under `$(rustup show home)/toolchains`
+  is a symlink (`-L`), and cover it in `test.sh` with a symlinked fixture.
 
 ## bhctl
 

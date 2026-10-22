@@ -124,5 +124,14 @@ STUB
     grep -qE '&& exec codex --model gpt-6-astra$' "$STUB/command"
     bash "$here/qemubox" -T -n cli -x gpt </dev/null > "$STUB/output" 2>&1
     grep -qE '&& exec codex -m gpt-6-astra$' "$STUB/command"
+    printf '%s\n' '-v /:rw' > "$PROJ/.qemuboxrc"
+    if (cd "$PROJ" && bash "$here/qemubox" -n cli exec true) </dev/null > "$STUB/output" 2>&1
+    then
+        exit 1
+    else
+        [ "$?" = 2 ]
+    fi
+    rm "$PROJ/.qemuboxrc"
+    grep -q 'refusing to mount sensitive path /;' "$STUB/output"
 ) > "$fixture/cli.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and non-TTY"; }

@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
-MEM="${QEMUBOX_MEM:-65536}"
+MEM="${QEMUBOX_MEM:-24576}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
 LINGER="${QEMUBOX_LINGER:-1200}"
@@ -24,6 +24,7 @@ docker_remote=""
 persist_builds=""
 eph_no_tmpfs=""
 tmp_session=""
+mount_sensitive=""
 new_session=""
 gcloud_creds=""
 gpg_forward=""
@@ -49,7 +50,8 @@ usage() {
     cat <<EOF
 Usage: qemubox [options] [tool] [dirs...] [tool-args...]
        qemubox ls | status <name> | stop <name|glob|-a>... [-f]
-       qemubox rm <name|glob|-a>... | prune [hours] | build-base [-f|--force]
+       qemubox rm <name|glob|-a>... | rm --stopped <hours> | prune
+       qemubox build-base [-f|--force]
        qemubox [options] bash [dirs...]
        qemubox [options] exec <cmd> [args...]
 
@@ -76,8 +78,12 @@ Options:
     -e VAR     Forward env var into the session
     -v path    Extra 9p mount at same path ro by default; path:rw for read-write
     -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
-               (guest tmpfs, lost at power-off); VM name tmp unless -n;
-               implies -N
+               (guest tmpfs, lost at power-off); a new random VM name
+               unless -n; implies -N
+    --mount-sensitive
+               Mount a sensitive path: /, a top-level dir, \$HOME, an
+               ancestor of \$HOME or a hidden dir in \$HOME. Without it, such
+               a path is an error, and a run from one with no dir acts as -T
     -N         New Claude session: skip the resume picker
     -H         Egress kill-switch: disable the guest's outbound network
     -U         Untrusted: inject NO host config/credentials, force network off,
@@ -115,7 +121,7 @@ list or message each other's Claude sessions.
 Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
 is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 
-Environment: QEMUBOX_MEM=65536 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
+Environment: QEMUBOX_MEM=24576 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
 Memory: the host backs guest RAM as the guest touches it and takes freed pages
         back (virtio-balloon free page reporting). Guest /tmp is a tmpfs capped
@@ -131,8 +137,9 @@ Lifecycle: the VM stays up QEMUBOX_LINGER=1200 seconds after the last session
 Stop: qemubox stop resumes a paused guest, trims its disk, asks it to power
       off and waits up to 90s before stopping qemu; -f stops qemu at once
       (quit over QMP or SIGTERM, then SIGKILL).
-Prune: remove stopped over [hours] (default 2160); stop running idle past 4 hours.
-       Reclaim unreferenced bases except current.
+Prune: stop running VMs idle past 4 hours; never removes a VM. Reclaim
+       unreferenced bases except current.
+Remove: rm --stopped <hours> removes VMs stopped for over that many whole hours.
 State: $ROOT
 EOF
 }
@@ -143,6 +150,36 @@ box_name() {
 
 box_dir() {
     printf '%s/%s' "$ROOT" "$(box_name "$1")"
+}
+
+random_name() {
+    local adjectives=(bold brave calm clever eager fond gentle happy humble jolly
+        keen lively lucid merry nifty proud quirky serene sharp tender upbeat vivid
+        witty zealous)
+    local names=(babbage backus berners cerf church curie dijkstra hamilton hopper
+        kay knuth liskov lovelace mccarthy noether pike ritchie shannon stallman
+        thompson torvalds turing wirth wozniak)
+    local n tries
+    mkdir -p "$ROOT"
+    for tries in {1..100}
+    do
+        n="${adjectives[RANDOM % ${#adjectives[@]}]}-${names[RANDOM % ${#names[@]}]}"
+        if mkdir "$(box_dir "$n")" 2>/dev/null
+        then
+            printf '%s' "$n"
+            return 0
+        fi
+    done
+    echo "qemubox: no free random name after 100 tries; pass -n <name>" >&2
+    return 1
+}
+
+is_sensitive() {
+    local path home
+    path=$(realpath -m -- "$1")
+    home=$(realpath -m -- "$HOME")
+    [[ "$path" = / || "$path" =~ ^/[^/]+$ || "$home" = "$path" ||
+        "$home" = "$path"/* || ( "${path%/*}" = "$home" && "${path##*/}" = .* ) ]]
 }
 
 port_for() {
@@ -969,7 +1006,7 @@ build_base() (
         note "creating ext4 base in /tmp"
         mke2fs -q -t ext4 -F -d "$tmp/rootfs.tar" "$tmp/rootfs.raw" 20G
         note "converting base to qcow2"
-        qemu-img convert -O qcow2 "$tmp/rootfs.raw" "$base.qcow2.tmp"
+        qemu-img convert -c -O qcow2 -o compression_type=zstd "$tmp/rootfs.raw" "$base.qcow2.tmp"
         mv "$base.vmlinuz.tmp" "$base.vmlinuz"
         mv "$base.initrd.tmp" "$base.initrd"
         mv "$base.qcow2.tmp" "$base.qcow2"
@@ -979,16 +1016,17 @@ build_base() (
 )
 
 list_boxes() {
-    local dir name state use ram disk markers found=""
+    local dir name state use ram disk markers found="" mem used cache tmpfs
     mkdir -p "$ROOT"
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
         [ "${dir##*/}" = base ] && continue
-        [ -n "$found" ] || printf "NAME\tSTATUS\tUSE\tRAM\tDISK\tPATH\n"
+        [ -n "$found" ] ||
+            printf "NAME\tSTATUS\tUSE\tRAM\tUSED\tCACHE\tTMPFS\tDISK\tPATH\n"
         found=1
         name="${dir##*/}"
-        use=idle; ram=0
+        use=idle; ram=0; used=-; cache=-; tmpfs=-
         lock_box "$name" || return 1
         state=$(run_state "$name")
         if [ "$state" != stopped ]
@@ -1004,16 +1042,39 @@ list_boxes() {
                 use="?"
             fi
         fi
+        # Guest view: used = total - available, cache = page cache without
+        # tmpfs, tmpfs = shmem; the host RAM column is QEMU's resident size.
+        if [ "$state" = running ] && mem=$(ssh_plain_box "$name" \
+            "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo")
+        then
+            read -r -d '' t a c sh <<< "$mem" || true
+            # Guest output is untrusted: bash arithmetic runs command
+            # substitutions in array indexes, so accept digits only.
+            if [[ "$t$a$c$sh" =~ ^[0-9]+$ && -n "$t" && -n "$a" && -n "$c" && -n "$sh" ]]
+            then
+                used=$(human_kib $((10#$t - 10#$a)))
+                cache=$(human_kib $((10#$c - 10#$sh)))
+                tmpfs=$(human_kib "$sh")
+            fi
+        fi
         disk=0
         if [ -f "$dir/disk.qcow2" ]
         then
             disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
         fi
         unlock_box
-        printf "qemubox-%s\t%s\t%s\t%sKiB\t%sKiB\t%s\n" \
-            "$name" "$state" "$use" "${ram// /}" "$disk" "$dir"
+        printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" \
+            "$use" "$(human_kib "${ram// /}")" "$used" "$cache" "$tmpfs" \
+            "$(human_kib "$disk")" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
+}
+
+human_kib() {
+    case $1 in
+        *[!0-9]*|"") echo "$1" ;;
+        *) numfmt --from-unit=1024 --to=iec "$1" ;;
+    esac
 }
 
 match_boxes() {
@@ -1034,12 +1095,43 @@ match_boxes() {
     [ -n "$matched" ]
 }
 
+is_stopped_over() {
+    local dir ts
+    dir="$(box_dir "$1")"
+    ! running "$1" || return 1
+    ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || return 1
+    [ "$ts" -lt $(($(date +%s) - 10#$2 * 3600)) ]
+}
+
+stopped_boxes() {
+    local dir name
+    for dir in "$ROOT"/*
+    do
+        [ -d "$dir" ] || continue
+        name=${dir##*/}
+        [ "$name" = base ] && continue
+        is_stopped_over "$name" "$1" || continue
+        echo "qemubox-$name"
+        targets+=("$name")
+    done
+}
+
 remove_boxes() {
-    local pat name rc=0 targets=()
+    local pat name rc=0 hours="" targets=()
     [ "$#" -gt 0 ] || {
         echo "qemubox rm: a name or glob is required (-a for all)" >&2
         return 2
     }
+    if [ "$1" = --stopped ]
+    then
+        hours=${2:-}
+        [[ "$#" -eq 2 && "$hours" =~ ^[0-9]+$ ]] || {
+            echo "qemubox rm: --stopped takes whole hours and nothing else" >&2
+            return 2
+        }
+        stopped_boxes "$hours"
+        set --
+    fi
     for pat in "$@"
     do
         case "$pat" in
@@ -1051,7 +1143,12 @@ remove_boxes() {
     for name in "${targets[@]}"
     do
         lock_box "$name" || { rc=1; continue; }
-        remove_box "$name" || rc=1
+        if [ -n "$hours" ] && ! is_stopped_over "$name" "$hours"
+        then
+            note "qemubox-$name is no longer stopped over $hours hours; keeping it"
+        else
+            remove_box "$name" || rc=1
+        fi
         unlock_box
     done
     return "$rc"
@@ -1091,14 +1188,8 @@ stop_boxes() {
 }
 
 prune_boxes() {
-    local hours="${1:-2160}" now cutoff grace dir name ts markers rc=0
-    [[ "$hours" =~ ^[0-9]+$ ]] || {
-        echo "qemubox prune: hours must be a whole number, got '$hours'" >&2
-        return 2
-    }
-    now=$(date +%s)
-    cutoff=$((now - 10#$hours * 3600))
-    grace=$((now - 4 * 3600))
+    local grace dir name ts markers rc=0
+    grace=$(($(date +%s) - 4 * 3600))
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
@@ -1118,11 +1209,6 @@ prune_boxes() {
                     rc=1
                 fi
             fi
-        else
-            ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || {
-                unlock_box; continue;
-            }
-            [ "$ts" -ge "$cutoff" ] || remove_box "$name" || rc=1
         fi
         unlock_box
     done
@@ -1134,6 +1220,7 @@ prune_bases() (
     [ -d "$ROOT/base" ] || exit 0
     exec 8>"$ROOT/base/.lock"
     flock 8
+    [ -f "$ROOT/base/current" ] || exit 0
     current=$(cat "$ROOT/base/current") || exit 1
     for base in "$ROOT/base/"*.qcow2
     do
@@ -1248,6 +1335,7 @@ read_rc() {
 }
 
 project_rc() {
+    [ ! "$1/.qemuboxrc" -ef "$HOME/.qemuboxrc" ] || return 0
     read_rc "$1/.qemuboxrc"
     OPTIND=1
     while getopts ":n:d:x:e:v:HKUADgGPBTSN" opt "${rc_tokens[@]}"
@@ -1434,16 +1522,23 @@ case "${1:-}" in
     status)
         [ -n "${2:-}" ] || { echo "usage: qemubox status <name>" >&2; exit 2; }
         status_box "$2"; exit 0 ;;
-    rm) shift; remove_boxes "$@"; exit $? ;;
+    rm) shift; rc=0; remove_boxes "$@" || rc=$?; prune_bases || rc=1; exit "$rc" ;;
     stop) shift; stop_boxes "$@"; exit $? ;;
-    prune) prune_boxes "${2:-2160}"; exit $? ;;
+    prune)
+        [ "$#" -eq 1 ] || {
+            echo "qemubox prune: takes no argument; use qemubox rm --stopped <hours>" >&2
+            exit 2
+        }
+        prune_boxes; exit $? ;;
     build-base)
         force=""
         case "${2:-}" in
             ""|-f|--force) [ -n "${2:-}" ] && force=1 ;;
             *) echo "unknown build-base option: $2" >&2; exit 2 ;;
         esac
+        prune_bases
         build_base "$force"
+        prune_bases
         exit 0 ;;
     -h|--help|help) usage; exit 0 ;;
 esac
@@ -1456,6 +1551,7 @@ for a in "$@"; do
     case "$a" in
         --no-ephemeral) persist_builds=1 ;;
         --untrusted) untrusted=1; network="" ;;
+        --mount-sensitive) mount_sensitive=1 ;;
         *) _args+=("$a") ;;
     esac
 done
@@ -1488,6 +1584,15 @@ for arg in "$@"; do
     esac
 done
 
+if [ -z "$mount_sensitive" ]
+then
+    if [ -z "$tmp_session" ] && [ "${#dirs[@]}" -eq 0 ] && is_sensitive "$(pwd)"
+    then
+        warnings+=("$(pwd) is a sensitive path; starting a scratch box as -T does (pass the dir and --mount-sensitive to mount it)")
+        tmp_session=1
+    fi
+fi
+
 if [ -n "$tmp_session" ]
 then
     [ "${#dirs[@]}" -eq 0 ] || {
@@ -1495,12 +1600,23 @@ then
         exit 2
     }
     primary="$TMP_WORKDIR"
-    name_override="${name_override:-tmp}"
+    name_override="${name_override:-$(random_name)}"
     new_session=1
 else
     [ "${#dirs[@]}" -gt 0 ] || dirs=("$(pwd)")
     primary="${dirs[-1]}"
     project_rc "$primary"
+fi
+if [ -z "$mount_sensitive" ]
+then
+    for dir in "${dirs[@]}" "${extra_dirs[@]}"
+    do
+        if is_sensitive "$dir"
+        then
+            echo "qemubox: refusing to mount sensitive path $dir; pass --mount-sensitive to mount it" >&2
+            exit 2
+        fi
+    done
 fi
 if [ "$entrypoint" != exec ]
 then

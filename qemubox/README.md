@@ -26,6 +26,7 @@ make install
 `make install` builds the `vm` target from `dockbox/Dockerfile`, exports it
 into a qcow2 base named by its Docker image ID, then installs the script.
 `qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
+`build-base` writes the base zstd-compressed. `build-base` and `rm` remove each base that is not current and that no VM uses.
 
 System packages:
 
@@ -58,7 +59,7 @@ qemubox cargo test .       # run any command in the mounted dir
 qemubox bash               # shell into the project's VM (-n name for a separate box)
 qemubox exec make test     # run a command in the project's VM
 qemubox -v ~/src/lib .     # extra read-only mount (:rw for read-write)
-qemubox -T bash            # scratch VM: no project mount, works in /tmp/work
+qemubox -T bash            # new scratch VM: no project mount, works in /tmp/work
 qemubox -N                 # new Claude session, no resume picker
 ```
 
@@ -70,8 +71,17 @@ through untouched. The default VM name is the project dir basename; `-n name` gi
 
 `-T` starts a temporary session: qemubox mounts no project dir, and the
 session starts in `/tmp/work` on the guest tmpfs, which power-off clears.
-The VM is `qemubox-tmp` unless `-n` names it. `-v` still adds host paths, a
-dir argument is an error, and `-T` implies `-N`.
+Each `-T` run gets a new random VM name, such as `qemubox-brave-turing`,
+unless `-n` names it. `-v` still adds host paths, a dir argument is an error,
+and `-T` implies `-N`. Scratch VMs stay on disk after power-off: `qemubox ls`
+lists them and `qemubox rm` removes them.
+
+qemubox does not mount a sensitive path: `/`, a top-level dir such as `/etc`
+or `/home`, `$HOME`, an ancestor of `$HOME`, or a hidden dir directly in
+`$HOME`. A project dir or `-v` path of that kind is an error. A run from such
+a dir with no dir argument starts a scratch VM, as `-T` does. The guest home
+then stays the guest's own, so the guest shell uses only the image's `/etc`
+defaults and not the host dotfiles. `--mount-sensitive` mounts the path.
 
 Management:
 
@@ -83,7 +93,8 @@ qemubox stop -a          # power every running VM off
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
 qemubox rm -a            # remove all VMs (bare `rm` refuses; -a or '*' means all)
-qemubox prune [hours]    # remove old stopped VMs; stop running idle VMs past 4h
+qemubox rm --stopped 72  # remove VMs stopped for over 72 whole hours
+qemubox prune            # stop running idle VMs past 4h; reclaim unused bases
 qemubox build-base       # (re)bake the prebuilt base image
 ```
 
@@ -127,7 +138,7 @@ holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
 match as for `rm`; a stopped box is reported and skipped.
 
 `ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
-space allocated on the host (both sizes in KiB); a VM waiting out
+space allocated on the host (sizes in K, M or G); a VM waiting out
 `QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails
 because the host filesystem under the overlay is full; other write errors go
 to the guest. `ls` and `status` then show `paused:` and qemu's reason, such as
@@ -141,10 +152,11 @@ powers itself off skips the trim; the first `stop` after its next boot does it.
 
 `rm` accepts several names or globs, with or without the `qemubox-` prefix,
 and fails if removal fails.
-`prune [hours]` removes stopped VMs after that many hours (default 2160).
-Running VMs with no sessions stop after four hours since readiness; their disks
-stay until the stopped age rule applies. Prune also removes base sets that no
-VM references, keeping the `current` base.
+`rm --stopped <hours>` lists the VMs stopped for over that many whole hours
+(the `stopped` marker age, else the directory age), then removes them. `prune`
+takes no argument and never removes a VM: it stops running VMs with no sessions
+four hours after readiness, and removes base sets that no VM references,
+keeping the `current` base. Their disks stay until `rm`.
 
 ## Build directories
 
@@ -157,7 +169,7 @@ Only directories present at launch are overmounted.
 `-B` backs them with the guest disk, keyed by canonical path. Without `-B`
 they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 
-`/tmp` is a tmpfs capped at 75% of guest RAM, 48 GiB at the default 64 GiB.
+`/tmp` is a tmpfs capped at 75% of guest RAM, 18 GiB at the default 24 GiB.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
 in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
@@ -228,7 +240,7 @@ What qemubox gives you:
   it can only touch the project dir(s) you mount and its own persistent disk.
   Host paths outside the shares stay inaccessible unless explicitly forwarded.
 - **Persistent guest storage.** The qcow2 overlay keeps installs and guest
-  files across boots. `qemubox rm` or age-based prune deletes it.
+  files across boots. `qemubox rm` deletes it.
 
 What it does **not** give you — do **not** run genuinely hostile code here:
 
@@ -272,7 +284,7 @@ pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools sou
 
 ## Memory
 
-A VM starts with 64 GiB (`QEMUBOX_MEM=65536`). KVM backs a guest page with
+A VM starts with 24 GiB (`QEMUBOX_MEM=24576`). KVM backs a guest page with
 host memory only once the guest touches it, and the VM's virtio-balloon
 device reports freed pages back to the host, so a VM costs what the guest
 holds, not its size: a `cargo clean` or a removed tmpfs file returns its

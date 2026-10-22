@@ -1,0 +1,667 @@
+#!/bin/bash
+set -Eeuo pipefail
+shopt -s extglob
+
+usage() {
+    cat <<'EOF'
+usage: diskclean [-1] [-2] [-k kind,...] [-o AGE] [-l] [dir...]
+
+Lists ephemeral build and cache dirs, stalest first, and asks y/N before
+removing.
+  -1        level 1: caches and build output inside projects under dir...
+            (default)
+  -2        level 2: level 1, then global toolchains and tool caches
+            images
+  -k kinds  only these kinds (comma list); -k list prints the kinds table
+  -o AGE    only candidates not used for AGE: 30d, 8w, 6m, 1y (bare number
+            is days); default 30d at level 1, 0 at level 2
+  -l        list only, never prompt
+  dir...    roots for level 1 (default ~), resolved with realpath; never
+            searched: .git, .claude, .codex, .agents, .diary, specs, plans,
+            docs at any depth, and hidden dirs directly under ~; a root
+            inside any of them is refused
+EOF
+}
+
+kinds_table() {
+    cat <<'EOF'
+1 node_modules    dependency install beside package.json
+1 target          cargo build output beside Cargo.toml, keeping deploy
+1 pnpm-store      project-local pnpm store
+1 next            Next.js build output
+1 venv            python virtualenv with pyvenv.cfg
+1 pycache         compiled python files
+1 toolcache       pytest, ruff and mypy caches
+1 gomod           project-local go module cache
+2 rustup          numbered rustup toolchains
+2 platform-tools  Solana platform-tools versions
+2 pipenv          pipenv virtualenvs
+2 browsers        playwright and puppeteer browsers
+2 prunes          vendor prune commands, docker images, qemubox, dockbox
+EOF
+}
+
+want() {
+    [[ -z $kinds || ,$kinds, == *",$1,"* ]]
+}
+
+wants_level() {
+    kinds_table | awk -v level="$1" -v kinds=",$kinds," '
+        $1 == level && (kinds == ",," || index(kinds, "," $2 ",")) {found = 1}
+        END {exit !found}'
+}
+
+die() {
+    echo "$*" >&2
+    exit 2
+}
+
+parse_age() {
+    local days
+    if [[ ! $1 =~ ^([0-9]+)([dwmy]?)$ ]]
+    then
+        echo "Bad age: $1" >&2
+        return 1
+    fi
+    case ${BASH_REMATCH[2]} in
+        w) days=7 ;;
+        m) days=30 ;;
+        y) days=365 ;;
+        *) days=1 ;;
+    esac
+    echo $(( ${BASH_REMATCH[1]} * days * 86400 ))
+}
+
+confirm() {
+    local answer
+    ! $list_only || return 1
+    printf '%s [y/N] ' "$1"
+    read -r answer
+    [[ $answer == [yY] ]]
+}
+
+check_root() {
+    local part parts
+    if [[ $1 == "$home"/.* ]]
+    then
+        die "Refusing a root inside a hidden dir under home: $1"
+    fi
+    IFS=/ read -ra parts <<< "$1"
+    for part in "${parts[@]}"
+    do
+        if [[ " ${pruned_names[*]} " == *" $part "* ]]
+        then
+            die "Refusing a root inside $part: $1"
+        fi
+    done
+}
+
+run_installed() {
+    if command -v "$1" >/dev/null
+    then
+        "$@"
+    else
+        echo "skip: $1 not installed" >&2
+    fi
+}
+
+walk_projects() {
+    local -n match=$1
+    local name prune=()
+    shift
+    for name in "${pruned_names[@]}"
+    do
+        prune+=(-name "$name" -o)
+    done
+    find "$@" -xdev -mindepth 1 \
+        \( "${prune[@]}" \( -path "$home/.*" ! -path "$home/.*/*" \) \) \
+        -prune -o "${match[@]}"
+}
+
+kind_of() {
+    case $1 in
+        */node_modules) echo node_modules ;;
+        */target) echo target ;;
+        */.pnpm-store) echo pnpm-store ;;
+        */.next) echo next ;;
+        */.venv|*/venv) echo venv ;;
+        */__pycache__) echo pycache ;;
+        */.pytest_cache|*/.ruff_cache|*/.mypy_cache) echo toolcache ;;
+        */pkg/mod) echo gomod ;;
+    esac
+}
+
+is_inside_roots() {
+    local root
+    [[ $1 == /*/* ]] || return 1
+    for root in "${roots[@]}"
+    do
+        if [[ $1 == "${root%/}"/* ]]
+        then
+            return 0
+        fi
+    done
+    return 1
+}
+
+project_dir() {
+    local dir=
+    case $1 in
+        gomod)
+            dir=${2%/*}
+            while is_inside_roots "$dir/." && [[ ! -f $dir/go.mod ]]
+            do
+                dir=${dir%/*}
+            done
+            is_inside_roots "$dir/." && echo "$dir" || echo "${2%/*}" ;;
+        pipenv)
+            read -r dir < "$2/.project" || true
+            echo "$dir" ;;
+        rustup|platform-tools|browsers) ;;
+        *) echo "${2%/*}" ;;
+    esac
+}
+
+is_proven() {
+    local line
+    case $1 in
+        node_modules) [[ -f ${2%/*}/package.json ]] ;;
+        target) [[ -f ${2%/*}/Cargo.toml && -f $2/CACHEDIR.TAG ]] ;;
+        pnpm-store) compgen -G "$2/v+([0-9])/files/" >/dev/null ;;
+        next) [[ -f ${2%/*}/package.json && -f $2/package.json ]] ;;
+        venv) [[ -f $2/pyvenv.cfg ]] ;;
+        pycache) compgen -G "$2/*.pyc" >/dev/null ;;
+        toolcache)
+            [[ -f $2/CACHEDIR.TAG ]] && read -r line < "$2/CACHEDIR.TAG" &&
+                [[ $line == "Signature: 8a477f597d28d172789f06886806bc55" ]] ;;
+        gomod) [[ -d $2/cache/download &&
+            -f $(project_dir gomod "$2")/go.mod ]] ;;
+    esac
+}
+
+measure_kb() {
+    if [[ ${1##*/} == target ]]
+    then
+        find "$1" -mindepth 1 -maxdepth 1 ! -name deploy -exec du -skx -- {} + |
+            awk '{kb += $1} END {print kb + 0}'
+    else
+        du -skx -- "$1" | cut -f1
+    fi
+}
+
+to_iec() {
+    numfmt -d $'\t' --field=3 --from-unit=1024 --to=iec
+}
+
+newest() {
+    awk -v now="$now" '$1 > m {m = $1} END {printf "%.0f\n", (m > now ? now : m)}'
+}
+
+has_atime() {
+    [[ $(findmnt -T "$1" -no OPTIONS) != *noatime* ]]
+}
+
+project_activity() {
+    {
+        stat -c %Y "$1"/.git/{index,HEAD,logs/HEAD,FETCH_HEAD} 2>/dev/null ||
+            true
+        find "$1" -xdev -mindepth 1 \
+            \( -name .git -o "${dir_match[@]}" \) -prune -o \
+            -type f -printf '%T@\n'
+    } | newest
+}
+
+last_use_of() {
+    local dir=$1 project=$2 depth=$3 read_expr=(-false)
+    if has_atime "$dir"
+    then
+        read_expr=(-type f ! -name CACHEDIR.TAG ! -name .project -printf '%A@\n')
+    fi
+    {
+        { [[ -z $project ]] || project_activity "$project"; } &&
+            find "$dir" -maxdepth "$depth" -printf '%T@\n' \( "${read_expr[@]}" \)
+    } | newest
+}
+
+is_mount_point() {
+    local status=0
+    mountpoint -q -- "$1" || status=$?
+    (( status != 32 ))
+}
+
+add_kept() {
+    kept+=("$1"$'\t'"${2#"$home"/}")
+}
+
+is_l2() {
+    [[ " ${l2_rows[*]}" == *" $1;"* ]]
+}
+
+prove_l2() {
+    local row kind base pat markers marker name
+    for row in "${l2_rows[@]}"
+    do
+        IFS=';' read -r kind base pat markers <<< "$row"
+        name=${2#"$base"/}
+        if [[ $kind == "$1" && $2 == "$base"/* && $name != */* && $name == $pat ]]
+        then
+            for marker in $markers
+            do
+                compgen -G "$2/$marker" >/dev/null || return 1
+            done
+            return 0
+        fi
+    done
+    return 1
+}
+
+collect_pins() {
+    local file pin
+    pinned=()
+    while IFS= read -r -d '' file
+    do
+        pin=$(sed -n -e '/^ *channel *=/{s/[^"]*"\([^"]*\)".*/\1/;p;q}' \
+            -e '/^[0-9]/{p;q}' "$file")
+        [[ -z $pin ]] || pinned[$pin]=${file%/*}
+    done < <(walk_projects pin_walk "${roots[@]}")
+}
+
+candidate_reason() {
+    local kind=$1 dir=$2 name=${2##*/} pin
+    if is_l2 "$kind"
+    then
+        prove_l2 "$kind" "$dir" || return 1
+    elif ! is_proven "$kind" "$dir"
+    then
+        if [[ $kind == target && -f ${dir%/*}/Cargo.toml ]]
+        then
+            echo "target without CACHEDIR.TAG"
+            return 0
+        fi
+        return 1
+    fi
+    if [[ -L $dir ]]
+    then
+        echo symlink
+    elif is_mount_point "$dir"
+    then
+        echo "mount point"
+    elif [[ -e $dir/.git ]]
+    then
+        echo "holds .git"
+    elif ! is_l2 "$kind" && [[ $(project_dir "$kind" "$dir") == "$home" ]]
+    then
+        echo "project is home"
+    elif [[ $kind == rustup ]]
+    then
+        if ! command -v rustup >/dev/null
+        then
+            echo "rustup not installed"
+        elif rustup toolchain list |
+            awk -v n="$name" '$1 == n && NF > 1 {f = 1} END {exit !f}'
+        then
+            echo "default or active"
+        else
+            for pin in "${!pinned[@]}"
+            do
+                if [[ $name == "$pin" || $name == "$pin"[-.]* ]]
+                then
+                    echo "pinned by ${pinned[$pin]#"$home"/}"
+                    break
+                fi
+            done
+        fi
+    elif [[ $kind == platform-tools ]]
+    then
+        if [[ $dir/platform-tools == $(printf '%s\n' \
+            "${dir%/*}"/v+([0-9])+(.+([0-9]))/platform-tools | sort -V | tail -1) ]]
+        then
+            echo newest
+        elif [[ -n $(find "$rustup_home/toolchains" -maxdepth 1 -type l \
+            -lname "$dir/*" -print -quit 2>/dev/null) ]]
+        then
+            echo "linked by rustup"
+        fi
+    fi
+}
+
+candidates() {
+    local row kind base pat markers dir
+    if (( $1 == 1 ))
+    then
+        while IFS= read -r -d '' dir
+        do
+            printf '%s\0%s\0' "$(kind_of "$dir")" "$dir"
+        done < <(walk_projects dir_walk "${roots[@]}")
+        return 0
+    fi
+    for row in "${l2_rows[@]}"
+    do
+        IFS=';' read -r kind base pat markers <<< "$row"
+        for dir in "$base"/$pat
+        do
+            [[ ! -d $dir ]] || printf '%s\0%s\0' "$kind" "$dir"
+        done
+    done
+}
+
+scan() {
+    local kind dir reason project kb last depth=2
+    records=()
+    kept=()
+    if (( $1 == 2 ))
+    then
+        depth=99
+        ! want rustup || collect_pins
+    fi
+    while IFS= read -r -d '' kind && IFS= read -r -d '' dir
+    do
+        want "$kind" || continue
+        reason=$(candidate_reason "$kind" "$dir") || continue
+        project=$(project_dir "$kind" "$dir")
+        if [[ $reason ]]
+        then
+            add_kept "$reason" "$dir"
+        elif ! kb=$(measure_kb "$dir")
+        then
+            add_kept unreadable "$dir"
+        elif [[ $kind == pipenv && ! -d $project ]]
+        then
+            records+=("$kind"$'\t'0$'\t'"$kb"$'\t'"$dir"$'\t'"project gone")
+        elif last=$(last_use_of "$dir" "$project" "$depth")
+        then
+            records+=("$kind"$'\t'"$last"$'\t'"$kb"$'\t'"$dir")
+        else
+            add_kept unreadable "$dir"
+        fi
+    done < <(candidates "$1")
+}
+
+remove_candidate() {
+    case $1 in
+        rustup) rustup toolchain uninstall "${2##*/}" ;;
+        target) find "$2" -mindepth 1 -maxdepth 1 ! -name deploy \
+            -exec rm -rf --one-file-system -- {} + ;;
+        gomod) chmod -R u+w -- "$2" && rm -rf --one-file-system -- "$2" ;;
+        *) rm -rf --one-file-system -- "$2" ;;
+    esac
+}
+
+do_remove() {
+    local kind=$1 dir=$2 kb=$3 reason
+    if is_l2 "$kind"
+    then
+        [[ $kind != rustup ]] || collect_pins
+    elif ! is_inside_roots "$dir"
+    then
+        echo "Refused: $dir is outside the searched roots" >&2
+        failed=true
+        return 0
+    fi
+    reason=$(candidate_reason "$kind" "$dir") || reason=changed
+    if [[ $reason ]]
+    then
+        echo "skip: ${dir#"$home"/} changed since listing"
+        return 0
+    fi
+    if remove_candidate "$kind" "$dir"
+    then
+        removed_n=$(( removed_n + 1 ))
+        freed_kb=$(( freed_kb + kb ))
+    else
+        echo "Failed: $dir" >&2
+        failed=true
+    fi
+}
+
+print_removed() {
+    echo "$1 $removed_n dirs," \
+        "$(numfmt --from-unit=1024 --to=iec "$freed_kb")"
+}
+
+stop_run() {
+    print_removed interrupted:
+    exit 1
+}
+
+remove_rows() {
+    local row kind dir kb
+    removed_n=0
+    freed_kb=0
+    for row in "$@"
+    do
+        IFS=$'\t' read -r kind _ kb dir _ <<< "$row"
+        do_remove "$kind" "$dir" "$kb"
+    done
+    print_removed removed
+}
+
+print_table() {
+    local kind last kb path note age
+    printf '%9s %6s  %-14s %s\n' 'last use' size kind path
+    while IFS=$'\t' read -r kind last kb path note
+    do
+        age=never
+        (( ! last )) || age=$(( (now - last) / 86400 ))d
+        printf '%9s %6s  %-14s %s%s\n' "$age" "$kb" "$kind" \
+            "${path#"$home"/}" "${note:+  ($note)}"
+    done < <(printf '%s\n' "$@" | to_iec)
+}
+
+print_summary() {
+    local kind count kb
+    printf ' %-14s %3s %6s\n' kind n size
+    while IFS=$'\t' read -r kind count kb
+    do
+        printf ' %-14s %3s %6s\n' "$kind" "$count" "$kb"
+    done < <(printf '%s\n' "$@" | awk -F'\t' '
+        {n[$1]++; kb[$1] += $3; total_n++; total_kb += $3}
+        END {
+            for (kind in n) print kind "\t" n[kind] "\t" kb[kind] | "sort"
+            close("sort")
+            print "total\t" total_n "\t" total_kb
+        }' | to_iec)
+}
+
+print_kept() {
+    (( ${#kept[@]} )) || return 0
+    printf '%s\n' "${kept[@]}" | awk -F'\t' '
+        !($1 in n) {order[++k] = $1}
+        {n[$1]++}
+        $2 != "" {paths[$1] = paths[$1] (paths[$1] != "" ? ", " : "") $2}
+        END {
+            for (i = 1; i <= k; i++) {
+                printf "%s%d %s%s", (i > 1 ? "; " : "kept: "), n[order[i]],
+                    order[i], (paths[order[i]] ? " (" paths[order[i]] ")" : "")
+            }
+            print ""
+        }'
+}
+
+offer() {
+    local sorted=() row last
+    selected=()
+    if (( ${#records[@]} ))
+    then
+        mapfile -t sorted < <(printf '%s\n' "${records[@]}" |
+            sort -t$'\t' -k2,2n -k3,3nr)
+    fi
+    for row in "${sorted[@]}"
+    do
+        IFS=$'\t' read -r _ last _ <<< "$row"
+        if (( now - last < min_age ))
+        then
+            add_kept "used within $(( min_age / 86400 ))d" ""
+        else
+            selected+=("$row")
+        fi
+    done
+    if (( ! ${#selected[@]} ))
+    then
+        echo "nothing to clean at level $1"
+        print_kept
+        return 1
+    fi
+    print_table "${selected[@]}"
+    print_summary "${selected[@]}"
+    print_kept
+}
+
+clean_level() {
+    local recorded=yes root
+    if (( $1 == 1 ))
+    then
+        for root in "${roots[@]}"
+        do
+            has_atime "$root" || recorded=no
+        done
+        echo "scanning ${#roots[@]} roots (atime recorded: $recorded)"
+    fi
+    scan "$1"
+    offer "$1" || return 0
+    confirm "level $1: remove these?" || return 0
+    remove_rows "${selected[@]}"
+}
+
+anonymous_volumes() {
+    run_installed docker volume ls -q -f dangling=true |
+        grep -Ex '[0-9a-f]{64}' || true
+}
+
+prune_tools() {
+    local row prune store words size=
+    echo "tool prunes:"
+    for row in "${prune_rows[@]}"
+    do
+        IFS=';' read -r prune store <<< "$row"
+        read -ra words <<< "${store:-true}"
+        size=$("${words[@]}" 2>/dev/null |
+            xargs -r -d '\n' du -shx -- 2>/dev/null | cut -f1) || true
+        printf '  %-26s %s\n' "$prune" "$size"
+    done
+    run_installed qemubox ls
+    run_installed dockbox ls
+    run_installed docker system df
+    echo "anonymous volumes no container uses:"
+    anonymous_volumes
+    echo "dockbox and qemubox images need a rebuild after this"
+    confirm "level 2: run these prunes?" || return 0
+    for row in "${prune_rows[@]}"
+    do
+        read -ra words <<< "${row%%;*}"
+        run_installed "${words[@]}"
+    done
+    anonymous_volumes | xargs -r docker volume rm
+}
+
+level=1
+kinds=
+min_age=
+list_only=false
+declare -A pinned=()
+rustup_home=${RUSTUP_HOME:-$HOME/.rustup}
+cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
+home=$(realpath -- "$HOME")
+pruned_names=(.git .claude .codex .agents .diary specs plans docs)
+dir_match=(-path '*/node_modules' -o -path '*/target' -o -path '*/.pnpm-store'
+    -o -path '*/.next' -o -path '*/.venv' -o -path '*/venv'
+    -o -path '*/__pycache__' -o -path '*/.pytest_cache'
+    -o -path '*/.ruff_cache' -o -path '*/.mypy_cache' -o -path '*/pkg/mod')
+dir_walk=(-type d \( "${dir_match[@]}" \) -prune -print0)
+pin_walk=(\( "${dir_match[@]}" \) -prune -o -type f
+    \( -name rust-toolchain -o -name rust-toolchain.toml \) -print0)
+l2_rows=(
+    "rustup;$rustup_home/toolchains;+([0-9]).+([0-9])*;bin/rustc"
+    "platform-tools;$cache_home/solana;v+([0-9])+(.+([0-9]));platform-tools"
+    "pipenv;$HOME/.local/share/virtualenvs;*;pyvenv.cfg .project"
+    "browsers;$cache_home;ms-playwright;*/@(INSTALLATION_COMPLETE|DEPENDENCIES_VALIDATED)"
+    "browsers;$cache_home;puppeteer;@(chrome|chrome-headless-shell)"
+)
+prune_rows=(
+    "pnpm store prune;pnpm store path"
+    "bun pm cache rm;echo $home/.bun/install/cache"
+    "uv cache prune;uv cache dir"
+    "pip cache purge;pip cache dir"
+    "pre-commit gc;echo $cache_home/pre-commit"
+    "yay -Sc;echo $cache_home/yay"
+    "go clean -cache;go env GOCACHE"
+    "go clean -modcache;go env GOMODCACHE"
+    "docker image prune -a -f;"
+    "docker builder prune -f;"
+    "qemubox prune;"
+    "dockbox prune 0;"
+)
+roots=()
+now=$(date +%s)
+records=()
+selected=()
+kept=()
+removed_n=0
+freed_kb=0
+failed=false
+
+if [[ ${1:-} == --help ]]
+then
+    usage
+    exit 0
+fi
+while getopts ':12k:o:lh' opt
+do
+    case $opt in
+        1|2) level=$opt ;;
+        k) kinds=$OPTARG ;;
+        o) min_age=$(parse_age "$OPTARG") || exit 2 ;;
+        l) list_only=true ;;
+        h) usage; exit 0 ;;
+        :) usage >&2; die "Option needs an argument: -$OPTARG" ;;
+        *) usage >&2; die "Unknown option: -$OPTARG" ;;
+    esac
+done
+shift $(( OPTIND - 1 ))
+
+if [[ $kinds == list ]]
+then
+    kinds_table
+    exit 0
+fi
+IFS=, read -ra names <<< "$kinds"
+for kind in "${names[@]}"
+do
+    kinds_table | awk '{print $2}' | grep -qxF -- "$kind" ||
+        die "Unknown kind: $kind"
+done
+if (( ! $# ))
+then
+    set -- "$home"
+fi
+for dir in "$@"
+do
+    [[ -d $dir ]] || die "Not a directory: $dir"
+    root=$(realpath -- "$dir")
+    check_root "$root"
+    roots+=("$root")
+done
+if [[ -z $min_age ]]
+then
+    min_age=$(( level == 1 ? 30 * 86400 : 0 ))
+fi
+
+trap stop_run INT TERM
+df -h / "$HOME"
+if wants_level 1
+then
+    clean_level 1
+fi
+if (( level >= 2 )) && wants_level 2
+then
+    clean_level 2
+    if want prunes
+    then
+        prune_tools
+    fi
+fi
+df -h / "$HOME"
+if $failed
+then
+    exit 1
+fi

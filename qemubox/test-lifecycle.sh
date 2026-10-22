@@ -1,6 +1,5 @@
 true_ "rm accepts ls prefix" 'rm_matches repo qemubox-repo'
 true_ "rm accepts prefixed glob" 'rm_matches repo-1 "qemubox-repo-*"'
-exits 2 'prune_boxes bad' "prune rejects invalid age"
 exits 2 'remove_boxes' "rm requires names"
 exits 1 'remove_boxes nonexistent-xyz' "rm fails on no match"
 exits 2 'remove_boxes --bad' "rm rejects unknown options"
@@ -119,11 +118,46 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     }
     stop_box() { echo "$1" >> "$fixture/stopped-idle"; }
     remove_box() { echo "$1" >> "$fixture/pruned"; }
-    if prune_boxes 2; then exit 1; fi
-    [ "$(cat "$fixture/pruned")" = stopped ]
+    if prune_boxes; then exit 1; fi
+    [ ! -e "$fixture/pruned" ]
     [ "$(cat "$fixture/stopped-idle")" = old ]
 ) > "$fixture/prune.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/prune.log"; bad "prune age, grace, busy and failed count"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/prune.log"; bad "prune grace, busy and failed count; removes no VM"; }
+
+(
+    set -e
+    ROOT="$fixture/rm-stopped"
+    mkdir -p "$ROOT"/{old,recent,up,base}
+    touch "$ROOT/old/stopped" "$ROOT/recent/stopped"
+    touch -d '3 hours ago' "$ROOT/old/stopped"
+    running() { [ "$1" = up ]; }
+    remove_box() { echo "$1" >> "$fixture/rm-stopped.removed"; }
+    [ "$(remove_boxes --stopped 2)" = qemubox-old ]
+    [ "$(cat "$fixture/rm-stopped.removed")" = old ]
+) > "$fixture/rm-stopped.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/rm-stopped.log"; bad "rm --stopped removes only VMs stopped over the age"; }
+(
+    set -e
+    ROOT="$fixture/rm-stopped-race"
+    mkdir -p "$ROOT"/{old,restarted,flipped,base}
+    touch -d '3 hours ago' "$ROOT"/{old,restarted,flipped}/stopped
+    up=""
+    running() { [ "$1" = "$up" ]; }
+    lock_box() {
+        case "$1" in
+            restarted) touch "$ROOT/restarted/stopped" ;;
+            flipped) up=flipped ;;
+        esac
+    }
+    unlock_box() { :; }
+    remove_box() { echo "$1" >> "$fixture/rm-stopped-race.removed"; }
+    remove_boxes --stopped 2 > /dev/null 2>&1
+    [ "$(cat "$fixture/rm-stopped-race.removed")" = old ]
+) > "$fixture/rm-stopped-race.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/rm-stopped-race.log"; bad "rm --stopped rechecks running and age under the lock"; }
+exits 2 'remove_boxes --stopped' "rm --stopped requires hours"
+exits 2 'remove_boxes --stopped bad' "rm --stopped rejects invalid hours"
+exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
 
 (
     set -e
@@ -133,9 +167,15 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     echo disk > "$ROOT/vm/disk.qcow2"
     running() { return 0; }
     session_markers() { echo 123; }
+    ssh_plain_box() { printf '%s\n' 'x[$(touch "$fixture/pwned")0]' 1 1 1; }
+    list_boxes > /dev/null
+    [ ! -e "$fixture/pwned" ]
+    ssh_plain_box() { printf '%s\n' 100 40 30 10; }
+    [[ "$(list_boxes)" = *$'\t60K\t20K\t10K\t'* ]]
+    unset -f ssh_plain_box
     output=$(list_boxes)
-    [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'DISK$'\t'PATH* ]]
-    [[ "$output" = *$'running\tbusy\t'*KiB* ]]
+    [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'USED$'\t'CACHE$'\t'TMPFS$'\t'DISK$'\t'PATH* ]]
+    [[ "$output" = *$'running\tbusy\t'*[0-9KMG]* ]]
     session_markers() { :; }
     [[ "$(list_boxes)" = *$'running\tidle\t'* ]]
     session_markers() { return 1; }
