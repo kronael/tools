@@ -90,7 +90,7 @@ build_dep_test() {
     }
     fake_docker() { touch "$fixture/unexpected-build"; return 43; }
     QEMUBOX_DOCKER=fake_docker
-    for missing in fake_docker bsdtar mke2fs; do
+    for missing in fake_docker qemu-img tar flock; do
         if build_base 2> "$fixture/deps-error"; then exit 1; fi
         [ ! -f "$fixture/unexpected-build" ]
         grep -q "Missing:.*$missing" "$fixture/deps-error"
@@ -98,16 +98,50 @@ build_dep_test() {
 }
 regression "missing build dependencies fail before Docker build or export" build_dep_test
 
-mke2fs_test() {
+build_import_test() {
     regression_setup
-    fake_docker() { touch "$fixture/unexpected-mke-build"; return 43; }
-    mke2fs() { echo 'tar input unsupported' >&2; return 1; }
+    command() {
+        case "${2:-}" in bsdtar|mke2fs) return 1 ;; esac
+        builtin command "$@"
+    }
+    mkdir -p "$ROOT/export/boot"
+    printf kernel > "$ROOT/export/boot/vmlinuz-fixture"
+    printf initrd > "$ROOT/export/boot/initrd.img-fixture"
+    touch "$ROOT/export/.dockerenv"
+    fake_docker() {
+        case "$1" in
+            build) : ;;
+            image) printf 'sha256:%064d\n' 0 ;;
+            create) echo fixture-container ;;
+            export) tar -C "$ROOT/export" -cf - .dockerenv boot ;;
+            rm) : ;;
+            run)
+                local expected=(run --rm --network none --user 0:0
+                    --entrypoint /bin/sh -v "$tmp:/qemubox" "$image_id" -ec)
+                [ "${*:1:12}" = "${expected[*]}" ]
+                [ "${@: -1}" = "$(id -u):$(id -g)" ]
+                [ "$(tar -xOf "$tmp/rootfs.tar" boot/vmlinuz-fixture)" = kernel ]
+                [ "$import_rc" = 0 ] || return "$import_rc"
+                printf raw > "$tmp/rootfs.raw"
+                ;;
+        esac
+    }
+    qemu-img() { printf qcow2 > "${@: -1}"; }
     QEMUBOX_DOCKER=fake_docker
-    if build_base 2> "$fixture/mke-error"; then exit 1; fi
-    [ ! -f "$fixture/unexpected-mke-build" ]
-    grep -q 'Missing: mke2fs with -d tarball support' "$fixture/mke-error"
+    import_rc=47
+    set +e
+    (set -e; build_base)
+    rc=$?
+    set -e
+    [ "$rc" = 47 ]
+    [ "$(cat "$ROOT/base/current")" = fixture ]
+    [ ! -f "$ROOT/base/$(printf '%064d' 0).qcow2" ]
+    import_rc=0
+    build_base
+    [ "$(cat "$ROOT/base/current")" = "$(printf '%064d' 0)" ]
+    [ "$(cat "$ROOT/base/$(cat "$ROOT/base/current").qcow2")" = qcow2 ]
 }
-regression "mke2fs tar input is probed before building" mke2fs_test
+regression "image import needs no host tools and fails before publication" build_import_test
 
 temp_test() {
     regression_setup

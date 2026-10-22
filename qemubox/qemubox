@@ -951,18 +951,9 @@ build_base() (
         exit 1
     }
     read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
-    PATH="$PATH:/usr/sbin:/sbin"
-    missing_deps "${docker_cmd[0]}" bsdtar mke2fs qemu-img tar flock
+    missing_deps "${docker_cmd[0]}" qemu-img tar flock
     tmp=$(mktemp -d)
-    trap 'rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"; rmdir "$tmp"' EXIT
-    tar -cf "$tmp/probe.tar" --files-from /dev/null
-    if ! mke2fs -q -t ext4 -F -d "$tmp/probe.tar" "$tmp/probe.raw" 8M >"$tmp/probe.log" 2>&1
-    then
-        cat "$tmp/probe.log" >&2
-        echo "Missing: mke2fs with -d tarball support (the build needs a mke2fs -d that accepts a tarball)" >&2
-        exit 1
-    fi
-    rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"
+    trap 'rmdir "$tmp"' EXIT
     mkdir -p "$ROOT/base"
     exec 8>"$ROOT/base/.lock"
     flock 8
@@ -984,7 +975,7 @@ build_base() (
             then
                 "${docker_cmd[@]}" rm "$container" >/dev/null || rc=1
             fi
-            rm -f "$tmp/export.tar" "$tmp/rootfs.tar" "$tmp/rootfs.raw" \
+            rm -f "$tmp/rootfs.tar" "$tmp/rootfs.raw" \
                 "$base.qcow2.tmp" "$base.vmlinuz.tmp" "$base.initrd.tmp"
             rmdir "$tmp"
             exit "$rc"
@@ -994,17 +985,22 @@ build_base() (
         trap 'exit 143' TERM
         note "exporting VM rootfs: $image_id"
         container=$("${docker_cmd[@]}" create "$image_id")
-        "${docker_cmd[@]}" export -o "$tmp/export.tar" "$container"
+        "${docker_cmd[@]}" export "$container" > "$tmp/rootfs.tar"
         "${docker_cmd[@]}" rm "$container" >/dev/null
         container=""
-        bsdtar -cf "$tmp/rootfs.tar" --exclude=.dockerenv "@$tmp/export.tar"
-        rm "$tmp/export.tar"
         kernel=$(tar -tf "$tmp/rootfs.tar" | sed -n 's,^boot/vmlinuz-,,p' | sort -V | tail -1)
         [ -n "$kernel" ]
         tar -xOf "$tmp/rootfs.tar" "boot/vmlinuz-$kernel" > "$base.vmlinuz.tmp"
         tar -xOf "$tmp/rootfs.tar" "boot/initrd.img-$kernel" > "$base.initrd.tmp"
         note "creating ext4 base in /tmp"
-        mke2fs -q -t ext4 -F -d "$tmp/rootfs.tar" "$tmp/rootfs.raw" 20G
+        "${docker_cmd[@]}" run --rm --network none --user 0:0 \
+            --entrypoint /bin/sh -v "$tmp:/qemubox" "$image_id" -ec '
+                rootfs=$(mktemp -d)
+                tar -xf /qemubox/rootfs.tar -C "$rootfs" --exclude=.dockerenv
+                rm /qemubox/rootfs.tar
+                mke2fs -q -t ext4 -F -d "$rootfs" /qemubox/rootfs.raw 20G
+                chown "$1" /qemubox/rootfs.raw
+            ' qemubox "$(id -u):$(id -g)"
         note "converting base to qcow2"
         qemu-img convert -c -O qcow2 -o compression_type=zstd "$tmp/rootfs.raw" "$base.qcow2.tmp"
         mv "$base.vmlinuz.tmp" "$base.vmlinuz"

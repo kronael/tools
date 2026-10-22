@@ -32,18 +32,19 @@ System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base openssh tar python libarchive e2fsprogs docker
+sudo pacman -S qemu-base openssh tar python docker
 # Fedora
-sudo dnf install qemu openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu openssh-clients tar python3 moby-engine docker-cli
 ```
 
-The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
-`mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
-that support before it starts. Debian installs `mke2fs` in `/usr/sbin`, which a
-non-root PATH omits, so the build adds it. Allow about 20 GB free in `/tmp` and 11 GB
-per base on the state filesystem.
+The build needs Docker, tar and `qemu-img` on the host. A disposable container
+extracts the filesystem and imports it with the VM image's `mke2fs`.
+Temporary files belong to the caller, including when
+`QEMUBOX_DOCKER="sudo -n docker"`. Budget space for Docker layers and the
+extracted filesystem, the export and allocated ext4 blocks in `/tmp`,
+and the compressed base on the state filesystem.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
 software emulation.
