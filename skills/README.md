@@ -121,7 +121,10 @@ the authoritative entry. The categories:
   `research/` holds the quantitative-research runbooks: method (evidence),
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`) —
+- **Shared references** (`writing`, `humanize`, `owner`) —
+  `owner` is the person behind WISDOM: how they decide, what they check first,
+  what draws a correction and how they want to be told things; the wisdom file
+  points at it before a design answer, a plan, a review or a sub brief.
   `writing` owns the prose rules and, in its cold `page.md`, how a document or
   page is laid out; `humanize` is the AI-tells catalogue it finishes with.
   `writing` is cited by `create`, `diary`, `gh-issue`, `pr-draft`, `readme`,
