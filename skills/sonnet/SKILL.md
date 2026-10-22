@@ -1,7 +1,7 @@
 ---
 name: sonnet
-description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, read-only audits, and the steps of a written plan. NOT for mapping or a bounded mechanical edit (use /haiku), a design call the plan leaves open (use /opus), or multi-file code without a written plan (plan it with /opus first)."
-when_to_use: "do this in a sonnet sub, spawn a sonnet sub, use sonnet, sonnet sub, plan and delegate, delegate to sonnets, split the work across subagents, execute the plan step by step, too big for one pass, multi-file refactor, orchestrate subagents, investigation, bug hunt, pre-review, flagging, find simplification, read-only audit"
+description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, read-only audits and the steps of a written plan. NOT for mapping or a mechanical edit (use /haiku), a design call (use /opus) or multi-file code without a written plan (plan with /opus first)."
+when_to_use: "do this in a sonnet sub, use sonnet, plan and delegate, split the work across subagents, execute the plan step by step, too big for one pass, investigation, bug hunt, pre-review, read-only audit"
 user-invocable: true
 ---
 
@@ -22,7 +22,7 @@ For work too big for one pass — a feature across packages, a refactor, a chang
 
 NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make it in the parent.
 
-1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file in `~/.claude/plans/` with a status and a snapshot SHA per step; a plan held only in context is lost at compaction.
+1. **Plan.** ALWAYS read the code first and name real paths and symbols — NEVER plan from the task text. In a large or unfamiliar tree, ALWAYS write the questions the task raises and send them, without the task, to a background read-only `/sonnet` research sub; it returns facts with `file:line`, not a solution, so the facts cannot lean toward one design. ALWAYS write the plan to a file in `~/.claude/plans/` with a status and a snapshot SHA per step; a plan held only in context is lost at compaction. ALWAYS mirror it into the task tool before the first step: `TaskCreate` one task per step and one per high-level subagent run, `TaskUpdate` each to in_progress and completed the moment it changes.
    - ALWAYS plan top-down: the end state (what is true when done, the choices the user sees), then the design, then the steps; each level discards bad solutions before the next one builds on them. ALWAYS show the end state to the user when it holds a choice that is theirs. A change the design already pins needs no step list — its one step is "implement this design".
    - ALWAYS settle every cross-cutting choice in the plan: names, signatures, data shapes, the error convention, which existing mechanism to extend. A choice left to the executors gets a different answer in each step.
    - ALWAYS make each step one coherent behaviour change that leaves the tree green and stays readable in one pass (≤ ~1,000 changed lines). A step that must break the build says so, and its repair step comes next.
@@ -38,8 +38,9 @@ NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make 
    - ALWAYS look for what the sub weakened or removed: deleted or skipped tests, loosened assertions, new lint suppressions, swallowed errors, stubs, TODOs.
    - ALWAYS grep the whole repo — docs, configs, tests — for a renamed or removed name. NEVER check only the files the sub reported.
    - ALWAYS fix a small finding (a missed call site, a wrong name) in the parent, and name it in the report.
+   - ALWAYS end the step's reply with the numbered plan and each task's status (WISDOM § Agents) — the owner tracks progress there, not in the diff.
 
-   Completion criterion: the gate passes in the parent's own run.
+   Completion criterion: the gate passes in the parent's own run, and the reply closes on the plan with its statuses.
 4. **Recover.** On a failure, read the tree, restore the step's files (`git restore --source=<sha> --worktree -- <files>`, delete the files it created by name, `git revert` a commit it made), fix the brief, and re-brief once with the exact gate output — NEVER rerun an unchanged brief or re-brief on top of a failed attempt. After a second failure, take the step over or escalate to `/opus`. When the diff shows the design is wrong, NEVER patch it — ALWAYS discard the step the same way, fix the design, and re-plan the steps after it.
 
    Completion criterion: the step passes its gate, or the plan records the new design and route.

@@ -120,7 +120,9 @@ this same stage.
 ALWAYS inspect the returned diff and run the step's gate yourself before
 accepting it. A worker's commit or success report is not gate evidence.
 Use `commit` for logical verified changes. Record status, commit, gate
-result and next action in the work record after each accepted step.
+result and next action in the work record after each accepted step. The
+task tool mirrors the plan — one task per step and per worker run, restated
+with its status after each step (`sonnet` § Plan, then execute).
 
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the
@@ -164,7 +166,9 @@ rerun the affected check, not a broad review merely to fill a loop. `fin`
 owns the final open-items pass within the accepted scope.
 
 Local commits are the default destination. A requested release uses
-`release`, and a requested PR uses `pr-draft`. Push, PR creation and merge,
+`release`, and a requested PR uses `pr-draft`. A release or push the owner
+asked for happens once, after the last step — NEVER per step — and a pass
+they asked to release is not done at local commits. Push, PR creation and merge,
 publication and deployment follow WISDOM and their owning skills' gates. A
 ship brief cannot waive them.
 

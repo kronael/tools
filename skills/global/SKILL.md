@@ -156,6 +156,10 @@ PR body with the robot. These win.
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
+- ALWAYS keep a multi-step plan in the task tool: one task per step and one per
+  high-level subagent run, its status updated the moment it changes, and the
+  numbered plan with every status restated in chat after each step (`sonnet`
+  § Plan, then execute).
 - ALWAYS run implementation — a comprehensive or multi-file change, autonomous
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
   step, its diff read by the parent before the next (`sonnet` § Plan, then
