@@ -82,7 +82,7 @@ record the round in the diary — one line. Then stop.
 
 Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
 the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
-flagging; the fixes run on the `improve` agent, Sonnet 5.5 at high, for
+flagging; the fixes run on `sonnet` loading `improve` for
 `simplify` work and on `opus` for `correctness` — `refine` step 8).
 ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
 
