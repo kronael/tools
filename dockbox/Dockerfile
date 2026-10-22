@@ -362,3 +362,6 @@ RUN printf '%s\n' \
     > /usr/local/bin/qemubox-init && chmod 755 /usr/local/bin/qemubox-init
 ENTRYPOINT ["/sbin/init"]
 WORKDIR /
+
+RUN uv cache clean && go clean -cache \
+    && bun pm cache rm && npm cache clean --force
