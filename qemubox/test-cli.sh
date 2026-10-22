@@ -23,7 +23,7 @@ set -e
 printf '%s\n' "$*" >> "$STUB/ssh.log"
 command=${!#}
 case "$command" in
-    'test -f /run/qemubox/ready') exit 0 ;;
+    'test -f /run/qemubox/ready') cat >/dev/null; exit 0 ;;
     'sudo mkdir -p /run/qemubox/sess && sudo touch '*)
         touch "$STUB/sess/${command##*/}" ;;
     'sudo rm -f /run/qemubox/sess/'*) rm "$STUB/sess/${command##*/}" ;;
@@ -31,6 +31,7 @@ case "$command" in
     'umask 077 && cat > /dev/shm/qemubox-env.'*) cat > "$STUB/env" ;;
     '. /dev/shm/qemubox-env.'*)
         echo "$command" > "$STUB/command"
+        case "$command" in *'&& exec cat') cat ;; esac
         if [ -n "${STUB_HOLD:-}" ]; then
             trap 'exit 143' TERM
             sleep 10 &
@@ -120,6 +121,10 @@ STUB
     done
     if grep -q zzsecret "$STUB/ssh.log"; then exit 1; fi
     rm "$HOME/.qemuboxrc"
+    printf 'stdin-marker\n' > "$STUB/input"
+    (cd "$PROJ" && bash "$here/qemubox" -U -n cli exec cat) \
+        < "$STUB/input" > "$STUB/stdout" 2> "$STUB/output"
+    cmp "$STUB/input" "$STUB/stdout"
     bash "$here/qemubox" -T -n cli codex --model gpt-6-astra </dev/null > "$STUB/output" 2>&1
     grep -qE '&& exec codex --model gpt-6-astra$' "$STUB/command"
     bash "$here/qemubox" -T -n cli -x gpt </dev/null > "$STUB/output" 2>&1
@@ -134,4 +139,4 @@ STUB
     rm "$PROJ/.qemuboxrc"
     grep -q 'refusing to mount sensitive path /;' "$STUB/output"
 ) > "$fixture/cli.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and non-TTY"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and stdin"; }
