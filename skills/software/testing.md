@@ -38,6 +38,18 @@
   the full tier, integration, build. A focused run is evidence for the next
   iteration, not for the commit.
 
+## Proving the suite ran
+
+- NEVER report a suite green without counting what ran against what exists:
+  the fixtures the Make target names against the files on disk. A test the
+  target omits never runs and looks exactly like a passing one, and a list
+  cut with a fixed `grep -A N` window truncates silently. State both counts.
+- A model-backed feature is unverified until real weights ran end to end:
+  mocked adapters pass while the service cannot start and a threshold sits on
+  a scale nobody measured. ALWAYS keep a labelled fixture set, assert the
+  accuracy and the observed score range, and derive every threshold from
+  that range.
+
 ## Descriptions
 
 - A test module's doc-comment and a test's intro name BOTH the SCENARIO and

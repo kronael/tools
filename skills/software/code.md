@@ -179,6 +179,8 @@ your diff against every `##` heading here before calling an edit done.
   by construction.
 - A redesign (new contract, changed control flow, cross-cutting) ships only
   after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
+- NEVER improve beyond what the task asks — no drive-by cleanup, rename or
+  feature in the same change; park it (`next`, `bugs`).
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
