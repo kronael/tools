@@ -1084,14 +1084,6 @@
 
 ## qemubox
 
-- **QEMUBOX-DOCKER-MODE-PARITY** (MED, design) — owner decision, no test — design.
-  `-D` in `qemubox/qemubox` forwards the host Docker socket. Dockbox's `-D`
-  starts an isolated Docker daemon inside the box. The flag contract needs a
-  decision before dockbox removal. **Options:** (a) make `-D` start guest Docker
-  and expose host forwarding as `--host-docker`; (b) keep `-D` for host forwarding
-  and add an explicit guest Docker option. **Default if nothing is decided:**
-  keep the current flag contract and retain dockbox until parity passes.
-
 - **QEMUBOX-SSH-READS-TERMINAL** (LOW, ux) — open (record only), no test.
   `ssh_plain_box` (`qemubox/qemubox:548`) runs `ssh` without `-n`, so every
   helper SSH call reads the terminal. A `qemubox rm <box> &` job stops on
@@ -1341,6 +1333,10 @@
 
 ## Ruled not a defect
 
+- **QEMUBOX-DOCKER-VM-BOUNDARY** (LOW, design) — not a defect. Guest Docker
+  uses the VM's process and network boundaries. It needs no extra isolation
+  mode or flag. `-D` explicitly selects host Docker through socket forwarding.
+
 - **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
   duplicate flag parsing, the tool/model table, `ls`/`rm`/`prune`, and the
   lifecycle block. A shared sourced file would violate the repo's "tools are
@@ -1353,12 +1349,10 @@
   so `-e LD_PRELOAD=<repo file>` runs code as root there. dockbox is a decently
   isolated env, not a jail: root inside the box is within its design.
 
-- **BOXES-DOCKER-SOCKET-CROSSES-BOXES** (MED, isolation) — not a defect. `-D`
-  binds `/var/run/docker.sock` into a dockbox and forwards it into a qemubox
-  over SSH; either agent can then `docker exec` into every dockbox on the
-  host. That is the flag's purpose (building images, running containers)
-  and the project `.dockboxrc`/`.qemuboxrc` cannot set it, so it is an
-  explicit per-box grant. Both READMEs say it crosses the box wall.
+- **BOXES-DOCKER-SOCKET-CROSSES-BOXES** (MED, isolation) — not a defect.
+  Qemubox's `-D` forwards the host Docker socket over SSH. The agent can then
+  manage host containers. Project `.qemuboxrc` cannot set `-D`; the flag is an
+  explicit grant of host access. Guest Docker uses its own socket without `-D`.
 
 - **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
   `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).

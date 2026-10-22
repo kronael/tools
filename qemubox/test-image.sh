@@ -45,6 +45,31 @@ docker_cli_test() {
 }
 regression "both images install docker-cli" docker_cli_test
 
+docker_socket_test() {
+    local service_root="$fixture/guest-services" unit
+    mkdir -p "$service_root/usr/lib/systemd/system"
+    for unit in docker.service docker.socket containerd.service \
+        systemd-networkd.service systemd-resolved.service \
+        systemd-timesyncd.service ssh.service ssh.socket qemubox-init.service
+    do
+        printf '[Install]\nWantedBy=multi-user.target\n' > \
+            "$service_root/usr/lib/systemd/system/$unit"
+    done
+    awk '/^FROM .* AS vm$/ {vm=1}
+        vm && /&& systemctl / {
+            sub(/^.*&& systemctl /, "")
+            sub(/[[:space:]]*\\$/, "")
+            print "systemctl " $0
+        }' "$here/Dockerfile" > "$fixture/guest-services.sh"
+    [[ -s "$fixture/guest-services.sh" ]]
+    systemctl() { command systemctl --root="$service_root" "$@"; }
+    source "$fixture/guest-services.sh"
+    [[ "$(systemctl is-enabled docker.socket)" = enabled ]]
+    [[ "$(systemctl is-enabled docker.service)" = disabled ]]
+}
+regression "guest Docker starts on demand through its own socket" \
+    docker_socket_test
+
 timezone_test() {
     regression_setup
     untrusted=""
@@ -64,8 +89,10 @@ regression "identity and init set the UTC time zone" timezone_test
 
 groups_test() {
     mkdir -p "$fixture/groups"
-    printf '%s\n' 'systemd-journal:x:998:journaluser' 'wheel:x:10:other' > "$fixture/groups/group"
-    sed -n '/^for group in /,/^done/p' "$image_init" |
+    printf '%s\n' 'systemd-journal:x:998:journaluser' 'wheel:x:10:other' \
+        'docker:x:997:dockeruser' > "$fixture/groups/group"
+    sed -n '/^groups=.*getent group docker/p; /^for group in /,/^done/p' \
+        "$image_init" |
         sed "s|/etc/group|$fixture/groups/group|g" > "$fixture/group-init"
     getent() {
         awk -F: -v key="$2" '$1==key || $3==key {found=1;print} END {exit !found}' "$fixture/groups/group"
@@ -80,8 +107,9 @@ groups_test() {
     grep -qx 'hostgrp999:x:999:guest' "$fixture/groups/group"
     grep -qx 'hostgrp1001:x:1001:guest' "$fixture/groups/group"
     grep -qx 'hostgrp1002:x:1002:guest' "$fixture/groups/group"
-    [ "$(cut -d: -f3 "$fixture/groups/group" | sort -u | wc -l)" = 5 ]
-    [ "$(wc -l < "$fixture/groups/group")" = 5 ]
+    grep -qx 'docker:x:997:dockeruser,guest' "$fixture/groups/group"
+    [ "$(cut -d: -f3 "$fixture/groups/group" | sort -u | wc -l)" = 6 ]
+    [ "$(wc -l < "$fixture/groups/group")" = 6 ]
 }
 regression "init preserves gid membership and sanitizes missing or invalid names" groups_test
 

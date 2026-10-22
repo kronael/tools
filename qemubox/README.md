@@ -223,6 +223,10 @@ At boot the launcher writes `/etc/claude-code/CLAUDE.md` in the guest.
 Claude Code reads the sandbox, shared mount and disk lifetime details there.
 Every session gets `CLAUDE_SANDBOX=qemubox`.
 
+Docker runs inside the VM. Its socket starts the guest daemon on the first
+Docker command. Images and containers use the guest disk. Container networking
+stays inside the VM; `docker run --network host` uses the guest's network.
+
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't reach or
 log into each other. `-A` forwards your SSH agent, `-D` the Docker socket (and with it
 `docker exec` into every dockbox on the host), `-K` the gpg-agent (commit signing; off by
