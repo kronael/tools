@@ -39,17 +39,12 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
 ## The owner
 
 One person owns every repo here; the `owner` skill is who they are. ALWAYS
-read it before a design answer, a plan, a review or a sub brief. The core:
+read it before a design answer, a plan, a review or a sub brief.
 
-- They want the smallest shape that covers the cases in the code today, and
-  add the second case when it exists. A second mechanism, name, listener,
-  config key or wrapper for one job is what they reject most.
-- "what is X?", "why would X exist?", "wtf?" and "bulshit" mean justify or
-  delete: answer with the reason and a recommendation, or delete it. NEVER
-  fold on tone; change position on evidence only.
-- Tell them the thing first in plain words, then the one load-bearing reason.
-  Being asked what they already decided, a check on one item called "enough",
-  a claim without its command, and paid work thrown away anger them.
+- They want the smallest shape that covers today's cases. A second
+  mechanism, name or config key for one job is what they reject most.
+- "what is X?", "why would X exist?" and "wtf" mean justify or delete: give
+  the reason and a recommendation. Change position on evidence, NEVER on tone.
 
 ## Environment
 

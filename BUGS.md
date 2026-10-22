@@ -397,17 +397,6 @@
   scope one of the two — e.g. refactor-stack commits on the focused run and
   runs the full tier per pushed layer.
 
-- **WISDOM-BODY-OVER-200-LINES** (LOW, docs) — CONFIRMED 2026-10-13, no test
-  — docs. `skills/global/SKILL.md` body is 215 lines: `make skills-frontmatter`
-  warns `[skill-length]` (> 200) while `CLAUDE.md` § Under 200 lines holds the
-  wisdom file to the cap. The body measures 195 lines at origin/master and 215
-  at HEAD (`git show <rev>:skills/global/SKILL.md | awk 'n>=2 && (p || NF)
-  {p=1; c++} /^---$/{n++} END{print c}'`); the range changed § Git (the
-  `rip -g` bullet and the approval sentence), § Agents (the cap wording) and
-  added § The owner (13 lines, the hot core of the `owner` skill).
-  **Fix:** cut two lines — the owner's
-  wording, so the owner's call which.
-
 - **PY-RECORD-ROW-KEEPS-SMALLINT-INT** (MED, docs) — owner decision. Three
   rules are jointly unsatisfiable: `skills/py/SKILL.md:91` builds a record from
   its own SQL row as `Record(**row)`; `skills/sql/SKILL.md:43` stores a closed
