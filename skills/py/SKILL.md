@@ -72,7 +72,7 @@ Python-specific additions and deltas.
 
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
-- ALWAYS asyncpg direct, NEVER SQLAlchemy
+- ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
 - ALWAYS a `dataclass` for every structured value — record, return value, parameter bundle,
