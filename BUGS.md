@@ -75,11 +75,9 @@
   `sonnet` and 1 `opus` or `fable`; the bundle also launches `general-purpose`
   (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
   (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
-  `skills/recall-memories/SKILL.md:165`) and the thin
-  skill agents — `improve` pins Sonnet 5.5 (`agents/improve.md:3`), the rest
-  inherit the parent's model — none of which the cap names. **Options:**
-  (a) count a sub under the model it runs on (`improve` as `sonnet`,
-  `general-purpose` as the parent's model); (b) count only the three named
+  `skills/recall-memories/SKILL.md:165`), neither of which the cap names.
+  **Options:** (a) count a sub under the model it runs on (`general-purpose`
+  as the parent's model); (b) count only the three named
   types. **Default if nothing is decided:** (a). No test — design.
 
 - **AGENT-ROUTING-RULES-DISAGREE** (LOW, docs) — owner decision.
@@ -715,11 +713,9 @@
   the hooks path filter.
 
 - **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
-  — config. `agents/distill.md:4`, `agents/refine.md:4` and
-  `agents/visual.md:4` list the `Task` tool and `settings-recommended.json:4`
-  allows `Task(*)`; Claude Code renamed it to `Agent` in 2.1.63 and keeps
-  `Task` as an alias. **Default if nothing is decided:** keep `Task` until
-  the alias goes.
+  — config. `settings-recommended.json:4` allows `Task(*)`; Claude Code
+  renamed it to `Agent` in 2.1.63 and keeps `Task` as an alias. **Default if
+  nothing is decided:** keep `Task` until the alias goes.
 
 - **SETTINGS-ALLOW-GIT-BRANCH** (LOW, config) — owner decision, no test —
   config. `settings-recommended.json:10` allows `Bash(git branch*)` while

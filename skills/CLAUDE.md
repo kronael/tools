@@ -100,23 +100,22 @@ skills it replaces.
 
 ## Agent definitions
 
-- `agents/` holds model and effort pins — `fable`, `opus`, `sonnet`, `haiku`,
-  with no body — and thin skill agents whose body only loads the same-named
-  skill. `visual`, `readme`, `improve` (pins Sonnet 5.5 at high), `learn` and
-  `distill` are each launched from their skill's `## Where it runs`
-  (`readme/sync.md` for `readme`). `refine` runs in the main thread by design;
-  its agent serves only an explicit dispatch of a whole refine pass.
-  Knowledge lives in the skill that owns the concern, NEVER in an agent body.
-- `terra` and `luna` are the exceptions because they route OpenAI models. NEVER
-  add an `agents/terra.md` or `agents/luna.md`; Codex reads their skills
-  through the bridge.
+- `agents/` holds the four tier pins — `fable`, `opus`, `sonnet`, `haiku` —
+  each a model and an effort with no body, and no other file: an agent
+  without `effort:` inherits the parent session's effort, so a low-effort
+  session would run its subs at low. Knowledge lives in the skill that owns
+  the concern, NEVER in an agent body.
+- `terra` and `luna` route OpenAI models from their skills. NEVER add an
+  `agents/terra.md` or `agents/luna.md`; Codex reads their skills through the
+  bridge.
 - This section owns the agents rule. ALWAYS point here in one line from any
   other file; NEVER restate the list.
-- A skill that needs isolation or a model says so in its own body (`## Where
-  it runs`): ALWAYS its thin same-named agent where one fits, else
-  `general-purpose` or a model pin (`fable`/`opus`/`sonnet`/`haiku`) told to
-  load the skill. NEVER write a content-bearing agent definition, and NEVER reduce
-  a skill body to one "launch agent X" line.
+- A skill that needs isolation says so in its own body (`## Where it runs`):
+  ALWAYS a tier agent (`dispatch` § Tiers) told to "Load the `<skill>` skill
+  (Skill tool) and follow it" — NEVER a same-named agent for the skill, which
+  would pin no effort, NEVER `general-purpose` there (it inherits the
+  parent's effort), and NEVER a skill body reduced to one "launch agent X"
+  line.
 
 ## Earning a rule's place
 
