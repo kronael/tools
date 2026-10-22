@@ -21,10 +21,12 @@ exists.
   or a tiered design: it invites work on the taxonomy.
 - ALWAYS treat a deviation from the house standard as a migration target.
   NEVER an adapter that lets it stay.
-- ALWAYS take a maintained upstream package over a hand-written utility. The
-  owner trims invented machinery, not dependencies.
-- ALWAYS move forward only. NEVER a rollback path, a backup copy, a
-  compatibility branch or a "before" tag: git holds every version.
+- ALWAYS take a maintained upstream package over a hand-written utility; a
+  short local function stays local, as the language skills say. The owner
+  trims invented machinery, not dependencies.
+- ALWAYS move a deploy or a data change forward only. NEVER a rollback image,
+  a backup copy, a compatibility branch or a "before" tag: git holds every
+  version.
 
 ## Pushback asks for the argument
 

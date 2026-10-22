@@ -29,7 +29,7 @@ ALWAYS report what was launched and continue on non-overlapping work.
 
 ```bash
 codex exec --ephemeral --sandbox read-only -C "<worker directory>" \
-  -m gpt-6.1-sol -c model_reasoning_effort="high" \
+  -m gpt-6.1-sol -c model_reasoning_effort="<high, or xhigh for a review>" \
   "<self-contained brief>" </dev/null
 ```
 
