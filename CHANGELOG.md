@@ -1,30 +1,29 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.55] — 20261022
 
-### Added
+> kronael v0.4.55 — An owner profile and pinned sub effort
+>
+> Agents read how the owner decides before a plan or a review, and every sub runs at a set effort.
+>
+> • Owner — a new owner skill says what the owner wants and what their pushback means.
+> • Agents — four tiers remain; coding runs at high effort, plans and reviews at xhigh.
+> • SQL — functions in numbered files, tables-only migrations, one call per unit of work.
+> • Hooks — /solve nudges after an idle gap and at subagent start; no per-prompt rule blocks.
+> • Rules — extend what exists; a new module or knob is the plan's decision, not the executor's.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `sql` § Functions: PL/pgSQL only, each in a numbered file after the versioned migrations.
-- `sql` § Migrations: tables only, one `DO` block per file, no `IF EXISTS`, a single runner.
-- `sql` § Concurrency: row locks and an application-side hash, never an advisory lock for rows.
-- `sql` § Database Modules: one call per unit of work, lists in and out, a batch as one parameter.
-- `software/code.md` § Naming: one word per endpoint across path, handler, module and model.
-- `dispatch`: a brief quotes the owner's latest decision verbatim, never an example against it.
-- `py`: native dependencies build from source with the dev headers; a binary wheel is banned.
-- `software/strict-typing.md`: `sys.stdout.write` as a print dodge is banned.
-- `bugs`: a long-term technical debt section in `BUGS.md`.
-- `readme`: every flow drawn as a figure; every mode ends with the density prune and humanize.
-
-### Changed
-
-- `agents/` holds only `fable`, `opus`, `sonnet` and `haiku`; the six skill agents are removed.
-- A skill's `## Where it runs` names the tier agent that loads it; the sync retires the old agents.
-- `skills/CLAUDE.md` § Agent definitions: an agent without `effort:` inherits the session's effort.
-- `software/code.md` § Comments and § Boring code: 225 → 195 lines; no docstring restating the body.
-- `software/code.md`: a new module, stage, helper or knob is the plan's or the owner's decision.
-- WISDOM § System-change discipline: a stage beside the original or a helper around it is parallel.
-- WISDOM § Git: dated branch heads join words with underscores (`20261017_<tag>`).
-- `py` and `data` point at the `sql` skill for database modules and locks.
+- New `owner` skill; the wisdom file's § The owner points at it.
+- The six skill agents are removed; a skill names its tier agent, and sync retires the old ones.
+- Sub effort: coding at high, plans and reviews at xhigh, fable at high.
+- `sql`: PL/pgSQL functions in numbered files, tables-only migrations, row locks, one call per unit.
+- `software/code.md`: one word per endpoint, extend what exists, and § System changes.
+- `software`: suite-coverage, real-weights and scope rules; `tsx`: web security rules and headers.
+- `py`: native dependencies build from source; `sys.stdout.write` as a print dodge is banned.
+- `bugs`: a long-term technical debt section; `readme`: every flow drawn as a figure.
+- Hooks: `/solve` nudge after an idle gap and at subagent start, Codex too; diary nudge throttled.
+- Plans stay in the task tool, restated per step; dated branch heads join words with underscores.
 
 ## [v0.4.54] — 20261020
 
