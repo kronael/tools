@@ -1,7 +1,7 @@
 ---
 name: solve
 description: Universal entry point — invoke BEFORE any domain skill to pick the best-matching skill from every skill's frontmatter. NOT for skill authoring (use wisdom).
-when_to_use: "which skill, what should I use, start of task, before acting, route this request, new task, mid-session new task, prompt after a pause, subagent brief, first message, no skill matched"
+when_to_use: "which skill, what should I use, start of task, new task, mid-session new task, prompt after a pause, subagent brief, first message, no skill matched"
 user-invocable: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: luna
 description: "/luna — GPT-6 Luna fan-out subagent, the Codex counterpart of /haiku. NOT for investigation or a plan step (use /terra), second opinions (use /oracle) or design calls (use /opus)."
-when_to_use: "luna, GPT-6 Luna worker, Codex fan-out, cheap Codex sub, fast Codex sub, delegate to Luna, cross-model mapping, cross-model grep survey, cross-model mechanical edit"
+when_to_use: "luna, GPT-6 Luna worker, Codex fan-out, cheap Codex sub, delegate to Luna, cross-model mapping, cross-model mechanical edit"
 user-invocable: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: worktree
-description: Isolate a code-editing subagent when its change gets a separate PR, the user requests a worktree, or an applicable skill explicitly opts in. NOT for routine serial edits or read-only agents.
-when_to_use: change gets its own PR, user requests a worktree, applicable skill explicitly opts in, reconcile worktree commits, remove a worktree, stale or prunable worktree, worktree registered under a missing path
+description: Isolate a code-editing subagent when its change gets its own PR, the user asks for a worktree, or a skill opts in. NOT for serial edits or read-only agents.
+when_to_use: "change gets its own PR, user requests a worktree, reconcile worktree commits, remove a worktree, stale or prunable worktree, worktree registered under a missing path"
 ---
 
 # Worktree selection

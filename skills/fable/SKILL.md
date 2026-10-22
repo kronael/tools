@@ -1,7 +1,7 @@
 ---
 name: fable
-description: /fable — most capable xhigh-effort subagent for specs, architecture, WISDOM and skill writing, algorithmic solutions, and red reviews or deep audits. NOT for implementation (opus plans, sonnet steps) or tasks opus can handle (use /opus).
-when_to_use: "do this in a fable sub, spawn a fable sub, use fable, use claude fable, hardest problem, maximum intelligence, deep reasoning, most capable, write the spec, architecture, algorithm design, red review, adversarial review, security audit, deep audit"
+description: /fable — most capable xhigh-effort subagent for specs, architecture, WISDOM and skill writing, algorithms, red reviews and deep audits. NOT for implementation (opus plans, sonnet steps) or tasks opus can handle (use /opus).
+when_to_use: "do this in a fable sub, use fable, hardest problem, deep reasoning, write the spec, architecture, algorithm design, red review, adversarial review, security audit, deep audit"
 user-invocable: true
 ---
 

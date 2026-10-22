@@ -1,7 +1,7 @@
 ---
 name: haiku
-description: "/haiku — cheap, fast background subagent for read-only fan-out (mapping, grep surveys, one-file lookups) and a bounded mechanical edit with a clear spec. NOT for investigation or a plan step (use /sonnet), a design call (use /opus), or a codemod (stays in the parent)."
-when_to_use: "do this in a haiku sub, spawn a haiku sub, use haiku, haiku sub, cheap sub, fast sub, explore cheaply, survey the codebase, map files, map routes, map references, grep and report, list every X, summarize one file, quick lookup, find and replace in a few files, update a constant, fix a typo everywhere, boilerplate, test stub, single-file edit, mechanical task"
+description: "/haiku — cheap, fast background subagent for read-only fan-out and a bounded mechanical edit with a clear spec. NOT for investigation or a plan step (use /sonnet), a design call (use /opus) or a codemod (stays in the parent)."
+when_to_use: "do this in a haiku sub, use haiku, cheap sub, fast sub, survey the codebase, map files, grep and report, list every X, summarize one file, quick lookup, update a constant, fix a typo everywhere, single-file edit, mechanical task"
 user-invocable: true
 ---
 

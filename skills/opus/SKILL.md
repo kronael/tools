@@ -1,7 +1,7 @@
 ---
 name: opus
-description: "/opus — Opus subagent at high effort for design decisions, deep analysis, and implementation plans that need a clean context. NOT for a plan step whose design is settled or investigation (use /sonnet), or mechanical work (use /haiku)."
-when_to_use: "do this in an opus sub, spawn an opus sub, use opus, opus sub, design decision, architecture review, deep analysis, cross-cutting analysis, complex reasoning, write the plan in a sub, plan step needs judgment, step failed twice, protocol design"
+description: "/opus — Opus subagent at high effort for design decisions, deep analysis and implementation plans that need a clean context. NOT for a settled plan step or investigation (use /sonnet), or mechanical work (use /haiku)."
+when_to_use: "do this in an opus sub, use opus, design decision, architecture review, deep analysis, cross-cutting analysis, write the plan in a sub, plan step needs judgment, step failed twice, protocol design"
 user-invocable: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: gh-issue
-description: Assemble and file a GitHub issue on a repo, with a mandatory approval gate — never posts without showing the exact title+body first. NOT for a PR review comment (use gh-comment) or a PR description (use pr-draft).
-when_to_use: "filing a bug report or issue on a GitHub repo, often a different repo than the current one (e.g. an upstream dependency), file an issue, open an issue, report a bug upstream"
+description: Assemble and file a GitHub issue behind an approval gate — never posts before showing the exact title and body. NOT for a PR comment (use gh-comment) or a PR description (use pr-draft).
+when_to_use: "file an issue, open an issue, report a bug upstream, file a bug report on a GitHub repo"
 user-invocable: true
 ---
 

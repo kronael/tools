@@ -1,7 +1,7 @@
 ---
 name: astra
-description: "Ask the codex CLI on gpt-6-astra (or gpt-6.1-sol, the Sol variant) for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent — this is the OpenAI codex CLI. Usually routed through oracle."
-when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, second opinion, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning. NOT for routine lookups"
+description: "Ask the codex CLI on gpt-6-astra (or gpt-6.1-sol, the Sol variant) for a second opinion, usually routed through oracle. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude agent."
+when_to_use: "astra, ask astra, codex, ask codex, sol, ask sol, second opinion, sanity check, disagreement after reasoning"
 user-invocable: true
 ---
 

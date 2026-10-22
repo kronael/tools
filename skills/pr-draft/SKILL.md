@@ -1,7 +1,7 @@
 ---
 name: pr-draft
 description: Draft or rewrite a PR description. NOT for commit messages (use commit).
-when_to_use: "draft a PR, open a PR, write the PR description, PR body, PR summary, update the PR description, rewrite/update the body of an open PR, PR body too long, shorten the PR description, gh pr create refused, GitHub pr text refused, gh_text_lint"
+when_to_use: "draft a PR, open a PR, write the PR description, PR body, update the PR description, PR body too long, gh pr create refused, gh_text_lint"
 user-invocable: true
 ---
 

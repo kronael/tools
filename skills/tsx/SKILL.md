@@ -1,7 +1,7 @@
 ---
 name: tsx
 description: Frontend React/Next.js. NOT for plain TypeScript without JSX (use ts).
-when_to_use: editing .tsx files or writing React components with JSX; web app security, CSP, Content-Security-Policy, response headers, Trusted Types, dangerouslySetInnerHTML, cookie flags, SES lockdown, harden, Compartment, LavaMoat, supply chain, install scripts
+when_to_use: "editing .tsx files or writing React components with JSX; web app security, CSP, response headers, Trusted Types, dangerouslySetInnerHTML, cookie flags, SES lockdown, harden, LavaMoat, supply chain"
 ---
 
 # Frontend (React / Next.js)

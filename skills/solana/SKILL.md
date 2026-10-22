@@ -1,7 +1,7 @@
 ---
 name: solana
-description: On-chain Solana programs — Anchor instructions, PDAs, CPIs, account layout, compute budget, contract audit. NOT for general Rust idiom (use rs), NOT for client or SDK TypeScript (use ts).
-when_to_use: writing or reviewing a Solana program, Anchor instruction, #[program], #[derive(Accounts)], declare_id, Account/UncheckedAccount/SystemAccount/Sysvar wrapper, PDA seeds, find_program_address, invoke_signed, signer seeds, CPI, remaining_accounts, on-chain account layout, rent-exempt minimum, close account, compute budget, set_compute_unit_limit, MaxInstructionTraceLengthExceeded, exceeded CUs meter, instruction trace, address lookup table, solana-program-test, BPF_OUT_DIR, litesvm, anchor build, avm, anchor-lang version conflict, two majors of solana-pubkey, smart contract audit, lamport arithmetic, stake account, treasury and fee design
+description: On-chain Solana programs — Anchor instructions, PDAs, CPIs, account layout, compute budget, contract audit. NOT for general Rust (use rs) or client TypeScript (use ts).
+when_to_use: "Solana program, Anchor instruction, #[program], #[derive(Accounts)], PDA seeds, invoke_signed, CPI, remaining_accounts, account layout, rent-exempt, compute budget, address lookup table, solana-program-test, litesvm, anchor build, anchor-lang version conflict, smart contract audit, lamport arithmetic"
 ---
 
 # Solana on-chain programs

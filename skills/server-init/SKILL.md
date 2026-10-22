@@ -1,7 +1,7 @@
 ---
 name: server-init
-description: Build or refresh this host's server memory, the skill server-<hostname> — what runs here and where things live. NOT for writing a service's Dockerfile or unit (use ops), NOT inside dockbox or qemubox (the launcher's note covers the box).
-when_to_use: "server-init, server memory, map this server, scan this host, new server, what runs on this machine, host layout, services and ports on this host, where things live on this server, the server skill is wrong, refresh the server memory, machine facts in LOCAL.md"
+description: Build or refresh this host's server memory, the skill server-<hostname> — what runs here and where things live. NOT for a service's Dockerfile or unit (use ops) or inside dockbox or qemubox.
+when_to_use: "server-init, server memory, map this server, scan this host, what runs on this machine, services and ports on this host, refresh the server memory, machine facts in LOCAL.md"
 ---
 
 # Server init

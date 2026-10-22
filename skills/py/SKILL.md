@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, work items, hashable keys, generator naming, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module, ruff --fix
+when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module"
 ---
 
 # Python

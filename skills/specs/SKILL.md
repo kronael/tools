@@ -1,7 +1,7 @@
 ---
 name: specs
-description: Router for the spec workflow — the case against building, spec file conventions, and spec-first code changes. NOT for in-flight execution tracking (use ship) or README/ARCHITECTURE prose (use readme).
-when_to_use: "write a spec, design doc, RFC, ADR, proposal, SPEC.md, specs/ directory, spec numbering, specs index, spec status frontmatter, spec before coding, spec-first change, code contradicts the spec; is this worth building, prior art check, already solved, talk me out of it, devil's advocate, over-engineered for its payoff, kill this idea, teardown"
+description: Router for the spec workflow — the case against building, spec file conventions, spec-first code changes. NOT for execution tracking (use ship) or README/ARCHITECTURE prose (use readme).
+when_to_use: "write a spec, design doc, RFC, ADR, proposal, SPEC.md, specs/ directory, spec numbering, spec status frontmatter, spec before coding, code contradicts the spec; is this worth building, prior art check, talk me out of it, kill this idea, teardown"
 user-invocable: true
 ---
 

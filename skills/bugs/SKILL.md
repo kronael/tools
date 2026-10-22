@@ -1,7 +1,7 @@
 ---
 name: bugs
 description: The `BUGS.md` open-issues queue — record-don't-fix policy, entry format, pruning. NOT for resolved-bug history (git and /diary) or a feature backlog (use TODO.md/specs).
-when_to_use: "log this bug, open issues, what's broken, what's the queue, prune BUGS.md, audit-record-only, debugging-but-not-fixing-now, deliberate limit, decision the owner owes, needs sign-off entry, ruled not a defect"
+when_to_use: "log this bug, open issues, what's broken, prune BUGS.md, audit-record-only, debugging but not fixing now, deliberate limit, decision the owner owes, ruled not a defect"
 ---
 
 # Bugs

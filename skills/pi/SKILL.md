@@ -1,7 +1,7 @@
 ---
 name: pi
-description: Ask the pi coding-agent CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent and NOT codex — this is badlogic's `pi` CLI (a distinct model, complements /astra).
-when_to_use: "pi, ask pi, second opinion from pi, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, cross-check Astra. NOT for routine lookups"
+description: Ask the pi coding-agent CLI for a second opinion — badlogic's `pi`, a distinct model that complements /astra. NOT for routine lookups (use grep/read/recall-memories).
+when_to_use: "pi, ask pi, second opinion from pi, cross-check Astra"
 user-invocable: true
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: codemap
-description: Map a codebase and drill into it — ranked overview, task lookup, callers, blast radius — and generate module, import and call graphs from the code. NOT for hand-drawn diagrams (use diagrams), a mid-conversation sketch (use show-me) or structural search and rewrite (use astgrep).
-when_to_use: "map the codebase, orient in a new repo, codebase overview, unfamiliar repo, where is X implemented, which code does this task touch, drill down, who calls this, every use of a symbol, blast radius, what breaks if I change X, god files, import cycles, call graph, import graph, package graph, module graph from code, generate a diagram of the code, interactive call graph, ripwire, goda, pydeps"
+description: Map a codebase and drill into it — ranked overview, callers, blast radius, module, import and call graphs. NOT for hand-drawn diagrams (use diagrams), a quick sketch (use show-me) or structural rewrite (use astgrep).
+when_to_use: "map the codebase, orient in a new repo, codebase overview, where is X implemented, who calls this, blast radius, what breaks if I change X, god files, import cycles, call graph, import graph, ripwire, goda, pydeps"
 user-invocable: true
 ---
 

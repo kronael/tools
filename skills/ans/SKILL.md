@@ -1,6 +1,6 @@
 ---
 name: ans
-description: /ans — conversational answer-only mode toggle. NEVER edit files or run shell. /ans end to exit. NOT for stopping mid-task to ask (just answer inline).
+description: /ans — answer-only mode toggle, NEVER edit files or run shell; /ans end exits. NOT for stopping mid-task to ask (answer inline).
 when_to_use: "just answer, don't change anything, explain only, read-only mode, no edits, answer from context, stop touching files"
 user-invocable: true
 ---
