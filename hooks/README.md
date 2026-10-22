@@ -1,6 +1,6 @@
 # Kronael Hooks
 
-Lifecycle hooks: keyword routing, language-skill nudges, rule injection,
+Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
 unsafe-command blocks, a GitHub text gate, Markdown formatting, commit/diary
 stop checks and a session memory nudge. Scripts install to `~/.claude/hooks/`.
 
@@ -53,9 +53,11 @@ one. And `SubagentStart`, where the brief is a new task by construction: the
 nudge lands before the subagent's first prompt, except for the harness's own
 agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
-Also injects `COMMIT_RULES` on "commit" and `DOCS_RULES` on doc-file mentions.
-Meta prompts (hook/agent debugging) are skipped so the hook does not interfere
-with its own maintenance.
+A prompt with no nudge and no route gets no output: the output style and the
+wisdom file sit in the system prompt already, and `SKILL_KEYWORDS` holds skill
+names and words that mean one skill only, never a plain verb such as `fix` or
+`test`. Meta prompts (hook/agent debugging) are skipped so the hook does not
+interfere with its own maintenance.
 
 ### pretool_nudge.py (PreToolUse)
 
@@ -142,9 +144,8 @@ forwards explicit `decision: block` responses.
 ### local.py (UserPromptSubmit + PreCompact)
 
 Injects `~/.claude/LOCAL.md` (and `$cwd/LOCAL.md` if present) on the
-first prompt of a session and on pre-compaction. Re-injects a short
-`RULES` block on continue/recap keywords, respecting negation.
-State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
+first prompt of a session and on pre-compaction; every later prompt is
+silent. State: the session-keyed stamp `local-{session_id}` in `~/.claude/state` (`lib/state.py`).
 
 ### reclaude.py (PreCompact)
 
@@ -156,9 +157,9 @@ instructing the model to preserve the wisdom across the compact.
 Real `Stop` emits top-level `decision: "block"` if `git status --porcelain
 -uno` shows uncommitted changes ("Run /commit"; Codex sees `@commit`) or
 today's diary entry is missing or >1h stale ("Run /diary"; Codex sees
-`@diary`). The commit nudge repeats at most every 10 minutes
-(`NUDGE_INTERVAL`); the diary nudge has no throttle: it repeats on every
-Stop until today's entry exists and is under an hour old. When called from
+`@diary`). Each nudge repeats at most every 10 minutes (`NUDGE_INTERVAL`),
+on its own stamp in the git dir, until the tree is committed or today's
+entry exists and is under an hour old. When called from
 periodic `PostToolUse`, the same checks emit advisory
 `hookSpecificOutput.additionalContext` and never block a tool call.
 

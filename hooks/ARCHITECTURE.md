@@ -17,7 +17,7 @@ Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe blo
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
 
-Compaction ──> PreCompact ──> local.py        (LOCAL.md + RULES)
+Compaction ──> PreCompact ──> local.py        (LOCAL.md)
                           ──> reclaude.py     (RECLAUDE.md + preservation note)
                           ──> memory_nudge.py (session memory, unconditional)
 ```
@@ -81,16 +81,16 @@ model; `systemMessage` reaches only the user.
    route, no `commit`, no slash command, not a resumed session's summary.
    Every later prompt restamps the gap, routed or not. Other continuations
    stay silent.
-3. If prompt mentions `todo|readme|changelog|spec|architecture|*.md`,
-   append `DOCS_RULES`.
-4. In Claude only, route a prompt that starts with `/astra`, and the phrases
+3. In Claude only, route a prompt that starts with `/astra`, and the phrases
    `ask codex`, `ask astra`, `oracle`, and `second opinion`, to `/astra`.
-5. Match model escalation only when explicit: `/fable`, `use fable`,
+4. Match model escalation only when explicit: `/fable`, `use fable`,
    `spawn fable`, `/opus`, etc.
-6. Tokenise prompt and exact-match words against `SKILL_KEYWORDS`. A trailing
+5. Tokenise prompt and exact-match words against `SKILL_KEYWORDS` — skill
+   names and words that mean one skill only, never a plain verb. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.
-7. If prompt contains `commit`, append `COMMIT_RULES`; otherwise emit the
-   first exact route as `info`.
+6. Emit the first exact route as `info: Invoke /<skill>.`. A prompt with no
+   nudge and no route gets no output: the output style and the wisdom file
+   are in the system prompt already.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
 `~/.claude/state` (`lib/state.py`): its presence marks that a session's first
@@ -203,9 +203,7 @@ suppressed there to avoid invalid Codex hook JSON.
 **Flow:**
 1. First prompt per session (tracked via the `local-{sid}` stamp in `~/.claude/state`)
    or `PreCompact` event → inject `~/.claude/LOCAL.md` and `$cwd/LOCAL.md`
-   contents.
-2. On continue/recap keywords (respecting negation), append `RULES`.
-3. On `PreCompact`, always append `RULES`.
+   contents. Every later prompt is silent.
 
 ### reclaude.py (PreCompact)
 
@@ -246,13 +244,15 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    never read as clean.
 4. Resolve the diary file (`main_tree`, `diary_file`, below) and check for
    today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
-   on every Stop; no stamp throttles it. The directory need not exist; a
-   repo without one is nudged to start it.
+   when the `claude-diary-nudge` stamp is missing or at least `NUDGE_INTERVAL`
+   old, and re-stamp. The directory need not exist; a repo without one is
+   nudged to start it.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
 diary; it never writes a diary header. State:
-`<git-dir>/claude-commit-nudge` (commit nudge throttle).
+`<git-dir>/claude-commit-nudge` and `<git-dir>/claude-diary-nudge` (one
+throttle stamp per nudge).
 
 **Diary file:** `~/.claude/projects/<slug>/diary/YYYYMMDD.md`, never inside
 the repo. `<slug>` is the first entry of `git worktree list --porcelain`

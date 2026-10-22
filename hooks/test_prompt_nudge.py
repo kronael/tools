@@ -105,7 +105,6 @@ def test_continue_routes_to_continue_skill() -> None:
         'novice',
         'pentest',
         'roi',
-        'security',
         'ux',
         'usability',
         'walkthrough',
@@ -118,6 +117,31 @@ def test_eval_lens_words_route_to_eval(word) -> None:
 def test_ship_phrasings_route_to_ship() -> None:
     for prompt in ('ship this', 'ship it', "let's ship", 'and ship it'):
         assert explicit_route(prompt) == '/ship', prompt
+
+
+def test_commit_routes_to_commit() -> None:
+    assert explicit_route('commit this') == '/commit'
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'fix the failing test',
+        'design the schema',
+        'create a config file',
+        'run it in the background',
+        'add the security headers',
+        'draft the email',
+        'the inline comment is wrong',
+    ],
+)
+def test_plain_verbs_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+def test_continuation_without_a_route_is_silent(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert run(monkeypatch, capsys, 'now wire it into main') == ''
 
 
 def test_output_reaches_the_model(monkeypatch, capsys) -> None:
