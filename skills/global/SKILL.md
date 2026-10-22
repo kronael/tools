@@ -130,7 +130,7 @@ PR body with the robot. These win.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_hel1v2_disk`, not `20261017_hel1v2-disk`. `<default head>` needs
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs
   a SECOND explicit approval naming it, given AFTER the refspec is shown;
   "push it" and "ship it" are NEVER that approval.
 - NEVER `gh release create`: the annotated tag is the release. NEVER
