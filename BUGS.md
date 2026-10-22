@@ -397,6 +397,14 @@
   scope one of the two — e.g. refactor-stack commits on the focused run and
   runs the full tier per pushed layer.
 
+- **SYNC-SETTINGS-NEEDS-JQ** (MED, bug) — CONFIRMED 2026-10-22, no test — docs.
+  `kronael/sync/reference.md` § Settings merges the always-apply set and lists the
+  differing keys with `jq`, and § External tool commands never installs `jq`. On a
+  host without it the merge exits 127 (`jq: command not found`) and its redirect
+  leaves an empty `~/.claude/settings.json.new`; `settings.json` stays unchanged.
+  **Fix:** write the merge in `python3`, which the sync already needs, or add `jq`
+  to the Core batch.
+
 - **PY-RECORD-ROW-KEEPS-SMALLINT-INT** (MED, docs) — owner decision. Three
   rules are jointly unsatisfiable: `skills/py/SKILL.md:91` builds a record from
   its own SQL row as `Record(**row)`; `skills/sql/SKILL.md:43` stores a closed
