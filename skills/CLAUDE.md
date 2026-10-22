@@ -85,18 +85,15 @@ skills it replaces.
 
 ## Subagent effort defaults
 
-- The agent files in `agents/` pin each tier, and the launcher skills quote
-  them: `haiku` = Haiku 5.5 at medium, `sonnet` = Sonnet 5.5 at high, `opus` =
-  Opus 5.5 at high, `fable` = xhigh. ALWAYS change an agent file and every
-  skill that quotes it — its launcher and `dispatch` § Tiers — in one commit.
-- ALWAYS keep `terra`'s GPT-6.1 Sol high pin in `skills/terra/SKILL.md` and
-  `luna`'s GPT-6 Luna medium pin in `skills/luna/SKILL.md`.
-- `global` § Agents owns the caps and the routes between tiers; `dispatch`
-  § Tiers is the one table of every lane with its pin. A launcher states its
-  own lane and its neighbours' NOT-for clauses; NEVER describe every tier
-  anywhere else.
-- NEVER rely on prompt text like "think harder" to set effort. Encode the
-  intended model/effort in the launcher skill or agent definition.
+- The agent files in `agents/` pin each Claude tier and the `luna`, `terra`
+  and `astra` skills each Codex tier; `dispatch` § Tiers and the launchers
+  quote the pins. ALWAYS change a pin and every quote of it in one commit.
+- `global` § Agents owns the caps, the routes between tiers and the effort per
+  launch; `dispatch` § Tiers is the one table of every lane with its pin. A
+  launcher states its own lane and its neighbours' NOT-for clauses; NEVER
+  describe every tier anywhere else.
+- NEVER rely on prompt text like "think harder" to set effort — ALWAYS the
+  pin or the launch's `effort` parameter.
 
 ## Agent definitions
 

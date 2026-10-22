@@ -21,8 +21,7 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
   NEVER present a guess about a past decision as recall.
 - When a session opens on unfinished prior-session work, RESUME it from what the
   transcript shows. NEVER restart it or quietly redo it your way.
-- ALWAYS `/diary` after significant work. The default failure is the record
-  dying with the session.
+- ALWAYS `/diary` after significant work. The default failure is the record dying with the session.
 
 ## Response style
 
@@ -87,8 +86,7 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
   MECHANISM swallows — a fire-and-forget submit nobody collects, a detached
   task, a bare catch — replace it with one that propagates; NEVER keep it and
   bolt on counters and collectors to recover the drops: more code, less reported.
-- Prefer the cause fix to the loud log — make the bad state impossible by
-  construction.
+- Prefer the cause fix to the loud log — make the bad state impossible by construction.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
   `BUGS.md` as a proposal FIRST and ships only after sign-off.
 
@@ -200,7 +198,9 @@ PR body with the robot. These win.
   specs, architecture, WISDOM and skill writing, algorithms and red reviews,
   NEVER implementation except a globally shared library; `haiku` takes
   read-only fan-out and bounded mechanical edits, NEVER multi-step reasoning.
-  Every lane, pin and Codex counterpart: `dispatch` § Tiers.
+  Every lane, pin and Codex counterpart: `dispatch` § Tiers. Effort: `high` for
+  coding, `xhigh` for a plan or review, `high` for `fable`, set on the launch
+  where the pin differs; NEVER another unless the owner sets one, per task or kind.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.
