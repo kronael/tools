@@ -139,6 +139,8 @@ RETIRED = {  # names the bundle shipped and dropped
         'software-engineering', 'speed-demo', 'sub', 'sync-tools-skills', 'testing',
         'trader', 'typescript', 'useless',
     )),
+    'agents/distill.md', 'agents/improve.md', 'agents/learn.md', 'agents/readme.md',
+    'agents/refine.md', 'agents/visual.md',
     'commands/improve.md', 'commands/learn.md', 'commands/readme.md', 'commands/refine.md',
     'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',

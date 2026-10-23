@@ -7,10 +7,10 @@ wrong file is doc rot even when the fact is right.
 
 ## Where it runs
 
-A pass over a whole doc set runs in a subagent — `Agent(subagent_type:
-readme)`, the thin agent that loads the `readme` skill, prompt opening with
-"read its `sync.md`", then one line per changed behaviour. A one-fact fix
-runs inline. A subagent that loaded this skill runs the pass itself.
+A pass over a whole doc set runs in a `sonnet` sub, prompt opening with "Load
+the `readme` skill (Skill tool) and read its `sync.md`", then one line per
+changed behaviour. A one-fact fix runs inline. A subagent that loaded this
+skill runs the pass itself.
 
 ## Protocol
 

@@ -17,17 +17,15 @@ astra, sol, fable, creative, code, planning, or security routing, follow that ro
 | Code review, bug hunt, algorithm/design critique | `fable` subagent |
 | Planning critique, release plan, architecture plan | `fable` subagent |
 | Security, red-team, exploitability, deep audit | `fable` subagent |
-| Naming, prose, narrative, product copy, ideation | `astra` skill, high effort |
+| Naming, prose, narrative, product copy, ideation | `astra` skill, xhigh effort |
 | Ambiguous but touches code or operations | `fable` subagent |
-| Explicit "ask codex" / "use codex" | `astra` skill, high effort |
+| Explicit "ask codex" / "use codex" | `astra` skill, xhigh effort |
 | Explicit Astra or Sol request | `astra` skill; for Sol, its § Sol variant |
 
 ## Fable Route
 
-Launch a background agent with `subagent_type: "fable"` — `agents/fable.md`
-pins it at xhigh, so every fable route runs at xhigh; the opus fallback
-(`agents/opus.md`) runs at high. Include the goal, target files/dirs, and
-what to return. Frame adversarially:
+Launch a background agent with `subagent_type: "fable"`. Include the goal,
+target files/dirs, and what to return. Frame adversarially:
 
 ```text
 Goal: <X>. Find the flaw in <code/design/plan>. Entry points: <files, symbols,
@@ -36,7 +34,7 @@ error output>. Return findings only, with file:line or concrete trace.
 
 Rules:
 
-- NEVER set effort in the prompt text — ALWAYS rely on the agent file's pin.
+- NEVER set effort in the prompt text — ALWAYS the agent file's pin, or the launch's `effort` per WISDOM § Agents.
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.

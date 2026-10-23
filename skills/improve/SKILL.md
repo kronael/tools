@@ -15,8 +15,7 @@ design — ALWAYS load it first.
 ## Where it runs
 
 Invoked in the main thread, ALWAYS hand the work to a subagent and keep the
-conversation here: `Agent(subagent_type: improve)`, the thin agent that loads
-this skill on Sonnet 5.5 at high, for simplification and cleanup; `opus` for
+conversation here: `sonnet` for simplification and cleanup; `opus` for
 correctness and multi-file work — the split `refine` sets by lens tag. Open
 the prompt with "Load the `improve` and `software` skills
 (Skill tool)", then pass `Intent:` (the user's words), `Primary:` (files to

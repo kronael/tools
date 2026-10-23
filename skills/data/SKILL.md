@@ -73,7 +73,7 @@ comments, design and the boring-code rules.
 ## Concurrency
 
 - ALWAYS parallelize independent tasks
-- Database constraints for dedup, not in-memory locks
+- Database constraints for dedup, not in-memory or advisory locks (`sql` skill § Concurrency)
 - Redis atomic ops (INCR, SET NX), DashMap for lock-free reads
 
 ## Pipeline (file-based stages)

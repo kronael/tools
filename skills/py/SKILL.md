@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -74,7 +74,7 @@ Python-specific additions and deltas.
 
 ## Stack
 - ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
-- ALWAYS asyncpg direct, NEVER SQLAlchemy
+- ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
 - ALWAYS a `dataclass` for every structured value — record, return value, parameter bundle,
@@ -155,6 +155,9 @@ Python-specific additions and deltas.
 
 ## Build
 - uv for packages, pyright for types
+- NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`): its
+  bundled libssl segfaults beside `ssl` — ALWAYS the source build, the builder given the
+  dev headers (`libpq-dev`).
 - ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
   `basic` default with a per-file `strict` list. Every test file opts down with
   `# pyright: basic` on its first line.

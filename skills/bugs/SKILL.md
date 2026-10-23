@@ -1,17 +1,19 @@
 ---
 name: bugs
 description: The `BUGS.md` open-issues queue — record-don't-fix policy, entry format, pruning. NOT for resolved-bug history (git and /diary) or a feature backlog (use TODO.md/specs).
-when_to_use: "log this bug, open issues, what's broken, prune BUGS.md, audit-record-only, debugging but not fixing now, deliberate limit, decision the owner owes, ruled not a defect"
+when_to_use: "log this bug, open issues, what's broken, prune BUGS.md, audit-record-only, debugging but not fixing now, deliberate limit, decision the owner owes, ruled not a defect, long-term technical debt"
 ---
 
 # Bugs
 
-`BUGS.md` at the project root holds exactly two things:
+`BUGS.md` at the project root holds exactly three things:
 
 1. **What is open** — defects still true of the code, and the decisions the
    owner still owes (a redesign, a deliberate limit, a licence or product call).
 2. **Things that were reported as defects and are not** — so the next audit
    does not re-report them.
+3. **Long-term technical debt** — a structural cost the owner accepts for
+   now, awaiting no decision (§ Long-term technical debt).
 
 Nothing else. It is NOT a log of audits, reviews, sessions or sweeps: no
 "Status — <date> — <what I checked>" blocks, no lead paragraphs describing a
@@ -123,6 +125,20 @@ intentional, do not re-report` — holds one compressed line per ruling:
 what was reported, and why it is correct behaviour. These are NEVER deleted;
 they exist to stop the same finding coming back. A refuted finding (premise
 was false) goes here too, with the evidence that refuted it.
+
+## Long-term technical debt
+
+A permanent `## Long-term technical debt` section holds a known structural
+cost the owner accepts for now: two parallel type sets nobody will unify
+soon, a helper pattern that one day becomes a standard mechanism. It
+qualifies when nothing fails and it is not a feature request; a cost still
+awaiting the owner's call is `needs sign-off` instead. Same bullet format,
+type `design` (carve-out, no test), status `deferred — long-term technical
+debt`, `**Options:**`, and `**Trigger:**` — what would make paying it down
+worth it. ALWAYS triage it on its own cadence — the trigger firing or the
+owner asking — NEVER in the defect sweep, and NEVER prune it as
+not-a-defect or for want of a red test; it leaves with the commit that pays
+it down.
 
 ## Pruning
 

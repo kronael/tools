@@ -41,7 +41,8 @@ reads to pick the agent type.
 
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
   config knob the change adds — `rg -n '<name>'`. One or two sites is a
-  finding: inline it (§ Boring code).
+  finding: inline it (§ Boring code). Application code only: a `table_verb`
+  SQL function with one caller is the `sql` § Functions design.
 - ALWAYS test each added mechanism against § Boring code: identify the unmet
   requirement and why subtraction or model, view and state simplification
   cannot satisfy it. Missing evidence is a finding.

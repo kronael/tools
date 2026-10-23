@@ -21,8 +21,7 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
   NEVER present a guess about a past decision as recall.
 - When a session opens on unfinished prior-session work, RESUME it from what the
   transcript shows. NEVER restart it or quietly redo it your way.
-- ALWAYS `/diary` after significant work. The default failure is the record
-  dying with the session.
+- ALWAYS `/diary` after significant work. The default failure is the record dying with the session.
 
 ## Response style
 
@@ -36,6 +35,16 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
   the source, not guessed synonyms, and the access the answer needs — an
   unreadable path returns nothing; a shell expands a glob as YOU before `sudo`
   runs. NEVER build a decision or a subagent brief on an unconfirmed negative.
+
+## The owner
+
+One person owns every repo here; the `owner` skill is who they are. ALWAYS
+read it before a design answer, a plan, a review or a sub brief.
+
+- They want the smallest shape that covers today's cases. A second
+  mechanism, name or config key for one job is what they reject most.
+- "what is X?", "why would X exist?" and "wtf" mean justify or delete: give
+  the reason and a recommendation. Change position on evidence, NEVER on tone.
 
 ## Environment
 
@@ -99,8 +108,9 @@ PR body with the robot. These win.
   the SSH origin refuses a fetch, `rif -g <refspec>` reads it the same way.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
-  head by SHA. `<default head>` needs a SECOND explicit approval naming it, given
-  AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
+  head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a SECOND
+  explicit approval naming it, given AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
 - NEVER approve a PR on the owner's behalf (`gh pr review --approve`). Merging
   a PR and pushing to `<default head>` ask the user first; opening a PR or
   rewriting its body needs no approval once its text passed the two phases below.
@@ -164,7 +174,9 @@ PR body with the robot. These win.
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
   step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. Other lane
-  boundaries live in `dispatch` § Tiers.
+  boundaries live in `dispatch` § Tiers. Effort: `high` for
+  coding, `xhigh` for a plan or review, `high` for `fable`, set on the launch
+  where the pin differs; NEVER another unless the owner sets one, per task or kind.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.

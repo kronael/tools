@@ -8,7 +8,7 @@ user-invocable: true
 # Terra
 
 Terra is the Codex-native counterpart to `/sonnet`. It runs `gpt-6.1-sol` at
-high effort as an independent workhorse. It is a skill alias, not a model name.
+high effort, `xhigh` for a review. It is a skill alias, not a model name.
 
 ## Invoke
 
@@ -16,7 +16,7 @@ With a prompt after `/terra`, ALWAYS launch the worker in the background.
 ALWAYS report what was launched and continue on non-overlapping work.
 
 - If Codex's native `spawn_agent` supports explicit model and effort selection,
-  ALWAYS use `model: "gpt-6.1-sol"`, `reasoning_effort: "high"`, and
+  ALWAYS use `model: "gpt-6.1-sol"`, `reasoning_effort` at that level, and
   `fork_turns: "none"`. Otherwise, ALWAYS use the CLI route below.
 - For CLI workers, ALWAYS apply only `astra`'s Model and Auth checks from
   `../astra/SKILL.md`. ALWAYS use the shell tool's background mode.
@@ -29,7 +29,7 @@ ALWAYS report what was launched and continue on non-overlapping work.
 
 ```bash
 codex exec --ephemeral --sandbox read-only -C "<worker directory>" \
-  -m gpt-6.1-sol -c model_reasoning_effort="high" \
+  -m gpt-6.1-sol -c model_reasoning_effort="<high, or xhigh for a review>" \
   "<self-contained brief>" </dev/null
 ```
 

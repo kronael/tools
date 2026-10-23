@@ -7,7 +7,7 @@ user-invocable: true
 
 # Astra
 
-The codex CLI pinned to `gpt-6-astra`, at high effort. Its catalog description
+The codex CLI pinned to `gpt-6-astra`, at xhigh effort. Its catalog description
 is "Frontier intelligence for the most demanding work." This is a subprocess,
 NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
@@ -58,7 +58,7 @@ fi
 #   perimeter; -s danger-full-access still runs bwrap, fails on no-userns kernels)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
 codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6-astra -c model_reasoning_effort="high" \
+  -m gpt-6-astra -c model_reasoning_effort="xhigh" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -74,7 +74,7 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 ## Sol
 
 Sol is the same second opinion from `gpt-6.1-sol` (catalog description
-"Latest workhorse model for coding and everyday work"), at high effort.
+"Latest workhorse model for coding and everyday work"), at xhigh effort.
 Use it only when the user explicitly asks for Sol; `oracle` routes to it only
 on such a request. Two differences from the Astra invocation: select
 `gpt-6.1-sol` in the catalog
@@ -85,7 +85,7 @@ Astra's prompt and answer.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6.1-sol -c model_reasoning_effort="high" \
+  -m gpt-6.1-sol -c model_reasoning_effort="xhigh" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -98,7 +98,7 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
 - If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
   launch and report the exact missing model. ALWAYS ask the user to refresh
   the Codex catalog or explicitly choose another model; NEVER silently substitute.
-- ALWAYS pass `-c model_reasoning_effort="high"` for second-opinion work, in
+- ALWAYS pass `-c model_reasoning_effort="xhigh"` for second-opinion work, in
   both variants; NEVER trust a lower local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
