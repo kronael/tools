@@ -63,3 +63,47 @@ rule:
 message: 'NEVER a -> bool, TypeGuard or TypeIs function without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Leading underscores before
     the prefix are allowed. Exempt: dunders, @override methods, pytest test/test_* functions, test files and tests/ dirs. See skill:py.'
 note: 'source: skills/software/code.md — Naming'
+---
+id: py-no-str-case-dispatch
+language: python
+severity: warning
+rule:
+    kind: match_statement
+    has:
+        stopBy: end
+        kind: case_clause
+        has:
+            kind: case_pattern
+            any:
+                - has:
+                      kind: string
+                - has:
+                      kind: union_pattern
+                      has:
+                          kind: string
+message: NEVER match on a kind string (case 'kline1m/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
+    (case Kline1m():). See skill:py.
+note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
+---
+id: py-no-dict-call
+language: python
+severity: warning
+rule:
+    kind: call
+    has:
+        field: function
+        regex: ^dict$
+    not:
+        any:
+            - has:
+                  field: arguments
+                  has:
+                      pattern: $ARG
+                      not:
+                          kind: keyword_argument
+            - inside:
+                  kind: argument_list
+                  stopBy: end
+message: "NEVER dict(a=1) for a value built in place — write the {'a': 1} literal, or an Enum for a closed set of names. Allowed only as a call argument,\
+    \ f(extra=dict(a=1)). See skill:py."
+note: 'source: skills/py/SKILL.md — Style'
