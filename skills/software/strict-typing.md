@@ -93,7 +93,8 @@ select = [
 
 | The move | Blocked by |
 |---|---|
-| annotate `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| annotate a param or return `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| `Any` inside a generic (`dict[str, Any]`, `list[Any]`) or on a variable (`x: Any`) | basedpyright `reportExplicitAny` only — `ANN401` sees a bare param/return `Any` and nothing else |
 | *use* an `Any` value (untyped-lib return, `cast(Any, …)`) | basedpyright `reportAny` |
 | leave a fn unannotated | basedpyright `reportUnknownParameterType`; ruff `ANN001/201/...` |
 | `# type: ignore` | basedpyright `enableTypeIgnoreComments=false`; ruff `PGH003` |
