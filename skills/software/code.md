@@ -128,6 +128,10 @@ your diff against every `##` heading here before calling an edit done.
   `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
   state or inject dependencies — functions compose better and leak less.
+- ALWAYS compose a part of an object's behaviour that varies: a field holding
+  an object of one interface, a do-nothing one where there is nothing to do.
+  NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe
+  for an optional method.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
