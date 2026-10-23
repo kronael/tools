@@ -166,11 +166,12 @@ rerun the affected check, not a broad review merely to fill a loop. `fin`
 owns the final open-items pass within the accepted scope.
 
 Local commits are the default destination. A requested release uses
-`release`, and a requested PR uses `pr-draft`. A release or push the owner
-asked for happens once, after the last step — NEVER per step — and a pass
-they asked to release is not done at local commits. Push, PR creation and merge,
-publication and deployment follow WISDOM and their owning skills' gates. A
-ship brief cannot waive them.
+`release`, and a requested PR uses `pr-draft`. A release the owner asked for
+happens once, after the last step — NEVER per step — and a pass they asked
+to release is not done at local commits. A push goes to the confirmed set as
+the work needs it (WISDOM § Git). Push, PR creation and merge, publication
+and deployment follow WISDOM and their owning skills' gates. A ship brief
+cannot waive them.
 
 Completion criterion: every acceptance item has final evidence, local work
 is committed, and the requested delivery is completed or concretely waiting

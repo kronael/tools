@@ -52,7 +52,7 @@ still-unpushed stack — and for good once pushed.
 ```
 - Conventional commits, `type(scope): Message`, subject ≤72 characters.
 - Stage by path. NEVER `git add -A`, NEVER `--amend`, NEVER push by any
-  command, `git push` or `rip -g` (WISDOM § Git).
+  command, `git push` or `rip -g`: the parent pushes (WISDOM § Git).
 - NEVER add a `Co-Authored-By` trailer to any commit.
 - Detached HEAD only — NEVER create or attach a local branch.
 - NEVER remove recursively; delete named files only.

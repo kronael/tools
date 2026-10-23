@@ -153,8 +153,9 @@ code extension and still carries every claim the reviewer will trust.
     lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
     from here and why, and each step-1 instruction's outcome. NEVER push by
-    any command (`git push`, `rip -g`) without the user's ask (WISDOM § Git),
-    and NEVER `gh pr merge` or `gh pr review`. The closing report follows `report.md`.
+    any command (`git push`, `rip -g`) outside the confirmed set (WISDOM
+    § Git), and NEVER `gh pr merge` or `gh pr review`. The closing report
+    follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.

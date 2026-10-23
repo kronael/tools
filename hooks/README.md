@@ -68,8 +68,9 @@ nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks the
 unsafe shell commands `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names,
 and recursive Codex execution inside Codex. A push, `git push` or `rip -g`, is
-NOT blocked here: `skills/global` § Git gates every push on the user's ask, and
-the settings `ask` rules gate `git push` and a `rip -g` to `master` or `main`.
+NOT blocked here: `skills/global` § Git limits every push to the set the user
+confirmed, and the settings `ask` rules gate `git push` and a `rip -g` to
+`master` or `main`.
 
 It also refuses a `gh` command that posts GitHub text whose body fails
 `gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr

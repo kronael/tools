@@ -75,10 +75,10 @@ Fix → verify as above (§3), then answer EVERY thread — the default for "tak
 GH review"; skip only if the user explicitly asked for code-only, no reply.
 `gh-comment` owns every disposition (§ Reply to a thread, § Resolve a thread,
 § Re-review request) — NEVER call the thread API directly from here. Reply to
-the unfixed threads now. ALWAYS show the PR's own head refspec,
-`rip -g <fix-sha>:refs/heads/<headRefName>`; NEVER push without the
-user's ask (WISDOM § Git). The fixed threads' resolve and the one re-review
-request run once that push has landed.
+the unfixed threads now. ALWAYS name the PR's own head refspec,
+`rip -g <fix-sha>:refs/heads/<headRefName>`, and push it only inside the
+confirmed set (WISDOM § Git). The fixed threads' resolve and the one
+re-review request run once that push has landed.
 
 ## Rules
 
