@@ -24,9 +24,10 @@ your diff against every `##` heading here before calling an edit done.
   or that it is the one place a failure is sorted.
 - ALWAYS reuse the name the code, the schema, the domain and the owner already
   give a thing — function, parameter, field, type, file, commit term — and
-  carry one word through an endpoint's path, handler, module and model:
-  `/v1/react` → `react()` in `react.py`, `ReactRequest`; NEVER `reactions.py`,
-  NEVER a `stream()` on `/v1/ws`.
+  carry one word through an endpoint's path, handler, module and models, the
+  models named `<Word>Request` and `<Word>Response`: `/v1/react` → `react()`
+  in `react.py`, `ReactRequest`, `ReactResponse`; NEVER `reactions.py`, NEVER
+  `ReactIn`/`ReactOut`, NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
 - ALWAYS name a parameter or local after its own type or the domain concept it
@@ -80,6 +81,9 @@ your diff against every `##` heading here before calling an edit done.
 - A machine-read marker is not a comment: a `// #region <name>` doc anchor
   (`readme` skill) and a lint or type pragma (`//nolint:`, `# noqa`,
   `# type: ignore`, `// @ts-expect-error`) stay.
+- A config file is not code: the reason beside an entry — a lint `ignore`
+  list, a CI matrix, host vars — stays, because the entry has no name, type
+  or body to carry it. A sweep deletes nothing there.
 
 ## Boring code
 
