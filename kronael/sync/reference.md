@@ -743,7 +743,7 @@ one toolchain is missing — report that tool skipped and continue.
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | `diskclean` | `cd diskclean && make install` | frees disk space in two levels (`-1`, `-2`), each asks y/N; `-l` lists only; bash only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
-| `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
+| `qemubox` | `cd qemubox && make install` | builds and exports a VM image — needs Docker and the host dependencies in `qemubox/README.md`; ask separately |
 
 The CDPATH block is a plain shell variable, not exported by the block: a
 script that inherits CDPATH can `cd` somewhere unexpected. Its first entry is

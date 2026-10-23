@@ -23,9 +23,9 @@ done
 eq "default: no per-slug mount" "$(mount_mode "$slug_dest")" ""
 eq "default: single-file config ro" "$(mount_mode /mnt/qemubox-home)" "ro"
 eq "default: shell history rw" "$(mount_mode /mnt/qemubox-history)" "rw"
-true_ "history shares host inode" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
+true_ "history shares host inode" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'
 echo history-test >> "$ROOT/testbox/history/history"
-eq "history writes reach host" "$(cat "$HOME/.dockbox_history")" "history-test"
+eq "history writes reach host" "$(cat "$HOME/.qemubox_history")" "history-test"
 mount_args=$(qemu_mount_args)
 for i in "${!mount_tags[@]}"; do
     true_ "qemu socket ${mount_dests[$i]}" \
@@ -38,9 +38,9 @@ false_ "virtiofs exports use no -virtfs" 'grep -q -- -virtfs <<< "$mount_args"'
 printf '{"fixture":true}\n' > "$HOME/.claude.json"
 stage_host_cfg "$ROOT/testbox/hostcfg"
 true_ "claude.json staged intact" 'cmp "$HOME/.claude.json" "$ROOT/testbox/hostcfg/.claude.json"'
-false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.dockbox_history" ]'
+false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.qemubox_history" ]'
 run_assemble
-true_ "history staging supports re-entry" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
+true_ "history staging supports re-entry" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'
 
 run_assemble 'untrusted=1'
 eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"

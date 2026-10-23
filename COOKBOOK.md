@@ -1,6 +1,6 @@
 # Cookbook
 
-Daily recipes for `rig + dockbox + kronael`. Detached HEAD by
+Daily recipes for `rig + qemubox + kronael`. Detached HEAD by
 default — drop the clutter, make git do what you want.
 
 ## Why detached HEAD
@@ -123,21 +123,20 @@ No branch creation, no tracking, no merge mess.
 
 ## Ship from spec end-to-end
 
-Combine `rig + dockbox + /ship`:
+Combine `rig + qemubox + /ship`:
 
 ```bash
 rco feature                # checkout starting point
-dockbox .                  # enter sandbox (current dir mounted)
-# inside dockbox:
+qemubox .                  # enter VM (current dir mounted)
+# inside qemubox:
 /ship                      # plan → build → judge from specs/
 exit
 rip feature                # push from host
 ```
 
-`dockbox` mounts `~/.claude` rw, so the boxed agent can update
-skills/memory just like a host session. Use it when you want
-isolation from `node_modules`, system Python, or random caches —
-not security isolation.
+`qemubox` shares `~/.claude` read-write, so the guest agent can update
+skills and memory. The VM keeps its own kernel, system Python and caches.
+See [qemubox security posture](qemubox/README.md#security-posture) for the shared credentials and host access.
 
 ## Polish before PR
 
@@ -180,5 +179,5 @@ rco -h                     # per-command help
 ## See also
 
 - [rig/README.md](rig/README.md) — full flag reference
-- [dockbox/README.md](dockbox/README.md) — sandbox config and mounts
+- [qemubox/README.md](qemubox/README.md) — VM config and mounts
 - [skills/README.md](skills/README.md) — skill rationale and workflow diagram

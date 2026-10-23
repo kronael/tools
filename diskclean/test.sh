@@ -23,7 +23,7 @@ check() {
 has() { [[ $2 == *"$1"* ]]; }
 lacks() { [[ $2 != *"$1"* ]]; }
 
-for cmd in pnpm bun uv pip pre-commit yay qemubox dockbox
+for cmd in pnpm bun uv pip pre-commit yay qemubox
 do
     printf '#!/bin/sh\necho "stub %s $*"\n' "$cmd" > "$stub/$cmd"
 done
@@ -252,7 +252,7 @@ out=$(printf 'n\nn\ny\n' | ./diskclean -2 "$work")
 for prune in "pnpm store prune" "bun pm cache rm" "uv cache prune" \
     "pip cache purge" "pre-commit gc" "yay -Sc" "go clean -cache" \
     "go clean -modcache" "docker image prune -a -f" "docker builder prune -f" \
-    "qemubox prune" "dockbox prune 0"
+    "qemubox prune"
 do
     check "runs $prune" has "stub $prune" "$out"
 done

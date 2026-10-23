@@ -1,4 +1,4 @@
-FROM debian:forky AS dockbox
+FROM debian:forky AS qemubox
 
 ENV TZ=UTC
 
@@ -192,11 +192,7 @@ RUN printf '%s\n' \
     'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' \
     >> /etc/ssh/ssh_known_hosts
 
-COPY dockbox/dockbox-init dockbox/dockbox-docker \
-    dockbox/dockbox-codex-bridge /usr/local/bin/
-COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
-
-FROM dockbox AS vm
+FROM qemubox AS vm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server e2fsprogs tini busybox-static \

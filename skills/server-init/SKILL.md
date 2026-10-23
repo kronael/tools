@@ -1,6 +1,6 @@
 ---
 name: server-init
-description: Build or refresh this host's server memory, the skill server-<hostname> — what runs here and where things live. NOT for writing a service's Dockerfile or unit (use ops), NOT inside dockbox or qemubox (the launcher's note covers the box).
+description: Build or refresh this host's server memory, the skill server-<hostname> — what runs here and where things live. NOT for writing a service's Dockerfile or unit (use ops), NOT inside qemubox (the launcher's note covers the box).
 when_to_use: "server-init, server memory, map this server, scan this host, new server, what runs on this machine, host layout, services and ports on this host, where things live on this server, the server skill is wrong, refresh the server memory, machine facts in LOCAL.md"
 ---
 
@@ -13,14 +13,14 @@ finds facts. Named per host, so a `~/.claude` shared between machines keeps one
 memory each.
 
 Where a machine fact goes: a note every session on this machine must see goes in
-`/etc/claude-code/CLAUDE.md`, Claude Code's managed file — dockbox and qemubox
-pre-write it, and on a host it is written only when already writable, NEVER
+`/etc/claude-code/CLAUDE.md`, Claude Code's managed file — qemubox
+pre-writes it, and on a host it is written only when already writable, NEVER
 with sudo; a fact about this host goes in its `server-<hostname>` skill.
 
 ## Steps
 
 1. **Refuse in a sandbox.** `CLAUDE_SANDBOX` set, or `/etc/claude-code/CLAUDE.md`
-   naming dockbox or qemubox → stop and say so. NEVER build a memory from a
+   naming qemubox → stop and say so. NEVER build a memory from a
    box: its services and paths describe the sandbox, not the host. ALWAYS use
    the launcher's note for sandbox facts.
    Completion criterion: `CLAUDE_SANDBOX` is empty and no sandbox note exists.
@@ -98,7 +98,7 @@ Pointers only, in `~/.claude/LOCAL.md`. NEVER a value in this file.
 ## Upkeep
 - A fact here is wrong or missing → fix it in this file in the same turn and
   bump "Last verified".
-- NEVER edit this file from inside dockbox or qemubox: it describes the host.
+- NEVER edit this file from inside qemubox: it describes the host.
 - Drifted beyond a few lines → re-run `/server-init`.
 ````
 

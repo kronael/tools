@@ -37,7 +37,7 @@ kinds_table() {
 2 platform-tools  Solana platform-tools versions
 2 pipenv          pipenv virtualenvs
 2 browsers        playwright and puppeteer browsers
-2 prunes          vendor prune commands, docker images, qemubox, dockbox
+2 prunes          vendor prune commands, docker images, qemubox
 EOF
 }
 
@@ -540,11 +540,10 @@ prune_tools() {
         printf '  %-26s %s\n' "$prune" "$size"
     done
     run_installed qemubox ls
-    run_installed dockbox ls
     run_installed docker system df
     echo "anonymous volumes no container uses:"
     anonymous_volumes
-    echo "dockbox and qemubox images need a rebuild after this"
+    echo "qemubox images need a rebuild after this"
     confirm "level 2: run these prunes?" || return 0
     for row in "${prune_rows[@]}"
     do
@@ -589,7 +588,6 @@ prune_rows=(
     "docker image prune -a -f;"
     "docker builder prune -f;"
     "qemubox prune;"
-    "dockbox prune 0;"
 )
 roots=()
 now=$(date +%s)

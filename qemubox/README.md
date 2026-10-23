@@ -8,14 +8,6 @@ last session exits; its disk and guest home survive the next launch.
 `qemubox rm` deletes the disk.
 Build tmpfs mounts last for one boot. Files written to host shares remain.
 
-**qemubox vs dockbox** — same idea, different wall between guest and host:
-
-- **[dockbox](../dockbox/)** uses a Docker container: lighter, faster, shares
-  the host kernel. The everyday default for code you trust.
-- **qemubox** uses a full VM with its own kernel and hardware-level isolation:
-  heavier, but the guest can't reach the host filesystem through a container
-  escape. Use it for a stronger wall around what the agent can touch on disk.
-
 ## Install
 
 ```sh
@@ -224,7 +216,7 @@ Default host access includes:
    username, UID, GID and home path, so an absolute skill link resolves when its target is
    mounted too.
 3. **Your agent tokens** — `CLAUDE_CODE_OAUTH_TOKEN`, `OPENAI_API_KEY` and `CODEX_API_KEY`,
-   when set on the host, reach each session's environment, as in dockbox.
+   when set on the host, reach each session's environment.
 
 Every session variable — the agent tokens, `-g`'s `GH_TOKEN`/`GITHUB_TOKEN`, `-D`'s
 `DOCKER_HOST`, each `-e VAR` — travels over SSH stdin into a per-session file in the guest's
@@ -234,11 +226,11 @@ read in `/proc`.
 
 Other home paths require an explicit mount or forwarding flag.
 `~/.gitconfig` and gpg **public** keyrings are staged read-only.
-The shared Dockerfile's Claude wrapper reads the staged, read-only
+The Dockerfile's Claude wrapper reads the staged, read-only
 `/tmp/host-claude.json` and writes a private writable `~/.claude.json`.
 It passes `--settings '{"sandbox":{"enabled":false}}'` in the VM so the
 shared `~/.claude/settings.json` needs no edit or overlay.
-`~/.dockbox_history` backs both shell history files through a writable share.
+`~/.qemubox_history` backs both shell history files through a writable share.
 That share uses a hard link; `QEMUBOX_HOME` and the history file must be on
 the same filesystem. A failed link stops launch.
 
@@ -252,7 +244,7 @@ stays inside the VM; `docker run --network host` uses the guest's network.
 
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't reach or
 log into each other. `-A` forwards your SSH agent, `-D` the Docker socket (and with it
-`docker exec` into every dockbox on the host), `-K` the gpg-agent (commit signing; off by
+access to host containers), `-K` the gpg-agent (commit signing; off by
 default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
@@ -274,7 +266,7 @@ What qemubox gives you:
 
 What it does **not** give you — do **not** run genuinely hostile code here:
 
-- **Your real agent credentials are shared read-write.** Like dockbox, qemubox
+- **Your real agent credentials are shared read-write.** Qemubox
   shares your live `~/.claude` / `~/.codex` (tokens included) and the agent
   token variables.
   Guest code can read, change and exfiltrate those tokens and config files.
@@ -289,8 +281,8 @@ What it does **not** give you — do **not** run genuinely hostile code here:
 
 `~/.qemuboxrc` supplies default flags, one per line, with blank lines and
 `#` comments ignored. Command-line flags override these defaults.
-The project `.qemuboxrc` applies its safe flags after command-line parsing,
-as dockbox does; it ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and `-x`.
+The project `.qemuboxrc` applies its safe flags after command-line parsing.
+It ignores `-A`, `-D`, `-K`, `-S`, `-T`, `-n`, `-d` and `-x`.
 Files contain whitespace-separated tokens, never shell code. Project rc files
 are masked read-only inside the guest.
 

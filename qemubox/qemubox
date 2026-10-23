@@ -75,7 +75,7 @@ Tools (first positional arg -- no leading dash):
 Options:
     -n name    Override VM name (default: qemubox-<project>)
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
-    -x tool    Alias for -d, matching dockbox
+    -x tool    Alias for -d
     -e NAME[=value]  Forward an exported variable or a literal value
     -v path    Extra virtiofs mount at same path ro; path:rw for read-write
     -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
@@ -93,7 +93,7 @@ Options:
     -A         Forward SSH agent
     -D         Forward Docker socket over SSH
     -K         Forward gpg-agent (commit signing); off by default
-    -S         Accepted for dockbox parity; guest user already has sudo
+    -S         Accepted; guest user already has sudo
     -g         Forward GH_TOKEN / GITHUB_TOKEN into the session
     -G         Mount ~/.config/gcloud ro
     -P         Keep project build dirs on the host (--no-ephemeral)
@@ -1464,10 +1464,10 @@ assemble_mounts() {
         history_dir="$(box_dir "$name")/history"
         mkdir -p "$history_dir"
         chmod 700 "$history_dir"
-        [ -f "$HOME/.dockbox_history" ] || touch "$HOME/.dockbox_history"
-        if [ ! "$HOME/.dockbox_history" -ef "$history_dir/history" ]
+        [ -f "$HOME/.qemubox_history" ] || touch "$HOME/.qemubox_history"
+        if [ ! "$HOME/.qemubox_history" -ef "$history_dir/history" ]
         then
-            ln -fL "$HOME/.dockbox_history" "$history_dir/history"
+            ln -fL "$HOME/.qemubox_history" "$history_dir/history"
         fi
         add_mount "$history_dir" /mnt/qemubox-history rw
     fi

@@ -38,9 +38,9 @@ sshd_test() {
 regression "guest sshd replaces stale Unix sockets" sshd_test
 
 docker_cli_test() {
-    sed '/^FROM dockbox AS vm/,$d' "$here/Dockerfile" | grep -qw docker-cli
+    sed '/^FROM qemubox AS vm/,$d' "$here/Dockerfile" | grep -qw docker-cli
 }
-regression "both images install docker-cli" docker_cli_test
+regression "guest image installs docker-cli" docker_cli_test
 
 timezone_test() {
     regression_setup

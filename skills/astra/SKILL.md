@@ -23,7 +23,7 @@ the requested model, ALWAYS answer directly and NEVER launch this CLI for it.
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model and the session: see § Sol.
 
-In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
+In qemubox, the VM provides isolation; codex's inner bwrap sandbox is unnecessary.
 On kernels that block unprivileged user namespaces, bwrap fails with
 `No permissions to create a new namespace` — and `-s danger-full-access` does NOT
 help, because it still spins up bwrap (in full-access mode), so every shell
@@ -118,12 +118,12 @@ PY
 
 ## Auth — two paths
 
-**Path A — host `~/.codex` mount (preferred).** dockbox bind-mounts `~/.codex` from the host.
+**Path A — host `~/.codex` mount (preferred).** qemubox shares `~/.codex` from the host.
 ```bash
 codex login status   # "Logged in using ChatGPT" / "Logged in using API key"
 ```
 
-**Path B — env var.** dockbox forwards `OPENAI_API_KEY` and `CODEX_API_KEY` from the host env.
+**Path B — env var.** qemubox forwards `OPENAI_API_KEY` and `CODEX_API_KEY` from the host env.
 
 If unavailable, ALWAYS tell the user "codex isn't configured". NEVER crash the turn.
 

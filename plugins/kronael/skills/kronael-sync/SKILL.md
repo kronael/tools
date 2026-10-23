@@ -1,6 +1,6 @@
 ---
 name: kronael-sync
-description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/spec-lint/dockbox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
+description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/spec-lint/qemubox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
 when_to_use: "@kronael-sync, sync kronael from codex, set up kronael in codex, bridge claude skills into codex, bridge hooks into codex, kronael skills missing in codex, kronael hooks missing in codex"
 ---
 
