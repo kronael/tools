@@ -200,19 +200,12 @@ RUN printf '%s\n' \
 FROM dockbox AS vm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    linux-image-amd64 initramfs-tools systemd-sysv udev dbus kmod \
-    openssh-server systemd-timesyncd systemd-resolved e2fsprogs \
+    openssh-server e2fsprogs tini busybox-static \
     && apt-get clean && rm -f /var/lib/apt/lists/*_* \
     && rm -f /usr/sbin/policy-rc.d /etc/apt/apt.conf.d/docker-* \
-       /etc/dpkg/dpkg.cfg.d/docker-* /etc/ssh/ssh_host_* \
-    && printf '%s\n' virtio_pci virtio_blk ext4 >> /etc/initramfs-tools/modules \
-    && update-initramfs -u -k all \
-    && systemctl disable docker.service containerd.service \
-    && systemctl enable systemd-networkd systemd-resolved systemd-timesyncd ssh docker.socket \
-    && systemctl mask ssh.socket \
-    && truncate -s 0 /etc/machine-id \
-    && rm -f /var/lib/dbus/machine-id \
-    && ln -s /etc/machine-id /var/lib/dbus/machine-id
+       /etc/dpkg/dpkg.cfg.d/docker-* /etc/ssh/ssh_host_* /sbin/poweroff \
+    && printf '%s\n' '#!/bin/sh' 'kill -TERM 1' > /sbin/poweroff \
+    && chmod 755 /sbin/poweroff
 
 RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     CLAUDE_CODE_DISABLE_AUTOUPDATE NPM_CONFIG_PREFIX NVM_DIR BUN_INSTALL \
@@ -225,94 +218,20 @@ RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     done \
     && echo '. /etc/profile.d/dev-tools.sh' >> /etc/zsh/zshenv
 
-RUN mkdir -p /etc/systemd/network /etc/systemd/system/ssh.service.d \
-    && printf '%s\n' '[Match]' 'Name=en* eth*' '[Network]' 'DHCP=yes' \
-       > /etc/systemd/network/20-qemubox.network \
-    && printf '%s\n' '[Unit]' 'Requires=qemubox-init.service' \
-       'After=qemubox-init.service' > /etc/systemd/system/ssh.service.d/qemubox.conf \
-    && printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
-       'PermitRootLogin no' 'StreamLocalBindUnlink yes' > /etc/ssh/sshd_config.d/qemubox.conf \
-    && printf '%s\n' '[Unit]' 'After=local-fs.target' 'Before=ssh.service' \
-       '[Service]' 'Type=oneshot' 'ExecStart=/usr/local/bin/qemubox-init' \
-       'StandardOutput=journal+console' 'StandardError=journal+console' \
-       'RemainAfterExit=yes' '[Install]' 'WantedBy=multi-user.target' \
-       > /etc/systemd/system/qemubox-init.service \
-    && systemctl enable qemubox-init.service
+RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
+       'PermitRootLogin no' 'StreamLocalBindUnlink yes' \
+       > /etc/ssh/sshd_config.d/qemubox.conf \
+    && sed -i '/pam_systemd.so/d' /etc/pam.d/common-session \
+    && settings='--settings '\''{"sandbox":{"enabled":false}}'\''' \
+    && sed -i "s/--dangerously-skip-permissions /&$settings /" \
+       /usr/local/bin/claude \
+    && printf '%s\n' '#!/bin/sh' \
+       'exec /opt/dev-tools/bun/bin/codex --no-daemon \' \
+       '    --dangerously-bypass-approvals-and-sandbox "$@"' \
+       > /usr/local/bin/codex \
+    && chmod 755 /usr/local/bin/codex
 
-RUN printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'set -Eeuo pipefail' \
-    'trap '"'"'echo "qemubox-init: failed at line $LINENO" >&2'"'"' ERR' \
-    '' \
-    'printf '"'"'127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s\n'"'"' "$(cat /proc/sys/kernel/hostname)" > /etc/hosts' \
-    'mkdir -p /run/qemubox/config' \
-    'mount -t virtiofs -o ro cfg /run/qemubox/config' \
-    '{' \
-    '    read -r username' \
-    '    read -r user_uid' \
-    '    read -r user_gid' \
-    '    IFS= read -r home_dir' \
-    '    read -r groups' \
-    '    IFS= read -r zone' \
-    '} < /run/qemubox/config/identity' \
-    '[[ "$username" =~ ^[A-Za-z0-9_-]+$ && "$user_uid" =~ ^[0-9]+$ &&' \
-    '    "$user_gid" =~ ^[0-9]+$ && "$home_dir" = /* && "$home_dir" != *:* ]]' \
-    '[[ "$user_uid" != 0 ]]' \
-    '[[ "$zone" != /* && "$zone" != *..* && -f "/usr/share/zoneinfo/$zone" ]]' \
-    'ln -sf "/usr/share/zoneinfo/$zone" /etc/localtime' \
-    '' \
-    'passwd_entry="$username:x:$user_uid:$user_gid::$home_dir:/bin/bash"' \
-    'if entry=$(getent passwd "$user_uid")' \
-    then \
-    '    [[ "$entry" = "$passwd_entry" ]]' \
-    else \
-    '    if getent passwd "$username" >/dev/null' \
-    '    then' \
-    '        echo "qemubox-init: conflicting user $username" >&2' \
-    '        exit 1' \
-    '    fi' \
-    '    echo "$passwd_entry" >> /etc/passwd' \
-    fi \
-    'if ! getent shadow "$username" >/dev/null' \
-    then \
-    '    echo "$username:!:19000:0:99999:7:::" >> /etc/shadow' \
-    fi \
-    'groups="$groups $(getent group docker | cut -d: -f3):docker"' \
-    'for group in $groups' \
-    do \
-    '    gid=${group%%:*}' \
-    '    gname=${group#*:}' \
-    '    [[ "$gid" =~ ^[0-9]+$ ]]' \
-    '    [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"' \
-    '    if entry=$(getent group "$gid")' \
-    '    then' \
-    '        gname=${entry%%:*}' \
-    '        members=${entry##*:}' \
-    '    else' \
-    '        members=""' \
-    '        getent group "$gname" >/dev/null && gname="hostgrp$gid"' \
-    '    fi' \
-    '    case ",$members," in' \
-    '        *",$username,"*) ;;' \
-    '        *) members="${members:+$members,}$username" ;;' \
-    '    esac' \
-    '    sed -i "/^$gname:/d" /etc/group' \
-    '    printf "%s:x:%s:%s\\n" "$gname" "$gid" "$members" >> /etc/group' \
-    done \
-    'getent group "$user_gid" >/dev/null' \
-    'echo "$username ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/qemubox' \
-    'chmod 0440 /etc/sudoers.d/qemubox' \
-    'visudo -cf /etc/sudoers.d/qemubox' \
-    'mkdir -p "$home_dir/.ssh"' \
-    'chown "$user_uid:$user_gid" "$home_dir" "$home_dir/.ssh"' \
-    'chmod 700 "$home_dir/.ssh"' \
-    'install -m 600 -o "$user_uid" -g "$user_gid" \' \
-    '    /run/qemubox/config/authorized_keys "$home_dir/.ssh/authorized_keys"' \
-    'ssh-keygen -A' \
-    'ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf' \
-    'resize2fs /dev/vda' \
-    'touch /run/qemubox/ready' \
-    'echo '"'"'qemubox: ready'"'"'' \
-    > /usr/local/bin/qemubox-init && chmod 755 /usr/local/bin/qemubox-init
-ENTRYPOINT ["/sbin/init"]
+COPY qemubox/guest-init /usr/local/bin/qemubox-init
+RUN chmod 755 /usr/local/bin/qemubox-init
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/qemubox-init"]
 WORKDIR /

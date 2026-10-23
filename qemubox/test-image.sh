@@ -1,21 +1,13 @@
-image_init="$fixture/image-init"
-awk '/^RUN printf/{block=$0;next} {block=block ORS $0}
-    / > \/usr\/local\/bin\/qemubox-init &&/{print block}' "$here/Dockerfile" |
-    sed '1s/^RUN //; s|> /usr/local/bin/qemubox-init.*|> "$image_init"|' > "$fixture/extract-init"
-source "$fixture/extract-init"
+image_init="$here/guest-init"
 
 codex_wrapper_test() {
-    regression_setup
-    mkdir -p "$ROOT/vm/config"
-    touch "$ROOT/vm/config/CLAUDE.md"
-    ssh_plain_box() { :; }
-    guest_note() { :; }
-    ssh_stream_box() {
-        printf '%s\n' "$2" |
-            sed -n '/^#!\/bin\/sh$/,/^EOF$/{/^EOF$/d;p;}' \
-                >> "$fixture/emitted-codex"
-    }
-    setup_guest_runtime vm
+    awk '/^    && printf.*#!\/bin\/sh/ && !/poweroff/ {
+            emit=1;sub(/^    && /, "")}
+        emit {print}
+        emit && / > \/usr\/local\/bin\/codex/ {exit}' "$here/Dockerfile" |
+        sed 's|> /usr/local/bin/codex|> "$fixture/emitted-codex"|' \
+        > "$fixture/extract-codex"
+    source "$fixture/extract-codex"
     sed 's|/opt/dev-tools/bun/bin/codex|"$QEMUBOX_TEST_CODEX"|' \
         "$fixture/emitted-codex" > "$fixture/codex-wrapper"
     grep -Fq 'exec "$QEMUBOX_TEST_CODEX" ' "$fixture/codex-wrapper"
@@ -48,83 +40,88 @@ docker_cli_test() {
 }
 regression "both images install docker-cli" docker_cli_test
 
-docker_socket_test() {
-    local service_root="$fixture/guest-services" unit
-    mkdir -p "$service_root/usr/lib/systemd/system"
-    for unit in docker.service docker.socket containerd.service \
-        systemd-networkd.service systemd-resolved.service \
-        systemd-timesyncd.service ssh.service ssh.socket qemubox-init.service
-    do
-        printf '[Install]\nWantedBy=multi-user.target\n' > \
-            "$service_root/usr/lib/systemd/system/$unit"
-    done
-    awk '/^FROM .* AS vm$/ {vm=1}
-        vm && /&& systemctl / {
-            sub(/^.*&& systemctl /, "")
-            sub(/[[:space:]]*\\$/, "")
-            print "systemctl " $0
-        }' "$here/Dockerfile" > "$fixture/guest-services.sh"
-    [[ -s "$fixture/guest-services.sh" ]]
-    systemctl() { command systemctl --root="$service_root" "$@"; }
-    source "$fixture/guest-services.sh"
-    [[ "$(systemctl is-enabled docker.socket)" = enabled ]]
-    [[ "$(systemctl is-enabled docker.service)" = disabled ]]
-}
-regression "guest Docker starts on demand through its own socket" \
-    docker_socket_test
-
 timezone_test() {
     regression_setup
     untrusted=""
     ensure_box timezone
     [ "$(sed -n '6p' "$ROOT/timezone/config/identity")" = Etc/UTC ]
     mkdir -p "$fixture/zone/etc" "$fixture/zone/run/qemubox/config"
-    cp "$ROOT/timezone/config/identity" "$fixture/zone/run/qemubox/config/identity"
-    sed '/^passwd_entry=/,$d' "$image_init" |
-        sed "s|/etc/|$fixture/zone/etc/|g; s|/run/|$fixture/zone/run/|g; s|/proc/sys/kernel/hostname|/dev/null|g" > "$fixture/zone-init"
-    mount() { printf '%s\n' "$*" >> "$fixture/image-mounts"; }
-    export -f mount
+    cp "$ROOT/timezone/config/identity" \
+        "$fixture/zone/run/qemubox/config/identity"
+    awk '/^{/ {emit=1} emit {print}
+        /^ln -sf .*zone.*localtime/ {exit}' "$image_init" |
+        sed "s|/etc/|$fixture/zone/etc/|g; s|/run/|$fixture/zone/run/|g" \
+        > "$fixture/zone-init"
     export fixture
     bash "$fixture/zone-init"
-    grep -Fxq -- "-t virtiofs -o ro cfg $fixture/zone/run/qemubox/config" \
-        "$fixture/image-mounts"
-    [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
+    [[ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]]
     if grep -q '^RUN for key in TZ ' "$here/Dockerfile"; then exit 1; fi
 }
 regression "identity and init set the UTC time zone" timezone_test
 
 groups_test() {
-    mkdir -p "$fixture/groups"
+    local prefix="$fixture/groups"
+    mkdir -p "$prefix/etc"
     printf '%s\n' 'systemd-journal:x:998:journaluser' 'wheel:x:10:other' \
-        'docker:x:997:dockeruser' > "$fixture/groups/group"
-    sed -n '/^groups=.*getent group docker/p; /^for group in /,/^done/p' \
-        "$image_init" |
-        sed "s|/etc/group|$fixture/groups/group|g" > "$fixture/group-init"
+        'docker:x:997:dockeruser' > "$prefix/etc/group"
+    printf '%s\n' 'systemd-journal:!::journaluser' 'wheel:!::other' \
+        'docker:!::dockeruser' > "$prefix/etc/gshadow"
+    printf '%s\n' 'root:x:0:0:root:/root:/bin/bash' > "$prefix/etc/passwd"
+    printf '%s\n' 'root:!:19000:0:99999:7:::' > "$prefix/etc/shadow"
+    printf '%s\n' 'PASS_MAX_DAYS 99999' 'PASS_MIN_DAYS 0' 'PASS_WARN_AGE 7' \
+        > "$prefix/etc/login.defs"
+    sed -n '/^groups=.*getent group docker/,/^echo .*ALL=(ALL)/p' \
+        "$image_init" | sed '$d' > "$fixture/group-init"
     getent() {
-        awk -F: -v key="$2" '$1==key || $3==key {found=1;print} END {exit !found}' "$fixture/groups/group"
+        awk -F: -v key="$2" \
+            '$1==key || $3==key {found=1;print} END {exit !found}' \
+            "$prefix/etc/$1"
     }
-    export fixture
-    export -f getent
-    username=guest; groups='998:wheel 999: 1001:bad.name 1002:wheel'
-    export username groups
-    bash "$fixture/group-init"
-    bash "$fixture/group-init"
-    grep -qx 'systemd-journal:x:998:journaluser,guest' "$fixture/groups/group"
-    grep -qx 'hostgrp999:x:999:guest' "$fixture/groups/group"
-    grep -qx 'hostgrp1001:x:1001:guest' "$fixture/groups/group"
-    grep -qx 'hostgrp1002:x:1002:guest' "$fixture/groups/group"
-    grep -qx 'docker:x:997:dockeruser,guest' "$fixture/groups/group"
-    [ "$(cut -d: -f3 "$fixture/groups/group" | sort -u | wc -l)" = 6 ]
-    [ "$(wc -l < "$fixture/groups/group")" = 6 ]
+    groupadd() { command groupadd -P "$prefix" "$@"; }
+    useradd() { command useradd -P "$prefix" "$@"; }
+    usermod() { command usermod -P "$prefix" "$@"; }
+    export prefix
+    export -f getent groupadd useradd usermod
+    username=guest; user_uid=2001; user_gid=999; home_dir=/home/guest
+    groups='998:wheel 999: 1001:bad.name 1002:wheel'
+    export username user_uid user_gid home_dir groups
+    bash -e "$fixture/group-init"
+    bash -e "$fixture/group-init"
+    grep -qx 'systemd-journal:x:998:journaluser,guest' "$prefix/etc/group"
+    grep -qx 'hostgrp999:x:999:guest' "$prefix/etc/group"
+    grep -qx 'hostgrp1001:x:1001:guest' "$prefix/etc/group"
+    grep -qx 'hostgrp1002:x:1002:guest' "$prefix/etc/group"
+    grep -qx 'docker:x:997:dockeruser,guest' "$prefix/etc/group"
+    grep -qx 'guest:x:2001:999::/home/guest:/bin/bash' "$prefix/etc/passwd"
+    grep -qxE 'guest:!:[0-9]+:0?:99999:7:::' "$prefix/etc/shadow"
+    [ "$(cut -d: -f3 "$prefix/etc/group" | sort -u | wc -l)" = 6 ]
+    [ "$(wc -l < "$prefix/etc/group")" = 6 ]
+    printf '%s\n' 'root:!:19000:0:99999:7:::' > "$prefix/etc/shadow"
+    bash -e "$fixture/group-init"
+    grep -qxE 'guest:!:[0-9]+:0?:99999:7:::' "$prefix/etc/shadow"
+    if user_uid=2002 bash -e "$fixture/group-init" 2> "$fixture/group-conflict"
+    then
+        return 1
+    fi
+    grep -q 'conflicting user guest' "$fixture/group-conflict"
+    if home_dir=/other bash -e "$fixture/group-init"
+    then
+        return 1
+    fi
 }
-regression "init preserves gid membership and sanitizes missing or invalid names" groups_test
+regression "init preserves memberships and sanitizes group names" groups_test
 
 host_groups_test() {
     regression_setup
     untrusted=""
     getent() {
         if [ "$1" = group ]; then
-            if [ "$2" = "$(id -g)" ]; then echo "bad group:x:$2:"; else return 2; fi
+            if [[ "$2" = "$(id -g)" ]]
+            then
+                echo "bad group:x:$2:"
+            else
+                return 2
+            fi
         else
             command getent "$@"
         fi
@@ -133,7 +130,8 @@ host_groups_test() {
     groups=$(sed -n '5p' "$ROOT/hostgroups/config/identity")
     for gid in $(id -G); do [[ "$groups" = *"$gid:hostgrp$gid "* ]]; done
 }
-regression "host identity sanitizes group names before tokenizing" host_groups_test
+regression "host identity sanitizes group names before tokenizing" \
+    host_groups_test
 
 forward_test() {
     mkdir -p "$fixture/ssh-bin"
@@ -161,7 +159,8 @@ build_dep_test() {
         grep -q "Missing:.*$missing" "$fixture/deps-error"
     done
 }
-regression "missing build dependencies fail before Docker build or export" build_dep_test
+regression "missing dependencies fail before Docker build or export" \
+    build_dep_test
 
 mke2fs_test() {
     regression_setup

@@ -13,3 +13,4 @@ udfix/udfix
 !qemubox/Dockerfile.kernel
 !qemubox/kernel.fragment
 !qemubox/initrd-init
+!qemubox/guest-init

@@ -5,6 +5,8 @@ PREFIX ?= $(HOME)/.local/bin
 
 test:
 	bash -n $(name)
+	bash -n guest-init
+	sh -n initrd-init
 	bash test.sh
 
 image:
