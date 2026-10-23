@@ -131,7 +131,14 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS compose a part of an object's behaviour that varies: a field holding
   an object of one interface, a do-nothing one where there is nothing to do.
   NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe
-  for an optional method.
+  for an optional method — the type test that asks "can this object do X?".
+- ALWAYS model a closed set of data variants — message types, sample kinds,
+  events — as one named, frozen type per variant behind one small interface
+  or base, and dispatch on the type: a Rust `match` on the enum, a Go type
+  switch, Python `isinstance`/`match` on the class. NEVER on a `kind`/`type`
+  string or a map key, and NEVER a map of untyped values (`dict[str, Any]`,
+  `map[string]any`) as a data shape: external JSON is parsed into the variants
+  where it enters, and nothing past that boundary sees the raw form.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
