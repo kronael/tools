@@ -5,6 +5,9 @@ awk '/^RUN printf/{block=$0;next} {block=block ORS $0}
 source "$fixture/extract-init"
 
 codex_wrapper_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm/config"
+    touch "$ROOT/vm/config/CLAUDE.md"
     ssh_plain_box() { :; }
     guest_note() { :; }
     ssh_stream_box() {

@@ -9,6 +9,7 @@ LINGER="${QEMUBOX_LINGER:-1200}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
 QEMU="${QEMUBOX_QEMU:-qemu-system-x86_64}"
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 EPHEMERAL_DIRS=(node_modules .venv .next .turbo .cache)
 TMP_WORKDIR=/tmp/work
 agent_tokens=(CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY)
@@ -29,9 +30,6 @@ new_session=""
 gcloud_creds=""
 gpg_forward=""
 untrusted=""
-booted=""
-locked=""
-sid=""
 session_pid=""
 args=()
 dirs=()
@@ -132,13 +130,11 @@ Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
         Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
-Lifecycle: the VM stays up QEMUBOX_LINGER=1200 seconds after the last session
-           exits, then powers off (0: at once); disk survives until rm.
-Stop: qemubox stop resumes a paused guest, trims its disk, asks it to power
-      off and waits up to 90s before stopping qemu; -f stops qemu at once
-      (quit over QMP or SIGTERM, then SIGKILL).
-Prune: stop running VMs idle past 4 hours; never removes a VM. Reclaim
-       unreferenced bases except current.
+Lifecycle: each VM is the systemd user unit qemubox@<name>; it stops after
+           QEMUBOX_LINGER=1200 seconds with no session; disk survives until rm.
+Stop: qemubox stop powers the guest off (systemd stops qemu after 100s);
+      -f sends qemu SIGTERM at once.
+Prune: stop VMs with no session for 4 hours; reclaim unused bases.
 Remove: rm --stopped <hours> removes VMs stopped for over that many whole hours.
 State: $ROOT
 EOF
@@ -195,7 +191,8 @@ port_for() {
 }
 
 missing_deps() {
-    local miss="" dep deps=("$QEMU" qemu-img ssh ssh-keygen tar flock python3)
+    local miss="" dep deps=("$QEMU" qemu-img ssh ssh-keygen tar flock python3
+        systemctl systemd-run journalctl loginctl ss)
     [ "$#" -eq 0 ] || deps=("$@")
     for dep in "${deps[@]}"; do
         command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
@@ -205,6 +202,11 @@ missing_deps() {
         echo "Install qemubox system dependencies listed in qemubox/README.md." >&2
         exit 1
     }
+    [ "$#" -eq 0 ] || return 0
+    systemctl --user show-environment >/dev/null ||
+        { echo "qemubox: no systemd user manager answers systemctl --user" >&2; exit 1; }
+    [ "$(loginctl show-user "$(id -un)" -p Linger --value)" = yes ] ||
+        { echo "qemubox: VMs need lingering: loginctl enable-linger $(id -un)" >&2; exit 1; }
 }
 
 note() {
@@ -293,14 +295,12 @@ ensure_box() {
     exec 8>&-
 }
 
-running() {
-    local dir pid state
-    dir="$(box_dir "$1")"
-    [ -s "$dir/pid" ] || return 1
-    pid=$(cat "$dir/pid")
-    state=$(ps -o stat= -p "$pid") || return 1
-    [[ "$state" != Z* ]] || return 1
-    grep -zFq -- "file=$dir/disk.qcow2," "/proc/$pid/cmdline"
+box_unit() {
+    printf 'qemubox@%s.service' "$(box_name "$1")"
+}
+
+unit_state() {
+    systemctl --user is-active "$(box_unit "$1")" || :
 }
 
 qmp_box() {
@@ -336,188 +336,89 @@ EOF
 
 run_state() {
     local state
-    if ! running "$1"
-    then
-        state=stopped
-    elif [ ! -S "$(box_dir "$1")/qmp" ]
-    then
-        state=running
-    elif ! state=$(qmp_box "$1" query-status)
-    then
-        state="?"
-    fi
+    case "$(unit_state "$1")" in
+        inactive|failed) echo stopped; return 0 ;;
+    esac
+    state=$(qmp_box "$1" query-status) || state="?"
     case "$state" in
-        stopped|running|paused|"?") printf '%s\n' "$state" ;;
+        running|paused|"?") printf '%s\n' "$state" ;;
         *) printf 'paused:%s\n' "$state" ;;
     esac
 }
 
 ready_error() {
-    echo "VM qemubox-$1 not ready; serial log: $(box_dir "$1")/serial.log" >&2
-    tail -40 "$(box_dir "$1")/serial.log" >&2 || true
+    echo "VM qemubox-$1 not ready; journalctl --user -u $(box_unit "$1"):" >&2
+    journalctl --user -u "$(box_unit "$1")" -n 40 --no-pager >&2 || true
 }
 
 lock_box() {
     mkdir -p "$ROOT/.locks"
     exec 9>"$ROOT/.locks/$(box_name "$1")"
-    flock -w "${QEMUBOX_READY_TIMEOUT:-180}" 9 || {
-        ready_error "$1"
-        return 1
-    }
-    locked=1
+    flock -w "${QEMUBOX_READY_TIMEOUT:-180}" 9 ||
+        { echo "qemubox-$1 stayed locked by another launch or rm" >&2; return 1; }
 }
 
 unlock_box() {
     flock -u 9
     exec 9>&-
-    locked=""
 }
 
-wait_ready() {
-    local name="$1" gate="$2" deadline state
-    deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
-    while [ "$SECONDS" -lt "$deadline" ]
-    do
-        state=$(run_state "$name")
-        if [[ "$state" = paused* ]]
-        then
-            echo "VM qemubox-$name is $state, not running; io-error means" \
-                "the host disk under $ROOT filled. Free space, then run" \
-                "qemubox stop $name" >&2
-            return 1
-        fi
-        if [ "$gate" = boot ] || [ -f "$(box_dir "$name")/ready" ]
-        then
-            if ssh_plain_box "$name" "test -f /run/qemubox/ready" \
-                >/dev/null 2>&1
-            then
-                return 0
-            fi
-        fi
-        sleep 1
-    done
-    ready_error "$name"
+refuse_paused() {
+    local state
+    state=$(run_state "$1")
+    [[ "$state" = paused* ]] || return 0
+    echo "VM qemubox-$1 is $state, not running; io-error means" \
+        "the host disk under $ROOT filled. Free space, then run" \
+        "qemubox stop $1" >&2
     return 1
 }
 
-session_markers() {
-    local markers marker
-    [ -n "$locked" ] || { echo "Session count requires the VM lock" >&2; return 1; }
-    markers=$(ssh_plain_box "$1" 'sudo ls -1 /run/qemubox/sess') || return 1
-    for marker in $markers
+wait_ready() {
+    until ssh_plain_box "$1" "test -f /run/qemubox/ready" >/dev/null 2>&1
     do
-        [[ "$marker" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid session marker: $marker" >&2; return 1; }
-        if kill -0 "$marker" 2>/dev/null
-        then
-            printf '%s\n' "$marker"
-        else
-            ssh_plain_box "$1" "sudo rm -f /run/qemubox/sess/$marker" || return 1
-        fi
+        refuse_paused "$1" || return 1
+        sleep 1
     done
 }
 
-has_idle_token() {
-    [ "$(cat "$(box_dir "$1")/idle" 2>/dev/null)" = "$2" ]
+session_count() {
+    ss -Htn state established "( dport = :$(port_for "$1") )" | wc -l
 }
 
-stop_after_linger() {
-    local name="$1" token="$2" idle markers
-    trap '' HUP
-    while :
-    do
-        sleep "$LINGER"
-        lock_box "$name" || return 1
-        if ! running "$name" || ! has_idle_token "$name" "$token"
-        then
-            note "qemubox-$name is stopped or stamped idle again; leaving it"
-            unlock_box
-            return 0
-        fi
-        idle=$(stat -c %Y "$(box_dir "$name")/idle")
-        if markers=$(session_markers "$name")
-        then
-            if [ -n "$markers" ]
-            then
-                note "qemubox-$name is busy; leaving it"
-            else
-                note "no session for ${LINGER}s; powering off qemubox-$name, keeping disk"
-                stop_box "$name" || return 1
-            fi
-            unlock_box
-            return 0
-        fi
-        unlock_box
-        if [ $(( $(date +%s) - idle )) -ge $((4 * 3600)) ]
-        then
-            note "cannot count sessions 4h after the last exit; giving up on qemubox-$name"
-            return 1
-        fi
-        note "cannot count sessions; retrying in ${LINGER}s"
-    done
-}
-
-linger_box() {
-    local dir token
-    dir="$(box_dir "$1")"
-    token="$$.$(date +%s%N)"
-    printf '%s\n' "$token" > "$dir/idle"
-    note "last session exited; qemubox-$1 powers off after ${LINGER}s idle"
-    (stop_after_linger "$1" "$token") </dev/null >>"$dir/idle.log" 2>&1 9>&- &
+check_box() {
+    local name dir linger count
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    [ -f "$dir/idle" ] || return 0
+    linger=${2:-$(cat "$dir/idle")}
+    count=$(session_count "$name") || return
+    [ "$count" -eq 0 ] || return 0
+    [ $(($(date +%s) - $(stat -c %Y "$dir/idle"))) -ge "$linger" ] || return 0
+    note "no session for ${linger}s; stopping qemubox-$name, keeping disk"
+    systemctl --user stop --no-block "$(box_unit "$name")"
 }
 
 leave_session() {
-    local rc=$? left err
+    local rc=$?
     trap - EXIT HUP TERM INT
     if [ -n "$session_pid" ]
     then
         kill "$session_pid" 2>/dev/null || true
         wait "$session_pid" 2>/dev/null || true
     fi
-    if [ -z "$locked" ] && ! lock_box "$name"
-    then
-        exit 1
-    fi
-    if ! running "$name"
-    then
-        :
-    elif [ -z "$sid" ]
-    then
-        [ -z "$booted" ] || stop_box "$name" || rc=1
-    elif ! err=$(ssh_plain_box "$name" "sudo rm -f /run/qemubox/sess/$sid" 2>&1)
-    then
-        if wait_stopped "$name" 15
-        then
-            note "qemubox-$name powered off during the session"
-        else
-            [ -z "$err" ] || echo "$err" >&2
-            note "cannot remove session marker; keeping qemubox-$name $(run_state "$name")"
-            rc=1
-        fi
-    elif ! left=$(session_markers "$name")
-    then
-        note "cannot count sessions; keeping qemubox-$name running"
-        rc=1
-    elif [ -z "$left" ] && [ "$LINGER" -gt 0 ]
-    then
-        linger_box "$name"
-    elif [ -z "$left" ]
-    then
-        note "last session exited; powering off qemubox-$name, keeping disk"
-        stop_box "$name" || rc=1
-    fi
-    unlock_box
+    printf '%s\n' "$LINGER" > "$(box_dir "$name")/idle"
+    note "qemubox-$name stops after ${LINGER}s with no session"
+    [ "$LINGER" -gt 0 ] || check_box "$name" || rc=1
     exit "$rc"
 }
 
 enter_session() {
-    trap leave_session EXIT
     trap 'exit 129' HUP
     trap 'exit 143' TERM
     trap 'exit 130' INT
     start_box "$name"
-    sid=$$
-    ssh_plain_box "$name" "sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/sess/$sid"
     unlock_box
+    trap leave_session EXIT
 }
 
 ssh_opts() {
@@ -575,7 +476,9 @@ add_mount() {
         return 1
     }
     case "$src" in
-        *,*) echo "Cannot 9p-mount path containing comma: $src" >&2; exit 2 ;;
+        *,*|*$'\t'*|*$'\n'*)
+            echo "Cannot mount path containing comma, tab or newline: $src" >&2
+            exit 2 ;;
     esac
     tag="qbx${#mount_tags[@]}"
     mount_tags+=("$tag")
@@ -723,22 +626,21 @@ start_box() {
     mkdir -p "$dir"
     lock_box "$name"
     check_trust "$name" || return 1
-    port="$(port_for "$name")"
-    if running "$name"
+    if [ "$(run_state "$name")" != stopped ]
     then
-        image_id=$(cat "$dir/image-id")
-        [ -s "$ROOT/base/$image_id.qcow2" ] || {
-            echo "Missing base $image_id; run qemubox rm $name" >&2
-            return 1
-        }
-        note "waiting for running VM qemubox-$name"
-        wait_ready "$name" session
-        booted=""
+        refuse_paused "$name"
         return
     fi
     assemble_mounts
     ensure_box "$name"
-    rm -f "$dir/ready" "$dir/known_hosts"
+    for i in "${!mount_tags[@]}"
+    do
+        printf '%s\t%s\t%s\t%s\n' "${mount_tags[$i]}" "${mount_srcs[$i]}" \
+            "${mount_dests[$i]}" "${mount_modes[$i]}"
+    done > "$dir/config/mounts"
+    guest_note "$HOSTNAME" "$dir/config/ephemeral" > "$dir/config/CLAUDE.md"
+    rm -f "$dir/known_hosts"
+    port="$(port_for "$name")"
     for ((attempt=0; attempt<100; attempt++))
     do
         (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || break
@@ -747,20 +649,52 @@ start_box() {
     [ "$attempt" -lt 100 ] || { echo "No free SSH port for $name" >&2; return 1; }
     echo "$port" > "$dir/port"
     qemu_acceleration
-    restrict=",restrict=on"
-    [ -n "$network" ] && restrict=""
     if [ "${#accel[@]}" -gt 0 ]; then
         note "starting qemubox-$name with KVM acceleration"
     else
         note "starting qemubox-$name without KVM; software emulation is slower"
     fi
     if [ -n "$network" ]; then
+        echo on > "$dir/net"
         note "guest network: outbound enabled"
     else
+        echo off > "$dir/net"
         note "guest network: restricted; only host SSH forwarding is open"
     fi
+    note "waiting for guest setup on 127.0.0.1:$port"
+    systemd-run --user --collect --quiet --unit="$(box_unit "$name")" \
+        -p TimeoutStartSec="${QEMUBOX_READY_TIMEOUT:-180}" -p TimeoutStopSec=100 \
+        -p "ExecStartPost=/bin/bash \"$SELF\" _ready $name" \
+        -p "ExecStop=/bin/bash \"$SELF\" _stop $name" \
+        -p "ExecStopPost=/usr/bin/touch \"$dir/stopped\"" \
+        -E QEMUBOX_HOME="$ROOT" -E QEMUBOX_MEM="$MEM" -E QEMUBOX_CPUS="$CPUS" \
+        -E QEMUBOX_QEMU="$QEMU" -E QEMUBOX_LINGER="$LINGER" -E PATH="$PATH" \
+        /bin/bash "$SELF" _vm "$name" || { ready_error "$name"; return 1; }
+}
+
+read_mounts() {
+    local tag src dest mode
+    mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=()
+    while IFS=$'\t' read -r tag src dest mode
+    do
+        mount_tags+=("$tag")
+        mount_srcs+=("$src")
+        mount_dests+=("$dest")
+        mount_modes+=("$mode")
+    done < "$1"
+}
+
+run_qemu() {
+    local restrict=",restrict=on" mounts
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    image_id=$(cat "$dir/image-id")
+    read_mounts "$dir/config/mounts"
     mapfile -t mounts < <(qemu_mount_args)
-    (cd "$dir" && "$QEMU" "${accel[@]}" \
+    qemu_acceleration
+    [ "$(cat "$dir/net")" = off ] || restrict=""
+    cd "$dir"
+    exec "$QEMU" "${accel[@]}" \
         -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
         -device virtio-balloon-pci,free-page-reporting=on \
         -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2,discard=unmap,detect-zeroes=unmap" \
@@ -768,14 +702,16 @@ start_box() {
         -append "root=/dev/vda rw console=ttyS0 noresume loglevel=5" \
         -virtfs "local,path=$dir/config,mount_tag=qbxcfg,security_model=none,readonly=on" \
         "${mounts[@]}" \
-        -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$port-:22" \
-        -serial "file:$dir/serial.log" \
-        -qmp "unix:qmp,server=on,wait=off" \
-        -display none -no-reboot -daemonize -pidfile "$dir/pid" 9>&-)
-    booted=1
-    note "waiting for guest setup on 127.0.0.1:$port"
-    wait_ready "$name" boot
-    ssh_plain_box "$name" 'sudo rm -f /run/qemubox/ready'
+        -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
+        -serial stdio -qmp "unix:qmp,server=on,wait=off" -display none -no-reboot
+}
+
+setup_box() {
+    name="$(box_name "$1")"
+    dir="$(box_dir "$name")"
+    read_mounts "$dir/config/mounts"
+    [ "$(cat "$dir/trust")" = trusted ] || untrusted=1
+    wait_ready "$name"
     setup_guest_tmp "$name"
     mount_host_paths "$name"
     setup_guest_builds "$name"
@@ -783,8 +719,11 @@ start_box() {
     setup_guest_sessions "$name"
     setup_guest_limits "$name"
     sync_guest_clock "$name"
-    ssh_plain_box "$name" 'sudo mkdir -p /run/qemubox/sess && sudo touch /run/qemubox/ready'
-    touch "$dir/ready"
+    printf '%s\n' "$LINGER" > "$dir/idle"
+    systemd-run --user --collect --quiet --unit="qemubox-check@$name" \
+        --on-active=60 --on-unit-active=60 \
+        --timer-property=BindsTo="$(box_unit "$name")" \
+        -E QEMUBOX_HOME="$ROOT" -E PATH="$PATH" /bin/bash "$SELF" _check "$name"
 }
 
 detect_gpg() {
@@ -814,9 +753,6 @@ mount_host_paths() {
         [ "${mount_modes[$i]}" = ro ] && opts="$opts,ro"
         setup_mount_path "$name" "$dest"
         ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t 9p -o $(quote "$opts") $(quote "$tag") $(quote "$dest")"
-    done
-    for dest in "${dirs[@]}"
-    do
         ssh_plain_box "$name" "if [ -f $(quote "$dest/.qemuboxrc") ]; then sudo mount --bind /dev/null $(quote "$dest/.qemuboxrc") && sudo mount -o remount,bind,ro $(quote "$dest/.qemuboxrc"); fi"
     done
 }
@@ -835,7 +771,8 @@ exec /opt/dev-tools/bun/bin/codex --no-daemon \
     --dangerously-bypass-approvals-and-sandbox "$@"
 EOF
 sudo chmod 755 /usr/local/bin/codex'
-    guest_note "$HOSTNAME" "$(box_dir "$name")/config/ephemeral" | ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null'
+    ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null' \
+        < "$(box_dir "$name")/config/CLAUDE.md"
     ssh_stream_box "$name" 'set -e
 if [ -f /mnt/qemubox-home/.claude.json ]
 then
@@ -858,70 +795,37 @@ then
 fi'
 }
 
-wait_stopped() {
-    local n
-    for ((n = 0; n < $2; n++))
+shutdown_box() {
+    name="$(box_name "$1")"
+    kill -0 "${MAINPID:-}" 2>/dev/null || return 0
+    qmp_box "$name" cont >/dev/null || note "cannot resume qemubox-$name over QMP"
+    ssh_plain_box "$name" sudo fstrim / >/dev/null ||
+        note "cannot trim the disk of qemubox-$name"
+    ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 ||
+        note "poweroff SSH closed; waiting for qemu"
+    while kill -0 "$MAINPID" 2>/dev/null
     do
-        running "$1" || return 0
         sleep 1
     done
-    return 1
 }
 
 stop_box() {
-    local mode="${2:-graceful}" state
-    name="$(box_name "$1")"
-    running "$name" || return 0
-    dir="$(box_dir "$name")"
-    pid="$(cat "$dir/pid")"
-    if [ "$mode" = graceful ]
+    if [ "${2:-}" = force ]
     then
-        state=$(run_state "$name")
-        if [[ "$state" = paused* ]]
-        then
-            note "resuming qemubox-$name ($state) for its shutdown"
-            qmp_box "$name" cont >/dev/null ||
-                note "cannot resume qemubox-$name over QMP"
-        fi
-        ssh_plain_box "$name" sudo fstrim / >/dev/null ||
-            note "cannot trim the disk of qemubox-$name"
-        ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 ||
-            note "poweroff SSH closed; waiting for qemu"
-        note "waiting up to 90s for guest shutdown of qemubox-$name"
-        wait_stopped "$name" 90 || mode=force
+        systemctl --user kill -s SIGTERM "$(box_unit "$1")" || return
     fi
-    if [ "$mode" = force ]
-    then
-        if [ -S "$dir/qmp" ]
-        then
-            note "sending quit over QMP to qemu PID $pid; waiting up to 10s"
-            qmp_box "$name" quit >/dev/null || kill "$pid" 2>/dev/null || true
-        else
-            note "sending SIGTERM to qemu PID $pid; waiting up to 10s"
-            kill "$pid" 2>/dev/null || true
-        fi
-        wait_stopped "$name" 10 || mode=kill
-    fi
-    if [ "$mode" = kill ]
-    then
-        note "sending SIGKILL to qemu PID $pid; waiting up to 5s"
-        kill -9 "$pid" 2>/dev/null || true
-        wait_stopped "$name" 5 || {
-            echo "VM still running as PID $pid" >&2
-            return 1
-        }
-    fi
-    rm -f "$dir/pid" "$dir/ready"
-    touch "$dir/stopped"
+    systemctl --user stop "$(box_unit "$1")"
 }
 
 remove_box() {
     local name dir rel
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    stop_box "$name" || { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
-    rm -f "$dir/config/identity" "$dir/config/authorized_keys" \
-        "$dir/config/ephemeral" "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
+    [ "$(run_state "$name")" = stopped ] || stop_box "$name" ||
+        { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
+    rm -f "$dir/config/identity" "$dir/config/authorized_keys" "$dir/config/ephemeral" \
+        "$dir/config/mounts" "$dir/config/CLAUDE.md" "$dir/net" \
+        "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
     if [ -d "$dir/config" ]
     then
         rmdir "$dir/config"
@@ -946,7 +850,7 @@ remove_box() {
 build_base() (
     set -Eeuo pipefail
     force="${1:-}"
-    source_dir="${QEMUBOX_SOURCE:-$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")")}"
+    source_dir="${QEMUBOX_SOURCE:-$(dirname "$(dirname "$SELF")")}"
     [ -f "$source_dir/qemubox/Dockerfile" ] || {
         echo "Set QEMUBOX_SOURCE to the tools repo containing qemubox/Dockerfile" >&2
         exit 1
@@ -1017,7 +921,7 @@ build_base() (
 )
 
 list_boxes() {
-    local dir name state use ram disk markers found="" mem used cache tmpfs
+    local dir name state use ram disk found="" mem used cache tmpfs count
     mkdir -p "$ROOT"
     for dir in "$ROOT"/*
     do
@@ -1028,17 +932,14 @@ list_boxes() {
         found=1
         name="${dir##*/}"
         use=idle; ram=0; used=-; cache=-; tmpfs=-
-        lock_box "$name" || return 1
         state=$(run_state "$name")
         if [ "$state" != stopped ]
         then
-            ram=$(ps -o rss= -p "$(cat "$dir/pid")") || ram="?"
-            if [ "$state" != running ]
+            ram=$(systemctl --user show -p MemoryCurrent --value "$(box_unit "$name")")
+            [[ "$ram" =~ ^[0-9]+$ ]] && ram=$((ram / 1024)) || ram="?"
+            if count=$(session_count "$name")
             then
-                use="?"
-            elif markers=$(session_markers "$name")
-            then
-                [ -z "$markers" ] || use=busy
+                [ "$count" -eq 0 ] || use=busy
             else
                 use="?"
             fi
@@ -1059,9 +960,8 @@ list_boxes() {
         then
             disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
         fi
-        unlock_box
         printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" \
-            "$use" "$(human_kib "${ram// /}")" "$used" "$cache" "$tmpfs" \
+            "$use" "$(human_kib "$ram")" "$used" "$cache" "$tmpfs" \
             "$(human_kib "$disk")" "$dir"
     done
     [ -n "$found" ] || echo "no qemubox VMs"
@@ -1095,7 +995,7 @@ match_boxes() {
 is_stopped_over() {
     local dir ts
     dir="$(box_dir "$1")"
-    ! running "$1" || return 1
+    [ "$(run_state "$1")" = stopped ] || return 1
     ts=$(stat -c %Y "$dir/stopped" 2>/dev/null || stat -c %Y "$dir") || return 1
     [ "$ts" -lt $(($(date +%s) - 10#$2 * 3600)) ]
 }
@@ -1169,8 +1069,7 @@ stop_boxes() {
     }
     for name in "${targets[@]}"
     do
-        lock_box "$name" || { rc=1; continue; }
-        if ! running "$name"
+        if [ "$(run_state "$name")" = stopped ]
         then
             note "qemubox-$name is not running"
         elif stop_box "$name" "$mode"
@@ -1179,35 +1078,19 @@ stop_boxes() {
         else
             rc=1
         fi
-        unlock_box
     done
     return "$rc"
 }
 
 prune_boxes() {
-    local grace dir name ts markers rc=0
-    grace=$(($(date +%s) - 4 * 3600))
+    local dir name rc=0
     for dir in "$ROOT"/*
     do
         [ -d "$dir" ] || continue
         name=${dir##*/}
         [ "$name" = base ] && continue
-        lock_box "$name" || { rc=1; continue; }
-        if running "$name"
-        then
-            ts=$(stat -c %Y "$dir/ready") || { unlock_box; continue; }
-            if [ "$ts" -le "$grace" ]
-            then
-                if markers=$(session_markers "$name")
-                then
-                    [ -n "$markers" ] || stop_box "$name" || rc=1
-                else
-                    note "cannot count sessions; keeping qemubox-$name running"
-                    rc=1
-                fi
-            fi
-        fi
-        unlock_box
+        [ "$(run_state "$name")" = stopped ] ||
+            check_box "$name" $((4 * 3600)) || rc=1
     done
     prune_bases || rc=1
     return "$rc"
@@ -1241,13 +1124,10 @@ status_box() {
     dir="$(box_dir "$name")"
     [ -d "$dir" ] || { echo "no qemubox VM named '$name'" >&2; exit 1; }
     port="$(port_for "$name")"
-    proc=$(run_state "$name")
     ssh_state=closed
     (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && ssh_state=open
-    boot=pending
-    [ -f "$dir/serial.log" ] && grep -qiE 'qemubox: ready' "$dir/serial.log" && boot=ready
-    printf "qemubox-%s\tprocess=%s\tssh=%s\tboot=%s\tport=%s\n" \
-        "$name" "$proc" "$ssh_state" "$boot" "$port"
+    printf "qemubox-%s\tunit=%s\tstate=%s\tssh=%s\tport=%s\n" "$name" \
+        "$(unit_state "$name")" "$(run_state "$name")" "$ssh_state" "$port"
 }
 
 add_env() {
@@ -1532,6 +1412,10 @@ case "${1:-}" in
             exit 2
         }
         prune_boxes; exit $? ;;
+    _vm) run_qemu "$2" ;;
+    _ready) setup_box "$2"; exit 0 ;;
+    _stop) shutdown_box "$2"; exit 0 ;;
+    _check) check_box "$2"; exit 0 ;;
     build-base)
         force=""
         case "${2:-}" in
@@ -1639,7 +1523,7 @@ done
     exit 2
 }
 enter_session
-env_file="/dev/shm/qemubox-env.$sid"
+env_file="/dev/shm/qemubox-env.$$"
 envs=(CLAUDE_SANDBOX=qemubox "${envs[@]}" CARGO_TARGET_DIR=/tmp/cargo-target
     CODEX_SQLITE_HOME=/tmp/codex-sqlite)
 send_envs
@@ -1661,7 +1545,7 @@ rc=0
 remote=". $env_file && rm -f $env_file && $cd_workdir && exec$remote"
 note "running in qemubox-$name:$primary"
 session_tty
-ssh_box "$name" "${tty[@]}" "$remote" <&0 9>&- &
+ssh_box "$name" "${tty[@]}" "$remote" <&0 &
 session_pid=$!
 wait "$session_pid" || rc=$?
 session_pid=""

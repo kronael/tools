@@ -1,6 +1,6 @@
 port_test() {
     regression_setup
-    untrusted=""; locked=""
+    untrusted=""
     ensure_box portbox
     python3 - "$fixture/listener-port" <<'PY' &
 import socket
@@ -22,18 +22,12 @@ PY
     cat "$fixture/listener-port" > "$ROOT/portbox/port"
     saved=$(cat "$ROOT/portbox/port")
     missing_deps() { :; }; assemble_mounts() { :; }
-    wait_ready() { :; }; ssh_plain_box() { :; }
-    setup_guest_tmp() { :; }; mount_host_paths() { :; }
-    setup_guest_builds() { :; }; setup_guest_runtime() { :; }
-    setup_guest_limits() { :; }
-    sync_guest_clock() { :; }
-    QEMU=fake_qemu
-    fake_qemu() { printf '%s\n' "$@" > "$fixture/port-qemu"; }
     start_box portbox
+    unlock_box
     chosen=$(cat "$ROOT/portbox/port")
     [ "$chosen" != "$saved" ]
+    (QEMU="$fake_qemu" QEMU_ARGS="$fixture/port-qemu" run_qemu portbox)
     grep -q "hostfwd=tcp:127.0.0.1:$chosen-:22" "$fixture/port-qemu"
-    unlock_box
 }
 regression "boot walks away from an occupied saved port" port_test
 

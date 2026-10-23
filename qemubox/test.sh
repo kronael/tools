@@ -9,7 +9,6 @@ here="$(cd "$(dirname "$0")" && pwd)"
 fixture="$(mktemp -d)"
 trap 'rm -rf "$fixture"' EXIT
 
-# Fixture home holding the agent-config dirs assemble_mounts probes for.
 export HOME="$fixture/home"
 export QEMUBOX_HOME="$fixture/state"
 mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$QEMUBOX_HOME"
@@ -17,7 +16,23 @@ PROJ="$fixture/proj"; mkdir -p "$PROJ"
 
 # shellcheck disable=SC1090
 QEMUBOX_LIB=1 . "$here/qemubox"
-set +e  # sourcing turned on set -e; take back control for assertions
+set +e
+
+systemd_log="$fixture/systemd.log"
+systemctl() {
+    printf 'systemctl %s\n' "$*" >> "$systemd_log"
+    case "$2" in
+        is-active) echo inactive; return 3 ;;
+        show) echo "${memory_current:-[not set]}" ;;
+    esac
+}
+systemd-run() { printf 'systemd-run %s\n' "$*" >> "$systemd_log"; }
+journalctl() { printf 'journalctl %s\n' "$*" >> "$systemd_log"; }
+loginctl() { echo yes; }
+ss() { :; }
+fake_qemu="$fixture/fake-qemu"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "$QEMU_ARGS"\n' > "$fake_qemu"
+chmod +x "$fake_qemu"
 
 pass=0; fail=0
 ok()   { pass=$((pass+1)); }
@@ -26,7 +41,6 @@ eq()   { [ "$2" = "$3" ] && ok || bad "$1: expected '$3' got '$2'"; }
 true_() { if eval "$2"; then ok; else bad "$1"; fi; }
 false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 
-# exits with code $1 when run in a subshell? (guards use exit, so run isolated)
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
 regression() {
@@ -104,7 +118,6 @@ eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
 source "$here/test-mounts.sh"
 
-## guest note ---------------------------------------------------------------
 run_assemble
 persist_builds=""; eph_no_tmpfs=""; stage_ephemeral "$eph"
 network=1; gout="$(guest_note myhost "$eph")"
@@ -134,11 +147,10 @@ true_ "-T note names the tmpfs workdir" \
     '[[ "$gout" == *"working dir /tmp/work is guest tmpfs"* ]]'
 tmp_session=""
 
-## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
 sout="$(status_box sbx)"
-true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
-true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
+true_ "status: unit inactive" '[[ "$sout" == *unit=inactive* ]]'
+true_ "status: state stopped" '[[ "$sout" == *state=stopped* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
 eq "default RAM" "$MEM" "24576"
@@ -160,31 +172,38 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     cmp "$ROOT/identitybox/key.pub" "$ROOT/identitybox/config/authorized_keys"
     [ "$(cat "$ROOT/identitybox/image-id")" = fixture ]
     [ "$(tail -1 "$fixture/qemu-img.args")" = 40G ]
-    QEMU=fake_qemu
-    fake_qemu() { printf '%s\n' "$@" > "$fixture/qemu.args"; }
     missing_deps() { :; }
-    ssh_plain_box() { :; }
-    assemble_mounts() { :; }
-    setup_guest_tmp() { :; }
-    mount_host_paths() { :; }
-    setup_guest_builds() { :; }
-    setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
-    setup_guest_sessions() { :; }
-    setup_guest_limits() { :; }
-    sync_guest_clock() { :; }
+    dirs=("$PROJ"); name=identitybox; network=""; untrusted=""
+    : > "$systemd_log"
     start_box identitybox
-    [ -f "$ROOT/identitybox/ready" ]
     if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
+    grep -qF -- "-E QEMUBOX_HOME=$ROOT -E QEMUBOX_MEM=24576 -E QEMUBOX_CPUS=4 -E QEMUBOX_QEMU=qemu-system-x86_64 " "$systemd_log"
+    grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=100' "$systemd_log"
+    [ "$(tail -1 "$ROOT/identitybox/config/mounts" | cut -f2-)" = "$PROJ"$'\t'"$PROJ"$'\t'rw ]
+    [ "$(cat "$ROOT/identitybox/net")" = off ]
+    grep -q 'CLAUDE_SANDBOX=qemubox' "$ROOT/identitybox/config/CLAUDE.md"
     echo retained > "$ROOT/identitybox/disk.qcow2"
     ensure_box identitybox
     [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
+    (QEMU="$fake_qemu" QEMU_ARGS="$fixture/qemu.args" run_qemu identitybox)
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi
+    grep -Fx -- "local,path=$PROJ,mount_tag=$(tail -1 "$ROOT/identitybox/config/mounts" | cut -f1),security_model=none" "$fixture/qemu.args"
+    grep -Fx -- "user,model=virtio,restrict=on,hostfwd=tcp:127.0.0.1:$(cat "$ROOT/identitybox/port")-:22" "$fixture/qemu.args"
+    [ "$(grep -A1 -Fx -- -serial "$fixture/qemu.args" | tail -1)" = stdio ]
+    if grep -qE -- '^-(daemonize|pidfile)$|seed.iso' "$fixture/qemu.args"; then exit 1; fi
+    : > "$systemd_log"
+    systemctl() { printf 'systemctl %s\n' "$*" >> "$systemd_log"; echo active; }
+    qmp_box() { echo running; }
+    rm "$ROOT/identitybox/net"
+    start_box identitybox
+    unlock_box
+    [ ! -e "$ROOT/identitybox/net" ]
+    if grep -q systemd-run "$systemd_log"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
 rm -f "$ROOT/base/fixture.vmlinuz"

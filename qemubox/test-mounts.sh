@@ -132,3 +132,6 @@ exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
     "failed tmp mount stops launch"
 exits 32 'set -e; ssh_plain_box() { case "$2" in *"sudo mount"*) return 32;; esac; }; mount_host_paths testbox' \
     "failed 9p mount stops launch"
+tab_dir="$fixture/tab"$'\t'"dir"
+mkdir -p "$tab_dir"
+exits 2 'add_mount "$tab_dir" /x rw' "a tab in a share path is refused"

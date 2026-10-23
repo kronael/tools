@@ -48,6 +48,11 @@ per base on the state filesystem.
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
 software emulation.
 
+Each VM is a systemd user unit. A launch needs `systemctl --user` to answer,
+`ss` from iproute2, and lingering, without which the user manager stops every
+VM at your last logout. A launch refuses to start without lingering; enable it
+once with `loginctl enable-linger $(id -un)`.
+
 ## Usage
 
 ```sh
@@ -87,8 +92,8 @@ Management:
 
 ```sh
 qemubox ls               # list NAME STATUS USE RAM DISK PATH
-qemubox status repo      # readiness of one VM (process/ssh/boot) without a shell
-qemubox stop repo        # power one VM off, keep its disk (-f: signal qemu at once)
+qemubox status repo      # one VM's unit, state, ssh and port without a shell
+qemubox stop repo        # power one VM off, keep its disk (-f: SIGTERM qemu at once)
 qemubox stop -a          # power every running VM off
 qemubox rm repo          # remove one VM by exact name
 qemubox rm 'repo-*'      # remove by glob (only * or ? trigger glob matching)
@@ -100,44 +105,36 @@ qemubox build-base       # (re)bake the prebuilt base image
 
 ## Lifecycle
 
-A box starts on first use. When the **last** session exits (counted by
-session markers) the VM stays up for `QEMUBOX_LINGER` seconds (default 1200,
-twenty minutes), so the next launch joins it without a boot. A detached check
-then takes the VM lock and powers it off, provided no session is running and
-none has exited since: each last-session exit writes a fresh token into the
-box's `idle` stamp and starts its own check, and only the check whose token
-the stamp still holds acts. A check that cannot count sessions retries every
-`QEMUBOX_LINGER` seconds until four hours after the last exit, then gives up.
-The check logs to `idle.log` in the box's state dir. `QEMUBOX_LINGER=0` powers
-off as the last session exits. The disk stays on the host; the next launch
-boots that disk and keeps files in the guest home. `qemubox rm` deletes it.
+Each VM is the systemd user unit `qemubox@<name>.service`, which needs
+lingering on (see Install). qemu runs in the foreground; its serial console
+goes to `journalctl --user -u qemubox@<name>`. A box starts on first use and
+the start waits for guest setup, at most `QEMUBOX_READY_TIMEOUT` seconds
+(default 180); a failed boot stops the unit and prints the journal tail.
+
+Sessions are the established SSH connections to the box's forwarded port.
+Boot and every session exit stamp the box's `idle` file with `QEMUBOX_LINGER`
+(default 1200, twenty minutes). The timer `qemubox-check@<name>.timer` stops
+the VM once no session is connected and the stamp is older than the seconds
+it holds; `QEMUBOX_LINGER=0` stops it as the last session exits. A launch that
+dies before its session leaves the VM to the timer. The disk stays on the
+host; the next launch boots that disk and keeps files in the guest home.
+`qemubox rm` deletes it.
 A missing recorded base image refuses launch with a `qemubox rm` hint.
 Each disk records trusted or `-U` mode. A mismatch or missing trust record
 refuses launch; use `-n` for another box or `qemubox rm` to delete the disk.
-Re-entering a running box from a second terminal joins the live VM; it stays up until every session has exited, so concurrent
-sessions don't tear it down under each other. The tool/model applies to the
+Re-entering a running box from a second terminal joins the live VM; a launch
+during a boot waits on the per-VM lock, which covers the box files, the start
+and removal. The tool/model applies to the
 new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
 ignored on re-entry — use `-n <name>` for a separately-mounted box.
 
-The per-VM lock covers setup, session markers, shutdown and removal.
-A new session waits for full guest readiness before it runs.
-`QEMUBOX_READY_TIMEOUT` sets the wait limit in seconds (default 180);
-a timeout prints the serial log tail. The kernel uses `loglevel=5` to keep
-warnings and errors visible without routine boot messages. Guest setup errors
-still reach the serial log. HUP and TERM remove the session marker.
-Dead host PID markers are removed under the lock. A failed marker listing
-keeps the VM up and reports an error.
+`qemubox stop <name>` stops the unit and keeps the disk: the guest is resumed
+if paused, trimmed and powered off, and systemd sends qemu SIGTERM after 100 s.
+`-f` sends SIGTERM at once. Every stop, a guest poweroff included, stamps the
+box's `stopped` file. Names, globs and `-a` match as for `rm`; a stopped box
+is reported and skipped.
 
-`qemubox stop <name>` powers a running VM off and keeps its disk: it resumes
-a paused guest, runs `fstrim /` in the guest, asks it to shut down and waits
-up to 90 s, then asks qemu to quit over QMP and, 10 s later, sends SIGKILL,
-printing a line before each wait. qemu gets SIGTERM in place of the quit when
-the VM has no QMP socket or the quit fails. `-f` skips the resume, trim and
-guest shutdown and stops qemu at once. Both take the VM lock, so a session that
-holds it bounds the wait by `QEMUBOX_READY_TIMEOUT`. Names, globs and `-a`
-match as for `rm`; a stopped box is reported and skipped.
-
-`ls` shows busy/idle from session markers, QEMU resident RAM, and the overlay
+`ls` shows busy/idle from the session count, the unit's memory, and the overlay
 space allocated on the host (sizes in K, M or G); a VM waiting out
 `QEMUBOX_LINGER` is `running idle`. qemu pauses a guest whose disk write fails
 because the host filesystem under the overlay is full; other write errors go
@@ -154,8 +151,8 @@ powers itself off skips the trim; the first `stop` after its next boot does it.
 and fails if removal fails.
 `rm --stopped <hours>` lists the VMs stopped for over that many whole hours
 (the `stopped` marker age, else the directory age), then removes them. `prune`
-takes no argument and never removes a VM: it stops running VMs with no sessions
-four hours after readiness, and removes base sets that no VM references,
+takes no argument and never removes a VM: it stops running VMs with no session
+whose `idle` stamp is four hours old, and removes base sets that no VM references,
 keeping the `current` base. Their disks stay until `rm`.
 
 ## Build directories
@@ -286,7 +283,7 @@ New mount parent directories belong to the user; existing parents keep their own
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
 image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
-pid, serial log, idle stamp and idle log. `QEMUBOX_SOURCE` selects the tools source repository.
+port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the tools source repository.
 `QEMUBOX_QEMU` selects the qemu binary, default `qemu-system-x86_64`.
 
 ## Memory

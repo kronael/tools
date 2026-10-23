@@ -1159,37 +1159,13 @@
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
 
-- **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
-  2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
-  `lock_box` (`qemubox/qemubox`), whose `QEMUBOX_READY_TIMEOUT` wait (180 s)
-  ends in `ready_error`: "VM qemubox-x not ready; serial log:" plus the
-  serial tail. A stop blocked by a launch that holds the lock while it waits
-  on a wedged guest gets that message, which names the wrong cause, and exits
-  1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:386`) takes the lock the same way, so a check blocked for
-  180 s writes the same `ready_error` into `idle.log` and ends, where a failed
-  session count retries. **Fix:** `lock_box` reports the lock wait
-  itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
-  `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
-
-- **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:422`) backgrounds the idle check with `&`
-  from the leaving session's shell, which runs without job control, so the
-  check keeps the session's process group: a shell that sourced the script
-  and called `linger_box` saw the check report that shell's PGID. `trap ''
-  HUP` covers a terminal hangup, but a signal to the group — a multiplexer
-  or supervisor tearing the job down, `kill -- -<pgid>` — ends the check
-  with the session and the VM never powers off. **Proposal:** start the
-  check under `setsid` so it owns its session and process group; test: the
-  check's PGID differs from the launcher's. No test — design.
-
 - **QEMUBOX-GUEST-GROUP-NOT-CRASH-SAFE** (MED, ops) — open (record only), no
   test — ops; CONFIRMED 2026-10-14 on a scratch box. `qemubox-init`
   (`dockbox/Dockerfile`, the `vm` stage) rewrites `/etc/group` on every boot
   in one loop over the host groups: for each, `sed -i` deletes its line and
   `printf >>` appends the new one. A qemu stop
-  without a guest shutdown (`qemubox stop -f`, or the escalation after the
-  90 s wait) soon after boot loses the appended data but keeps the file
+  without a guest shutdown (`qemubox stop -f`, or systemd's SIGTERM after the
+  100 s stop timeout) soon after boot loses the appended data but keeps the file
   size, so `/etc/group` ends in NUL bytes (28 on the scratch box). The next
   boot fails at `getent group "$user_gid"`: `qemubox-init` exits, `ssh` never
   starts, and the launch ends in "not ready" after `QEMUBOX_READY_TIMEOUT`.
@@ -1214,14 +1190,6 @@
   Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
   **Fix:** size the existing mount with `mount -o remount,size=75% /tmp`
   instead of stacking a second one.
-
-- **QEMUBOX-POWEROFF-LEAVES-READY-NOT-STOPPED** (LOW, ops) — open (record
-  only), no test — ops. After a guest poweroff, `leave_session` only reports
-  it (`qemubox/qemubox:453`). A later `stop_box` returns early because the VM
-  is not running (`:836`), so `ready` and `pid` stay and `stopped` (`:877`)
-  is never written. `prune` then dates the box from the directory mtime
-  (`:1122`), not from the poweroff. **Fix:** record the stop in the poweroff
-  branch of `leave_session`.
 
 - **QEMUBOX-CODEX-MEMORIES-PRIVATE-DB** (MED, correctness) — open (record
   only), unverified, no test — correctness. Each session sets

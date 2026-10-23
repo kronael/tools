@@ -14,25 +14,6 @@ trust_modes() {
 trust_test() { regression_setup; trust_modes; }
 regression "disk trust refuses both mode changes and unmarked disks" trust_test
 
-markers_test() {
-    regression_setup
-    sleep 30 &
-    dead=$!
-    kill "$dead"; wait "$dead" || true
-    ssh_plain_box() {
-        if flock -n "$ROOT/.locks/vm" true; then return 1; fi
-        case "$2" in
-            'sudo ls'*) printf '%s\n' "$$" "$dead" ;;
-            *) echo "$2" > "$fixture/reaped" ;;
-        esac
-    }
-    lock_box vm
-    [ "$(session_markers vm)" = "$$" ]
-    [ "$(cat "$fixture/reaped")" = "sudo rm -f /run/qemubox/sess/$dead" ]
-    unlock_box
-}
-regression "dead session markers are removed under lock" markers_test
-
 resume_test() {
     primary="$fixture/repo_with.dot+space name"
     slug="${primary//[^A-Za-z0-9]/-}"
@@ -78,20 +59,6 @@ random_name_test() {
 }
 regression "random_name reserves its dir and gives up when none is free" random_name_test
 
-pid_test() {
-    regression_setup
-    mkdir -p "$ROOT/vm"
-    echo $$ > "$ROOT/vm/pid"
-    if running vm; then exit 1; fi
-    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
-    vm_pid=$!
-    trap 'kill "$vm_pid"; wait "$vm_pid" 2>/dev/null || true' EXIT
-    echo "$vm_pid" > "$ROOT/vm/pid"
-    sleep 0.05
-    running vm
-}
-regression "pidfile must refer to this VM disk" pid_test
-
 half_box_test() {
     regression_setup
     mkdir -p "$ROOT/half"
@@ -117,20 +84,12 @@ plugins_test() {
 regression "plugins have a readonly 9p export" plugins_test
 
 rc_test() {
-    reset_mounts; dirs=("$PROJ")
+    reset_mounts; add_mount "$PROJ" "$PROJ" rw
     ssh_plain_box() { echo "$2" >> "$fixture/rc-commands"; }
     mount_host_paths vm
     grep -F -- "$PROJ/.qemuboxrc" "$fixture/rc-commands" | grep -q 'remount,bind,ro'
 }
 regression "project rc is masked by a readonly bind" rc_test
-
-status_test() {
-    regression_setup
-    mkdir -p "$ROOT/vm"
-    echo 'guest login:' > "$ROOT/vm/serial.log"
-    [[ "$(status_box vm)" = *boot=pending* ]]
-}
-regression "login prompt does not prove guest readiness" status_test
 
 base_lock_test() {
     regression_setup

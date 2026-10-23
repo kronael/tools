@@ -5,29 +5,21 @@
         OPENAI_API_KEY='zzsecret-openai $x' CODEX_API_KEY='zzsecret-codex $x' \
         GH_TOKEN='zzsecret-gh $x' MYSECRET='zzsecret-my $x' RCPROBE=probe
     unset GITHUB_TOKEN
-    mkdir -p "$STUB/bin" "$STUB/sess" "$QEMUBOX_HOME/cli" "$QEMUBOX_HOME/base"
-    touch "$STUB/sess/$$" "$QEMUBOX_HOME/cli/ready"
-    echo base > "$QEMUBOX_HOME/base/fixture.qcow2"
-    echo fixture > "$QEMUBOX_HOME/cli/image-id"
-    bash -c 'exec -a "$1" sleep 120' -- "file=$QEMUBOX_HOME/cli/disk.qcow2," &
-    vm_pid=$!
-    trap 'kill "$vm_pid"; wait "$vm_pid" 2>/dev/null || true' EXIT
-    echo "$vm_pid" > "$QEMUBOX_HOME/cli/pid"
-    for binary in qemu-system-x86_64 qemu-img; do
+    mkdir -p "$STUB/bin" "$QEMUBOX_HOME/cli"
+    for binary in qemu-system-x86_64 qemu-img systemd-run journalctl; do
         printf '#!/bin/sh\nexit 99\n' > "$STUB/bin/$binary"
         chmod +x "$STUB/bin/$binary"
     done
+    printf '#!/bin/sh\n[ "$2" != is-active ] || echo active\n' > "$STUB/bin/systemctl"
+    printf '#!/bin/sh\necho yes\n' > "$STUB/bin/loginctl"
+    printf '#!/bin/sh\n' > "$STUB/bin/ss"
+    chmod +x "$STUB/bin/systemctl" "$STUB/bin/loginctl" "$STUB/bin/ss"
     cat > "$STUB/bin/ssh" <<'STUB'
 #!/usr/bin/env bash
 set -e
 printf '%s\n' "$*" >> "$STUB/ssh.log"
 command=${!#}
 case "$command" in
-    'test -f /run/qemubox/ready') exit 0 ;;
-    'sudo mkdir -p /run/qemubox/sess && sudo touch '*)
-        touch "$STUB/sess/${command##*/}" ;;
-    'sudo rm -f /run/qemubox/sess/'*) rm "$STUB/sess/${command##*/}" ;;
-    'sudo ls -1 /run/qemubox/sess') ls -1 "$STUB/sess" ;;
     'umask 077 && cat > /dev/shm/qemubox-env.'*) cat > "$STUB/env" ;;
     '. /dev/shm/qemubox-env.'*)
         echo "$command" > "$STUB/command"
@@ -60,7 +52,7 @@ STUB
         [ "$CODEX_SQLITE_HOME" = /tmp/codex-sqlite ]
     )
     if grep -q -- ' -t ' "$STUB/ssh.log"; then exit 1; fi
-    [ "$(ls "$STUB/sess")" = $$ ]
+    [ "$(cat "$QEMUBOX_HOME/cli/idle")" = 1200 ]
     bash "$here/qemubox" -T -n cli exec true </dev/null > "$STUB/output" 2>&1
     grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && mkdir -p /tmp/work && cd /tmp/work && exec codex ' "$STUB/command"
     if bash "$here/qemubox" -T -n cli exec true "$PROJ" </dev/null > "$STUB/output" 2>&1; then
@@ -87,8 +79,8 @@ STUB
     else
         [ "$?" = 17 ]
     fi
-    [ "$(ls "$STUB/sess")" = $$ ]
     unset STUB_RC
+    rm "$QEMUBOX_HOME/cli/idle"
     for linger in 1234567890 12x -1
     do
         if QEMUBOX_LINGER="$linger" bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1
@@ -99,9 +91,9 @@ STUB
         fi
         grep -q 'QEMUBOX_LINGER must be whole seconds' "$STUB/output"
     done
-    [ "$(ls "$STUB/sess")" = $$ ]
+    [ ! -e "$QEMUBOX_HOME/cli/idle" ]
     for signal in HUP TERM; do
-        rm -f "$STUB/command"
+        rm -f "$STUB/command" "$QEMUBOX_HOME/cli/idle"
         STUB_HOLD=1 bash "$here/qemubox" -n cli exec true </dev/null > "$STUB/output" 2>&1 &
         parent=$!
         for ((i=0;i<100;i++)); do
@@ -109,14 +101,13 @@ STUB
             sleep 0.01
         done
         [ -f "$STUB/command" ]
-        [ -f "$STUB/sess/$parent" ]
         grep -qF "/dev/shm/qemubox-env.$parent " "$STUB/command"
         kill -"$signal" "$parent"
         if wait "$parent"; then exit 1; else
             code=$?
             [ "$signal:$code" = HUP:129 ] || [ "$signal:$code" = TERM:143 ]
         fi
-        [ "$(ls "$STUB/sess")" = $$ ]
+        [ -f "$QEMUBOX_HOME/cli/idle" ]
     done
     if grep -q zzsecret "$STUB/ssh.log"; then exit 1; fi
     rm "$HOME/.qemuboxrc"
