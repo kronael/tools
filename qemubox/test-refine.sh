@@ -27,16 +27,54 @@ regression "resume handles every nonalphanumeric path character" resume_test
 base_test() {
     regression_setup
     mkdir -p "$ROOT/kept"
-    echo used > "$ROOT/kept/image-id"
+    local used stale legacy_used legacy_stale kernel_current kernel_stale
+    printf -v used '%064d' 1
+    printf -v stale '%064d' 2
+    printf -v legacy_used '%064d' 7
+    printf -v legacy_stale '%064d' 8
+    printf -v kernel_current '%064d' 4
+    printf -v kernel_stale '%064d' 5
+    echo "$used" > "$ROOT/kept/image-id"
     touch "$ROOT/kept/stopped"
-    for id in used stale; do
-        for suffix in qcow2 vmlinuz initrd; do echo data > "$ROOT/base/$id.$suffix"; done
+    for id in "$used" "$stale"
+    do
+        mkdir -p "$ROOT/base/$id/rootfs"
+        echo data > "$ROOT/base/$id/rootfs/file"
     done
+    mkdir -p "$fixture/foreign-rootfs"
+    echo keep > "$fixture/foreign-rootfs/file"
+    ln -s "$fixture/foreign-rootfs" "$ROOT/base/$(printf '%064d' 3)"
+    mkdir -p "$ROOT/base/not-an-image"
+    mkdir -p "$ROOT/legacy"
+    echo "$legacy_used" > "$ROOT/legacy/image-id"
+    for id in "$legacy_used" "$legacy_stale"
+    do
+        for suffix in qcow2 vmlinuz initrd
+        do
+            echo data > "$ROOT/base/$id.$suffix"
+        done
+    done
+    for id in "$kernel_current" "$kernel_stale"
+    do
+        mkdir -p "$ROOT/base/kernel/$id"
+        echo kernel > "$ROOT/base/kernel/$id/bzImage"
+    done
+    echo "$kernel_current" > "$ROOT/base/kernel/current"
+    ln -s "$fixture/foreign-rootfs" \
+        "$ROOT/base/kernel/$(printf '%064d' 6)"
     prune_boxes
-    for suffix in qcow2 vmlinuz initrd; do
-        [ ! -e "$ROOT/base/stale.$suffix" ]
-        [ -f "$ROOT/base/fixture.$suffix" ]
-        [ -f "$ROOT/base/used.$suffix" ]
+    [ ! -e "$ROOT/base/$stale" ]
+    [ -f "$ROOT/base/fixture/exported" ]
+    [ -f "$ROOT/base/$used/rootfs/file" ]
+    [ -f "$fixture/foreign-rootfs/file" ]
+    [ -d "$ROOT/base/not-an-image" ]
+    [ -f "$ROOT/base/kernel/fixture/bzImage" ]
+    [ -f "$ROOT/base/kernel/$kernel_current/bzImage" ]
+    [ ! -e "$ROOT/base/kernel/$kernel_stale" ]
+    for suffix in qcow2 vmlinuz initrd
+    do
+        [ -f "$ROOT/base/$legacy_used.$suffix" ]
+        [ ! -e "$ROOT/base/$legacy_stale.$suffix" ]
     done
 }
 regression "prune removes only unused noncurrent base sets" base_test
@@ -45,7 +83,7 @@ no_current_test() {
     regression_setup
     rm "$ROOT/base/current"
     prune_bases
-    [ -f "$ROOT/base/fixture.qcow2" ]
+    [ -f "$ROOT/base/fixture/exported" ]
 }
 regression "prune_bases without a current base does nothing" no_current_test
 
@@ -83,20 +121,11 @@ plugins_test() {
 }
 regression "plugins have a readonly virtiofs export" plugins_test
 
-rc_test() {
-    reset_mounts; add_mount "$PROJ" "$PROJ" rw
-    ssh_plain_box() { echo "$2" >> "$fixture/rc-commands"; }
-    mount_host_paths vm
-    grep -F -- "$PROJ/.qemuboxrc" "$fixture/rc-commands" | grep -q 'remount,bind,ro'
-}
-regression "project rc is masked by a readonly bind" rc_test
-
 base_lock_test() {
     regression_setup
     untrusted=""
-    qemu-img() {
+    mkfs.ext4() {
         if flock -n "$ROOT/base/.lock" true; then return 1; fi
-        touch "$dir/disk.qcow2"
     }
     ensure_box lockedbase
     flock -n "$ROOT/base/.lock" true

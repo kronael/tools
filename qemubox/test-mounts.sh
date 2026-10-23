@@ -83,58 +83,6 @@ eq "-T stages no project overmount" "${#paths[@]}" 1
 dirs=("$PROJ"); eph_no_tmpfs=""
 exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find stops launch"
 
-(
-    ssh_stream_box() { cat > "$fixture/guest-builds.sh"; }
-    setup_guest_builds testbox
-)
-(
-    set -e
-    mount() { printf '%s\n' "$*" >> "$fixture/mounts"; }
-    mkdir() { :; }
-    chown() { printf '%s\n' "$*" >> "$fixture/chown"; }
-    export -f mount mkdir chown
-    export fixture
-    printf '%s\0' tmpfs "$PROJ/space dir/node_modules" > "$eph"
-    bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    key=$(realpath -e "$PROJ/space dir/node_modules" | sha256sum); key=${key%% *}
-    grep -Fx -- "--bind /tmp/qemubox-builds/$key $PROJ/space dir/node_modules" "$fixture/mounts"
-    grep -Fx -- "1234:5678 /tmp/qemubox-builds/$key" "$fixture/chown"
-    ! grep -q -- "-t tmpfs" "$fixture/mounts"
-    printf '%s\0' disk "$PROJ/node_modules" > "$eph"
-    bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    key=$(realpath -e "$PROJ/node_modules" | sha256sum); key=${key%% *}
-    grep -Fx -- "--bind /var/lib/qemubox/builds/$key $PROJ/node_modules" "$fixture/mounts"
-    grep -Fx -- "1234:5678 /var/lib/qemubox/builds/$key" "$fixture/chown"
-    mount() { echo "mount denied" >&2; return 32; }
-    export -f mount
-    for mode in tmpfs disk; do
-        printf '%s\0' "$mode" "$PROJ/node_modules" > "$eph"
-        if bash "$fixture/guest-builds.sh" 1234 5678 "$eph"; then exit 1; else
-            [ "$?" -eq 32 ]
-        fi
-    done
-) > "$fixture/build-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/build-tests.log"; bad "guest build mounts and failures"; }
-
-(
-    set -e
-    ssh_stream_box() { bash -c "$2"; }
-    sudo() { "$@"; }
-    mount() { echo "$*" >> "$fixture/tmp-mounts"; }
-    install() { echo "$*" >> "$fixture/tmp-installs"; }
-    export fixture
-    export -f sudo mount install
-    setup_guest_tmp testbox
-    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp' "$fixture/tmp-mounts"
-    grep -Fx -- "-d -o $(id -u) -g $(id -g) /tmp/cargo-target" "$fixture/tmp-installs"
-    [ "$(wc -l < "$fixture/tmp-mounts")" = 1 ]
-) > "$fixture/tmp-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp cap and cargo-target dir"; }
-
-exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
-    "failed tmp mount stops launch"
-exits 32 'set -e; ssh_plain_box() { case "$2" in *"sudo mount"*) return 32;; esac; }; mount_host_paths testbox' \
-    "failed virtiofs mount stops launch"
 tab_dir="$fixture/tab"$'\t'"dir"
 mkdir -p "$tab_dir"
 exits 2 'add_mount "$tab_dir" /x rw' "a tab in a share path is refused"
@@ -150,23 +98,6 @@ comma_dir="$fixture/comma,dir"
 mkdir -p "$comma_dir"
 true_ "commas in share paths are accepted" \
     'reset_mounts; add_mount "$comma_dir" /comma,dest ro; [ "${mount_srcs[0]}" = "$comma_dir" ] && [ "${mount_dests[0]}" = /comma,dest ]'
-
-guest_virtiofs_test() {
-    reset_mounts
-    add_mount "$PROJ" /readonly ro
-    add_mount "$PROJ" /writable rw
-    add_mount "$PROJ" /run/qemubox/config ro required cfg
-    setup_mount_path() { :; }
-    ssh_plain_box() { printf '%s\n' "$2" >> "$fixture/virtiofs-guest"; }
-    mount_host_paths vm
-    grep -Fxq 'mountpoint -q /readonly || sudo mount -t virtiofs -o ro qbx0 /readonly' \
-        "$fixture/virtiofs-guest"
-    grep -Fxq 'mountpoint -q /writable || sudo mount -t virtiofs -o rw qbx1 /writable' \
-        "$fixture/virtiofs-guest"
-    ! grep -q '/run/qemubox/config' "$fixture/virtiofs-guest"
-}
-regression "guest mounts virtiofs with each mode and keeps the boot config mount" \
-    guest_virtiofs_test
 
 canonical_newline_test() {
     untrusted=1

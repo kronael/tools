@@ -8,6 +8,8 @@ guest_mounts_test() {
     printf 'qbx1\t/host/ro\t%s/project\tro\n' "$dir" >> "$dir/config/mounts"
     printf 'cfg\t/host/config\t/run/qemubox/config\tro\n' \
         >> "$dir/config/mounts"
+    printf 'root\t/host/rootfs\t/.qemubox/lower\tro\n' \
+        >> "$dir/config/mounts"
     mkdir -p "$dir/project/space dir/node_modules"
     printf '%s\0' tmpfs "$dir/project/space dir/node_modules" \
         > "$dir/config/ephemeral"
@@ -31,6 +33,7 @@ guest_mounts_test() {
     [[ "$(stat -c %u:%g "$dir/existing/new")" = "$(id -u):$(id -g)" ]]
     [[ "$(grep -c -- '-t tmpfs ' "$dir/mounts")" = 1 ]]
     ! grep -q -- ' ro cfg ' "$dir/mounts"
+    ! grep -q -- ' ro root ' "$dir/mounts"
     path=$(tail -1 "$dir/mounts")
     [[ "$path" == "--bind $dir/tmp/qemubox-builds/"* ]]
     [[ "$path" == *" $dir/project/space dir/node_modules" ]]

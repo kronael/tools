@@ -34,18 +34,22 @@ regression "boot walks away from an occupied saved port" port_test
 cache_test() {
     mkdir -p "$fixture/cache/a/node_modules" "$fixture/cache/b/node_modules"
     ln -s "$fixture/cache/a" "$fixture/cache/alias"
-    ssh_stream_box() { cat > "$fixture/cache-script"; }
-    setup_guest_builds vm
+    awk '/^    IFS= read -r -d .* backing/ {print "{"; emit=1}
+        emit {print} emit && /^} </ {exit}' "$here/guest-init" |
+        sed 's|/run/qemubox/config/ephemeral|"$QEMUBOX_TEST_PATHS"|' \
+        > "$fixture/cache-script"
     mount() { printf '%s\n' "$*" >> "$fixture/cache-mounts"; }
     mkdir() { :; }; chown() { :; }
     export -f mount mkdir chown
     export fixture
     printf '%s\0' disk "$fixture/cache/a/node_modules" "$fixture/cache/b/node_modules" > "$fixture/cache-paths"
-    bash "$fixture/cache-script" 1000 1000 "$fixture/cache-paths"
+    QEMUBOX_TEST_PATHS="$fixture/cache-paths" user_uid=1000 user_gid=1000 \
+        bash "$fixture/cache-script"
     first=$(head -1 "$fixture/cache-mounts" | cut -d' ' -f2)
     second=$(tail -1 "$fixture/cache-mounts" | cut -d' ' -f2)
     printf '%s\0' disk "$fixture/cache/b/node_modules" "$fixture/cache/alias/node_modules" > "$fixture/cache-paths"
-    bash "$fixture/cache-script" 1000 1000 "$fixture/cache-paths"
+    QEMUBOX_TEST_PATHS="$fixture/cache-paths" user_uid=1000 user_gid=1000 \
+        bash "$fixture/cache-script"
     [ "$(tail -1 "$fixture/cache-mounts" | cut -d' ' -f2)" = "$first" ]
     [ "$(tail -2 "$fixture/cache-mounts" | head -1 | cut -d' ' -f2)" = "$second" ]
     [ "$first" != "$second" ]
@@ -115,3 +119,48 @@ PY
 }
 regression "QEMU waits for every socket within one deadline and uses configured shared RAM" \
     socket_wait_test
+
+control_stdin_test() {
+    regression_setup
+    untrusted=1
+    ensure_box vm
+    printf 'payload\000with\nbytes\377' > "$fixture/session-input"
+    ssh() {
+        case "${!#}" in
+            'test -f /run/qemubox/ready')
+                cat > "$fixture/control-input" ;;
+            'umask 077 && cat > '* ) cat > "$fixture/env-input" ;;
+            payload)
+                cat
+                echo session-error >&2
+                return 37 ;;
+            *) return 96 ;;
+        esac
+    }
+    local mode rc
+    for mode in cold warm
+    do
+        session_io() {
+            [[ "$mode" != cold ]] || setup_box vm
+            name=vm
+            env_file=/dev/shm/fixture-env
+            envs=('PROBE=literal $value')
+            send_envs
+            ssh_plain_box vm payload
+        }
+        if session_io < "$fixture/session-input" \
+            > "$fixture/session-output" 2> "$fixture/session-error"
+        then
+            return 1
+        else
+            rc=$?
+        fi
+        [[ "$rc" = 37 ]]
+        cmp "$fixture/session-input" "$fixture/session-output"
+        grep -Fxq session-error "$fixture/session-error"
+        grep -Fxq 'export PROBE=literal\ \$value' "$fixture/env-input"
+        [[ ! -s "$fixture/control-input" ]]
+    done
+}
+regression 'cold control SSH preserves session stdin and explicit environment upload' \
+    control_stdin_test

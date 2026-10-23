@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 ROOT="${QEMUBOX_HOME:-$HOME/.local/share/qemubox}"
+PATH="$PATH:/usr/sbin:/sbin"
 MEM="${QEMUBOX_MEM:-24576}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
@@ -191,8 +192,8 @@ port_for() {
 }
 
 missing_deps() {
-    local miss="" dep deps=("$QEMU" qemu-img ssh ssh-keygen tar flock python3
-        systemctl systemd-run journalctl loginctl ss)
+    local miss="" dep deps=("$QEMU" mkfs.ext4 truncate ssh ssh-keygen tar flock
+        python3 systemctl systemd-run journalctl loginctl ss)
     [ "$#" -eq 0 ] || deps=("$@")
     for dep in "${deps[@]}"; do
         command -v "$dep" >/dev/null 2>&1 || miss="$miss $dep"
@@ -243,18 +244,27 @@ note() {
 }
 
 ensure_base() {
-    if [ ! -s "$ROOT/base/current" ]
+    local image_id kernel_id
+    image_id=$(cat "$ROOT/base/current" 2>/dev/null) || image_id=""
+    kernel_id=$(cat "$ROOT/base/kernel/current" 2>/dev/null) || kernel_id=""
+    if [[ ! -s "$ROOT/base/$image_id/exported" ||
+        ! -s "$ROOT/base/kernel/$kernel_id/bzImage" ||
+        ! -s "$ROOT/base/kernel/$kernel_id/initrd" ]]
     then
-        build_base >&2
+        build_base >&2 || return
     fi
-    image_id=$(cat "$ROOT/base/current")
-    printf '%s/%s.qcow2\n' "$ROOT/base" "$image_id"
 }
 
 check_trust() {
     local dir mode saved=unknown
     dir="$(box_dir "$1")"
-    [ -f "$dir/disk.qcow2" ] || return 0
+    if [[ -f "$dir/disk.qcow2" ]]
+    then
+        echo "qemubox-$1: qcow2 disk needs recreation;" \
+            "run qemubox rm $1, then launch again" >&2
+        return 1
+    fi
+    [ -f "$dir/upper.raw" ] || return 0
     mode=trusted
     [ -z "$untrusted" ] || mode=untrusted
     [ ! -f "$dir/trust" ] || saved=$(cat "$dir/trust")
@@ -270,25 +280,30 @@ ensure_box() {
     mkdir -p "$dir"
     chmod 700 "$dir"
     check_trust "$name" || return 1
-    [ -f "$dir/image-id" ] || ensure_base >/dev/null
+    [ -f "$dir/image-id" ] || ensure_base >/dev/null || return
     exec 8>"$ROOT/base/.lock"
     flock -s 8
     if [ -f "$dir/image-id" ]
     then
         image_id=$(cat "$dir/image-id")
-        base="$ROOT/base/$image_id.qcow2"
     else
-        base="$(ensure_base)"
-        image_id=${base##*/}
-        image_id=${image_id%.qcow2}
+        image_id=$(cat "$ROOT/base/current")
     fi
-    for file in "$base" "$ROOT/base/$image_id.vmlinuz" "$ROOT/base/$image_id.initrd"
+    base="$ROOT/base/$image_id/rootfs"
+    kernel_id=$(cat "$ROOT/base/kernel/current") || return
+    for file in "$ROOT/base/$image_id/exported" \
+        "$ROOT/base/kernel/$kernel_id/bzImage" \
+        "$ROOT/base/kernel/$kernel_id/initrd"
     do
         [ -s "$file" ] || {
             echo "Missing base file $file; run qemubox rm $name, then qemubox build-base" >&2
             exit 1
         }
     done
+    [[ -d "$base" ]] || {
+        echo "Missing base rootfs $base; run qemubox rm $name, then qemubox build-base" >&2
+        return 1
+    }
     [ -f "$dir/key" ] || {
         note "creating SSH key for qemubox-$name"
         ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
@@ -308,13 +323,15 @@ ensure_box() {
     } > "$dir/config/identity"
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
-    [ -f "$dir/disk.qcow2" ] || {
-        note "creating persistent qcow2 overlay for qemubox-$name"
-        qemu-img create -f qcow2 -F qcow2 -b "$base" "$dir/disk.qcow2" "$DISK" >/dev/null
-        printf '%s\n' "$image_id" > "$dir/image-id"
+    [ -f "$dir/upper.raw" ] || {
+        note "creating persistent ext4 upper for qemubox-$name"
+        truncate -s "$DISK" "$dir/upper.raw.tmp" || return
+        mkfs.ext4 -q -F "$dir/upper.raw.tmp" || return
+        mv "$dir/upper.raw.tmp" "$dir/upper.raw" || return
+        printf '%s\n' "$image_id" > "$dir/image-id" || return
         mode=trusted
         [ -z "$untrusted" ] || mode=untrusted
-        printf '%s\n' "$mode" > "$dir/trust"
+        printf '%s\n' "$mode" > "$dir/trust" || return
     }
     flock -u 8
     exec 8>&-
@@ -399,7 +416,8 @@ refuse_paused() {
 }
 
 wait_ready() {
-    until ssh_plain_box "$1" "test -f /run/qemubox/ready" >/dev/null 2>&1
+    until ssh_plain_box "$1" "test -f /run/qemubox/ready" \
+        </dev/null >/dev/null 2>&1
     do
         refuse_paused "$1" || return 1
         sleep 1
@@ -479,14 +497,6 @@ ssh_plain_box() {
     ssh "${ssh_opts[@]}" "$GUEST_USER@127.0.0.1" "$@"
 }
 
-ssh_stream_box() {
-    if [ -t 2 ]; then
-        ssh_plain_box "$@" 2>&1 | sed $'s/^/\033[2m> \033[0m/' >&2
-    else
-        ssh_plain_box "$@"
-    fi
-}
-
 quote() {
     printf "%q" "$1"
 }
@@ -559,38 +569,6 @@ stage_ephemeral() {
     done
 }
 
-setup_guest_tmp() {
-    ssh_stream_box "$1" 'set -e
-sudo mount -t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp
-sudo install -d -o "$(id -u)" -g "$(id -g)" /tmp/cargo-target'
-}
-
-setup_guest_builds() {
-    ssh_stream_box "$1" \
-        "sudo bash -s -- $(id -u) $(id -g) /run/qemubox/config/ephemeral" <<'EOF'
-set -Eeuo pipefail
-uid=$1
-gid=$2
-{
-    IFS= read -r -d '' mode
-    case "$mode" in
-        tmpfs) root=/tmp/qemubox-builds ;;
-        disk) root=/var/lib/qemubox/builds ;;
-        *) echo "Invalid build mount mode: $mode" >&2; exit 1 ;;
-    esac
-    while IFS= read -r -d '' path
-    do
-        mkdir -p -- "$path"
-        key=$(realpath -e -- "$path" | sha256sum)
-        backing="$root/${key%% *}"
-        mkdir -p "$backing"
-        chown "$uid:$gid" "$backing"
-        mount --bind "$backing" "$path"
-    done
-} < "$3"
-EOF
-}
-
 qemu_acceleration() {
     local device="${1:-/dev/kvm}"
     accel=()
@@ -602,46 +580,6 @@ qemu_acceleration() {
     fi
 }
 
-setup_guest_limits() {
-    ssh_plain_box "$1" "sudo bash -s -- $(quote "$GUEST_USER")" <<'EOF'
-set -Eeuo pipefail
-mkdir -p /etc/security/limits.d
-printf '%s - nice -20\n%s - rtprio 99\n%s - memlock unlimited\n' \
-    "$1" "$1" "$1" > /etc/security/limits.d/90-qemubox.conf
-EOF
-}
-
-sync_guest_clock() {
-    ssh_plain_box "$1" \
-        "sudo systemctl disable --now --quiet systemd-timesyncd.service"
-    ssh_plain_box "$1" "sudo date -u -s $(quote "@$(date +%s.%N)") >/dev/null"
-}
-
-setup_guest_sessions() {
-    [ -z "$untrusted" ] || return 0
-    ssh_plain_box "$1" "mkdir -p ~/.claude/sessions && sudo mount -t tmpfs -o rw,mode=0700,uid=$(id -u),gid=$(id -g) tmpfs ~/.claude/sessions"
-}
-
-setup_mount_path() {
-    ssh_plain_box "$1" \
-        "sudo bash -s -- $(id -u) $(id -g) $(quote "$2")" <<'EOF'
-set -Eeuo pipefail
-uid=$1
-gid=$2
-path=$3
-missing=()
-while [ ! -d "$path" ]
-do
-    missing+=("$path")
-    path=$(dirname "$path")
-done
-for ((i=${#missing[@]}-1; i>=0; i--))
-do
-    install -d -m 755 -o "$uid" -g "$gid" -- "${missing[$i]}"
-done
-EOF
-}
-
 session_tty() {
     tty=()
     if [ -t 0 ] && [ -t 1 ]
@@ -651,7 +589,7 @@ session_tty() {
 }
 
 start_box() {
-    local virtiofsd fs_units=() ro=()
+    local virtiofsd fs_units=() access=()
     name="$(box_name "$1")"
     missing_deps
     dir="$(box_dir "$name")"
@@ -666,6 +604,7 @@ start_box() {
     assemble_mounts
     ensure_box "$name"
     add_mount "$dir/config" /run/qemubox/config ro required cfg
+    add_mount "$base" /.qemubox/lower ro required root
     for i in "${!mount_tags[@]}"
     do
         printf '%s\t%s\t%s\t%s\n' "${mount_tags[$i]}" "${mount_srcs[$i]}" \
@@ -700,15 +639,20 @@ start_box() {
     do
         tag="${mount_tags[$i]}"
         fs_units+=("qemubox-fs@$name-$tag.service")
-        ro=()
-        [ "${mount_modes[$i]}" != ro ] || ro=(--readonly)
+        access=()
+        [ "${mount_modes[$i]}" != ro ] || access=(--readonly)
+        if [[ "$tag" = root ]]
+        then
+            access+=(--cache=always --translate-uid "map:0:$(id -u):1"
+                --translate-gid "map:0:$(id -g):1")
+        fi
         rm -f "$dir/$tag.sock"
         if ! systemd-run --user --collect --quiet --service-type=exec \
             --expand-environment=no \
             --unit="${fs_units[-1]}" -p "PartOf=$(box_unit "$name")" \
             -p "ExecStopPost=:/usr/bin/rm -f \"$dir/$tag.sock\"" \
             "$virtiofsd" --socket-path="$dir/$tag.sock" \
-            --shared-dir="${mount_srcs[$i]}" --sandbox=none "${ro[@]}"
+            --shared-dir="${mount_srcs[$i]}" --sandbox=none "${access[@]}"
         then
             systemctl --user stop "${fs_units[@]}" || return 1
             return 1
@@ -758,10 +702,10 @@ read_mounts() {
 }
 
 run_qemu() {
-    local restrict=",restrict=on" mounts tag deadline
+    local restrict=",restrict=on" mounts tag deadline kernel_id append
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    image_id=$(cat "$dir/image-id")
+    kernel_id=$(cat "$ROOT/base/kernel/current")
     read_mounts "$dir/config/mounts"
     deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
     for tag in "${mount_tags[@]}"
@@ -778,15 +722,18 @@ run_qemu() {
     mapfile -t mounts < <(qemu_mount_args)
     qemu_acceleration
     [ "$(cat "$dir/net")" = off ] || restrict=""
+    append='console=ttyS0 reboot=t panic=-1 loglevel=5'
+    append+=' ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off'
     cd "$dir"
-    exec "$QEMU" "${accel[@]}" \
+    exec "$QEMU" "${accel[@]}" -nodefaults \
         -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
         -object "memory-backend-memfd,id=mem,size=${MEM}M,share=on" \
         -numa node,memdev=mem \
         -device virtio-balloon-pci,free-page-reporting=on \
-        -drive "file=$dir/disk.qcow2,if=virtio,format=qcow2,discard=unmap,detect-zeroes=unmap" \
-        -kernel "$ROOT/base/$image_id.vmlinuz" -initrd "$ROOT/base/$image_id.initrd" \
-        -append "root=/dev/vda rw console=ttyS0 noresume loglevel=5" \
+        -drive 'file=upper.raw,if=virtio,format=raw,discard=unmap,detect-zeroes=unmap' \
+        -kernel "$ROOT/base/kernel/$kernel_id/bzImage" \
+        -initrd "$ROOT/base/kernel/$kernel_id/initrd" \
+        -append "$append" \
         "${mounts[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
         -serial stdio -qmp "unix:qmp,server=on,wait=off" -display none -no-reboot
@@ -795,16 +742,7 @@ run_qemu() {
 setup_box() {
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    read_mounts "$dir/config/mounts"
-    [ "$(cat "$dir/trust")" = trusted ] || untrusted=1
     wait_ready "$name"
-    setup_guest_tmp "$name"
-    mount_host_paths "$name"
-    setup_guest_builds "$name"
-    setup_guest_runtime "$name"
-    setup_guest_sessions "$name"
-    setup_guest_limits "$name"
-    sync_guest_clock "$name"
     printf '%s\n' "$LINGER" > "$dir/idle"
     systemd-run --user --collect --quiet --unit="qemubox-check@$name" \
         --on-active=60 --on-unit-active=60 \
@@ -824,57 +762,6 @@ detect_gpg() {
     gpg_sock=""
 }
 
-mount_host_paths() {
-    name="$1"
-    note "mounting host paths into qemubox-$name with virtiofs"
-    for i in "${!mount_tags[@]}"; do
-        tag="${mount_tags[$i]}"
-        [ "$tag" != cfg ] || continue
-        dest="${mount_dests[$i]}"
-        setup_mount_path "$name" "$dest"
-        ssh_plain_box "$name" "mountpoint -q $(quote "$dest") || sudo mount -t virtiofs -o $(quote "${mount_modes[$i]}") $(quote "$tag") $(quote "$dest")"
-        ssh_plain_box "$name" "if [ -f $(quote "$dest/.qemuboxrc") ]; then sudo mount --bind /dev/null $(quote "$dest/.qemuboxrc") && sudo mount -o remount,bind,ro $(quote "$dest/.qemuboxrc"); fi"
-    done
-}
-
-setup_guest_runtime() {
-    name="$1"
-    settings='--settings '\''{"sandbox":{"enabled":false}}'\'''
-    wrapper_edit="s/--dangerously-skip-permissions \"/--dangerously-skip-permissions $settings \"/"
-    ssh_plain_box "$name" "sudo sed -i $(quote "$wrapper_edit") /usr/local/bin/claude"
-    ssh_stream_box "$name" 'set -e
-mkdir -p ~/.docker/run ~/.gnupg
-chmod 700 ~/.gnupg
-sudo tee /usr/local/bin/codex >/dev/null <<'\''EOF'\''
-#!/bin/sh
-exec /opt/dev-tools/bun/bin/codex --no-daemon \
-    --dangerously-bypass-approvals-and-sandbox "$@"
-EOF
-sudo chmod 755 /usr/local/bin/codex'
-    ssh_plain_box "$name" 'sudo mkdir -p /etc/claude-code && sudo tee /etc/claude-code/CLAUDE.md >/dev/null' \
-        < "$(box_dir "$name")/config/CLAUDE.md"
-    ssh_stream_box "$name" 'set -e
-if [ -f /mnt/qemubox-home/.claude.json ]
-then
-    ln -sf /mnt/qemubox-home/.claude.json /tmp/host-claude.json
-fi
-for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
-do
-    if [ -f "/mnt/qemubox-home/$rel" ]
-    then
-        ln -sf "/mnt/qemubox-home/$rel" "$HOME/$rel"
-    fi
-done
-if [ -f /mnt/qemubox-history/history ]
-then
-    for rel in .bash_history .zsh_history
-    do
-        touch "$HOME/$rel"
-        sudo mount --bind /mnt/qemubox-history/history "$HOME/$rel"
-    done
-fi'
-}
-
 shutdown_box() {
     local tag
     name="$(box_name "$1")"
@@ -885,9 +772,7 @@ shutdown_box() {
             "qemubox-fs@$name-$tag.service" || return 0
     done < "$(box_dir "$name")/config/mounts"
     qmp_box "$name" cont >/dev/null || note "cannot resume qemubox-$name over QMP"
-    ssh_plain_box "$name" sudo fstrim / >/dev/null ||
-        note "cannot trim the disk of qemubox-$name"
-    ssh_plain_box "$name" sudo poweroff >/dev/null 2>&1 ||
+    ssh_plain_box "$name" sudo kill -TERM 1 </dev/null >/dev/null 2>&1 ||
         note "poweroff SSH closed; waiting for qemu"
     while kill -0 "$MAINPID" 2>/dev/null
     do
@@ -917,9 +802,10 @@ remove_box() {
     then
         rmdir "$dir/config"
     fi
-    rm -f "$dir/disk.qcow2"
+    rm -f "$dir/disk.qcow2" "$dir/upper.raw" "$dir/upper.raw.tmp"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port" "$dir/qmp"
-    rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock"
+    rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock" \
+        "$dir/root.sock"
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
@@ -943,68 +829,90 @@ build_base() (
         exit 1
     }
     read -r -a docker_cmd <<< "${QEMUBOX_DOCKER:-docker}"
-    PATH="$PATH:/usr/sbin:/sbin"
-    missing_deps "${docker_cmd[0]}" bsdtar mke2fs qemu-img tar flock
-    tmp=$(mktemp -d)
-    trap 'rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"; rmdir "$tmp"' EXIT
-    tar -cf "$tmp/probe.tar" --files-from /dev/null
-    if ! mke2fs -q -t ext4 -F -d "$tmp/probe.tar" "$tmp/probe.raw" 8M >"$tmp/probe.log" 2>&1
-    then
-        cat "$tmp/probe.log" >&2
-        echo "Missing: mke2fs with -d tarball support (the build needs a mke2fs -d that accepts a tarball)" >&2
+    missing_deps "${docker_cmd[0]}" tar flock sha256sum df du
+    tar --version | grep -q 'GNU tar' || {
+        echo 'Missing: GNU tar with --no-same-owner support' >&2
         exit 1
+    }
+    mkdir -p "$ROOT/base/kernel" || exit
+    exec 8>"$ROOT/base/.lock" || exit
+    flock 8 || exit
+    container=""
+    cleanup_image() {
+        rc=$?
+        trap - EXIT
+        if [ -n "$container" ]
+        then
+            "${docker_cmd[@]}" rm "$container" >/dev/null || rc=1
+        fi
+        exit "$rc"
+    }
+    trap cleanup_image EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    kernel_id=$(
+        cd "$source_dir/qemubox" &&
+            sha256sum Dockerfile.kernel kernel.fragment initrd-init | sha256sum
+    ) || exit
+    kernel_id=${kernel_id%% *}
+    kernel="$ROOT/base/kernel/$kernel_id"
+    if [[ ! -s "$kernel/bzImage" || ! -s "$kernel/initrd" ||
+        ! -s "$kernel/kernel.config" ]]
+    then
+        "${docker_cmd[@]}" build --force-rm -t "qemubox-kernel:$kernel_id" \
+            -f "$source_dir/qemubox/Dockerfile.kernel" "$source_dir" || exit
+        mkdir -p "$kernel" || exit
+        container=$("${docker_cmd[@]}" create \
+            "qemubox-kernel:$kernel_id" /unused) || exit
+        for file in bzImage initrd kernel.config
+        do
+            "${docker_cmd[@]}" cp "$container:/$file" "$kernel/$file.tmp" || exit
+            [ -s "$kernel/$file.tmp" ] || exit 1
+            mv "$kernel/$file.tmp" "$kernel/$file" || exit
+        done
+        "${docker_cmd[@]}" rm "$container" >/dev/null || exit
+        container=""
     fi
-    rm -f "$tmp/probe.tar" "$tmp/probe.raw" "$tmp/probe.log"
-    mkdir -p "$ROOT/base"
-    exec 8>"$ROOT/base/.lock"
-    flock 8
     build_args=()
     [ -z "$force" ] || build_args+=(--build-arg "AGENTS_CACHEBUST=$(date +%s)")
     "${docker_cmd[@]}" build --force-rm --target vm -t qemubox-vm \
-        "${build_args[@]}" -f "$source_dir/qemubox/Dockerfile" "$source_dir"
-    image_id=$("${docker_cmd[@]}" image inspect -f '{{.Id}}' qemubox-vm)
+        "${build_args[@]}" -f "$source_dir/qemubox/Dockerfile" \
+        "$source_dir" || exit
+    image_id=$("${docker_cmd[@]}" image inspect \
+        -f '{{.Id}}' qemubox-vm) || exit
     image_id=${image_id#sha256:}
-    [[ "$image_id" =~ ^[a-f0-9]{64}$ ]]
+    [[ "$image_id" =~ ^[a-f0-9]{64}$ ]] || exit 1
     base="$ROOT/base/$image_id"
-    if [ ! -s "$base.qcow2" ] || [ ! -s "$base.vmlinuz" ] || [ ! -s "$base.initrd" ]
+    if [ ! -s "$base/exported" ]
     then
-        container=""
-        cleanup_image() {
-            rc=$?
-            trap - EXIT
-            if [ -n "$container" ]
-            then
-                "${docker_cmd[@]}" rm "$container" >/dev/null || rc=1
-            fi
-            rm -f "$tmp/export.tar" "$tmp/rootfs.tar" "$tmp/rootfs.raw" \
-                "$base.qcow2.tmp" "$base.vmlinuz.tmp" "$base.initrd.tmp"
-            rmdir "$tmp"
-            exit "$rc"
+        mkdir -p "$base/rootfs" || exit
+        required=$("${docker_cmd[@]}" run --rm --read-only --network none \
+            --memory 256m --pids-limit 32 --entrypoint du "$image_id" \
+            -sx --apparent-size -B1 /) || exit
+        required=${required%%[[:space:]]*}
+        [[ "$required" =~ ^[0-9]+$ ]] || exit 1
+        required=$((required + 1024 * 1024 * 1024))
+        free=$(df -B1 --output=avail "$base/rootfs" | tail -1) || exit
+        used=$(du -sb "$base/rootfs" | cut -f1) || exit
+        ((free + used >= required)) || {
+            echo "Insufficient base space: need $required bytes, have $free free" >&2
+            exit 1
         }
-        trap cleanup_image EXIT
-        trap 'exit 130' INT
-        trap 'exit 143' TERM
         note "exporting VM rootfs: $image_id"
-        container=$("${docker_cmd[@]}" create "$image_id")
-        "${docker_cmd[@]}" export -o "$tmp/export.tar" "$container"
-        "${docker_cmd[@]}" rm "$container" >/dev/null
+        container=$("${docker_cmd[@]}" create "$image_id" /unused) || exit
+        "${docker_cmd[@]}" export "$container" |
+            tar -xp --no-same-owner --exclude=.dockerenv \
+                --exclude=./.dockerenv -C "$base/rootfs" || exit
+        "${docker_cmd[@]}" rm "$container" >/dev/null || exit
         container=""
-        bsdtar -cf "$tmp/rootfs.tar" --exclude=.dockerenv "@$tmp/export.tar"
-        rm "$tmp/export.tar"
-        kernel=$(tar -tf "$tmp/rootfs.tar" | sed -n 's,^boot/vmlinuz-,,p' | sort -V | tail -1)
-        [ -n "$kernel" ]
-        tar -xOf "$tmp/rootfs.tar" "boot/vmlinuz-$kernel" > "$base.vmlinuz.tmp"
-        tar -xOf "$tmp/rootfs.tar" "boot/initrd.img-$kernel" > "$base.initrd.tmp"
-        note "creating ext4 base in /tmp"
-        mke2fs -q -t ext4 -F -d "$tmp/rootfs.tar" "$tmp/rootfs.raw" 20G
-        note "converting base to qcow2"
-        qemu-img convert -c -O qcow2 -o compression_type=zstd "$tmp/rootfs.raw" "$base.qcow2.tmp"
-        mv "$base.vmlinuz.tmp" "$base.vmlinuz"
-        mv "$base.initrd.tmp" "$base.initrd"
-        mv "$base.qcow2.tmp" "$base.qcow2"
+        printf 'complete\n' > "$base/exported.tmp" || exit
+        mv "$base/exported.tmp" "$base/exported" || exit
     fi
-    printf '%s\n' "$image_id" > "$ROOT/base/current"
-    note "base ready: $base.qcow2"
+    printf '%s\n' "$kernel_id" > "$ROOT/base/kernel/current.tmp" || exit
+    mv "$ROOT/base/kernel/current.tmp" "$ROOT/base/kernel/current" || exit
+    printf '%s\n' "$image_id" > "$ROOT/base/current.tmp" || exit
+    mv "$ROOT/base/current.tmp" "$ROOT/base/current" || exit
+    note "base ready: $base/rootfs"
 )
 
 list_boxes() {
@@ -1032,7 +940,8 @@ list_boxes() {
             fi
         fi
         if [ "$state" = running ] && mem=$(ssh_plain_box "$name" \
-            "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo")
+            "awk '/^(MemTotal|MemAvailable|Cached|Shmem):/ {print \$2}' /proc/meminfo" \
+            </dev/null)
         then
             read -r -d '' t a c sh <<< "$mem" || true
             if [[ "$t$a$c$sh" =~ ^[0-9]+$ && -n "$t" && -n "$a" && -n "$c" && -n "$sh" ]]
@@ -1043,9 +952,9 @@ list_boxes() {
             fi
         fi
         disk=0
-        if [ -f "$dir/disk.qcow2" ]
+        if [ -f "$dir/upper.raw" ]
         then
-            disk=$(du -k "$dir/disk.qcow2" | cut -f1) || disk="?"
+            disk=$(du -k "$dir/upper.raw" | cut -f1) || disk="?"
         fi
         printf "qemubox-%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$state" \
             "$use" "$(human_kib "$ram")" "$used" "$cache" "$tmpfs" \
@@ -1189,11 +1098,17 @@ prune_bases() (
     flock 8
     [ -f "$ROOT/base/current" ] || exit 0
     current=$(cat "$ROOT/base/current") || exit 1
-    for base in "$ROOT/base/"*.qcow2
+    for base in "$ROOT/base/"*
     do
-        [ -f "$base" ] || continue
+        [ ! -L "$base" ] || continue
         image_id=${base##*/}
-        image_id=${image_id%.qcow2}
+        case "$base" in
+            *.qcow2|*.vmlinuz|*.initrd)
+                [ -f "$base" ] || continue
+                image_id=${image_id%.*} ;;
+            *) [ -d "$base" ] || continue ;;
+        esac
+        [[ "$image_id" =~ ^[a-f0-9]{64}$ ]] || continue
         [ "$image_id" != "$current" ] || continue
         for ref in "$ROOT"/*/image-id
         do
@@ -1201,8 +1116,26 @@ prune_bases() (
             ref_id=$(cat "$ref") || exit 1
             [ "$ref_id" != "$image_id" ] || continue 2
         done
-        rm -f "$base" "$ROOT/base/$image_id.vmlinuz" "$ROOT/base/$image_id.initrd" || exit 1
+        if [ -d "$base" ]
+        then
+            rm -rf -- "$base" || exit 1
+        else
+            rm -f -- "$ROOT/base/$image_id.qcow2" \
+                "$ROOT/base/$image_id.vmlinuz" \
+                "$ROOT/base/$image_id.initrd" || exit 1
+        fi
         note "removed unused base $image_id"
+    done
+    [ -s "$ROOT/base/kernel/current" ] || exit 0
+    current=$(cat "$ROOT/base/kernel/current") || exit 1
+    for base in "$ROOT/base/kernel/"*
+    do
+        [ -d "$base" ] && [ ! -L "$base" ] || continue
+        image_id=${base##*/}
+        [[ "$image_id" =~ ^[a-f0-9]{64}$ ]] || continue
+        [ "$image_id" != "$current" ] || continue
+        rm -rf -- "$base" || exit 1
+        note "removed unused kernel $image_id"
     done
 )
 

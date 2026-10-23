@@ -13,6 +13,11 @@ PROJ="$fixture/proj"; mkdir -p "$PROJ"
 # shellcheck disable=SC1090
 QEMUBOX_LIB=1 . "$here/qemubox"
 set +e
+unexpected_docker() {
+    echo 'A unit test attempted an unstubbed Docker command' >&2
+    return 99
+}
+QEMUBOX_DOCKER=unexpected_docker
 
 systemd_log="$fixture/systemd.log"
 systemctl() {
@@ -63,13 +68,16 @@ regression() {
 
 regression_setup() {
     ROOT="$fixture/refine-$BASHPID"
-    mkdir -p "$ROOT/base"
+    mkdir -p "$ROOT/base/fixture/rootfs" "$ROOT/base/kernel/fixture"
     echo fixture > "$ROOT/base/current"
-    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    echo fixture > "$ROOT/base/kernel/current"
+    echo complete > "$ROOT/base/fixture/exported"
+    for file in bzImage initrd kernel.config
+    do
+        echo base > "$ROOT/base/kernel/fixture/$file"
+    done
     dirs=()
-    qemu-img() { touch "$dir/disk.qcow2"; }
-    bsdtar() { :; }
-    mke2fs() { :; }
+    mkfs.ext4() { :; }
 }
 
 eq "box_name plain" "$(box_name repo)" "repo"
@@ -173,17 +181,16 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
 
 (
     set -e
-    mkdir -p "$ROOT/base"
-    printf '%s\n' fixture > "$ROOT/base/current"
-    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
-    qemu-img() { printf '%s\n' "$@" > "$fixture/qemu-img.args"; touch "$dir/disk.qcow2"; }
+    regression_setup
+    mkfs.ext4() { printf '%s\n' "$@" >> "$fixture/mkfs.args"; }
     ensure_box identitybox
     head -4 "$ROOT/identitybox/config/identity" > "$fixture/actual-identity"
     printf '%s\n' "$(id -un)" "$(id -u)" "$(id -g)" "$GUEST_HOME" > "$fixture/want-identity"
     cmp "$fixture/actual-identity" "$fixture/want-identity"
     cmp "$ROOT/identitybox/key.pub" "$ROOT/identitybox/config/authorized_keys"
     [ "$(cat "$ROOT/identitybox/image-id")" = fixture ]
-    [ "$(tail -1 "$fixture/qemu-img.args")" = 40G ]
+    [ "$(stat -c %s "$ROOT/identitybox/upper.raw")" = 42949672960 ]
+    [ "$(tail -1 "$fixture/mkfs.args")" = "$ROOT/identitybox/upper.raw.tmp" ]
     missing_deps() { :; }
     dirs=("$PROJ"); name=identitybox; network=""; untrusted=""
     : > "$systemd_log"
@@ -194,17 +201,24 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=10 -p TimeoutStopFailureMode=kill' "$systemd_log"
     grep -qFx "$PROJ"$'\t'"$PROJ"$'\t'rw \
         < <(cut -f2- "$ROOT/identitybox/config/mounts")
-    [ "$(tail -1 "$ROOT/identitybox/config/mounts")" = \
+    [ "$(tail -2 "$ROOT/identitybox/config/mounts" | head -1)" = \
         cfg$'\t'"$ROOT/identitybox/config"$'\t'/run/qemubox/config$'\t'ro ]
+    [ "$(tail -1 "$ROOT/identitybox/config/mounts")" = \
+        root$'\t'"$ROOT/base/fixture/rootfs"$'\t'/.qemubox/lower$'\t'ro ]
     [ "$(cat "$ROOT/identitybox/net")" = off ]
     grep -q 'CLAUDE_SANDBOX=qemubox' "$ROOT/identitybox/config/CLAUDE.md"
-    echo retained > "$ROOT/identitybox/disk.qcow2"
+    echo retained > "$ROOT/identitybox/upper.raw"
     ensure_box identitybox
-    [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
+    [ "$(cat "$ROOT/identitybox/upper.raw")" = retained ]
+    [ "$(wc -l < "$fixture/mkfs.args")" = 3 ]
     (QEMU="$fake_qemu" QEMU_ARGS="$fixture/qemu.args" run_qemu identitybox)
     grep -Fx -- '-kernel' "$fixture/qemu.args"
+    grep -Fx -- '-nodefaults' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
-    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
+    grep -Fx -- 'console=ttyS0 reboot=t panic=-1 loglevel=5 ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off' "$fixture/qemu.args"
+    grep -Fx -- 'file=upper.raw,if=virtio,format=raw,discard=unmap,detect-zeroes=unmap' "$fixture/qemu.args"
+    grep -Fx -- "$ROOT/base/kernel/fixture/bzImage" "$fixture/qemu.args"
+    grep -Fx -- "$ROOT/base/kernel/fixture/initrd" "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
     grep -Fx -- 'socket,id=cfg,path=cfg.sock' "$fixture/qemu.args"
     grep -Fx -- 'vhost-user-fs-pci,queue-size=1024,chardev=cfg,tag=cfg' \
@@ -227,30 +241,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     if grep -q systemd-run "$systemd_log"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
-rm -f "$ROOT/base/fixture.vmlinuz"
-exits 1 'ensure_box identitybox' "missing recorded base refuses VM"
-
-fake_docker() {
-    case "$1" in
-        build) return 0 ;;
-        image) printf 'sha256:%064d\n' 0 ;;
-        create) echo fixture-container ;;
-        export)
-            echo "$3" > "$fixture/export-path"
-            echo partial > "$3"
-            return 42 ;;
-        rm) echo "$2" > "$fixture/removed-container" ;;
-    esac
-}
-QEMUBOX_DOCKER=fake_docker
-bsdtar() { :; }
-mke2fs() { :; }
-qemu-img() { :; }
-exits 42 'build_base' "export failure stays visible"
-eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
-false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
-unset QEMUBOX_DOCKER
-unset -f bsdtar mke2fs qemu-img
+source "$here/test-base.sh"
 
 source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"

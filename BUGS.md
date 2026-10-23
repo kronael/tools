@@ -1084,6 +1084,15 @@
 
 ## qemubox
 
+- **QEMUBOX-KERNEL-PRUNE-DURING-LAUNCH** (LOW, ops) — open, no test — ops.
+  `run_qemu` reads `base/kernel/current` before it waits for share sockets
+  at `qemubox/qemubox:708`. A concurrent kernel rebuild can publish a new
+  pointer and `prune_bases` can delete the selected artifacts before QEMU
+  opens them at `qemubox/qemubox:1131`. Source review only; no runtime
+  reproduction. A launch then fails with a missing kernel or initrd.
+  **Fix:** retain the selected artifacts through launch. This rare race
+  remains deferred under the disposable-VM policy.
+
 - **QEMUBOX-SSH-READS-TERMINAL** (LOW, ux) — open (record only), no test.
   `ssh_plain_box` (`qemubox/qemubox:548`) runs `ssh` without `-n`, so every
   helper SSH call reads the terminal. A `qemubox rm <box> &` job stops on

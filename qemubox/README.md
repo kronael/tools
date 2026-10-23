@@ -24,27 +24,32 @@ make install
 ```
 
 `make install` builds the `vm` target from [Dockerfile](Dockerfile), exports it
-into a qcow2 base named by its Docker image ID, then installs the script.
+into a rootfs directory named by its Docker image ID, then installs the script.
+The pinned kernel and initrd use a separate cache named by the hash of
+`Dockerfile.kernel`, `kernel.fragment` and `initrd-init`.
 `qemubox build-base -f` or `--force` refreshes the agent CLI build layer.
-`build-base` writes the base zstd-compressed. `build-base` and `rm` remove each base that is not current and that no VM uses.
+`build-base` and `rm` remove each base that is not current and that no VM uses.
 
 System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils virtiofsd openssh-client tar python3 \
-    libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 virtiofsd openssh-client tar python3 \
+    e2fsprogs docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base virtiofsd openssh tar python libarchive e2fsprogs docker
+sudo pacman -S qemu-base virtiofsd openssh tar python e2fsprogs docker
 # Fedora
-sudo dnf install qemu virtiofsd openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu virtiofsd openssh-clients tar python3 e2fsprogs moby-engine docker-cli
 ```
 
-The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
-`mke2fs -d` accepts a tarball; Debian 12's 1.47.0 does not. The build probes
-that support before it starts. Debian installs `mke2fs` in `/usr/sbin`, which a
-non-root PATH omits, so the build adds it. Allow about 20 GB free in `/tmp` and 11 GB
-per base on the state filesystem.
+The build needs Docker and GNU tar. It streams the Docker export directly to
+the state filesystem and preserves file modes. All files in the rootfs belong
+to the host user; the read-only root share maps that user to guest root in both
+directions. The build checks free space against the merged rootfs size plus
+1 GiB before export.
+Published rootfs directories stay immutable; only their root share uses permanent
+virtiofs caching. Project and config shares keep automatic caching.
+Debian installs `mkfs.ext4` in `/usr/sbin`; the launcher adds that directory to PATH.
 
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
 software emulation.
@@ -55,7 +60,8 @@ Each VM is a systemd user unit. A launch needs systemd 254 or newer,
 VM at your last logout. A launch refuses to start without lingering; enable it
 once with `loginctl enable-linger $(id -un)`.
 The launcher finds `virtiofsd` in PATH, `/usr/lib/virtiofsd`, or
-`/usr/libexec/virtiofsd`. The daemon must support `--readonly`.
+`/usr/libexec/virtiofsd`. The daemon must support `--readonly` and
+`--translate-uid`/`--translate-gid` with `map:` mappings.
 
 ## Usage
 
@@ -115,7 +121,7 @@ goes to `journalctl --user -u qemubox@<name>`. A box starts on first use and
 the start waits for guest setup, at most `QEMUBOX_READY_TIMEOUT` seconds
 (default 180); a failed boot stops the unit and prints the journal tail.
 Each directory share has a user unit, `qemubox-fs@<name>-<tag>.service`,
-including the read-only `cfg` share. QEMU starts after these units and waits
+including the read-only `cfg` and root shares. QEMU starts after these units and waits
 for their sockets. Stopping the VM stops its share units, including after
 a failed boot. If a share daemon exits, systemd stops the VM and its other
 share daemons. The next launch boots the persistent disk.
@@ -138,7 +144,8 @@ new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
 ignored on re-entry — use `-n <name>` for a separately-mounted box.
 
 `qemubox stop <name>` stops the unit and keeps the disk: the guest is resumed
-if paused, trimmed and powered off, and systemd kills qemu after 10 s.
+if paused and receives TERM through its init process. The init stops services,
+syncs disk writes and powers off. Systemd kills qemu after 10 s.
 If a share daemon exits, shutdown skips guest commands and terminates qemu.
 `-f` sends SIGTERM at once. Every stop, a guest poweroff included, stamps the
 box's `stopped` file. Names, globs and `-a` match as for `rm`; a stopped box
@@ -230,8 +237,8 @@ At boot the launcher writes `/etc/claude-code/CLAUDE.md` in the guest.
 Claude Code reads the sandbox, shared mount and disk lifetime details there.
 Every session gets `CLAUDE_SANDBOX=qemubox`.
 
-Docker runs inside the VM. Its socket starts the guest daemon on the first
-Docker command. Images and containers use the guest disk. Container networking
+Docker starts inside the VM before the guest becomes ready. Images and containers
+use direct ext4 directories on the guest disk. Container networking
 stays inside the VM; `docker run --network host` uses the guest's network.
 
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't reach or
@@ -253,7 +260,7 @@ What qemubox gives you:
 - **Host-filesystem confinement.** The guest is a real VM with its own kernel;
   it can only touch the project dir(s) you mount and its own persistent disk.
   Host paths outside the shares stay inaccessible unless explicitly forwarded.
-- **Persistent guest storage.** The qcow2 overlay keeps installs and guest
+- **Persistent guest storage.** The ext4 upper keeps installs and guest
   files across boots. `qemubox rm` deletes it.
 
 What it does **not** give you — do **not** run genuinely hostile code here:
@@ -286,13 +293,16 @@ Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
 the tool name replaces the alias's model and effort. SSH allocates a tty only
 if stdin and stdout are terminals.
 
-Guest setup disables guest NTP and syncs the clock from the host before
-the first session of each boot. The guest runs in UTC.
+The guest gets UTC time from QEMU's host-backed real-time clock.
 PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
 New mount parent directories belong to the user; existing parents keep their owner.
 
-State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). The base
-image is kept while current or referenced; `rm` deletes a box's overlay, key, config, known-hosts,
+State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). Each box pins
+a base image ID and has a sparse `upper.raw` ext4 disk, sized by `QEMUBOX_DISK`
+(default 40G). The guest combines the read-only rootfs lower with that disk
+through overlayfs. Writes allocate host disk blocks; ext4 discard releases
+deleted blocks. The base image stays while current or referenced.
+`rm` deletes a box's upper, key, config, known-hosts,
 port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the tools source repository.
 `QEMUBOX_QEMU` selects the qemu binary, default `qemu-system-x86_64`.
 
@@ -305,8 +315,5 @@ holds, not its size: a `cargo clean` or a removed tmpfs file returns its
 pages. If the host has swap, cold guest pages go there when host RAM runs
 short. The guest itself has no swap, so the `/tmp` cap under Build directories
 keeps a large build from exhausting guest memory.
-
-The guest boots with `noresume`. A Docker-built initramfs can detect host
-swap, and the VM must not wait for it.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.

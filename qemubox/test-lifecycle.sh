@@ -9,7 +9,7 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     ROOT="$fixture/removal"
     mkdir -p "$ROOT/one" "$ROOT/two" "$ROOT/keep"
     echo disk > "$ROOT/one/disk.qcow2"
-    echo disk > "$ROOT/two/disk.qcow2"
+    echo disk > "$ROOT/two/upper.raw"
     remove_boxes qemubox-one 'tw*'
     [ ! -d "$ROOT/one" ]
     [ ! -d "$ROOT/two" ]
@@ -132,13 +132,13 @@ shutdown_test() {
     ssh_plain_box() {
         [ ! -e "$ROOT/vm/stopped" ]
         echo "$*" >> "$fixture/shutdown-ssh"
-        [ "$3" = poweroff ] || return 0
+        [ "$3" = kill ] || return 0
         kill "$MAINPID"
         wait "$MAINPID" || true
     }
     shutdown_box vm
     [ "$(cat "$fixture/shutdown-qmp")" = cont ]
-    [ "$(cat "$fixture/shutdown-ssh")" = $'vm sudo fstrim /\nvm sudo poweroff' ]
+    [ "$(cat "$fixture/shutdown-ssh")" = 'vm sudo kill -TERM 1' ]
     [ ! -e "$ROOT/vm/stopped" ]
 }
 regression "_stop resumes and powers off a live guest; returns at once after qemu" shutdown_test
@@ -226,7 +226,7 @@ leave_test() {
     regression_setup
     name=vm; session_pid=""
     mkdir -p "$ROOT/vm"
-    echo disk > "$ROOT/vm/disk.qcow2"
+    echo disk > "$ROOT/vm/upper.raw"
     : > "$systemd_log"
     (LINGER=1; leave_session) 2> "$fixture/leave.err"
     [ "$(cat "$ROOT/vm/idle")" = 1 ]
@@ -235,23 +235,14 @@ leave_test() {
     (LINGER=0; leave_session) 2> /dev/null
     [ "$(cat "$ROOT/vm/idle")" = 0 ]
     [ "$(cat "$systemd_log")" = 'systemctl --user stop --no-block qemubox@vm.service' ]
-    [ "$(cat "$ROOT/vm/disk.qcow2")" = disk ]
+    [ "$(cat "$ROOT/vm/upper.raw")" = disk ]
 }
 regression "leaving stamps idle; QEMUBOX_LINGER=0 stops at once" leave_test
 
 setup_test() {
     regression_setup
     mkdir -p "$ROOT/vm/config"
-    printf 'qbx0\t/src dir\t/dest dir\tro\n' > "$ROOT/vm/config/mounts"
-    echo untrusted > "$ROOT/vm/trust"
-    wait_ready() { :; }
-    setup_guest_tmp() { :; }
-    setup_guest_builds() { :; }
-    setup_guest_runtime() { :; }
-    setup_guest_limits() { :; }
-    sync_guest_clock() { :; }
-    mount_host_paths() { printf '%s|' "${mount_srcs[@]}" "${mount_modes[@]}" > "$fixture/setup-mounts"; }
-    setup_guest_sessions() { echo "$untrusted" > "$fixture/setup-trust"; }
+    wait_ready() { echo "$1" > "$fixture/setup-ready"; }
     SELF="$fixture/check source/qemubox"
     mkdir -p "${SELF%/*}"
     printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$SELF"
@@ -269,12 +260,11 @@ setup_test() {
     : > "$systemd_log"
     setup_box vm
     [ "$(cat "$ROOT/vm/idle")" = 77 ]
-    [ "$(cat "$fixture/setup-mounts")" = '/src dir|ro|' ]
-    [ "$(cat "$fixture/setup-trust")" = 1 ]
+    [ "$(cat "$fixture/setup-ready")" = vm ]
     grep -qxF "systemd-run --user --collect --quiet --unit=qemubox-check@vm --on-active=60 --on-unit-active=60 --timer-property=BindsTo=qemubox@vm.service -E QEMUBOX_HOME=$ROOT -E PATH=$PATH /bin/bash $SELF _check vm" "$systemd_log"
     [ "$(cat "$fixture/check-command")" = $'_check\nvm' ]
 }
-regression "_ready sets up the guest from box files, stamps idle, arms the check" setup_test
+regression "_ready waits for the guest, stamps idle and arms the check" setup_test
 
 linger_test() {
     command() { return 0; }
@@ -342,11 +332,13 @@ import pathlib
 import sys
 
 fixture, box = map(pathlib.Path, sys.argv[1:])
-units = [f"qemubox-fs@shares-{tag}.service" for tag in ("qbx0", "qbx1", "cfg")]
+units = [f"qemubox-fs@shares-{tag}.service"
+         for tag in ("qbx0", "qbx1", "cfg", "root")]
 for n, (tag, source, readonly) in enumerate([
     ("qbx0", fixture / "unit,share $literal", True),
     ("qbx1", fixture / "proj", False),
     ("cfg", box / "config", True),
+    ("root", box.parent / "base/fixture/rootfs", True),
 ], 1):
     args = (fixture / f"share-unit-{n}").read_bytes().decode().split("\0")[:-1]
     assert f"--unit=qemubox-fs@shares-{tag}.service" in args
@@ -359,8 +351,12 @@ for n, (tag, source, readonly) in enumerate([
                 f"--shared-dir={source}", "--sandbox=none"]
     if readonly:
         expected.append("--readonly")
+    if tag == "root":
+        import os
+        expected += ["--cache=always", "--translate-uid", f"map:0:{os.getuid()}:1",
+                     "--translate-gid", f"map:0:{os.getgid()}:1"]
     assert command == expected, command
-args = (fixture / "share-unit-4").read_bytes().decode().split("\0")[:-1]
+args = (fixture / "share-unit-5").read_bytes().decode().split("\0")[:-1]
 for key in ("BindsTo", "After"):
     assert f"{key}={' '.join(units)}" in args
 assert "QEMUBOX_READY_TIMEOUT=180" in args
@@ -368,7 +364,7 @@ PY
     : > "$systemd_log"
     cleanup_box shares
     [ "$(cat "$systemd_log")" = \
-        'systemctl --user stop --no-block qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service' ]
+        'systemctl --user stop --no-block qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service qemubox-fs@shares-root.service' ]
     [ -f "$ROOT/shares/stopped" ]
 }
 regression "share units enforce readonly, include cfg, order QEMU and stop at teardown" \
@@ -408,7 +404,7 @@ share_failure_test() {
     fi
     unlock_box
     grep -Fxq \
-        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service' \
+        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service qemubox-fs@shares-root.service' \
         "$systemd_log"
     grep -q 'journalctl --user -u qemubox@shares.service' "$systemd_log"
 }
@@ -469,7 +465,7 @@ exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
     set -e
     ROOT="$fixture/listing"
     mkdir -p "$ROOT/vm"
-    echo disk > "$ROOT/vm/disk.qcow2"
+    echo disk > "$ROOT/vm/upper.raw"
     run_state() { echo running; }
     session_count() { echo 1; }
     memory_current=10485760

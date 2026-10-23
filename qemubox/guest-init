@@ -122,7 +122,7 @@ install -d -o "$user_uid" -g "$user_gid" /tmp/cargo-target
 mode=untrusted
 while IFS=$'\t' read -r tag src dest access
 do
-    [[ "$tag" != cfg ]] || continue
+    [[ "$tag" != cfg && "$tag" != root ]] || continue
     [[ "$access" = ro || "$access" = rw ]]
     path=$dest
     missing=()
