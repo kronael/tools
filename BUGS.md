@@ -1049,38 +1049,6 @@
   calls (`ls`, start-up) keep the read. **Fix:** `ssh -n` in `ssh_plain_box`,
   except the calls that feed a heredoc.
 
-- **QEMUBOX-9P-TO-VIRTIOFS** (MED, design) — needs sign-off.
-  Host paths reach the guest over 9p (`qemubox/qemubox:596`, `:761`,
-  mount at `:805-808`). 9p is slow on many small files and weak on locks and
-  mmap, so the Codex SQLite DB must live in the guest `/tmp`. virtiofs fixes
-  both; `virtiofsd` is installed here at `/usr/lib/virtiofsd`. **Fix
-  (proposal):** per share, start one `virtiofsd --socket-path=<box>/<tag>.sock
-  --shared-dir=<src>` (plus `--readonly` for ro), add
-  `-chardev socket,id=<tag>,path=<sock> -device vhost-user-fs-pci,chardev=<tag>,tag=<tag>`,
-  and back guest RAM with `-object memory-backend-memfd,id=mem,size=$MEM,share=on
-  -numa node,memdev=mem` (vhost-user needs shared memory); the guest mounts
-  `-t virtiofs <tag> <dest>`. `stop_box` kills the daemons; the base kernel
-  needs `CONFIG_VIRTIO_FS`. Open: the guest identity mapping that
-  `security_model=none` gives 9p, and memfd with a 64 GiB guest.
-  Mac: QEMU's virtiofs needs `virtiofsd`, which is Linux-only (unverified);
-  on macOS virtiofs comes from Virtualization.framework, a second backend.
-
-- **QEMUBOX-NO-SERVICE-MANAGER** (MED, design) — needs sign-off.
-  A VM lives as a detached QEMU process that qemubox starts on first attach;
-  nothing restarts it after a pause, a crash or a reboot, and stop/start go
-  through the qemubox CLI only. **Fix (proposal):** a systemd user template
-  `qemubox@.service` (`ExecStart` = qemubox boot-only for `%i`, `ExecStop` =
-  `qemubox stop %i`, `Restart=on-failure`), plus `qemubox enable|disable
-  <name>`; the CLI attach then only connects over SSH. A path or timer unit
-  could resume `io-error` guests when free space returns. With
-  QEMUBOX-9P-TO-VIRTIOFS, each share becomes `qemubox-fs@<box>-<tag>.service`
-  (one `virtiofsd`) that `qemubox@<box>` Requires and orders After, so
-  systemd starts and stops the daemons with the VM and qemubox drops its PID
-  and kill logic; a `-v` share on a running VM goes through
-  `systemd-run --user`. Open: the 4h idle prune and `qemubox stop` must stop
-  the unit, never kill the process, or systemd restarts the VM. Linux only;
-  a Mac port would need launchd.
-
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
   `~/.codex` tokens are shared read-write with the guest, outbound is open unless `-H`,
@@ -1103,24 +1071,6 @@
   Unmeasured: that slirp actually drops guest DNS under `restrict=on` — the
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
-
-- **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1491`) lingers like any other: after its session exits,
-  `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
-  seconds (default 1200), and a second `qemubox -T` in that window joins the
-  VM and finds the earlier scratch files, while `qemubox/README.md:71-74`
-  says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
-  for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
-  window in README § Usage. **Default if nothing is decided:** (b). No test
-  — design.
-
-- **QEMUBOX-TMP-STACKED-TMPFS** (LOW, ops) — open (record only), no test —
-  ops. `setup_guest_tmp` (`qemubox/qemubox:591-594`) mounts a tmpfs over
-  `/tmp` on every boot, and systemd's `tmp.mount` already mounted one there,
-  so guest `/tmp` is two stacked tmpfs mounts and the first is hidden.
-  Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
-  **Fix:** size the existing mount with `mount -o remount,size=75% /tmp`
-  instead of stacking a second one.
 
 - **QEMUBOX-CODEX-MEMORIES-PRIVATE-DB** (MED, correctness) — open (record
   only), unverified, no test — correctness. Each session sets
