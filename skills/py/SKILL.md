@@ -22,6 +22,7 @@ Python-specific additions and deltas.
 
 ## Type Annotations
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
+- NEVER `Any` in an annotation — bare or inside a generic (`dict[str, Any]`, `list[Any]`): a value whose shape has no name is a dataclass not yet written (§ Named Data Structures). `../software/strict-typing.md` holds the config that errors on it; the one survivor is the pass-through `**kwargs` below, carrying `# noqa: ANN401`
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
 - NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
@@ -30,8 +31,8 @@ Python-specific additions and deltas.
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
-- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
-- NEVER widen an annotation to `object` or `Any` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
+- Forward a pass-through `**kwargs` as plain `**kwargs: Any  # noqa: ANN401` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
+- NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
 - NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
 
 ## Naming
@@ -81,12 +82,18 @@ Python-specific additions and deltas.
   queued work item, decoded message. NEVER declare a `TypedDict`: at runtime it is a plain
   dict, so a payload cast to it is never checked and a missing key fails at the read, not at
   the boundary.
+- A closed set of variants (`code.md` § Design): one `@dataclass(frozen=True)` per variant on one
+  `Protocol` or small base, dispatched by class — `isinstance(s, Kline1m)` / `case Kline1m():` —
+  NEVER `match kind: case 'kline1m/1':` on a payload string. Lint `py-no-str-case-dispatch`.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
 - ALWAYS decode and encode external payloads through the project's one codec (its lib
   `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
   structurer drifts from the first.
+- A wire or storage encoding that is not the plain field map (positional lists, short keys) lives
+  one module per type, like route handlers: the dataclass carries `KIND`/`VERSION` `ClassVar`s
+  (`kline1m/1` → `'kline1m'`, `1`), the module its `encode`/`decode`. NEVER one function over kind strings.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a
@@ -122,6 +129,8 @@ Python-specific additions and deltas.
 - NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
 - NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
 - NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
+- NEVER `dict(...)` for a value built in place — ALWAYS the `{}` literal, or an `Enum` for a closed
+  set of names; allowed only as a call argument, `log.info(..., extra=dict(id=id))`. Lint `py-no-dict-call`
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
@@ -150,8 +159,8 @@ Python-specific additions and deltas.
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
   `py-no-lambda-default-factory`, `py-no-property`, `py-bool-fn-prefix`
-  (`software/code.md` § Naming). ruff owns the rest — NEVER duplicate a ruff
-  rule here.
+  (`software/code.md` § Naming), `py-no-str-case-dispatch`, `py-no-dict-call` (overlaps ruff
+  `C408` only because `C408` cannot spare the call-argument form). ruff owns the rest — NEVER duplicate a ruff rule here.
 
 ## Build
 - uv for packages, pyright for types
