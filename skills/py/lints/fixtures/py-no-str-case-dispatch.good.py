@@ -3,13 +3,13 @@ from enum import Enum
 
 
 @dataclass(frozen=True, slots=True)
-class Kline1m:
+class Quote:
     open: float
     close: float
 
 
 @dataclass(frozen=True, slots=True)
-class Depth:
+class Book:
     bid: float
     ask: float
 
@@ -19,11 +19,11 @@ class Side(Enum):
     SELL = 'sell'
 
 
-def encode(sample: Kline1m | Depth) -> list[float]:
+def encode(sample: Quote | Book) -> list[float]:
     match sample:
-        case Kline1m():
+        case Quote():
             return [sample.open, sample.close]
-        case Depth():
+        case Book():
             return [sample.bid, sample.ask]
 
 

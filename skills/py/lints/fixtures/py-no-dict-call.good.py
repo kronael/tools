@@ -2,7 +2,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-STATS = {'mark_price': 'markPrice', 'index_price': 'indexPrice'}
+FIELDS = {'last_price': 'lastPrice', 'index_price': 'indexPrice'}
 
 empty = {}
 

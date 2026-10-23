@@ -84,9 +84,9 @@ Python-specific additions and deltas.
   queued work item, decoded message. NEVER declare a `TypedDict`: at runtime it is a plain
   dict, so a payload cast to it is never checked and a missing key fails at the read, not at
   the boundary.
-- A closed set of variants (`code.md` § Design): one `@dataclass(frozen=True)` per variant on one
-  `Protocol` or small base, dispatched by class — `isinstance(s, Kline1m)` / `case Kline1m():` —
-  NEVER `match kind: case 'kline1m/1':` on a payload string. Lint `py-no-str-case-dispatch`.
+- For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
+  on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
+  Lint `py-no-str-case-dispatch`.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
@@ -95,7 +95,7 @@ Python-specific additions and deltas.
   structurer drifts from the first.
 - A wire or storage encoding that is not the plain field map (positional lists, short keys) lives
   one module per type, like route handlers: the dataclass carries `KIND`/`VERSION` `ClassVar`s
-  (`kline1m/1` → `'kline1m'`, `1`), the module its `encode`/`decode`. NEVER one function over kind strings.
+  (`quote/1` → `'quote'`, `1`), the module its `encode`/`decode`. NEVER one function over kind strings.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a

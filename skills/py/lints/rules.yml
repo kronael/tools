@@ -34,7 +34,8 @@ rule:
             has:
                 field: superclasses
                 regex: \bProtocol\b
-            stopBy: end
+            stopBy:
+                kind: class_definition
 message: NEVER @property / @setter / __getattr__ (except mocks, adapting external APIs, a record's value derived from its own fields, or a Protocol's data
     member) — use a plain method. See skill:py.
 note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
@@ -88,8 +89,8 @@ rule:
                       kind: union_pattern
                       has:
                           kind: string
-message: NEVER match on a kind string (case 'kline1m/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
-    (case Kline1m():). See skill:py.
+message: NEVER match on a kind string (case 'quote/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
+    (case Quote():). See skill:py.
 note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
 ---
 id: py-no-dict-call
@@ -110,7 +111,14 @@ rule:
                           kind: keyword_argument
             - inside:
                   kind: argument_list
-                  stopBy: end
+                  inside:
+                      kind: call
+            - inside:
+                  kind: keyword_argument
+                  inside:
+                      kind: argument_list
+                      inside:
+                          kind: call
 message: "NEVER dict(a=1) for a value built in place — write the {'a': 1} literal, or an Enum for a closed set of names. Allowed only as a call argument,\
     \ f(extra=dict(a=1)). See skill:py."
 note: 'source: skills/py/SKILL.md — Style'
