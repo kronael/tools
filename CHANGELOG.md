@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.56] — 20261023
+
+> kronael v0.4.56 — qemubox bases that need no host e2fs tools
+>
+> qemubox now builds its VM base image inside a container, so the host needs only Docker, tar and qemu-img.
+>
+> • qemubox — base builds drop the bsdtar, mke2fs and e2fsprogs host requirements.
+> • qemubox — `exec` passes piped stdin to the guest command.
+> • VM image — the base image carries no uv, Go, bun or npm download caches.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox imports the base filesystem in a disposable container; the host needs Docker, tar, qemu-img.
+- `qemubox exec` keeps piped stdin, so `qemubox exec cat < file` reaches the guest.
+- The VM base image drops installer caches.
+- Base builds need a local Docker daemon without `userns-remap`; recorded in `BUGS.md`.
+
 ## [v0.4.55] — 20261022
 
 > kronael v0.4.55 — An owner profile and pinned sub effort
