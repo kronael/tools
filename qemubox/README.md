@@ -117,8 +117,8 @@ the start waits for guest setup, at most `QEMUBOX_READY_TIMEOUT` seconds
 Each directory share has a user unit, `qemubox-fs@<name>-<tag>.service`,
 including the read-only `cfg` share. QEMU starts after these units and waits
 for their sockets. Stopping the VM stops its share units, including after
-a failed boot. A failed share daemon leaves the VM running and makes that
-share unavailable.
+a failed boot. If a share daemon exits, systemd stops the VM and its other
+share daemons. The next launch boots the persistent disk.
 
 Sessions are the established SSH connections to the box's forwarded port.
 Boot and every session exit stamp the box's `idle` file with `QEMUBOX_LINGER`
@@ -138,7 +138,8 @@ new session, but mount flags (`-v`, dirs, network) are fixed at boot and are
 ignored on re-entry — use `-n <name>` for a separately-mounted box.
 
 `qemubox stop <name>` stops the unit and keeps the disk: the guest is resumed
-if paused, trimmed and powered off, and systemd sends qemu SIGTERM after 100 s.
+if paused, trimmed and powered off, and systemd kills qemu after 10 s.
+If a share daemon exits, shutdown skips guest commands and terminates qemu.
 `-f` sends SIGTERM at once. Every stop, a guest poweroff included, stamps the
 box's `stopped` file. Names, globs and `-a` match as for `rm`; a stopped box
 is reported and skipped.

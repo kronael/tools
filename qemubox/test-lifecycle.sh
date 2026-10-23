@@ -110,13 +110,16 @@ stop_unit_test() {
     run_state() { echo running; }
     sleep() { echo 'Stop must use the systemd deadline' >&2; return 1; }
     stop_box vm force
-    [ "$(cat "$systemd_log")" = $'systemctl --user kill -s SIGTERM qemubox@vm.service\nsystemctl --user stop qemubox@vm.service' ]
+    [ "$(cat "$systemd_log")" = $'systemctl --user kill --kill-who=main -s SIGTERM qemubox@vm.service\nsystemctl --user stop qemubox@vm.service' ]
 }
 regression "stop asks systemd; -f sends SIGTERM then uses the manager stop deadline" stop_unit_test
 
 shutdown_test() {
     regression_setup
-    mkdir -p "$ROOT/vm"
+    mkdir -p "$ROOT/vm/config"
+    printf 'cfg\t%s\t/run/qemubox/config\tro\n' "$ROOT/vm/config" \
+        > "$ROOT/vm/config/mounts"
+    systemctl() { return 0; }
     ssh_plain_box() { echo "$*" >> "$fixture/shutdown-ssh"; }
     qmp_box() { echo "$2" >> "$fixture/shutdown-qmp"; }
     unset MAINPID
@@ -139,6 +142,28 @@ shutdown_test() {
     [ ! -e "$ROOT/vm/stopped" ]
 }
 regression "_stop resumes and powers off a live guest; returns at once after qemu" shutdown_test
+
+shutdown_missing_share_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm/config"
+    printf 'qbx0\t%s\t/project\trw\ncfg\t%s\t/run/qemubox/config\tro\n' \
+        "$PROJ" "$ROOT/vm/config" > "$ROOT/vm/config/mounts"
+    sleep 30 &
+    MAINPID=$!
+    trap 'kill "$MAINPID" 2>/dev/null || true; wait "$MAINPID" 2>/dev/null || true' EXIT
+    systemctl() {
+        printf '%s\n' "$*" >> "$fixture/share-health"
+        [ "${!#}" != qemubox-fs@vm-cfg.service ]
+    }
+    ssh_plain_box() { touch "$fixture/bad-shutdown-ssh"; }
+    qmp_box() { touch "$fixture/bad-shutdown-qmp"; }
+    shutdown_box vm
+    [ "$(wc -l < "$fixture/share-health")" = 2 ]
+    [ ! -e "$fixture/bad-shutdown-ssh" ]
+    [ ! -e "$fixture/bad-shutdown-qmp" ]
+}
+regression "lost share skips guest shutdown so systemd can terminate QEMU" \
+    shutdown_missing_share_test
 
 check_test() {
     regression_setup
@@ -328,6 +353,7 @@ for n, (tag, source, readonly) in enumerate([
     assert "--service-type=exec" in args
     assert "--expand-environment=no" in args
     assert "PartOf=qemubox@shares.service" in args
+    assert f'ExecStopPost=:/usr/bin/rm -f "{box}/{tag}.sock"' in args
     command = args[args.index("/fake/virtiofsd"):]
     expected = ["/fake/virtiofsd", f"--socket-path={box}/{tag}.sock",
                 f"--shared-dir={source}", "--sandbox=none"]
@@ -335,7 +361,7 @@ for n, (tag, source, readonly) in enumerate([
         expected.append("--readonly")
     assert command == expected, command
 args = (fixture / "share-unit-4").read_bytes().decode().split("\0")[:-1]
-for key in ("Wants", "After"):
+for key in ("BindsTo", "After"):
     assert f"{key}={' '.join(units)}" in args
 assert "QEMUBOX_READY_TIMEOUT=180" in args
 PY

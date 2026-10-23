@@ -132,7 +132,7 @@ Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
         Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
 Lifecycle: each VM is the systemd user unit qemubox@<name>; it stops after
            QEMUBOX_LINGER=1200 seconds with no session; disk survives until rm.
-Stop: qemubox stop powers the guest off (systemd stops qemu after 100s);
+Stop: qemubox stop powers the guest off (systemd kills qemu after 10s);
       -f sends qemu SIGTERM at once.
 Prune: stop VMs with no session for 4 hours; reclaim unused bases.
 Remove: rm --stopped <hours> removes VMs stopped for over that many whole hours.
@@ -706,6 +706,7 @@ start_box() {
         if ! systemd-run --user --collect --quiet --service-type=exec \
             --expand-environment=no \
             --unit="${fs_units[-1]}" -p "PartOf=$(box_unit "$name")" \
+            -p "ExecStopPost=:/usr/bin/rm -f \"$dir/$tag.sock\"" \
             "$virtiofsd" --socket-path="$dir/$tag.sock" \
             --shared-dir="${mount_srcs[$i]}" --sandbox=none "${ro[@]}"
         then
@@ -714,8 +715,9 @@ start_box() {
         fi
     done
     systemd-run --user --collect --quiet --unit="$(box_unit "$name")" \
-        -p "Wants=${fs_units[*]}" -p "After=${fs_units[*]}" \
-        -p TimeoutStartSec="${QEMUBOX_READY_TIMEOUT:-180}" -p TimeoutStopSec=100 \
+        -p "BindsTo=${fs_units[*]}" -p "After=${fs_units[*]}" \
+        -p TimeoutStartSec="${QEMUBOX_READY_TIMEOUT:-180}" \
+        -p TimeoutStopSec=10 -p TimeoutStopFailureMode=kill \
         -p "ExecStartPost=/bin/bash \"$SELF\" _ready $name" \
         -p "ExecStop=/bin/bash \"$SELF\" _stop $name" \
         -p "ExecStopPost=/bin/bash \"$SELF\" _cleanup $name" \
@@ -874,8 +876,14 @@ fi'
 }
 
 shutdown_box() {
+    local tag
     name="$(box_name "$1")"
     kill -0 "${MAINPID:-}" 2>/dev/null || return 0
+    while IFS=$'\t' read -r tag _
+    do
+        systemctl --user is-active --quiet \
+            "qemubox-fs@$name-$tag.service" || return 0
+    done < "$(box_dir "$name")/config/mounts"
     qmp_box "$name" cont >/dev/null || note "cannot resume qemubox-$name over QMP"
     ssh_plain_box "$name" sudo fstrim / >/dev/null ||
         note "cannot trim the disk of qemubox-$name"
@@ -890,7 +898,8 @@ shutdown_box() {
 stop_box() {
     if [ "${2:-}" = force ]
     then
-        systemctl --user kill -s SIGTERM "$(box_unit "$1")" || return
+        systemctl --user kill --kill-who=main -s SIGTERM \
+            "$(box_unit "$1")" || return
     fi
     systemctl --user stop "$(box_unit "$1")"
 }

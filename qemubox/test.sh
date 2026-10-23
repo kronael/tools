@@ -191,7 +191,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
     grep -qF -- "-E QEMUBOX_HOME=$ROOT -E QEMUBOX_MEM=24576 -E QEMUBOX_CPUS=4 -E QEMUBOX_QEMU=qemu-system-x86_64 " "$systemd_log"
-    grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=100' "$systemd_log"
+    grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=10 -p TimeoutStopFailureMode=kill' "$systemd_log"
     grep -qFx "$PROJ"$'\t'"$PROJ"$'\t'rw \
         < <(cut -f2- "$ROOT/identitybox/config/mounts")
     [ "$(tail -1 "$ROOT/identitybox/config/mounts")" = \
