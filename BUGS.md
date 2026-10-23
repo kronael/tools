@@ -1158,6 +1158,12 @@
 
 ## Root Makefile
 
+- **ROOT-MAKE-FORCED-CI-TREATS-TEMPLATE-AS-PROJECT** (LOW, config) — open,
+  no test — config. `make -B gen-ci` selects the root `test-%` pattern
+  while remaking `.github/templates/test-go.yml.tmpl`. The recipe runs
+  `make -C .github/templates/go.yml.tmpl test` and fails before generating CI.
+  **Fix:** constrain project test targets so template names cannot match them.
+
 - **ROOT-MAKE-CLEAN-UNINSTALLS** (LOW, docs) — CONFIRMED 2026-10-10, no
   test — docs. Root `make clean` runs each project's `clean`; `bhctl`,
   `qemubox` and `rig` delete their installed binaries (and rig's symlinks),
