@@ -42,7 +42,7 @@ ENV DEVCONTAINER=true \
     DOTNET_ROOT=/opt/dev-tools/dotnet \
     PATH=/usr/local/bin:/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/opt/dev-tools/dotnet:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
-RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
+RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace
 
 WORKDIR /workspace
 
@@ -144,10 +144,7 @@ unset NPM_CONFIG_PREFIX\n\
 exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
 
-COPY dockbox/dockbox-init dockbox/dockbox-docker \
-    dockbox/dockbox-codex-bridge /usr/local/bin/
-
-RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox
+RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace
 
 ARG RIPWIRE_VERSION=0.6.5
 ENV UV_PYTHON_INSTALL_DIR=/opt/dev-tools/uv/python \
@@ -181,8 +178,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && ripwire --version \
   && chmod -R a+rwX /opt/dev-tools/uv /opt/dev-tools/serena
 
-COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
-
 ARG AGENTS_CACHEBUST=0
 RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
   && bun install -g --trust @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
@@ -196,6 +191,10 @@ RUN printf '%s\n' \
     'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' \
     'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' \
     >> /etc/ssh/ssh_known_hosts
+
+COPY dockbox/dockbox-init dockbox/dockbox-docker \
+    dockbox/dockbox-codex-bridge /usr/local/bin/
+COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
 
 FROM dockbox AS vm
 
