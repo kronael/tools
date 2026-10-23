@@ -32,6 +32,7 @@ Python-specific additions and deltas.
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
+- ALWAYS write an `Enum` member's value, `LIVE = 1` — NEVER `auto()`. Lint `py-no-enum-auto`.
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any  # noqa: ANN401` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 - NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
 - NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
@@ -86,16 +87,14 @@ Python-specific additions and deltas.
   the boundary.
 - For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
   on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
-  Lint `py-no-str-case-dispatch`.
+  Lint `py-no-str-case-dispatch`. NEVER a `KIND`/`VERSION` `ClassVar` on a variant: its stored
+  format's version is its module's name, `depth_v1.py`.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
 - ALWAYS decode and encode external payloads through the project's one codec (its lib
   `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
   structurer drifts from the first.
-- A wire or storage encoding that is not the plain field map (positional lists, short keys) lives
-  one module per type, like route handlers: the dataclass carries `KIND`/`VERSION` `ClassVar`s
-  (`quote/1` → `'quote'`, `1`), the module its `encode`/`decode`. NEVER one function over kind strings.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a
@@ -160,7 +159,7 @@ Python-specific additions and deltas.
 
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
-  `py-no-lambda-default-factory`, `py-no-property`, `py-bool-fn-prefix`
+  `py-no-lambda-default-factory`, `py-no-property`, `py-no-enum-auto`, `py-bool-fn-prefix`
   (`software/code.md` § Naming), `py-no-str-case-dispatch`, `py-no-dict-call` (overlaps ruff
   `C408` only because `C408` cannot spare the call-argument form). ruff owns the rest — NEVER duplicate a ruff rule here.
 

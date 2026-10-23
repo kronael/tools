@@ -122,3 +122,22 @@ rule:
 message: "NEVER dict(a=1) for a value built in place — write the {'a': 1} literal, or an Enum for a closed set of names. Allowed only as a call argument,\
     \ f(extra=dict(a=1)). See skill:py."
 note: 'source: skills/py/SKILL.md — Style'
+---
+id: py-no-enum-auto
+language: python
+severity: warning
+rule:
+    kind: call
+    any:
+        - pattern: auto()
+        - pattern: enum.auto()
+    inside:
+        kind: assignment
+        inside:
+            kind: expression_statement
+            inside:
+                kind: block
+                inside:
+                    kind: class_definition
+message: NEVER an Enum member = auto() — write the value, LIVE = 1. See skill:py.
+note: 'source: skills/py/SKILL.md — Type Annotations'

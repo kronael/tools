@@ -139,6 +139,13 @@ your diff against every `##` heading here before calling an edit done.
   string or a map key, and NEVER a map of untyped values (`dict[str, Any]`,
   `map[string]any`) as a data shape: external JSON is parsed into the variants
   where it enters, and nothing past that boundary sees the raw form.
+- ALWAYS make a stored or wire format's version part of a name and nothing
+  else: the module of the record and its encoder (`depth_v1.py`) and the
+  kind string that encoder writes once (`'depth/1'`). The record keeps a plain
+  name (`Depth`) and no kind or version constant, typed code passes records,
+  and no code builds, compares or looks up a kind or version string. A new
+  version is a new module beside the old one; a decoder only tests use lives
+  in the tests.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
