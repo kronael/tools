@@ -1221,6 +1221,25 @@
   them and `~/.codex/memories` is empty. **Fix:** turn memories off for the
   guest Codex, or keep its memory files on the guest disk too.
 
+- **QEMUBOX-IMPORT-REMOTE-DOCKER-BIND-MOUNT** (MED, config) — open (record
+  only); inferred from Docker's bind-mount contract, not reproduced.
+  `qemubox/qemubox:997` mounts the caller's temp dir (`-v "$tmp:/qemubox"`)
+  into the import container, and `rootfs.tar` is written there locally
+  (`:988`). Against a remote daemon (`DOCKER_HOST` or a remote context) the
+  source path resolves on the daemon host, so the importer finds no archive
+  and the base build fails. **Fix:** stream the tar through the container's
+  stdin and the raw image out through stdout, or document local Docker as a
+  requirement; no test — config, needs a remote daemon.
+
+- **QEMUBOX-IMPORT-USERNS-REMAP-TMP-PERMS** (MED, config) — open (record
+  only); inferred from Docker's userns-remap contract, not reproduced.
+  `qemubox/qemubox:996` runs the importer as `--user 0:0`. With
+  `userns-remap` that is an unprivileged host UID, which cannot traverse the
+  caller-owned mode-`0700` temp dir, so the import fails with permission
+  denied. **Fix:** pass `--userns host` for the import container, or make the
+  temp dir reachable to the remapped UID; no test — config, needs a daemon
+  with `userns-remap`.
+
 ## diskclean
 
 - **DISKCLEAN-LINKED-TOOLCHAIN** (HIGH, data loss) — level 2 uninstalls a
