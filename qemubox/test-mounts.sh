@@ -28,9 +28,12 @@ echo history-test >> "$ROOT/testbox/history/history"
 eq "history writes reach host" "$(cat "$HOME/.dockbox_history")" "history-test"
 mount_args=$(qemu_mount_args)
 for i in "${!mount_tags[@]}"; do
-    ro=""; [ "${mount_modes[$i]}" = ro ] && ro=",readonly=on"
-    true_ "qemu export ${mount_dests[$i]}" 'grep -Fxq "local,path=${mount_srcs[$i]},mount_tag=${mount_tags[$i]},security_model=none$ro" <<< "$mount_args"'
+    true_ "qemu socket ${mount_dests[$i]}" \
+        'grep -Fxq "socket,id=${mount_tags[$i]},path=${mount_tags[$i]}.sock" <<< "$mount_args"'
+    true_ "qemu device ${mount_dests[$i]}" \
+        'grep -Fxq "vhost-user-fs-pci,queue-size=1024,chardev=${mount_tags[$i]},tag=${mount_tags[$i]}" <<< "$mount_args"'
 done
+false_ "virtiofs exports use no -virtfs" 'grep -q -- -virtfs <<< "$mount_args"'
 
 printf '{"fixture":true}\n' > "$HOME/.claude.json"
 stage_host_cfg "$ROOT/testbox/hostcfg"
@@ -131,7 +134,54 @@ exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find
 exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
     "failed tmp mount stops launch"
 exits 32 'set -e; ssh_plain_box() { case "$2" in *"sudo mount"*) return 32;; esac; }; mount_host_paths testbox' \
-    "failed 9p mount stops launch"
+    "failed virtiofs mount stops launch"
 tab_dir="$fixture/tab"$'\t'"dir"
 mkdir -p "$tab_dir"
 exits 2 'add_mount "$tab_dir" /x rw' "a tab in a share path is refused"
+exits 2 'add_mount "$PROJ" "$tab_dir" rw' \
+    "a tab in a share destination is refused"
+newline_dir="$fixture/newline"$'\n'"dir"
+mkdir -p "$newline_dir"
+exits 2 'add_mount "$newline_dir" /x rw' \
+    "a newline in a share source is refused"
+exits 2 'add_mount "$PROJ" "$newline_dir" rw' \
+    "a newline in a share destination is refused"
+comma_dir="$fixture/comma,dir"
+mkdir -p "$comma_dir"
+true_ "commas in share paths are accepted" \
+    'reset_mounts; add_mount "$comma_dir" /comma,dest ro; [ "${mount_srcs[0]}" = "$comma_dir" ] && [ "${mount_dests[0]}" = /comma,dest ]'
+
+guest_virtiofs_test() {
+    reset_mounts
+    add_mount "$PROJ" /readonly ro
+    add_mount "$PROJ" /writable rw
+    add_mount "$PROJ" /run/qemubox/config ro required cfg
+    setup_mount_path() { :; }
+    ssh_plain_box() { printf '%s\n' "$2" >> "$fixture/virtiofs-guest"; }
+    mount_host_paths vm
+    grep -Fxq 'mountpoint -q /readonly || sudo mount -t virtiofs -o ro qbx0 /readonly' \
+        "$fixture/virtiofs-guest"
+    grep -Fxq 'mountpoint -q /writable || sudo mount -t virtiofs -o rw qbx1 /writable' \
+        "$fixture/virtiofs-guest"
+    ! grep -q '/run/qemubox/config' "$fixture/virtiofs-guest"
+}
+regression "guest mounts virtiofs with each mode and keeps the boot config mount" \
+    guest_virtiofs_test
+
+canonical_newline_test() {
+    untrusted=1
+    dirs=()
+    extra_modes=(ro)
+    mkdir -p "$fixture/target" "$fixture/target"$'\n'
+    ln -s "$fixture/target"$'\n' "$fixture/volume-link"
+    extra_dirs=("$fixture/volume-link")
+    if (assemble_mounts) 2> "$fixture/canonical-error"
+    then
+        return 1
+    else
+        [ "$?" = 2 ]
+    fi
+    grep -q 'containing tab or newline' "$fixture/canonical-error"
+}
+regression "a canonical share path keeps its trailing newline and refuses the prefix path" \
+    canonical_newline_test

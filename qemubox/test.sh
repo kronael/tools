@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Unit tests for qemubox's pure helpers. Sources the script with QEMUBOX_LIB=1
-# so the CLI never runs and no VM is booted; asserts the security-load-bearing
-# behavior (name guard, rm matcher, -v path parse, port derivation, and the
-# per-flag 9p mount matrix).
 set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -26,7 +22,23 @@ systemctl() {
         show) echo "${memory_current:-[not set]}" ;;
     esac
 }
-systemd-run() { printf 'systemd-run %s\n' "$*" >> "$systemd_log"; }
+systemd-run() {
+    printf 'systemd-run %s\n' "$*" >> "$systemd_log"
+    local arg
+    for arg in "$@"
+    do
+        case "$arg" in
+            --socket-path=*)
+                python3 - "${arg#*=}" <<'PY'
+import socket
+import sys
+with socket.socket(socket.AF_UNIX) as sock:
+    sock.bind(sys.argv[1])
+PY
+                ;;
+        esac
+    done
+}
 journalctl() { printf 'journalctl %s\n' "$*" >> "$systemd_log"; }
 loginctl() { echo yes; }
 ss() { :; }
@@ -180,7 +192,10 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     unlock_box
     grep -qF -- "-E QEMUBOX_HOME=$ROOT -E QEMUBOX_MEM=24576 -E QEMUBOX_CPUS=4 -E QEMUBOX_QEMU=qemu-system-x86_64 " "$systemd_log"
     grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=100' "$systemd_log"
-    [ "$(tail -1 "$ROOT/identitybox/config/mounts" | cut -f2-)" = "$PROJ"$'\t'"$PROJ"$'\t'rw ]
+    grep -qFx "$PROJ"$'\t'"$PROJ"$'\t'rw \
+        < <(cut -f2- "$ROOT/identitybox/config/mounts")
+    [ "$(tail -1 "$ROOT/identitybox/config/mounts")" = \
+        cfg$'\t'"$ROOT/identitybox/config"$'\t'/run/qemubox/config$'\t'ro ]
     [ "$(cat "$ROOT/identitybox/net")" = off ]
     grep -q 'CLAUDE_SANDBOX=qemubox' "$ROOT/identitybox/config/CLAUDE.md"
     echo retained > "$ROOT/identitybox/disk.qcow2"
@@ -191,11 +206,17 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- '-initrd' "$fixture/qemu.args"
     grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
-    grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    grep -Fx -- "local,path=$PROJ,mount_tag=$(tail -1 "$ROOT/identitybox/config/mounts" | cut -f1),security_model=none" "$fixture/qemu.args"
+    grep -Fx -- 'socket,id=cfg,path=cfg.sock' "$fixture/qemu.args"
+    grep -Fx -- 'vhost-user-fs-pci,queue-size=1024,chardev=cfg,tag=cfg' \
+        "$fixture/qemu.args"
+    grep -Fx -- 'memory-backend-memfd,id=mem,size=24576M,share=on' \
+        "$fixture/qemu.args"
+    grep -Fx -- node,memdev=mem "$fixture/qemu.args"
+    [ "$(grep -Fxc -- -chardev "$fixture/qemu.args")" = \
+        "$(wc -l < "$ROOT/identitybox/config/mounts")" ]
     grep -Fx -- "user,model=virtio,restrict=on,hostfwd=tcp:127.0.0.1:$(cat "$ROOT/identitybox/port")-:22" "$fixture/qemu.args"
     [ "$(grep -A1 -Fx -- -serial "$fixture/qemu.args" | tail -1)" = stdio ]
-    if grep -qE -- '^-(daemonize|pidfile)$|seed.iso' "$fixture/qemu.args"; then exit 1; fi
+    if grep -qE -- '^-(virtfs|daemonize|pidfile)$|seed.iso' "$fixture/qemu.args"; then exit 1; fi
     : > "$systemd_log"
     systemctl() { printf 'systemctl %s\n' "$*" >> "$systemd_log"; echo active; }
     qmp_box() { echo running; }

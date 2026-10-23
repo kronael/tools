@@ -81,7 +81,7 @@ plugins_test() {
     run_assemble
     [ "$(mount_mode "$HOME/.claude/plugins")" = ro ]
 }
-regression "plugins have a readonly 9p export" plugins_test
+regression "plugins have a readonly virtiofs export" plugins_test
 
 rc_test() {
     reset_mounts; add_mount "$PROJ" "$PROJ" rw

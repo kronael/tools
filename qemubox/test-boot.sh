@@ -60,3 +60,58 @@ explicit_mount_test() {
     grep -q missing-volume "$fixture/volume-error"
 }
 regression "missing explicit volume fails even in a conditional caller" explicit_mount_test
+
+socket_wait_test() {
+    regression_setup
+    untrusted=1
+    ensure_box sockets
+    echo off > "$ROOT/sockets/net"
+    printf 'qbx0\t%s\t/first\trw\ncfg\t%s\t/run/qemubox/config\tro\n' \
+        "$PROJ" "$ROOT/sockets/config" > "$ROOT/sockets/config/mounts"
+    if (QEMUBOX_READY_TIMEOUT=0 QEMU="$fake_qemu" \
+        QEMU_ARGS="$fixture/socket-qemu" run_qemu sockets) \
+        2> "$fixture/socket-error"
+    then
+        return 1
+    fi
+    grep -q 'Timed out waiting for virtiofs socket .*qbx0.sock' \
+        "$fixture/socket-error"
+    [ ! -e "$fixture/socket-qemu" ]
+    python3 - "$ROOT/sockets" <<'PY'
+import pathlib
+import socket
+import sys
+
+with socket.socket(socket.AF_UNIX) as sock:
+    sock.bind(str(pathlib.Path(sys.argv[1]) / "qbx0.sock"))
+PY
+    if (QEMUBOX_READY_TIMEOUT=0 QEMU="$fake_qemu" \
+        QEMU_ARGS="$fixture/socket-qemu" run_qemu sockets) \
+        2> "$fixture/socket-error"
+    then
+        return 1
+    fi
+    grep -q 'Timed out waiting for virtiofs socket .*cfg.sock' \
+        "$fixture/socket-error"
+    [ ! -e "$fixture/socket-qemu" ]
+    python3 - "$ROOT/sockets" <<'PY' &
+import pathlib
+import socket
+import sys
+import time
+
+time.sleep(0.2)
+with socket.socket(socket.AF_UNIX) as sock:
+    sock.bind(str(pathlib.Path(sys.argv[1]) / "cfg.sock"))
+PY
+    local binder=$!
+    (MEM=768 QEMUBOX_READY_TIMEOUT=3 QEMU="$fake_qemu" \
+        QEMU_ARGS="$fixture/socket-qemu" run_qemu sockets)
+    wait "$binder"
+    grep -Fxq 'memory-backend-memfd,id=mem,size=768M,share=on' \
+        "$fixture/socket-qemu"
+    [ "$(grep -A1 -Fx -- -m "$fixture/socket-qemu" | tail -1)" = 768 ]
+    [ "$(grep -Fxc -- -chardev "$fixture/socket-qemu")" = 2 ]
+}
+regression "QEMU waits for every socket within one deadline and uses configured shared RAM" \
+    socket_wait_test

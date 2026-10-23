@@ -36,6 +36,28 @@ esac
 STUB
     chmod +x "$STUB/bin/ssh"
     export PATH="$STUB/bin:$PATH"
+    for suffix in $'\t' $'\n'
+    do
+        invalid_path="$PROJ$suffix"
+        mkdir -p "$invalid_path"
+        for mode in volume project
+        do
+            if [ "$mode" = volume ]
+            then
+                invalid_args=(-v "$invalid_path" "$PROJ")
+            else
+                invalid_args=("$invalid_path")
+            fi
+            if bash "$here/qemubox" "${invalid_args[@]}" \
+                </dev/null > "$STUB/output" 2>&1
+            then
+                exit 1
+            else
+                [ "$?" = 2 ]
+            fi
+            grep -q 'containing tab or newline' "$STUB/output"
+        done
+    done
     printf '%s\n' '-n global' '-d codex' > "$HOME/.qemuboxrc"
     bash "$here/qemubox" -g -e MYSECRET -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
     grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh$' \
@@ -80,6 +102,9 @@ STUB
         [ "$?" = 17 ]
     fi
     unset STUB_RC
+    bash "$here/qemubox" -n cli -d exec printf '%s' $'first\nsecond' \
+        </dev/null > "$STUB/output" 2>&1
+    grep -Fq -- "exec printf %s \$'first\\nsecond'" "$STUB/command"
     rm "$QEMUBOX_HOME/cli/idle"
     for linger in 1234567890 12x -1
     do

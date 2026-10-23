@@ -246,8 +246,7 @@ RUN printf '%s\n' \
     '' \
     'printf '"'"'127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s\n'"'"' "$(cat /proc/sys/kernel/hostname)" > /etc/hosts' \
     'mkdir -p /run/qemubox/config' \
-    'modprobe -a 9p 9pnet_virtio' \
-    'mount -t 9p -o trans=virtio,version=9p2000.L,ro qbxcfg /run/qemubox/config' \
+    'mount -t virtiofs -o ro cfg /run/qemubox/config' \
     '{' \
     '    read -r username' \
     '    read -r user_uid' \

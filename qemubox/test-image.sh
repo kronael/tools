@@ -82,9 +82,12 @@ timezone_test() {
     cp "$ROOT/timezone/config/identity" "$fixture/zone/run/qemubox/config/identity"
     sed '/^passwd_entry=/,$d' "$image_init" |
         sed "s|/etc/|$fixture/zone/etc/|g; s|/run/|$fixture/zone/run/|g; s|/proc/sys/kernel/hostname|/dev/null|g" > "$fixture/zone-init"
-    modprobe() { :; }; mount() { :; }
-    export -f modprobe mount
+    mount() { printf '%s\n' "$*" >> "$fixture/image-mounts"; }
+    export -f mount
+    export fixture
     bash "$fixture/zone-init"
+    grep -Fxq -- "-t virtiofs -o ro cfg $fixture/zone/run/qemubox/config" \
+        "$fixture/image-mounts"
     [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
     if grep -q '^RUN for key in TZ ' "$here/Dockerfile"; then exit 1; fi
 }

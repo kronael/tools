@@ -88,17 +88,16 @@ source = sys.argv[2]
 command = args[index:]
 assert subprocess.check_output(command, text=True) == "_vm\nvm\n"
 assert command == ["/bin/bash", source, "_vm", "vm"]
-for key, action in (("ExecStartPost", "_ready"), ("ExecStop", "_stop")):
+for key, action in (("ExecStartPost", "_ready"), ("ExecStop", "_stop"),
+                    ("ExecStopPost", "_cleanup")):
     command = shlex.split(properties[key])
     assert subprocess.check_output(command, text=True) == f"{action}\nvm\n"
     assert command == ["/bin/bash", source, action, "vm"]
 stopped = pathlib.Path(sys.argv[3])
 assert not stopped.exists()
-command = shlex.split(properties["ExecStopPost"])
-assert command == ["/usr/bin/touch", str(stopped)]
-subprocess.run(command, check=True)
-assert stopped.is_file()
 PY
+    cleanup_box vm
+    [ -f "$ROOT/vm/stopped" ]
 }
 regression "unit commands run a non-executable source with spaces and stamp stop completion" \
     service_commands_test
@@ -254,6 +253,9 @@ regression "_ready sets up the guest from box files, stamps idle, arms the check
 
 linger_test() {
     command() { return 0; }
+    find_virtiofsd() { echo "$fixture/readonly-virtiofsd"; }
+    printf '#!/bin/sh\necho --readonly\n' > "$fixture/readonly-virtiofsd"
+    chmod +x "$fixture/readonly-virtiofsd"
     loginctl() { echo no; }
     if (missing_deps) 2> "$fixture/linger.err"; then exit 1; fi
     grep -q "loginctl enable-linger $(id -un)" "$fixture/linger.err"
@@ -261,6 +263,131 @@ linger_test() {
     (missing_deps)
 }
 regression "launch requires lingering and names the command" linger_test
+
+virtiofsd_deps_test() {
+    mkdir -p "$fixture/bin"
+    printf '#!/bin/sh\necho --readonly\n' > "$fixture/bin/virtiofsd"
+    chmod +x "$fixture/bin/virtiofsd"
+    PATH="$fixture/bin:$PATH"
+    [ "$(find_virtiofsd)" = "$fixture/bin/virtiofsd" ]
+    command() {
+        if [ "$1" = -v ] && [ "$2" = virtiofsd ]
+        then
+            printf '%s\n' "$fixture/bin/virtiofsd"
+        fi
+    }
+    loginctl() { echo yes; }
+    (missing_deps)
+    printf '#!/bin/sh\necho legacy-help\n' > "$fixture/bin/virtiofsd"
+    if (missing_deps) 2> "$fixture/readonly-error"
+    then
+        return 1
+    fi
+    grep -q 'needs --readonly support' "$fixture/readonly-error"
+    find_virtiofsd() { return 1; }
+    if (missing_deps) 2> "$fixture/missing-virtiofsd"
+    then
+        return 1
+    fi
+    grep -qx 'Missing: virtiofsd' "$fixture/missing-virtiofsd"
+}
+regression "PATH virtiofsd wins; missing and writable-only daemons refuse launch" \
+    virtiofsd_deps_test
+
+share_units_test() {
+    regression_setup
+    untrusted=1
+    mkdir -p "$fixture/unit,share \$literal"
+    assemble_mounts() {
+        reset_mounts
+        add_mount "$fixture/unit,share \$literal" /readonly ro
+        add_mount "$PROJ" /writable rw
+    }
+    find_virtiofsd() { echo /fake/virtiofsd; }
+    missing_deps() { :; }
+    local calls=0
+    systemd-run() {
+        calls=$((calls + 1))
+        printf '%s\0' "$@" > "$fixture/share-unit-$calls"
+    }
+    start_box shares
+    unlock_box
+    python3 - "$fixture" "$ROOT/shares" <<'PY'
+import pathlib
+import sys
+
+fixture, box = map(pathlib.Path, sys.argv[1:])
+units = [f"qemubox-fs@shares-{tag}.service" for tag in ("qbx0", "qbx1", "cfg")]
+for n, (tag, source, readonly) in enumerate([
+    ("qbx0", fixture / "unit,share $literal", True),
+    ("qbx1", fixture / "proj", False),
+    ("cfg", box / "config", True),
+], 1):
+    args = (fixture / f"share-unit-{n}").read_bytes().decode().split("\0")[:-1]
+    assert f"--unit=qemubox-fs@shares-{tag}.service" in args
+    assert "--service-type=exec" in args
+    assert "--expand-environment=no" in args
+    assert "PartOf=qemubox@shares.service" in args
+    command = args[args.index("/fake/virtiofsd"):]
+    expected = ["/fake/virtiofsd", f"--socket-path={box}/{tag}.sock",
+                f"--shared-dir={source}", "--sandbox=none"]
+    if readonly:
+        expected.append("--readonly")
+    assert command == expected, command
+args = (fixture / "share-unit-4").read_bytes().decode().split("\0")[:-1]
+for key in ("Wants", "After"):
+    assert f"{key}={' '.join(units)}" in args
+assert "QEMUBOX_READY_TIMEOUT=180" in args
+PY
+    : > "$systemd_log"
+    cleanup_box shares
+    [ "$(cat "$systemd_log")" = \
+        'systemctl --user stop --no-block qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service' ]
+    [ -f "$ROOT/shares/stopped" ]
+}
+regression "share units enforce readonly, include cfg, order QEMU and stop at teardown" \
+    share_units_test
+
+share_failure_test() {
+    regression_setup
+    untrusted=1
+    assemble_mounts() {
+        reset_mounts
+        add_mount "$PROJ" /first rw
+        add_mount "$PROJ" /second ro
+    }
+    missing_deps() { :; }
+    find_virtiofsd() { echo /fake/virtiofsd; }
+    local failed=qemubox-fs@shares-qbx1.service
+    systemd-run() {
+        printf '%s\n' "$*" >> "$fixture/share-failure-units"
+        [[ " $* " != *" --unit=$failed "* ]]
+    }
+    : > "$systemd_log"
+    if start_box shares
+    then
+        return 1
+    fi
+    unlock_box
+    grep -Fxq \
+        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service' \
+        "$systemd_log"
+    ! grep -q 'shares-cfg' "$systemd_log"
+    ! grep -q -- '--unit=qemubox@shares.service' "$fixture/share-failure-units"
+    failed=qemubox@shares.service
+    : > "$systemd_log"
+    if start_box shares
+    then
+        return 1
+    fi
+    unlock_box
+    grep -Fxq \
+        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service' \
+        "$systemd_log"
+    grep -q 'journalctl --user -u qemubox@shares.service' "$systemd_log"
+}
+regression "daemon startup failure and VM startup failure stop every started share" \
+    share_failure_test
 
 (
     set -e

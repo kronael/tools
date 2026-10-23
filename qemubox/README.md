@@ -32,11 +32,12 @@ System packages:
 
 ```sh
 # Debian
-sudo apt install qemu-system-x86 qemu-utils openssh-client tar python3 libarchive-tools e2fsprogs docker.io docker-cli
+sudo apt install qemu-system-x86 qemu-utils virtiofsd openssh-client tar python3 \
+    libarchive-tools e2fsprogs docker.io docker-cli
 # Arch
-sudo pacman -S qemu-base openssh tar python libarchive e2fsprogs docker
+sudo pacman -S qemu-base virtiofsd openssh tar python libarchive e2fsprogs docker
 # Fedora
-sudo dnf install qemu openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
+sudo dnf install qemu virtiofsd openssh-clients tar python3 bsdtar e2fsprogs moby-engine docker-cli
 ```
 
 The build needs Docker, `bsdtar` from libarchive, and an e2fsprogs whose
@@ -48,10 +49,13 @@ per base on the state filesystem.
 KVM acceleration needs read and write access to `/dev/kvm`. Without it qemubox falls back to slow
 software emulation.
 
-Each VM is a systemd user unit. A launch needs `systemctl --user` to answer,
+Each VM is a systemd user unit. A launch needs systemd 254 or newer,
+`systemctl --user` to answer,
 `ss` from iproute2, and lingering, without which the user manager stops every
 VM at your last logout. A launch refuses to start without lingering; enable it
 once with `loginctl enable-linger $(id -un)`.
+The launcher finds `virtiofsd` in PATH, `/usr/lib/virtiofsd`, or
+`/usr/libexec/virtiofsd`. The daemon must support `--readonly`.
 
 ## Usage
 
@@ -110,6 +114,11 @@ lingering on (see Install). qemu runs in the foreground; its serial console
 goes to `journalctl --user -u qemubox@<name>`. A box starts on first use and
 the start waits for guest setup, at most `QEMUBOX_READY_TIMEOUT` seconds
 (default 180); a failed boot stops the unit and prints the journal tail.
+Each directory share has a user unit, `qemubox-fs@<name>-<tag>.service`,
+including the read-only `cfg` share. QEMU starts after these units and waits
+for their sockets. Stopping the VM stops its share units, including after
+a failed boot. A failed share daemon leaves the VM running and makes that
+share unavailable.
 
 Sessions are the established SSH connections to the box's forwarded port.
 Boot and every session exit stamp the box's `idle` file with `QEMUBOX_LINGER`
@@ -172,8 +181,8 @@ in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
 guest. Process memory is not counted against the cap.
 Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
 `CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
-guest `/tmp`, because 9p gives the guest no shared mmap and no lock shared
-with the host. A `sqlite_home` key in `~/.codex/config.toml` overrides the
+guest `/tmp` to keep its SQLite locks separate from the host.
+A `sqlite_home` key in `~/.codex/config.toml` overrides the
 variable. At shutdown the databases disappear with any prompts still queued in
 them; Codex rebuilds its thread index from `~/.codex/sessions` at the next
 start.
@@ -188,7 +197,7 @@ shutdown. A failed mount stops launch.
 
 Default host access includes:
 
-1. **Your project dir(s)** — 9p-mounted at their real host paths, read-write,
+1. **Your project dir(s)** — virtiofs-mounted at their real host paths, read-write,
    including `.git`. `-v path` adds an extra read-only mount, `-v path:rw` a
    read-write one. `-T` mounts no project dir.
 2. **Your agent config** — `~/.claude`, `~/.codex`, `~/.agents` (settings, credentials, skills,
@@ -202,7 +211,7 @@ Default host access includes:
 
 Every session variable — the agent tokens, `-g`'s `GH_TOKEN`/`GITHUB_TOKEN`, `-D`'s
 `DOCKER_HOST`, each `-e VAR` — travels over SSH stdin into a per-session file in the guest's
-`/dev/shm` (mode 0600, guest tmpfs outside every 9p mount). The session sources and deletes it
+`/dev/shm` (mode 0600, guest tmpfs outside every virtiofs mount). The session sources and deletes it
 before it starts the tool, so no value reaches an SSH command line, which every host user can
 read in `/proc`.
 
