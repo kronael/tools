@@ -1084,6 +1084,21 @@
 
 ## qemubox
 
+- **QEMUBOX-MAN-CACHE-OWNERSHIP** (LOW, ops) — confirmed in the production
+  guest, no test — ops. The rootfs export collapses every image owner to
+  guest root in `qemubox/qemubox:900`. The man-db trigger runs as `man` and
+  cannot update the root-owned directories under `/var/cache/man`; package
+  installation succeeds but prints permission errors. **Fix:** give the
+  manual cache its service ownership on the writable guest filesystem.
+
+- **QEMUBOX-ACCELERATION-LOG-USES-LAUNCHER-GROUPS** (LOW, ops) — open,
+  no test — ops. `start_box` checks KVM access in the launcher while
+  `run_qemu` checks it in the user manager at `qemubox/qemubox:623,723`.
+  When only the manager has a newly added KVM group, the launcher says
+  software emulation but QEMU runs with `-enable-kvm`. **Fix:** report
+  acceleration from the process that starts QEMU. Deferred as a temporary
+  group-membership mismatch.
+
 - **QEMUBOX-KERNEL-PRUNE-DURING-LAUNCH** (LOW, ops) — open, no test — ops.
   `run_qemu` reads `base/kernel/current` before it waits for share sockets
   at `qemubox/qemubox:708`. A concurrent kernel rebuild can publish a new
