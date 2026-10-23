@@ -195,7 +195,16 @@ regression 'kernel source checksums reject changed input' kernel_checksum_test
 
 kernel_initrd_test() (
     export QEMUBOX_TEST_INITRD_LOG="$fixture/kernel-initrd.log"
-    busybox() { :; }
+    busybox() {
+        echo 'Absolute BusyBox path required' >&2
+        return 64
+    }
+    printf '%s\n' '#!/bin/sh' \
+        'printf "/bin/busybox %s\n" "$*" >> "$QEMUBOX_TEST_INITRD_LOG"' \
+        > "$fixture/kernel-busybox"
+    chmod +x "$fixture/kernel-busybox"
+    sed "s|^/bin/busybox |\"$fixture/kernel-busybox\" |" \
+        "$here/initrd-init" > "$fixture/kernel-initrd"
     mkdir() { :; }
     mount() {
         printf '%s\n' "$*" >> "$QEMUBOX_TEST_INITRD_LOG"
@@ -207,8 +216,9 @@ kernel_initrd_test() (
     }
     exec() { printf '%s\n' "$*" >> "$QEMUBOX_TEST_INITRD_LOG"; }
     export -f busybox mkdir mount exec
-    bash "$here/initrd-init"
+    bash "$fixture/kernel-initrd"
     cat > "$fixture/kernel-initrd.want" <<'MOUNTS'
+/bin/busybox --install -s /bin
 -t devtmpfs devtmpfs /dev
 -t proc proc /proc
 -t sysfs sysfs /sys
@@ -224,7 +234,7 @@ switch_root /root /usr/bin/tini -- /usr/local/bin/qemubox-init
 MOUNTS
     diff -u "$fixture/kernel-initrd.want" "$QEMUBOX_TEST_INITRD_LOG"
     : > "$QEMUBOX_TEST_INITRD_LOG"
-    if QEMUBOX_TEST_MOUNT_ERROR=1 bash "$here/initrd-init"
+    if QEMUBOX_TEST_MOUNT_ERROR=1 bash "$fixture/kernel-initrd"
     then
         exit 1
     else
