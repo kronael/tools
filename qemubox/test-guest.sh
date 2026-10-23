@@ -13,7 +13,7 @@ guest_mounts_test() {
     mkdir -p "$dir/project/space dir/node_modules"
     printf '%s\0' tmpfs "$dir/project/space dir/node_modules" \
         > "$dir/config/ephemeral"
-    awk '/^mount -t tmpfs .*size=75%/ {emit=1}
+    awk '/^tmp_kib=/ {emit=1}
         /^mkdir -p .*home_dir/ {exit} emit {print}' "$here/guest-init" |
         sed "s|/tmp/|$dir/tmp/|g;
              s| tmpfs /tmp$| tmpfs $dir/tmp|;
@@ -115,7 +115,8 @@ regression 'guest home shares guidance and history, with private sessions' \
 
 guest_services_test() (
     local dir="$fixture/guest-services" runner
-    mkdir -p "$dir"/{bin,sessions}
+    mkdir -p "$dir"/{bin,cgroup,sessions}
+    echo 0 > "$dir/cgroup/memory.current"
     cat > "$dir/bin/docker" <<'EOF'
 #!/bin/sh
 test -f "$QEMUBOX_TEST_SERVICES/docker-ready"
@@ -129,15 +130,28 @@ EOF
     chmod +x "$dir/bin/"*
     printf '%s\n' 'set -Eeuo pipefail' \
         'sshd_pid=""' \
+        'reclaim_pid=""' \
         'sleep 30 & docker_pid=$!' \
-        'trap '\''kill "$docker_pid" "$sshd_pid" 2>/dev/null || true'\'' EXIT' \
+        'trap '\''kill "$docker_pid" "$sshd_pid" "$reclaim_pid" 2>/dev/null || true'\'' EXIT' \
         > "$dir/services-init"
+    awk '/^reclaim_memory_loop\(\)/ {emit=1}
+        /^shutdown\(\)/ {exit} emit {print}' "$here/guest-init" |
+        sed "s|/sys/fs/cgroup/qemubox|$dir/cgroup|g" \
+        >> "$dir/services-init"
     awk '/^ssh-keygen -A/ {emit=1} emit {print}' "$here/guest-init" |
         sed "s|/usr/sbin/sshd|$dir/bin/sshd|g;
              s|/sys/fs/cgroup/qemubox/sessions|$dir/sessions|g;
              s|/run/qemubox/ready|$dir/ready|g" >> "$dir/services-init"
     ssh-keygen() { :; }
-    export -f ssh-keygen
+    sleep() {
+        if [[ "$1" = 60 ]]
+        then
+            command sleep 0.05
+        else
+            command sleep "$@"
+        fi
+    }
+    export -f ssh-keygen sleep
     export QEMUBOX_TEST_SERVICES="$dir"
     PATH="$dir/bin:$PATH" bash "$dir/services-init" > "$dir/output" 2>&1 &
     runner=$!
@@ -166,6 +180,20 @@ EOF
     fi
     grep -Fxq 'qemubox: ready' "$dir/output"
     grep -q 'required service exited with status ' "$dir/output"
+    rm "$dir/ready"
+    echo 9223372036854775807 > "$dir/cgroup/memory.current"
+    ln -s /dev/full "$dir/cgroup/memory.reclaim"
+    PATH="$dir/bin:$PATH" bash "$dir/services-init" > "$dir/output" 2>&1 &
+    runner=$!
+    if wait "$runner"
+    then
+        return 1
+    else
+        [[ "$?" = 1 ]]
+    fi
+    grep -q 'No space left on device' "$dir/output"
+    grep -q 'memory.reclaim failed:' "$dir/output"
+    grep -q 'required service exited with status 1' "$dir/output"
     trap - EXIT
 )
 regression 'Docker readiness and service exits govern guest supervision' \

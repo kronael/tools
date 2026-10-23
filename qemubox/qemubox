@@ -6,6 +6,7 @@ PATH="$PATH:/usr/sbin:/sbin"
 MEM="${QEMUBOX_MEM:-24576}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
+SWAP="${QEMUBOX_SWAP-16384}"
 LINGER="${QEMUBOX_LINGER:-1200}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
@@ -121,12 +122,15 @@ Sandbox note: /etc/claude-code/CLAUDE.md (written at boot) tells the agent it
 is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 
 Environment: QEMUBOX_MEM=24576 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
+             QEMUBOX_SWAP=16384 MiB on guest ext4; 0 disables
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
-Memory: the host backs guest RAM as the guest touches it and takes freed pages
-        back (virtio-balloon free page reporting). Guest /tmp is a tmpfs capped
-        at 75% of RAM. /tmp/cargo-target and the build-dir mounts live on it,
-        so a full /tmp gives ENOSPC, not an out-of-memory guest. Process
-        memory is not counted against the cap.
+Memory: the host backs guest RAM as the guest touches it. Free-page reporting
+        can return freed pages, subject to QEMU and virtiofs support.
+        Guest /tmp is a tmpfs capped at 75% of RAM and active swap combined.
+        /tmp/cargo-target and the build-dir
+        mounts share this cap. Process memory also needs RAM or swap.
+        Every 60s, guest reclaim requests at most 1 GiB from workloads above
+        half of guest RAM. Swap size stays fixed once allocated.
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
@@ -274,7 +278,16 @@ check_trust() {
     }
 }
 
+validate_swap() {
+    [[ "$SWAP" =~ ^[0-9]{1,9}$ ]] || {
+        echo 'QEMUBOX_SWAP must be MiB as 1 to 9 digits; 0 disables swap' >&2
+        return 2
+    }
+    SWAP=$((10#$SWAP))
+}
+
 ensure_box() {
+    validate_swap || return
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     mkdir -p "$dir"
@@ -321,6 +334,7 @@ ensure_box() {
         printf '\n'
         printf '%s\n' Etc/UTC
     } > "$dir/config/identity"
+    printf '%s\n' "$SWAP" > "$dir/config/swap"
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
     [ -f "$dir/upper.raw" ] || {
@@ -796,7 +810,8 @@ remove_box() {
     [ "$(run_state "$name")" = stopped ] || stop_box "$name" ||
         { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" "$dir/config/ephemeral" \
-        "$dir/config/mounts" "$dir/config/CLAUDE.md" "$dir/net" \
+        "$dir/config/mounts" "$dir/config/CLAUDE.md" "$dir/config/swap" \
+        "$dir/net" \
         "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
     if [ -d "$dir/config" ]
     then
@@ -1451,6 +1466,7 @@ case "${1:-}" in
     -h|--help|help) usage; exit 0 ;;
 esac
 
+validate_swap || exit 2
 read_rc "$HOME/.qemuboxrc"
 set -- "${rc_tokens[@]}" "$@"
 

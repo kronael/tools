@@ -3,13 +3,80 @@ set -Eeuo pipefail
 
 docker_pid=""
 sshd_pid=""
+reclaim_pid=""
+setup_swap() {
+    local swap bytes capacity size
+    read -r swap < /run/qemubox/config/swap || return
+    [[ "$swap" =~ ^[0-9]{1,9}$ ]] || {
+        echo 'Invalid guest swap size in MiB' >&2
+        return 1
+    }
+    bytes=$((10#$swap * 1048576))
+    ((bytes > 0)) || return 0
+    [[ "$(findmnt -n -o FSTYPE -T /.qemubox)" = ext4 ]] || {
+        echo 'Guest swap requires direct ext4 storage at /.qemubox' >&2
+        return 1
+    }
+    capacity=$(df -B1 --output=size /.qemubox | tail -1) || return
+    ((bytes < capacity)) || {
+        echo "Guest swap request $swap MiB leaves no filesystem capacity" >&2
+        return 1
+    }
+    if [[ -e /.qemubox/swap || -L /.qemubox/swap ]]
+    then
+        [[ -f /.qemubox/swap && ! -L /.qemubox/swap ]] || {
+            echo 'Guest swap path must be a regular file' >&2
+            return 1
+        }
+        size=$(stat -c %s /.qemubox/swap) || return
+        [[ "$size" = "$bytes" ]] || {
+            echo "Guest swap stores $size bytes; requested $bytes; use 0 or a matching QEMUBOX_SWAP" >&2
+            return 1
+        }
+    else
+        install -m 600 /dev/null /.qemubox/swap.new || return
+        fallocate -l "$bytes" /.qemubox/swap.new || return
+        mkswap /.qemubox/swap.new || return
+        mv /.qemubox/swap.new /.qemubox/swap || return
+    fi
+    chmod 600 /.qemubox/swap || return
+    swapon /.qemubox/swap
+}
+
+reclaim_memory_loop() {
+    local mem_total before after bytes error rc
+    local cgroup=/sys/fs/cgroup/qemubox
+    export LC_ALL=C
+    mem_total=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+    while sleep 60
+    do
+        read -r before < "$cgroup/memory.current"
+        bytes=$((before - mem_total * 512))
+        ((bytes > 0)) || continue
+        ((bytes <= 1073741824)) || bytes=1073741824
+        rc=0
+        error=$({ printf '%s\n' "$bytes" > "$cgroup/memory.reclaim"; } 2>&1) || rc=$?
+        read -r after < "$cgroup/memory.current"
+        ((rc != 0)) || continue
+        printf '%s\n' "$error" >&2
+        if [[ "$error" = *'Resource temporarily unavailable'* &&
+            -w "$cgroup/memory.reclaim" ]]
+        then
+            echo "qemubox: reclaim shortfall: requested=$bytes before=$before after=$after" >&2
+        else
+            echo "qemubox-init: memory.reclaim failed: before=$before after=$after" >&2
+            return 1
+        fi
+    done
+}
+
 shutdown() {
     local rc=$? pid deadline=$((SECONDS + 5))
     trap - EXIT ERR TERM INT
     set +e
     [[ ! -f /run/qemubox/ready ]] || rm -- /run/qemubox/ready
     kill -TERM -1 2>/dev/null
-    for pid in $sshd_pid $docker_pid
+    for pid in $sshd_pid $docker_pid $reclaim_pid
     do
         while kill -0 "$pid" 2>/dev/null && ((SECONDS < deadline))
         do
@@ -17,7 +84,7 @@ shutdown() {
         done
     done
     kill -KILL -1 2>/dev/null
-    for pid in $sshd_pid $docker_pid
+    for pid in $sshd_pid $docker_pid $reclaim_pid
     do
         wait "$pid" 2>/dev/null
     done
@@ -107,17 +174,23 @@ printf '+%s ' "${controllers[@]}" > /sys/fs/cgroup/cgroup.subtree_control
 mkdir -p /sys/fs/cgroup/qemubox
 printf '+%s ' "${controllers[@]}" > \
     /sys/fs/cgroup/qemubox/cgroup.subtree_control
-mkdir -p /sys/fs/cgroup/qemubox/{sessions,docker}
+mkdir -p /sys/fs/cgroup/qemubox/{sessions,docker,services}
 for path in docker containerd
 do
     mkdir -p "/.qemubox/$path" "/var/lib/$path"
     mount --bind "/.qemubox/$path" "/var/lib/$path"
 done
-dockerd --exec-opt native.cgroupdriver=cgroupfs \
-    --cgroup-parent=/qemubox/docker --shutdown-timeout=3 &
+(
+    echo "$BASHPID" > /sys/fs/cgroup/qemubox/services/cgroup.procs
+    exec dockerd --exec-opt native.cgroupdriver=cgroupfs \
+        --cgroup-parent=/qemubox/docker --shutdown-timeout=3
+) &
 docker_pid=$!
 
-mount -t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp
+setup_swap
+tmp_kib=$(awk '/^(MemTotal|SwapTotal):/ {n += $2} END {print int(3*n/4)}' \
+    /proc/meminfo)
+mount -t tmpfs -o "rw,exec,mode=1777,size=${tmp_kib}k" tmpfs /tmp
 install -d -o "$user_uid" -g "$user_gid" /tmp/cargo-target
 mode=untrusted
 while IFS=$'\t' read -r tag src dest access
@@ -219,9 +292,11 @@ do
     sleep 0.05
 done
 kill -0 "$docker_pid" "$sshd_pid"
+reclaim_memory_loop &
+reclaim_pid=$!
 touch /run/qemubox/ready
 echo 'qemubox: ready'
 rc=0
-wait -n "$docker_pid" "$sshd_pid" || rc=$?
+wait -n "$docker_pid" "$sshd_pid" "$reclaim_pid" || rc=$?
 echo "qemubox-init: required service exited with status $rc" >&2
 exit 1

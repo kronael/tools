@@ -183,10 +183,10 @@ Only directories present at launch are overmounted.
 `-B` backs them with the guest disk, keyed by canonical path. Without `-B`
 they are backed by directories under `/tmp/qemubox-builds`, keyed the same way.
 
-`/tmp` is a tmpfs capped at 75% of guest RAM, 18 GiB at the default 24 GiB.
+`/tmp` is a tmpfs capped at 75% of guest RAM and active guest swap combined.
 Without `-B`, the build directories, `/tmp/cargo-target` and every other file
-in `/tmp` share that cap. A full `/tmp` fails with ENOSPC, not an out-of-memory
-guest. Process memory is not counted against the cap.
+in `/tmp` share that cap. A full `/tmp` fails with ENOSPC.
+Process memory also needs RAM or swap, so the cap does not prevent every OOM.
 Each session sets `CARGO_TARGET_DIR=/tmp/cargo-target` and
 `CODEX_SQLITE_HOME=/tmp/codex-sqlite`. Codex keeps its SQLite databases in
 guest `/tmp` to keep its SQLite locks separate from the host.
@@ -308,12 +308,36 @@ port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the too
 
 ## Memory
 
-A VM starts with 24 GiB (`QEMUBOX_MEM=24576`). KVM backs a guest page with
-host memory only once the guest touches it, and the VM's virtio-balloon
-device reports freed pages back to the host, so a VM costs what the guest
-holds, not its size: a `cargo clean` or a removed tmpfs file returns its
-pages. If the host has swap, cold guest pages go there when host RAM runs
-short. The guest itself has no swap, so the `/tmp` cap under Build directories
-keeps a large build from exhausting guest memory.
+A VM starts with 24 GiB of RAM, set by `QEMUBOX_MEM=24576`.
+`QEMUBOX_SWAP=16384` requests 16 GiB of guest swap in MiB. Set `QEMUBOX_SWAP=0`
+to disable swap on the next boot. The launcher accepts one to nine decimal digits.
+Boot settings apply when the box starts; joining a running box keeps its settings.
+
+The guest allocates `/.qemubox/swap` on direct ext4 storage with mode 0600.
+The guest formats the file once and reactivates the file on later boots.
+A different nonzero size fails boot with the stored and requested sizes.
+Choose a matching size or zero. A request at least as large as the filesystem
+fails before allocation. Insufficient free space fails with the allocation error.
+Swap consumes guest filesystem capacity shared with persistent files and Docker.
+Disabling swap keeps its file and allocated extents.
+
+The guest activates swap before mounting `/tmp`. The tmpfs cap is
+`3 * (MemTotal + SwapTotal) / 4` in whole KiB from `/proc/meminfo`.
+Only active swap counts toward this cap. Swap can hold cold tmpfs and process pages.
+The guest swap file has allocated extents. The host disk stays sparse, with physical
+host allocation dependent on writes.
+
+Every 60 seconds, the guest checks memory use under the `/qemubox` workload cgroup.
+This cgroup contains SSH sessions, Docker services and containers.
+Init and the reclaim loop stay outside it.
+Above half of guest RAM, the loop requests the excess through `memory.reclaim`,
+up to 1 GiB per check. No hard memory limit or balloon reduction applies.
+The console records partial reclaim with before and after usage and retains stderr.
+A control-file error stops the loop and triggers guest shutdown.
+
+KVM backs guest pages when the guest touches them. The virtio-balloon device
+reports free pages to the host. Host RAM release depends on QEMU and virtiofs support;
+guest reclaim alone does not prove a reduction in host RAM use.
+If the host has swap, the host can also swap cold guest pages.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
