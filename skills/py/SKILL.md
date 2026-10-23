@@ -87,7 +87,8 @@ Python-specific additions and deltas.
   the boundary.
 - For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
   on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
-  Lint `py-no-str-case-dispatch`. NEVER a `KIND`/`VERSION` `ClassVar` on a variant: its stored
+  Lints `py-no-str-case-dispatch` and `py-no-str-callable-table` — a `dict[str, Callable]` table is
+  the same dispatch respelled. NEVER a `KIND`/`VERSION` `ClassVar` on a variant: its stored
   format's version is its module's name, `depth_v1.py`.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
@@ -160,7 +161,7 @@ Python-specific additions and deltas.
 ## Lints
 - ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
   `py-no-lambda-default-factory`, `py-no-property`, `py-no-enum-auto`, `py-bool-fn-prefix`
-  (`software/code.md` § Naming), `py-no-str-case-dispatch`, `py-no-dict-call` (overlaps ruff
+  (`software/code.md` § Naming), `py-no-str-case-dispatch`, `py-no-str-callable-table`, `py-no-dict-call` (overlaps ruff
   `C408` only because `C408` cannot spare the call-argument form). ruff owns the rest — NEVER duplicate a ruff rule here.
 
 ## Build

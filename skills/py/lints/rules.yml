@@ -141,3 +141,25 @@ rule:
                     kind: class_definition
 message: NEVER an Enum member = auto() — write the value, LIVE = 1. See skill:py.
 note: 'source: skills/py/SKILL.md — Type Annotations'
+---
+id: py-no-str-callable-table
+language: python
+severity: warning
+ignores:
+    - '**/test_*.py'
+    - '**/*_test.py'
+    - '**/conftest.py'
+    - '**/tests/**'
+    - '**/test/**'
+rule:
+    kind: assignment
+    has:
+        field: type
+        regex: ^(dict|Mapping|MutableMapping)\[str,\s*(Callable|Awaitable|Coroutine)\b
+    inside:
+        kind: expression_statement
+        inside:
+            kind: module
+message: 'NEVER a module-level table of functions keyed by a string (CHANNELS: dict[str, Callable] = {...}) — it is the match on a kind string respelled;
+    parse the string to one dataclass per variant at the boundary and dispatch on the class. See skill:py.'
+note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
