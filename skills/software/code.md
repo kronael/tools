@@ -130,8 +130,11 @@ your diff against every `##` heading here before calling an edit done.
   state or inject dependencies — functions compose better and leak less.
 - ALWAYS compose a part of an object's behaviour that varies: a field holding
   an object of one interface, a do-nothing one where there is nothing to do.
-  NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe
-  for an optional method — the type test that asks "can this object do X?".
+  An override stays simple: a subclass implements a method its base only
+  declares, or replaces a one-line default. NEVER a subclass override of a base
+  method with real behaviour, or one that calls `super()` around it — compose
+  that part instead. NEVER an `isinstance` probe for an optional method — the
+  type test that asks "can this object do X?".
 - ALWAYS model a closed set of data variants — message types, sample kinds,
   events — as one named, frozen type per variant behind one small interface
   or base, and dispatch on the type: a Rust `match` on the enum, a Go type
