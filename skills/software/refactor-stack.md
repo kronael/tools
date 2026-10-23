@@ -299,8 +299,11 @@ built to be provable was still a third short until someone attacked it.
 - A fix that undoes a cut lands in the layer that made the cut and merges up
   from there — NEVER in the layer where it was noticed.
 - A change at the bottom costs a pass over every layer above it, in order.
-  Each layer merges it in, re-aims a test that names what the layer moves —
-  NEVER weakens it — and re-measures every claim its bug queue and PR body
+  Each layer merges in the new tip of ITS OWN base (`.base.ref`), NEVER the
+  root's tip: a layer missing its base's tip diffs against the whole base on
+  GitHub and shows as conflicting. Then it re-aims a test that names what the
+  layer moves — NEVER weakens it — and re-measures every claim its bug queue
+  and PR body
   made before the merge: a "no test reaches X" written before the test layer
   arrived is false afterwards.
 
