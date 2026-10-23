@@ -23,13 +23,14 @@ the requested model, ALWAYS answer directly and NEVER launch this CLI for it.
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model and the session: see § Sol.
 
-In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
+The caller's environment provides isolation (dockbox, qemubox, the Claude Code
+sandbox); codex's inner bwrap sandbox is unnecessary.
 On kernels that block unprivileged user namespaces, bwrap fails with
 `No permissions to create a new namespace` — and `-s danger-full-access` does NOT
 help, because it still spins up bwrap (in full-access mode), so every shell
 command codex runs dies before executing. The ONLY reliable skip is the flag
 `--dangerously-bypass-approvals-and-sandbox`, which disables bwrap entirely.
-NEVER use `-s read-only` for an audit on this path — ALWAYS use the bypass
+NEVER use `-s read-only` or `--sandbox` for any call — ALWAYS use the bypass
 flag; sandboxed backend lookups can fail (`failed to lookup address information`).
 
 ALWAYS launch via the `resume` subcommand so codex continues this project's
