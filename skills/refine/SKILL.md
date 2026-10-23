@@ -84,9 +84,10 @@ code extension and still carries every claim the reviewer will trust.
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Launch each with `subagent_type` set by the context's heaviest tag:
-   `simplify` → `sonnet`, `correctness` → `opus` — NEVER `model=`, which
-   leaves the effort to the parent. A context whose lenses carry no tag (a
-   document context) runs as `correctness`. The subs report
+   `simplify` → `sonnet`, `correctness` → `opus`, both at `effort: high`
+   (`xhigh` only for a security context) — NEVER `model=`, which leaves the
+   effort to the parent. A context whose lenses carry no tag (a document
+   context) runs as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
    files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced

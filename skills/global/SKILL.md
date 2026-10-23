@@ -163,9 +163,10 @@ PR body with the robot. These win.
   at once; a Codex worker counts in its lane (`dispatch` § Tiers). Only the
   owner lifts the cap — explicitly, for one named task, after seeing what would
   be spawned — and the lift ends with that task.
-- The cap is a CONCURRENCY limit, never a routing hint: NEVER send a task to a
-  weaker model because the right one is busy, and NEVER split it to fit. ALWAYS
-  wait for the slot, say what waits behind what, and start it when it frees.
+- The cap is a CONCURRENCY limit, never a routing hint: NEVER degrade a task —
+  a weaker model, a lower tier, the lower lane's Codex worker, a lower effort —
+  so it starts without waiting, and NEVER split it to fit. ALWAYS wait for the
+  slot, say what waits behind what, and start it when it frees.
 - Parallel is for READ-ONLY subs or fully isolated worktrees; NEVER code-editing
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
@@ -180,8 +181,9 @@ PR body with the robot. These win.
   step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. Other lane
   boundaries live in `dispatch` § Tiers. Effort: `high` for
-  coding, `xhigh` for a plan or review, `high` for `fable`, set on the launch
-  where the pin differs; NEVER another unless the owner sets one, per task or kind.
+  coding and for a review; `xhigh` only for a plan, a security review (the red
+  eval) and a CTO or CEO audit, those audits on `opus` or `fable`; set on the
+  launch where the pin differs; NEVER another unless the owner sets one, per task or kind.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.
