@@ -10,6 +10,8 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     mkdir -p "$ROOT/one" "$ROOT/two" "$ROOT/keep"
     echo disk > "$ROOT/one/disk.qcow2"
     echo disk > "$ROOT/two/upper.raw"
+    touch "$ROOT/one/root.sock.pid" "$ROOT/one/cfg.sock.pid" \
+        "$ROOT/two/qbx0.sock.pid" "$ROOT/two/capture.sock.pid"
     remove_boxes qemubox-one 'tw*'
     [ ! -d "$ROOT/one" ]
     [ ! -d "$ROOT/two" ]
@@ -345,7 +347,8 @@ for n, (tag, source, readonly) in enumerate([
     assert "--service-type=exec" in args
     assert "--expand-environment=no" in args
     assert "PartOf=qemubox@shares.service" in args
-    assert f'ExecStopPost=:/usr/bin/rm -f "{box}/{tag}.sock"' in args
+    cleanup = f'ExecStopPost=:/usr/bin/rm -f "{box}/{tag}.sock"'
+    assert f'{cleanup} "{box}/{tag}.sock.pid"' in args
     command = args[args.index("/fake/virtiofsd"):]
     expected = ["/fake/virtiofsd", f"--socket-path={box}/{tag}.sock",
                 f"--shared-dir={source}", "--sandbox=none"]

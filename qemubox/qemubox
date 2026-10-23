@@ -650,7 +650,7 @@ start_box() {
         if ! systemd-run --user --collect --quiet --service-type=exec \
             --expand-environment=no \
             --unit="${fs_units[-1]}" -p "PartOf=$(box_unit "$name")" \
-            -p "ExecStopPost=:/usr/bin/rm -f \"$dir/$tag.sock\"" \
+            -p "ExecStopPost=:/usr/bin/rm -f \"$dir/$tag.sock\" \"$dir/$tag.sock.pid\"" \
             "$virtiofsd" --socket-path="$dir/$tag.sock" \
             --shared-dir="${mount_srcs[$i]}" --sandbox=none "${access[@]}"
         then
@@ -805,7 +805,7 @@ remove_box() {
     rm -f "$dir/disk.qcow2" "$dir/upper.raw" "$dir/upper.raw.tmp"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port" "$dir/qmp"
     rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock" \
-        "$dir/root.sock"
+        "$dir/root.sock" "$dir"/*.sock.pid
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
