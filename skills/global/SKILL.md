@@ -96,10 +96,14 @@ PR body with the robot. These win.
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
   `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
   `git status`'s "up to date" without a fetch — it compares with the last one.
-- ONLY push when the user asked for a push in that message — NEVER on your own
-  initiative or as the silent tail of a commit, sync, release or ship workflow;
-  those end at the local commit or tag. ALWAYS state the exact refspec first and
-  push only that, by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
+- ALWAYS ask once whether a branch or tag is part of the current work before
+  its first push, one question for the whole set (a PR stack is one ask) —
+  once or twice a session, NEVER per push. Once the user confirms, ALWAYS push
+  each verified fast-forward of that set as the work needs it and name the
+  refspec in the reply. NEVER push outside the confirmed set: a branch the work
+  did not touch, another session's head, a sync or release tag nobody named —
+  those end at the local commit or tag. Push only the named refspec,
+  by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
   — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
   (`set-url`, `remote add`) or store the token, and NEVER `--force` in any
