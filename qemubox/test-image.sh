@@ -8,7 +8,8 @@ codex_wrapper_test() {
         sed 's|> /usr/local/bin/codex|> "$fixture/emitted-codex"|' \
         > "$fixture/extract-codex"
     source "$fixture/extract-codex"
-    sed 's|/opt/dev-tools/bun/bin/codex|"$QEMUBOX_TEST_CODEX"|' \
+    sed 's|/opt/dev-tools/bun/bin/codex|"$QEMUBOX_TEST_CODEX"|;
+         s|/usr/local/bin/qemubox-codex-bridge|sh "$QEMUBOX_TEST_BRIDGE"|' \
         "$fixture/emitted-codex" > "$fixture/codex-wrapper"
     grep -Fq 'exec "$QEMUBOX_TEST_CODEX" ' "$fixture/codex-wrapper"
     cat > "$fixture/fake-codex" <<'EOF'
@@ -18,6 +19,7 @@ EOF
     chmod +x "$fixture/fake-codex"
     CODEX_HOME="$HOME/.codex" CODEX_SQLITE_HOME=/tmp/codex-sqlite \
         QEMUBOX_TEST_CODEX="$fixture/fake-codex" \
+        QEMUBOX_TEST_BRIDGE="$here/qemubox-codex-bridge" \
         QEMUBOX_TEST_ARGS="$fixture/codex-args" \
         sh "$fixture/codex-wrapper" resume 'session with spaces' \
             -c 'model_reasoning_effort="xhigh"' '' 'literal $HOME $(false)'

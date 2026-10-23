@@ -75,7 +75,7 @@ Options:
     -n name    Override VM name (default: qemubox-<project>)
     -d tool    Explicit tool (same as first-arg tool, useful in scripts)
     -x tool    Alias for -d, matching dockbox
-    -e VAR     Forward env var into the session
+    -e NAME[=value]  Forward an exported variable or a literal value
     -v path    Extra virtiofs mount at same path ro; path:rw for read-write
     -T         Temporary session: mount no project dir, start in $TMP_WORKDIR
                (guest tmpfs, lost at power-off); a new random VM name
@@ -439,7 +439,33 @@ wait_ready() {
 }
 
 session_count() {
-    ss -Htn state established "( dport = :$(port_for "$1") )" | wc -l
+    local sessions containers
+    sessions=$(ss -Htn state established "( dport = :$(port_for "$1") )" | wc -l) || return
+    containers=$(container_count "$1") || {
+        echo "qemubox-$1: cannot probe native guest containers; preserving VM" >&2
+        return 1
+    }
+    printf '%s\n' "$((sessions + containers))"
+}
+
+container_count() {
+    local containers remote
+    ssh_opts "$1"
+    remote='env -u DOCKER_CONTEXT -u DOCKER_TLS_VERIFY -u DOCKER_CERT_PATH'
+    remote+=' docker --host=unix:///var/run/docker.sock ps --quiet'
+    containers=$(timeout 8 ssh "${ssh_opts[@]}" "$GUEST_USER@127.0.0.1" \
+        "$remote" </dev/null) || return
+    if [[ -n "$containers" && ! "$containers" =~ ^[a-f0-9]+($'\n'[a-f0-9]+)*$ ]]
+    then
+        echo "qemubox-$1: invalid native container probe response" >&2
+        return 1
+    fi
+    if [[ -z "$containers" ]]
+    then
+        echo 0
+    else
+        printf '%s\n' "$containers" | wc -l
+    fi
 }
 
 check_box() {
@@ -473,6 +499,7 @@ enter_session() {
     trap 'exit 129' HUP
     trap 'exit 143' TERM
     trap 'exit 130' INT
+    trap 'rc=$?; cleanup_capture "$name" || rc=1; exit "$rc"' EXIT
     start_box "$name"
     unlock_box
     trap leave_session EXIT
@@ -483,7 +510,7 @@ ssh_opts() {
     dir="$(box_dir "$1")"
     ssh_opts=(-i "$dir/key" -p "$(port_for "$1")" \
         -o ConnectTimeout=3 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 \
-        -o BatchMode=yes -o LogLevel=ERROR \
+        -o BatchMode=yes -o LogLevel=ERROR -o ForwardAgent=no \
         -o UserKnownHostsFile="$dir/known_hosts" \
         -o StrictHostKeyChecking=accept-new)
 }
@@ -498,8 +525,8 @@ ssh_box() {
     [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "$GUEST_HOME/.gnupg/S.gpg-agent:$gpg_sock")
     docker=()
     [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
-    exec ssh "${ssh_opts[@]}" -o ExitOnForwardFailure=yes \
-        "${agent[@]}" "${gpg[@]}" "${docker[@]}" \
+    exec ssh "${agent[@]}" "${ssh_opts[@]}" -o ExitOnForwardFailure=yes \
+        "${gpg[@]}" "${docker[@]}" \
         "$GUEST_USER@127.0.0.1" "$@"
 }
 
@@ -617,6 +644,8 @@ start_box() {
     fi
     assemble_mounts
     ensure_box "$name"
+    cleanup_capture "$name" || return
+    stage_capture "$name" || return
     add_mount "$dir/config" /run/qemubox/config ro required cfg
     add_mount "$base" /.qemubox/lower ro required root
     for i in "${!mount_tags[@]}"
@@ -700,6 +729,7 @@ cleanup_box() {
     done < "$dir/config/mounts"
     systemctl --user stop --no-block "${units[@]}" ||
         note "cannot stop every share of qemubox-$name"
+    cleanup_capture "$name" || return
     touch "$dir/stopped"
 }
 
@@ -809,6 +839,7 @@ remove_box() {
     dir="$(box_dir "$name")"
     [ "$(run_state "$name")" = stopped ] || stop_box "$name" ||
         { echo "qemubox-$name still running; not removing its files" >&2; return 1; }
+    cleanup_capture "$name" || return
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" "$dir/config/ephemeral" \
         "$dir/config/mounts" "$dir/config/CLAUDE.md" "$dir/config/swap" \
         "$dir/net" \
@@ -820,7 +851,7 @@ remove_box() {
     rm -f "$dir/disk.qcow2" "$dir/upper.raw" "$dir/upper.raw.tmp"
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port" "$dir/qmp"
     rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock" \
-        "$dir/root.sock" "$dir"/*.sock.pid
+        "$dir/root.sock" "$dir/capture.sock" "$dir"/*.sock.pid
     for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
@@ -1166,14 +1197,45 @@ status_box() {
 }
 
 add_env() {
-    var="$1"
+    local var=${1%%=*} val
     case "$var" in
         ""|*[!A-Za-z0-9_]*|[0-9]*)
             echo "Invalid env var: $var" >&2
             exit 2 ;;
     esac
-    val="${!var-}"
+    if [[ "$1" = *=* ]]
+    then
+        val=${1#*=}
+    else
+        val=${!var-}
+    fi
     envs+=("$var=$val")
+}
+
+stage_capture() {
+    local dir stage source=${2:-/tmp/capture.png}
+    [[ -f "$source" ]] || return 0
+    dir=$(box_dir "$1")
+    stage=$(mktemp -d "${source%/*}/.qemubox-capture.XXXXXXXX") || return
+    printf '%s\n' "$stage" > "$dir/capture-stage" || {
+        rm -f -- "$dir/capture-stage"
+        rmdir "$stage"
+        return 1
+    }
+    ln -L -- "$source" "$stage/capture.png" || { cleanup_capture "$1"; return 1; }
+    add_mount "$stage" /mnt/qemubox-capture ro required capture
+}
+
+cleanup_capture() {
+    local dir stage
+    dir=$(box_dir "$1")
+    [[ -f "$dir/capture-stage" ]] || return 0
+    IFS= read -r stage < "$dir/capture-stage" || return
+    [[ "${stage##*/}" = .qemubox-capture.???????? &&
+        -d "$stage" && ! -L "$stage" ]] || return 1
+    rm -f -- "$stage/capture.png" || return
+    rmdir -- "$stage" || return
+    rm -- "$dir/capture-stage"
 }
 
 copy_arg() {

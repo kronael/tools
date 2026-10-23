@@ -127,9 +127,11 @@ a failed boot. If a share daemon exits, systemd stops the VM and its other
 share daemons. The next launch boots the persistent disk.
 
 Sessions are the established SSH connections to the box's forwarded port.
+Running containers on the native guest Docker daemon also keep the VM busy.
+An idle daemon does not count. A failed container probe preserves the VM and reports an error.
 Boot and every session exit stamp the box's `idle` file with `QEMUBOX_LINGER`
 (default 1200, twenty minutes). The timer `qemubox-check@<name>.timer` stops
-the VM once no session is connected and the stamp is older than the seconds
+the VM once no session or container runs and the stamp is older than the seconds
 it holds; `QEMUBOX_LINGER=0` stops it as the last session exits. A launch that
 dies before its session leaves the VM to the timer. The disk stays on the
 host; the next launch boots that disk and keeps files in the guest home.
@@ -293,6 +295,17 @@ Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
 the tool name replaces the alias's model and effort. SSH allocates a tty only
 if stdin and stdout are terminals.
 
+`-e NAME=value` passes the literal value, including empty values and newlines.
+`-e NAME` reads the host environment. SSH agent forwarding requires `-A`, even when
+the host SSH configuration enables forwarding.
+Codex connects `.agents/skills` to `.claude/skills` when the skills exist.
+The bridge preserves custom `.codex/AGENTS.md` files and unrelated symlinks.
+
+When `/tmp/capture.png` exists at boot, the VM reads that file through a private
+read-only share. Writes to the same host inode appear in guest `/tmp/capture.png`.
+The VM does not share the host `/tmp` directory. Creation or inode replacement
+after boot requires a new boot.
+
 The guest gets UTC time from QEMU's host-backed real-time clock.
 PAM limits grant nice -20, rtprio 99 and unlimited locked memory to the user.
 New mount parent directories belong to the user; existing parents keep their owner.
@@ -341,3 +354,21 @@ guest reclaim alone does not prove a reduction in host RAM use.
 If the host has swap, the host can also swap cold guest pages.
 
 For an 8 GiB VM: `QEMUBOX_MEM=8192 qemubox -n small .`.
+
+## Native checks
+
+`make test` runs the unit suite. `make test-native` starts disposable actual VMs.
+The native checks require the production base with the current VM helpers and a
+disk-backed fixture directory. The harness uses fixture guidance and signing keys.
+It retains its private run directory for inspection and stops only its own VMs.
+The screenshot check requires `/tmp/capture.png` to be absent before the run.
+
+```sh
+QEMUBOX_NATIVE=1 QEMUBOX_NATIVE_BASE="$HOME/.local/share/qemubox" \
+  QEMUBOX_NATIVE_DIR="$HOME/native-fixtures" make -C qemubox test-native
+```
+
+Create the fixture directory first. `QEMUBOX_NATIVE_DOCKER` selects a host Docker
+client executable with socket access. The default is `docker`.
+Authenticated Codex turns and Claude/pi startup checks use existing authorized
+credentials in a separate controller check. The harness does not copy those credentials.

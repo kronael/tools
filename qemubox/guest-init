@@ -209,6 +209,12 @@ do
         install -d -m 755 -o "$user_uid" -g "$user_gid" -- "${missing[$i]}"
     done
     mount -t virtiofs -o "$access" "$tag" "$dest"
+    if [[ "$tag" = capture ]]
+    then
+        touch /tmp/capture.png
+        mount --bind "$dest/capture.png" /tmp/capture.png
+        mount -o remount,bind,ro /tmp/capture.png
+    fi
     if [[ -f "$dest/.qemuboxrc" ]]
     then
         mount --bind /dev/null "$dest/.qemuboxrc"
@@ -273,6 +279,7 @@ then
     fi
     mount -t tmpfs -o "mode=0700,uid=$user_uid,gid=$user_gid" \
         tmpfs "$home_dir/.claude/sessions"
+    runuser -u "$username" -- /usr/local/bin/qemubox-codex-bridge
 fi
 ssh-keygen -A
 /usr/sbin/sshd -t

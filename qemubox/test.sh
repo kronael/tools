@@ -47,6 +47,13 @@ PY
 journalctl() { printf 'journalctl %s\n' "$*" >> "$systemd_log"; }
 loginctl() { echo yes; }
 ss() { :; }
+timeout() {
+    if [[ "$2" = ssh ]]
+    then
+        return 0
+    fi
+    command timeout "$@"
+}
 fake_qemu="$fixture/fake-qemu"
 printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "$QEMU_ARGS"\n' > "$fake_qemu"
 chmod +x "$fake_qemu"

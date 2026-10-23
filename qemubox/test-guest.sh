@@ -10,6 +10,10 @@ guest_mounts_test() {
         >> "$dir/config/mounts"
     printf 'root\t/host/rootfs\t/.qemubox/lower\tro\n' \
         >> "$dir/config/mounts"
+    mkdir -p "$dir/capture"
+    touch "$dir/capture/capture.png"
+    printf 'capture\t/host/capture\t%s/capture\tro\n' "$dir" \
+        >> "$dir/config/mounts"
     mkdir -p "$dir/project/space dir/node_modules"
     printf '%s\0' tmpfs "$dir/project/space dir/node_modules" \
         > "$dir/config/ephemeral"
@@ -28,6 +32,9 @@ guest_mounts_test() {
     grep -Fxq -- "-t virtiofs -o ro qbx1 $dir/project" "$dir/mounts"
     grep -Fxq -- "--bind /dev/null $dir/project/.qemuboxrc" "$dir/mounts"
     grep -Fxq -- "-o remount,bind,ro $dir/project/.qemuboxrc" "$dir/mounts"
+    grep -Fxq -- "--bind $dir/capture/capture.png $dir/tmp/capture.png" \
+        "$dir/mounts"
+    grep -Fxq -- "-o remount,bind,ro $dir/tmp/capture.png" "$dir/mounts"
     [[ "$(stat -c %a "$dir/existing")" = 750 ]]
     [[ "$(stat -c %a "$dir/existing/new")" = 755 ]]
     [[ "$(stat -c %u:%g "$dir/existing/new")" = "$(id -u):$(id -g)" ]]
@@ -78,11 +85,16 @@ guest_home_test() {
              s|/tmp/host-claude.json|$dir/tmp/host-claude.json|g" \
         > "$dir/home-init"
     mount() { printf '%s\n' "$*" >> "$QEMUBOX_TEST_MOUNTS"; }
-    export -f mount
+    runuser() {
+        [[ "$*" = '-u guest -- /usr/local/bin/qemubox-codex-bridge' ]]
+        touch "$QEMUBOX_TEST_MOUNTS.bridge"
+    }
+    export -f mount runuser
     export QEMUBOX_TEST_MOUNTS="$dir/mounts"
     username=guest user_uid=$(id -u) user_gid=$(id -g) \
         home_dir="$dir/home" mode=trusted bash -e "$dir/home-init"
     [[ "$(stat -c %a "$dir/home/.claude/sessions")" = 700 ]]
+    [[ -f "$dir/mounts.bridge" ]]
     [[ "$(stat -c %a "$dir/home/.ssh/authorized_keys")" = 600 ]]
     [[ "$(stat -c %a "$dir/home/.ssh")" = 700 ]]
     [[ "$(stat -c %a "$dir/home/.gnupg")" = 700 ]]
@@ -104,11 +116,13 @@ guest_home_test() {
     grep -Fxq 'guest - memlock unlimited' \
         "$dir/etc/security/limits.d/90-qemubox.conf"
     : > "$dir/mounts"
+    rm "$dir/mounts.bridge"
     username=guest user_uid=$(id -u) user_gid=$(id -g) \
         home_dir="$dir/untrusted" mode=untrusted bash -e "$dir/home-init"
     [[ ! -e "$dir/untrusted/.claude/sessions" ]]
     [[ ! -e "$dir/untrusted/.gitconfig" ]]
     [[ ! -s "$dir/mounts" ]]
+    [[ ! -e "$dir/mounts.bridge" ]]
 }
 regression 'guest home shares guidance and history, with private sessions' \
     guest_home_test

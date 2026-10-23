@@ -225,14 +225,17 @@ RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' 
     && sed -i "s/--dangerously-skip-permissions /&$settings /" \
        /usr/local/bin/claude \
     && printf '%s\n' '#!/bin/sh' \
+       '/usr/local/bin/qemubox-codex-bridge || exit $?' \
        'exec /opt/dev-tools/bun/bin/codex --no-daemon \' \
        '    --dangerously-bypass-approvals-and-sandbox "$@"' \
        > /usr/local/bin/codex \
     && chmod 755 /usr/local/bin/codex
 
+COPY codex/AGENTS.md /opt/qemubox/codex-AGENTS.md
+COPY qemubox/qemubox-codex-bridge /usr/local/bin/qemubox-codex-bridge
 COPY qemubox/guest-init /usr/local/bin/qemubox-init
-RUN chmod 755 /usr/local/bin/qemubox-init \
-    && uv cache clean \
+RUN chmod 755 /usr/local/bin/qemubox-init /usr/local/bin/qemubox-codex-bridge
+RUN uv cache clean \
     && go clean -cache -modcache \
     && npm cache clean --force \
     && cd "$BUN_INSTALL/install/global" && bun pm cache rm

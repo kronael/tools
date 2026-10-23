@@ -313,6 +313,7 @@ regression "PATH virtiofsd wins; missing and writable-only daemons refuse launch
 
 share_units_test() {
     regression_setup
+    stage_capture() { :; }
     untrusted=1
     mkdir -p "$fixture/unit,share \$literal"
     assemble_mounts() {
@@ -375,6 +376,7 @@ regression "share units enforce readonly, include cfg, order QEMU and stop at te
 
 share_failure_test() {
     regression_setup
+    stage_capture() { :; }
     untrusted=1
     assemble_mounts() {
         reset_mounts
