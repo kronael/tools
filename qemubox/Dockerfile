@@ -231,6 +231,10 @@ RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' 
     && chmod 755 /usr/local/bin/codex
 
 COPY qemubox/guest-init /usr/local/bin/qemubox-init
-RUN chmod 755 /usr/local/bin/qemubox-init
+RUN chmod 755 /usr/local/bin/qemubox-init \
+    && uv cache clean \
+    && go clean -cache -modcache \
+    && npm cache clean --force \
+    && cd "$BUN_INSTALL/install/global" && bun pm cache rm
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/qemubox-init"]
 WORKDIR /
