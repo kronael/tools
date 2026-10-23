@@ -18,11 +18,22 @@ reads to pick the agent type.
 - ALWAYS read each new or renamed function body against its verb — a `get_`
   that writes, an `is_` that mutates, a `finish_` that cancels is a finding,
   and a `simplify` fix is the rename, never a comment explaining the verb.
+  Read its callers too: an argument that inverts the verb
+  (`subscribe(…, op=UNSUBSCRIBE)`) is a second function wearing the first's
+  name. A verb that names no operation —
+  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — and a module or
+  package whose name covers only part of what it holds (`samples/` holding
+  catalog documents) are findings: say what it does (`read_stats`).
+- ALWAYS count the diff's repeated assemblies: the same two names glued at
+  three or more sites —
+  `git diff <range> | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
+  — is one value the design never named (§ Design: a format's version is a
+  name, written once).
 - ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
   the changed files of a language that ships one — `rs`, `py`, `ts` (not
-  `.tsx`); NEVER for another, which has no rules file. Each
-  `<lang>-bool-fn-prefix` hit, a predicate not named
-  `is_`/`has_`/`can_`/`should_`, is a finding fixed by the rename (§ Naming).
+  `.tsx`); NEVER for another, which has no rules file. Every hit is a
+  finding: a `<lang>-bool-fn-prefix` one fixed by the rename (§ Naming), the
+  rest by the rule each message names.
 
 ## Comments the baseline bans `simplify`
 
@@ -41,14 +52,29 @@ reads to pick the agent type.
 
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
   config knob the change adds — `rg -n '<name>'`. One or two sites is a
-  finding: inline it (§ Boring code). Application code only: a `table_verb`
-  SQL function with one caller is the `sql` § Functions design.
+  finding: inline it (§ Boring code). Count production and test callers
+  apart (`rg -n '<name>' -g '!**/test*'`): zero production callers is
+  test-only code, moved to the tests or deleted. Application code only: a
+  `table_verb` SQL function with one caller is the `sql` § Functions design.
+- ALWAYS list every function the range adds that assigns to or appends on its
+  first parameter (`def add_trade(klines, …)` writing `klines.x`): an
+  aggregator's updates are its methods (§ Design) — move it onto the type.
+- ALWAYS name, for every fan-out the range adds (`gather`, `TaskGroup`,
+  `errgroup`, `join_all`), the resource each awaitable takes — a lock, a
+  one-in-flight bucket, a connection. All serialized on one is a loop dressed
+  as concurrency; none bounded is a flood that wants a semaphore.
+- ALWAYS read every added scan over a mapping's values for a field
+  (`next(m for m in xs.values() if m.address == …)`, a `find_<x>` helper):
+  the callers hold the key the map lacks — key the map by it.
 - ALWAYS test each added mechanism against § Boring code: identify the unmet
   requirement and why subtraction or model, view and state simplification
   cannot satisfy it. Missing evidence is a finding.
 - ALWAYS grep for function-typed struct fields the change adds (`func(` inside
-  a Go struct, `Box<dyn Fn`, a `Callable` attribute) and run § Design's
-  five-second test on each.
+  a Go struct, `Box<dyn Fn`, a `Callable` attribute) and for every map whose
+  values are functions (`dict[str, Callable`, `map[string]func`, a
+  `{'kind': handler}` literal): keyed by a string the wire carries, it is the
+  `match` on a kind string respelled (§ Design); run § Design's five-second
+  test on the rest.
 - ALWAYS flag two or more booleans that together encode one state — § Design
   wants the enum.
 - ALWAYS read each new construct against the plain version: a clever or novel
@@ -83,6 +109,10 @@ reads to pick the agent type.
   its default head; a parameter name or formula sourced from an in-repo
   summary or a stub branch is a finding. ALWAYS recompute a derived formula on
   the spec's own worked examples (§ System changes).
+- ALWAYS read each config key the range adds against that spec: a fact the
+  provider fixes — a step, a sequence rule, an interval, a format — is a
+  constant or a client fix, NEVER a knob the deploy sets (§ Boring code: a
+  knob is the plan's or the owner's decision).
 
 ## Layout drift `simplify`
 

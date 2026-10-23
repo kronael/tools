@@ -8,9 +8,15 @@ reads to pick the agent type.
 
 - NEVER wrap short local file I/O in a thread or `aiofiles`, and NEVER pair
   `open`/`close` where `with` belongs.
-- NEVER accept a per-module wrapper around threads, subprocesses, retry or
-  clocks. ALWAYS grep the project's shared lib first: reuse its helper, or put
-  the missing one there.
+- NEVER accept a per-module wrapper around threads, subprocesses, retry,
+  clocks or JSON coercion. ALWAYS list what the range adds under a helper
+  name (`git diff --name-only <range> | rg '(_utils|helpers|common)\.py$'`)
+  and every added `def` whose body is `asyncio.sleep` or clock arithmetic, or
+  a `to_<type>(value)` over `JsonValue`/`dict`/`Any`; then grep the project's
+  shared lib for the helper with that job (`rg -n '^(async )?def ' <lib>`,
+  its `from_dict`, pydantic at the boundary). A hit beside the copy — or
+  hundreds of `<module>.to_int(` calls — is a second mechanism (`py` § Named
+  Data Structures): reuse the lib's helper, or put the missing one there.
 
 ## Threads and subprocesses end before their caller `correctness`
 
@@ -35,6 +41,9 @@ reads to pick the agent type.
   `datetime.now(UTC).date()`), and NEVER `utcnow()`.
 - ALWAYS pass the record, NEVER its fields one by one; ALWAYS the domain term
   (`interval`), NEVER a vague one (`nested`, `granularity`).
+- NEVER a `type X = tuple[A, B]` alias or a `-> tuple[A, B]` of unlike parts
+  (`rg -n 'tuple\[' <added files>`): a shape that earned a name is a
+  dataclass (`py` § Named Data Structures); a tuple stays only as a key.
 
 ## Less source `simplify`
 

@@ -36,7 +36,11 @@ Done: <observable condition>.
   matches its prefixes, a grep over a projection cannot see a field you did not
   print.
 - NEVER accept a count without the matches it counted, and ALWAYS say which
-  query shape the count must come from when grep would miscount it.
+  query shape the count must come from when grep would miscount it. A count
+  of a shape the change may add — `Any`, a comment, a `print` — runs over the
+  diff's added lines (`git diff <range> | rg '^\+' | rg -c '\bAny\b'`), NEVER
+  as a tree total before and after: a total nets an addition against a
+  removal elsewhere.
 - ALWAYS demand a separate list of what the sub could NOT confirm. A report
   with no such list has folded its uncertainty into its findings.
 

@@ -41,6 +41,9 @@ code extension and still carries every claim the reviewer will trust.
    `git diff --stat <base>...<head>`. ALWAYS take the base from the PR and the
    branch from `git branch -r`; NEVER type `origin/master` from habit — a ref
    that does not resolve and a range holding nothing print the same nothing.
+   `git diff --name-only <base>...<head> | cut -d/ -f1 | sort -u`: a top-level
+   directory outside the PR's component with no reason in the ask is a
+   drive-by finding (`code.md` § System changes).
    Then list what the change asserts, each with the `file:line` stating it:
    counts, line numbers, "there is no X", "every Y does Z", relative links,
    acceptance criteria, commit subjects. `claims.md` names each kind and the
@@ -195,9 +198,6 @@ to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
 - ALWAYS delegate the edit to a subagent carrying the `improve` skill; NEVER do
   the improvement work in main context, and NEVER launch a sub through a
   `claude` CLI call from Bash — the Agent tool only.
-- NEVER edit a file while a sub is reading it, and NEVER run two writing subs on
-  one tree.
-- ALWAYS route a critique, plan or creative second opinion to `oracle` instead.
 - A language lens lives at `<skill>.md` in this directory, named for the skill
   step 4 matched — adding the file is the whole registration. One lens per `##`
   heading, each ending in its own tag so step 6 can pick the agent type without
