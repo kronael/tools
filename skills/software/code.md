@@ -25,7 +25,7 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS reuse the name the code, the schema, the domain and the owner already
   give a thing — function, parameter, field, type, file, commit term — and
   carry one word through an endpoint's path, handler, module and model:
-  `/v1/react` → `react()` in `react.py`, `ReactIn`; NEVER `reactions.py`,
+  `/v1/react` → `react()` in `react.py`, `ReactRequest`; NEVER `reactions.py`,
   NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
