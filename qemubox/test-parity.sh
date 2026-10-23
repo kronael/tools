@@ -174,6 +174,7 @@ regression 'capture shares one live inode through a private readonly directory' 
 
 native_busy_test() {
     regression_setup
+    run_state() { echo running; }
     mkdir -p "$ROOT/vm"
     echo 0 > "$ROOT/vm/idle"
     local probe=abcdef012345
@@ -241,6 +242,11 @@ forward_config_test() {
     done
     grep -Fxq 'forwardagent no' "$fixture/ssh-forward/disabled"
     grep -Fxq 'forwardagent yes' "$fixture/ssh-forward/enabled"
+    grep -Fxq 'serveraliveinterval 0' "$fixture/ssh-forward/disabled"
+    (PATH="$fixture/ssh-forward:$PATH" ssh_plain_box vm true) \
+        > "$fixture/ssh-forward/control"
+    grep -Fxq 'serveraliveinterval 5' "$fixture/ssh-forward/control"
+    grep -Fxq 'serveralivecountmax 2' "$fixture/ssh-forward/control"
 }
 regression 'configured SSH forwarding stays disabled until explicit -A' forward_config_test
 

@@ -126,6 +126,13 @@ for their sockets. Stopping the VM stops its share units, including after
 a failed boot. If a share daemon exits, systemd stops the VM and its other
 share daemons. The next launch boots the persistent disk.
 
+After an `io-error` pause, the timer resumes the VM when the state filesystem
+has at least `QEMUBOX_RESUME_FREE` MiB free, default 2048. The setting applies
+at boot; zero disables recovery. Manual pauses stay paused.
+The readiness loop also checks free space during startup, within its timeout.
+Session SSH disables application keepalive timeouts so a pause can preserve the
+running command. Control probes retain their timeouts.
+
 Sessions are the established SSH connections to the box's forwarded port.
 Running containers on the native guest Docker daemon also keep the VM busy.
 An idle daemon does not count. A failed container probe preserves the VM and reports an error.

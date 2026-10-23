@@ -7,6 +7,7 @@ MEM="${QEMUBOX_MEM:-24576}"
 CPUS="${QEMUBOX_CPUS:-4}"
 DISK="${QEMUBOX_DISK:-40G}"
 SWAP="${QEMUBOX_SWAP-16384}"
+RESUME_FREE="${QEMUBOX_RESUME_FREE-2048}"
 LINGER="${QEMUBOX_LINGER:-1200}"
 GUEST_USER="$(id -un)"
 GUEST_HOME="$(getent passwd "$(id -u)" | cut -d: -f6)"
@@ -133,6 +134,7 @@ Memory: the host backs guest RAM as the guest touches it. Free-page reporting
         half of guest RAM. Swap size stays fixed once allocated.
 Build: QEMUBOX_SOURCE=<tools repo> QEMUBOX_DOCKER="docker"
 Readiness: QEMUBOX_READY_TIMEOUT=180 (seconds)
+Resume: QEMUBOX_RESUME_FREE=2048 MiB free before io-error resume; 0 disables
 Config: ~/.qemuboxrc defaults; project .qemuboxrc safe flags only.
         Project files cannot set -A/-D/-K/-S/-T/-n/-d/-x.
 Lifecycle: each VM is the systemd user unit qemubox@<name>; it stops after
@@ -423,18 +425,57 @@ refuse_paused() {
     local state
     state=$(run_state "$1")
     [[ "$state" = paused* ]] || return 0
-    echo "VM qemubox-$1 is $state, not running; io-error means" \
-        "the host disk under $ROOT filled. Free space, then run" \
-        "qemubox stop $1" >&2
+    if [[ "$state" = paused:io-error && "$RESUME_FREE" -gt 0 ]]
+    then
+        echo "VM qemubox-$1 is $state; free space under $ROOT." \
+            "The VM resumes automatically at $RESUME_FREE MiB free." >&2
+    else
+        echo "VM qemubox-$1 is $state; run qemubox stop $1" >&2
+    fi
     return 1
 }
 
+validate_resume() {
+    [[ "$RESUME_FREE" =~ ^[0-9]{1,9}$ ]] || {
+        echo 'QEMUBOX_RESUME_FREE must be MiB as 1 to 9 digits; 0 disables' >&2
+        return 2
+    }
+    RESUME_FREE=$((10#$RESUME_FREE))
+}
+
+resume_box() {
+    local free
+    ((RESUME_FREE > 0)) || return 0
+    free=$(df --output=avail -m "$ROOT" | tail -1) || {
+        echo "Cannot read free space under $ROOT; preserving paused VM" >&2
+        return 1
+    }
+    [[ "$free" =~ ^[[:space:]]*([0-9]+)[[:space:]]*$ ]] || {
+        echo "Invalid free space under $ROOT: $free" >&2
+        return 1
+    }
+    free=$((10#${BASH_REMATCH[1]}))
+    if ((free < RESUME_FREE))
+    then
+        note "qemubox-$1 stays paused: $free MiB free, need $RESUME_FREE MiB"
+        return 0
+    fi
+    qmp_box "$1" cont >/dev/null || return
+    note "resumed qemubox-$1: $free MiB free"
+}
+
 wait_ready() {
+    validate_resume || return
     until ssh_plain_box "$1" "test -f /run/qemubox/ready" \
         </dev/null >/dev/null 2>&1
     do
-        refuse_paused "$1" || return 1
-        sleep 1
+        case "$(run_state "$1")" in
+            paused:io-error)
+                ((RESUME_FREE > 0)) || { refuse_paused "$1"; return 1; }
+                resume_box "$1" || return ;;
+            paused*) refuse_paused "$1"; return 1 ;;
+        esac
+        sleep 0.1
     done
 }
 
@@ -469,10 +510,17 @@ container_count() {
 }
 
 check_box() {
-    local name dir linger count
+    local name dir linger count state
+    validate_resume || return
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
     [ -f "$dir/idle" ] || return 0
+    state=$(run_state "$name")
+    if [[ "$state" = paused* ]]
+    then
+        [[ "$state" != paused:io-error ]] || resume_box "$name"
+        return
+    fi
     linger=${2:-$(cat "$dir/idle")}
     count=$(session_count "$name") || return
     [ "$count" -eq 0 ] || return 0
@@ -525,7 +573,8 @@ ssh_box() {
     [ -n "$gpg_sock" ] && gpg=(-o StreamLocalBindUnlink=yes -R "$GUEST_HOME/.gnupg/S.gpg-agent:$gpg_sock")
     docker=()
     [ -n "$docker_sock" ] && docker=(-R "$docker_remote:$docker_sock")
-    exec ssh "${agent[@]}" "${ssh_opts[@]}" -o ExitOnForwardFailure=yes \
+    exec ssh -o ServerAliveInterval=0 "${agent[@]}" "${ssh_opts[@]}" \
+        -o ExitOnForwardFailure=yes \
         "${gpg[@]}" "${docker[@]}" \
         "$GUEST_USER@127.0.0.1" "$@"
 }
@@ -710,6 +759,7 @@ start_box() {
         -p "ExecStopPost=/bin/bash \"$SELF\" _cleanup $name" \
         -E QEMUBOX_HOME="$ROOT" -E QEMUBOX_MEM="$MEM" -E QEMUBOX_CPUS="$CPUS" \
         -E QEMUBOX_QEMU="$QEMU" -E QEMUBOX_LINGER="$LINGER" -E PATH="$PATH" \
+        -E QEMUBOX_RESUME_FREE="$RESUME_FREE" \
         -E QEMUBOX_READY_TIMEOUT="${QEMUBOX_READY_TIMEOUT:-180}" \
         /bin/bash "$SELF" _vm "$name" || {
             systemctl --user stop "${fs_units[@]}" ||
@@ -790,8 +840,10 @@ setup_box() {
     printf '%s\n' "$LINGER" > "$dir/idle"
     systemd-run --user --collect --quiet --unit="qemubox-check@$name" \
         --on-active=60 --on-unit-active=60 \
+        --timer-property=AccuracySec=1s \
         --timer-property=BindsTo="$(box_unit "$name")" \
-        -E QEMUBOX_HOME="$ROOT" -E PATH="$PATH" /bin/bash "$SELF" _check "$name"
+        -E QEMUBOX_HOME="$ROOT" -E PATH="$PATH" \
+        -E QEMUBOX_RESUME_FREE="$RESUME_FREE" /bin/bash "$SELF" _check "$name"
 }
 
 detect_gpg() {
@@ -1529,6 +1581,7 @@ case "${1:-}" in
 esac
 
 validate_swap || exit 2
+validate_resume || exit 2
 read_rc "$HOME/.qemuboxrc"
 set -- "${rc_tokens[@]}" "$@"
 

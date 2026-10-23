@@ -258,6 +258,7 @@ source "$here/test-refine.sh"
 source "$here/test-image.sh"
 source "$here/test-guest.sh"
 source "$here/test-memory.sh"
+source "$here/test-resume.sh"
 source "$here/test-boot.sh"
 source "$here/test-kernel.sh"
 

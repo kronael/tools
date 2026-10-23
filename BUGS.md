@@ -1118,16 +1118,6 @@
   calls (`ls`, start-up) keep the read. **Fix:** `ssh -n` in `ssh_plain_box`,
   except the calls that feed a heredoc.
 
-- **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
-  When the host disk fills, QEMU pauses the guest with `io-error`.
-  `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
-  qemubox stop", so the owner must stop the VM and start it again by hand,
-  even after space is back. `stop_box` already resumes over QMP
-  (`qemubox:873`). **Fix (proposal):** in `wait_ready`, on `paused:io-error`
-  check free space under `$ROOT`; above a margin, send QMP `cont` and keep
-  waiting; below it, print the free and needed space and exit. Same check in
-  `qemubox ls`/`status` so a paused VM shows how to recover.
-
 - **QEMUBOX-9P-TO-VIRTIOFS** (MED, design) — needs sign-off.
   Host paths reach the guest over 9p (`qemubox/qemubox:596`, `:761`,
   mount at `:805-808`). 9p is slow on many small files and weak on locks and

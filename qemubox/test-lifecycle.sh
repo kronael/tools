@@ -169,6 +169,7 @@ regression "lost share skips guest shutdown so systemd can terminate QEMU" \
 
 check_test() {
     regression_setup
+    run_state() { echo running; }
     mkdir -p "$ROOT/vm"
     : > "$systemd_log"
     check_box vm
@@ -187,6 +188,7 @@ regression "_check stops only a box idle past its linger with no session" check_
 
 check_count_failure_test() {
     regression_setup
+    run_state() { echo running; }
     mkdir -p "$ROOT/vm"
     echo 0 > "$ROOT/vm/idle"
     ss() { echo 'Session probe failed' >&2; return 17; }
@@ -226,6 +228,7 @@ regression "sessions are established connections to the box port" session_count_
 
 leave_test() {
     regression_setup
+    run_state() { echo running; }
     name=vm; session_pid=""
     mkdir -p "$ROOT/vm"
     echo disk > "$ROOT/vm/upper.raw"
@@ -263,7 +266,7 @@ setup_test() {
     setup_box vm
     [ "$(cat "$ROOT/vm/idle")" = 77 ]
     [ "$(cat "$fixture/setup-ready")" = vm ]
-    grep -qxF "systemd-run --user --collect --quiet --unit=qemubox-check@vm --on-active=60 --on-unit-active=60 --timer-property=BindsTo=qemubox@vm.service -E QEMUBOX_HOME=$ROOT -E PATH=$PATH /bin/bash $SELF _check vm" "$systemd_log"
+    grep -qxF "systemd-run --user --collect --quiet --unit=qemubox-check@vm --on-active=60 --on-unit-active=60 --timer-property=AccuracySec=1s --timer-property=BindsTo=qemubox@vm.service -E QEMUBOX_HOME=$ROOT -E PATH=$PATH -E QEMUBOX_RESUME_FREE=2048 /bin/bash $SELF _check vm" "$systemd_log"
     [ "$(cat "$fixture/check-command")" = $'_check\nvm' ]
 }
 regression "_ready waits for the guest, stamps idle and arms the check" setup_test
@@ -364,6 +367,7 @@ args = (fixture / "share-unit-5").read_bytes().decode().split("\0")[:-1]
 for key in ("BindsTo", "After"):
     assert f"{key}={' '.join(units)}" in args
 assert "QEMUBOX_READY_TIMEOUT=180" in args
+assert "QEMUBOX_RESUME_FREE=2048" in args
 PY
     : > "$systemd_log"
     cleanup_box shares
@@ -499,9 +503,9 @@ exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
     wait_ready vm
     [ -e "$fixture/guest-ready" ]
     rm "$fixture/guest-ready"
-    run_state() { echo paused:io-error; }
+    run_state() { echo paused:prelaunch; }
     if wait_ready vm 2> "$fixture/paused"; then exit 1; fi
-    grep -q 'is paused:io-error' "$fixture/paused"
+    grep -q 'is paused:prelaunch' "$fixture/paused"
     : > "$systemd_log"
     ready_error vm 2> /dev/null
     grep -qx 'journalctl --user -u qemubox@vm.service -n 40 --no-pager' "$systemd_log"
