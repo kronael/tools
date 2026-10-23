@@ -44,10 +44,11 @@ Python-specific additions and deltas.
 ## Properties and accessor overrides
 - NEVER use `@property`, `@x.setter`, or `__getattr__`/`__setattr__` overrides — they are code smell
 - They hide computation behind attribute access, break "no surprises" reads, and make grep useless
-- Three legitimate exceptions:
+- Four legitimate exceptions:
   1. **Mocking / test doubles** — overriding attribute access on a stub
   2. **Adapting external/library code** — wrapping an API you don't own that requires property protocol
   3. **A record's value derived from its own fields** — § Named Data Structures owns the rule
+  4. **A `Protocol`'s data member** — a body-less read-only declaration (§ Type Annotations); the lint skips `Protocol` classes
 - Instead: plain method (`def program_lookup(self)`) or compute once and store on the dataclass field
 
 ## getattr/setattr
