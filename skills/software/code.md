@@ -127,7 +127,12 @@ your diff against every `##` heading here before calling an edit done.
   — NEVER an interpretive label the reader has to decode:
   `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
-  state or inject dependencies — functions compose better and leak less.
+  state or inject dependencies — functions compose better and leak less. An
+  object that holds state to aggregate updates — an order book, a kline
+  accumulator — carries the operations that change it as methods
+  (`book.apply_delta(delta)`, `klines.add_trade(trade)`), NEVER as functions
+  beside it; a value that travels — a trade, a stored record — stays a frozen
+  record with no logic.
 - ALWAYS compose a part of an object's behaviour that varies: a field holding
   an object of one interface, a do-nothing one where there is nothing to do.
   NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe

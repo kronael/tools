@@ -103,7 +103,7 @@ Python-specific additions and deltas.
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
 - NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
-- ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`).
+- ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
 - A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
