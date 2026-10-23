@@ -86,7 +86,9 @@ code extension and still carries every claim the reviewer will trust.
    brief. Launch each with `subagent_type` set by the context's heaviest tag:
    `simplify` → `sonnet`, `correctness` → `opus`, both at `effort: high`
    (`xhigh` only for a security context) — NEVER `model=`, which leaves the
-   effort to the parent. A context whose lenses carry no tag (a document
+   effort to the parent. On Codex, `simplify` → Terra and `correctness` →
+   Astra. NEVER a review with no `opus`-tier reviewer: Sonnet or Terra alone
+   misses what a correctness pass finds. A context whose lenses carry no tag (a document
    context) runs as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
    files alone in main context until its sub returns.
