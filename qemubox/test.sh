@@ -259,6 +259,7 @@ source "$here/test-cli.sh"
 source "$here/test-refine.sh"
 source "$here/test-image.sh"
 source "$here/test-boot.sh"
+source "$here/test-kernel.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

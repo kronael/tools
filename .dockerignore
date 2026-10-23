@@ -10,3 +10,6 @@ udfix/udfix
 !dockbox/dockbox-codex-bridge
 !qemubox/
 !qemubox/Dockerfile
+!qemubox/Dockerfile.kernel
+!qemubox/kernel.fragment
+!qemubox/initrd-init
