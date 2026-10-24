@@ -145,12 +145,17 @@ your diff against every `##` heading here before calling an edit done.
   `map[string]any`) as a data shape: external JSON is parsed into the variants
   where it enters, and nothing past that boundary sees the raw form.
 - ALWAYS make a stored or wire format's version part of a name and nothing
-  else: the module of the record and its encoder (`depth_v1.py`) and the
-  kind string that encoder writes once (`'depth/1'`). The record keeps a plain
-  name (`Depth`) and no kind or version constant, typed code passes records,
-  and no code builds, compares or looks up a kind or version string. A new
-  version is a new module beside the old one; a decoder only tests use lives
-  in the tests.
+  else: the module of the record (`depth_v1.py`) and the kind string written
+  once beside it (`'depth/1'`). The record keeps a plain name (`Depth`) and no
+  kind or version constant, typed code passes records, and no code builds,
+  compares or looks up a kind or version string. A new version is a new module
+  beside the old one; a decoder only tests use lives in the tests.
+- ALWAYS let a record stored in a shape other than its field map — a
+  positional array — BE that row: the class holds the row and reads a slot
+  through a method named after the slot (`post.title()`; NEVER `get_title()`,
+  NEVER a property), with a `set_<slot>` only where code updates one. NEVER a
+  field-by-field copy of the row plus an `encode` back: two shapes of one
+  record drift, and the copy is paid on every row.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
@@ -235,7 +240,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS one import per line — it keeps diffs clean.
 - ALWAYS name utility files `*_utils.*`.
 - ALWAYS run a script from a fixed working directory with simple relative
-  paths — NEVER `basename $0`, `__dirname`, or complex path resolution.
+  paths, and ALWAYS take a path a program needs from its configuration — a
+  flag, an env var, the config file. NEVER `basename $0`, `__dirname`,
+  `Path(__file__)` or any path derived from where the binary or module sits;
+  a test reads its fixtures through the runner's configured root (`py`
+  § Testing).
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
   `"checking..."`, `"Failed: ..."`.
 - ALWAYS the Unix log format: `Sep 18 10:34:26 INFO subsystem: message`.

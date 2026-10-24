@@ -180,7 +180,7 @@ Python-specific additions and deltas.
 ## Testing
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
-- Testcontainers: centralize in `conftest.py`
+- Testcontainers and the fixture directory centralize in `conftest.py`: one fixture returning `pytestconfig.rootpath / '<tree>/tests/assets'` — NEVER `Path(__file__)` (`code.md` § Layout and formatting)
 - ALWAYS build properly shaped test doubles (`Mock` / `MagicMock` with explicit
   attrs or a small fake class); NEVER make production code tolerate incomplete
   fakes
