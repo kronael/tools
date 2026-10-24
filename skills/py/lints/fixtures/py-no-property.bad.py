@@ -4,7 +4,7 @@ class Account:
         return self._balance
 
 
-class AccountLike(Protocol):
+class Ledger(Protocol):
     class Account:
         @property
         def balance(self):

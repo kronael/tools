@@ -5,6 +5,6 @@ class Account:
         return self._balance
 
 
-class SocketLike(Protocol):
+class Socket(Protocol):
     @property
     def name(self) -> str: ...
