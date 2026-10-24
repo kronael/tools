@@ -51,11 +51,23 @@ reads to pick the agent type.
 ## Abstraction that does not pay `simplify`
 
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
-  config knob the change adds — `rg -n '<name>'`. One or two sites is a
-  finding: inline it (§ Boring code). Count production and test callers
-  apart (`rg -n '<name>' -g '!**/test*'`): zero production callers is
-  test-only code, moved to the tests or deleted. Application code only: a
-  `table_verb` SQL function with one caller is the `sql` § Functions design.
+  config knob the change adds — `rg -n '<name>'`, a `Protocol` declared so
+  one reader at the edge (health, a status page) can take several concrete
+  classes included. One or two sites is a finding: inline it (§ Boring
+  code). Count production and test callers apart (`rg -n '<name>' -g
+  '!**/test*'`): zero production callers is test-only code, moved to the
+  tests or deleted. Application code only: a `table_verb` SQL function with
+  one caller is the `sql` § Functions design.
+- ALWAYS open every function the range adds (`git diff <range> | rg
+  '^\+\s*(async )?def '`) whose body is one or two statements: one that only
+  forwards its arguments to one call and wraps or renames the result
+  (`read_catalog` = `get_markets(…)` then `Catalog(…)`) is a finding: inline
+  it at its callers (§ Boring code).
+- ALWAYS grep the tree for the name of every non-source file the range adds
+  (`git diff --name-only --diff-filter=A <range>` minus code, then `rg -l
+  '<basename>'`): a file no code, test or Make target reads — a provenance or
+  manifest beside fixtures — is a finding, deleted (`testing.md` § Scope and
+  layout).
 - ALWAYS list every function the range adds that assigns to or appends on its
   first parameter (`def add_trade(klines, …)` writing `klines.x`): an
   aggregator's updates are its methods (§ Design) — move it onto the type.
@@ -91,6 +103,22 @@ reads to pick the agent type.
 - ALWAYS check a fix that changes a contract or control flow across modules
   for its `BUGS.md` proposal; none is a finding, routed to `BUGS.md`, never
   applied.
+- ALWAYS list every encoder the range adds beside a record (`rg -n 'def
+  (encode|to_row|to_wire|as_row)'` over the added files): a record copied
+  field by field into the row it is stored as is two shapes of one record
+  (§ Design: the row is the record).
+
+## Tests that prove nothing `simplify`
+
+- ALWAYS list, per test file the range adds, the production modules it
+  imports (`rg -n '^(from|import) ' <file>`, minus stdlib, third-party and
+  `tests`): none is a library test; production reached only through a helper
+  under `tests/` is a test of the helper — delete, or rewrite against the
+  production path (`testing.md` § Scope and layout).
+- ALWAYS grep each added test's expected values for the module under test
+  (`rg -n 'assert .*== *<module>\.'`) and its patches for the project's own
+  modules (`rg -n "patch\('<project>"`): a mirror assertion or a mocked own
+  module proves nothing (`testing.md` § What an assertion proves).
 
 ## Swallowed, softened and retried errors `correctness`
 
@@ -113,13 +141,19 @@ reads to pick the agent type.
   provider fixes — a step, a sequence rule, an interval, a format — is a
   constant or a client fix, NEVER a knob the deploy sets (§ Boring code: a
   knob is the plan's or the owner's decision).
+- ALWAYS compare each record type the range adds or narrows for an external
+  source against a real row or sample of it: positions skipped (`Post(row[0],
+  row[1], row[3], row[4])` of eight) or columns dropped because nothing reads
+  them yet are findings (`data` § State Management).
 
 ## Layout drift `simplify`
 
 - ALWAYS measure, never eyeball: `awk 'length > 80'` over the changed code
   lines, a multi-line expression inside an `if` condition, two imports on one
-  line, a file log handler or log-file path in application code, `__dirname`
-  or `basename $0` in a script (§ Layout and formatting).
+  line, a file log handler or log-file path in application code, and over the
+  added lines `rg -n '__file__|__dirname|basename \$0'` — a path derived from
+  the module's or binary's location where configuration or the test runner's
+  root should hold it (§ Layout and formatting).
 
 ## Deleted without being understood `correctness`
 
