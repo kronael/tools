@@ -1,7 +1,7 @@
 ---
 name: wisdom
 description: Write or edit SKILL.md or CLAUDE.md. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
-when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, does this rule earn its context, trim an always-loaded file, instruction tags"
+when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, promote rules to lints, does this rule earn its context, trim an always-loaded file, instruction tags"
 ---
 
 # Wisdom Skill
@@ -72,6 +72,13 @@ argument-hint: "<question>"   # optional — shown after /name
   `skills/CLAUDE.md`; keep this skill as the compact writing checklist.
 
 ## The subtraction test — ALWAYS run it before writing or trimming
+
+ALWAYS promote an approved rule to an existing native lint when it covers the
+rule exactly; otherwise use the owning skill's ast-grep pack (`astgrep` → `lints.md`).
+ALWAYS prove positive cases and permitted exceptions before replacing prose
+with one lint-id pointer. Keep uncovered judgment as prose and refine lenses.
+This is executable enforcement, not a cut based on model knowledge; no clean-room
+measurement is needed. NEVER duplicate a native check or promote a noisy heuristic.
 
 A rule in an always-loaded file costs every session; it earns that only when a
 capable model would not already behave that way. NEVER judge that from memory

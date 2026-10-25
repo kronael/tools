@@ -9,13 +9,11 @@ user-invocable: true
 
 Runs in main context so the whole conversation stays visible.
 
-A change is finished when the code is good AND what it says about the tree is
-true. One pass settles both, because both are found the same way: cut the
-change into **contexts**, dispatch one read-only subagent per context, re-derive
-every finding here. A context is an aspect of the project this change touches —
-its deployment, its spec set, its data layer, its agent surface. A language
-bucket is ONE KIND of context, never the axis: a documents-only PR matches no
-code extension and still carries every claim the reviewer will trust.
+A finished change has good code and true claims about the tree. Cut it into
+**contexts**, dispatch one read-only subagent per context, and re-derive every
+finding here. A context is an aspect the change touches: deployment, specs,
+data or agent surface. Language is one kind of context; a documents-only PR
+still carries claims to verify.
 
 `/release` is the later gate (version bumps). Run this first.
 
@@ -49,6 +47,8 @@ code extension and still carries every claim the reviewer will trust.
    acceptance criteria, commit subjects. `claims.md` names each kind and the
    command that settles it.
    → the range resolves and every assertion carries its `file:line`.
+
+   ALWAYS run mechanical checks per `astgrep` → `lints.md` § Refine, and repeat after fixes at step 10.
 
 4. **Contexts** — cut the change into ≤4 contexts, one per command family —
    what resolves references, what counts occurrences, what deploys, what the

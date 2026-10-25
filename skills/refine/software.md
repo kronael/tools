@@ -28,11 +28,6 @@ reads to pick the agent type.
   `git diff <range> | rg '^\+[^+]' | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
   — is one value the design never named (§ Design: a format's version is a
   name, written once).
-- ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
-  the changed files of a language that ships one — `rs`, `py`, `ts` (not
-  `.tsx`); NEVER for another, which has no rules file. ALWAYS assess each
-  warning against its owning rule and documented exceptions before calling
-  it a finding; syntax alone cannot establish every exception.
 - ALWAYS compare added/renamed module and package names with their main symbol or job;
   ALWAYS flag generic/partial names or utility basenames violating § Layout and formatting.
 

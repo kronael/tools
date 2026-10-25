@@ -68,6 +68,7 @@ help:
 test: $(addprefix test-,$(PROJECTS))
 	bash tests/drift_test.sh
 	$(PYTEST) -q skills/recall-memories/test_recall.py
+	$(PYTEST) -q skills/astgrep/test_check.py
 	@echo "all tests passed ($(PROJECTS))"
 
 clean: $(addprefix clean-,$(PROJECTS))
@@ -102,4 +103,4 @@ spec-lint:
 	python3 spec-lint/spec_lint.py $(SPECS)
 
 lints:
-	python3 lints/check.py
+	python3 skills/astgrep/check.py

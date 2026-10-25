@@ -21,7 +21,7 @@ COOKBOOK.md                 daily git recipes (detached HEAD with rig)
 BUGS.md                     open issues
 NOTICE                      upstream attribution
 docs/                       research notes behind individual skills
-lints/                      fixture harness for the ast-grep lint rules (make lints)
+skills/astgrep/check.py      lint runner and fixture harness (make lints)
 tests/                      repo-level tests (qemubox/dockbox alias drift)
 .github/                    CI workflows, generated from .github/templates/
 sgconfig.yml                ast-grep config listing the skill lint rule dirs

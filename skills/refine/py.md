@@ -31,8 +31,7 @@ reads to pick the agent type.
   if/elif chain per member — ALWAYS one table of frozen records.
 - NEVER build a mapping with `dict.fromkeys(keys, value)` or another clever
   construct where an explicit literal is clearer.
-- NEVER a wrapper that only renames stdlib (`today()` for
-  `datetime.now(UTC).date()`), and NEVER `utcnow()`.
+- NEVER a wrapper that only renames stdlib (`today()` for `datetime.now(UTC).date()`).
 - ALWAYS pass the record, NEVER its fields one by one; ALWAYS the domain term
   (`interval`), NEVER a vague one (`nested`, `granularity`).
 - NEVER a `type X = tuple[A, B]` alias or a `-> tuple[A, B]` of unlike parts

@@ -24,5 +24,7 @@ jobs:
                   extra_args: >-
                       --from-ref ${{ github.event.pull_request.base.sha || github.event.before }}
                       --to-ref ${{ github.event.pull_request.head.sha || github.sha }}
-            - run: pip install PyYAML
+            - run: pip install PyYAML ast-grep-cli pytest
             - run: make skills-frontmatter
+            - run: make lints
+            - run: python -m pytest -q skills/astgrep/test_check.py

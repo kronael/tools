@@ -254,11 +254,12 @@ your diff against every `##` heading here before calling an edit done.
   NEVER generic `client`, `chat`, `helpers`, `common`, `core`, `manager` or `service` names.
 - ALWAYS apply `readme/topology.md` § Files for the flat component layout.
 - ALWAYS run a script from a fixed working directory with simple relative
-  paths, and ALWAYS take a path a program needs from its configuration — a
+  paths, and ALWAYS take application input, output and state paths from configuration — a
   flag, an env var, the config file. NEVER `basename $0`, `__dirname`,
   `Path(__file__)` or any path derived from where the binary or module sits;
   a test reads its fixtures through the runner's configured root (`py`
   § Testing).
+- An installed tool may locate its own shipped read-only resources relative to its module.
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
   `"checking..."`, `"Failed: ..."`.
 - ALWAYS the Unix log format: `Sep 18 10:34:26 INFO subsystem: message`.
