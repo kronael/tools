@@ -23,7 +23,7 @@ selected through `dispatch` § Tiers. `refine` step 6 owns its native Codex laun
 
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model, effort and session: see § Sol.
-ALWAYS use `dispatch` § Brief for both variants.
+ALWAYS use `dispatch` § Brief, including its Codex opening, for both variants.
 
 ALWAYS use `--dangerously-bypass-approvals-and-sandbox`: the owner requires no
 inner sandbox. NEVER pass `--sandbox` or `-s`. The bypass disables approvals

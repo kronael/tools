@@ -93,7 +93,7 @@ code extension and still carries every claim the reviewer will trust.
    `model: "gpt-6.1-sol"`, `reasoning_effort: "xhigh"`, `fork_turns: "none"`.
    Native workers need no CLI Model/Auth checks; the CLI fallback follows
    `astra` § Sol. An explicit Astra route uses `astra`'s model and effort.
-   ALWAYS write Codex briefs through `dispatch` § Brief.
+   ALWAYS use `dispatch` § Brief for the Codex opening and skill routing.
    A context worker reviews its assigned context itself; NEVER delegate that
    same review again. A context without a tag runs as `correctness`.
    The subs report findings with commands and outputs and NEVER edit.

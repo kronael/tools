@@ -30,7 +30,7 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "<worker di
   "<self-contained brief>" </dev/null
 ```
 
-- ALWAYS use `dispatch` § Brief.
+- ALWAYS use `dispatch` § Brief, including its Codex opening.
 - ALWAYS ask the worker to return changed files, commands and outputs, and
   deviations. ALWAYS inspect its result before using it.
 - ALWAYS follow `worktree` for editing workers.
