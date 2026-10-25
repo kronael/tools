@@ -8,6 +8,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from codex_hook import normalize
 from pretool_nudge import extract_path
 from pretool_nudge import format_markdown
 from pretool_nudge import main
@@ -240,13 +241,62 @@ def test_process_refuses_a_review_submit_the_user_did_not_ask_for(tmp_path) -> N
     assert process(payload) is None
 
 
-def test_process_blocks_recursive_codex_inside_codex() -> None:
-    result = process(
-        {'tool_name': 'exec_command', 'tool_input': {'cmd': 'codex exec test'}, 'harness': 'codex'}
-    )
+@pytest.mark.parametrize(
+    'command',
+    [
+        'codex exec resume --last',
+        'codex exec resume --last --ephemeral',
+        'codex resume --last',
+        'codex e resume --last',
+        'codex -C /repo -c model="example" exec resume --last',
+        'true; codex exec resume --last',
+        'true\ncodex exec resume --last',
+        'env MODE=worker codex exec resume --last',
+        'command /usr/bin/codex exec resume --last',
+        'codex exec --color never resume --last --ephemeral',
+        'env -i /usr/bin/codex exec resume --last --ephemeral',
+        'env -u MODE codex exec resume --last',
+        'command -p /usr/bin/codex exec resume --last --ephemeral',
+        'codex exec resume --last -- --help',
+        "printf ';'; codex exec resume --last",
+        'codex \\\n exec resume --last',
+    ],
+)
+def test_process_blocks_recursive_codex_inside_codex(command: str) -> None:
+    payload = {'tool_name': 'exec_command', 'tool_input': {'cmd': command}}
+    result = process(normalize(payload, 'PreToolUse'))
     assert result is not None
     assert result['decision'] == 'block'
     assert 'recursive codex' in result['reason']
+    assert process(payload) is None
+
+
+@pytest.mark.parametrize(
+    'command',
+    [
+        'codex login status',
+        'codex --version',
+        'codex exec --help',
+        'codex exec resume --help',
+        'codex resume --help',
+        'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
+        '-m gpt-6.1-sol -c model_reasoning_effort="xhigh" '
+        '"Start by invoking the solve skill on this request."',
+        'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
+        '-m gpt-6.1-sol -c model_reasoning_effort="high" task',
+        'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
+        '-m gpt-6-luna -c model_reasoning_effort="high" task',
+        'codex exec --ephemeral "Explain codex exec resume --last"',
+        "printf '%s\\n' 'codex exec resume --last'",
+        'echo codex exec resume --last',
+        'codex -C resume exec --ephemeral task',
+        "printf '%s\\n' ';' 'codex' 'exec' 'resume' '--last'",
+        "cat <<'EOF'\ncodex exec resume --last\nEOF",
+    ],
+)
+def test_process_allows_isolated_codex_and_status(command: str) -> None:
+    payload = {'tool_name': 'exec_command', 'tool_input': {'cmd': command}}
+    assert process(normalize(payload, 'PreToolUse')) is None
 
 
 @pytest.mark.parametrize(

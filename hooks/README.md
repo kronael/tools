@@ -67,7 +67,8 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks the
 unsafe shell commands `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names,
-and recursive Codex execution inside Codex. A push, `git push` or `rip -g`, is
+and Codex `resume` commands inside Codex. Independent workers, auth checks and
+help commands are permitted. A push, `git push` or `rip -g`, is
 NOT blocked here: `skills/global` § Git limits every push to the set the user
 confirmed, and the settings `ask` rules gate `git push` and a `rip -g` to
 `master` or `main`.

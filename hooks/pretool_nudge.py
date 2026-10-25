@@ -9,11 +9,13 @@ import contextlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
 
 from gh_text_lint import command_reason
+from gh_text_lint import mark_heredocs
 from lib.state import hook_event
 
 MARKDOWN_TOOLS = frozenset({'Write', 'Edit', 'MultiEdit'})
@@ -137,8 +139,97 @@ def unsafe_command_reason(command: str, harness: str | None = None) -> str | Non
     for pattern, reason in UNSAFE_COMMAND_PATTERNS:
         if re.search(pattern, command):
             return reason
-    if harness == 'codex' and re.search(r'(?<!\S)codex\b', command):
-        return 'recursive codex execution'
+    if harness != 'codex':
+        return None
+    code, _ = mark_heredocs(command)
+    values = []
+    parts = []
+    offset = 0
+    for match in re.finditer(r"""'[^']*'|"(?:\\[\s\S]|[^"\\])*"|\\[\s\S]""", code):
+        parts.append(code[offset : match.start()])
+        word = match.group()
+        if word != '\\\n':
+            parts.append(f'\x00q{len(values)}\x00')
+            values.append(shlex.split(word)[0])
+        offset = match.end()
+    parts.append(code[offset:])
+    lexer = shlex.shlex(''.join(parts), posix=True, punctuation_chars=';&|()\n')
+    lexer.whitespace = ' \t\r'
+    lexer.whitespace_split = True
+    try:
+        commands = [[]]
+        for token in lexer:
+            if token and not token.strip(';&|()\n'):
+                commands.append([])
+                continue
+            word = token
+            for index, value in enumerate(values):
+                word = word.replace(f'\x00q{index}\x00', value)
+            commands[-1].append(word)
+    except ValueError:
+        return None
+    for tokens in commands:
+        words = iter(tokens)
+        for token in words:
+            if token in {'env', 'command', 'exec', 'sudo', 'nohup', 'if', 'then', 'do', '!'}:
+                continue
+            if token in {'-u', '--unset', '--user', '-g', '--group', '--chdir'}:
+                next(words, None)
+                continue
+            if token.startswith('-') or re.match(r'^[A-Za-z_]\w*=', token):
+                continue
+            break
+        else:
+            continue
+        if os.path.basename(token) != 'codex':
+            continue
+        args = list(words)
+        options = args[: args.index('--')] if '--' in args else args
+        if any(arg in {'-h', '--help', '-V', '--version'} for arg in options):
+            continue
+        arguments = iter(args)
+        execution = False
+        for arg in arguments:
+            if arg == '--':
+                break
+            if arg in {
+                '-C',
+                '--cd',
+                '-c',
+                '--config',
+                '-m',
+                '--model',
+                '-p',
+                '--profile',
+                '-a',
+                '--ask-for-approval',
+                '-s',
+                '--sandbox',
+                '-i',
+                '--image',
+                '--add-dir',
+                '--enable',
+                '--disable',
+                '--local-provider',
+                '-o',
+                '--output-last-message',
+                '--output-schema',
+                '--color',
+                '--remote',
+                '--remote-auth-token-env',
+                '--thread-source',
+                '--cyber-access-program',
+            }:
+                next(arguments, None)
+                continue
+            if arg.startswith('-'):
+                continue
+            if arg == 'resume':
+                return 'recursive codex execution'
+            if arg in {'exec', 'e'} and not execution:
+                execution = True
+                continue
+            break
     return None
 
 

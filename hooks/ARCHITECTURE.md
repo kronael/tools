@@ -124,9 +124,8 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    bytes back.
 
 **PreToolUse flow:**
-1. For shell tools (`Bash`, Codex `exec_command`), block the commands
-   `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names, and recursive Codex
-   execution inside Codex. Then
+1. For shell tools (`Bash`, Codex `exec_command`), `unsafe_command_reason`
+   applies the shell guards documented in `README.md` § pretool_nudge.py. Then
    `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
    PR body, an issue body or a comment is blocked when the body it carries
    fails the lint, cannot be read, or is required and absent. The reason names
