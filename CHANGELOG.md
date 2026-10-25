@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [v0.4.56] — 20261025
+
+> kronael v0.4.56 — Codex workers by tier, stricter Python rules
+>
+> Codex workers run without an inner sandbox and open with /solve, and kvs survives parallel first use.
+>
+> • Workers — Terra builds code; Sol or Opus does reviews, refines and docs rounds.
+> • Codex — every worker runs unsandboxed and its brief starts with /solve.
+> • Python — new lints flag dict() built in place, string dispatch tables and Enum auto().
+> • Design — variants are types, aggregators own their updates, a format's version is a name.
+> • kvs — parallel processes no longer fail with SQLITE_BUSY on a fresh database.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dispatch` owns the tier table: Terra builds code, Sol (xhigh) or Opus reviews, refines, docs.
+- Codex workers run with `--dangerously-bypass-approvals-and-sandbox`; briefs open with /solve.
+- `py` lints: in-place `dict()`, string-literal case dispatch, `dict[str, Callable]` tables, `auto()`.
+- `py`: a Protocol takes the plain noun; no `Any`; read-only protocol properties allowed.
+- `software/code.md`: variants as types, aggregator methods, version as a name, row is the record.
+- `refine`: hunts pass-throughs, unread files, dropped fields, `__file__` paths, library tests.
+- Hooks: the skill lint survives a bad repository marker; only a real nested `codex` is blocked.
 - kvs: serialize database initialization to prevent SQLITE_BUSY during concurrent WAL setup.
 
 ## [v0.4.55] — 20261022
