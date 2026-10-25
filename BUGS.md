@@ -487,16 +487,6 @@
 
 ## Hooks
 
-- **SKILL-LINT-GIT-LS-FILES-OUTSIDE-A-REPO** (LOW, correctness) — CONFIRMED
-  at 1883ba4 2026-10-24. `hooks/skill_frontmatter_lint.py:111` runs `git -C
-  <top> ls-files --others --ignored` with `check=True`; a tree that is not a
-  repository exits 128 and the whole lint dies. `make test-hooks` fails two
-  tests on a plain `tmp_path`:
-  `test_skill_frontmatter_lint.py::test_leak_scan_reaches_a_doc_outside_any_skill`
-  and `::test_hidden_directories_are_not_scanned`. **Fix:** treat a non-repo
-  as having no ignored paths (catch `CalledProcessError`, or `git rev-parse
-  --show-toplevel` first); the two failing tests are the test.
-
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51

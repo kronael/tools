@@ -21,7 +21,7 @@ Use it to cross-check Astra or when you want a non-Claude view. NEVER use a raw
 
 pi runs in **YOLO / full-access mode by default** — no permission prompts, full
 filesystem + shell. That's the codex `--dangerously-bypass-approvals-and-sandbox`
-behavior built in, so NO sandbox flag is needed. The container is the perimeter.
+behavior built in, so NO sandbox flag is needed.
 
 ```bash
 # There is NO reliable static auth check (no `login status`; a
@@ -30,9 +30,9 @@ behavior built in, so NO sandbox flag is needed. The container is the perimeter.
 # a `404 page not found` body or non-zero exit = not authed / endpoint down.
 
 # --no-session: don't persist a rollout file (a batch loop fills the disk otherwise)
-# --thinking xhigh: match Astra's xhigh effort
+# --thinking high: ordinary review; WISDOM § Agents owns the exceptions
 # </dev/null is REQUIRED — without it pi blocks waiting for more stdin
-pi -p --no-session --thinking xhigh "Goal: <X>. Find the flaw in..." </dev/null
+pi -p --no-session --thinking high "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
 ALWAYS treat a non-zero exit OR a body like `404 page not found` as
@@ -43,13 +43,14 @@ NEVER `pkill -f pi` to clean up — `pi` is a 2-char substring that matches
 unrelated processes (and your own shell). Kill by numeric PID
 (`ps -eo pid,args | grep -F 'pi -p' | grep -v grep`).
 
-## Model — newest available, xhigh effort
+## Model and effort
 
 - Discover with `pi --list-models`; it prints the providers/models the current
   auth can reach.
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
-  strongest configured model. Pass `--thinking xhigh`, its top level.
+  strongest configured model. ALWAYS set `--thinking` per WISDOM § Agents:
+  `high` for a review, `xhigh` only for its named exceptions.
 - To force a specific tier: `--model sonnet:high`, or `--provider openai --model
   <id>`. `--model <provider>/<id>` and `--model <id>:<effort>` shorthands work.
 - pi's OUT-OF-BOX default (fresh install, no login) is `google/gemini-2.5-flash`,

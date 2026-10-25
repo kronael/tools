@@ -88,9 +88,13 @@ code extension and still carries every claim the reviewer will trust.
    written from `brief.md`; ALWAYS read that file before writing the first
    brief. Launch each with `subagent_type` set by the context's heaviest tag:
    `simplify` → `sonnet`, `correctness` → `opus`, both at `effort: high`
-   (`xhigh` only for a security context) — NEVER `model=`, which leaves the
-   effort to the parent. On Codex, `simplify` → Terra and `correctness` →
-   Astra. NEVER a review with no `opus`-tier reviewer: Sonnet or Terra alone
+   (`xhigh` only for a security context) — NEVER `model=` for a Claude agent,
+   which leaves the effort to the parent. On Codex, `simplify` → Terra using
+   its native settings. For `correctness`, ALWAYS use native `spawn_agent`
+   when available: `model: "gpt-6-astra"`, `reasoning_effort: "high"`
+   (`"xhigh"` for security), `fork_turns: "none"`. Native workers need no CLI
+   Model/Auth checks; the CLI fallback follows `astra`. NEVER a review with
+   no `opus`-tier reviewer: Sonnet or Terra alone
    misses what a correctness pass finds. A context whose lenses carry no tag (a document
    context) runs as `correctness`. The subs report
    findings with commands and outputs and NEVER edit. ALWAYS leave a context's
@@ -165,9 +169,6 @@ code extension and still carries every claim the reviewer will trust.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.
-
-Pass every agent `Intent:` (the user's original words), `Primary:` (files
-to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
 
 ## Review Checklist
 

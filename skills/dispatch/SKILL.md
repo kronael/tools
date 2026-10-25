@@ -23,9 +23,9 @@ One lane per tier, and this table is the one place every lane is written. WISDOM
 |---|---|---|
 | Read-only fan-out — mapping, grep surveys, one-file lookups — and a bounded mechanical edit with a clear spec | `/haiku` — Haiku 5.5, high | `/luna` — `gpt-6-luna`, high |
 | Investigation, bug hunts, pre-review, read-only audits, and the steps of a written plan | `/sonnet` — Sonnet 5.5, high | `/terra` — `gpt-6.1-sol`, high |
-| Design calls, deep analysis, and the plan for implementation work | `/opus` — Opus 5.5, xhigh | `sol` — `gpt-6.1-sol`, xhigh; a second opinion only, `oracle` → `astra` § Sol |
-| Specs, architecture, WISDOM and skill writing, algorithmic solutions, red reviews and deep audits — NEVER implementation, except a change to a globally shared library, one other repositories or teams import; a project's own library takes the regular path | `/fable` — Fable 5.1, high | `astra` — `gpt-6-astra`, xhigh; a second opinion only, `oracle` → `astra` |
+| Design calls, deep analysis, and the plan for implementation work | `/opus` — Opus 5.5, xhigh | `sol` — `gpt-6.1-sol`, high for a review; WISDOM § Agents sets exceptions; a second opinion only, `oracle` → `astra` § Sol |
+| Specs, architecture, WISDOM and skill writing, algorithmic solutions, red reviews and deep audits — NEVER implementation, except a change to a globally shared library, one other repositories or teams import; a project's own library takes the regular path | `/fable` — Fable 5.1, high | `astra` — `gpt-6-astra`, high for a review; WISDOM § Agents sets exceptions; `oracle` → `astra`, or a correctness reviewer through `refine` |
 
 - ALWAYS take the lowest lane whose description holds the whole task, and escalate one lane — `/haiku` → `/sonnet` → `/opus` → `/fable` — when the work asks for judgment the lane lacks or a step fails twice.
-- NEVER launch a tier with `model:` — ALWAYS the agent type or the skill, so the pin applies and the cap counts it.
+- NEVER launch a Claude tier with `model:` — ALWAYS its agent type so the pin applies and the cap counts it. Native Codex workers use their skill's explicit model and effort settings.
 - A codemod — one pattern change across many files — is no lane: it stays in the parent (`sonnet` § Plan).

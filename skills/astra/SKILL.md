@@ -7,31 +7,27 @@ user-invocable: true
 
 # Astra
 
-The codex CLI pinned to `gpt-6-astra`, at xhigh effort. Its catalog description
+The codex CLI pinned to `gpt-6-astra`, at high effort for a review. Its catalog description
 is "Frontier intelligence for the most demanding work." This is a subprocess,
 NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
 Routing lives in `oracle`. Use this skill directly only when the user
-explicitly asks for Astra, Codex or Sol, or when `oracle` dispatches to the
-Astra route.
+explicitly asks for Astra, Codex or Sol, or when `oracle` or `refine` dispatches
+to the Astra route.
 
 ## Invoke
 
-A second opinion from the model you are running on is none: when already on
-the requested model, ALWAYS answer directly and NEVER launch this CLI for it.
+For a second opinion from the model you are running on, ALWAYS answer directly
+and NEVER launch this CLI. This shortcut does not apply to `refine`'s isolated
+correctness reviewer; `refine` § Dispatch owns its native Codex launch.
 
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model and the session: see § Sol.
 
-ALWAYS run codex without its sandbox: the host or container isolates it, and
-the owner wants no inner sandbox. NEVER pass `--sandbox` or `-s`.
-On kernels that block unprivileged user namespaces, bwrap fails with
-`No permissions to create a new namespace` — and `-s danger-full-access` does NOT
-help, because it still spins up bwrap (in full-access mode), so every shell
-command codex runs dies before executing. The ONLY reliable skip is the flag
-`--dangerously-bypass-approvals-and-sandbox`, which disables bwrap entirely.
-NEVER use `-s read-only` for an audit on this path — ALWAYS use the bypass
-flag; sandboxed backend lookups can fail (`failed to lookup address information`).
+ALWAYS use `--dangerously-bypass-approvals-and-sandbox`: the owner requires no
+inner sandbox. NEVER pass `--sandbox` or `-s`. The bypass disables approvals
+and sandboxing, including namespace setup that can fail on restricted kernels.
+A read-only worker is read-only by its brief, not by this flag.
 
 ALWAYS launch via the `resume` subcommand so codex continues this project's
 existing thread instead of starting cold every call. `--last` picks the most
@@ -55,11 +51,9 @@ fi
 # resume --last: continue this cwd's most recent codex session (cold-starts if
 #   none). Repeated calls fold into ONE growing session file, not N rollout
 #   files — so this is also the disk-friendly path, no --ephemeral needed.
-# --dangerously-bypass-approvals-and-sandbox: skip bwrap (container is the real
-#   perimeter; -s danger-full-access still runs bwrap, fails on no-userns kernels)
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
 codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6-astra -c model_reasoning_effort="xhigh" \
+  -m gpt-6-astra -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -75,7 +69,7 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 ## Sol
 
 Sol is the same second opinion from `gpt-6.1-sol` (catalog description
-"Latest workhorse model for coding and everyday work"), at xhigh effort.
+"Latest workhorse model for coding and everyday work"), with the same effort policy.
 Use it only when the user explicitly asks for Sol; `oracle` routes to it only
 on such a request. Two differences from the Astra invocation: select
 `gpt-6.1-sol` in the catalog
@@ -86,7 +80,7 @@ Astra's prompt and answer.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6.1-sol -c model_reasoning_effort="xhigh" \
+  -m gpt-6.1-sol -c model_reasoning_effort="high" \
   "Goal: <X>. Find the flaw in..." </dev/null
 ```
 
@@ -99,8 +93,9 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
 - If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
   launch and report the exact missing model. ALWAYS ask the user to refresh
   the Codex catalog or explicitly choose another model; NEVER silently substitute.
-- ALWAYS pass `-c model_reasoning_effort="xhigh"` for second-opinion work, in
-  both variants; NEVER trust a lower local config default.
+- ALWAYS set `model_reasoning_effort` explicitly in both variants: `high` for
+  a review, `xhigh` only for the exceptions in WISDOM § Agents. NEVER trust
+  the local config default; the examples above are ordinary reviews.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 

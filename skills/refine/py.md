@@ -43,7 +43,7 @@ reads to pick the agent type.
   (`interval`), NEVER a vague one (`nested`, `granularity`).
 - NEVER a `type X = tuple[A, B]` alias or a `-> tuple[A, B]` of unlike parts
   (`rg -n 'tuple\[' <added files>`): a shape that earned a name is a
-  dataclass (`py` § Named Data Structures); a tuple stays only as a key.
+  dataclass unless it meets a tuple exception in `py` § Named Data Structures.
 
 ## Less source `simplify`
 

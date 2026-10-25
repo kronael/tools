@@ -132,7 +132,8 @@ your diff against every `##` heading here before calling an edit done.
   accumulator — carries the operations that change it as methods
   (`book.apply_delta(delta)`, `klines.add_trade(trade)`), NEVER as functions
   beside it; a value that travels — a trade, a stored record — stays a frozen
-  record with no logic.
+  record without orchestration or external effects. Constructors, derived
+  values and the slot accessors below stay on the record.
 - ALWAYS compose a part of an object's behaviour that varies: a field holding
   an object of one interface, a do-nothing one where there is nothing to do.
   NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe
@@ -147,9 +148,11 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS make a stored or wire format's version part of a name and nothing
   else: the module of the record (`depth_v1.py`) and the kind string written
   once beside it (`'depth/1'`). The record keeps a plain name (`Depth`) and no
-  kind or version constant, typed code passes records, and no code builds,
-  compares or looks up a kind or version string. A new version is a new module
-  beside the old one; a decoder only tests use lives in the tests.
+  kind or version constant. Typed application code passes records, never
+  builds, compares or looks up a kind or version string. The external decoder
+  may inspect the wire discriminator and source schema metadata to select the
+  record type, using the format name defined beside that record. A new version
+  is a new module beside the old one; a decoder only tests use lives in the tests.
 - ALWAYS let a record stored in a shape other than its field map — a
   positional array — BE that row: the class holds the row and reads a slot
   through a method named after the slot (`post.title()`; NEVER `get_title()`,

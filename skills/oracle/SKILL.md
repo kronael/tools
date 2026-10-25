@@ -17,9 +17,9 @@ astra, sol, fable, creative, code, planning, or security routing, follow that ro
 | Code review, bug hunt, algorithm/design critique | `fable` subagent |
 | Planning critique, release plan, architecture plan | `fable` subagent |
 | Security, red-team, exploitability, deep audit | `fable` subagent |
-| Naming, prose, narrative, product copy, ideation | `astra` skill, xhigh effort |
+| Naming, prose, narrative, product copy, ideation | `astra` skill |
 | Ambiguous but touches code or operations | `fable` subagent |
-| Explicit "ask codex" / "use codex" | `astra` skill, xhigh effort |
+| Explicit "ask codex" / "use codex" | `astra` skill |
 | Explicit Astra or Sol request | `astra` skill; for Sol, its § Sol variant |
 
 ## Fable Route

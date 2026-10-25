@@ -22,18 +22,18 @@ Python-specific additions and deltas.
 
 ## Type Annotations
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
-- NEVER `Any` in an annotation — bare or inside a generic (`dict[str, Any]`, `list[Any]`): a value whose shape has no name is a dataclass not yet written (§ Named Data Structures). `../software/strict-typing.md` holds the config that errors on it; the one survivor is the pass-through `**kwargs` below, carrying `# noqa: ANN401`
+- NEVER `Any` in an annotation — bare or inside a generic (`dict[str, Any]`, `list[Any]`): a value whose shape has no name is a dataclass not yet written (§ Named Data Structures). `../software/strict-typing.md` holds the config and the narrow suppression for pass-through `**kwargs` below.
 - NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
 - NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
 - NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
-- ALWAYS declare a `Protocol`'s data members as read-only `@property`s — a plain class then satisfies it with plain assignments (`name = 'x'`, `lists = ()`, `server = Server()`). NEVER a bare `name: str` or `ClassVar` member in a protocol a class implements by assignment, unless code reads it off the class itself: pyright then demands the same annotation in every class, and a mutable member is invariant, so a subtype value fails
+- ALWAYS declare a `Protocol`'s data members as read-only `@property`s — a plain class then satisfies it with plain assignments (`name = 'x'`, `lists = ()`, `server = Server()`). NEVER a bare `name: str` or `ClassVar` member in a protocol a class implements by assignment, unless code reads it off the class itself: a mutable member is invariant, so a subtype value fails.
 - ALWAYS name a `Protocol` by the plain noun of the thing it describes (`Venue`, `Job`, `Server`); an implementation is often `<Qualifier><Noun>` (`BinanceVenue`) but takes any fitting name. `<Verb>able` when it promises one or a few methods and nothing else (`Runnable`: `run()`). NEVER a suffix or prefix that only says it is a protocol: `VenueLike`, `VenueProtocol`, `VenueInterface`, `IVenue`
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
 - ALWAYS write an `Enum` member's value, `LIVE = 1` — NEVER `auto()`. Lint `py-no-enum-auto`.
-- Forward a pass-through `**kwargs` as plain `**kwargs: Any  # noqa: ANN401` to a callee that owns the real typed signature — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
+- Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature, with the narrow suppressions in `../software/strict-typing.md` — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 - NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
 - NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
 
@@ -49,7 +49,7 @@ Python-specific additions and deltas.
   1. **Mocking / test doubles** — overriding attribute access on a stub
   2. **Adapting external/library code** — wrapping an API you don't own that requires property protocol
   3. **A record's value derived from its own fields** — § Named Data Structures owns the rule
-  4. **A `Protocol`'s data member** — a body-less read-only declaration (§ Type Annotations); the lint skips `Protocol` classes
+  4. **A `Protocol`'s data member** — a read-only declaration with only `...` or `pass` (§ Type Annotations); the lint exempts that declaration
 - Instead: plain method (`def program_lookup(self)`) or compute once and store on the dataclass field
 
 ## getattr/setattr

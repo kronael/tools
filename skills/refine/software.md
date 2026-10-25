@@ -26,22 +26,21 @@ reads to pick the agent type.
   catalog documents) are findings: say what it does (`read_stats`).
 - ALWAYS count the diff's repeated assemblies: the same two names glued at
   three or more sites —
-  `git diff <range> | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
+  `git diff <range> | rg '^\+[^+]' | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
   — is one value the design never named (§ Design: a format's version is a
   name, written once).
 - ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
   the changed files of a language that ships one — `rs`, `py`, `ts` (not
-  `.tsx`); NEVER for another, which has no rules file. Every hit is a
-  finding: a `<lang>-bool-fn-prefix` one fixed by the rename (§ Naming), the
-  rest by the rule each message names.
+  `.tsx`); NEVER for another, which has no rules file. ALWAYS assess each
+  warning against its owning rule and documented exceptions before calling
+  it a finding; syntax alone cannot establish every exception.
 
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
   (`grep -nE '^\s*(//|#|--|/\*|\*)'`) — § Comments puts the whole file in
-  scope. Each one that is not a public-API doc comment, one of the three
-  named body exceptions or a machine-read marker (a `// #region` anchor, a
-  lint or type pragma) is a finding.
+  scope. ALWAYS apply that section's exceptions; a comment outside them is
+  a finding.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
 - ALWAYS check the comment directly above a log, warn or error call — a
@@ -63,11 +62,11 @@ reads to pick the agent type.
   forwards its arguments to one call and wraps or renames the result
   (`read_catalog` = `get_markets(…)` then `Catalog(…)`) is a finding: inline
   it at its callers (§ Boring code).
-- ALWAYS grep the tree for the name of every non-source file the range adds
-  (`git diff --name-only --diff-filter=A <range>` minus code, then `rg -l
-  '<basename>'`): a file no code, test or Make target reads — a provenance or
-  manifest beside fixtures — is a finding, deleted (`testing.md` § Scope and
-  layout).
+- ALWAYS trace consumers of each runtime or test asset the range adds
+  (`git diff --name-only --diff-filter=A <range>`): search its name, then check
+  glob discovery, directory scans and configuration. An asset with no consumer
+  is a finding, deleted (`testing.md` § Scope and layout). Documentation is
+  read by people; NEVER infer an unused asset from a missing basename match.
 - ALWAYS list every function the range adds that assigns to or appends on its
   first parameter (`def add_trade(klines, …)` writing `klines.x`): an
   aggregator's updates are its methods (§ Design) — move it onto the type.
@@ -111,10 +110,9 @@ reads to pick the agent type.
 ## Tests that prove nothing `simplify`
 
 - ALWAYS list, per test file the range adds, the production modules it
-  imports (`rg -n '^(from|import) ' <file>`, minus stdlib, third-party and
-  `tests`): none is a library test; production reached only through a helper
-  under `tests/` is a test of the helper — delete, or rewrite against the
-  production path (`testing.md` § Scope and layout).
+  exercises: trace imports, helpers, subprocesses and service calls. A test
+  whose subject is only a library or test helper is a finding; a helper that
+  drives production is allowed (`testing.md` § Scope and layout).
 - ALWAYS grep each added test's expected values for the module under test
   (`rg -n 'assert .*== *<module>\.'`) and its patches for the project's own
   modules (`rg -n "patch\('<project>"`): a mirror assertion or a mocked own

@@ -24,9 +24,7 @@ ALWAYS report what was launched and continue on non-overlapping work.
   `../astra/SKILL.md`. ALWAYS use the shell tool's background mode.
 - ALWAYS set `-C` to the CLI worker's designated directory.
 - ALWAYS use `--dangerously-bypass-approvals-and-sandbox` per `astra` § Invoke.
-  NEVER pass `--sandbox`: the host isolates the worker, and the sandbox blocks
-  sockets, Postgres and git, so the worker cannot run the checks.
-  A read-only worker is read-only by its brief. The invocation is:
+  The invocation is:
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "<worker directory>" \
