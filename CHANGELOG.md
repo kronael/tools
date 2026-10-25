@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [v0.4.57] — 20261025
+
+> kronael v0.4.57 — Project checks from the bundle
+>
+> Projects can run bundled lint rules through local hooks, and refine checks files without matching rule coverage.
+>
+> • Project hooks — scan selected Python, Rust, TypeScript and shell files.
+> • Lint rules — mechanical checks preserve semantic exceptions and native lint ownership.
+> • Refine — uncovered changed files receive bundled checks.
+> • Components — reuse existing stacks and separate runtime changes from features.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Projects can adopt bundled Python, Rust, TypeScript and shell rules through local hooks.
+- Python gains checks for type-only imports, record declarations, logger names and tuple assignments.
+- Refine checks changed files without matching rule coverage; semantic/native checks own exceptions.
+- Component guidance requires shared stacks, codecs and builds, plus separate deployment PRs.
+- Structural property, string-dispatch and unwrap checks move to semantic review or native linters.
+
 ## [v0.4.56] — 20261025
 
 > kronael v0.4.56 — Codex workers by tier, stricter Python rules
