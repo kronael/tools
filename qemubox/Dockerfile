@@ -230,7 +230,8 @@ RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' 
 COPY codex/AGENTS.md /opt/qemubox/codex-AGENTS.md
 COPY qemubox/qemubox-codex-bridge /usr/local/bin/qemubox-codex-bridge
 COPY qemubox/guest-init /usr/local/bin/qemubox-init
-RUN chmod 755 /usr/local/bin/qemubox-init /usr/local/bin/qemubox-codex-bridge
+RUN chmod 755 /usr/local/bin/qemubox-init /usr/local/bin/qemubox-codex-bridge \
+    && touch /opt/qemubox/memory-hotplug
 RUN uv cache clean \
     && go clean -cache -modcache \
     && npm cache clean --force \

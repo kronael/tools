@@ -125,9 +125,11 @@ is boxed and what survives; CLAUDE_SANDBOX=qemubox is set.
 Environment: QEMUBOX_MEM=24576 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
              QEMUBOX_SWAP=16384 MiB on guest ext4; 0 disables
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
-Memory: the host backs guest RAM as the guest touches it. Free-page reporting
+Memory: QEMUBOX_MEM sets the RAM ceiling in positive decimal MiB.
+        The VM boots near 2 GiB and requests the remaining RAM after SSH starts.
+        The host backs guest RAM as the guest touches it. Free-page reporting
         can return freed pages, subject to QEMU and virtiofs support.
-        Guest /tmp is a tmpfs capped at 75% of RAM and active swap combined.
+        Guest /tmp is capped at 75% of configured RAM and active swap combined.
         /tmp/cargo-target and the build-dir
         mounts share this cap. Process memory also needs RAM or swap.
         Every 60s, guest reclaim requests at most 1 GiB from workloads above
@@ -288,7 +290,17 @@ validate_swap() {
     SWAP=$((10#$SWAP))
 }
 
+validate_memory() {
+    [[ "$MEM" =~ ^[0-9]{1,9}$ ]] && ((10#$MEM > 0)) || {
+        echo 'QEMUBOX_MEM must be positive MiB as 1 to 9 decimal digits' >&2
+        return 2
+    }
+    MEM=$((10#$MEM))
+}
+
 ensure_box() {
+    local extra=0
+    validate_memory || return
     validate_swap || return
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
@@ -319,6 +331,10 @@ ensure_box() {
         echo "Missing base rootfs $base; run qemubox rm $name, then qemubox build-base" >&2
         return 1
     }
+    if [[ -f "$base/opt/qemubox/memory-hotplug" ]]
+    then
+        extra=$((MEM > 2048 ? (MEM - 2048) / 128 * 128 : 0))
+    fi
     [ -f "$dir/key" ] || {
         note "creating SSH key for qemubox-$name"
         ssh-keygen -t ed25519 -f "$dir/key" -N "" -C "qemubox-$name" >/dev/null
@@ -337,6 +353,7 @@ ensure_box() {
         printf '%s\n' Etc/UTC
     } > "$dir/config/identity"
     printf '%s\n' "$SWAP" > "$dir/config/swap"
+    printf '%s\n' "$MEM" "$extra" > "$dir/config/memory"
     cp "$dir/key.pub" "$dir/config/authorized_keys"
     stage_ephemeral "$dir/config/ephemeral"
     [ -f "$dir/upper.raw" ] || {
@@ -362,7 +379,7 @@ unit_state() {
 }
 
 qmp_box() {
-    python3 - "$(box_dir "$1")" "$2" <<'EOF'
+    python3 - "$(box_dir "$1")" "$2" "${3:-}" <<'EOF'
 import json
 import os
 import socket
@@ -376,7 +393,10 @@ try:
         qmp = sock.makefile("rw")
         qmp.readline()
         for command in ["qmp_capabilities", sys.argv[2]]:
-            qmp.write(json.dumps({"execute": command}) + "\n")
+            request = {"execute": command}
+            if command != "qmp_capabilities" and sys.argv[3]:
+                request["arguments"] = json.loads(sys.argv[3])
+            qmp.write(json.dumps(request) + "\n")
             qmp.flush()
             reply = {"event": None}
             while "event" in reply:
@@ -680,6 +700,7 @@ session_tty() {
 
 start_box() {
     local virtiofsd fs_units=() access=()
+    validate_memory || return
     name="$(box_name "$1")"
     missing_deps
     dir="$(box_dir "$name")"
@@ -797,8 +818,23 @@ read_mounts() {
 
 run_qemu() {
     local restrict=",restrict=on" mounts tag deadline kernel_id append
+    local MEM extra boot memory growth=()
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
+    {
+        read -r MEM
+        read -r extra
+    } < "$dir/config/memory" || return
+    boot=$((MEM - extra))
+    memory="${boot}M"
+    if ((extra > 0))
+    then
+        memory+=",maxmem=${MEM}M"
+        growth=(-object
+            "memory-backend-memfd,id=vmem,size=${extra}M,share=on,prealloc=off"
+            -device
+            'virtio-mem-pci,id=vm0,memdev=vmem,requested-size=0,dynamic-memslots=on,prealloc=off')
+    fi
     kernel_id=$(cat "$ROOT/base/kernel/current")
     read_mounts "$dir/config/mounts"
     deadline=$((SECONDS + ${QEMUBOX_READY_TIMEOUT:-180}))
@@ -818,25 +854,37 @@ run_qemu() {
     [ "$(cat "$dir/net")" = off ] || restrict=""
     append='console=ttyS0 reboot=t panic=-1 loglevel=5'
     append+=' ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off'
+    append+=' memhp_default_state=online'
     cd "$dir"
     exec "$QEMU" "${accel[@]}" -nodefaults \
-        -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$MEM" -smp "$CPUS" \
-        -object "memory-backend-memfd,id=mem,size=${MEM}M,share=on" \
+        -cpu "$cpu" -machine q35 -rtc base=utc,clock=host -m "$memory" -smp "$CPUS" \
+        -object "memory-backend-memfd,id=mem,size=${boot}M,share=on" \
         -numa node,memdev=mem \
         -device virtio-balloon-pci,free-page-reporting=on \
         -drive 'file=upper.raw,if=virtio,format=raw,discard=unmap,detect-zeroes=unmap' \
         -kernel "$ROOT/base/kernel/$kernel_id/bzImage" \
         -initrd "$ROOT/base/kernel/$kernel_id/initrd" \
         -append "$append" \
-        "${mounts[@]}" \
+        "${mounts[@]}" "${growth[@]}" \
         -nic "user,model=virtio$restrict,hostfwd=tcp:127.0.0.1:$(port_for "$name")-:22" \
         -serial stdio -qmp "unix:qmp,server=on,wait=off" -display none -no-reboot
 }
 
 setup_box() {
+    local extra
     name="$(box_name "$1")"
     dir="$(box_dir "$name")"
-    wait_ready "$name"
+    wait_ready "$name" || return
+    {
+        read -r _
+        read -r extra
+    } < "$dir/config/memory" || return
+    if ((extra > 0))
+    then
+        qmp_box "$name" qom-set \
+            "{\"path\":\"/machine/peripheral/vm0\",\"property\":\"requested-size\",\"value\":$((extra * 1048576))}" \
+            >/dev/null || return
+    fi
     printf '%s\n' "$LINGER" > "$dir/idle"
     systemd-run --user --collect --quiet --unit="qemubox-check@$name" \
         --on-active=60 --on-unit-active=60 \
@@ -894,6 +942,7 @@ remove_box() {
     cleanup_capture "$name" || return
     rm -f "$dir/config/identity" "$dir/config/authorized_keys" "$dir/config/ephemeral" \
         "$dir/config/mounts" "$dir/config/CLAUDE.md" "$dir/config/swap" \
+        "$dir/config/memory" \
         "$dir/net" \
         "$dir/trust" "$dir/image-id" "$dir/ready" "$dir/stopped"
     if [ -d "$dir/config" ]
@@ -1580,6 +1629,7 @@ case "${1:-}" in
     -h|--help|help) usage; exit 0 ;;
 esac
 
+validate_memory || exit 2
 validate_swap || exit 2
 validate_resume || exit 2
 read_rc "$HOME/.qemuboxrc"

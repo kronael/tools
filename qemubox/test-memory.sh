@@ -1,5 +1,45 @@
 eq 'default guest swap MiB' "$SWAP" 16384
 
+memory_config_test() {
+    regression_setup
+    local value
+    for value in '' 0 0000 -1 1G 1.5 ' 16' 1000000000 '1+1'
+    do
+        MEM="$value"
+        if ensure_box invalidmem 2> "$fixture/mem-error"
+        then
+            return 1
+        else
+            [[ "$?" = 2 ]]
+        fi
+        [[ ! -e "$ROOT/invalidmem" ]]
+        grep -q QEMUBOX_MEM "$fixture/mem-error"
+        if start_box invalidmem 2> "$fixture/mem-error"
+        then
+            return 1
+        else
+            [[ "$?" = 2 ]]
+        fi
+        [[ ! -e "$ROOT/invalidmem" ]]
+    done
+    if QEMUBOX_MEM=bad QEMUBOX_HOME="$ROOT/invalid-cli" \
+        bash "$here/qemubox" -T exec true 2> "$fixture/mem-error"
+    then
+        return 1
+    else
+        [[ "$?" = 2 ]]
+    fi
+    [[ ! -e "$ROOT/invalid-cli" ]]
+    MEM=24576 untrusted="" ensure_box memdefault
+    [[ "$(cat "$ROOT/memdefault/config/memory")" = $'24576\n22528' ]]
+    MEM=0008 untrusted="" ensure_box memdecimal
+    [[ "$(cat "$ROOT/memdecimal/config/memory")" = $'8\n0' ]]
+    MEM=2177 untrusted="" ensure_box memodd
+    [[ "$(cat "$ROOT/memodd/config/memory")" = $'2177\n128' ]]
+}
+regression 'memory validates before box files and serializes positive decimal MiB' \
+    memory_config_test
+
 swap_config_test() {
     regression_setup
     local value
@@ -104,19 +144,25 @@ regression 'guest swap allocates extents once and preserves size and ENOSPC' \
 guest_tmp_size_test() {
     local dir="$fixture/guest-tmp"
     mkdir -p "$dir"
-    awk '/^tmp_kib=/ {emit=1} emit {print}
+    awk '/^read -r memory / {emit=1} emit {print}
         /^mount -t tmpfs .*tmpfs \/tmp$/ {exit}' "$here/guest-init" |
-        sed "s|/proc/meminfo|$dir/meminfo|" > "$dir/tmp-init"
+        sed "s|/proc/meminfo|$dir/meminfo|;
+             s|/run/qemubox/config/memory|$dir/memory|" > "$dir/tmp-init"
     mount() { printf '%s\n' "$*"; }
     export -f mount
+    echo 24576 > "$dir/memory"
     printf 'MemTotal: 1048576 kB\nSwapTotal: 4194304 kB\n' > "$dir/meminfo"
     [[ "$(bash -e "$dir/tmp-init")" = \
-        '-t tmpfs -o rw,exec,mode=1777,size=3932160k tmpfs /tmp' ]]
+        '-t tmpfs -o rw,exec,mode=1777,size=22020096k tmpfs /tmp' ]]
+    echo 2177 > "$dir/memory"
     printf 'MemTotal: 1048577 kB\nSwapTotal: 0 kB\n' > "$dir/meminfo"
     [[ "$(bash -e "$dir/tmp-init")" = \
-        '-t tmpfs -o rw,exec,mode=1777,size=786432k tmpfs /tmp' ]]
+        '-t tmpfs -o rw,exec,mode=1777,size=1671936k tmpfs /tmp' ]]
+    echo 768 > "$dir/memory"
+    [[ "$(bash -e "$dir/tmp-init")" = \
+        '-t tmpfs -o rw,exec,mode=1777,size=589824k tmpfs /tmp' ]]
 }
-regression 'tmpfs uses three quarters of RAM and active swap in whole KiB' \
+regression 'tmpfs uses configured RAM and active swap before growth in whole KiB' \
     guest_tmp_size_test
 
 guest_reclaim_test() {
@@ -144,6 +190,30 @@ guest_reclaim_test() {
             2147483648) [[ "$(cat "$dir/cgroup/memory.reclaim")" = 1073741824 ]] ;;
         esac
     done
+    sleep() {
+        [[ "$1" = 60 ]]
+        ((ticks += 1))
+        case "$ticks" in
+            1) echo 'MemTotal: 1048576 kB' > "$dir/meminfo" ;;
+            2) echo 'MemTotal: 4194304 kB' > "$dir/meminfo" ;;
+            *) return 1 ;;
+        esac
+    }
+    printf() {
+        builtin printf '%s\n' "$2" >> "$dir/requests"
+        builtin printf "$@"
+    }
+    echo 1073741824 > "$dir/cgroup/memory.current"
+    ticks=0 reclaim_memory_loop
+    [[ "$(cat "$dir/requests")" = 536870912 ]]
+    unset -f printf
+    echo 'MemTotal: 1048576 kB' > "$dir/meminfo"
+    echo 2147483648 > "$dir/cgroup/memory.current"
+    sleep() {
+        [[ "$1" = 60 ]]
+        ((ticks += 1))
+        ((ticks <= 1))
+    }
     printf() {
         if [[ "$2" = 1073741824 ]]
         then

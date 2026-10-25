@@ -322,7 +322,13 @@ port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the too
 
 ## Memory
 
-A VM starts with 24 GiB of RAM, set by `QEMUBOX_MEM=24576`.
+A VM has a 24 GiB RAM ceiling, set by `QEMUBOX_MEM=24576` in positive decimal MiB.
+Images with memory hotplug support boot with 2 GiB plus any remainder below 128 MiB.
+After SSH starts, the launcher requests the remaining RAM in 128 MiB blocks.
+RAM grows in the background. The launcher does not wait for all RAM to come online.
+For ceilings below 2176 MiB, all configured RAM is present at boot.
+Boxes pinned to images without memory hotplug support boot with all configured RAM.
+The launcher accepts one to nine decimal digits and preserves the exact ceiling.
 `QEMUBOX_SWAP=16384` requests 16 GiB of guest swap in MiB. Set `QEMUBOX_SWAP=0`
 to disable swap on the next boot. The launcher accepts one to nine decimal digits.
 Boot settings apply when the box starts; joining a running box keeps its settings.
@@ -336,7 +342,8 @@ Swap consumes guest filesystem capacity shared with persistent files and Docker.
 Disabling swap keeps its file and allocated extents.
 
 The guest activates swap before mounting `/tmp`. The tmpfs cap is
-`3 * (MemTotal + SwapTotal) / 4` in whole KiB from `/proc/meminfo`.
+`3 * (QEMUBOX_MEM * 1024 + SwapTotal) / 4` in whole KiB.
+The guest reads active `SwapTotal` from `/proc/meminfo` and sets the cap once at boot.
 Only active swap counts toward this cap. Swap can hold cold tmpfs and process pages.
 The guest swap file has allocated extents. The host disk stays sparse, with physical
 host allocation dependent on writes.
@@ -344,7 +351,8 @@ host allocation dependent on writes.
 Every 60 seconds, the guest checks memory use under the `/qemubox` workload cgroup.
 This cgroup contains SSH sessions, Docker services and containers.
 Init and the reclaim loop stay outside it.
-Above half of guest RAM, the loop requests the excess through `memory.reclaim`,
+Each check reads the RAM currently online. Above half of this RAM,
+the loop requests the excess through `memory.reclaim`,
 up to 1 GiB per check. No hard memory limit or balloon reduction applies.
 The console records partial reclaim with before and after usage and retains stderr.
 A control-file error stops the loop and triggers guest shutdown.

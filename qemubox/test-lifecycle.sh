@@ -247,7 +247,9 @@ regression "leaving stamps idle; QEMUBOX_LINGER=0 stops at once" leave_test
 setup_test() {
     regression_setup
     mkdir -p "$ROOT/vm/config"
+    printf '%s\n' 24576 22528 > "$ROOT/vm/config/memory"
     wait_ready() { echo "$1" > "$fixture/setup-ready"; }
+    qmp_box() { :; }
     SELF="$fixture/check source/qemubox"
     mkdir -p "${SELF%/*}"
     printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$SELF"

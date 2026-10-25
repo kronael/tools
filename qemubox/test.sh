@@ -75,7 +75,8 @@ regression() {
 
 regression_setup() {
     ROOT="$fixture/refine-$BASHPID"
-    mkdir -p "$ROOT/base/fixture/rootfs" "$ROOT/base/kernel/fixture"
+    mkdir -p "$ROOT/base/fixture/rootfs/opt/qemubox" "$ROOT/base/kernel/fixture"
+    touch "$ROOT/base/fixture/rootfs/opt/qemubox/memory-hotplug"
     echo fixture > "$ROOT/base/current"
     echo fixture > "$ROOT/base/kernel/current"
     echo complete > "$ROOT/base/fixture/exported"
@@ -222,7 +223,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- '-kernel' "$fixture/qemu.args"
     grep -Fx -- '-nodefaults' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
-    grep -Fx -- 'console=ttyS0 reboot=t panic=-1 loglevel=5 ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off' "$fixture/qemu.args"
+    grep -Fx -- 'console=ttyS0 reboot=t panic=-1 loglevel=5 ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off memhp_default_state=online' "$fixture/qemu.args"
     grep -Fx -- 'file=upper.raw,if=virtio,format=raw,discard=unmap,detect-zeroes=unmap' "$fixture/qemu.args"
     grep -Fx -- "$ROOT/base/kernel/fixture/bzImage" "$fixture/qemu.args"
     grep -Fx -- "$ROOT/base/kernel/fixture/initrd" "$fixture/qemu.args"
@@ -230,7 +231,7 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
     grep -Fx -- 'socket,id=cfg,path=cfg.sock' "$fixture/qemu.args"
     grep -Fx -- 'vhost-user-fs-pci,queue-size=1024,chardev=cfg,tag=cfg' \
         "$fixture/qemu.args"
-    grep -Fx -- 'memory-backend-memfd,id=mem,size=24576M,share=on' \
+    grep -Fx -- 'memory-backend-memfd,id=mem,size=2048M,share=on' \
         "$fixture/qemu.args"
     grep -Fx -- node,memdev=mem "$fixture/qemu.args"
     [ "$(grep -Fxc -- -chardev "$fixture/qemu.args")" = \

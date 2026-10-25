@@ -17,7 +17,8 @@ guest_mounts_test() {
     mkdir -p "$dir/project/space dir/node_modules"
     printf '%s\0' tmpfs "$dir/project/space dir/node_modules" \
         > "$dir/config/ephemeral"
-    awk '/^tmp_kib=/ {emit=1}
+    echo 24576 > "$dir/config/memory"
+    awk '/^read -r memory / {emit=1}
         /^mkdir -p .*home_dir/ {exit} emit {print}' "$here/guest-init" |
         sed "s|/tmp/|$dir/tmp/|g;
              s| tmpfs /tmp$| tmpfs $dir/tmp|;

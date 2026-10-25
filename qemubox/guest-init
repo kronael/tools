@@ -47,9 +47,9 @@ reclaim_memory_loop() {
     local mem_total before after bytes error rc
     local cgroup=/sys/fs/cgroup/qemubox
     export LC_ALL=C
-    mem_total=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
     while sleep 60
     do
+        mem_total=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
         read -r before < "$cgroup/memory.current"
         bytes=$((before - mem_total * 512))
         ((bytes > 0)) || continue
@@ -188,8 +188,9 @@ done
 docker_pid=$!
 
 setup_swap
-tmp_kib=$(awk '/^(MemTotal|SwapTotal):/ {n += $2} END {print int(3*n/4)}' \
-    /proc/meminfo)
+read -r memory < /run/qemubox/config/memory
+tmp_kib=$(awk -v memory="$memory" '/^SwapTotal:/ {swap = $2}
+    END {print int(3 * (memory * 1024 + swap) / 4)}' /proc/meminfo)
 mount -t tmpfs -o "rw,exec,mode=1777,size=${tmp_kib}k" tmpfs /tmp
 install -d -o "$user_uid" -g "$user_gid" /tmp/cargo-target
 mode=untrusted
