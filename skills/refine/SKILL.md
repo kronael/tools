@@ -91,14 +91,14 @@ code extension and still carries every claim the reviewer will trust.
    NEVER use `model=` alone — ALWAYS use the Claude agent type.
    On Codex, ALWAYS use native `spawn_agent` when available:
    `model: "gpt-6.1-sol"`, `reasoning_effort: "xhigh"`, `fork_turns: "none"`.
-   Native workers need no CLI Model/Auth checks; the CLI fallback follows
-   `astra` § Sol. An explicit Astra route uses `astra`'s model and effort.
+   Native workers need no CLI Model/Auth checks; the CLI fallback uses isolated
+   `codex exec --ephemeral` per `astra` § Sol. An explicit Astra route uses
+   `astra`'s model and effort.
    ALWAYS use `dispatch` § Brief for the Codex opening and skill routing.
    A context worker reviews its assigned context itself; NEVER delegate that
    same review again. A context without a tag runs as `correctness`.
    The subs report findings with commands and outputs and NEVER edit.
-   ALWAYS leave a context's
-   files alone in main context until its sub returns.
+   ALWAYS leave a context's files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
    it.
 

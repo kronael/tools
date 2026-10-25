@@ -30,11 +30,11 @@ inner sandbox. NEVER pass `--sandbox` or `-s`. The bypass disables approvals
 and sandboxing, including namespace setup that can fail on restricted kernels.
 A read-only worker is read-only by its brief, not by this flag.
 
-ALWAYS launch via the `resume` subcommand so codex continues this project's
-existing thread instead of starting cold every call. `--last` picks the most
-recent session for the current cwd (`--all` disables that cwd filter); with no
-prior session it cold-starts cleanly (fresh id, exit 0, no error), so
-`resume --last` is the ONE universal invocation — no first-call special case.
+From Claude Code, ALWAYS launch via `resume --last` to continue this project's
+existing thread. `--last` picks the most recent session for the current cwd;
+`--all` disables that cwd filter. With no prior session it starts a fresh one.
+From Codex, ALWAYS use isolated `codex exec --ephemeral` with the same model,
+effort and bypass flags below. NEVER resume a thread from a Codex worker.
 
 ```bash
 # Auth check first — catches "never logged in" only. `codex login status`
@@ -58,10 +58,9 @@ codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
   "<brief per dispatch § Brief>" </dev/null
 ```
 
-NEVER combine `resume` with `--ephemeral` — ephemeral skips persistence, so
-there is nothing to resume next call. Use plain `codex exec --ephemeral …`
-(no `resume`) ONLY for a genuinely isolated batch loop where each item must NOT
-inherit the others' context; everything else uses `resume --last`.
+NEVER combine `resume` with `--ephemeral`. ALWAYS use plain `codex exec --ephemeral …`
+(no `resume`) for a Codex parent or an isolated batch loop whose items must NOT
+inherit each other's context. Other Astra calls from Claude use `resume --last`.
 
 NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 (which contains "codex") and kills the harness. Kill codex by numeric PID
