@@ -288,6 +288,11 @@ ssh-keygen -A
     exec /usr/sbin/sshd -D -e
 ) &
 sshd_pid=$!
+kill -0 "$docker_pid" "$sshd_pid"
+reclaim_memory_loop &
+reclaim_pid=$!
+touch /run/qemubox/ready
+echo 'qemubox: ready'
 deadline=$((SECONDS + 30))
 until timeout 1 docker info >/dev/null 2>&1
 do
@@ -299,10 +304,6 @@ do
     sleep 0.05
 done
 kill -0 "$docker_pid" "$sshd_pid"
-reclaim_memory_loop &
-reclaim_pid=$!
-touch /run/qemubox/ready
-echo 'qemubox: ready'
 rc=0
 wait -n "$docker_pid" "$sshd_pid" "$reclaim_pid" || rc=$?
 echo "qemubox-init: required service exited with status $rc" >&2

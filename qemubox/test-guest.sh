@@ -146,6 +146,7 @@ EOF
         'sshd_pid=""' \
         'reclaim_pid=""' \
         'sleep 30 & docker_pid=$!' \
+        'echo "$docker_pid" > "$QEMUBOX_TEST_SERVICES/docker-pid"' \
         'trap '\''kill "$docker_pid" "$sshd_pid" "$reclaim_pid" 2>/dev/null || true'\'' EXIT' \
         > "$dir/services-init"
     awk '/^reclaim_memory_loop\(\)/ {emit=1}
@@ -173,18 +174,14 @@ EOF
         wait "$runner" 2>/dev/null || true' EXIT
     for ((i=0; i<100; i++))
     do
-        [[ ! -f "$dir/sshd-pid" ]] || break
+        [[ ! -f "$dir/sshd-pid" || ! -f "$dir/ready" ]] || break
         sleep 0.01
     done
-    [[ -s "$dir/sshd-pid" && ! -e "$dir/ready" ]]
+    [[ -s "$dir/sshd-pid" && -f "$dir/ready" ]]
+    [[ ! -e "$dir/docker-ready" ]]
     [[ "$(cat "$dir/sessions/cgroup.procs")" = "$(cat "$dir/sshd-pid")" ]]
     touch "$dir/docker-ready"
-    for ((i=0; i<100; i++))
-    do
-        [[ ! -f "$dir/ready" ]] || break
-        sleep 0.01
-    done
-    [[ -f "$dir/ready" ]]
+    sleep 0.1
     kill -TERM "$(cat "$dir/sshd-pid")"
     if wait "$runner"
     then
@@ -195,6 +192,25 @@ EOF
     grep -Fxq 'qemubox: ready' "$dir/output"
     grep -q 'required service exited with status ' "$dir/output"
     rm "$dir/ready"
+    rm "$dir/docker-ready" "$dir/sshd-pid"
+    PATH="$dir/bin:$PATH" bash "$dir/services-init" > "$dir/output" 2>&1 &
+    runner=$!
+    for ((i=0; i<100; i++))
+    do
+        [[ ! -f "$dir/ready" ]] || break
+        sleep 0.01
+    done
+    [[ -f "$dir/ready" && ! -f "$dir/docker-ready" ]]
+    kill -TERM "$(cat "$dir/docker-pid")"
+    if wait "$runner"
+    then
+        return 1
+    else
+        [[ "$?" = 1 ]]
+    fi
+    grep -Fxq 'qemubox: ready' "$dir/output"
+    rm "$dir/ready"
+    touch "$dir/docker-ready"
     echo 9223372036854775807 > "$dir/cgroup/memory.current"
     ln -s /dev/full "$dir/cgroup/memory.reclaim"
     PATH="$dir/bin:$PATH" bash "$dir/services-init" > "$dir/output" 2>&1 &
@@ -210,5 +226,5 @@ EOF
     grep -q 'required service exited with status 1' "$dir/output"
     trap - EXIT
 )
-regression 'Docker readiness and service exits govern guest supervision' \
+regression 'SSH readiness precedes Docker readiness and service exits fail' \
     guest_services_test

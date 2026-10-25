@@ -112,6 +112,8 @@ lingering on (see Install). qemu runs in the foreground; its serial console
 goes to `journalctl --user -u qemubox@<name>`. A box starts on first use and
 the start waits for guest setup, at most `QEMUBOX_READY_TIMEOUT` seconds
 (default 180); a failed boot stops the unit and prints the journal tail.
+SSH readiness admits the agent while Docker continues starting in parallel.
+Docker startup failure shuts down the guest and appears in the journal.
 Each directory share has a user unit, `qemubox-fs@<name>-<tag>.service`,
 including the read-only `cfg` and root shares. QEMU starts after these units and waits
 for their sockets. Stopping the VM stops its share units, including after
