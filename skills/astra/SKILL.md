@@ -23,7 +23,8 @@ the requested model, ALWAYS answer directly and NEVER launch this CLI for it.
 ALWAYS complete the Model and Auth checks below before this invocation.
 A Sol call shares these rules except the model and the session: see § Sol.
 
-In dockbox, the container provides isolation; codex's inner bwrap sandbox is unnecessary.
+ALWAYS run codex without its sandbox: the host or container isolates it, and
+the owner wants no inner sandbox. NEVER pass `--sandbox` or `-s`.
 On kernels that block unprivileged user namespaces, bwrap fails with
 `No permissions to create a new namespace` — and `-s danger-full-access` does NOT
 help, because it still spins up bwrap (in full-access mode), so every shell
