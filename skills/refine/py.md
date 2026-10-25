@@ -8,15 +8,9 @@ reads to pick the agent type.
 
 - NEVER wrap short local file I/O in a thread or `aiofiles`, and NEVER pair
   `open`/`close` where `with` belongs.
-- NEVER accept a per-module wrapper around threads, subprocesses, retry,
-  clocks or JSON coercion. ALWAYS list what the range adds under a helper
-  name (`git diff --name-only <range> | rg '(_utils|helpers|common)\.py$'`)
-  and every added `def` whose body is `asyncio.sleep` or clock arithmetic, or
-  a `to_<type>(value)` over `JsonValue`/`dict`/`Any`; then grep the project's
-  shared lib for the helper with that job (`rg -n '^(async )?def ' <lib>`,
-  its `from_dict`, pydantic at the boundary). A hit beside the copy — or
-  hundreds of `<module>.to_int(` calls — is a second mechanism (`py` § Named
-  Data Structures): reuse the lib's helper, or put the missing one there.
+- ALWAYS apply `software.md` § Second path beside the first to added thread, subprocess, retry, clock and JSON helpers.
+  ALWAYS inspect added `(_utils|helpers|common).py` files, sleep/clock bodies and `to_<type>` over `JsonValue`/`dict`/`Any`;
+  ALWAYS compare with `rg -n '^(async )?def ' <lib>`, its codec and boundary pydantic (`py` § Named Data Structures).
 
 ## Threads and subprocesses end before their caller `correctness`
 
@@ -44,11 +38,8 @@ reads to pick the agent type.
 - NEVER a `type X = tuple[A, B]` alias or a `-> tuple[A, B]` of unlike parts
   (`rg -n 'tuple\[' <added files>`): a shape that earned a name is a
   dataclass unless it meets a tuple exception in `py` § Named Data Structures.
-
-## Local models duplicate upstream wire types `simplify`
-
-- ALWAYS compare added wire models and field-copy conversions with upstream exports, including `openai`'s `ChatCompletion`.
-  Flag replacements for upstream types (`software/code.md` § Design; `py` § Named Data Structures).
+- ALWAYS compare added wire models and field-copy conversions with upstream exports;
+  ALWAYS flag replacements for standard types (`software/code.md` § Design; `py` § Named Data Structures).
 
 ## Less source `simplify`
 

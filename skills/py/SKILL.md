@@ -77,8 +77,7 @@ Python-specific additions and deltas.
   call (`@retry(BACKOFF, …)`) — NEVER make call sites pass `lambda: iter(...)`.
 
 ## Stack
-- ALWAYS follow `software/code.md` § System changes for existing layer idioms.
-  With no repo choice, ALWAYS use aiohttp for clients (HTTP + WS), FastAPI for servers.
+- With no repo choice (`software/code.md` § System changes), ALWAYS use aiohttp clients (HTTP + WS) and FastAPI servers.
 - ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
@@ -94,9 +93,8 @@ Python-specific additions and deltas.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
-- ALWAYS preserve upstream wire types and their codecs (`software/code.md` § Design); otherwise use the project's
-  one codec (`from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
-  structurer drifts from the first.
+- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`;
+  NEVER add dacite, cattrs or hand-written `cls(**d)` beside it.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a

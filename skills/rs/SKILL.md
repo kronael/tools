@@ -71,7 +71,7 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - Integration tests (cross-crate, external API surface) go in `tests/`
 - Inside `src/<module>_test.rs` use `crate::` paths, not `super::*`
 - `--test-threads=1` if global state via DashMap/RwLock
-- Centralize setup in `tests/container_utils.rs`
+- ALWAYS follow `../software/testing.md` § Testcontainers for shared container setup.
 - Testcontainers: dynamic port via `.get_host_port_ipv4()`
 
 ## Threading
@@ -172,7 +172,7 @@ tokio::spawn(fetch_and_process(client));
 ```
 
 ## Crate Organization
-- Crate-per-concern, named for the concrete job each crate does.
+- ALWAYS one crate per concern, named for its concrete job.
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
 - ALWAYS re-export the crate's own key types at its root — NEVER re-export another crate's items
   (`pub use other_crate::X`, a `pub use solana_pubkey::Pubkey`): a caller depends on the crate that

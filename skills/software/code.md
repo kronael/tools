@@ -67,7 +67,7 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER write a comment or docstring; intent travels in names, types and
   structure. ALWAYS sweep the WHOLE file you touch and delete every comment
   this section bans — one left standing is a defect, not a no-op.
-  For component moves, ALWAYS apply § System changes' verbatim-copy rule.
+  ALWAYS exempt component moves per § System changes.
 - The one general exception: a doc comment on a PUBLIC API item stating what
   the signature cannot — contract, units, ownership, error conditions — NEVER
   what the body does: `"""The MD5 hex digest of repr(contents)."""` on
@@ -122,8 +122,8 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Design
 
-- ALWAYS use upstream package types for standard wire formats, such as `openai`'s `ChatCompletion`.
-  NEVER define local replacement models or field-copy wrappers for those formats.
+- ALWAYS use upstream types/codecs for standard wire formats (`openai.ChatCompletion`);
+  NEVER define local models or field-copy wrappers for them.
 - ALWAYS model states as explicit enum variants, NEVER implicit boolean flags:
   `sent: bool, skipped: bool` → `enum Notify { Send, Skip }`.
 - ALWAYS name a variant by what happens at the use site — the action or effect
@@ -190,13 +190,13 @@ your diff against every `##` heading here before calling an edit done.
 
 ## System changes
 
-- ALWAYS copy code verbatim into a new component; allow only destination-forced differences, each listed with its reason.
-  NEVER include discretionary cleanup, including comment or formatting changes, in the move.
+- ALWAYS copy code verbatim into new components; list each destination-forced difference and its reason.
+  NEVER include discretionary cleanup, including comment or formatting changes.
 - ALWAYS grep for the existing mechanism (guard, helper, runner, table, log
   site, config) before adding one, and extend the ORIGINAL. NEVER a parallel
   second path, a stage beside it or a helper around it — two paths drift. If
   the original is wrong, fix it or say so; NEVER route around it.
-- ALWAYS copy existing layer idioms: framework, routes, config loader, logging and `main`.
+- ALWAYS copy the repo's framework, routes, config loader, logging and `main` idioms.
   NEVER add a dependency that duplicates a role the repo already covers.
 - ALWAYS fail loud, to the user: an error on a user-facing path MUST surface
   (thrown, non-2xx, delivered), not just logged. NEVER swallow it, and NEVER
@@ -212,8 +212,8 @@ your diff against every `##` heading here before calling an edit done.
   after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
 - NEVER improve beyond what the task asks — no drive-by cleanup, rename or
   feature in the same change; park it (`next`, `bugs`).
-- NEVER change service runtime or deployment in a feature PR: container user, HOME, mounts, units or host paths.
-  ALWAYS put those changes in a separate PR with owner sign-off.
+- ALWAYS put service runtime/deployment changes in a separate PR with owner sign-off;
+  NEVER change container user, HOME, mounts, units or host paths in a feature PR.
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
@@ -250,7 +250,7 @@ your diff against every `##` heading here before calling an edit done.
   and the PostToolUse hook runs it on every `.md` you write. A repo with no
   config is never rewrapped.
 - ALWAYS one import per line — it keeps diffs clean.
-- ALWAYS name modules after their one main class/function or exact job; utilities keep `<what>_utils.*`.
+- ALWAYS name modules for their main class/function or exact job; utilities use `<what>_utils.*`.
   NEVER generic `client`, `chat`, `helpers`, `common`, `core`, `manager` or `service` names.
 - ALWAYS apply `readme/topology.md` § Files for the flat component layout.
 - ALWAYS run a script from a fixed working directory with simple relative
@@ -276,6 +276,7 @@ your diff against every `##` heading here before calling an edit done.
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second.
+- ALWAYS use singular TOML array-of-tables names (`[[model]]`, `[[service]]`): each header introduces one entry, an exception to plural collection names.
 - `make` for build/lint/test/clean and debug builds: `make test` = fast unit
   (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
   production data.

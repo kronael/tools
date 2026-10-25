@@ -69,7 +69,7 @@
 
 ## Testcontainers
 
-- Centralize setup in `tests/container_utils.rs` or the language equivalent.
+- ALWAYS centralize container setup in `tests/container_utils.rs` or the language equivalent.
 - Test app/harness structs own the container handle; RAII cleanup is part of
   the fixture contract.
 - Use dynamic ports, then run migrations after start.
@@ -99,7 +99,7 @@
 ## Pitfalls
 
 - Remove real API/database tests from unit test suites.
-- Use shared fixture modules (`conftest.py`, `common/mod.rs`) for common setup.
+- ALWAYS share fixture setup in the language's fixture module (`conftest.py`); container setup follows § Testcontainers.
 - Return `Result<()>` or the language equivalent for clean error propagation.
 - A test that fails from import/typo/fixture errors proves nothing - confirm
   the failure names the missing behavior before writing code.

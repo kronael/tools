@@ -6,7 +6,7 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 # Ops
 
-ALWAYS apply `../software/code.md` § System changes before runtime or deployment edits, including hardening.
+ALWAYS apply `../software/code.md` § System changes to runtime/deployment edits, including hardening.
 
 ## Docker
 

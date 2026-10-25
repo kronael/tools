@@ -17,7 +17,7 @@ user-invocable: true
 
 One commit = one logical change. Group by WHY, not by directory:
 
-- fix vs refa vs simp vs docs vs test → separate commits
+- ALWAYS separate fix, refa, simp, docs and test commits.
 - a fix + its test → one commit
 - a doc/SCREENS/ARCHITECTURE update for a behavior change → same commit
 
