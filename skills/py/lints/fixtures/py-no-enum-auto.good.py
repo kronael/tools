@@ -21,3 +21,7 @@ def auto() -> int:
 
 
 value = auto()
+
+
+class Settings:
+    default = auto()

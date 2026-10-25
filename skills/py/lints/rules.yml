@@ -30,12 +30,21 @@ rule:
     pattern: '@property'
     not:
         inside:
-            kind: class_definition
+            kind: decorated_definition
             has:
-                field: superclasses
-                regex: \bProtocol\b
-            stopBy:
-                kind: class_definition
+                field: definition
+                kind: function_definition
+                has:
+                    field: body
+                    regex: ^\s*(\.\.\.|pass)\s*$
+            inside:
+                kind: block
+                inside:
+                    kind: class_definition
+                    has:
+                        field: superclasses
+                        has:
+                            regex: ^((typing|typing_extensions)\.)?Protocol(\[.*\])?$
 message: NEVER @property / @setter / __getattr__ (except mocks, adapting external APIs, a record's value derived from its own fields, or a Protocol's data
     member) — use a plain method. See skill:py.
 note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
@@ -78,17 +87,18 @@ severity: warning
 rule:
     kind: match_statement
     has:
-        stopBy: end
-        kind: case_clause
+        field: body
         has:
-            kind: case_pattern
-            any:
-                - has:
-                      kind: string
-                - has:
-                      kind: union_pattern
-                      has:
+            kind: case_clause
+            has:
+                kind: case_pattern
+                any:
+                    - has:
                           kind: string
+                    - has:
+                          kind: union_pattern
+                          has:
+                              kind: string
 message: NEVER match on a kind string (case 'quote/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
     (case Quote():). See skill:py.
 note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
@@ -111,10 +121,16 @@ rule:
                           kind: keyword_argument
             - inside:
                   kind: argument_list
+                  stopBy:
+                      not:
+                          kind: parenthesized_expression
                   inside:
                       kind: call
             - inside:
                   kind: keyword_argument
+                  stopBy:
+                      not:
+                          kind: parenthesized_expression
                   inside:
                       kind: argument_list
                       inside:
@@ -139,6 +155,10 @@ rule:
                 kind: block
                 inside:
                     kind: class_definition
+                    has:
+                        field: superclasses
+                        has:
+                            regex: ^(enum\.)?(Enum|IntEnum|StrEnum|Flag|IntFlag)$
 message: NEVER an Enum member = auto() — write the value, LIVE = 1. See skill:py.
 note: 'source: skills/py/SKILL.md — Type Annotations'
 ---
@@ -155,7 +175,7 @@ rule:
     kind: assignment
     has:
         field: type
-        regex: ^(dict|Mapping|MutableMapping)\[str,\s*(Callable|Awaitable|Coroutine)\b
+        regex: ^(dict|Mapping|MutableMapping)\[str,\s*Callable\b
     inside:
         kind: expression_statement
         inside:

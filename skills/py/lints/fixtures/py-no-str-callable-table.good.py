@@ -25,3 +25,6 @@ LIMITS: dict[str, int] = {'quote': 6, 'book': 2}
 
 NAMES: Mapping[str, str] = {'quote': 'Quote'}
 
+PENDING: dict[str, Awaitable[None]] = {}
+
+JOBS: dict[str, Coroutine[None, None, int]] = {}

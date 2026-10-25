@@ -8,3 +8,9 @@ class Account:
 class Socket(Protocol):
     @property
     def name(self) -> str: ...
+
+
+class Connection(Protocol):
+    @property
+    def name(self) -> str:
+        pass

@@ -14,3 +14,12 @@ def width(kind: str) -> int:
             return 6
         case _:
             return 2
+
+
+def nested(sample: Quote, kind: str) -> int:
+    match sample:
+        case Quote():
+            match kind:
+                case 'quote/1':
+                    return 6
+    return 0

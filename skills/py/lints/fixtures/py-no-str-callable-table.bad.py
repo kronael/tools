@@ -7,5 +7,3 @@ DECODERS: Mapping[str, Callable[[object], Sample]] = {
     'quote/1': decode_quote,
     'book/1': decode_book,
 }
-
-HANDLERS: dict[str, Awaitable[None]] = {}

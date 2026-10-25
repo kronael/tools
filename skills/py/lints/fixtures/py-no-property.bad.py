@@ -9,3 +9,9 @@ class Ledger(Protocol):
         @property
         def balance(self):
             return fetch_balance()
+
+
+class Socket(Protocol):
+    @property
+    def name(self) -> str:
+        return fetch_name()

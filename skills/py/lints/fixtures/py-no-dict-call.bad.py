@@ -8,6 +8,10 @@ send([dict(a=1)])
 
 schedule(lambda: dict(a=1))
 
+send(([dict(a=1)]))
+
+schedule((lambda: dict(a=1)))
+
 
 def build():
     return dict(a=1)
