@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- kvs: serialize database initialization to prevent SQLITE_BUSY during concurrent WAL setup.
+
 ## [v0.4.55] — 20261022
 
 > kronael v0.4.55 — An owner profile and pinned sub effort

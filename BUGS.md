@@ -915,21 +915,6 @@
   `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
   `path` after the `case`, with the "not a GitHub remote" error.
 
-## kvs
-
-- **KVS-PARALLEL-INCR-SQLITE-BUSY** (MED, correctness) — CONFIRMED at HEAD
-  2026-10-16. `kvs/main_test.go::TestParallelIncrLosesNoUpdate` runs 16
-  processes doing 25 `incr` each; 3 runs in 8 here fail with `kvs: database is
-  locked (5) (SQLITE_BUSY)` (exit 9) and `make test` goes red with it; upstream
-  CI passed one run at v0.4.48. `TestTTL` (`main_test.go:174`) sets a key with
-  a 1 s TTL and reads it back after two more commands; under load (the race
-  detector plus other work on the host) the read came back absent once in 8
-  runs. **Fix:** the store waits on `SQLITE_BUSY` (a busy timeout or a retry
-  around the write in `kvs/store.go`) so parallel writers queue instead of
-  failing; the TTL test uses a margin wider than its command latency.
-  Measured: `kvs/main_test.go::TestParallelIncrLosesNoUpdate`,
-  `kvs/main_test.go::TestTTL`.
-
 ## spec-lint
 
 - **SPEC-LINT-PHASED-CORPUS-NO-INDEX-INVISIBLE** (LOW, correctness) —
