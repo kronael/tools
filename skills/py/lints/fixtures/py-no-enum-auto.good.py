@@ -25,3 +25,19 @@ value = auto()
 
 class Settings:
     default = auto()
+
+
+class Labels(Enum):
+    LIVE = (1, 'live')
+
+
+class Options:
+    default = (auto(), 'live')
+
+
+class Explicit(Enum):
+    LIVE = 1
+
+    def computed(self):
+        value = auto()
+        return value

@@ -9,3 +9,15 @@ class Phase(enum.Enum):
 
 class Perm(enum.IntFlag):
     READ = enum.auto()
+
+
+class Label(Enum):
+    LIVE = (auto(), 'live')
+
+
+class Position(enum.Enum):
+    LAST = ('last', (enum.auto()))
+
+
+class ImplicitTuple(Enum):
+    LIVE = auto(), 'live'

@@ -23,3 +23,24 @@ def nested(sample: Quote, kind: str) -> int:
                 case 'quote/1':
                     return 6
     return 0
+
+
+def captured(kind: str) -> int:
+    match kind:
+        case 'quote/1' as name:
+            return len(name)
+    return 0
+
+
+def captured_union(kind: str) -> int:
+    match kind:
+        case ('quote/1' | 'book/1') as name:
+            return len(name)
+    return 0
+
+
+def adjacent(kind: str) -> int:
+    match kind:
+        case 'quote' '/1' as name:
+            return len(name)
+    return 0

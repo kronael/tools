@@ -92,13 +92,19 @@ rule:
             kind: case_clause
             has:
                 kind: case_pattern
-                any:
-                    - has:
-                          kind: string
-                    - has:
-                          kind: union_pattern
-                          has:
-                              kind: string
+                has:
+                    kind: string
+                    stopBy:
+                        not:
+                            any:
+                                - kind: case_pattern
+                                - kind: union_pattern
+                                - kind: as_pattern
+                                - kind: concatenated_string
+                                - kind: tuple_pattern
+                                  not:
+                                      has:
+                                          regex: ^,$
 message: NEVER match on a kind string (case 'quote/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
     (case Quote():). See skill:py.
 note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
@@ -149,6 +155,12 @@ rule:
         - pattern: enum.auto()
     inside:
         kind: assignment
+        stopBy:
+            not:
+                any:
+                    - kind: tuple
+                    - kind: parenthesized_expression
+                    - kind: expression_list
         inside:
             kind: expression_statement
             inside:
@@ -175,7 +187,7 @@ rule:
     kind: assignment
     has:
         field: type
-        regex: ^(dict|Mapping|MutableMapping)\[str,\s*Callable\b
+        regex: ^(dict|((typing|collections\.abc)\.)?(Mapping|MutableMapping))\[\s*str\s*,\s*((typing|collections\.abc)\.)?Callable\b
     inside:
         kind: expression_statement
         inside:

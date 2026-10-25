@@ -28,3 +28,11 @@ NAMES: Mapping[str, str] = {'quote': 'Quote'}
 PENDING: dict[str, Awaitable[None]] = {}
 
 JOBS: dict[str, Coroutine[None, None, int]] = {}
+
+READY: dict[str, typing.Awaitable[None]] = {}
+
+TYPED: dict[Side, typing.Callable[[bytes], Quote]] = {}
+
+def local_table():
+    handlers: dict[str, typing.Callable] = {}
+    return handlers
