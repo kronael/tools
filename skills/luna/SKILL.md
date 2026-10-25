@@ -1,6 +1,6 @@
 ---
 name: luna
-description: "/luna — GPT-6 Luna fan-out subagent, the Codex counterpart of /haiku. NOT for investigation or a plan step (use /terra), second opinions (use /oracle) or design calls (use /opus)."
+description: "/luna — GPT-6 Luna fan-out subagent, the Codex counterpart of /haiku. NOT for investigation or a code step (use /terra), docs rounds or reviews (use dispatch § Tiers), second opinions (use /oracle) or design calls (use /opus)."
 when_to_use: "luna, GPT-6 Luna worker, Codex fan-out, cheap Codex sub, delegate to Luna, cross-model mapping, cross-model mechanical edit"
 user-invocable: true
 ---
@@ -32,11 +32,11 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "<worker di
   "<self-contained brief>" </dev/null
 ```
 
-- ALWAYS brief per `dispatch`.
+- ALWAYS use `dispatch` § Brief.
 - ALWAYS ask the worker to return changed files, commands and outputs, and
   deviations. ALWAYS inspect its result before using it.
 - ALWAYS follow `worktree` for editing workers.
 - NEVER accept multi-step reasoning, an ambiguous spec or a cross-file refactor
-  — ALWAYS escalate investigation and plan steps to `/terra`, a design call to
-  `/opus`. A routine lookup stays in direct tools; a codemod stays in the
+  — ALWAYS choose the worker through `dispatch` § Tiers.
+  A routine lookup stays in direct tools; a codemod stays in the
   parent (`sonnet` § Plan).

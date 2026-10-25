@@ -1,15 +1,17 @@
 ---
 name: sonnet
-description: "/sonnet — high-effort background subagent for investigation, bug hunts, pre-review, read-only audits and the steps of a written plan. NOT for mapping or a mechanical edit (use /haiku), a design call (use /opus) or multi-file code without a written plan (plan with /opus first)."
-when_to_use: "do this in a sonnet sub, use sonnet, plan and delegate, split the work across subagents, execute the plan step by step, too big for one pass, investigation, bug hunt, pre-review, read-only audit"
+description: "/sonnet — high-effort worker for investigation, bug hunts, review fact gathering and planned code steps. NOT for docs rounds, refines or review judgments (use dispatch § Tiers), mapping (use /haiku) or design calls (use /opus)."
+when_to_use: "do this in a sonnet sub, use sonnet, plan and delegate, split the work across subagents, execute the code plan step by step, too big for one pass, investigation, bug hunt, review fact gathering"
 user-invocable: true
 ---
 
 With a prompt after /sonnet: launch it as a background agent (`run_in_background: true`, `subagent_type: "sonnet"`), report what was launched, and continue without waiting. For work too big for one sub, run § Plan, then execute — it launches one sub per delegated step.
 
 ALWAYS reach for /sonnet without being asked when the task is:
-- A bug hunt, a pre-review sweep, or a read-only audit that needs judgment.
-- One step of a written plan whose design the plan settles (a `ship` step goes here).
+- A bug hunt or fact gathering for a review.
+- One code step of a written plan whose design the plan settles.
+
+For docs rounds, refines and review judgments, ALWAYS follow `dispatch` § Tiers.
 
 - ALWAYS use `subagent_type: "sonnet"`, NEVER `model: "sonnet"`: `agents/sonnet.md` pins Sonnet 5.5 at effort `high`, and a sub without the agent type inherits the parent's effort (xhigh under a Fable parent).
 - NEVER set effort with prompt text ("Effort: low") — ALWAYS the agent file's pin, or the launch's `effort` per WISDOM § Agents.
@@ -18,7 +20,7 @@ ALWAYS reach for /sonnet without being asked when the task is:
 
 ## Plan, then execute
 
-For work too big for one pass — a feature across packages, a refactor, a change at many call sites — an `/opus` sub plans (WISDOM § Agents), a sonnet sub executes each delegated step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
+For work too big for one pass — a feature across packages, a refactor, a change at many call sites — an `/opus` sub plans (WISDOM § Agents), a worker selected through `dispatch` § Tiers executes each step, and the parent reviews each step before the next. ALWAYS take spec-sized, mostly unattended work to `ship` instead.
 
 NEVER plan or delegate a change under ~200 lines or ~10 minutes — ALWAYS make it in the parent.
 

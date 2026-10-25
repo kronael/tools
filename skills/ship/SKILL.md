@@ -110,8 +110,8 @@ gate, and no unresolved owner decision blocks the first step.
 
 ### 4. Implement and verify each step
 
-ALWAYS dispatch each bounded step to `sonnet`, or to `opus` when the plan
-leaves a design call open. `runtime.md` names supported equivalents.
+ALWAYS select each step's worker through `dispatch` § Tiers.
+`runtime.md` names supported equivalents.
 Follow `worktree` for isolation and reconciliation. Parallel work needs
 independent owned paths and dependencies. Read-only investigations may
 share the tree. If the owner explicitly chose the CLI, read `cli.md` at

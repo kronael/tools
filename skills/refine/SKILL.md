@@ -86,18 +86,18 @@ code extension and still carries every claim the reviewer will trust.
 
 6. **Dispatch** — one read-only subagent per context, in parallel, each brief
    written from `brief.md`; ALWAYS read that file before writing the first
-   brief. Launch each with `subagent_type` set by the context's heaviest tag:
-   `simplify` → `sonnet`, `correctness` → `opus`, both at `effort: high`
-   (`xhigh` only for a security context) — NEVER `model=` for a Claude agent,
-   which leaves the effort to the parent. On Codex, `simplify` → Terra using
-   its native settings. For `correctness`, ALWAYS use native `spawn_agent`
-   when available: `model: "gpt-6-astra"`, `reasoning_effort: "high"`
-   (`"xhigh"` for security), `fork_turns: "none"`. Native workers need no CLI
-   Model/Auth checks; the CLI fallback follows `astra`. NEVER a review with
-   no `opus`-tier reviewer: Sonnet or Terra alone
-   misses what a correctness pass finds. A context whose lenses carry no tag (a document
-   context) runs as `correctness`. The subs report
-   findings with commands and outputs and NEVER edit. ALWAYS leave a context's
+   brief. ALWAYS choose reviewers through `dispatch` § Tiers for both tags.
+   On Claude, ALWAYS use `subagent_type: "opus"` with effort per WISDOM § Agents.
+   NEVER use `model=` alone — ALWAYS use the Claude agent type.
+   On Codex, ALWAYS use native `spawn_agent` when available:
+   `model: "gpt-6.1-sol"`, `reasoning_effort: "xhigh"`, `fork_turns: "none"`.
+   Native workers need no CLI Model/Auth checks; the CLI fallback follows
+   `astra` § Sol. An explicit Astra route uses `astra`'s model and effort.
+   ALWAYS write Codex briefs through `dispatch` § Brief.
+   A context worker reviews its assigned context itself; NEVER delegate that
+   same review again. A context without a tag runs as `correctness`.
+   The subs report findings with commands and outputs and NEVER edit.
+   ALWAYS leave a context's
    files alone in main context until its sub returns.
    → every context has returned findings, each with the command that produced
    it.
@@ -116,8 +116,9 @@ code extension and still carries every claim the reviewer will trust.
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
    (WISDOM § Bug triage); NEVER build one without sign-off.
    ALWAYS apply code findings under `software/code.md` § Boring code. Apply
-   serially, one context at a time, briefed from `brief.md`: `simplify` →
-   `sonnet` loading `improve`, `correctness` → `opus` loading `improve`.
+   serially, one context at a time, briefed from `brief.md`.
+   ALWAYS keep refinement edits on the tier selected in step 6.
+   Claude workers load `improve`; Codex briefs follow `dispatch` § Brief.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.
@@ -130,8 +131,8 @@ code extension and still carries every claim the reviewer will trust.
    → every acceptance command in the diff has been run in this turn and its
    coverage checked against a second query.
 
-10. **Document and commit** — a `sonnet` sub told to load the `readme` skill and
-    read its `sync.md`, with what changed, one line per file; it
+10. **Document and commit** — ALWAYS dispatch the docs round through `readme`
+    → `sync.md` § Where it runs, with what changed, one line per file. The worker
     reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where the project
     keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a

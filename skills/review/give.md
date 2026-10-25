@@ -80,11 +80,10 @@ record the round in the diary — one line. Then stop.
 
 ## Model tier
 
-Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
-the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
-flagging; the fixes run on `sonnet` loading `improve` for
-`simplify` work and on `opus` for `correctness` — `refine` step 8).
-ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
+ALWAYS select review workers through `dispatch` § Tiers and brief them through
+`dispatch` § Brief. `refine` step 6 owns its native Codex launch.
+ALWAYS keep fact gathering separate from the review judgment.
+For Claude workers, NEVER pass `model=` alone — ALWAYS use the agent type.
 
 ## GitHub PR (gh)
 

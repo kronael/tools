@@ -12,17 +12,18 @@ is "Frontier intelligence for the most demanding work." This is a subprocess,
 NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
 Routing lives in `oracle`. Use this skill directly only when the user
-explicitly asks for Astra, Codex or Sol, or when `oracle` or `refine` dispatches
-to the Astra route.
+explicitly asks for Astra, Codex or Sol, or when `dispatch`, `oracle` or
+`refine` selects a route here.
 
 ## Invoke
 
 For a second opinion from the model you are running on, ALWAYS answer directly
-and NEVER launch this CLI. This shortcut does not apply to `refine`'s isolated
-correctness reviewer; `refine` § Dispatch owns its native Codex launch.
+and NEVER launch this CLI. This shortcut does not apply to an isolated worker
+selected through `dispatch` § Tiers. `refine` step 6 owns its native Codex launch.
 
 ALWAYS complete the Model and Auth checks below before this invocation.
-A Sol call shares these rules except the model and the session: see § Sol.
+A Sol call shares these rules except the model, effort and session: see § Sol.
+ALWAYS use `dispatch` § Brief for both variants.
 
 ALWAYS use `--dangerously-bypass-approvals-and-sandbox`: the owner requires no
 inner sandbox. NEVER pass `--sandbox` or `-s`. The bypass disables approvals
@@ -54,7 +55,7 @@ fi
 # </dev/null is REQUIRED — without it codex blocks waiting for additional stdin
 codex exec resume --last --dangerously-bypass-approvals-and-sandbox \
   -m gpt-6-astra -c model_reasoning_effort="high" \
-  "Goal: <X>. Find the flaw in..." </dev/null
+  "<brief per dispatch § Brief>" </dev/null
 ```
 
 NEVER combine `resume` with `--ephemeral` — ephemeral skips persistence, so
@@ -68,20 +69,16 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Sol
 
-Sol is the same second opinion from `gpt-6.1-sol` (catalog description
-"Latest workhorse model for coding and everyday work"), with the same effort policy.
-Use it only when the user explicitly asks for Sol; `oracle` routes to it only
-on such a request. Two differences from the Astra invocation: select
-`gpt-6.1-sol` in the catalog
-check and the command, and run `codex exec --ephemeral` instead of `resume
---last`. `resume --last` picks the working directory's latest session, which is
-Astra's thread after an Astra call, and Sol must answer without having read
-Astra's prompt and answer.
+Sol runs `gpt-6.1-sol` at xhigh effort. `dispatch` § Tiers owns its work
+assignments; `oracle` also selects it for an explicit Sol opinion.
+ALWAYS apply § Invoke and its brief rule. For CLI calls, ALWAYS select
+`gpt-6.1-sol` in the catalog check and use `codex exec --ephemeral`.
+NEVER resume Astra's thread for Sol — ALWAYS give Sol an independent context.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6.1-sol -c model_reasoning_effort="high" \
-  "Goal: <X>. Find the flaw in..." </dev/null
+  -m gpt-6.1-sol -c model_reasoning_effort="xhigh" \
+  "<brief per dispatch § Brief>" </dev/null
 ```
 
 ## Model — fixed by the variant asked for
@@ -93,9 +90,9 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
 - If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
   launch and report the exact missing model. ALWAYS ask the user to refresh
   the Codex catalog or explicitly choose another model; NEVER silently substitute.
-- ALWAYS set `model_reasoning_effort` explicitly in both variants: `high` for
-  a review, `xhigh` only for the exceptions in WISDOM § Agents. NEVER trust
-  the local config default; the examples above are ordinary reviews.
+- ALWAYS set `model_reasoning_effort` explicitly: Sol uses § Sol's pin;
+  Astra uses `high`, with WISDOM § Agents setting its exceptions.
+  NEVER trust the local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 

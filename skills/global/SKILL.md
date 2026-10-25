@@ -178,10 +178,11 @@ PR body with the robot. These win.
   where things stand (`sonnet` § Plan, then execute).
 - ALWAYS run implementation — a comprehensive or multi-file change, autonomous
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
-  step, its diff read by the parent before the next (`sonnet` § Plan, then
+  code step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. Other lane
   boundaries live in `dispatch` § Tiers. Effort: `high` for
-  coding and for a review; `xhigh` only for a plan, a security review (the red
+  coding and for a review, with Sol's pin owned by `astra` § Sol;
+  `xhigh` otherwise only for a plan, a security review (the red
   eval) and a CTO or CEO audit, those audits on `opus` or `fable`; set on the
   launch where the pin differs; NEVER another unless the owner sets one, per task or kind.
 - ALWAYS read the diff or output a subagent produced before repeating its

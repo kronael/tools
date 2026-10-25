@@ -10,7 +10,8 @@ Report what was launched. Continue immediately without waiting.
 
 ALWAYS reach for /opus without being asked when the task is:
 - A design or architecture decision, or a deep cross-cutting analysis, that needs a clean context.
-- The plan for implementation work (multi-file code, a `ship` plan) — one `sonnet` sub then runs each step and the parent reads each diff (`sonnet` § Plan, then execute).
+- The plan for implementation work — `sonnet` § Plan, then execute owns the workflow.
+- Work assigned to this tier by `dispatch` § Tiers.
 - A plan step that leaves a design call open, or that failed twice on sonnet.
 
 - ALWAYS use `subagent_type: "opus"`, NEVER `model: "opus"`: `agents/opus.md` pins Opus at effort `xhigh`, and a sub without the agent type inherits the parent's effort.

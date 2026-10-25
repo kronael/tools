@@ -108,9 +108,9 @@ skills it replaces.
 - This section owns the agents rule. ALWAYS point here in one line from any
   other file; NEVER restate the list.
 - A skill that needs isolation says so in its own body (`## Where it runs`):
-  ALWAYS a tier agent (`dispatch` § Tiers) told to "Load the `<skill>` skill
-  (Skill tool) and follow it" — NEVER a same-named agent for the skill, which
-  would pin no effort, NEVER `general-purpose` there (it inherits the
+  ALWAYS a tier agent selected and briefed through `dispatch` — NEVER a
+  same-named agent for the skill, which would pin no effort,
+  NEVER `general-purpose` there (it inherits the
   parent's effort), and NEVER a skill body reduced to one "launch agent X"
   line.
 

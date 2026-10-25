@@ -33,7 +33,9 @@ instead read the token from `/proc/$CLAUDE_PID/environ`, export it and
 
 `ship` runs every role on one `--model` (env `MODEL`, default `sonnet`) with
 fixed role timeouts sized for sonnet. ALWAYS launch it on the default: sonnet
-writes the steps, and fable is not an implementer (WISDOM § Agents). The CLI
+writes the steps, and fable is not an implementer (WISDOM § Agents).
+ALWAYS give this executor code steps only. Other work follows `dispatch` § Tiers.
+The CLI
 runs its tasks back to back, so no diff is read before the next task;
 ALWAYS read the whole diff after the run and run the gates yourself
 (`BUGS.md` SHIP-INTO-TOOLS-AS-STEP-RUNNER, SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES).

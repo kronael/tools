@@ -7,10 +7,10 @@ wrong file is doc rot even when the fact is right.
 
 ## Where it runs
 
-A pass over a whole doc set runs in a `sonnet` sub, prompt opening with "Load
-the `readme` skill (Skill tool) and read its `sync.md`", then one line per
-changed behaviour. A one-fact fix runs inline. A subagent that loaded this
-skill runs the pass itself.
+For a whole doc set, ALWAYS select the worker through `dispatch` § Tiers
+and write its brief through `dispatch` § Brief. ALWAYS name each changed
+behaviour in the brief. A one-fact fix runs inline. A worker that loaded
+this skill runs the pass itself.
 
 ## Protocol
 

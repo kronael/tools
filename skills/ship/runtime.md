@@ -65,9 +65,8 @@ differ by client. When absent, execute the same plan with ordinary supported
 tools and preserve a resume point. NEVER promise unattended work after the
 session exits without a runtime that provides it.
 
-When a named Claude agent tier is unavailable, use an exposed subagent of
-appropriate capability for the same role: a fresh capable planner, a bounded
-implementer, or a skeptical read-only reviewer. Use supported model and
+When a named Claude tier is unavailable, ALWAYS use its equivalent from
+`dispatch` § Tiers and its brief from `dispatch` § Brief. Use supported model and
 effort controls, not invented model names or prompt text claiming an effort
 setting. ALWAYS preserve fresh planner context and worker isolation. If no
 suitable subagent exists, report that capability gap and complete
