@@ -21,9 +21,8 @@ reads to pick the agent type.
   Read its callers too: an argument that inverts the verb
   (`subscribe(…, op=UNSUBSCRIBE)`) is a second function wearing the first's
   name. A verb that names no operation —
-  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — and a module or
-  package whose name covers only part of what it holds (`samples/` holding
-  catalog documents) are findings: say what it does (`read_stats`).
+  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — is a finding: say what
+  it does (`read_stats`).
 - ALWAYS count the diff's repeated assemblies: the same two names glued at
   three or more sites —
   `git diff <range> | rg '^\+[^+]' | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
@@ -35,11 +34,16 @@ reads to pick the agent type.
   warning against its owning rule and documented exceptions before calling
   it a finding; syntax alone cannot establish every exception.
 
+## Module names hide their contents `simplify`
+
+- ALWAYS compare added/renamed module and package names with their main symbol or job; flag generic or partial names.
+  Check utility basenames against `<what>_utils.*` (`code.md` § Layout and formatting).
+
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
   (`grep -nE '^\s*(//|#|--|/\*|\*)'`) — § Comments puts the whole file in
-  scope. ALWAYS apply that section's exceptions; a comment outside them is
+  scope. ALWAYS apply its exceptions and § System changes' verbatim-move rule; a comment outside them is
   a finding.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
@@ -107,6 +111,21 @@ reads to pick the agent type.
   field by field into the row it is stored as is two shapes of one record
   (§ Design: the row is the record).
 
+## New layers diverge from the repo `simplify`
+
+- ALWAYS compare new layers with a repo exemplar: framework, routes, config loader, logging and `main`.
+  Flag departures and dependency additions duplicating an existing role (`code.md` § System changes).
+
+## Component moves change the code `correctness`
+
+- ALWAYS identify each copy's source revision/path and diff it raw against the destination; reconcile every difference.
+  Missing evidence or a delta without a listed destination constraint is a finding (`code.md` § System changes).
+
+## Feature PRs change runtime or deployment `correctness`
+
+- ALWAYS inspect the whole PR for changes to container user, HOME, mounts, units or host paths, even in its component.
+  Flag runtime/deployment changes bundled with features or lacking owner sign-off (`code.md` § System changes).
+
 ## Tests that prove nothing `simplify`
 
 - ALWAYS list, per test file the range adds, the production modules it
@@ -152,6 +171,11 @@ reads to pick the agent type.
   added lines `rg -n '__file__|__dirname|basename \$0'` — a path derived from
   the module's or binary's location where configuration or the test runner's
   root should hold it (§ Layout and formatting).
+
+## Component wrappers add a level `simplify`
+
+- ALWAYS inspect changed component trees for same-name nesting, redundant `api/` wrappers and nested utility modules.
+  Flag wrappers that displace packages or modules from the component root (`readme/topology.md` § Files).
 
 ## Deleted without being understood `correctness`
 

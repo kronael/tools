@@ -69,7 +69,7 @@
 
 ## Testcontainers
 
-- Centralize setup in `tests/common/mod.rs` or the language equivalent.
+- Centralize setup in `tests/container_utils.rs` or the language equivalent.
 - Test app/harness structs own the container handle; RAII cleanup is part of
   the fixture contract.
 - Use dynamic ports, then run migrations after start.

@@ -78,6 +78,8 @@ built to be provable was still a third short until someone attacked it.
 
 ## Moving
 
+ALWAYS apply `code.md` § System changes for verbatim component moves before the comparisons below.
+
 - ALWAYS lint the destination module before committing a move. A name the old
   module's namespace supplied — an import used only on a rare branch —
   vanishes silently: the type checker follows the imports it can see, the

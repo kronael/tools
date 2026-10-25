@@ -45,6 +45,11 @@ reads to pick the agent type.
   (`rg -n 'tuple\[' <added files>`): a shape that earned a name is a
   dataclass unless it meets a tuple exception in `py` § Named Data Structures.
 
+## Local models duplicate upstream wire types `simplify`
+
+- ALWAYS compare added wire models and field-copy conversions with upstream exports, including `openai`'s `ChatCompletion`.
+  Flag replacements for upstream types (`software/code.md` § Design; `py` § Named Data Structures).
+
 ## Less source `simplify`
 
 - NEVER a comment or docstring that restates the code; keep one short clause
