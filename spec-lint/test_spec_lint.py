@@ -31,8 +31,9 @@ SCRIPT = Path(__file__).with_name('spec_lint.py')
 
 
 @pytest.fixture(autouse=True)
-def fresh_index():
+def fresh_index(tmp_path: Path):
     indexed_files.cache_clear()
+    (tmp_path / '.git').write_text('gitdir: elsewhere\n')
 
 
 @pytest.fixture
