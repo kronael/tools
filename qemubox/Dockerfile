@@ -218,7 +218,8 @@ RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' 
        > /etc/ssh/sshd_config.d/qemubox.conf \
     && sed -i '/pam_systemd.so/d' /etc/pam.d/common-session \
     && settings='--settings '\''{"sandbox":{"enabled":false}}'\''' \
-    && sed -i "s/--dangerously-skip-permissions /&$settings /" \
+    && sed -i -e '\|nvm.sh|d' \
+       -e "s/--dangerously-skip-permissions /&$settings /" \
        /usr/local/bin/claude \
     && printf '%s\n' '#!/bin/sh' \
        '/usr/local/bin/qemubox-codex-bridge || exit $?' \
