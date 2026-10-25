@@ -17,7 +17,7 @@ user-invocable: true
 
 One commit = one logical change. Group by WHY, not by directory:
 
-- fix vs refa vs splx vs docs vs test → separate commits
+- fix vs refa vs simp vs docs vs test → separate commits
 - a fix + its test → one commit
 - a doc/SCREENS/ARCHITECTURE update for a behavior change → same commit
 
@@ -26,7 +26,7 @@ One commit = one logical change. Group by WHY, not by directory:
 ALWAYS read the repo's commit-msg gate before its first commit
 (`commitlint.config.*`, `.commitlintrc*`, `.husky/commit-msg`); where it
 disagrees with this section, the gate wins. Under
-`@commitlint/config-conventional`: no `refa`/`splx`/`fixup`/`merge` types
+`@commitlint/config-conventional`: no `refa`/`simp`/`fixup`/`merge` types
 (`refactor` instead), lowercase subject, body lines ≤100; a merge keeps git's
 default `Merge remote-tracking branch …` subject, which commitlint ignores.
 
@@ -36,7 +36,7 @@ Format shapes:
 - `fix(scope): Fix why it broke`
 - `feat(scope): Add what`
 - `refa(scope): Restructure what`
-- `splx(scope): Simplify what`
+- `simp(scope): Simplify what`
 - `chore: Maintain what`
 - `docs(scope): Document what`
 - `test(scope): Cover what`
