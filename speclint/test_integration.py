@@ -76,6 +76,23 @@ def test_uvx_wheel_outside_source(wheel, consumer):
     assert 'no such file' in result.stderr
 
 
+@pytest.mark.parametrize('invalid', ['nul', 'huge-line'])
+def test_packaged_input_errors_exit_2(wheel, consumer, invalid):
+    directory, env = consumer
+    if invalid == 'nul':
+        (directory / 'specs' / 'index.md').write_text('[Invalid](bad%00.md)\n')
+    else:
+        (directory / 'code.py').write_text('x = 1\n')
+        (directory / 'specs' / '01-cache.md').write_text(
+            '---\nstatus: planned\n---\n`code.py:' + '9' * 4500 + '`\n'
+        )
+    result = run_process(['uvx', '--from', str(wheel), 'speclint', '.'], directory, env)
+    assert result.returncode == 2
+    assert result.stderr.startswith('speclint: Cannot read corpus')
+    assert len(result.stderr.splitlines()) == 1
+    assert 'Traceback' not in result.stderr
+
+
 def test_uvx_git_subdirectory_pin(consumer, tmp_path_factory, pytestconfig):
     directory, env = consumer
     repo = tmp_path_factory.mktemp('source')

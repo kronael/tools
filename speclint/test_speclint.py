@@ -522,6 +522,32 @@ def test_invalid_utf8_fails(tmp_path, capsys):
     assert 'Cannot read corpus' in capsys.readouterr().err
 
 
+@pytest.mark.parametrize('target', ['01-auth.md%00', '%00/index.md'])
+def test_invalid_index_path_exits_2(tmp_path, target, capsys):
+    root = corpus(tmp_path, index=INDEX.replace('(01-auth.md)', f'({target})'))
+    assert run([root], verbose=False) == 2
+    assert 'embedded null' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize('lines', ['9' * 4500, '1-' + '9' * 4500], ids=['start', 'end'])
+def test_oversized_pointer_line_exits_2(tmp_path, lines, capsys):
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', f'src/config.py:{lines}'))
+    assert run([root], verbose=False) == 2
+    assert 'integer string conversion' in capsys.readouterr().err
+
+
+def test_unreadable_explicit_path_exits_2(locked):
+    result = subprocess.run(
+        [sys.executable, '-m', 'speclint', str(locked / 'specs')],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert result.stderr.startswith('speclint:')
+    assert 'Traceback' not in result.stderr
+
+
 def test_empty_corpus_passes(tmp_path):
     root = tmp_path / 'specs'
     root.mkdir()

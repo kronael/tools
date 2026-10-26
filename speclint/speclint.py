@@ -493,20 +493,20 @@ def check_corpus(root: Path) -> list[Finding]:
 def run(paths: list[Path], verbose: bool) -> int:
     indexed_files.cache_clear()
     line_count.cache_clear()
-    missing = [path for path in paths if not path.exists()]
-    for path in missing:
-        print(f'speclint: {path}: no such file or directory', file=sys.stderr)
-    if missing:
-        return 2
     try:
+        missing = [path for path in paths if not path.exists()]
+        for path in missing:
+            print(f'speclint: {path}: no such file or directory', file=sys.stderr)
+        if missing:
+            return 2
         roots = spec_roots(paths)
-    except OSError as err:
+        if not roots:
+            named = ', '.join(str(path) for path in paths)
+            print(f'speclint: no spec corpus under {named}', file=sys.stderr)
+            return 2 if any(not path.is_dir() for path in paths) else 0
+    except (OSError, ValueError) as err:
         print(f'speclint: Cannot discover corpora: {err}', file=sys.stderr)
         return 2
-    if not roots:
-        named = ', '.join(str(path) for path in paths)
-        print(f'speclint: no spec corpus under {named}', file=sys.stderr)
-        return 2 if any(not path.is_dir() for path in paths) else 0
     errors = 0
     warnings = 0
     for root in roots:
@@ -514,7 +514,7 @@ def run(paths: list[Path], verbose: bool) -> int:
             print(f'checking {root}')
         try:
             findings = check_corpus(root)
-        except (OSError, UnicodeError) as err:
+        except (OSError, ValueError) as err:
             print(f'speclint: Cannot read corpus {root}: {err}', file=sys.stderr)
             return 2
         for found in findings:
