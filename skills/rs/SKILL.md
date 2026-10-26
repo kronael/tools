@@ -71,7 +71,7 @@ cargo-fuzz, cargo-mutants, nextest). Below are Rust-specific additions.
 - Integration tests (cross-crate, external API surface) go in `tests/`
 - Inside `src/<module>_test.rs` use `crate::` paths, not `super::*`
 - `--test-threads=1` if global state via DashMap/RwLock
-- Centralize setup in `tests/common/mod.rs`
+- ALWAYS follow `../software/testing.md` § Testcontainers for shared container setup.
 - Testcontainers: dynamic port via `.get_host_port_ipv4()`
 
 ## Threading
@@ -128,7 +128,7 @@ fn main() -> eyre::Result<()> {
   clippy::indexing_slicing)]`, allowed again only in `main.rs` and test
   modules — NEVER per call site.
 - In a binary NEVER bare `.unwrap()` in non-test code; use `.expect("msg")`;
-  the one exception is a `//` reason on the line directly above (§ Lints)
+  the one exception is a `//` reason on the line directly above, NEVER `// SAFETY:`.
 - In a binary `.expect()` is for truly unrecoverable config at startup, with
   the REASON in its message (§ Unsafe owns `// SAFETY:`); a fn that returns
   `Result` under a retry, backoff or supervisor `?`s the error instead — a
@@ -146,11 +146,7 @@ fn main() -> eyre::Result<()> {
   message — `// SAFETY:` means "this unsafe is sound", nothing else.
 
 ## serde_json Value
-- NEVER `serde_json::from_value::<T>(value.clone())` — `&Value` implements `Deserializer`, use
-  `T::deserialize(value)` (ref, no clone):
-  ```rust
-  let Ok(value) = MyType::deserialize(details) else { continue };
-  ```
+- ALWAYS pass `rs-no-from-value-clone`.
 - For sparse reads (1–2 fields), prefer direct access over full deserialization:
   ```rust
   let Some(value) = details.get("count").and_then(|v| v.as_u64()) else { continue };
@@ -162,17 +158,10 @@ fn main() -> eyre::Result<()> {
 - Clone only when you actually need an owned duplicate
 
 ## Async Spawn
-- NEVER anonymous `spawn(async { ... })` — name the coroutine as a function:
-
-```rust
-// WRONG: tokio::spawn(async move { ... });
-// RIGHT:
-async fn fetch_and_process(client: Client) { ... }
-tokio::spawn(fetch_and_process(client));
-```
+- ALWAYS pass `rs-no-anon-spawn`.
 
 ## Crate Organization
-- Crate-per-concern: types/, common/, clients/, engine/
+- ALWAYS one crate per concern, named for its concrete job.
 - Flat modules: lib.rs lists all `pub mod` flat, no nested `mod.rs`
 - ALWAYS re-export the crate's own key types at its root — NEVER re-export another crate's items
   (`pub use other_crate::X`, a `pub use solana_pubkey::Pubkey`): a caller depends on the crate that
@@ -183,14 +172,9 @@ tokio::spawn(fetch_and_process(client));
 - ALWAYS scan Cargo.toml independently, NEVER assume workspace.members
 
 ## Lints
-- ast-grep rules in `skills/rs/lints/` (`make lints`): `rs-no-unwrap`,
-  `rs-no-from-value-clone`, `rs-no-anon-spawn`, `rs-bool-fn-prefix`
-  (`software/code.md` § Naming). clippy owns the rest — NEVER duplicate a
-  clippy lint here.
-- `rs-no-unwrap` exempts test files (`*_test.rs`, `tests/`) and any unwrap
-  carrying a `//` reason on the line directly above — one of the in-body
-  comments `software/code.md` § Comments allows. NEVER `// SAFETY:` for it;
-  that marker is reserved for `unsafe`.
+- `lints/rules.yml` also enforces `rs-bool-fn-prefix` (`software/code.md` § Naming).
+  Adoption and verification: `astgrep` → `lints.md`. NEVER duplicate Clippy;
+  § Unwrap Safety owns its configuration and the binary's judgment calls.
 
 ## Refactor tools
 - ALWAYS rename with the `serena` skill, then its check for code behind a

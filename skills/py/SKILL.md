@@ -23,8 +23,9 @@ Python-specific additions and deltas.
 ## Type Annotations
 - Builtin generics: `dict[str, float]`, `list[str]`, `Type | None`
 - NEVER `Any` in an annotation — bare or inside a generic (`dict[str, Any]`, `list[Any]`): a value whose shape has no name is a dataclass not yet written (§ Named Data Structures). `../software/strict-typing.md` holds the config and the narrow suppression for pass-through `**kwargs` below.
-- NEVER move imports into `TYPE_CHECKING` blocks — breaks runtime
-- NEVER `default_factory=lambda: []` — use `default_factory=list`; for typed collections pass the parametrized type: `default_factory=dict[K, V]`
+- NEVER move imports into type-only branches; ALWAYS keep them available at runtime,
+  including compound or negated `TYPE_CHECKING` guards.
+- ALWAYS pass `py-no-type-checking-imports` and `py-no-lambda-default-factory`.
 - NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 - ALWAYS declare a `Protocol`'s data members as read-only `@property`s — a plain class then satisfies it with plain assignments (`name = 'x'`, `lists = ()`, `server = Server()`). NEVER a bare `name: str` or `ClassVar` member in a protocol a class implements by assignment, unless code reads it off the class itself: a mutable member is invariant, so a subtype value fails.
@@ -32,14 +33,14 @@ Python-specific additions and deltas.
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
 - Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
-- ALWAYS write an `Enum` member's value, `LIVE = 1` — NEVER `auto()`. Lint `py-no-enum-auto`.
+- ALWAYS pass `py-no-enum-auto`.
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature, with the narrow suppressions in `../software/strict-typing.md` — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 - NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
 - NEVER answer a container-invariance error by widening the value type — ALWAYS take `Mapping` or `Sequence`, which are covariant, and keep the precise value type
 
 ## Naming
 `software/code.md` § Naming owns names. Python additions:
-- ALWAYS call `datetime.now(UTC)` and `.date()` directly — NEVER wrap them in a `now()`/`today()` helper, NEVER `utcnow()` (deprecated, naive).
+- ALWAYS call `datetime.now(UTC)` and `.date()` directly — NEVER add a `now()`/`today()` wrapper.
 - ALWAYS name item-iteration helpers `iter_<items>`; preserve framework-required names.
 
 ## Properties and accessor overrides
@@ -49,7 +50,7 @@ Python-specific additions and deltas.
   1. **Mocking / test doubles** — overriding attribute access on a stub
   2. **Adapting external/library code** — wrapping an API you don't own that requires property protocol
   3. **A record's value derived from its own fields** — § Named Data Structures owns the rule
-  4. **A `Protocol`'s data member** — a read-only declaration with only `...` or `pass` (§ Type Annotations); the lint exempts that declaration
+  4. **A `Protocol`'s data member** — a read-only declaration with only `...` or `pass` (§ Type Annotations)
 - Instead: plain method (`def program_lookup(self)`) or compute once and store on the dataclass field
 
 ## getattr/setattr
@@ -77,25 +78,20 @@ Python-specific additions and deltas.
   call (`@retry(BACKOFF, …)`) — NEVER make call sites pass `lambda: iter(...)`.
 
 ## Stack
-- ALWAYS aiohttp for clients (HTTP + WS), FastAPI for servers
+- With no repo choice (`software/code.md` § System changes), ALWAYS use aiohttp clients (HTTP + WS) and FastAPI servers.
 - ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
-- ALWAYS a `dataclass` for every structured value — record, return value, parameter bundle,
-  queued work item, decoded message. NEVER declare a `TypedDict`: at runtime it is a plain
-  dict, so a payload cast to it is never checked and a missing key fails at the read, not at
-  the boundary.
+- ALWAYS a `dataclass` for application-owned records, return values, parameter bundles and messages; lint `py-no-typeddict`.
 - For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
   on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
-  Lints `py-no-str-case-dispatch` and `py-no-str-callable-table` — a `dict[str, Callable]` table is
-  the same dispatch respelled. NEVER a `KIND`/`VERSION` `ClassVar` on a variant: its stored
+  NEVER dispatch application records through a string-keyed callable table or `KIND`/`VERSION` `ClassVar`: the stored
   format's version is its module's name, `depth_v1.py`.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
-- ALWAYS decode and encode external payloads through the project's one codec (its lib
-  `from_dict`/`to_dict`) — NEVER dacite, cattrs or a hand-written `cls(**d)` beside it; a second
-  structurer drifts from the first.
+- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`;
+  NEVER add dacite, cattrs or hand-written `cls(**d)` beside it.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a
@@ -103,7 +99,7 @@ Python-specific additions and deltas.
 - ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
-- NEVER `NamedTuple` — a record that is also a tuple invites the positional access `@dataclass(frozen=True)` exists to stop, and `slots=True` gives the same compactness
+- ALWAYS pass `py-no-namedtuple`.
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
@@ -112,10 +108,10 @@ Python-specific additions and deltas.
 - NEVER use tuple as a generic collection just because the values are not mutated — ALWAYS use `list` for ordinary sequences; reserve tuple for dict/set keys, deliberate immutability boundaries, varargs/returns where positional shape is the point, or small fixed heterogeneous records when a dataclass would be overkill.
 
 ## Datetime
-- `datetime.fromtimestamp(ts, tz=timezone.utc)` not `utcfromtimestamp`
+- ALWAYS enable Ruff `DTZ003` and `DTZ004` for naive UTC constructors.
 
 ## Logging
-- ALWAYS `log = logging.getLogger(__name__)` — variable ALWAYS named `log`
+- ALWAYS `logging.getLogger(__name__)`; binding name enforced by `py-log-name`.
 
 ## Imports
 - NEVER alias a module import unless the name genuinely collides: `import json_utils` not `import json_utils as ju`
@@ -125,14 +121,12 @@ Python-specific additions and deltas.
 - NEVER a docstring on a private function, method, or class — `code.md`'s
   public-API exception is the whole allowance. A module docstring only where
   the module is an imported public surface
-- Exception variables: NEVER `e` — use `ex`, `exc`, `err`
+- ALWAYS pass `py-except-var-e`.
 - Use `async with asynccontextmanager` for resource cleanup, never bare `try/finally` for pools/connections
 - Python-specific short vars: `ts`, `ms` for time
 - NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
 - NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
-- NEVER multi-assign tuples: `a, b, c = x, y, z` — one per line
-- NEVER `dict(...)` for a value built in place — ALWAYS the `{}` literal, or an `Enum` for a closed
-  set of names; allowed only as a call argument, `log.info(..., extra=dict(id=id))`. Lint `py-no-dict-call`
+- ALWAYS pass `py-no-tuple-assignment` and `py-no-dict-call`.
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
@@ -159,10 +153,10 @@ Python-specific additions and deltas.
   keeps comments and whitespace; `ruff format` after.
 
 ## Lints
-- ast-grep rules in `skills/py/lints/` (`make lints`): `py-except-var-e`,
-  `py-no-lambda-default-factory`, `py-no-property`, `py-no-enum-auto`, `py-bool-fn-prefix`
-  (`software/code.md` § Naming), `py-no-str-case-dispatch`, `py-no-str-callable-table`, `py-no-dict-call` (overlaps ruff
-  `C408` only because `C408` cannot spare the call-argument form). ruff owns the rest — NEVER duplicate a ruff rule here.
+- `lints/rules.yml` also enforces `py-bool-fn-prefix` (`software/code.md` § Naming).
+  Adoption and verification: `astgrep` → `lints.md`. NEVER duplicate Ruff:
+  `py-no-dict-call` preserves call arguments that `C408` flags; the record rules
+  flag declarations, while `TID251` bans imports/access, including use of upstream types.
 
 ## Build
 - uv for packages, pyright for types

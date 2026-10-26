@@ -1,2 +1,5 @@
+[tools.update_plan]
+enabled = true
+
 [tui]
 status_line = ["model-name", "context-used", "five-hour-limit", "weekly-limit"]

@@ -30,7 +30,7 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # PROJECTS, tests/drift_test.sh, skills/recall-memories/test_recall.py
+make test          # PROJECTS, drift checks, recall and astgrep runner tests
 make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
 make gen-ci        # regenerate .github/workflows/ from .github/templates/

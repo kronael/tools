@@ -1,0 +1,11 @@
+---
+id: sh-no-sudo
+language: bash
+severity: warning
+rule:
+    kind: command
+    has:
+        field: name
+        regex: ^['"]?([^$'"\s]*/)?sudo['"]?$
+message: Parameterize privilege in committed scripts; NEVER invoke sudo directly. See skill:sh.
+note: 'source: skills/sh/SKILL.md — Anti-patterns'

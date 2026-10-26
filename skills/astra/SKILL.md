@@ -68,8 +68,9 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 
 ## Sol
 
-Sol runs `gpt-6.1-sol` at xhigh effort. `dispatch` § Tiers owns its work
-assignments; `oracle` also selects it for an explicit Sol opinion.
+Sol is the Codex worker for the `/opus` lane. Its model ID is `gpt-6.1-sol`,
+and its effort is `xhigh`. `dispatch` § Tiers owns its work assignments;
+`oracle` also selects it for an explicit Sol opinion.
 ALWAYS apply § Invoke and its brief rule. For CLI calls, ALWAYS select
 `gpt-6.1-sol` in the catalog check and use `codex exec --ephemeral`.
 NEVER resume Astra's thread for Sol — ALWAYS give Sol an independent context.

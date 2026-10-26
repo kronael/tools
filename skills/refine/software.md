@@ -21,26 +21,20 @@ reads to pick the agent type.
   Read its callers too: an argument that inverts the verb
   (`subscribe(…, op=UNSUBSCRIBE)`) is a second function wearing the first's
   name. A verb that names no operation —
-  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — and a module or
-  package whose name covers only part of what it holds (`samples/` holding
-  catalog documents) are findings: say what it does (`read_stats`).
+  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — is a finding: say what
+  it does (`read_stats`).
 - ALWAYS count the diff's repeated assemblies: the same two names glued at
   three or more sites —
   `git diff <range> | rg '^\+[^+]' | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
   — is one value the design never named (§ Design: a format's version is a
   name, written once).
-- ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
-  the changed files of a language that ships one — `rs`, `py`, `ts` (not
-  `.tsx`); NEVER for another, which has no rules file. ALWAYS assess each
-  warning against its owning rule and documented exceptions before calling
-  it a finding; syntax alone cannot establish every exception.
+- ALWAYS compare added/renamed module and package names with their main symbol or job;
+  ALWAYS flag generic/partial names or utility basenames violating § Layout and formatting.
 
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
-  (`grep -nE '^\s*(//|#|--|/\*|\*)'`) — § Comments puts the whole file in
-  scope. ALWAYS apply that section's exceptions; a comment outside them is
-  a finding.
+  (`grep -nE '^\s*(//|#|--|/\*|\*)'`); ALWAYS flag those outside § Comments' exceptions.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
 - ALWAYS check the comment directly above a log, warn or error call — a
@@ -56,7 +50,7 @@ reads to pick the agent type.
   code). Count production and test callers apart (`rg -n '<name>' -g
   '!**/test*'`): zero production callers is test-only code, moved to the
   tests or deleted. Application code only: a `table_verb` SQL function with
-  one caller is the `sql` § Functions design.
+  one caller is the `sql` § Functions design; shared helpers follow § Second path beside the first.
 - ALWAYS open every function the range adds (`git diff <range> | rg
   '^\+\s*(async )?def '`) whose body is one or two statements: one that only
   forwards its arguments to one call and wraps or renames the result
@@ -99,6 +93,10 @@ reads to pick the agent type.
   site or config key duplicates — same verb, same table, same env var. A
   second path where the original could be extended is a finding
   (`software/code.md` § System changes).
+- ALWAYS grep shared-library public names and maintained upstream dependencies already in use; replace helpers they provide.
+- ALWAYS compare function bodies across components; put a helper two components need in the shared library once.
+- ALWAYS compare new layers with a sibling's framework, routes, config loader, logging and `main`;
+  ALWAYS flag departures or dependencies duplicating a role (§ System changes).
 - ALWAYS check a fix that changes a contract or control flow across modules
   for its `BUGS.md` proposal; none is a finding, routed to `BUGS.md`, never
   applied.
@@ -106,6 +104,22 @@ reads to pick the agent type.
   (encode|to_row|to_wire|as_row)'` over the added files): a record copied
   field by field into the row it is stored as is two shapes of one record
   (§ Design: the row is the record).
+
+## Component moves change the code `correctness`
+
+- ALWAYS diff each copy raw against its source revision/path; ALWAYS flag missing evidence or differences
+  without a listed destination constraint (§ System changes).
+
+## Feature PRs change runtime or deployment `correctness`
+
+- ALWAYS inspect the whole PR for runtime/deployment changes listed in § System changes;
+  ALWAYS flag changes bundled with features or lacking owner sign-off.
+
+## Component builds diverge from the repo `simplify`
+
+- ALWAYS require new build files to copy a sibling's Makefile, Dockerfile extension and manifests; diff the Makefiles.
+- ALWAYS list `Dockerfile.ext` lines and check each against the base template and its preparation path;
+  ALWAYS flag extensions or manual downloads for tools the base image or package manager already provides.
 
 ## Tests that prove nothing `simplify`
 
@@ -152,6 +166,8 @@ reads to pick the agent type.
   added lines `rg -n '__file__|__dirname|basename \$0'` — a path derived from
   the module's or binary's location where configuration or the test runner's
   root should hold it (§ Layout and formatting).
+- ALWAYS inspect changed component trees for same-name nesting, redundant `api/` wrappers and nested utility modules.
+  ALWAYS flag wrappers violating `readme/topology.md` § Files.
 
 ## Deleted without being understood `correctness`
 

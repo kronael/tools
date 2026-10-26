@@ -171,9 +171,13 @@ PR body with the robot. These win.
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
-- ALWAYS keep a multi-step plan in the task tool: one task per step and one per
-  high-level subagent run, its status updated the moment it changes. While work
-  spans several turns, ALWAYS restate the whole numbered plan in chat — every
+- ALWAYS track multi-step work with the exposed native checklist tool:
+  `TaskCreate`/`TaskUpdate` in Claude Code, `update_plan` in Codex. ALWAYS follow
+  its schema, authorization and mode restrictions. ALWAYS include one item per
+  step and high-level subagent run, updating status the moment it changes.
+  When absent or prohibited, ALWAYS report the gap and maintain the existing plan or
+  work record. NEVER invent tool calls or substitute goals or threads for a
+  checklist. While work spans several turns, ALWAYS restate the whole numbered plan in chat — every
   open workstream with its status — after each step and whenever the user asks
   where things stand (`sonnet` § Plan, then execute).
 - ALWAYS run implementation — a comprehensive or multi-file change, autonomous

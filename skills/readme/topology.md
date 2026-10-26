@@ -8,6 +8,9 @@ page's craft: `page.md`. Prose: `writing`.
 
 ## Files
 
+- ALWAYS keep packages, modules and utilities at the component root;
+  NEVER nest a same-name package (`text-server/text_server/`) or wrap an API component in `api/`.
+
 | Path | The one question it answers |
 |---|---|
 | `docs/<name>.html` | What is it, who can do what, how does it behave? The study page for a newcomer. |

@@ -1,14 +1,14 @@
 ---
 name: terra
-description: "/terra — Codex code worker on GPT-6.1 Sol at high effort. NOT for docs rounds, refines or reviews (use dispatch § Tiers), mapping (use /luna), second opinions (use /oracle) or design calls (use /opus)."
+description: "/terra — Codex worker for the Sonnet lane, at high effort. NOT for docs rounds, refines or reviews (use dispatch § Tiers), mapping (use /luna), second opinions (use /oracle) or design calls (use /opus)."
 when_to_use: "terra, Codex workhorse, cross-model implementation, cross-model investigation, cross-model code step"
 user-invocable: true
 ---
 
 # Terra
 
-Terra is the Codex-native counterpart to `/sonnet`. It runs `gpt-6.1-sol` at
-high effort. It is a skill alias, not a model name.
+Terra is the Codex worker for the `/sonnet` lane. Its model ID is `gpt-6.1-sol`,
+and its effort is `high`. `dispatch` § Tiers distinguishes worker names from model IDs.
 
 ## Invoke
 

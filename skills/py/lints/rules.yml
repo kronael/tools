@@ -7,7 +7,11 @@ rule:
     regex: ^e$
     inside:
         kind: as_pattern_target
-message: NEVER name an as-alias e (except/with) — use ex, exc, or err. See skill:py.
+        inside:
+            kind: as_pattern
+            inside:
+                kind: except_clause
+message: NEVER name an exception e — use ex, exc, or err. See skill:py.
 note: 'source: skills/py/SKILL.md — Style'
 ---
 id: py-no-lambda-default-factory
@@ -15,39 +19,22 @@ language: python
 severity: warning
 rule:
     kind: lambda
+    not:
+        has:
+            field: parameters
+            regex: .
+    has:
+        field: body
+        any:
+            - pattern: '[]'
+            - pattern: '{}'
     inside:
         kind: keyword_argument
         has:
             field: name
             regex: ^default_factory$
-message: 'NEVER default_factory=lambda: [] — use default_factory=list or the parametrized type. See skill:py.'
+message: Use list or dict as the empty collection default_factory, including parametrized types. See skill:py.
 note: 'source: skills/py/SKILL.md — Type Annotations'
----
-id: py-no-property
-language: python
-severity: warning
-rule:
-    pattern: '@property'
-    not:
-        inside:
-            kind: decorated_definition
-            has:
-                field: definition
-                kind: function_definition
-                has:
-                    field: body
-                    regex: ^\s*(\.\.\.|pass)\s*$
-            inside:
-                kind: block
-                inside:
-                    kind: class_definition
-                    has:
-                        field: superclasses
-                        has:
-                            regex: ^((typing|typing_extensions)\.)?Protocol(\[.*\])?$
-message: NEVER @property / @setter / __getattr__ (except mocks, adapting external APIs, a record's value derived from its own fields, or a Protocol's data
-    member) — use a plain method. See skill:py.
-note: 'source: skills/py/SKILL.md — Properties and accessor overrides'
 ---
 id: py-bool-fn-prefix
 language: python
@@ -80,34 +67,6 @@ rule:
 message: 'NEVER a -> bool, TypeGuard or TypeIs function without an is_/has_/can_/should_ prefix — rename it, valid() → is_valid(). Leading underscores before
     the prefix are allowed. Exempt: dunders, @override methods, pytest test/test_* functions, test files and tests/ dirs. See skill:py.'
 note: 'source: skills/software/code.md — Naming'
----
-id: py-no-str-case-dispatch
-language: python
-severity: warning
-rule:
-    kind: match_statement
-    has:
-        field: body
-        has:
-            kind: case_clause
-            has:
-                kind: case_pattern
-                has:
-                    kind: string
-                    stopBy:
-                        not:
-                            any:
-                                - kind: case_pattern
-                                - kind: union_pattern
-                                - kind: as_pattern
-                                - kind: concatenated_string
-                                - kind: tuple_pattern
-                                  not:
-                                      has:
-                                          regex: ^,$
-message: NEVER match on a kind string (case 'quote/1':) — parse it to one dataclass per variant or an Enum member at the boundary and match on the class
-    (case Quote():). See skill:py.
-note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
 ---
 id: py-no-dict-call
 language: python
@@ -174,24 +133,125 @@ rule:
 message: NEVER an Enum member = auto() — write the value, LIVE = 1. See skill:py.
 note: 'source: skills/py/SKILL.md — Type Annotations'
 ---
-id: py-no-str-callable-table
+id: py-no-type-checking-imports
 language: python
 severity: warning
-ignores:
-    - '**/test_*.py'
-    - '**/*_test.py'
-    - '**/conftest.py'
-    - '**/tests/**'
-    - '**/test/**'
+utils:
+    type-checking:
+        regex: ^[\s(]*(typing\.)?TYPE_CHECKING[\s)]*$
+    not-type-checking:
+        regex: ^[\s(]*not[\s(]+(typing\.)?TYPE_CHECKING[\s)]*$
+    type-only-condition:
+        any:
+            - matches: type-checking
+            - all:
+                  - any:
+                        - kind: parenthesized_expression
+                        - pattern: $LEFT and $RIGHT
+                  - has:
+                        matches: type-checking
+                        stopBy:
+                            not:
+                                any:
+                                    - kind: parenthesized_expression
+                                    - pattern: $LEFT and $RIGHT
+rule:
+    any:
+        - kind: import_statement
+        - kind: import_from_statement
+    inside:
+        kind: block
+        stopBy: end
+        any:
+            - inside:
+                  any:
+                      - kind: if_statement
+                      - kind: elif_clause
+                  has:
+                      field: condition
+                      matches: type-only-condition
+            - inside:
+                  kind: else_clause
+                  any:
+                      - inside:
+                            kind: if_statement
+                            has:
+                                field: condition
+                                matches: not-type-checking
+                      - follows:
+                            kind: elif_clause
+                            has:
+                                field: condition
+                                matches: not-type-checking
+message: Keep imports available at runtime; NEVER put them under TYPE_CHECKING. See skill:py.
+note: 'source: skills/py/SKILL.md — Type Annotations'
+---
+id: py-no-typeddict
+language: python
+severity: warning
+rule:
+    any:
+        - kind: class_definition
+          has:
+              field: superclasses
+              has:
+                  regex: ^((typing|typing_extensions)\.)?TypedDict$
+        - kind: call
+          has:
+              field: function
+              regex: ^((typing|typing_extensions)\.)?TypedDict$
+message: Use a dataclass for an application-owned record; NEVER declare a TypedDict. See skill:py.
+note: 'source: skills/py/SKILL.md — Named Data Structures'
+---
+id: py-no-namedtuple
+language: python
+severity: warning
+rule:
+    any:
+        - kind: class_definition
+          has:
+              field: superclasses
+              has:
+                  regex: ^((typing|typing_extensions)\.)?NamedTuple$
+        - kind: call
+          has:
+              field: function
+              regex: ^((typing|typing_extensions)\.)?NamedTuple$
+message: Use a frozen dataclass with slots for a record; NEVER declare a NamedTuple. See skill:py.
+note: 'source: skills/py/SKILL.md — Named Data Structures'
+---
+id: py-log-name
+language: python
+severity: warning
 rule:
     kind: assignment
     has:
-        field: type
-        regex: ^(dict|((typing|collections\.abc)\.)?(Mapping|MutableMapping))\[\s*str\s*,\s*((typing|collections\.abc)\.)?Callable\b
-    inside:
-        kind: expression_statement
-        inside:
-            kind: module
-message: 'NEVER a module-level table of functions keyed by a string (CHANNELS: dict[str, Callable] = {...}) — it is the match on a kind string respelled;
-    parse the string to one dataclass per variant at the boundary and dispatch on the class. See skill:py.'
-note: 'source: skills/py/SKILL.md — Named Data Structures; skills/software/code.md — Design'
+        field: left
+        kind: identifier
+        not:
+            regex: ^log$
+    all:
+        - has:
+              field: right
+              pattern: logging.getLogger($$$)
+message: Name the logging.getLogger binding log. See skill:py.
+note: 'source: skills/py/SKILL.md — Logging'
+---
+id: py-no-tuple-assignment
+language: python
+severity: warning
+rule:
+    kind: assignment
+    has:
+        field: left
+        any:
+            - kind: pattern_list
+            - kind: tuple_pattern
+    all:
+        - has:
+              field: right
+              any:
+                  - kind: expression_list
+                  - kind: tuple
+message: Assign independent values on separate lines; NEVER a, b = x, y. Unpacking one returned value is allowed. See skill:py.
+note: 'source: skills/py/SKILL.md — Style'

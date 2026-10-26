@@ -2,6 +2,16 @@
 
 ## Bundle
 
+- **TOOLS-PYTHON-LINT-DEBT** (LOW, config) — bundled checks report thirteen
+  existing violations outside lint fixtures: four predicate names in
+  `hooks/pretool_nudge.py:335` and `skills/recall-memories/recall.py:161,169,802`,
+  two exception names in `hooks/test_hooks.py:60` and
+  `skills/create/diagram/excalidraw/scripts/upload.py:121`, and seven tuple
+  assignments in `skills/create/video/render/examples/`. **Fix:** rename the
+  bindings and split independent assignments when those files are touched.
+  Reproduce with `python3 skills/astgrep/check.py --scan hooks/ skills/recall-memories/
+  skills/create/`; no test — config, the structural checks expose the debt.
+
 - **MK-REPO-MAKEFILES-KEEP-HELP-TARGETS** (LOW, docs) — owner decision.
   `skills/mk/SKILL.md` § No help target bans a `help` target,
   `.DEFAULT_GOAL := help` and `##` descriptions, and this repo's own
@@ -106,7 +116,7 @@
   `should_`. A bool-returning wrapper (one around `git diff --quiet`) is
   claimed by both and neither states precedence. The bundle's own wrappers
   follow neither: `hooks/stop.py:20` `git_run()`, `hooks/pretool_nudge.py:202`
-  `format_markdown()`, `lints/check.py:59` `matches()`,
+  `format_markdown()`, `skills/astgrep/check.py` `matches()`,
   `skills/recall-memories/recall.py:899` `git()`. **Options:** (a) the
   predicate prefix wins and the body says which command runs; (b)
   `run_<command>` wins and returns the result, a predicate wraps it.
@@ -160,22 +170,11 @@
   and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
   take `claude-haiku-5-5` and the three tests follow.
 
-- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
-  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
-  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
-  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
-  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
-  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
-  effort; (b) keep the mapping by role — a second opinion is review-grade
-  work and takes the scarcer slot. **Default if nothing is decided:** (b),
-  the text as written.
-
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
   and `**Default if nothing is decided:**` on every entry whose status is
-  `needs sign-off`; the entries in this file with that status predate the
-  rule — none carries a default, and only `LINT-PACK-NOT-INSTALLABLE`
-  sketches options. **Options:** (a) backfill each entry when its subject is
+  `needs sign-off`; several entries lack those fields, including
+  `FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE`. **Options:** (a) fill the fields when its subject is
   next touched; (b) backfill them all in one pass; (c) grandfather them.
   **Default if nothing is decided:** (a).
 
@@ -202,18 +201,6 @@
   refuses with `live ['kronael-install-manifest.json'] are symlinks (Classify:
   SYMLINK)` — citing a line Classify never printed. **Fix:** add the manifest
   to the roots § Classify checks with `os.path.islink`.
-
-- **LINT-PACK-NOT-INSTALLABLE** (MED, design) — needs sign-off. The lint pack
-  (`skills/<lang>/lints/`, aggregated by `sgconfig.yml`, proven by
-  `make lints`) enforces code rules only in THIS repo. Getting it into a user's
-  project is a new install contract. Options: **A (recommended)** an
-  opt-in install step — "wire kronael lints into this repo?" writes/updates the
-  project's `sgconfig.yml` + `.pre-commit-config.yaml` and references the pack,
-  matching the opt-in-skills posture; **B** publish the pack as a standalone
-  `pre-commit` repo referenced by URL; **C** document a `sgconfig.yml`
-  reference only, no installer. Also: CI enforcement here needs an
-  ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
-  CI runner has no ast-grep).
 
 - **LANG-SKILLS-RESTATE-COLD-RUNBOOKS** (LOW, duplication) — owner decision,
   no test — duplication. Hot `SKILL.md` bodies restate rules a cold
@@ -695,14 +682,14 @@
   `kvs` sweep of sessions older than N days; (b) leave; the rows are small.
   **Default if nothing is decided:** (b).
 
-- **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
+- **CI-SKIPS-RECALL-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs
   `skills/recall-memories/test_recall.py` (`Makefile:66`), but no workflow
-  runs root `make test` or `make lints` (`grep -rn recall .github` is empty);
+  runs root `make test` (`grep -rn recall .github` is empty);
   `test-hooks.yml` triggers on `hooks/**` only while
   `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
   touching only `skills/` skips it. **Fix:** add
-  `test_recall.py` and `make lints` to `lint.yml.tmpl` and `skills/**` to
+  `test_recall.py` to `lint.yml.tmpl` and `skills/**` to
   the hooks path filter.
 
 - **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
