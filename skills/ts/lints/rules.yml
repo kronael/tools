@@ -12,11 +12,10 @@ language: typescript
 severity: warning
 rule:
     any:
-        - pattern: '[...$A.filter($$$)]'
-        - pattern: '[...$A.map($$$)]'
-        - pattern: '[...$A.slice($$$)]'
-message: NEVER spread a fresh array — filter/map/slice already copy; drop the spread. See skill:ts.
-note: 'source: skills/ts/SKILL.md — Array Operations'
+        - pattern: '[...[$$$ITEMS].filter($$$ARGS)]'
+        - pattern: '[...[$$$ITEMS].map($$$ARGS)]'
+message: NEVER spread the fresh array returned by a literal array's filter/map; drop the spread. See skill:ts.
+note: 'source: skills/ts/SKILL.md — Array Operations. Other receivers require return-type review.'
 ---
 id: ts-bool-fn-prefix
 language: typescript

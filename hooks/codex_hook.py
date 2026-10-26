@@ -75,8 +75,6 @@ def normalize(data: object, event: str) -> dict[str, Any]:
     normalized['cwd'] = cwd
     normalized['session_id'] = session_id
     normalized['hook_event'] = event
-    # In the payload, not the environment: an env var is inherited, so a Claude
-    # Code session started from inside Codex would read it and believe it.
     normalized['harness'] = 'codex'
     if prompt:
         normalized['prompt'] = prompt
@@ -118,8 +116,6 @@ def rewrite_skill_refs(text: str) -> str:
 
     def replace(match: re.Match[str]) -> str:
         name = match.group('name')
-        if name in {'astra', 'sol'}:
-            return 'the current Codex session'
         if name in names:
             return f'@{name}'
         return match.group(0)

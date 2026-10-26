@@ -15,6 +15,19 @@ engine is **basedpyright** (a drop-in pyright replacement, `uvx basedpyright`)
 whose `reportExplicitAny`/`reportAny` ban it, backed by **ruff `ANN401`** as a
 second annotation-level guard. No mypy.
 
+The `py` skill's pass-through `**kwargs: Any` is the one annotation exception.
+ALWAYS suppress only `ANN401`, `reportAny` and `reportExplicitAny` on that
+parameter, and `reportAny` on the forwarding call:
+
+```python
+def forward(
+    **kwargs: Any,  # noqa: ANN401  # pyright: ignore[reportAny, reportExplicitAny]
+) -> str:
+    return callee(**kwargs)  # pyright: ignore[reportAny]
+```
+
+NEVER widen these suppressions to a file or project.
+
 ---
 
 ## Python
@@ -93,7 +106,8 @@ select = [
 
 | The move | Blocked by |
 |---|---|
-| annotate `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| annotate a param or return `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| `Any` inside a generic (`dict[str, Any]`, `list[Any]`) or on a variable (`x: Any`) | basedpyright `reportExplicitAny` only — `ANN401` sees a bare param/return `Any` and nothing else |
 | *use* an `Any` value (untyped-lib return, `cast(Any, …)`) | basedpyright `reportAny` |
 | leave a fn unannotated | basedpyright `reportUnknownParameterType`; ruff `ANN001/201/...` |
 | `# type: ignore` | basedpyright `enableTypeIgnoreComments=false`; ruff `PGH003` |

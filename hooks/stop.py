@@ -126,7 +126,7 @@ def nudges(cwd, now):
             'premature fragments. Run /commit.\n'
             'Rules: "type(scope): Message" (scope optional), subject <= 72 chars '
             '(overflow -> second '
-            '-m body); NEVER add -A, -a, --amend, push, Co-Authored-By, '
+            '-m body); NEVER add -A, -a, --amend, Co-Authored-By, '
             '--no-verify; squash unpushed commits only, via /squash.'
         )
         parts.append(msg)

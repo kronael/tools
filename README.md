@@ -106,6 +106,7 @@ Troubleshooting:
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, sync paths, sync strategies, org overlays |
 | [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `dockbox`, and the toolkit |
 | [skills/README.md](skills/README.md) | Skill rationale, index, and workflow diagram |
+| [skills/astgrep/lints.md](skills/astgrep/lints.md) | Adopt the lint packs in a project; refine fallback and rule tests |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
 | [kronael/sync/SKILL.md](kronael/sync/SKILL.md) | Sync procedure (all paths) |

@@ -1,6 +1,6 @@
 tool_cmd codex
 eq "codex default model and effort" "${cmd[*]}" \
-    'codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh'
+    'codex -m gpt-6.1-sol -c model_reasoning_effort=high'
 args=(--model gpt-6-astra); tool_cmd codex
 eq "a session --model replaces the codex alias model and effort" "${cmd[*]}" codex
 args=(-m x); tool_cmd gpt
@@ -12,7 +12,13 @@ eq "other session flags keep the alias model" "${cmd[*]}" \
     'claude --model claude-sonnet-5-5 --effort high'
 args=(-p "explain the -m flag"); tool_cmd opus
 eq "a model flag inside a prompt keeps the alias model" "${cmd[*]}" \
-    'claude --model claude-opus-5-5 --effort xhigh'
+    'claude --model claude-opus-5-5 --effort high'
+args=(); tool_cmd fable
+eq "fable pins high effort" "${cmd[*]}" \
+    'claude --model claude-fable-5-1 --effort high'
+tool_cmd gpt
+eq "astra pins high effort" "${cmd[*]}" \
+    'codex -m gpt-6-astra -c model_reasoning_effort=high'
 args=()
 primary="$fixture/project.with.dots"
 slug="${primary//[\/.]/-}"

@@ -18,19 +18,23 @@ reads to pick the agent type.
 - ALWAYS read each new or renamed function body against its verb — a `get_`
   that writes, an `is_` that mutates, a `finish_` that cancels is a finding,
   and a `simplify` fix is the rename, never a comment explaining the verb.
-- ALWAYS run `ast-grep scan -r ~/.claude/skills/<lang>/lints/rules.yml` over
-  the changed files of a language that ships one — `rs`, `py`, `ts` (not
-  `.tsx`); NEVER for another, which has no rules file. Each
-  `<lang>-bool-fn-prefix` hit, a predicate not named
-  `is_`/`has_`/`can_`/`should_`, is a finding fixed by the rename (§ Naming).
+  Read its callers too: an argument that inverts the verb
+  (`subscribe(…, op=UNSUBSCRIBE)`) is a second function wearing the first's
+  name. A verb that names no operation —
+  `rg -n 'def (process|handle|poll|run|manage|do)\b'` — is a finding: say what
+  it does (`read_stats`).
+- ALWAYS count the diff's repeated assemblies: the same two names glued at
+  three or more sites —
+  `git diff <range> | rg '^\+[^+]' | rg -o "f'[^']*\{\w+\.\w+\}[^']*\{\w+\.\w+\}[^']*'" | sort | uniq -c`
+  — is one value the design never named (§ Design: a format's version is a
+  name, written once).
+- ALWAYS compare added/renamed module and package names with their main symbol or job;
+  ALWAYS flag generic/partial names or utility basenames violating § Layout and formatting.
 
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
-  (`grep -nE '^\s*(//|#|--|/\*|\*)'`) — § Comments puts the whole file in
-  scope. Each one that is not a public-API doc comment, one of the three
-  named body exceptions or a machine-read marker (a `// #region` anchor, a
-  lint or type pragma) is a finding.
+  (`grep -nE '^\s*(//|#|--|/\*|\*)'`); ALWAYS flag those outside § Comments' exceptions.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
 - ALWAYS check the comment directly above a log, warn or error call — a
@@ -40,15 +44,42 @@ reads to pick the agent type.
 ## Abstraction that does not pay `simplify`
 
 - ALWAYS count the call sites of each helper, interface, generic, wrapper and
-  config knob the change adds — `rg -n '<name>'`. One or two sites is a
-  finding: inline it (§ Boring code). Application code only: a `table_verb`
-  SQL function with one caller is the `sql` § Functions design.
+  config knob the change adds — `rg -n '<name>'`, a `Protocol` declared so
+  one reader at the edge (health, a status page) can take several concrete
+  classes included. One or two sites is a finding: inline it (§ Boring
+  code). Count production and test callers apart (`rg -n '<name>' -g
+  '!**/test*'`): zero production callers is test-only code, moved to the
+  tests or deleted. Application code only: a `table_verb` SQL function with
+  one caller is the `sql` § Functions design; shared helpers follow § Second path beside the first.
+- ALWAYS open every function the range adds (`git diff <range> | rg
+  '^\+\s*(async )?def '`) whose body is one or two statements: one that only
+  forwards its arguments to one call and wraps or renames the result
+  (`read_catalog` = `get_markets(…)` then `Catalog(…)`) is a finding: inline
+  it at its callers (§ Boring code).
+- ALWAYS trace consumers of each runtime or test asset the range adds
+  (`git diff --name-only --diff-filter=A <range>`): search its name, then check
+  glob discovery, directory scans and configuration. An asset with no consumer
+  is a finding, deleted (`testing.md` § Scope and layout). Documentation is
+  read by people; NEVER infer an unused asset from a missing basename match.
+- ALWAYS list every function the range adds that assigns to or appends on its
+  first parameter (`def add_trade(klines, …)` writing `klines.x`): an
+  aggregator's updates are its methods (§ Design) — move it onto the type.
+- ALWAYS name, for every fan-out the range adds (`gather`, `TaskGroup`,
+  `errgroup`, `join_all`), the resource each awaitable takes — a lock, a
+  one-in-flight bucket, a connection. All serialized on one is a loop dressed
+  as concurrency; none bounded is a flood that wants a semaphore.
+- ALWAYS read every added scan over a mapping's values for a field
+  (`next(m for m in xs.values() if m.address == …)`, a `find_<x>` helper):
+  the callers hold the key the map lacks — key the map by it.
 - ALWAYS test each added mechanism against § Boring code: identify the unmet
   requirement and why subtraction or model, view and state simplification
   cannot satisfy it. Missing evidence is a finding.
 - ALWAYS grep for function-typed struct fields the change adds (`func(` inside
-  a Go struct, `Box<dyn Fn`, a `Callable` attribute) and run § Design's
-  five-second test on each.
+  a Go struct, `Box<dyn Fn`, a `Callable` attribute) and for every map whose
+  values are functions (`dict[str, Callable`, `map[string]func`, a
+  `{'kind': handler}` literal): keyed by a string the wire carries, it is the
+  `match` on a kind string respelled (§ Design); run § Design's five-second
+  test on the rest.
 - ALWAYS flag two or more booleans that together encode one state — § Design
   wants the enum.
 - ALWAYS read each new construct against the plain version: a clever or novel
@@ -62,9 +93,44 @@ reads to pick the agent type.
   site or config key duplicates — same verb, same table, same env var. A
   second path where the original could be extended is a finding
   (`software/code.md` § System changes).
+- ALWAYS grep shared-library public names and maintained upstream dependencies already in use; replace helpers they provide.
+- ALWAYS compare function bodies across components; put a helper two components need in the shared library once.
+- ALWAYS compare new layers with a sibling's framework, routes, config loader, logging and `main`;
+  ALWAYS flag departures or dependencies duplicating a role (§ System changes).
 - ALWAYS check a fix that changes a contract or control flow across modules
   for its `BUGS.md` proposal; none is a finding, routed to `BUGS.md`, never
   applied.
+- ALWAYS list every encoder the range adds beside a record (`rg -n 'def
+  (encode|to_row|to_wire|as_row)'` over the added files): a record copied
+  field by field into the row it is stored as is two shapes of one record
+  (§ Design: the row is the record).
+
+## Component moves change the code `correctness`
+
+- ALWAYS diff each copy raw against its source revision/path; ALWAYS flag missing evidence or differences
+  without a listed destination constraint (§ System changes).
+
+## Feature PRs change runtime or deployment `correctness`
+
+- ALWAYS inspect the whole PR for runtime/deployment changes listed in § System changes;
+  ALWAYS flag changes bundled with features or lacking owner sign-off.
+
+## Component builds diverge from the repo `simplify`
+
+- ALWAYS require new build files to copy a sibling's Makefile, Dockerfile extension and manifests; diff the Makefiles.
+- ALWAYS list `Dockerfile.ext` lines and check each against the base template and its preparation path;
+  ALWAYS flag extensions or manual downloads for tools the base image or package manager already provides.
+
+## Tests that prove nothing `simplify`
+
+- ALWAYS list, per test file the range adds, the production modules it
+  exercises: trace imports, helpers, subprocesses and service calls. A test
+  whose subject is only a library or test helper is a finding; a helper that
+  drives production is allowed (`testing.md` § Scope and layout).
+- ALWAYS grep each added test's expected values for the module under test
+  (`rg -n 'assert .*== *<module>\.'`) and its patches for the project's own
+  modules (`rg -n "patch\('<project>"`): a mirror assertion or a mocked own
+  module proves nothing (`testing.md` § What an assertion proves).
 
 ## Swallowed, softened and retried errors `correctness`
 
@@ -83,13 +149,25 @@ reads to pick the agent type.
   its default head; a parameter name or formula sourced from an in-repo
   summary or a stub branch is a finding. ALWAYS recompute a derived formula on
   the spec's own worked examples (§ System changes).
+- ALWAYS read each config key the range adds against that spec: a fact the
+  provider fixes — a step, a sequence rule, an interval, a format — is a
+  constant or a client fix, NEVER a knob the deploy sets (§ Boring code: a
+  knob is the plan's or the owner's decision).
+- ALWAYS compare each record type the range adds or narrows for an external
+  source against a real row or sample of it: positions skipped (`Post(row[0],
+  row[1], row[3], row[4])` of eight) or columns dropped because nothing reads
+  them yet are findings (`data` § State Management).
 
 ## Layout drift `simplify`
 
 - ALWAYS measure, never eyeball: `awk 'length > 80'` over the changed code
   lines, a multi-line expression inside an `if` condition, two imports on one
-  line, a file log handler or log-file path in application code, `__dirname`
-  or `basename $0` in a script (§ Layout and formatting).
+  line, a file log handler or log-file path in application code, and over the
+  added lines `rg -n '__file__|__dirname|basename \$0'` — a path derived from
+  the module's or binary's location where configuration or the test runner's
+  root should hold it (§ Layout and formatting).
+- ALWAYS inspect changed component trees for same-name nesting, redundant `api/` wrappers and nested utility modules.
+  ALWAYS flag wrappers violating `readme/topology.md` § Files.
 
 ## Deleted without being understood `correctness`
 

@@ -28,14 +28,13 @@ version, CHANGELOG and tag.
      usual default); skip the bump step if pyproject already says it.
 1.5. **Refine** — ALWAYS run `/refine` over `git diff <last>..HEAD` (the whole
    tree on a first release) before bumping anything. A bare "release" implies
-   it — NEVER ask whether to refine. ALWAYS open with ONE first pass over the
-   whole range on `fable` (`opus` when fable is unavailable; the project
-   `CLAUDE.md` § Release may name another runner). It returns correctness
-   findings and the change's complexity, and that sizes the rest: a simple
-   change stops there, a complex one gets the refine contexts the first pass
-   names. NEVER add a second-opinion pass on top — it repeats the first pass at
-   full price. Findings settle in refine step 7 and apply through step 8,
-   NEVER in main context. Any change landing after the refine, other than the
+   it — NEVER ask whether to refine. ALWAYS use refine's one whole-change
+   audit over this release scope; it sizes any context reviews. `dispatch`
+   selects the audit route and honors an explicit project override. NEVER
+   substitute another model when that route is unavailable. A simple change
+   needs no duplicate context pass; NEVER add a second whole-range opinion.
+   Findings settle in refine step 7 and apply through step 8, NEVER in main
+   context. Any change landing after the refine, other than the
    refine's own commits and the release commit, reruns it — NEVER tag code the
    refine did not see.
 2. **Version bump** — patch default; components never carry (see Rules).

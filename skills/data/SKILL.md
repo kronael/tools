@@ -28,7 +28,7 @@ comments, design and the boring-code rules.
 - state.json for recovery: resume from last_processed + 1 (WISDOM § Shell: never re-fetch what is on disk)
 - Save state every 10,000 items, keep portable (JSON)
 - ALWAYS make pipeline writes idempotent (UPSERT by primary key, not INSERT) — retries must not duplicate
-- ALWAYS version raw payloads (store source schema_version with data); NEVER drop unknown fields silently — keep in raw blob
+- ALWAYS version raw payloads (store source schema_version with data); NEVER drop a field the source sends — the raw blob keeps the unknown ones, and the typed record a reader produces carries every column or position the source has, not only the ones read today; only a clearly redundant field goes
 - ALWAYS validate required fields + types BEFORE insert (reject to dead-letter, never write partial rows)
 
 ## Data Source Patterns

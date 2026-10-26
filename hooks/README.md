@@ -33,9 +33,12 @@ Exact-matches prompt keywords and emits `hookSpecificOutput.additionalContext`
 telling Claude to invoke the matching skill. That field is the one
 UserPromptSubmit output the model reads; `systemMessage` renders in the
 transcript for the user and never reaches the model. Routes are `SKILL_KEYWORDS` in
-the source. A prompt that starts with `/astra`, and the phrases `ask codex`,
-`ask astra`, `oracle` and `second opinion`, route to `/astra`. All are
-suppressed inside Codex so it never nudges Codex to invoke itself. `learn` is deliberately NOT a route — `/learn` is
+the source. A leading workflow command keeps its workflow. Explicit dispatch
+and model requests reach `/dispatch`; `oracle` and `second opinion` reach
+`/oracle`. Provider requests reach `/codex` or `/claude`. Both harnesses use
+the same routes. Codex translates installed skill names to `@name`; it never
+replaces a requested fresh worker with the current session. The original prompt
+retains model and effort overrides for the selected skill. `learn` is deliberately NOT a route — `/learn` is
 invoked only explicitly or by `memory_nudge.py`, never because the word
 appeared in a prompt.
 
@@ -67,9 +70,11 @@ Maps the touched file to a language skill by extension/filename
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
 adds "Read ~/.claude/skills/software/code.md first." It also blocks the
 unsafe shell commands `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names,
-and recursive Codex execution inside Codex. A push, `git push` or `rip -g`, is
-NOT blocked here: `skills/global` § Git gates every push on the user's ask, and
-the settings `ask` rules gate `git push` and a `rip -g` to `master` or `main`.
+and Codex `resume` commands inside Codex. Independent workers, auth checks and
+help commands are permitted. A push, `git push` or `rip -g`, is
+NOT blocked here: `skills/global` § Git limits every push to the set the user
+confirmed, and the settings `ask` rules gate `git push` and a `rip -g` to
+`master` or `main`.
 
 It also refuses a `gh` command that posts GitHub text whose body fails
 `gh_text_lint.py`: `gh pr create`/`edit`, `gh issue create`/`edit`, `gh pr

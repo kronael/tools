@@ -24,9 +24,10 @@ your diff against every `##` heading here before calling an edit done.
   or that it is the one place a failure is sorted.
 - ALWAYS reuse the name the code, the schema, the domain and the owner already
   give a thing — function, parameter, field, type, file, commit term — and
-  carry one word through an endpoint's path, handler, module and model:
-  `/v1/react` → `react()` in `react.py`, `ReactIn`; NEVER `reactions.py`,
-  NEVER a `stream()` on `/v1/ws`.
+  carry one word through an endpoint's path, handler, module and models, the
+  models named `<Word>Request` and `<Word>Response`: `/v1/react` → `react()`
+  in `react.py`, `ReactRequest`, `ReactResponse`; NEVER `reactions.py`, NEVER
+  `ReactIn`/`ReactOut`, NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
 - ALWAYS name a parameter or local after its own type or the domain concept it
@@ -66,6 +67,7 @@ your diff against every `##` heading here before calling an edit done.
 - NEVER write a comment or docstring; intent travels in names, types and
   structure. ALWAYS sweep the WHOLE file you touch and delete every comment
   this section bans — one left standing is a defect, not a no-op.
+  ALWAYS exempt component moves per § System changes.
 - The one general exception: a doc comment on a PUBLIC API item stating what
   the signature cannot — contract, units, ownership, error conditions — NEVER
   what the body does: `"""The MD5 hex digest of repr(contents)."""` on
@@ -80,6 +82,9 @@ your diff against every `##` heading here before calling an edit done.
 - A machine-read marker is not a comment: a `// #region <name>` doc anchor
   (`readme` skill) and a lint or type pragma (`//nolint:`, `# noqa`,
   `# type: ignore`, `// @ts-expect-error`) stay.
+- A config file is not code: the reason beside an entry — a lint `ignore`
+  list, a CI matrix, host vars — stays, because the entry has no name, type
+  or body to carry it. A sweep deletes nothing there.
 
 ## Boring code
 
@@ -117,13 +122,46 @@ your diff against every `##` heading here before calling an edit done.
 
 ## Design
 
+- ALWAYS use upstream types/codecs for standard wire formats (`openai.ChatCompletion`);
+  NEVER define local models or field-copy wrappers for them.
 - ALWAYS model states as explicit enum variants, NEVER implicit boolean flags:
   `sent: bool, skipped: bool` → `enum Notify { Send, Skip }`.
 - ALWAYS name a variant by what happens at the use site — the action or effect
   — NEVER an interpretive label the reader has to decode:
   `Notify::Partners`/`Notify::Silent` → `Notify::Send`/`Notify::Skip`.
 - ALWAYS plain functions in modules; reach for a struct or object only to hold
-  state or inject dependencies — functions compose better and leak less.
+  state or inject dependencies — functions compose better and leak less. An
+  object that holds state to aggregate updates — an order book, a kline
+  accumulator — carries the operations that change it as methods
+  (`book.apply_delta(delta)`, `klines.add_trade(trade)`), NEVER as functions
+  beside it; a value that travels — a trade, a stored record — stays a frozen
+  record without orchestration or external effects. Constructors, derived
+  values and the slot accessors below stay on the record.
+- ALWAYS compose a part of an object's behaviour that varies: a field holding
+  an object of one interface, a do-nothing one where there is nothing to do.
+  NEVER a base-class method a subclass overrides, NEVER an `isinstance` probe
+  for an optional method — the type test that asks "can this object do X?".
+- ALWAYS model a closed set of data variants — message types, sample kinds,
+  events — as one named, frozen type per variant behind one small interface
+  or base, and dispatch on the type: a Rust `match` on the enum, a Go type
+  switch, Python `isinstance`/`match` on the class. NEVER on a `kind`/`type`
+  string or a map key, and NEVER a map of untyped values (`dict[str, Any]`,
+  `map[string]any`) as a data shape: external JSON is parsed into the variants
+  where it enters, and nothing past that boundary sees the raw form.
+- ALWAYS make a stored or wire format's version part of a name and nothing
+  else: the module of the record (`depth_v1.py`) and the kind string written
+  once beside it (`'depth/1'`). The record keeps a plain name (`Depth`) and no
+  kind or version constant. Typed application code passes records, never
+  builds, compares or looks up a kind or version string. The external decoder
+  may inspect the wire discriminator and source schema metadata to select the
+  record type, using the format name defined beside that record. A new version
+  is a new module beside the old one; a decoder only tests use lives in the tests.
+- ALWAYS let a record stored in a shape other than its field map — a
+  positional array — BE that row: the class holds the row and reads a slot
+  through a method named after the slot (`post.title()`; NEVER `get_title()`,
+  NEVER a property), with a `set_<slot>` only where code updates one. NEVER a
+  field-by-field copy of the row plus an `encode` back: two shapes of one
+  record drift, and the copy is paid on every row.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
@@ -152,10 +190,14 @@ your diff against every `##` heading here before calling an edit done.
 
 ## System changes
 
+- ALWAYS copy code verbatim into new components; list each destination-forced difference and its reason.
+  NEVER include discretionary cleanup, including comment or formatting changes.
 - ALWAYS grep for the existing mechanism (guard, helper, runner, table, log
   site, config) before adding one, and extend the ORIGINAL. NEVER a parallel
   second path, a stage beside it or a helper around it — two paths drift. If
   the original is wrong, fix it or say so; NEVER route around it.
+- ALWAYS copy the repo's framework, routes, config loader, logging and `main` idioms.
+  NEVER add a dependency that duplicates a role the repo already covers.
 - ALWAYS fail loud, to the user: an error on a user-facing path MUST surface
   (thrown, non-2xx, delivered), not just logged. NEVER swallow it, and NEVER
   add retry/fallback/best-effort as "robustness" — that turns a visible failure
@@ -170,6 +212,8 @@ your diff against every `##` heading here before calling an edit done.
   after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
 - NEVER improve beyond what the task asks — no drive-by cleanup, rename or
   feature in the same change; park it (`next`, `bugs`).
+- ALWAYS put service runtime/deployment changes in a separate PR with owner sign-off;
+  NEVER change container user, HOME, mounts, units or host paths in a feature PR.
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
@@ -206,9 +250,16 @@ your diff against every `##` heading here before calling an edit done.
   and the PostToolUse hook runs it on every `.md` you write. A repo with no
   config is never rewrapped.
 - ALWAYS one import per line — it keeps diffs clean.
-- ALWAYS name utility files `*_utils.*`.
+- ALWAYS name modules for their main class/function or exact job; utilities use `<what>_utils.*`.
+  NEVER generic `client`, `chat`, `helpers`, `common`, `core`, `manager` or `service` names.
+- ALWAYS apply `readme/topology.md` § Files for the flat component layout.
 - ALWAYS run a script from a fixed working directory with simple relative
-  paths — NEVER `basename $0`, `__dirname`, or complex path resolution.
+  paths, and ALWAYS take application input, output and state paths from configuration — a
+  flag, an env var, the config file. NEVER `basename $0`, `__dirname`,
+  `Path(__file__)` or any path derived from where the binary or module sits;
+  a test reads its fixtures through the runner's configured root (`py`
+  § Testing).
+- An installed tool may locate its own shipped read-only resources relative to its module.
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
   `"checking..."`, `"Failed: ..."`. Where the language's linter requires
   lowercase errors (Go: staticcheck ST1005), the linter wins — NEVER suppress it.
@@ -227,6 +278,7 @@ your diff against every `##` heading here before calling an edit done.
   human types it (`-u`), a long name with an env var where the deploy sets it
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second.
+- ALWAYS use singular TOML array-of-tables names (`[[model]]`, `[[service]]`): each header introduces one entry, an exception to plural collection names.
 - `make` for build/lint/test/clean and debug builds: `make test` = fast unit
   (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
   production data.

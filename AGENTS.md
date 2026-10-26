@@ -33,7 +33,7 @@ checklist applies verbatim. Below are only the Codex-specific deltas.
 - What the bridge writes for Codex — `~/.codex/AGENTS.md`,
   `~/.codex/config.toml`, `~/.agents/skills`, `~/.codex/hooks.json` — is
   `kronael/sync/reference.md` § Codex bridge.
-- Native footer configuration also follows `kronael/sync/reference.md` § Codex bridge.
+- Native checklist and footer configuration follow `kronael/sync/reference.md` § Codex bridge.
 
 ## Codex plugin usage
 

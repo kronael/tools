@@ -2,6 +2,16 @@
 
 ## Bundle
 
+- **TOOLS-PYTHON-LINT-DEBT** (LOW, config) — bundled checks report thirteen
+  existing violations outside lint fixtures: four predicate names in
+  `hooks/pretool_nudge.py:335` and `skills/recall-memories/recall.py:161,169,802`,
+  two exception names in `hooks/test_hooks.py:60` and
+  `skills/create/diagram/excalidraw/scripts/upload.py:121`, and seven tuple
+  assignments in `skills/create/video/render/examples/`. **Fix:** rename the
+  bindings and split independent assignments when those files are touched.
+  Reproduce with `python3 skills/astgrep/check.py --scan hooks/ skills/recall-memories/
+  skills/create/`; no test — config, the structural checks expose the debt.
+
 - **MK-REPO-MAKEFILES-KEEP-HELP-TARGETS** (LOW, docs) — owner decision.
   `skills/mk/SKILL.md` § No help target bans a `help` target,
   `.DEFAULT_GOAL := help` and `##` descriptions, and this repo's own
@@ -40,17 +50,6 @@
   Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
   Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
 
-- **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED at
-  HEAD 2026-10-06. `hooks/prompt_nudge.py` sends any prompt with
-  the bare word `oracle` or `second opinion` to `/astra`
-  (`CODEX_PATTERNS`, `:90-94`), and checks those patterns before the
-  escalation ones (`:133-136`).
-  So `oracle: review this diff for bugs` skips `skills/oracle/SKILL.md`'s
-  table, which sends code and plan critique to fable, and `use opus for a
-  second opinion` loses the requested model. **Proposal:** route `oracle` and
-  `second opinion` to `/oracle`, keep `ask codex`/`ask astra` on `/astra`, and
-  test the escalation patterns first. No test yet — needs sign-off.
-
 - **SYNC-CDPATH-NO-OPT-OUT** (LOW, design) — proposed. `kronael/sync`
   step 8 writes the CDPATH block on every sync (`SKILL.md` step 8,
   `reference.md` CLI tools table "always"), so a block the owner deleted
@@ -70,30 +69,6 @@
   the report. Keep approval gates in `gh-comment`. No new review mode,
   skill, saved plan or hook. No test — design.
 
-- **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
-  `skills/global/SKILL.md:190-193` caps subagents by `subagent_type` at 2
-  `sonnet` and 1 `opus` or `fable`; the bundle also launches `general-purpose`
-  (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
-  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
-  `skills/recall-memories/SKILL.md:165`), neither of which the cap names.
-  **Options:** (a) count a sub under the model it runs on (`general-purpose`
-  as the parent's model); (b) count only the three named
-  types. **Default if nothing is decided:** (a). No test — design.
-
-- **AGENT-ROUTING-RULES-DISAGREE** (LOW, docs) — owner decision.
-  `skills/global/SKILL.md:200-202` runs every implementation as an `opus`
-  plan and one `sonnet` sub per step, but `skills/sonnet/SKILL.md:21` lets
-  the parent plan, and `skills/ship/SKILL.md:113` sends a step to `opus` when
-  the plan leaves a design call open. `skills/fable/SKILL.md:12` sends every
-  spec, architecture or skill text to `fable`, while `:19` forbids `fable`
-  whenever `opus` can do the work, which covers an ordinary spec. `:210-211`
-  of the global file sends a project's own library to an `opus` plan, then
-  `sonnet` or `opus` steps, an `opus` step that its own `:203-204` rules out.
-  **Options:**
-  (a) WISDOM names the parent-plans and `opus`-step exceptions, and `fable`
-  `:19` exempts the tasks `:11-14` list; (b) the skills drop the exceptions.
-  **Default if nothing is decided:** (a). No test — skill text.
-
 - **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
   decision. `skills/refine/SKILL.md:146-155` removes every worktree after the
   first whose HEAD is on a remote-tracking ref and whose status is clean,
@@ -110,7 +85,7 @@
   `should_`. A bool-returning wrapper (one around `git diff --quiet`) is
   claimed by both and neither states precedence. The bundle's own wrappers
   follow neither: `hooks/stop.py:20` `git_run()`, `hooks/pretool_nudge.py:202`
-  `format_markdown()`, `lints/check.py:59` `matches()`,
+  `format_markdown()`, `skills/astgrep/check.py` `matches()`,
   `skills/recall-memories/recall.py:899` `git()`. **Options:** (a) the
   predicate prefix wins and the body says which command runs; (b)
   `run_<command>` wins and returns the result, a predicate wraps it.
@@ -124,11 +99,6 @@
   **Options:** (a) the preserve list is exempt from the cap; (b) the cap holds
   and the detail goes to a `### Operator note`. **Default if nothing is
   decided:** (b). No test — docs.
-
-- **SWEEP-NAMES-TWO-READONLY-AGENT-TYPES** (LOW, duplication) — CONFIRMED
-  at HEAD 2026-10-10. `skills/sweep/SKILL.md:17` names its read-only subs
-  "Sonnet/Explore"; `:25` launches a `general-purpose` agent. **Fix:** name
-  one agent type. No test — duplication.
 
 - **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
   2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
@@ -164,22 +134,11 @@
   and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
   take `claude-haiku-5-5` and the three tests follow.
 
-- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
-  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
-  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
-  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
-  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
-  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
-  effort; (b) keep the mapping by role — a second opinion is review-grade
-  work and takes the scarcer slot. **Default if nothing is decided:** (b),
-  the text as written.
-
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
   and `**Default if nothing is decided:**` on every entry whose status is
-  `needs sign-off`; the entries in this file with that status predate the
-  rule — none carries a default, and only `LINT-PACK-NOT-INSTALLABLE`
-  sketches options. **Options:** (a) backfill each entry when its subject is
+  `needs sign-off`; several entries lack those fields, including
+  `FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE`. **Options:** (a) fill the fields when its subject is
   next touched; (b) backfill them all in one pass; (c) grandfather them.
   **Default if nothing is decided:** (a).
 
@@ -206,18 +165,6 @@
   refuses with `live ['kronael-install-manifest.json'] are symlinks (Classify:
   SYMLINK)` — citing a line Classify never printed. **Fix:** add the manifest
   to the roots § Classify checks with `os.path.islink`.
-
-- **LINT-PACK-NOT-INSTALLABLE** (MED, design) — needs sign-off. The lint pack
-  (`skills/<lang>/lints/`, aggregated by `sgconfig.yml`, proven by
-  `make lints`) enforces code rules only in THIS repo. Getting it into a user's
-  project is a new install contract. Options: **A (recommended)** an
-  opt-in install step — "wire kronael lints into this repo?" writes/updates the
-  project's `sgconfig.yml` + `.pre-commit-config.yaml` and references the pack,
-  matching the opt-in-skills posture; **B** publish the pack as a standalone
-  `pre-commit` repo referenced by URL; **C** document a `sgconfig.yml`
-  reference only, no installer. Also: CI enforcement here needs an
-  ast-grep-provisioned job (`make lints` is not in pre-commit because the lint
-  CI runner has no ast-grep).
 
 - **LANG-SKILLS-RESTATE-COLD-RUNBOOKS** (LOW, duplication) — owner decision,
   no test — duplication. Hot `SKILL.md` bodies restate rules a cold
@@ -281,17 +228,6 @@
   re-points a colliding tag. **Default if nothing is decided:** bump past —
   re-pointing a pushed tag is the failure.
 
-- **SECOND-OPINION-ROUTING-SPLIT** (LOW, docs) — owner decision, no test —
-  docs. `skills/astra/SKILL.md:14-16` allows direct use only on request or
-  via `oracle`, but `skills/release/SKILL.md:34` and
-  `skills/scavenge/SKILL.md:56,75,132` call astra directly; `oracle` never
-  routes to `pi`; `astra`, `pi` and `oracle` share the triggers "second
-  opinion", "sanity check" and "disagreement after reasoning"
-  (`skills/wisdom/SKILL.md:47` forbids a shared primary trigger);
-  `skills/terra/SKILL.md:24-27` requires `--sandbox read-only` outside
-  dockbox while `astra:29,57` always bypasses the sandbox. **Default if
-  nothing is decided:** as written.
-
 - **SCAVENGE-OUTPUTS-CONTRADICT-BUNDLE-RULES** (LOW, design) — owner
   decision, no test — design. `skills/scavenge/SKILL.md:25-26,136-138`
   writes new skills and agents into `~/.claude/` (an install of this repo,
@@ -307,7 +243,7 @@
   (`cfecd8c`, `0c16126`; WISDOM § Documentation wants them full);
   `skills/eval/novice.md:6-7,184-186` names its scavenge provenance and
   `oracle-critique.md` files that `scavenge:79` writes as
-  `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
+  `audit-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
 
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
@@ -396,6 +332,14 @@
   commits after every edit, which makes that a full run per edit. **Fix:**
   scope one of the two — e.g. refactor-stack commits on the focused run and
   runs the full tier per pushed layer.
+
+- **SYNC-SETTINGS-NEEDS-JQ** (MED, bug) — CONFIRMED 2026-10-22, no test — docs.
+  `kronael/sync/reference.md` § Settings merges the always-apply set and lists the
+  differing keys with `jq`, and § External tool commands never installs `jq`. On a
+  host without it the merge exits 127 (`jq: command not found`) and its redirect
+  leaves an empty `~/.claude/settings.json.new`; `settings.json` stays unchanged.
+  **Fix:** write the merge in `python3`, which the sync already needs, or add `jq`
+  to the Core batch.
 
 - **PY-RECORD-ROW-KEEPS-SMALLINT-INT** (MED, docs) — owner decision. Three
   rules are jointly unsatisfiable: `skills/py/SKILL.md:91` builds a record from
@@ -691,15 +635,15 @@
   `kvs` sweep of sessions older than N days; (b) leave; the rows are small.
   **Default if nothing is decided:** (b).
 
-- **CI-SKIPS-RECALL-LINTS-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
+- **CI-SKIPS-RECALL-AND-SKILL-DRIVEN-HOOK-TESTS** (LOW, config) —
   CONFIRMED 2026-10-12, no test — config. Root `make test` runs
   `skills/recall-memories/test_recall.py` (`Makefile:66`), but no workflow
-  runs root `make test` or `make lints` (`grep -rn recall .github` is empty);
+  runs root `make test` (`grep -rn recall .github` is empty);
   `test-hooks.yml` triggers on `hooks/**` only while
   `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
   touching only `skills/` skips it. `make spec-lint` stays out of CI: it
   needs `SPECS=<dir>` and this repo keeps no specs. **Fix:** add
-  `test_recall.py` and `make lints` to `lint.yml.tmpl` and `skills/**` to
+  `test_recall.py` to `lint.yml.tmpl` and `skills/**` to
   the hooks path filter.
 
 - **AGENTS-TASK-IS-A-LEGACY-ALIAS** (LOW, config) — owner decision, no test
@@ -907,21 +851,6 @@
   `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
   `path` after the `case`, with the "not a GitHub remote" error.
 
-## kvs
-
-- **KVS-PARALLEL-INCR-SQLITE-BUSY** (MED, correctness) — CONFIRMED at HEAD
-  2026-10-16. `kvs/main_test.go::TestParallelIncrLosesNoUpdate` runs 16
-  processes doing 25 `incr` each; 3 runs in 8 here fail with `kvs: database is
-  locked (5) (SQLITE_BUSY)` (exit 9) and `make test` goes red with it; upstream
-  CI passed one run at v0.4.48. `TestTTL` (`main_test.go:174`) sets a key with
-  a 1 s TTL and reads it back after two more commands; under load (the race
-  detector plus other work on the host) the read came back absent once in 8
-  runs. **Fix:** the store waits on `SQLITE_BUSY` (a busy timeout or a retry
-  around the write in `kvs/store.go`) so parallel writers queue instead of
-  failing; the TTL test uses a margin wider than its command latency.
-  Measured: `kvs/main_test.go::TestParallelIncrLosesNoUpdate`,
-  `kvs/main_test.go::TestTTL`.
-
 ## spec-lint
 
 - **SPEC-LINT-PHASED-CORPUS-NO-INDEX-INVISIBLE** (LOW, correctness) —
@@ -1024,16 +953,6 @@
   Reproducing needs a Wi-Fi toggle, which this audit did not do. `-H` has
   no NAT and none of this. **Fix:** none in dockbox short of host network;
   document, or test and close.
-
-- **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:76,80` and `qemubox/qemubox:1278,1282` launch the
-  `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:318`, `qemubox:58,62`, `qemubox/README.md:66`) and
-  `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
-  v0.3.35: the launcher matches the opus subagent) contradicts
-  `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
-  launchers to `high` (scripts, help, READMEs, test) or state the box's own
-  reason for xhigh. Owner's call.
 
 - **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
   test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
@@ -1316,14 +1235,13 @@
   the owner's sign-off. Recorded 2026-10-06.
 
 - **SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES** (LOW, ship) — RECORDED 2026-10-13.
-  `skills/ship/cli.md` states that the `ship` CLI runs every role (spec
-  validator, planner, worker, judge) on one `--model` (env `MODEL`, default
-  `sonnet`). WISDOM § Agents routes planning to `opus`, steps to `sonnet` and
-  specs or red reviews to `fable`, so the CLI cannot follow the routing: a
-  run on `sonnet` plans and judges on the implementer tier, and a run on
-  `fable` makes it the implementer. **Fix:** in kronael/ship, a model per role
-  (planner `opus`, worker `sonnet`, validator and judge `fable` or `opus`).
-  The CLI default stays `sonnet` until then. No test — the model is a CLI flag.
+  `skills/ship/cli.md` states that the external `ship` CLI runs validation,
+  planning, coding and judgment on one `--model` (env `MODEL`, default
+  `sonnet`). It cannot express the separate tasks in `dispatch`'s matrix or
+  preserve a parent review boundary between code steps. **Fix:** the external
+  executor needs explicit model/effort per role and a step-review boundary.
+  Until then, the skill reports the capability limit and requires an explicit
+  owner exception for a bounded run. No test — external executor behavior.
 
 - **SHIP-CLI-TRACE-LOG-IN-TREE** (LOW, ship) — RECORDED 2026-10-10. The
   `ship` CLI (kronael/ship) writes its trace log under the working

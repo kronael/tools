@@ -96,10 +96,12 @@ PR body with the robot. These win.
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
   `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
   `git status`'s "up to date" without a fetch — it compares with the last one.
-- ONLY push when the user asked for a push in that message — NEVER on your own
-  initiative or as the silent tail of a commit, sync, release or ship workflow;
-  those end at the local commit or tag. ALWAYS state the exact refspec first and
-  push only that, by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
+- ALWAYS treat authorized PR work as permission to publish its working head
+  and open or update the PR. NEVER ask for a separate publication approval.
+  ALWAYS push verified fast-forwards as the work needs them and name the
+  refspec in the reply. NEVER publish unrelated heads or tags without explicit
+  approval. Push only the authorized refspec,
+  by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
   — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
   (`set-url`, `remote add`) or store the token, and NEVER `--force` in any
@@ -109,7 +111,7 @@ PR body with the robot. These win.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a SECOND
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a separate
   explicit approval naming it, given AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
 - NEVER approve a PR on the owner's behalf (`gh pr review --approve`). Merging
   a PR and pushing to `<default head>` ask the user first; opening a PR or
@@ -155,28 +157,27 @@ PR body with the robot. These win.
 
 ## Agents
 
-- NEVER run more than 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable` subagent
-  at once; a Codex worker counts in its lane (`dispatch` § Tiers). Only the
-  owner lifts the cap — explicitly, for one named task, after seeing what would
-  be spawned — and the lift ends with that task.
-- The cap is a CONCURRENCY limit, never a routing hint: NEVER send a task to a
-  weaker model because the right one is busy, and NEVER split it to fit. ALWAYS
-  wait for the slot, say what waits behind what, and start it when it frees.
+- ALWAYS select delegated work through `dispatch`: it owns task definitions,
+  model/effort choices, explicit owner overrides and concurrency accounting.
+  ALWAYS use `claude` or `codex` for the selected provider's launch mechanics.
 - Parallel is for READ-ONLY subs or fully isolated worktrees; NEVER code-editing
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
-- ALWAYS keep a multi-step plan in the task tool: one task per step and one per
-  high-level subagent run, its status updated the moment it changes, and the
-  numbered plan with every status restated in chat after each step (`sonnet`
-  § Plan, then execute).
-- ALWAYS run implementation — a comprehensive or multi-file change, autonomous
-  code generation — as a plan from an `opus` sub, then one `sonnet` sub per
-  step, its diff read by the parent before the next (`sonnet` § Plan, then
-  execute); NEVER hand it to one sub whose work no parent reads. Other lane
-  boundaries live in `dispatch` § Tiers. Effort: `high` for
-  coding, `xhigh` for a plan or review, `high` for `fable`, set on the launch
-  where the pin differs; NEVER another unless the owner sets one, per task or kind.
+- ALWAYS track multi-step work with the exposed native checklist tool:
+  `TaskCreate`/`TaskUpdate` in Claude Code, `update_plan` in Codex. ALWAYS follow
+  its schema, authorization and mode restrictions. ALWAYS include one item per
+  step and high-level subagent run, updating status the moment it changes.
+  When absent or prohibited, ALWAYS report the gap and maintain the existing plan or
+  work record. NEVER invent tool calls or substitute goals or threads for a
+  checklist. While work spans several turns, ALWAYS restate the whole numbered plan in chat — every
+  open workstream with its status — after each step and whenever the user asks
+  where things stand (`dispatch` → `plan.md`).
+- ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
+  implementation: source-grounded planning, bounded coding steps and the
+  parent's diff review before each dependent step. Its small-change gate
+  applies; `ship` owns spec-sized delivery. NEVER let a model override bypass
+  this review boundary.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.

@@ -96,7 +96,7 @@ PY
 
 Read-only. Prints a count per class and one line per path that needs a
 decision; exits 1 on a `BADKEEP`, `SYMLINK` or `UNRESOLVED` line. A live file
-identical to any committed version of its source path is an older install,
+identical to any committed version of its source path, including merge results, is an older install,
 not local work: it counts as `stale`. A `both` file whose three-way merge
 into the repo copy changes nothing is `merged`. A legacy nested
 `skills/<name>/<name>/` copy, or a path under a name the bundle shipped and
@@ -125,7 +125,8 @@ JUNK = {'__pycache__', '.pytest_cache', '.ruff_cache', '.claude'}
 WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped
     *(f'skills/{n}' for n in (
-        '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'codex', 'con',
+        'astra', 'fable', 'haiku', 'luna', 'opus', 'sonnet', 'terra',
+        '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'con',
         'cont', 'create-architecture-diagram', 'create-ascii-art', 'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
         'create-design-md', 'create-eval', 'create-excalidraw', 'create-humanizer',
@@ -175,7 +176,7 @@ def committed(rel, data):
         revs = git('log', '--format=%H', 'HEAD', '--', WISDOM).decode().split()
         return any(body(git('show', f'{r}:{WISDOM}')) == data for r in revs)
     oid = git('hash-object', '--stdin', data=data).strip().decode()
-    return bool(oid) and bool(git('log', '-1', '--format=%H', '--find-object=' + oid, 'HEAD', '--', rel).strip())
+    return bool(oid) and bool(git('log', '-1', '-m', '--format=%H', '--find-object=' + oid, 'HEAD', '--', rel).strip())
 
 def merged(rel, data, s, m):  # the repo copy already holds every live change
     base = git('show', f'{commit}:{WISDOM if rel == "CLAUDE.md" else rel}') if commit else b''
@@ -534,6 +535,14 @@ project `.codex/` config and enabled plugins — Kronael writes
   header — TOML then makes it part of that table — and move a `CLAUDE.md`
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
+- Native checklist in `~/.codex/config.toml`: ALWAYS set the sync-owned
+  `tools.update_plan.enabled` to `true` from `$SRC/codex/config.toml`.
+  ALWAYS merge only this key, preserving other tool settings and tables.
+  `update_plan` tracks steps; Plan mode and native goals have separate roles.
+  After a fresh thread starts, ALWAYS inspect its exposed tools before
+  claiming the checklist is available. If absent or prohibited in the current
+  mode, ALWAYS use WISDOM § Agents' work record rule and report the limitation.
+  Source: [configuration schema](https://developers.openai.com/codex/config-schema.json).
 - Native footer in `~/.codex/config.toml`: ALWAYS set the sync-owned
   `tui.status_line` from `$SRC/codex/config.toml`, replacing any existing array,
   including `[]`.
@@ -544,6 +553,9 @@ project `.codex/` config and enabled plugins — Kronael writes
   The shipped configuration contains:
 
   ```toml
+  [tools.update_plan]
+  enabled = true
+
   [tui]
   status_line = ["model-name", "context-used", "five-hour-limit", "weekly-limit"]
   ```
@@ -578,7 +590,7 @@ project `.codex/` config and enabled plugins — Kronael writes
 
   The plugin manifest exposes only `kronael-sync`; shared skills need no manifest entries.
   ALWAYS verify every `$SRC/skills/*/SKILL.md` except `global` resolves through the bridge,
-  including `haiku` and `luna`. Report missing or conflicting names.
+  including `dispatch`, `claude` and `codex`. Report missing or conflicting names.
   `global` supplies `~/.claude/CLAUDE.md`; it is not an installed skill.
 
   ```sh
@@ -641,7 +653,7 @@ Run `which <tool>` first; skip if present and recent.
 |------|---------|--------|
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
-| `codex` | `bun install -g @openai/codex` | /astra /oracle |
+| `codex` | `bun install -g @openai/codex` | /codex /dispatch /oracle |
 | `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |

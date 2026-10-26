@@ -10,8 +10,8 @@ user-invocable: true
 ## Where it runs
 
 The memory pass runs where the nudge lands — in the main thread, or in a
-`sonnet` sub told to "Load the `learn` skill (Skill tool) and run the memory
-pass for <transcript path>". The skill and lint passes ask
+fact-gathering worker selected through `dispatch`, briefed to run the memory
+pass for the given transcript path. The skill and lint passes ask
 the user to approve each item, so they ALWAYS run in the main thread.
 
 ## Sources
@@ -37,11 +37,8 @@ the user to approve each item, so they ALWAYS run in the main thread.
   to detail the approved ones; write only after sign-off and report what was
   written.
 - **Lint** — user-invoked: the same structural, pattern-matchable correction
-  on one language across 2+ sessions → an ast-grep rule in
-  `skills/<lang>/lints/rules.yml` (`id`, `rule`, `message` naming the fix plus
-  `See skill:<lang>`, `severity: warning`, `note:` citing the skill), a
-  `<rule-id>.bad.<ext>` and `<rule-id>.good.<ext>` fixture proven by
-  `make lints`, and the id under that skill's `## Lints`.
+  across 2+ sessions → `wisdom`'s promotion procedure. `astgrep` → `lints.md`
+  owns rule files, fixtures, bindings and project adoption.
 
 The nudge runs the memory pass. "Learn from this session" runs the skill
 pass, then the lint pass.
@@ -57,7 +54,8 @@ mistake on one language — a lint candidate.
 - ALWAYS locate the specific failure or decision in the transcripts BEFORE
   drafting anything.
 - NEVER promote one session to a skill or a lint — the same pattern in 2+
-  distinct sessions; a single session goes to the diary.
+  distinct sessions; a single session goes to the diary. Implementing an
+  already-approved rule as a lint follows `wisdom` without this discovery threshold.
 - NEVER lint judgment (whether a name fits, minimality, "boring code") — a
   false positive trains `--no-verify`. A mechanical shape is lintable, such as
   a bool-returning function without an `is_`/`has_`/`can_`/`should_` prefix.

@@ -7,16 +7,21 @@ wrong file is doc rot even when the fact is right.
 
 ## Where it runs
 
-A pass over a whole doc set runs in a `sonnet` sub, prompt opening with "Load
-the `readme` skill (Skill tool) and read its `sync.md`", then one line per
-changed behaviour. A one-fact fix runs inline. A subagent that loaded this
-skill runs the pass itself.
+For a whole doc set, the parent ALWAYS selects a read-only review worker through
+`dispatch`. ALWAYS brief through `dispatch` § Brief and name each changed
+behaviour. The reviewer uses the protocol below as checks and returns evidenced
+discrepancies and proposed moves; NEVER edit during this review.
+
+The parent ALWAYS verifies the findings, then selects a coding worker through
+`dispatch` for confirmed document changes. The coding worker applies only those
+changes using the same protocol. A worker assigned either phase ALWAYS performs
+that phase itself; NEVER delegate the assignment again. A one-fact fix runs inline.
 
 ## Protocol
 
 1. **Read the current state** — README.md, ARCHITECTURE.md, CLAUDE.md,
    CHANGELOG.md where kept, and the tree (`ls`/`tree`).
-2. **Move content out of CLAUDE.md** — installation, usage, examples and
+2. **Content placement** — installation, usage, examples and
    getting started belong in README; system design, component relationships,
    data flows and state machines in ARCHITECTURE. CLAUDE.md keeps only the
    shocking, counter-intuitive patterns and production gotchas unique to the
@@ -58,7 +63,8 @@ skill runs the pass itself.
 5. **Verify claims against code** — NEVER trust existing doc text. ALWAYS grep
    every referenced function, variable, constant, test name and path to confirm
    it exists and behaves as described, and check every cited result against
-   the newest run. ALWAYS fix the doc to match the code, NEVER the reverse.
+   the newest run. Confirmed corrections ALWAYS change the doc to match the code,
+   NEVER the reverse.
 
 ## Rules
 

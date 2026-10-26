@@ -47,7 +47,7 @@ STUB
     export PATH="$STUB/bin:$PATH"
     printf '%s\n' '-n global' '-d codex' > "$HOME/.qemuboxrc"
     bash "$here/qemubox" -g -e MYSECRET -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
-    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh$' \
+    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=high$' \
         "$STUB/command"
     (
         unset CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY GH_TOKEN MYSECRET
@@ -128,7 +128,13 @@ STUB
     bash "$here/qemubox" -T -n cli codex --model gpt-6-astra </dev/null > "$STUB/output" 2>&1
     grep -qE '&& exec codex --model gpt-6-astra$' "$STUB/command"
     bash "$here/qemubox" -T -n cli -x gpt </dev/null > "$STUB/output" 2>&1
-    grep -qE '&& exec codex -m gpt-6-astra$' "$STUB/command"
+    grep -qE '&& exec codex -m gpt-6-astra -c model_reasoning_effort=high$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli opus --effort xhigh </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec claude --model claude-opus-5-5 --effort high --effort xhigh$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli codex -c model_reasoning_effort=xhigh </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec codex -m gpt-6.1-sol -c model_reasoning_effort=high -c model_reasoning_effort=xhigh$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli codex --model gpt-5.6-terra -c model_reasoning_effort=high </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec codex --model gpt-5.6-terra -c model_reasoning_effort=high$' "$STUB/command"
     printf '%s\n' '-v /:rw' > "$PROJ/.qemuboxrc"
     if (cd "$PROJ" && bash "$here/qemubox" -n cli exec true) </dev/null > "$STUB/output" 2>&1
     then

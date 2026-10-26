@@ -65,7 +65,7 @@ qemubox -N                 # new Claude session, no resume picker
 ```
 
 `qemubox [tool] [dirs] [args]`. The first bare (non-path) argument is the tool:
-`claude` (default, opus @ xhigh), `haiku` / `sonnet` / `opus` / `fable` for
+`claude` (default, opus @ high), `haiku` / `sonnet` / `opus` / `fable` for
 Claude models, `codex` / `gpt` / `mini` / `spark` for Codex, `bash` / `zsh` for
 a login shell, or any binary in the VM. `exec <cmd>` passes every later argument
 through untouched. The default VM name is the project dir basename; `-n name` gives a separate box.
@@ -269,7 +269,7 @@ Git worktrees also mount their common git directory at its host path.
 Claude opens its session selector when the project has JSONL history
 (`-N` skips it);
 the project slug maps every non-alphanumeric character to `-`.
-Codex defaults to `gpt-6.1-sol`/`xhigh`. A `--model` or Codex `-m` after
+Codex defaults to `gpt-6.1-sol`/`high`. A `--model` or Codex `-m` after
 the tool name replaces the alias's model and effort. SSH allocates a tty only
 if stdin and stdout are terminals.
 

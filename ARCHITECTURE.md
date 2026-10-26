@@ -21,7 +21,7 @@ COOKBOOK.md                 daily git recipes (detached HEAD with rig)
 BUGS.md                     open issues
 NOTICE                      upstream attribution
 docs/                       research notes behind individual skills
-lints/                      fixture harness for the ast-grep lint rules (make lints)
+skills/astgrep/check.py      lint runner and fixture harness (make lints)
 tests/                      repo-level tests (qemubox/dockbox alias drift)
 .github/                    CI workflows, generated from .github/templates/
 sgconfig.yml                ast-grep config listing the skill lint rule dirs
@@ -116,7 +116,7 @@ which the OS clears on reboot.
 3. Loads ./CLAUDE.md (project conventions)
 4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills load on dispatch (`/solve`, `/<name>`) or on a description match
-6. A tier agent (`sonnet`, `opus`, `fable`, `haiku`) launched by a skill or explicitly (`/sonnet`)
+6. `dispatch` selects a task route; `claude` or `codex` launches the selected worker
 ```
 
 ## Components

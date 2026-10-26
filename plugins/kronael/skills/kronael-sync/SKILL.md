@@ -79,7 +79,7 @@ no source run without one: the top-level key
 `project_doc_fallback_filenames = ["CLAUDE.md"]` in `~/.codex/config.toml`,
 and `ln -s ~/.claude/skills ~/.agents/skills` when `~/.agents/skills` is
 absent; anything else waits for the source root.
-ALWAYS apply the native footer configuration from that canonical section too.
+ALWAYS apply the native checklist and footer configuration from that canonical section too.
 
 ## Report
 

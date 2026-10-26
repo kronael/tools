@@ -162,8 +162,8 @@ or diary file), the originating project for an `-a` match, and the `cwd`
 plus rollout path for a Codex match. A fact taken from history and not
 re-checked in this turn is labelled "from session <id>, not re-checked".
 
-Long sweeps: run §2 steps 2-3 or §3 steps 1-2 in one Explore subagent
-(read-only, keeps dumps out of the main context). Its brief lists the
+For long sweeps, ALWAYS select one read-only fact-gathering worker through
+`dispatch` for §2 steps 2-3 or §3 steps 1-2. Its brief lists the
 commands above and requires the evidence line and the handles. Then run
 `show` yourself on every handle you will rely on — subagents overclaim.
 

@@ -52,6 +52,7 @@ def test_codex_bridge_configures_the_four_native_footer_items() -> None:
     config = Path(__file__).parents[1] / 'codex/config.toml'
     assert tomllib.loads(config.read_text()) == tomllib.loads(fences[0])
     assert tomllib.loads(fences[0]) == {
+        'tools': {'update_plan': {'enabled': True}},
         'tui': {
             'status_line': [
                 'model-name',

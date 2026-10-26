@@ -11,6 +11,9 @@ user-invocable: true
 Judge a target from one fixed expert perspective. Read the ONE matched file,
 then follow it. Every lens is findings-only: NEVER fix during an eval — a
 real defect goes to `BUGS.md` via `/bugs`, fixes go through `refine`.
+ALWAYS select delegated evaluations as audit tasks through `dispatch`, including
+CEO, CTO and red lenses. Its capacity limits and provider runbooks apply.
+A worker assigned one lens runs it itself, without delegating it again.
 
 ## Dispatch
 
