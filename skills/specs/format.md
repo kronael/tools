@@ -34,7 +34,7 @@ or cuts them before promotion. NEVER infer implementation completion from lint.
   spec-index-dangling. A phase may keep its own `specs/<phase>/index.md`; its
   rows count once the master table links it.
 - ALWAYS use `Spec`, `Status`, `Summary` as the first three index columns,
-  with one inline spec link in the first cell. ALWAYS keep the frontmatter
+  with one Markdown spec link in the first cell. ALWAYS keep the frontmatter
   to one `status: value` line between `---` delimiters; comments and quoted
   values are accepted. The [speclint README](https://github.com/kronael/tools/tree/master/speclint) owns
   the supported input forms and diagnostics.
