@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import zipfile
 
 import pytest
@@ -60,6 +61,18 @@ def test_wheel_contents(wheel):
         config = configparser.ConfigParser()
         config.read_string(archive.read('speclint-0.1.0.dist-info/entry_points.txt').decode())
         assert dict(config['console_scripts']) == {'speclint': 'speclint:main'}
+
+
+def test_source_archive_checks_and_rebuild(wheel, consumer):
+    directory, env = consumer
+    with tarfile.open(next(wheel.parent.glob('*.tar.gz'))) as archive:
+        archive.extractall(directory / 'source', filter='data')
+    source = directory / 'source' / 'speclint-0.1.0'
+    result = run_process(['make', 'prepare', 'check', 'right', 'test', 'build'], source, env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    rebuilt = next((source / 'dist').glob('*.whl'))
+    result = run_process(['uvx', '--from', str(rebuilt), 'speclint', 'specs'], directory, env)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_uvx_wheel_outside_source(wheel, consumer):

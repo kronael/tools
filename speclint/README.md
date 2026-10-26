@@ -111,7 +111,7 @@ repository checker script.
 |---|---|
 | `make prepare` | Install locked development dependencies |
 | `make test` | Run rule fixtures with Python development checks |
-| `make integration` | Build and inspect a wheel; run uvx and real Git hooks in temporary consumers |
+| `make integration` | Check extracted sources and rebuilt wheels; run uvx and real Git hooks in temporary consumers |
 | `make check` | Ruff lint and format checks |
 | `make right` | Strict type checks |
 | `make build` | Build source and wheel distributions |
