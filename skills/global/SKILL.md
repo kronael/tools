@@ -184,11 +184,12 @@ PR body with the robot. These win.
   code generation — as a plan from an `opus` sub, then one `sonnet` sub per
   code step, its diff read by the parent before the next (`sonnet` § Plan, then
   execute); NEVER hand it to one sub whose work no parent reads. Other lane
-  boundaries live in `dispatch` § Tiers. Effort: `high` for
-  coding and for a review, with Sol's pin owned by `astra` § Sol;
-  `xhigh` otherwise only for a plan, a security review (the red
-  eval) and a CTO or CEO audit, those audits on `opus` or `fable`; set on the
-  launch where the pin differs; NEVER another unless the owner sets one, per task or kind.
+  boundaries live in `dispatch` § Tiers. ALWAYS default to `high` effort.
+  ALWAYS use `xhigh` only on an explicit owner request, normally for
+  algorithmic work; NEVER select it automatically for plans, reviews or audits.
+  ALWAYS forward an explicit model or effort override on the launch.
+  If the route cannot honor it, ALWAYS stop and report the limitation;
+  NEVER silently substitute another model or effort.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.

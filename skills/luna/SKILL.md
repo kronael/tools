@@ -17,9 +17,10 @@ and a bounded mechanical edit with a clear spec. Its catalog description is
 With a prompt after `/luna`, ALWAYS launch the worker in the background.
 ALWAYS report what was launched and continue on non-overlapping work.
 
-- If Codex's native `spawn_agent` supports explicit model and effort selection,
+- If native `spawn_agent` exposes `gpt-6-luna` and explicit effort selection,
   ALWAYS use `model: "gpt-6-luna"`, `reasoning_effort: "high"`, and
   `fork_turns: "none"`. Otherwise, ALWAYS use the CLI route below.
+- ALWAYS apply explicit owner effort overrides per WISDOM § Agents to either route.
 - For CLI workers, ALWAYS apply only `astra`'s Model and Auth checks from
   `../astra/SKILL.md`. ALWAYS use the shell tool's background mode.
 - ALWAYS set `-C` to the CLI worker's designated directory.

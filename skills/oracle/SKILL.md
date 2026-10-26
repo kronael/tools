@@ -38,8 +38,8 @@ Rules:
 - Never ask "does this look right?" Ask what breaks, what is missing, or why the
   plan fails.
 - Verify claims against the repo before acting.
-- When fable cannot run (a usage limit), ALWAYS take the same route on
-  `subagent_type: "opus"` — NEVER skip the opinion.
+- When Fable cannot run, ALWAYS follow `fable`'s usage-limit rule;
+  NEVER substitute another model without the user's choice.
 
 ## Astra Route
 
@@ -51,10 +51,9 @@ For an explicit Sol opinion, ALWAYS run `astra` § Sol (`gpt-6.1-sol`,
 ephemeral) under the same `astra` § Rules; NEVER answer a Sol request on the
 Astra model silently.
 
-When the Astra CLI call cannot run (revoked auth, missing CLI), ALWAYS report
-the failure and take the Fable Route, on opus when fable cannot run either.
-For a missing pinned model, ALWAYS follow the named skill's stop-and-report
-rule; NEVER substitute an engine without the user's choice.
+When the selected model cannot run (revoked auth, missing CLI or model),
+ALWAYS report the failure and ask before selecting another model.
+NEVER substitute an engine without the user's choice.
 
 ## Output
 

@@ -89,12 +89,12 @@ still carries claims to verify.
    brief. ALWAYS choose reviewers through `dispatch` § Tiers for both tags.
    On Claude, ALWAYS use `subagent_type: "opus"` with effort per WISDOM § Agents.
    NEVER use `model=` alone — ALWAYS use the Claude agent type.
-   On Codex, ALWAYS use native `spawn_agent` when available:
-   `model: "gpt-6.1-sol"`, `reasoning_effort: "xhigh"`, `fork_turns: "none"`.
+   On Codex, ALWAYS use native `spawn_agent` when it exposes the model and effort:
+   `model: "gpt-6.1-sol"`, `reasoning_effort: "high"`, `fork_turns: "none"`
+   by default. ALWAYS forward explicit owner overrides per WISDOM § Agents.
    Native workers need no CLI Model/Auth checks; the CLI fallback uses isolated
    `codex exec --ephemeral` per `astra` § Sol. An explicit Astra route uses
-   `astra`'s model and effort.
-   ALWAYS use `dispatch` § Brief for the Codex opening and skill routing.
+   `astra`'s model and effort. ALWAYS use `dispatch` § Brief for the Codex opening and skill routing.
    A context worker reviews its assigned context itself; NEVER delegate that
    same review again. A context without a tag runs as `correctness`.
    The subs report findings with commands and outputs and NEVER edit.

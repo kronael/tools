@@ -30,7 +30,7 @@ behavior built in, so NO sandbox flag is needed.
 # a `404 page not found` body or non-zero exit = not authed / endpoint down.
 
 # --no-session: don't persist a rollout file (a batch loop fills the disk otherwise)
-# --thinking high: ordinary review; WISDOM § Agents owns the exceptions
+# --thinking high: default; WISDOM § Agents owns explicit owner overrides
 # </dev/null is REQUIRED — without it pi blocks waiting for more stdin
 pi -p --no-session --thinking high "Goal: <X>. Find the flaw in..." </dev/null
 ```
@@ -50,7 +50,7 @@ unrelated processes (and your own shell). Kill by numeric PID
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
   strongest configured model. ALWAYS set `--thinking` per WISDOM § Agents:
-  `high` for a review, `xhigh` only for its named exceptions.
+  `high` by default, `xhigh` only on an explicit owner request.
 - To force a specific tier: `--model sonnet:high`, or `--provider openai --model
   <id>`. `--model <provider>/<id>` and `--model <id>:<effort>` shorthands work.
 - pi's OUT-OF-BOX default (fresh install, no login) is `google/gemini-2.5-flash`,

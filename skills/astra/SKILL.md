@@ -7,7 +7,7 @@ user-invocable: true
 
 # Astra
 
-The codex CLI pinned to `gpt-6-astra`, at high effort for a review. Its catalog description
+The codex CLI pinned to `gpt-6-astra`, at high effort by default. Its catalog description
 is "Frontier intelligence for the most demanding work." This is a subprocess,
 NEVER a Claude `Agent(...)` type — ALWAYS use the CLI invocation below.
 
@@ -69,7 +69,7 @@ NEVER `pkill -f codex` to clean up — it matches your own shell's command line
 ## Sol
 
 Sol is the Codex worker for the `/opus` lane. Its model ID is `gpt-6.1-sol`,
-and its effort is `xhigh`. `dispatch` § Tiers owns its work assignments;
+and its default effort is `high`. `dispatch` § Tiers owns its work assignments;
 `oracle` also selects it for an explicit Sol opinion.
 ALWAYS apply § Invoke and its brief rule. For CLI calls, ALWAYS select
 `gpt-6.1-sol` in the catalog check and use `codex exec --ephemeral`.
@@ -77,7 +77,7 @@ NEVER resume Astra's thread for Sol — ALWAYS give Sol an independent context.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
-  -m gpt-6.1-sol -c model_reasoning_effort="xhigh" \
+  -m gpt-6.1-sol -c model_reasoning_effort="high" \
   "<brief per dispatch § Brief>" </dev/null
 ```
 
@@ -85,19 +85,20 @@ codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox \
 
 - ALWAYS pin `gpt-6-astra` for Astra and `gpt-6.1-sol` for Sol. The request
   names the variant; reading this runbook NEVER changes that choice.
-- ALWAYS confirm the selected slug exists with the check below before the
-  call; exit 0 means present. NEVER pick the model by the configured default or by priority.
-- If the cache is missing, unreadable, or lacks the slug, ALWAYS stop the
-  launch and report the exact missing model. ALWAYS ask the user to refresh
-  the Codex catalog or explicitly choose another model; NEVER silently substitute.
-- ALWAYS set `model_reasoning_effort` explicitly: Sol uses § Sol's pin;
-  Astra uses `high`, with WISDOM § Agents setting its exceptions.
-  NEVER trust the local config default.
+- ALWAYS confirm the selected slug and effort exist with the check below
+  before the call; exit 0 means present in the cache, not live entitlement.
+  NEVER pick the model by the configured default or by priority.
+- If the cache is missing, unreadable, or lacks the model or effort, ALWAYS
+  stop the launch and report the exact unsupported selection. ALWAYS ask the user to refresh
+  the Codex catalog or explicitly choose another model or effort; NEVER silently substitute.
+- ALWAYS set `model_reasoning_effort` explicitly to `high` by default.
+  ALWAYS apply explicit owner overrides per WISDOM § Agents; NEVER silently
+  drop an override or trust the local config default.
 - If `codex exec` errors that the model "requires a newer version of Codex",
   the CLI is stale — `bun add -g @openai/codex@latest` (or npm), then retry.
 
 ```bash
-python3 - '<selected slug>' <<'PY'
+python3 - '<selected slug>' '<selected effort>' <<'PY'
 import json
 import os
 import sys
@@ -105,7 +106,11 @@ from pathlib import Path
 
 home = Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
 catalog = json.loads((home / 'models_cache.json').read_text())
-sys.exit(0 if any(m['slug'] == sys.argv[1] for m in catalog['models']) else 1)
+sys.exit(0 if any(
+    m['slug'] == sys.argv[1]
+    and any(e['effort'] == sys.argv[2] for e in m['supported_reasoning_levels'])
+    for m in catalog['models']
+) else 1)
 PY
 ```
 

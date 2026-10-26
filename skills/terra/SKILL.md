@@ -7,17 +7,21 @@ user-invocable: true
 
 # Terra
 
-Terra is the Codex worker for the `/sonnet` lane. Its model ID is `gpt-6.1-sol`,
-and its effort is `high`. `dispatch` § Tiers distinguishes worker names from model IDs.
+Terra is the Codex worker for the `/sonnet` lane. Its model ID is `gpt-5.6-terra`,
+and its default effort is `high`. `dispatch` § Tiers owns its task assignments.
 
 ## Invoke
 
 With a prompt after `/terra`, ALWAYS launch the worker in the background.
 ALWAYS report what was launched and continue on non-overlapping work.
 
-- If Codex's native `spawn_agent` supports explicit model and effort selection,
-  ALWAYS use `model: "gpt-6.1-sol"`, `reasoning_effort: "high"`, and
+- ALWAYS use native `spawn_agent` only when its exposed model choices include
+  `gpt-5.6-terra` and it supports explicit effort selection.
+  ALWAYS set `model: "gpt-5.6-terra"`, `reasoning_effort: "high"`, and
   `fork_turns: "none"`. Otherwise, ALWAYS use the CLI route below.
+  A `model` parameter alone does not establish support for Terra.
+- ALWAYS apply an explicit owner effort override per WISDOM § Agents to
+  either launch route; NEVER silently replace the requested model or effort.
 - For CLI workers, ALWAYS apply only `astra`'s Model and Auth checks from
   `../astra/SKILL.md`. ALWAYS use the shell tool's background mode.
 - ALWAYS set `-C` to the CLI worker's designated directory.
@@ -26,7 +30,7 @@ ALWAYS report what was launched and continue on non-overlapping work.
 
 ```bash
 codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "<worker directory>" \
-  -m gpt-6.1-sol -c model_reasoning_effort="high" \
+  -m gpt-5.6-terra -c model_reasoning_effort="high" \
   "<self-contained brief>" </dev/null
 ```
 

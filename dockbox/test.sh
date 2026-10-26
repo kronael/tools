@@ -460,7 +460,7 @@ run=$(grep "^run " "$log")
 true_  "project rc --no-ephemeral persists builds" \
     '! grep -q -- "--tmpfs $proj/node_modules:" <<< "$run"'
 true_  "project rc --no-ephemeral passes no -- to claude" \
-    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort high" ]'
 false_ "project rc --no-ephemeral prints no ignoring warning" 'grep -q ignoring "$tmp/err"'
 printf -- '--no-ephemeral' > "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude "$proj" >/dev/null 2>"$tmp/err"
@@ -474,14 +474,14 @@ rm -f -- "$proj/.dockboxrc"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe claude --resume "$proj" >/dev/null 2>"$tmp/err"
 claude_line=$(sed -n "s/^exec -i .* -- claude //p" "$log")
 true_  "no project rc leaves the tool flags to the tool" \
-    '[ "$claude_line" = "--model claude-opus-5-5 --effort xhigh --resume" ]'
+    '[ "$claude_line" = "--model claude-opus-5-5 --effort high --resume" ]'
 
 # -d and -x take the same alias table as the first argument; a model flag in
 # the session's own arguments replaces the alias's model and effort.
 bypass="--dangerously-bypass-approvals-and-sandbox"
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d codex "$proj" >/dev/null 2>"$tmp/err"
 true_  "-d codex takes the codex alias defaults" \
-    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=xhigh" ]'
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=high" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -x haiku "$proj" >/dev/null 2>"$tmp/err"
 true_  "-x haiku runs claude on the haiku model" \
     '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-haiku-4-5-20251001" ]'
@@ -493,7 +493,22 @@ true_  "a session --model replaces the claude alias model and effort" \
     '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-sonnet-5-5" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus -p "explain the -m flag" "$proj" >/dev/null 2>"$tmp/err"
 true_  "a model flag inside a prompt keeps the alias model" \
-    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort xhigh -p explain the -m flag" ]'
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort high -p explain the -m flag" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe fable "$proj" >/dev/null 2>"$tmp/err"
+true_ "fable pins high effort" \
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-fable-5-1 --effort high" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe gpt "$proj" >/dev/null 2>"$tmp/err"
+true_ "astra pins high effort" \
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass -m gpt-6-astra -c model_reasoning_effort=high" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe opus --effort xhigh "$proj" >/dev/null 2>"$tmp/err"
+true_ "explicit claude effort follows the alias default" \
+    '[ "$(sed -n "s/^exec -i .* -- claude //p" "$log")" = "--model claude-opus-5-5 --effort high --effort xhigh" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex -c model_reasoning_effort=xhigh "$proj" >/dev/null 2>"$tmp/err"
+true_ "explicit codex effort follows the alias default" \
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass -m gpt-6.1-sol -c model_reasoning_effort=high -c model_reasoning_effort=xhigh" ]'
+HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe codex --model gpt-5.6-terra -c model_reasoning_effort=high "$proj" >/dev/null 2>"$tmp/err"
+true_ "explicit terra model and effort replace the alias defaults" \
+    '[ "$(sed -n "s/^exec -i .* -- codex //p" "$log")" = "$bypass --model gpt-5.6-terra -c model_reasoning_effort=high" ]'
 HOME="$tmp/home" STUB_FRESH=1 dockbox -n pe -d bash "$proj" >/dev/null 2>"$tmp/err"
 true_  "-d bash is the login shell the bash argument gives" \
     'grep -q -- " -- /bin/bash -l$" "$log"'

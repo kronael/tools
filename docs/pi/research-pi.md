@@ -138,7 +138,7 @@ pi --model <newest-from-list-models>:high -p "<prompt>" </dev/null
   present; if not, tell the user to `export …_API_KEY` or run `pi` + `/login`
   once. (No `login status` command to shell out to.)
 - **Model/effort:** default to the top-ranked model from `--list-models` at
-  `--thinking high` (or `xhigh`) to match Astra's high effort.
+  `--thinking high` to match Astra's default effort. Use `xhigh` only on an explicit owner request.
 - **Prompt framing:** same adversarial "find the flaw / second opinion" framing
   as the astra skill; pass via arg or stdin.
 - **Output:** plain text by default (`-p`); add `--mode json` only if the skill

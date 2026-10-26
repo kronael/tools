@@ -1005,16 +1005,6 @@
   no NAT and none of this. **Fix:** none in dockbox short of host network;
   document, or test and close.
 
-- **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:76,80` and `qemubox/qemubox:1278,1282` launch the
-  `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:318`, `qemubox:58,62`, `qemubox/README.md:66`) and
-  `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
-  v0.3.35: the launcher matches the opus subagent) contradicts
-  `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
-  launchers to `high` (scripts, help, READMEs, test) or state the box's own
-  reason for xhigh. Owner's call.
-
 - **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
   test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
   `mktemp` files (`dockbox/dockbox:589,711`) and bind-mounts them into the
