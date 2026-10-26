@@ -157,14 +157,9 @@ PR body with the robot. These win.
 
 ## Agents
 
-- NEVER run more than 2 `haiku`, 2 `sonnet` and 1 `opus` or `fable` subagent
-  at once; a Codex worker counts in its lane (`dispatch` § Tiers). Only the
-  owner lifts the cap — explicitly, for one named task, after seeing what would
-  be spawned — and the lift ends with that task.
-- The cap is a CONCURRENCY limit, never a routing hint: NEVER degrade a task —
-  a weaker model, a lower tier, the lower lane's Codex worker, a lower effort —
-  so it starts without waiting, and NEVER split it to fit. ALWAYS wait for the
-  slot, say what waits behind what, and start it when it frees.
+- ALWAYS select delegated work through `dispatch`: it owns task definitions,
+  model/effort choices, explicit owner overrides and concurrency accounting.
+  ALWAYS use `claude` or `codex` for the selected provider's launch mechanics.
 - Parallel is for READ-ONLY subs or fully isolated worktrees; NEVER code-editing
   subs on one shared tree — they interleave, one reverts another.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
@@ -177,17 +172,12 @@ PR body with the robot. These win.
   work record. NEVER invent tool calls or substitute goals or threads for a
   checklist. While work spans several turns, ALWAYS restate the whole numbered plan in chat — every
   open workstream with its status — after each step and whenever the user asks
-  where things stand (`sonnet` § Plan, then execute).
-- ALWAYS run implementation — a comprehensive or multi-file change, autonomous
-  code generation — as a plan from an `opus` sub, then one `sonnet` sub per
-  code step, its diff read by the parent before the next (`sonnet` § Plan, then
-  execute); NEVER hand it to one sub whose work no parent reads. Other lane
-  boundaries live in `dispatch` § Tiers. ALWAYS default to `high` effort.
-  ALWAYS use `xhigh` only on an explicit owner request, normally for
-  algorithmic work; NEVER select it automatically for plans, reviews or audits.
-  ALWAYS forward an explicit model or effort override on the launch.
-  If the route cannot honor it, ALWAYS stop and report the limitation;
-  NEVER silently substitute another model or effort.
+  where things stand (`dispatch` → `plan.md`).
+- ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
+  implementation: source-grounded planning, bounded coding steps and the
+  parent's diff review before each dependent step. Its small-change gate
+  applies; `ship` owns spec-sized delivery. NEVER let a model override bypass
+  this review boundary.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.
