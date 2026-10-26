@@ -174,16 +174,6 @@
   and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
   take `claude-haiku-5-5` and the three tests follow.
 
-- **AGENTS-SOL-TERRA-SAME-MODEL-DIFFERENT-CAP** (LOW, design) — owner
-  decision, no test — design. `skills/global/SKILL.md` § Agents counts `terra`
-  as a `sonnet` and `sol` as an `opus`, yet both run `gpt-6.1-sol` at high
-  (`skills/terra/SKILL.md:10`, `skills/astra/SKILL.md` § Sol), so the same
-  model at the same effort takes a 2-slot or a 1-slot bucket by skill name.
-  **Options:** (a) count `sol` as a `sonnet` — one bucket per model and
-  effort; (b) keep the mapping by role — a second opinion is review-grade
-  work and takes the scarcer slot. **Default if nothing is decided:** (b),
-  the text as written.
-
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
   and `**Default if nothing is decided:**` on every entry whose status is
