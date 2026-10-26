@@ -210,7 +210,8 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS run a script from a fixed working directory with simple relative
   paths — NEVER `basename $0`, `__dirname`, or complex path resolution.
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
-  `"checking..."`, `"Failed: ..."`.
+  `"checking..."`, `"Failed: ..."`. Where the language's linter requires
+  lowercase errors (Go: staticcheck ST1005), the linter wins — NEVER suppress it.
 - ALWAYS the Unix log format: `Sep 18 10:34:26 INFO subsystem: message`.
 - ALWAYS write logs from services and CLI entrypoints to stdout/stderr only —
   NEVER a file log handler or a log-file path passed through application code;

@@ -23,12 +23,16 @@ git fetch origin                          # refresh every origin/* head first
 OLD=$(git rev-parse HEAD)                 # old tip — the recovery anchor, record FIRST
 BASE=$(for c in $(git rev-list --first-parent HEAD); do   # newest pushed first-parent commit
   [ -n "$(git branch -r --contains "$c")" ] && echo "$c" && break; done)
+TAG=$(git describe --tags --abbrev=0 HEAD 2>/dev/null)     # newest local tag on HEAD
+[ -n "$TAG" ] && git merge-base --is-ancestor "$BASE" "$TAG^{commit}" \
+  && BASE=$(git rev-parse "$TAG^{commit}")                  # a tag raises the floor
 git log --oneline "$BASE"..HEAD --not --remotes=origin    # the rewrite set
 ```
 
 - `BASE` is the floor: the newest first-parent commit that ANY `origin/*` head
   holds — `origin/<default head>` (WISDOM § Git) and every pushed `YYYYMMDD_<tag>`
-  head alike. ONLY commits in `BASE..HEAD` may be rewritten; NEVER touch anything
+  head alike, raised to the newest tag on HEAD: an unpushed release tag
+  is published history too. ONLY commits in `BASE..HEAD` may be rewritten; NEVER touch anything
   at or below `BASE` — it is published.
 - STOP — nothing safe to squash — when `BASE` is empty (no pushed commit anchors
   the floor: ask), when `BASE..HEAD` is empty, or when

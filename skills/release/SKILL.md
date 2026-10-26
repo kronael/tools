@@ -131,8 +131,11 @@ version, CHANGELOG and tag.
    carries this blockquote. NEVER create a GitHub release object
    (`gh release create`) — the annotated tag is the release, and its push is
    the publication.
-4. **Verify** — `make test`, `make smoke` if defined. For monorepos
-   with sibling deployables, run each subdir's `make test` too.
+4. **Verify** — `make test`, `make smoke` if defined, and every release gate
+   the project's CLAUDE.md names. For monorepos with sibling deployables, run
+   each subdir's `make test` too. Before the first gate, read each target for
+   its required variables and set them; run a gate that needs `sudo`, docker
+   or a tool cache outside the agent sandbox.
 4.5. **Critique gate when unclear.** If verification passes but the release is
    still not obviously good enough from context, run the relevant critique lens
    before committing:
