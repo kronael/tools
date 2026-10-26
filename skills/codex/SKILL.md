@@ -1,7 +1,7 @@
 ---
 name: codex
 description: Run a selected model through native Codex workers or the Codex CLI. NOT for task selection (use dispatch) or second-opinion framing (use oracle).
-when_to_use: "Codex provider, ask codex, use codex, run codex, ask Astra, ask Sol, Codex CLI auth, Codex model catalog, Codex worker launch"
+when_to_use: "Codex provider, ask codex, use codex, run codex, ask Astra, ask Sol, ask Terra, Codex CLI auth, Codex model catalog, Codex worker launch"
 user-invocable: true
 ---
 

@@ -92,7 +92,7 @@ def test_translate_output_preserves_selected_workflow(monkeypatch, tmp_path, ski
     assert parsed['hookSpecificOutput']['additionalContext'] == f'Invoke @{skill}.'
 
 
-@pytest.mark.parametrize('name', ['astra', 'sol'])
+@pytest.mark.parametrize('name', ['astra', 'sol', 'terra'])
 def test_unknown_model_reference_is_not_replaced_with_current_session(monkeypatch, tmp_path, name):
     install_skills(monkeypatch, tmp_path, 'dispatch')
     output = translate_output(

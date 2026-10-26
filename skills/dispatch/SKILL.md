@@ -21,7 +21,7 @@ library code follow the same distinction as other artifacts.
 | Task | Requested output and boundary | Claude model / effort | Codex model / effort | Group |
 |---|---|---|---|---|
 | Mechanical | Named-file inventories, exact searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / high | `gpt-6-luna` / high | Lightweight |
-| Coding | Implement a settled plan, investigate a bug, gather nontrivial facts, or make settled document changes | Sonnet / high | `gpt-6.1-sol` / medium | Implementation |
+| Coding | Implement a settled plan, investigate a bug, gather nontrivial facts, or make settled document changes | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
