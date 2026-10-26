@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [v0.4.58] — 20261026
+
+> kronael v0.4.58 — workers chosen by task
+>
+> Dispatch picks the worker for a task through one model and effort table, and model names now lead there.
+>
+> • Dispatch — one table selects model and effort per task for Claude and Codex; Terra (`gpt-6.1-terra`) does coding.
+> • Provider skills — `claude` and `codex` launch the selected model; the model-named skills are retired.
+> • Nudge — a bare model name (terra, luna, astra, haiku, sonnet, opus, fable) points to /dispatch and says which word did it.
+> • Codex — the bridge keeps native checklist tracking.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dispatch` owns task definitions, model choices, effort and concurrency; workflows name a task.
+- `claude` and `codex` own launch mechanics; `astra`, `terra`, `luna`, `haiku`, `sonnet`, `opus` and `fable` skills are removed.
+- Terra (`gpt-6.1-terra`) is the Codex coding worker; agents default to high effort.
+- The prompt nudge routes `/name` and a bare model name (not a path) to `/dispatch`; phrase patterns are gone; Sol needs `/sol`, because SOL is a coin.
+- Every route the nudge emits names the prompt text that triggered it.
+- Workflow names with digits survive dispatch.
+
 ## [v0.4.57] — 20261025
 
 > kronael v0.4.57 — Project checks from the bundle
