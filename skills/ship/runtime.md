@@ -35,9 +35,9 @@ Repair the change's defects. Record adjacent defects with `bugs`, and use
 `intake.md` when their repair becomes a requirement outside the brief.
 
 ALWAYS spend a repair attempt on a changed hypothesis or implementation,
-not rerunning the same deterministic failure. Escalate a `sonnet` step to
-`opus`, or consult `oracle`, when the current approach stalls. Retry only a
-transient failure under the owning skill's rules. Count all attempts in the
+not rerunning the same deterministic failure. Return an unresolved design to
+planning through `dispatch`, or consult `oracle`, when the approach stalls.
+Retry only a transient failure under the owning skill's rules. Count all attempts in the
 work record.
 
 When each repair reveals a new defect somewhere else, that is a wrong
@@ -65,11 +65,12 @@ differ by client. When absent, execute the same plan with ordinary supported
 tools and preserve a resume point. NEVER promise unattended work after the
 session exits without a runtime that provides it.
 
-When a named Claude tier is unavailable, ALWAYS use its equivalent from
-`dispatch` § Tiers and its brief from `dispatch` § Brief. Use supported model and
-effort controls, not invented model names or prompt text claiming an effort
-setting. ALWAYS preserve fresh planner context and worker isolation. If no
-suitable subagent exists, report that capability gap and complete
+ALWAYS select the task through `dispatch` and use its provider runbook.
+When the selected model or effort is unavailable, report the exact limitation;
+NEVER silently substitute a model, provider or effort. Use supported controls,
+not invented model names or prompt text claiming an effort setting.
+ALWAYS preserve fresh planner context and worker isolation. If no suitable
+subagent exists, report that capability gap and complete
 independent preparation. NEVER present an inline self-plan as fresh
 independent research.
 

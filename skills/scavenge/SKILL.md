@@ -1,22 +1,22 @@
 ---
 name: scavenge
-description: Codify public best practice into a durable, astra-tested artifact — skill, agent, guideline, runbook, checklist or spec. NOT for session-history patterns (use learn) or editing an existing artifact (use wisdom).
+description: Codify public best practice into a durable, audited artifact — skill, agent, guideline, runbook, checklist or spec. NOT for session-history patterns (use learn) or editing an existing artifact (use wisdom).
 when_to_use: "codify a best practice into a skill, write up our guideline, draft a runbook, make a checklist, produce a review template, make an agent for Z, new methodology"
 user-invocable: true
 ---
 
-# scavenge — gather, astra-test at every step, assemble
+# Scavenge — research, critique, assemble
 
 You're not inventing. Someone (NN/g, Nielsen, Norman, Krug, GOV.UK,
 Google SRE, OWASP, ...) has already figured out the activity in front
-of you. The job: scavenge their work, sniff it for rot via `astra` at
+of you. The job: scavenge their work, audit its assumptions through `dispatch` at
 each step, and assemble what survives into a durable artifact your team
 can reuse.
 
 **Critique is not localised to step 3.** It threads through the
-pipeline. `astra` is the adversarial engine; call it at every
-checkpoint below. Confirmation bias accumulates step by step — one
-late critique can't undo a bias planted at step 1.
+pipeline. ALWAYS select an audit worker through `dispatch` at each
+checkpoint below; its model, effort and capacity rules apply. Confirmation bias
+accumulates step by step — one late critique can't undo a bias planted at step 1.
 
 ## Output shapes
 
@@ -53,13 +53,13 @@ shapes; only step 5's skeleton differs.
 ONE sentence: "<name> [shape] that <verb> <domain> for <persona/output>."
 Wobbling sentence → scope not bounded; reshape first.
 
-**Critique checkpoint 1 (light).** ALWAYS ask `astra` in 2–4 lines:
+**Critique checkpoint 1 (light).** ALWAYS dispatch an audit brief in 2–4 lines:
 "Find the flaw in this activity boundary and artifact shape given its reuse
 and invocation pattern." ALWAYS verify its findings before changing the shape.
 
 ### Step 2 — research subagent
 
-Spawn one (`general-purpose` or `Explore`). Self-contained prompt:
+ALWAYS select a read-only fact-gathering worker through `dispatch`. Brief:
 
 - activity name + scope, 5–15 sub-topics, explicit out-of-scope list
 - length budget ~1500–2000 words
@@ -70,13 +70,13 @@ Spawn one (`general-purpose` or `Explore`). Self-contained prompt:
 
 ALWAYS self-contained — subagent has zero context.
 
-### Step 3 — adversarial astra critique (the deep one)
+### Step 3 — adversarial audit
 
-Invoke `astra` adversarially: "find what's wrong, where the science
+ALWAYS dispatch an audit with this goal: "find what's wrong, where the science
 doesn't support the claim, where the protocol generates bad data,
 what to cut as filler, where classification collapses in practice."
 NEVER frame as "is this correct?" Save to
-`<cwd>/docs/<topic>/astra-critique.md`.
+`<cwd>/docs/<topic>/audit-critique.md`.
 
 ### Step 4 — fold the critique in
 
@@ -98,7 +98,7 @@ re-read and verify:
   identified, not just the methodological ones
 - the shape skeleton was followed (no missing sections)
 
-If thin or off-pattern, send to `astra` for a focused second pass.
+If thin or off-pattern, dispatch a focused audit of the remaining concern.
 
 ### Step 6 — dogfood (gating step, not a smoke test)
 
@@ -113,7 +113,7 @@ Run the new artifact end-to-end on the originating task. Verify:
 
 **Critique checkpoint 3 (dogfood-as-critique).** Dogfood IS critique
 against reality. If anything broke or surfaced ambiguity, send the
-v1 artifact + dogfood notes back to `astra` adversarially: "what
+artifact and dogfood notes to a fresh audit worker: "what
 operational rules are still missing? what rules will get smuggled
 around in practice?" Patch and re-run.
 
@@ -129,9 +129,9 @@ material.
 
 ## Rules
 
-- ALWAYS call `astra` at MULTIPLE checkpoints, not just step 3.
-  Adversarial framing on every call.
-- ALWAYS keep astra critique files as audit trail.
+- ALWAYS dispatch audits at the named checkpoints, not just step 3.
+  Use adversarial framing and preserve explicit model overrides.
+- ALWAYS keep the critique files as an audit trail.
 - ALWAYS dogfood as a GATING step (verify writes, not just runs).
 - ALWAYS main thread owns the final write to `~/.claude/skills/` or
   `~/.claude/agents/` — subagents may be sandbox-blocked from writing
@@ -145,7 +145,7 @@ material.
 - ALWAYS one activity per artifact. NEVER fold two domains into one.
 - ALWAYS cite the methodology doc from the artifact.
 - ALWAYS pick the shape by REUSE + INVOCATION pattern.
-- NEVER skip step 3 astra.
+- NEVER skip the step 3 audit.
 - NEVER let the produced artifact exceed 200 lines.
 - NEVER name artifacts as workflow summaries. Use a short compound name
   that states the artifact's durable purpose: the object being evaluated,
@@ -161,10 +161,10 @@ material.
   (it's a runbook); reusable persona-driven eval minted as checklist
   (it's a skill).
 - **Bloat.** Artifact becomes a generic "do good X" how-to.
-- **Validatory astra.** "Does this look right?" returns blessing,
+- **Confirmation request.** "Does this look right?" returns blessing,
   surfaces nothing.
 - **Critique-doc dead-letter.** Methodology never updated after
-  astra.
+  the audit.
 - **Two activities, one artifact.** Different triggers — separate
   artifacts.
 - **Artifact written from intuition.** No research, no citations —
@@ -174,5 +174,5 @@ material.
 
 ## Reference
 
-Methodology notes and Astra critiques for produced artifacts live under
+Methodology notes and audit critiques for produced artifacts live under
 `<cwd>/docs/<topic>/` per the pipeline above.

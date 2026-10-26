@@ -1,6 +1,6 @@
 ---
 name: opus
 model: opus
-effort: xhigh
-description: Opus 5.5 at xhigh effort — complex reasoning, design decisions, and multi-file architecture work.
+effort: high
+description: Native Claude model binding; task selection belongs to dispatch.
 ---

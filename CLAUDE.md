@@ -177,7 +177,8 @@ the wiring being right and the tool running are different claims.
 ## Release
 
 - Canonical version = git tag + `CHANGELOG.md`, cut by the `release` skill.
-  Its first refine pass runs on Astra (`astra` skill), NEVER fable.
+  Its whole-release audit explicitly selects Codex/Astra through `dispatch`;
+  `codex` owns the launch mechanics.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
   the same release. Nothing enforces it, and the drift is invisible: the
   manifest keeps reporting a version the bundle no longer is.

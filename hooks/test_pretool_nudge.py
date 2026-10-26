@@ -285,6 +285,8 @@ def test_process_blocks_recursive_codex_inside_codex(command: str) -> None:
         'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
         '-m gpt-6.1-sol -c model_reasoning_effort="high" task',
         'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
+        '-m gpt-6.1-terra -c model_reasoning_effort="high" task',
+        'codex exec --ephemeral --dangerously-bypass-approvals-and-sandbox '
         '-m gpt-6-luna -c model_reasoning_effort="high" task',
         'codex exec --ephemeral "Explain codex exec resume --last"',
         "printf '%s\\n' 'codex exec resume --last'",

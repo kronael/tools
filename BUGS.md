@@ -50,17 +50,6 @@
   Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
   Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
 
-- **PROMPT-NUDGE-ORACLE-WORD-SKIPS-DISPATCH** (LOW, hooks) — CONFIRMED at
-  HEAD 2026-10-06. `hooks/prompt_nudge.py` sends any prompt with
-  the bare word `oracle` or `second opinion` to `/astra`
-  (`CODEX_PATTERNS`, `:90-94`), and checks those patterns before the
-  escalation ones (`:133-136`).
-  So `oracle: review this diff for bugs` skips `skills/oracle/SKILL.md`'s
-  table, which sends code and plan critique to fable, and `use opus for a
-  second opinion` loses the requested model. **Proposal:** route `oracle` and
-  `second opinion` to `/oracle`, keep `ask codex`/`ask astra` on `/astra`, and
-  test the escalation patterns first. No test yet — needs sign-off.
-
 - **SYNC-CDPATH-NO-OPT-OUT** (LOW, design) — proposed. `kronael/sync`
   step 8 writes the CDPATH block on every sync (`SKILL.md` step 8,
   `reference.md` CLI tools table "always"), so a block the owner deleted
@@ -79,30 +68,6 @@
   owner kept local, close step 11 as an outstanding thread action listed in
   the report. Keep approval gates in `gh-comment`. No new review mode,
   skill, saved plan or hook. No test — design.
-
-- **GLOBAL-AGENT-CAP-NAMES-THREE-TYPES** (LOW, design) — owner decision.
-  `skills/global/SKILL.md:190-193` caps subagents by `subagent_type` at 2
-  `sonnet` and 1 `opus` or `fable`; the bundle also launches `general-purpose`
-  (`skills/dispatch/SKILL.md:8`, `skills/sweep/SKILL.md:25`), `Explore`
-  (`skills/sweep/SKILL.md:17`, `skills/scavenge/SKILL.md:62`,
-  `skills/recall-memories/SKILL.md:165`), neither of which the cap names.
-  **Options:** (a) count a sub under the model it runs on (`general-purpose`
-  as the parent's model); (b) count only the three named
-  types. **Default if nothing is decided:** (a). No test — design.
-
-- **AGENT-ROUTING-RULES-DISAGREE** (LOW, docs) — owner decision.
-  `skills/global/SKILL.md:200-202` runs every implementation as an `opus`
-  plan and one `sonnet` sub per step, but `skills/sonnet/SKILL.md:21` lets
-  the parent plan, and `skills/ship/SKILL.md:113` sends a step to `opus` when
-  the plan leaves a design call open. `skills/fable/SKILL.md:12` sends every
-  spec, architecture or skill text to `fable`, while `:19` forbids `fable`
-  whenever `opus` can do the work, which covers an ordinary spec. `:210-211`
-  of the global file sends a project's own library to an `opus` plan, then
-  `sonnet` or `opus` steps, an `opus` step that its own `:203-204` rules out.
-  **Options:**
-  (a) WISDOM names the parent-plans and `opus`-step exceptions, and `fable`
-  `:19` exempts the tasks `:11-14` list; (b) the skills drop the exceptions.
-  **Default if nothing is decided:** (a). No test — skill text.
 
 - **REFINE-STEP11-REMOVES-OTHER-TASKS-WORKTREE** (MED, design) — owner
   decision. `skills/refine/SKILL.md:146-155` removes every worktree after the
@@ -134,11 +99,6 @@
   **Options:** (a) the preserve list is exempt from the cap; (b) the cap holds
   and the detail goes to a `### Operator note`. **Default if nothing is
   decided:** (b). No test — docs.
-
-- **SWEEP-NAMES-TWO-READONLY-AGENT-TYPES** (LOW, duplication) — CONFIRMED
-  at HEAD 2026-10-10. `skills/sweep/SKILL.md:17` names its read-only subs
-  "Sonnet/Explore"; `:25` launches a `general-purpose` agent. **Fix:** name
-  one agent type. No test — duplication.
 
 - **TS-BANS-MJS-BROWSE-WRITES-MJS** (LOW, duplication) — CONFIRMED at HEAD
   2026-10-10. `skills/ts/SKILL.md:21-22` bans plain JavaScript tooling
@@ -268,17 +228,6 @@
   re-points a colliding tag. **Default if nothing is decided:** bump past —
   re-pointing a pushed tag is the failure.
 
-- **SECOND-OPINION-ROUTING-SPLIT** (LOW, docs) — owner decision, no test —
-  docs. `skills/astra/SKILL.md:14-16` allows direct use only on request or
-  via `oracle`, but `skills/release/SKILL.md:34` and
-  `skills/scavenge/SKILL.md:56,75,132` call astra directly; `oracle` never
-  routes to `pi`; `astra`, `pi` and `oracle` share the triggers "second
-  opinion", "sanity check" and "disagreement after reasoning"
-  (`skills/wisdom/SKILL.md:47` forbids a shared primary trigger);
-  `skills/terra/SKILL.md:24-27` requires `--sandbox read-only` outside
-  dockbox while `astra:29,57` always bypasses the sandbox. **Default if
-  nothing is decided:** as written.
-
 - **SCAVENGE-OUTPUTS-CONTRADICT-BUNDLE-RULES** (LOW, design) — owner
   decision, no test — design. `skills/scavenge/SKILL.md:25-26,136-138`
   writes new skills and agents into `~/.claude/` (an install of this repo,
@@ -294,7 +243,7 @@
   (`cfecd8c`, `0c16126`; WISDOM § Documentation wants them full);
   `skills/eval/novice.md:6-7,184-186` names its scavenge provenance and
   `oracle-critique.md` files that `scavenge:79` writes as
-  `astra-critique.md`. **Options:** (a) move the reports to the diary; (b)
+  `audit-critique.md`. **Options:** (a) move the reports to the diary; (b)
   genericise; (c) keep. **Default if nothing is decided:** (c).
 
 - **REFINE-PY-LENS-ALLOWS-WHY-COMMENT** (LOW, docs) — owner decision, no
@@ -1005,16 +954,6 @@
   no NAT and none of this. **Fix:** none in dockbox short of host network;
   document, or test and close.
 
-- **BOX-OPUS-XHIGH-RATIONALE-GONE** (LOW, design) — proposed.
-  `dockbox/dockbox:76,80` and `qemubox/qemubox:1278,1282` launch the
-  `opus` alias and the bare default at `--effort xhigh`; the help text
-  (`dockbox:318`, `qemubox:58,62`, `qemubox/README.md:66`) and
-  `dockbox/test.sh:359,373` pin it. The one reason on record (CHANGELOG
-  v0.3.35: the launcher matches the opus subagent) contradicts
-  `agents/opus.md:4`, which pins `high`. **Proposal:** either align the
-  launchers to `high` (scripts, help, READMEs, test) or state the box's own
-  reason for xhigh. Owner's call.
-
 - **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
   test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
   `mktemp` files (`dockbox/dockbox:589,711`) and bind-mounts them into the
@@ -1277,14 +1216,13 @@
   the owner's sign-off. Recorded 2026-10-06.
 
 - **SHIP-CLI-ONE-MODEL-FOR-ALL-ROLES** (LOW, ship) — RECORDED 2026-10-13.
-  `skills/ship/cli.md` states that the `ship` CLI runs every role (spec
-  validator, planner, worker, judge) on one `--model` (env `MODEL`, default
-  `sonnet`). WISDOM § Agents routes planning to `opus`, steps to `sonnet` and
-  specs or red reviews to `fable`, so the CLI cannot follow the routing: a
-  run on `sonnet` plans and judges on the implementer tier, and a run on
-  `fable` makes it the implementer. **Fix:** in kronael/ship, a model per role
-  (planner `opus`, worker `sonnet`, validator and judge `fable` or `opus`).
-  The CLI default stays `sonnet` until then. No test — the model is a CLI flag.
+  `skills/ship/cli.md` states that the external `ship` CLI runs validation,
+  planning, coding and judgment on one `--model` (env `MODEL`, default
+  `sonnet`). It cannot express the separate tasks in `dispatch`'s matrix or
+  preserve a parent review boundary between code steps. **Fix:** the external
+  executor needs explicit model/effort per role and a step-review boundary.
+  Until then, the skill reports the capability limit and requires an explicit
+  owner exception for a bounded run. No test — external executor behavior.
 
 - **SHIP-CLI-TRACE-LOG-IN-TREE** (LOW, ship) — RECORDED 2026-10-10. The
   `ship` CLI (kronael/ship) writes its trace log under the working

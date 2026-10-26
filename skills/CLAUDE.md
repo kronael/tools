@@ -85,34 +85,33 @@ skills it replaces.
 
 ## Subagent effort defaults
 
-- The agent files in `agents/` pin each Claude tier and the `luna`, `terra`
-  and `astra` skills each Codex tier; `dispatch` § Tiers and the launchers
-  quote the pins. ALWAYS change a pin and every quote of it in one commit.
-- `global` § Agents owns the caps, the routes between tiers and the effort per
-  launch; `dispatch` § Tiers is the one table of every lane with its pin. A
-  launcher states its own lane and its neighbours' NOT-for clauses; NEVER
-  describe every tier anywhere else.
-- NEVER rely on prompt text like "think harder" to set effort — ALWAYS the
-  pin or the launch's `effort` parameter.
+- `dispatch` § Task routing owns task definitions and the single model/effort
+  matrix; its Capacity section owns concurrency. ALWAYS point there from
+  workflow skills, never repeat the policy in a launcher or workflow.
+- `claude` and `codex` own provider launch mechanics. Native agent files are
+  execution bindings, not task routers. ALWAYS keep their model and effort
+  compatible with dispatch's selections and any explicit owner override.
+- NEVER rely on prompt text such as "think harder" to set effort. ALWAYS use
+  a supported launch parameter or a matching native binding.
 
 ## Agent definitions
 
-- `agents/` holds the four tier pins — `fable`, `opus`, `sonnet`, `haiku` —
-  each a model and an effort with no body, and no other file: an agent
-  without `effort:` inherits the parent session's effort, so a low-effort
-  session would run its subs at low. Knowledge lives in the skill that owns
-  the concern, NEVER in an agent body.
-- `terra` and `luna` route OpenAI models from their skills. NEVER add an
-  `agents/terra.md` or `agents/luna.md`; Codex reads their skills through the
-  bridge.
-- This section owns the agents rule. ALWAYS point here in one line from any
-  other file; NEVER restate the list.
-- A skill that needs isolation says so in its own body (`## Where it runs`):
-  ALWAYS a tier agent selected and briefed through `dispatch` — NEVER a
-  same-named agent for the skill, which would pin no effort,
-  NEVER `general-purpose` there (it inherits the
-  parent's effort), and NEVER a skill body reduced to one "launch agent X"
-  line.
+- `agents/` holds minimal native Claude bindings: `fable`, `opus`, `sonnet`
+  and `haiku`, plus `spec` for Opus/xhigh where a native launch lacks an effort
+  override. ALWAYS keep them as frontmatter-only model/effort bindings.
+  NEVER put task policy or workflow knowledge in an agent body or description.
+- An agent without `effort:` inherits the parent session's effort. ALWAYS pin
+  it and have the `claude` runbook verify the binding matches the selection.
+  An owner override still needs a supported control; a different prompt is not
+  an effort override.
+- Codex models launch through `codex`, using native controls or the CLI.
+  NEVER create Claude agent files for Codex models.
+- This section owns the agent-file convention. ALWAYS point here from other
+  files rather than repeating the inventory.
+- A skill that needs isolation says so in its own body (`## Where it runs`).
+  ALWAYS select its task through `dispatch` and use the provider runbook;
+  NEVER add a same-named agent for every workflow or use an inherited
+  `general-purpose` default as a substitute for explicit model and effort.
 
 ## Earning a rule's place
 

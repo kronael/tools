@@ -10,8 +10,8 @@ user-invocable: true
 ## Where it runs
 
 The memory pass runs where the nudge lands — in the main thread, or in a
-`sonnet` sub told to "Load the `learn` skill (Skill tool) and run the memory
-pass for <transcript path>". The skill and lint passes ask
+fact-gathering worker selected through `dispatch`, briefed to run the memory
+pass for the given transcript path. The skill and lint passes ask
 the user to approve each item, so they ALWAYS run in the main thread.
 
 ## Sources
