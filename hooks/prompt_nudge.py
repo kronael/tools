@@ -108,7 +108,7 @@ META_PATTERNS = [
 
 def explicit_route(prompt):
     lower = prompt.lower()
-    command = re.match(r'\s*[/@]([a-z][a-z-]*)(?![\w/.-])', lower)
+    command = re.match(r'\s*[/@]([a-z0-9][a-z0-9-]*)(?![\w/.-])', lower)
     if command:
         name = command.group(1)
         if name in {'codex', 'claude', 'oracle'}:

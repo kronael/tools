@@ -4,6 +4,7 @@ import os
 import time
 from pathlib import Path
 
+import codex_hook
 import prompt_nudge
 import pytest
 from prompt_nudge import explicit_route
@@ -54,6 +55,8 @@ def test_code_does_not_route_to_codex() -> None:
         ('/review this with Terra', '/review'),
         ('/oracle use opus', '/oracle'),
         ('/codex implement this', '/codex'),
+        ('/custom2/data ask codex about this', '/codex'),
+        ('@2custom.md use Terra for this', '/dispatch'),
     ],
 )
 def test_task_provider_and_opinion_routes(prompt, route) -> None:
@@ -69,6 +72,10 @@ def test_task_provider_and_opinion_routes(prompt, route) -> None:
         '@fix use Terra for this bug',
         '@fix use Astra for this bug',
         '/custom-workflow dispatch this review',
+        '/custom2 ask codex to explain this',
+        '@custom2 use Sol for this task',
+        '/2custom ask claude to explain this',
+        '@2custom use Terra for this task',
     ],
 )
 def test_other_leading_commands_suppress_conflicting_routes(prompt) -> None:
@@ -76,14 +83,36 @@ def test_other_leading_commands_suppress_conflicting_routes(prompt) -> None:
 
 
 @pytest.mark.parametrize('harness', ['claude', 'codex'])
-def test_leading_answer_mode_receives_no_provider_nudge(monkeypatch, capsys, harness):
-    payload = {'prompt': '/ans ask codex to explain this', 'harness': harness}
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        '/ans ask codex to explain this',
+        '/custom2 ask codex to explain this',
+        '@custom2 use Sol for this task',
+        '/2custom ask claude to explain this',
+        '@2custom use Terra for this task',
+    ],
+)
+def test_leading_workflow_receives_no_provider_nudge(
+    monkeypatch, capsys, tmp_path, harness, prompt
+):
+    payload = {'prompt': prompt, 'harness': harness}
+    expected = prompt_nudge.SOLVE_NUDGE
+    if harness == 'codex':
+        payload = codex_hook.normalize(payload, 'UserPromptSubmit')
+        (tmp_path / 'solve').mkdir()
+        (tmp_path / 'solve' / 'SKILL.md').write_text('')
+        monkeypatch.setattr(codex_hook, 'SKILLS_DIR', tmp_path)
+        expected = expected.replace('/solve', '@solve')
     monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
     with pytest.raises(SystemExit):
         main()
-    output = json.loads(capsys.readouterr().out)
+    output = capsys.readouterr().out
+    if harness == 'codex':
+        output = codex_hook.translate_output(output, 'UserPromptSubmit', 'prompt_nudge')
+    output = json.loads(output)
     context = output['hookSpecificOutput']['additionalContext']
-    assert context == prompt_nudge.SOLVE_NUDGE
+    assert context == expected
 
 
 def test_every_route_names_a_bundled_skill() -> None:
