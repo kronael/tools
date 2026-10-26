@@ -6,11 +6,12 @@ import sys
 from pathlib import Path
 
 import pytest
-from spec_lint import Severity
-from spec_lint import check_corpus
-from spec_lint import indexed_files
-from spec_lint import run
-from spec_lint import spec_roots
+
+from speclint import Severity
+from speclint import check_corpus
+from speclint import indexed_files
+from speclint import run
+from speclint import spec_roots
 
 INDEX = """| Spec | Status | Summary |
 |------|--------|---------|
@@ -25,9 +26,6 @@ status: shipped
 
 Tokens are verified once, at the edge — `src/config.py:3` holds the key.
 """
-
-
-SCRIPT = Path(__file__).with_name('spec_lint.py')
 
 
 @pytest.fixture(autouse=True)
@@ -61,8 +59,6 @@ def corpus(tmp_path: Path, index: str = INDEX, spec: str = SPEC, name: str = '01
 
 
 def component_corpus(tmp_path: Path, spec: str) -> Path:
-    """A repo (`.git` file, as a worktree has) holding `app/specs/` plus a
-    sibling component `lib/`."""
     tmp_path.mkdir(parents=True, exist_ok=True)
     (tmp_path / '.git').write_text('gitdir: elsewhere\n')
     root = corpus(tmp_path / 'app', spec=spec)
@@ -76,7 +72,6 @@ def rules(root: Path, severity: Severity) -> set[str]:
 
 
 def touch(path: Path) -> None:
-    """A file long enough for every line anchor the tests point into it."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('x\n' * 2000)
 
@@ -173,44 +168,14 @@ def test_unpadded_flat_number_warns(tmp_path: Path) -> None:
     assert run([root], verbose=False) == 0
 
 
-def test_tbd_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nRotation interval: TBD.\n')
-    assert 'spec-tbd' in rules(root, Severity.ERROR)
-
-
-def test_tbd_inside_fence_is_ignored(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\n```python\n# TODO: upstream bug\n```\n')
-    assert check_corpus(root) == []
-
-
-def test_todo_as_a_file_name_or_a_lowercase_word_passes(tmp_path: Path) -> None:
-    root = corpus(
-        tmp_path, spec=SPEC + '\nDeferred items go to `TODO.md`; the todo-list renders.\n'
-    )
-    assert check_corpus(root) == []
-
-
-def test_nested_fence_does_not_hide_prose(tmp_path: Path) -> None:
-    nested = '\n````md\n```\nquoted\n```\n````\n\nRotation interval: TBD.\n'
-    root = corpus(tmp_path, spec=SPEC + nested)
-    assert 'spec-tbd' in rules(root, Severity.ERROR)
-
-
 def test_corpus_under_a_generated_dir_name_is_checked(tmp_path: Path) -> None:
-    root = corpus(tmp_path / 'build' / 'app', spec=SPEC + '\nRotation interval: TBD.\n')
-    assert 'spec-tbd' in rules(root, Severity.ERROR)
+    root = corpus(tmp_path / 'build' / 'app', spec=SPEC.replace('shipped', 'invalid'))
+    assert 'spec-status' in rules(root, Severity.ERROR)
 
 
 def test_status_with_a_yaml_comment_passes(tmp_path: Path) -> None:
     root = corpus(tmp_path, spec=SPEC.replace('status: shipped', 'status: shipped  # landed'))
     assert check_corpus(root) == []
-
-
-def test_future_tense_warns(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nWe will move the check into the router.\n')
-    assert 'spec-future-tense' in rules(root, Severity.WARN)
-    assert 'spec-future-tense' not in rules(root, Severity.ERROR)
-    assert run([root], verbose=False) == 0
 
 
 def test_unresolved_pointer_warns(tmp_path: Path) -> None:
@@ -364,11 +329,6 @@ def test_root_relative_and_encoded_links_resolve(tmp_path: Path) -> None:
     assert [item.rule for item in found] == ['spec-naming']
 
 
-def test_titled_dangling_link_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nSee [the loader](02-loader.md "Loader").\n')
-    assert 'spec-link' in rules(root, Severity.ERROR)
-
-
 def test_unlinked_phase_index_does_not_count(tmp_path: Path) -> None:
     root = corpus(tmp_path, index='# Specs\n', name='1/2-webhooks.md')
     (root / '1' / 'index.md').write_text(INDEX.replace('01-auth.md', '2-webhooks.md'))
@@ -384,83 +344,12 @@ def test_shared_number_fails(tmp_path: Path) -> None:
     assert 'number shared with 01-sync.md' in found[0].message
 
 
-def test_dangling_body_link_fails(tmp_path: Path) -> None:
-    root = corpus(
-        tmp_path, spec=SPEC + '\nSee [the loader](02-loader.md) and [app](../src/app.py).\n'
-    )
-    found = [item for item in check_corpus(root) if item.rule == 'spec-link']
-    assert [item.severity for item in found] == [Severity.ERROR, Severity.ERROR]
-
-
 def test_resolving_scheme_anchor_and_quoted_links_pass(tmp_path: Path) -> None:
     root = corpus(
         tmp_path,
         spec=SPEC + '\nSee [key](../src/config.py), [top](#auth), [btc](asset:btc), '
         '[docs](https://example.test/x), [this](<path>) and the shape `[x](gone.md)`.\n',
     )
-    assert check_corpus(root) == []
-
-
-def test_same_table_in_two_specs_fails(tmp_path: Path) -> None:
-    table = '\n```sql\nCREATE TABLE IF NOT EXISTS tokens (id int);\n```\n'
-    root = corpus(
-        tmp_path, index=INDEX + '| [02-db.md](02-db.md) | shipped | DB |\n', spec=SPEC + table
-    )
-    (root / '02-db.md').write_text(SPEC + table.replace('IF NOT EXISTS ', ''))
-    found = [item for item in check_corpus(root) if item.rule == 'spec-table-owner']
-    assert len(found) == 1
-    assert found[0].severity is Severity.ERROR
-    assert "'tokens' is also declared in 02-db.md" in found[0].message
-
-
-def test_long_spec_warns_and_a_huge_one_fails(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + 'A line of state.\n' * 500)
-    assert 'spec-length' in rules(root, Severity.WARN)
-    root = corpus(tmp_path, spec=SPEC + 'A line of state.\n' * 1000)
-    assert 'spec-length' in rules(root, Severity.ERROR)
-
-
-def test_history_framing_warns(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nThe cache is no longer consulted; it used to be.\n')
-    found = [item for item in check_corpus(root) if item.rule == 'spec-history']
-    assert len(found) == 1
-    assert found[0].severity is Severity.WARN
-    root = corpus(tmp_path, spec=SPEC + '\nThe cache is read instead of the database.\n')
-    assert check_corpus(root) == []
-
-
-def test_jargon_and_marketing_warn(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nThe test harness is robust.\n')
-    found = sorted(item.message for item in check_corpus(root) if item.rule == 'spec-wording')
-    assert len(found) == 2
-    assert 'say "tests"' in found[0]
-    assert 'marketing' in found[1]
-    root = corpus(tmp_path, spec=SPEC + '\nThe wallet runs at 3x leverage.\n')
-    assert check_corpus(root) == []
-
-
-def test_options_heading_warns(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\n## Option A: cache\n\n## Alternatives\n')
-    assert len([item for item in check_corpus(root) if item.rule == 'spec-options']) == 2
-    root = corpus(
-        tmp_path, spec=SPEC + '\n## Decision\n\nThe cache wins; the one caveat is size.\n'
-    )
-    assert check_corpus(root) == []
-
-
-def test_open_questions_outside_draft_warn(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\n## Open questions\n\nNone yet.\n')
-    assert 'spec-open-questions' in rules(root, Severity.WARN)
-    for status in 'draft', 'reference':
-        draft = SPEC.replace('shipped', status) + '\n## Open questions\n'
-        root = corpus(tmp_path, index=INDEX.replace('shipped', status), spec=draft)
-        assert check_corpus(root) == []
-
-
-def test_checklist_item_warns(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\n- [x] wire the router\n- [ ] add the metric\n')
-    assert len([item for item in check_corpus(root) if item.rule == 'spec-checklist']) == 2
-    root = corpus(tmp_path, spec=SPEC + '\n- the router is wired\n')
     assert check_corpus(root) == []
 
 
@@ -471,17 +360,6 @@ def test_pointer_past_the_end_warns(tmp_path: Path) -> None:
         assert len(found) == 1, anchor
         assert 'past the end of the file (3 lines)' in found[0].message
     root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'src/config.py:1-3'))
-    assert check_corpus(root) == []
-
-
-def test_shipped_spec_without_a_file_name_warns(tmp_path: Path) -> None:
-    bare = SPEC.replace('`src/config.py:3` holds the key', 'the edge holds the key')
-    root = corpus(tmp_path, spec=bare)
-    assert 'spec-no-pointer' in rules(root, Severity.WARN)
-    root = corpus(tmp_path, spec=bare.replace('the edge', '`config.py`'))
-    assert check_corpus(root) == []
-    draft = bare.replace('shipped', 'draft')
-    root = corpus(tmp_path, index=INDEX.replace('shipped', 'draft'), spec=draft)
     assert check_corpus(root) == []
 
 
@@ -498,17 +376,17 @@ def test_no_corpus_exits_0_with_a_note(tmp_path: Path, capsys: pytest.CaptureFix
 def test_findings_and_summary_go_to_stdout(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nRotation interval: TBD.\n')
+    root = corpus(tmp_path, spec=SPEC.replace('shipped', 'invalid'))
     assert run([root], verbose=True) == 1
     out = capsys.readouterr().out
     assert out.startswith(f'checking {root}\n')
-    assert '[spec-tbd]' in out
-    assert out.rstrip().endswith('spec-lint: 1 errors, 0 warnings')
+    assert '[spec-status]' in out
+    assert out.rstrip().endswith('speclint: 1 errors, 0 warnings')
 
 
 def test_help_names_rules_and_exit_codes() -> None:
     result = subprocess.run(
-        [sys.executable, str(SCRIPT), '--help'], capture_output=True, text=True, check=False
+        [sys.executable, '-m', 'speclint', '--help'], capture_output=True, text=True, check=False
     )
     assert result.returncode == 0
     assert 'spec-pointer' in result.stdout
@@ -516,18 +394,18 @@ def test_help_names_rules_and_exit_codes() -> None:
 
 
 @pytest.mark.usefixtures('locked')
-def test_unreadable_dir_is_skipped(tmp_path: Path) -> None:
+def test_unreadable_dir_fails(tmp_path: Path) -> None:
     root = component_corpus(tmp_path, SPEC.replace('src/config.py:3', 'planning.py:1'))
     touch(tmp_path / 'tools' / 'planning.py')
-    assert spec_roots([tmp_path]) == [root]
-    assert check_corpus(root) == []
+    assert run([tmp_path], verbose=False) == 2
+    assert run([root], verbose=False) == 2
 
 
-def test_broken_symlink_and_dir_named_like_a_spec_are_not_specs(tmp_path: Path) -> None:
+def test_broken_spec_symlink_fails(tmp_path: Path) -> None:
     root = corpus(tmp_path)
     (root / '02-link.md').symlink_to(root / 'gone.md')
     (root / '03-notes.md').mkdir()
-    assert check_corpus(root) == []
+    assert run([root], verbose=False) == 2
 
 
 def test_path_without_an_extension_is_a_pointer(tmp_path: Path) -> None:
@@ -551,50 +429,15 @@ def test_host_port_and_directory_are_not_pointers(tmp_path: Path) -> None:
 
 def test_dotdot_path_is_not_resolved(tmp_path: Path) -> None:
     root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', '../src/config.py:999'))
-    assert [item.rule for item in check_corpus(root)] == ['spec-no-pointer']
-
-
-def test_link_with_balanced_parentheses_resolves(tmp_path: Path) -> None:
-    root = corpus(tmp_path, spec=SPEC + '\nSee [design](../docs/design(v2).md).\n')
-    design = tmp_path / 'docs' / 'design(v2).md'
-    design.parent.mkdir()
-    design.write_text('# v2\n')
     assert check_corpus(root) == []
-    design.unlink()
-    found = check_corpus(root)
-    assert [item.rule for item in found] == ['spec-link']
-    assert "link '../docs/design(v2).md' resolves to nothing" in found[0].message
-
-
-@pytest.mark.parametrize(
-    ('statement', 'plain'),
-    [
-        ('CREATE TABLE "users" (id int);', 'users'),
-        ('CREATE TABLE `users` (id int);', 'users'),
-        ('CREATE TABLE [users] (id int);', 'users'),
-        ('CREATE TABLE\nusers (id int);', 'users'),
-        ('create table if not exists\n  "public"."users" (id int);', 'public.users'),
-    ],
-)
-def test_quoted_or_wrapped_create_table_is_an_owner(
-    tmp_path: Path, statement: str, plain: str
-) -> None:
-    index = INDEX + '| [02-db.md](02-db.md) | shipped | DB |\n'
-    root = corpus(tmp_path, index=index, spec=SPEC + f'\n```sql\n-- users\n{statement}\n```\n')
-    (root / '02-db.md').write_text(SPEC + f'\n```sql\nCREATE TABLE {plain} (id int);\n```\n')
-    found = [item for item in check_corpus(root) if item.rule == 'spec-table-owner']
-    assert len(found) == 1
-    assert f'01-auth.md:11: [spec-table-owner] table {plain!r} is also declared in 02-db.md' in (
-        found[0].message
-    )
 
 
 def test_utf8_spec_reads_and_prints_under_the_c_locale(tmp_path: Path) -> None:
     env = {**os.environ, 'LC_ALL': 'C', 'PYTHONUTF8': '0', 'PYTHONCOERCECLOCALE': '0'}
-    for spec, code in (SPEC, 0), (SPEC + '\nRotation interval: TBD.\n', 1):
+    for spec, code in (SPEC, 0), (SPEC.replace('shipped', 'invalid'), 1):
         root = corpus(tmp_path, spec=spec)
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), str(root)],
+            [sys.executable, '-m', 'speclint', str(root)],
             capture_output=True,
             text=True,
             env=env,
@@ -611,30 +454,187 @@ def test_spec_with_a_byte_order_mark_has_frontmatter(tmp_path: Path) -> None:
 
 
 def test_fence_with_an_info_string_does_not_close_a_block(tmp_path: Path) -> None:
-    quoted = '\n```\n```bash\n# TODO: upstream bug\n```\n\nRotation interval: TBD.\n'
+    quoted = '\n```\n```bash\n`src/ignored.py:1`\n```\n\n`src/missing.py:1`\n'
     found = check_corpus(corpus(tmp_path, spec=SPEC + quoted))
-    assert [item.rule for item in found] == ['spec-tbd']
-    assert "'TBD'" in found[0].message
+    assert [item.rule for item in found] == ['spec-pointer']
+    assert 'src/missing.py' in found[0].message
 
 
-def test_open_questions_without_a_status_names_the_state(tmp_path: Path) -> None:
-    for spec in '# Auth\n\n## Open questions\n', '---\nowner: x\n---\n\n## Open questions\n':
-        root = corpus(tmp_path, spec=spec)
-        found = [item for item in check_corpus(root) if item.rule == 'spec-open-questions']
-        assert len(found) == 1
-        assert 'open questions in a spec without a status' in found[0].message
-
-
-def test_help_and_readme_name_the_same_rules() -> None:
+def test_help_and_readme_name_the_same_rules(pytestconfig: pytest.Config) -> None:
     result = subprocess.run(
-        [sys.executable, str(SCRIPT), '--help'], capture_output=True, text=True, check=False
+        [sys.executable, '-m', 'speclint', '--help'], capture_output=True, text=True, check=False
     )
-    readme = SCRIPT.with_name('README.md').read_text(encoding='utf-8')
+    readme = (pytestconfig.rootpath / 'README.md').read_text(encoding='utf-8')
     in_help = set(re.findall(r'^  (spec-[a-z-]+) ', result.stdout, re.MULTILINE))
     in_readme = set(re.findall(r'^\| `(spec-[a-z-]+)` \|', readme, re.MULTILINE))
     assert in_help == in_readme
-    assert len(in_help) == 16
-    for phrase in 'no frontmatter', 'Status cell is prose':
-        assert phrase in result.stdout
-    for phrase in 'no YAML frontmatter', 'Status cell that is prose':
-        assert phrase in readme
+    assert len(in_help) == 5
+
+
+@pytest.mark.parametrize(
+    'status', ['draft', 'experiment', 'planned', 'partial', 'shipped', 'reference']
+)
+def test_all_statuses_pass(tmp_path, status):
+    root = corpus(
+        tmp_path, spec=SPEC.replace('shipped', status), index=INDEX.replace('shipped', status)
+    )
+    assert check_corpus(root) == []
+
+
+@pytest.mark.parametrize(
+    'header',
+    [
+        '',
+        'status: unknown',
+        'status: "shipped',
+        "status: shipped'",
+        'status: shipped\nstatus: draft',
+        'status: shipped\nstatus: shipped',
+        'status: [shipped]',
+        'status:\n  shipped',
+        'status: shipped\nextra: [',
+        'status: shipped\n  nested: x',
+        'status: shipped#text',
+    ],
+)
+def test_malformed_header_fails(tmp_path, header):
+    root = corpus(tmp_path, spec=f'---\n{header}\n---\n# Example\n')
+    assert 'spec-status' in rules(root, Severity.ERROR)
+    assert run([root], verbose=False) == 1
+
+
+def test_unclosed_header_fails(tmp_path):
+    root = corpus(tmp_path, spec='---\nstatus: shipped\n# Example\n')
+    assert 'spec-status' in rules(root, Severity.ERROR)
+
+
+def test_header_comments_and_crlf_pass(tmp_path):
+    root = corpus(tmp_path)
+    text = SPEC.replace('status: shipped', "# State\n\nstatus: 'shipped' # Ready")
+    (root / '01-auth.md').write_bytes(text.replace('\n', '\r\n').encode())
+    assert check_corpus(root) == []
+
+
+def test_invalid_utf8_fails(tmp_path, capsys):
+    root = corpus(tmp_path)
+    (root / '01-auth.md').write_bytes(b'\xff')
+    assert run([root], verbose=False) == 2
+    assert 'Cannot read corpus' in capsys.readouterr().err
+
+
+def test_empty_corpus_passes(tmp_path):
+    root = tmp_path / 'specs'
+    root.mkdir()
+    assert run([root], verbose=False) == 0
+    (root / 'index.md').write_text('| Spec | Status | Summary |\n|---|---|---|\n')
+    assert run([root], verbose=False) == 0
+
+
+def test_retirement_requires_index_removal(tmp_path):
+    root = corpus(tmp_path)
+    (root / '01-auth.md').unlink()
+    assert rules(root, Severity.ERROR) == {'spec-index-dangling'}
+    (root / 'index.md').write_text('# Specs\n')
+    assert check_corpus(root) == []
+    (root / 'index.md').unlink()
+    assert run([tmp_path], verbose=False) == 0
+
+
+def test_duplicate_index_row_fails(tmp_path):
+    root = corpus(tmp_path, index=INDEX + INDEX.splitlines()[-1] + '\n')
+    assert 'spec-index-row' in rules(root, Severity.ERROR)
+
+
+def test_phased_corpus_without_root_index_is_discovered(tmp_path):
+    root = corpus(tmp_path, name='1/2-api.md', index='')
+    assert spec_roots([tmp_path]) == [root]
+    assert spec_roots([root / '1' / '2-api.md']) == [root]
+    assert run([tmp_path], verbose=False) == 1
+
+
+def test_stale_phase_index_fails(tmp_path):
+    root = tmp_path / 'specs'
+    root.mkdir()
+    (root / 'index.md').write_text('[Phase](1/index.md)\n')
+    assert rules(root, Severity.ERROR) == {'spec-index-dangling'}
+
+
+def test_markdown_and_prose_belong_to_other_checks(tmp_path):
+    text = """
+TODO TBD implement later
+We will make a robust harness.
+## Alternatives
+- [ ] Work
+[missing](../gone.md#absent)
+```sql
+CREATE TABLE sample (id int);
+```
+"""
+    root = corpus(
+        tmp_path,
+        spec=SPEC + text * 1100,
+        index=INDEX
+        + '| [02-store.md](02-store.md) | shipped | Store |\n'
+        + '\n[Guide](../absent.md)\n',
+    )
+    (root / '02-store.md').write_text(SPEC + text)
+    assert check_corpus(root) == []
+
+
+def test_status_does_not_require_code_pointers(tmp_path):
+    assert check_corpus(corpus(tmp_path, spec='---\nstatus: shipped\n---\n# Example\n')) == []
+
+
+@pytest.mark.parametrize('pointer', ['src/config.py:0', 'src/config.py:3-2', 'src/config.py:1-4'])
+def test_invalid_line_ranges_warn(tmp_path, pointer):
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', pointer))
+    assert rules(root, Severity.WARN) == {'spec-pointer'}
+
+
+def test_pointer_to_directory_warns(tmp_path):
+    (tmp_path / 'src' / 'directory').mkdir(parents=True)
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', 'src/directory:1'))
+    assert rules(root, Severity.WARN) == {'spec-pointer'}
+
+
+def test_run_refreshes_pointer_cache(tmp_path, capsys):
+    root = corpus(tmp_path)
+    assert run([root], verbose=False) == 0
+    (tmp_path / 'src' / 'config.py').write_text('x\n')
+    assert run([root], verbose=False) == 0
+    assert '[spec-pointer]' in capsys.readouterr().out
+
+
+def test_non_corpus_file_is_an_input_error(tmp_path):
+    path = tmp_path / 'readme.md'
+    path.write_text('# Example\n')
+    assert run([path], verbose=False) == 2
+
+
+def test_unlinked_phase_index_cannot_hide_retirement(tmp_path):
+    root = corpus(tmp_path)
+    phase = root / '1'
+    phase.mkdir()
+    (phase / 'index.md').write_text(INDEX)
+    assert 'spec-index-dangling' in rules(root, Severity.ERROR)
+    (root / 'index.md').unlink()
+    (root / '01-auth.md').unlink()
+    assert run([tmp_path], verbose=False) == 1
+
+
+def test_multiple_specs_in_one_cell_fail(tmp_path):
+    root = corpus(
+        tmp_path,
+        index=INDEX.replace('[01-auth.md](01-auth.md)', '[Auth](01-auth.md) [Other](02-other.md)'),
+    )
+    (root / '02-other.md').write_text(SPEC)
+    assert 'spec-index-row' in rules(root, Severity.ERROR)
+
+
+@pytest.mark.parametrize('pointer', ['turn/start', '3/7', 'src/config.py:1\u20132'])
+@pytest.mark.xfail(
+    strict=True, reason='SPECLINT-POINTER-NOISE-SLASH-TOKENS: slash tokens and en-dash ranges warn'
+)
+def test_non_file_slash_token_is_not_a_pointer(tmp_path, pointer):
+    root = corpus(tmp_path, spec=SPEC.replace('src/config.py:3', pointer))
+    assert check_corpus(root) == []

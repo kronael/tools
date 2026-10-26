@@ -49,7 +49,7 @@ A **first sync** = neither `~/.claude/CLAUDE.md` nor `~/.claude/skills/`
 exists. Before any write, explain sync in 2-3 lines and ask which groups to
 run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
 (default on — nothing else works without it), **Settings** (step 5),
-**External tools** (step 7 core), **CLI tools** rig/udfix/spec-lint + CDPATH, **dockbox**
+**External tools** (step 7 core), **CLI tools** rig/udfix/speclint + CDPATH, **dockbox**
 (needs Docker), **Heavy** security-audit + video, **ripwire**, and **Server memory**
 (`reference.md` § Server memory; NEVER offer when `CLAUDE_SANDBOX` is set).
 Run ONLY the opted-in groups.
@@ -166,7 +166,7 @@ the failure. Settings still confirm before applying.
    Completion criterion: each tool is present, installed, or declined.
 
 8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix, kvs,
-   spec-lint and diskclean always, dockbox on its own ask, from their dirs at `SRC` (else point to
+   speclint and diskclean always, dockbox on its own ask, from their dirs at `SRC` (else point to
    `cd <tool> && make install` from a clone) — and write its CDPATH block into
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.

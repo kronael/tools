@@ -36,7 +36,6 @@ make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
 make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
 make lints         # prove co-located ast-grep lint rules against fixtures
-make spec-lint     # lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)
 make skills-frontmatter-fix  # auto-fix loose SKILL.md YAML
 ```
 

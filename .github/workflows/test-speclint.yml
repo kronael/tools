@@ -1,0 +1,17 @@
+---
+name: Test — speclint
+
+on:
+    push:
+        paths: [speclint/**, ruff.toml]
+    pull_request:
+        branches: [master]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@v4
+            - uses: astral-sh/setup-uv@v6
+            - run: make -C speclint prepare check right test integration build

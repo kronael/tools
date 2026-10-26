@@ -1,0 +1,38 @@
+[project]
+name = "speclint"
+version = "0.1.0"
+description = "Check specification naming, status, indexes and code pointers"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+speclint = "speclint:main"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["speclint.py"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["speclint.py", "pyproject.toml", "README.md", "Makefile", "test_speclint.py", "test_integration.py", "uv.lock"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff==0.12.1", "basedpyright>=1.31", "pre-commit>=4"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.13"
+reportAny = "error"
+reportExplicitAny = "error"
+enableTypeIgnoreComments = false
+reportIgnoreCommentWithoutRule = "error"
+
+[tool.ruff]
+extend = "../ruff.toml"
+target-version = "py313"
+
+[tool.pytest.ini_options]
+testpaths = ["test_speclint.py", "test_integration.py"]

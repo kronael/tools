@@ -21,9 +21,9 @@ model, context use, and the 5-hour and weekly limits in whole percent.
 
 `skill_frontmatter_lint.py` also lives in `hooks/` and runs on demand, not from
 a lifecycle event: from `make skills-frontmatter` and pre-commit. The spec
-linter is the standalone CLI tool `spec-lint/`: `make spec-lint SPECS=<dir>`
-here, or `spec-lint specs` by hand in a project before a spec commit
-(`../skills/specs/format.md` § Before commit).
+linter is the standalone [speclint](../speclint/) command. Its README owns
+installation and consumer pre-commit integration; the lifecycle is in
+`../skills/specs/format.md` § Before commit.
 
 ## The hooks
 

@@ -15,9 +15,9 @@ Command-line utilities and Claude Code configuration.
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
-- [spec-lint](spec-lint/) — lint a `specs/` corpus: numbering, status vocabulary, index rows, links, wording, code pointers
+- [speclint](speclint/) — check spec numbering, status, index agreement and code pointers; run through uvx
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `dockbox`, `qemubox`, `gloww`, `spec-lint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `dockbox`, `qemubox`, `gloww`, `speclint`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 
