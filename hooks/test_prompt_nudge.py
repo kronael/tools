@@ -9,6 +9,7 @@ import prompt_nudge
 import pytest
 from prompt_nudge import explicit_route
 from prompt_nudge import main
+from prompt_nudge import route_with_trigger
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +43,6 @@ def test_code_does_not_route_to_codex() -> None:
         ('ask codex about this design', '/codex'),
         ('use claude for this task', '/claude'),
         ('ask astra about this design', '/dispatch'),
-        ('use sol for this implementation', '/dispatch'),
         ('use Terra for this implementation', '/dispatch'),
         ('ask Terra for a second opinion', '/oracle'),
         ('use fable for this', '/dispatch'),
@@ -50,6 +50,11 @@ def test_code_does_not_route_to_codex() -> None:
         ('/fable handle this', '/dispatch'),
         ('@luna inventory these files', '/dispatch'),
         ('@terra implement this change', '/dispatch'),
+        ('do this with terra', '/dispatch'),
+        ('luna can map these files', '/dispatch'),
+        ('let sonnet do the fix', '/dispatch'),
+        ('use astra db for vectors', '/dispatch'),
+        ('sonnet is a poem', '/dispatch'),
         ('/refine this with Astra', '/refine'),
         ('@review this with Sol', '/review'),
         ('/review this with Terra', '/review'),
@@ -137,7 +142,6 @@ def test_every_route_names_a_bundled_skill() -> None:
     [
         'use SOL as collateral on the perp',
         'run sol through the swap simulator',
-        'use astra db for vectors',
         'ls /sol/data',
         'cd /astra',
         '/astra/data contains vectors',
@@ -145,8 +149,6 @@ def test_every_route_names_a_bundled_skill() -> None:
         'cd /claude',
         '/terra/data contains files',
         'sol configuration',
-        'fable nudge is bad',
-        'sonnet is a poem',
     ],
 )
 def test_model_like_names_and_paths_do_not_route(prompt) -> None:
@@ -170,7 +172,7 @@ def test_both_harnesses_receive_the_requested_workflow(monkeypatch, capsys, harn
         main()
     output = json.loads(capsys.readouterr().out)
     context = output['hookSpecificOutput']['additionalContext']
-    assert f'info: Invoke {route}.' in context
+    assert f'info: Invoke {route} (the prompt says ' in context
     assert 'the current Codex session' not in context
 
 
@@ -237,7 +239,7 @@ def test_output_reaches_the_model(monkeypatch, capsys) -> None:
     out = json.loads(capsys.readouterr().out)
     assert 'systemMessage' not in out
     assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
-    assert 'info: Invoke /ship.' in out['hookSpecificOutput']['additionalContext']
+    assert 'info: Invoke /ship (the prompt says ' in out['hookSpecificOutput']['additionalContext']
 
 
 def test_first_prompt_nudges_solve(monkeypatch, capsys) -> None:
@@ -355,3 +357,8 @@ def test_subagent_start_does_not_consume_the_parent_first_prompt(monkeypatch, ca
 
 def test_harness_agent_start_is_silent(monkeypatch, capsys) -> None:
     assert run_subagent_start(monkeypatch, capsys, 'Explore') is None
+
+
+def test_route_names_the_text_that_triggered_it() -> None:
+    assert route_with_trigger('do this with terra') == ('/dispatch', 'terra')
+    assert route_with_trigger('cd /astra') == (None, None)
