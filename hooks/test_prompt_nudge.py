@@ -6,8 +6,9 @@ from pathlib import Path
 
 import prompt_nudge
 import pytest
-from prompt_nudge import explicit_route, route_with_trigger
+from prompt_nudge import explicit_route
 from prompt_nudge import main
+from prompt_nudge import route_with_trigger
 
 
 @pytest.fixture(autouse=True)
