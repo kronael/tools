@@ -96,13 +96,11 @@ PR body with the robot. These win.
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
   `main` or trust a local `origin/HEAD` (no fetch updates it), and NEVER trust
   `git status`'s "up to date" without a fetch — it compares with the last one.
-- ALWAYS ask once whether a branch or tag is part of the current work before
-  its first push, one question for the whole set (a PR stack is one ask) —
-  once or twice a session, NEVER per push. Once the user confirms, ALWAYS push
-  each verified fast-forward of that set as the work needs it and name the
-  refspec in the reply. NEVER push outside the confirmed set: a branch the work
-  did not touch, another session's head, a sync or release tag nobody named —
-  those end at the local commit or tag. Push only the named refspec,
+- ALWAYS treat authorized PR work as permission to publish its working head
+  and open or update the PR. NEVER ask for a separate publication approval.
+  ALWAYS push verified fast-forwards as the work needs them and name the
+  refspec in the reply. NEVER publish unrelated heads or tags without explicit
+  approval. Push only the authorized refspec,
   by SHA, with `rip -g <sha>:refs/heads/YYYYMMDD_<tag>` (rig):
   a one-off HTTPS push through the `gh` token, the SSH remote left to the human
   — NEVER rewrite `remote.origin.url`, write an HTTPS URL into any remote
@@ -113,7 +111,7 @@ PR body with the robot. These win.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a SECOND
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a separate
   explicit approval naming it, given AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
 - NEVER approve a PR on the owner's behalf (`gh pr review --approve`). Merging
   a PR and pushing to `<default head>` ask the user first; opening a PR or
