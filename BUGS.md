@@ -19,17 +19,13 @@
   **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
   test — skill text.
 
-- **FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE** (LOW, design) — proposed,
-  needs sign-off. `skills/writing/page.md:195` marks "one font family, five
-  sizes at most" a `keeper` (a `make lint` check that fails the build), but
-  `skills/create/form.md:67` and its calibration record (`:81`) measure
-  distinct rendered sizes and report the owner's accepted pages run 12–15,
-  failing only at >16 (≤5 is a "watch", never failing). A keeper at five sizes
-  fails every accepted page; the measurable fail sits at sixteen. No keeper
-  check exists yet, so nothing breaks today. **Proposal:** the owner sets the
-  enforceable number — drop the `keeper` from the five-sizes rule, or state the
-  measurable threshold (distinct rendered sizes) the keeper enforces, and point
-  `writing/page.md` and `form.md` at one owner for it. No test — design.
+- **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
+  `skills/writing/page.md` asks reviewers for five font sizes at most;
+  `skills/create/form.md` evaluates distinct rendered sizes against a limit
+  of sixteen. The criteria are manual and use different thresholds.
+  **Options:** (a) one shared threshold; (b) document different scopes.
+  **Default if nothing is decided:** retain each page's review criteria.
+  No test — design.
 
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every

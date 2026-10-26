@@ -1,7 +1,7 @@
 ---
 name: writing
 description: Router for how prose reads and how a page looks — copy rules and the owner's page rules. NOT for PR descriptions (use pr-draft), tweets (use tweet), diary (use diary), AI-tells (use humanize) or doc placement (use readme).
-when_to_use: "write a doc, doc prose, headers as claims, tooltip, help text, label, caption, microcopy, UI string, error message, empty-state text, make this clearer, simpler wording, 13yo style, rewrite this copy; AI slop, card header, box title, accent stripe, status pill, all-caps labels, em-dash chain, wall of text, nav label, sources note, full address, glossary, word budget, page checklist, keeper test, plain English, ASD-STE100"
+when_to_use: "write a doc, doc prose, headers as claims, tooltip, help text, label, caption, microcopy, UI string, error message, empty-state text, make this clearer, simpler wording, 13yo style, rewrite this copy; AI slop, card header, box title, accent stripe, status pill, all-caps labels, em-dash chain, wall of text, nav label, sources note, full address, glossary, word budget, page review, plain English, ASD-STE100"
 ---
 
 # Writing — prose and page router
@@ -12,7 +12,7 @@ below. Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
-| how a document or page is laid out and reads — box and card headers, entities named before use, description lists, no stripes, legends, pills or all-caps labels, short lines in cards, text filling its box, a real layout, one name across sidebar, index and title, the in-page nav block, explicit short anchors on linked headings, the brand block shared with sibling pages, the word budget, no mechanics or rent noise, every term glossed, one sources note per section, bracketed link text, exact-line code links, diagrams faithful to the code, contrast, the one-file craft (font, five sizes, accent, dark mode), the pre-handover checklist and its keeper tests | `page.md` |
+| how a document or page is laid out and reads — box and card headers, entities named before use, description lists, no stripes, legends, pills or all-caps labels, short lines in cards, text filling its box, a real layout, one name across sidebar, index and title, the in-page nav block, explicit short anchors on linked headings, the brand block shared with sibling pages, the word budget, no mechanics or rent noise, every term glossed, one sources note per section, bracketed link text, exact-line code links, diagrams faithful to the code, contrast, the one-file craft (font, five sizes, accent, dark mode), and the review before handover | `page.md` |
 
 The owner's name for a violation of any rule here is "AI slop"; "fix the slop"
 routes here. Prose tells with worked fixes are the `humanize` catalogue.

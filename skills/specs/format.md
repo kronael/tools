@@ -19,8 +19,8 @@ there; lint: spec-status (hard fail).
 - **`reference`** — analysis that never ships.
 
 ALWAYS move `status` in the commit that approves or lands the work. Open
-questions live only in a `draft` (or a `reference`); promotion answers them
-or cuts them; lint: spec-open-questions (warn).
+questions live only in a `draft` (or a `reference`); review answers them
+or cuts them before promotion. NEVER infer implementation completion from lint.
 
 ## Naming and index
 
@@ -33,6 +33,11 @@ or cuts them; lint: spec-open-questions (warn).
   the frontmatter, the row removed with the file; lint: spec-index-row,
   spec-index-dangling. A phase may keep its own `specs/<phase>/index.md`; its
   rows count once the master table links it.
+- ALWAYS use `Spec`, `Status`, `Summary` as the first three index columns,
+  with one inline spec link in the first cell. ALWAYS keep the frontmatter
+  to one `status: value` line between `---` delimiters; comments and quoted
+  values are accepted. The [speclint README](https://github.com/kronael/tools/tree/master/speclint) owns
+  the supported input forms and diagnostics.
 
 ## Body
 
@@ -42,16 +47,16 @@ or cuts them; lint: spec-open-questions (warn).
 - ALWAYS write the problem (the constraint it answers), the approach — the
   decision and its one caveat, WHY this way — and pointers to the code it
   changes (`src/config.ts` — one sentence why). NEVER an option space or a
-  taxonomy for the reader to choose from; lint: spec-options (warn).
+  taxonomy for the reader to choose from. ALWAYS review that decision.
 - A pointer that no longer resolves, matches several files or points past the
-  end of its file is stale; lint: spec-pointer (warn). A `partial` or
-  `shipped` spec with no pointer at all; lint: spec-no-pointer (warn). A link
-  to another spec or file resolves; lint: spec-link (hard fail).
-- Tables with `file:line` anchors over prose — a spec over 500 lines is
-  prose; lint: spec-length (warn; hard fail over 1000).
+  end of its file needs review; lint: spec-pointer (warn). ALWAYS review
+  whether pointers support the claims; absence alone never determines status.
+- ALWAYS use tables with `file:line` anchors where they explain the design
+  better than prose. NEVER infer quality from a line-count threshold.
 - One owner: each table, contract and term has one owning spec the others
   link to; a schema table derives from the code type it describes, with
-  `file:line`; lint: spec-table-owner (hard fail on a second `CREATE TABLE`).
+  `file:line`. ALWAYS review ownership against the code; SQL examples do not
+  establish ownership.
 - Existing vs proposed: existing code is cited by `file:line`; a new API sits
   under a heading that says it is proposed. NEVER present proposed code as
   existing, and NEVER call something new or absent without the search that
@@ -62,14 +67,13 @@ or cuts them; lint: spec-open-questions (warn).
   measured before the first edit, and the exact edit each gate performs.
 - NEVER implementation steps, code that duplicates the codebase, re-stated
   signatures (link `file:line`), checklists, schedules or TBD/TODO — decide or
-  omit; lint: spec-tbd (hard fail), spec-future-tense, spec-checklist (warn).
+  omit. ALWAYS check these choices during review.
 - NEVER a table, column, mode or abstraction no current case needs — name the
   case that would force it instead.
 - NEVER narrate history ("no longer", "formerly", "used to be", "renamed
-  from", backward compatibility) — a spec states what is; git holds what was;
-  lint: spec-history (warn).
+  from", backward compatibility) — ALWAYS state the design; git holds history.
 - NEVER coin a term or borrow jargon — the codebase's own name, "tests" never
-  "harness", and no marketing words; lint: spec-wording (warn).
+  "harness", and no marketing words. ALWAYS review prose in context.
 - NEVER write a defect up as a spec — it goes to `BUGS.md`, linked from the
   spec.
 
@@ -81,21 +85,27 @@ or cuts them; lint: spec-open-questions (warn).
 
 ## When the change ships
 
-1. ALWAYS move what stays true — each structure, its WHY beside it — into the
-   doc `readme` → `topology.md` names; set `status: shipped` in the same change.
-2. The spec MAY then be deleted — NEVER before step 1. Before deleting or
-   renaming, ALWAYS grep the repo for its path AND its handle (`spec 4/6`);
-   a path-only grep misses the handle. Re-point every hit in the same change.
+1. ALWAYS verify the approved requirements with implementation tests and review.
+   `planned` and `partial` specs govern unfinished work; `shipped` records
+   verified closeout, not a lint result. Reference analyses remain as applicable.
+2. ALWAYS move lasting facts and rationale into the documentation that
+   `readme` → `topology.md` names, then retire the verified implemented spec.
+   NEVER keep implemented specs as a permanent system registry.
+3. Before deleting or renaming, ALWAYS grep for both the path and its handle
+   (`spec 4/6`), repair references, and remove its index row with the file.
+   ALWAYS lint the remaining complete corpus, including unchanged indexes.
 
 ## Before commit
 
-ALWAYS run `spec-lint specs` from the repo root; `spec-lint --help` lists every
-rule. The kronael sync installs it, else `cd spec-lint && make install` from
-the tools clone. An explicit `specs/` directory is checked even without an
-index or numbered files; discovery from a project directory or a changed file
-requires `index.md` or a numbered spec directly in `specs/`, so a test suite or
-the `skills/specs/` router is excluded, and so is a corpus kept only in phase
-directories.
+ALWAYS run `speclint` on each complete corpus during drafting, implementation
+and retirement. The tool README owns installation, full-commit uvx pins,
+discovery and the consumer hook. ALWAYS follow `readme/topology.md`
+§ Documentation checks for consumer enforcement, scope and activation.
+
+ALWAYS check ignored or externally stored specs explicitly while drafting and
+verifying. CI can check only files present in its checkout. ALWAYS give Markdown
+syntax, formatting and supported links/anchors to rumdl; lint cannot verify the
+meaning of a link or decide that implementation meets a requirement.
 
 The lint checks the items above that name a `lint:` rule, and only the
 mechanical part of each. Everything else is a judgement:
@@ -114,5 +124,5 @@ mechanical part of each. Everything else is a judgement:
 - `status` moves in the commit that approves or lands the work
 - phase directories only when specs cluster into workstreams, and the next
   number is max + 1
-- no doc or code links a spec; a shipped spec's facts move to the doc before
-  the spec is deleted
+- no doc or code links a spec; verified implementation and durable documentation
+  precede retirement; remaining active specs and indexes agree
