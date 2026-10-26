@@ -71,8 +71,10 @@ SKILL_KEYWORDS = {
     'writing': '/writing',
 }
 
+MODEL_COMMAND_PATTERN = r'^\s*[/@](?:astra|sol|luna|terra|haiku|sonnet|opus|fable)(?![\w/.-])'
+
 MODEL_PATTERNS = [
-    (r'^\s*[/@](?:astra|sol|luna|terra|haiku|sonnet|opus|fable)(?![\w/.-])', '/dispatch'),
+    (MODEL_COMMAND_PATTERN, '/dispatch'),
     (r'\bask\s+(?:astra|sol|luna|terra|haiku|sonnet|opus|fable)\b', '/dispatch'),
     (
         r'\b(?:use|spawn|run|invoke|switch to)\s+(?:luna|terra|haiku|sonnet|opus|fable)\b',
@@ -113,6 +115,8 @@ def explicit_route(prompt):
             return f'/{name}'
         if name in SKILL_KEYWORDS:
             return SKILL_KEYWORDS[name]
+        if not re.match(MODEL_COMMAND_PATTERN, lower):
+            return None
     if re.search(r'\bdispatch\b', lower):
         return '/dispatch'
     if re.search(r'\boracle\b|\bsecond\s+opinion\b', lower):

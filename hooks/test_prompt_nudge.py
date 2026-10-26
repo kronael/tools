@@ -56,6 +56,31 @@ def test_task_provider_and_opinion_routes(prompt, route) -> None:
     assert explicit_route(prompt) == route
 
 
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        '/ans ask codex to explain this',
+        '@ans ask claude to explain this',
+        '/fix use Sol for this bug',
+        '@fix use Astra for this bug',
+        '/custom-workflow dispatch this review',
+    ],
+)
+def test_other_leading_commands_suppress_conflicting_routes(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+@pytest.mark.parametrize('harness', ['claude', 'codex'])
+def test_leading_answer_mode_receives_no_provider_nudge(monkeypatch, capsys, harness):
+    payload = {'prompt': '/ans ask codex to explain this', 'harness': harness}
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    with pytest.raises(SystemExit):
+        main()
+    output = json.loads(capsys.readouterr().out)
+    context = output['hookSpecificOutput']['additionalContext']
+    assert context == prompt_nudge.SOLVE_NUDGE
+
+
 def test_every_route_names_a_bundled_skill() -> None:
     skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
     targets = {
