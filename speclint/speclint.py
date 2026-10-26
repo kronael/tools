@@ -10,6 +10,10 @@ from enum import Enum
 from pathlib import Path
 from urllib.parse import unquote
 
+from markdown_it import MarkdownIt
+from markdown_it.tree import SyntaxTreeNode
+
+MARKDOWN = MarkdownIt('commonmark').enable('table')
 STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
 NUMBERED = re.compile(r'^(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
 NOT_SPECS = frozenset({'index.md', 'CLAUDE.md', 'AGENTS.md'})
@@ -17,7 +21,6 @@ FLAT_PAD = 2
 PHASE_DEPTH = 2
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 STATUS = re.compile(r"""status: +(?:([a-z]+)|'([a-z]+)'|"([a-z]+)")(?: +#.*)? *""")
-LINK = re.compile(r'\[[^\]]*\]\(((?:[^()\s]|\([^()\s]*\))+)(?:\s+"[^"]*")?\)')
 SCHEME = re.compile(r'^[a-z][a-z0-9+.-]*:')
 FENCE = re.compile(r'^\s*(`{3,}|~{3,})')
 CLOSING_FENCE = re.compile(r'^\s*(`{3,}|~{3,})\s*$')
@@ -191,13 +194,6 @@ def prose(text: str) -> list[tuple[int, str]]:
     return outside
 
 
-def row_cells(line: str) -> list[str]:
-    stripped = line.strip()
-    if not stripped.startswith('|') or not stripped.endswith('|'):
-        return []
-    return [cell.strip() for cell in stripped[1:-1].split('|')]
-
-
 def link_target(target: str) -> str | None:
     if '://' in target or target.startswith('#') or SCHEME.match(target):
         return None
@@ -322,10 +318,14 @@ def check_status(path: Path, text: str) -> list[Finding]:
     return [finding(Severity.ERROR, 'spec-status', path, 1, message)]
 
 
-def linked_files(line: str, beside: Path, repo: Path) -> list[tuple[str, Path]]:
+def linked_files(node: SyntaxTreeNode, beside: Path, repo: Path) -> list[tuple[str, Path]]:
     found: list[tuple[str, Path]] = []
-    for match in LINK.finditer(line):
-        target = match.group(1)
+    for child in node.walk():
+        if child.type != 'link':
+            continue
+        target = child.attrGet('href')
+        if not isinstance(target, str):
+            continue
         named = link_target(target)
         if named is not None:
             found.append((target, link_file(named, beside, repo)))
@@ -334,15 +334,15 @@ def linked_files(line: str, beside: Path, repo: Path) -> list[tuple[str, Path]]:
 
 def phase_indexes(index: Path, repo: Path) -> list[Path]:
     found: list[Path] = []
-    for _, line in prose(index.read_text(encoding='utf-8-sig')):
-        for _, path in linked_files(line, index.parent, repo):
-            candidate = path.resolve()
-            if (
-                candidate.name == 'index.md'
-                and candidate.is_file()
-                and candidate.parent.parent == index.parent.resolve()
-            ):
-                found.append(candidate)
+    tree = SyntaxTreeNode(MARKDOWN.parse(index.read_text(encoding='utf-8-sig')))
+    for _, path in linked_files(tree, index.parent, repo):
+        candidate = path.resolve()
+        if (
+            candidate.name == 'index.md'
+            and candidate.is_file()
+            and candidate.parent.parent == index.parent.resolve()
+        ):
+            found.append(candidate)
     return sorted(set(found))
 
 
@@ -351,8 +351,12 @@ def check_one_index(
 ) -> tuple[list[Finding], list[Path]]:
     findings: list[Finding] = []
     linked: list[Path] = []
-    for number, line in prose(index.read_text(encoding='utf-8-sig')):
-        for target, path in linked_files(line, index.parent, repo):
+    tree = SyntaxTreeNode(MARKDOWN.parse(index.read_text(encoding='utf-8-sig')))
+    for node in tree.walk(include_self=False):
+        if node.type != 'inline' or node.map is None:
+            continue
+        number = node.map[0] + 1
+        for target, path in linked_files(node, index.parent, repo):
             named = path.resolve()
             if (
                 named.is_relative_to(root.resolve())
@@ -366,9 +370,11 @@ def check_one_index(
                 findings.append(
                     finding(Severity.ERROR, 'spec-index-dangling', index, number, message)
                 )
-        cells = row_cells(line)
-        if len(cells) < 3:
+    for node in tree.walk(include_self=False):
+        if node.type != 'tr' or node.map is None or len(node.children) < 3:
             continue
+        number = node.map[0] + 1
+        cells = [cell.children[0] for cell in node.children]
         rows = [named.resolve() for _, named in linked_files(cells[0], index.parent, repo)]
         spec = next((row for row in rows if row in specs), None)
         if spec is None:
@@ -378,16 +384,17 @@ def check_one_index(
             findings.append(finding(Severity.ERROR, 'spec-index-row', index, number, message))
             continue
         linked.append(spec)
-        if cells[1] not in STATUSES:
+        cell_status = cells[1].content
+        if cell_status not in STATUSES:
             message = (
-                f'index Status cell {cells[1]!r} is not one of {", ".join(STATUSES)} '
+                f'index Status cell {cell_status!r} is not one of {", ".join(STATUSES)} '
                 '— format.md: the Status column carries the lifecycle value, not prose'
             )
             findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))
         status = status_of(spec.read_text(encoding='utf-8-sig'))
-        if status in STATUSES and cells[1] in STATUSES and cells[1] != status:
+        if status in STATUSES and cell_status in STATUSES and cell_status != status:
             message = (
-                f'index Status {cells[1]!r} differs from {spec.name} status '
+                f'index Status {cell_status!r} differs from {spec.name} status '
                 f'{status!r} — format.md: Status matches the frontmatter'
             )
             findings.append(finding(Severity.ERROR, 'spec-status', index, number, message))

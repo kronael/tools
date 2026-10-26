@@ -631,6 +631,70 @@ def test_multiple_specs_in_one_cell_fail(tmp_path):
     assert 'spec-index-row' in rules(root, Severity.ERROR)
 
 
+@pytest.mark.parametrize(
+    'index',
+    [
+        '<!--\n' + INDEX + '-->\n',
+        INDEX.replace('| [01-auth.md]', '<!--\n| [01-auth.md]') + '-->\n',
+        '```md\n' + INDEX + '```\n',
+        ''.join('    ' + line + '\n' for line in INDEX.splitlines()),
+        INDEX.replace('[01-auth.md](01-auth.md)', '`[01-auth.md](01-auth.md)`'),
+        INDEX.replace('[01-auth.md]', r'\[01-auth.md]'),
+        INDEX.replace('[01-auth.md]', '![01-auth.md]'),
+    ],
+)
+def test_hidden_or_literal_rows_do_not_register_specs(tmp_path, index):
+    root = corpus(tmp_path, index=index)
+    assert rules(root, Severity.ERROR) == {'spec-index-row'}
+
+
+@pytest.mark.parametrize(
+    'example',
+    [
+        '`[Template](02-missing.md)`',
+        '``[Template](02-missing.md) with `ticks` ``',
+        '<!-- [Template](02-missing.md) -->',
+        '```md\n[Template](02-missing.md)\n```',
+        '    [Template](02-missing.md)',
+        r'\[Template](02-missing.md)',
+    ],
+)
+def test_literal_index_links_do_not_check_targets(tmp_path, example):
+    root = corpus(tmp_path, index=INDEX + '\n' + example + '\n')
+    assert check_corpus(root) == []
+
+
+@pytest.mark.parametrize(
+    'link',
+    [
+        '[Auth](<01-auth.md>)',
+        "[Auth](01-auth.md 'Example')",
+        '[Auth](01-auth.md "Example")',
+        '[Auth](01-auth.md (Example))',
+        "[Auth](<01-auth.md> 'Example')",
+        r'[Auth\|API](01-auth.md)',
+        '[Auth](01%2Dauth.md#auth)',
+        '[Auth](/specs/01-auth.md)',
+        '[Auth][spec]',
+    ],
+)
+def test_index_links_register_specs_and_detect_retirement(tmp_path, link):
+    index = INDEX.replace('[01-auth.md](01-auth.md)', link)
+    root = corpus(tmp_path, index=index + '\n[spec]: 01-auth.md "Example"\n')
+    assert check_corpus(root) == []
+    (root / '01-auth.md').unlink()
+    found = check_corpus(root)
+    assert [item.rule for item in found] == ['spec-index-dangling']
+    assert 'index.md:3:' in found[0].message
+
+
+@pytest.mark.parametrize('link', ['<!-- [Phase](1/index.md) -->', '`[Phase](1/index.md)`'])
+def test_hidden_phase_links_do_not_activate_rows(tmp_path, link):
+    root = corpus(tmp_path, index=link, name='1/2-webhooks.md')
+    (root / '1' / 'index.md').write_text(INDEX.replace('01-auth.md', '2-webhooks.md'))
+    assert rules(root, Severity.ERROR) == {'spec-index-row'}
+
+
 @pytest.mark.parametrize('pointer', ['turn/start', '3/7', 'src/config.py:1\u20132'])
 @pytest.mark.xfail(
     strict=True, reason='SPECLINT-POINTER-NOISE-SLASH-TOKENS: slash tokens and en-dash ranges warn'

@@ -1,9 +1,9 @@
 # speclint
 
 Check a specification corpus for naming, status, index agreement and code pointers. Python 3.13+,
-with no runtime dependencies. [Spec conventions](../skills/specs/format.md) own the lifecycle; tests
-and review establish implementation completion. Rumdl owns Markdown syntax, formatting and supported
-file links and heading anchors.
+with markdown-it-py for index parsing. [Spec conventions](../skills/specs/format.md) own the
+lifecycle; tests and review establish implementation completion. Rumdl owns Markdown syntax,
+formatting and supported file links and heading anchors.
 
 ## Run
 
@@ -41,12 +41,13 @@ a restricted YAML header: extra keys, duplicate statuses and other YAML forms fa
 byte-order mark and CRLF input are accepted.
 
 Indexes use `| Spec | Status | Summary |` columns in that order, with optional additional columns.
-Each spec row has one inline Markdown link in the first cell, the exact status in the second, and a
-summary in the third. A prose link or summary-cell link does not register a spec. The root index can
-link `<phase>/index.md` to include that phase's rows. Index links may use relative or
-repository-root paths, URL encoding, titles and heading fragments. Rumdl validates fragments and
-general Markdown links; speclint interprets index links to establish membership and status
-agreement.
+Each spec row has one Markdown link in the first cell, the exact status in the second, and a summary
+in the third. A prose link or summary-cell link does not register a spec. The root index can link
+`<phase>/index.md` to include that phase's rows. Index links may use relative or repository-root
+paths, URL encoding, angle-delimited destinations, titles and heading fragments. Reference links
+also work. CommonMark parsing with tables excludes comments, code blocks, code spans, escaped links
+and images from spec membership. Rumdl validates fragments and general Markdown links; speclint
+interprets index links to establish membership and status agreement.
 
 `CLAUDE.md` and `AGENTS.md` are directory instructions, not specs. Empty corpora pass, including an
 empty index. Retirement deletes the spec and its index row together. Lint never decides whether a

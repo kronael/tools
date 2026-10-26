@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Check specification naming, status, indexes and code pointers"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["markdown-it-py>=4,<5"]
 
 [project.scripts]
 speclint = "speclint:main"

@@ -56,7 +56,7 @@ def test_wheel_contents(wheel):
         ]
         metadata = archive.read('speclint-0.1.0.dist-info/METADATA').decode()
         assert 'Requires-Python: >=3.13' in metadata
-        assert 'Requires-Dist:' not in metadata
+        assert 'Requires-Dist: markdown-it-py<5,>=4' in metadata
         config = configparser.ConfigParser()
         config.read_string(archive.read('speclint-0.1.0.dist-info/entry_points.txt').decode())
         assert dict(config['console_scripts']) == {'speclint': 'speclint:main'}
@@ -122,6 +122,29 @@ def test_pre_commit_activation_and_deletion(wheel, consumer, pytestconfig):
     result = run_process(['git', 'commit', '-qm', 'Valid corpus'], directory, env)
     assert result.returncode == 0, result.stdout + result.stderr
     assert 'Passed' in result.stderr
+    index = directory / 'specs' / 'index.md'
+    original = index.read_text()
+    index.write_text('<!--\n' + original + '-->\n')
+    assert run_process(['git', 'add', 'specs/index.md'], directory, env).returncode == 0
+    result = run_process(['git', 'commit', '-qm', 'Hidden row'], directory, env)
+    assert result.returncode != 0
+    assert '[spec-index-row]' in result.stderr
+    index.write_text(original + '\n`[Template](02-missing.md)`\n')
+    assert run_process(['git', 'add', 'specs/index.md'], directory, env).returncode == 0
+    result = run_process(['git', 'commit', '-qm', 'Literal example'], directory, env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    for target in '<02-removed.md>', "02-removed.md 'Example'":
+        index.write_text(original + f'| [Removed]({target}) | shipped | Removed |\n')
+        assert run_process(['git', 'add', 'specs/index.md'], directory, env).returncode == 0
+        result = run_process(['git', 'commit', '-qm', 'Stale row'], directory, env)
+        assert result.returncode != 0
+        assert '[spec-index-dangling]' in result.stderr
+    assert (
+        run_process(
+            ['git', 'restore', '--staged', '--worktree', 'specs/index.md'], directory, env
+        ).returncode
+        == 0
+    )
     spec = directory / 'specs' / '01-cache.md'
     spec.write_text('---\nstatus: invalid\n---\n')
     assert run_process(['git', 'add', 'specs/01-cache.md'], directory, env).returncode == 0
