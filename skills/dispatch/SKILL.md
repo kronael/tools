@@ -16,7 +16,7 @@ Report what was launched. Continue immediately without waiting.
   This applies to Sol, Astra, Terra and Luna. The worker lets solve choose the
   domain skill, including refine for a refine pass. NEVER prescribe domain
   skill files in its brief — ALWAYS state the goal, scope and acceptance criteria.
-- ALWAYS create a task for the run before launching and mark it complete once its result is read (WISDOM § Agents); a launched sub no task tracks is lost at compaction.
+- ALWAYS track the run before launching and mark it complete once its result is read, using WISDOM § Agents' native checklist or work record.
 - ALWAYS write the prompt as if the subagent has no memory of this session — paste paths, errors, and acceptance criteria inline; NEVER your own analysis, suspected cause, or pointers. A written plan's decisions are not analysis — ALWAYS pass them to an executor as constraints (`sonnet` § Plan, then execute). ALWAYS quote the owner's latest decision verbatim, and NEVER keep an example that contradicts it — a sub follows the example over the words.
 - NEVER assume dispatch/`general-purpose` runs cheap — it has no effort pin, so it INHERITS the parent session's effort (xhigh under a Fable parent). ALWAYS use a tier skill (§ Tiers) when a specific effort is required; only accept dispatch when the parent's inherited effort is acceptable.
 - NEVER dispatch autonomous code generation here (WISDOM § Agents) — it goes to an `/opus` plan and one `/sonnet` sub per code step.

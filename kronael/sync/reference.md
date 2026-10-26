@@ -534,6 +534,14 @@ project `.codex/` config and enabled plugins — Kronael writes
   header — TOML then makes it part of that table — and move a `CLAUDE.md`
   entry found under `[tui]` or `[tui.model_availability_nux]` to the
   top-level key.
+- Native checklist in `~/.codex/config.toml`: ALWAYS set the sync-owned
+  `tools.update_plan.enabled` to `true` from `$SRC/codex/config.toml`.
+  ALWAYS merge only this key, preserving other tool settings and tables.
+  `update_plan` tracks steps; Plan mode and native goals have separate roles.
+  After a fresh thread starts, ALWAYS inspect its exposed tools before
+  claiming the checklist is available. If absent or prohibited in the current
+  mode, ALWAYS use WISDOM § Agents' work record rule and report the limitation.
+  Source: [configuration schema](https://developers.openai.com/codex/config-schema.json).
 - Native footer in `~/.codex/config.toml`: ALWAYS set the sync-owned
   `tui.status_line` from `$SRC/codex/config.toml`, replacing any existing array,
   including `[]`.
@@ -544,6 +552,9 @@ project `.codex/` config and enabled plugins — Kronael writes
   The shipped configuration contains:
 
   ```toml
+  [tools.update_plan]
+  enabled = true
+
   [tui]
   status_line = ["model-name", "context-used", "five-hour-limit", "weekly-limit"]
   ```

@@ -120,9 +120,9 @@ this same stage.
 ALWAYS inspect the returned diff and run the step's gate yourself before
 accepting it. A worker's commit or success report is not gate evidence.
 Use `commit` for logical verified changes. Record status, commit, gate
-result and next action in the work record after each accepted step. The
-task tool mirrors the plan — one task per step and per worker run, restated
-with its status after each step (`sonnet` § Plan, then execute).
+result and next action in the work record after each accepted step. ALWAYS
+apply WISDOM § Agents' native checklist or work record rule, including the
+numbered status update after each step (`sonnet` § Plan, then execute).
 
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the

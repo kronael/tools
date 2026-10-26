@@ -156,8 +156,9 @@ the failure. Settings still confirm before applying.
    NEVER write the Kronael block into `~/.claude/CLAUDE.md`.
    Completion criterion: `~/.codex/AGENTS.md` holds the block, the symlinks
    resolve, and `~/.codex/hooks.json` equals `codex-hooks.json`.
-   Parse `~/.codex/config.toml` as TOML and verify `tui.status_line` equals
-   the ordered array in `reference.md` § Codex bridge.
+   Parse `~/.codex/config.toml` as TOML and verify `tools.update_plan.enabled`
+   is true and `tui.status_line` equals the ordered array in `reference.md`
+   § Codex bridge. Configuration alone does not prove tool exposure.
 
 7. **External tools.** `which` each; install the missing **Core** batch from
    `reference.md` § External tool commands (ask once), then ask separately for
