@@ -86,9 +86,9 @@ line are explicit, with material owner decisions answered.
 
 ### 3. Plan against the current code
 
-ALWAYS plan in a fresh subagent with no conversation fork. Use `opus`, or `fable`
-only when the plan is itself a spec, architecture or algorithm problem;
-`runtime.md` names supported role equivalents. The planner
+ALWAYS select a fresh planning worker through `dispatch`, with no conversation
+fork. High-level product contracts use the spec task before detailed planning.
+The planner
 researches the live code and writes or updates the work record. Existing
 plans and specs are inputs to verify, not authority about code. Read
 `prompt.md` for the brief and plan fields.
@@ -110,8 +110,8 @@ gate, and no unresolved owner decision blocks the first step.
 
 ### 4. Implement and verify each step
 
-ALWAYS select each step's worker through `dispatch` § Tiers.
-`runtime.md` names supported equivalents.
+ALWAYS select each settled implementation step as coding through `dispatch`.
+`runtime.md` covers unavailable launch capabilities.
 Follow `worktree` for isolation and reconciliation. Parallel work needs
 independent owned paths and dependencies. Read-only investigations may
 share the tree. If the owner explicitly chose the CLI, read `cli.md` at
@@ -122,7 +122,7 @@ accepting it. A worker's commit or success report is not gate evidence.
 Use `commit` for logical verified changes. Record status, commit, gate
 result and next action in the work record after each accepted step. ALWAYS
 apply WISDOM § Agents' native checklist or work record rule, including the
-numbered status update after each step (`sonnet` § Plan, then execute).
+numbered status update after each step (`dispatch` → `plan.md`).
 
 ALWAYS repair failures caused by this change within its accepted scope and
 limits. NEVER weaken an acceptance check to get a green result. Replan the
@@ -145,8 +145,8 @@ Run the owner-selected checks through the matching existing skills:
 `review` for an independent review, and the `eval` lenses — red for hostile
 failure cases, CTO for operational risks, design for UI craft and novice for
 first use. Load only lenses justified by the brief or a concrete
-unresolved concern. An explicit independent engine choice uses `astra` or
-`oracle`.
+unresolved concern. `dispatch` preserves explicit independent model choices;
+`oracle` owns second-opinion framing.
 
 ALWAYS re-verify findings against the code before acting. The brief covers
 fixes to defects this change causes, scoped simplification and docs. A

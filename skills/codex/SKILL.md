@@ -19,9 +19,10 @@ selected model and it supports explicit effort. ALWAYS set `model` and
 alone does not prove the model is available. Native workers need no CLI
 catalog or auth check. Otherwise, ALWAYS use the CLI checks below.
 
-For a same-model second opinion, ALWAYS answer directly unless the owner asks
-for isolation or independence. NEVER apply that shortcut to a worker selected
-by dispatch: it needs a separate context even on the parent's model.
+For a same-model second opinion, ALWAYS answer directly unless the owner or
+workflow requires isolation or independence. NEVER apply that shortcut to a
+worker selected by dispatch, a required review, or refine's whole-change audit:
+those need a fresh context even on the parent's model.
 
 ALWAYS use `dispatch` for the brief, capacity and launch report. A read-only
 worker is read-only by its brief, not by a CLI sandbox flag. Editing isolation

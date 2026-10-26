@@ -1,61 +1,51 @@
 ---
 name: oracle
-description: One second-opinion router for code, planning, security/deep audit, and creative critique. NOT for routine lookups (use grep/read/recall-memories) or fire-and-forget work (use dispatch).
-when_to_use: "oracle, second opinion, sanity check, ask oracle, plan critique, code critique, creative critique, security audit critique, red team critique"
+description: Independent critique of code, plans, products or claims. NOT for routine lookups (use direct tools) or execution work (use dispatch).
+when_to_use: "oracle, second opinion, sanity check, plan critique, code critique, creative critique, security audit critique, red team critique"
 user-invocable: true
 ---
 
 # Oracle
 
-One router for second opinions. User text wins: if the user explicitly asks for
-astra, sol, fable, creative, code, planning, or security routing, follow that route.
+This skill owns second-opinion framing and verification. `dispatch` owns task
+selection, models, effort, capacity and overrides; `claude` and `codex` own
+provider launches. ALWAYS pass the owner's requested model, provider and effort
+through unchanged. “Ask Codex” selects a provider, not an audit model.
 
-## Dispatch
+## Select the task
 
-| Request | Route |
-|---|---|
-| Code review, bug hunt, algorithm/design critique | `fable` subagent |
-| Planning critique, release plan, architecture plan | `fable` subagent |
-| Security, red-team, exploitability, deep audit | `fable` subagent |
-| Naming, prose, narrative, product copy, ideation | `astra` skill |
-| Ambiguous but touches code or operations | `fable` subagent |
-| Explicit "ask codex" / "use codex" | `astra` skill |
-| Explicit Astra or Sol request | `astra` skill; for Sol, its § Sol variant |
+ALWAYS select the task from `dispatch` by the requested output. A code or plan
+critique uses review; a broad adversarial, security or systemic critique uses
+audit. Creative critique follows the same distinction. Product specification
+and implementation are separate tasks, not implicit parts of an opinion.
 
-## Fable Route
+ALWAYS preserve a required fresh reviewer or auditor. A provider's same-model
+inline shortcut applies only to an ordinary opinion without an independence
+requirement. NEVER use it to bypass `review`, `refine` or their whole-change
+audit. For an explicit Pi request, use `pi` and preserve its actual engine
+choice; NEVER substitute it for a selected Claude or Codex route silently.
 
-Launch a background agent with `subagent_type: "fable"`. Include the goal,
-target files/dirs, and what to return. Frame adversarially:
+## Brief
 
-```text
-Goal: <X>. Find the flaw in <code/design/plan>. Entry points: <files, symbols,
-error output>. Return findings only, with file:line or concrete trace.
-```
+ALWAYS use `dispatch` § Brief. Give the goal, target artifacts, entry points,
+house rules, boundaries and required evidence. Frame the request adversarially:
+“Find what breaks this claim” or “Find the flaw in this plan.”
 
-Rules:
+- NEVER ask “is this correct?” or “does this look right?” Those questions
+  invite confirmation. ALWAYS ask what breaks, what is missing or why it fails.
+- NEVER provide your own suspected weaknesses or reasoning chain. ALWAYS let
+  the reviewer choose the attack from the goal and source artifacts.
+- ALWAYS give an implementation-plan reviewer the accepted requirements and
+  current plan as artifacts, not the author's defense of its choices.
+- ALWAYS require findings with `file:line`, a concrete trace or a command and
+  its output. A summary without evidence does not support a change.
 
-- NEVER set effort in the prompt text — ALWAYS the agent file's pin, or the launch's `effort` per WISDOM § Agents.
-- Never ask "does this look right?" Ask what breaks, what is missing, or why the
-  plan fails.
-- Verify claims against the repo before acting.
-- When Fable cannot run, ALWAYS follow `fable`'s usage-limit rule;
-  NEVER substitute another model without the user's choice.
+## Settle the result
 
-## Astra Route
+ALWAYS verify each claim against the source before acting. Cite the evidence
+when applying a finding; give a one-line reason when discarding it. NEVER
+implement an opinion blindly or treat the model's confidence as proof.
 
-Load the `astra` skill and follow its runbook. Use it for creative critique and
-explicit Codex or Astra requests. Keep the prompt adversarial and high-level; do not
-paste your full reasoning chain.
-
-For an explicit Sol opinion, ALWAYS run `astra` § Sol (`gpt-6.1-sol`,
-ephemeral) under the same `astra` § Rules; NEVER answer a Sol request on the
-Astra model silently.
-
-When the selected model cannot run (revoked auth, missing CLI or model),
-ALWAYS report the failure and ask before selecting another model.
-NEVER substitute an engine without the user's choice.
-
-## Output
-
-Treat every oracle answer as advisory. Cite the finding when acting; discard
-wrong claims with a one-line reason.
+On unavailable credentials, model, effort or usage capacity, ALWAYS report the
+exact selected route and limitation. Continue independent preparation; NEVER
+silently substitute an engine. Dispatch owns explicit owner-approved alternatives.

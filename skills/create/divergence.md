@@ -52,9 +52,9 @@ Two interchangeable methods; both feed one distinct brief per version:
   wordlists — setting · protagonist · force/twist · material · mood · palette ·
   motion. The seed makes the whole brief reproducible; log seed+words so a run
   can be replayed. (Worked generator: schema `tmp/inspiration.py` pattern.)
-- **Sonnet at high temperature.** Ask a `sonnet` agent, temperature ramped up,
-  for N deliberately-divergent one-paragraph briefs. Looser and more coherent
-  than raw word-salad, but not reproducible — capture the output verbatim.
+- **Independent briefs.** ALWAYS select the spec task through `dispatch` for
+  N deliberately different one-paragraph creative directions. Capture the
+  output verbatim; NEVER claim a temperature control the runtime does not expose.
 
 Hand each version its brief as *inspiration to interpret freely*, not a spec to
 execute literally. The brief supplies the corner of the space; the agent fills

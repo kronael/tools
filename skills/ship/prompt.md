@@ -1,7 +1,7 @@
 # Agent briefs and work record
 
-`dispatch` owns briefing style, and `fable`, `sonnet` and `opus` own model
-launch settings. Fill the brackets with real paths and the owner's words.
+`dispatch` owns task selection and briefing. `claude` and `codex` own provider
+launch mechanics. Fill the brackets with real paths and the owner's words.
 Do not send this file as a worker's task list.
 
 ## Planner brief

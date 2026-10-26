@@ -81,10 +81,11 @@ model; `systemMessage` reaches only the user.
    route, no `commit`, no slash command, not a resumed session's summary.
    Every later prompt restamps the gap, routed or not. Other continuations
    stay silent.
-3. In Claude only, route a prompt that starts with `/astra`, and the phrases
-   `ask codex`, `ask astra`, `oracle`, and `second opinion`, to `/astra`.
-4. Match model escalation only when explicit: `/fable`, `use fable`,
-   `spawn fable`, `/opus`, etc.
+3. Preserve a leading workflow command. Route explicit dispatch to `/dispatch`
+   and opinion requests to `/oracle`, retaining the original override text.
+4. Route explicit model requests to `/dispatch`, and provider requests to
+   `/codex` or `/claude`. Both harnesses use these routes. Bare model-like
+   words and paths do not select a model; the hook never chooses effort.
 5. Tokenise prompt and exact-match words against `SKILL_KEYWORDS` — skill
    names and words that mean one skill only, never a plain verb. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.

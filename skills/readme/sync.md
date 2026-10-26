@@ -7,7 +7,7 @@ wrong file is doc rot even when the fact is right.
 
 ## Where it runs
 
-For a whole doc set, ALWAYS select the worker through `dispatch` § Tiers
+For a whole doc set, ALWAYS select the review task through `dispatch`
 and write its brief through `dispatch` § Brief. ALWAYS name each changed
 behaviour in the brief. A one-fact fix runs inline. A worker that loaded
 this skill runs the pass itself.

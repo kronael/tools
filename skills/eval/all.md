@@ -15,8 +15,9 @@ verdict, so a later session has the context instead of re-deriving it.
 1. Pick the applicable lenses. Skip `design.md` / `novice.md` / `hiring.md`
    when they don't fit; SAY which you skipped and why (don't silently drop
    coverage).
-2. Dispatch one subagent per lens — parallel is safe (all read-only). Each
-   loads the `eval` skill, reads its ONE lens file and returns: one-line
+2. ALWAYS select one fresh read-only audit worker per lens through `dispatch`.
+   Queue under its capacity limits; read-only work does not waive those limits.
+   Each loads the `eval` skill, reads its ONE lens file and returns: one-line
    verdict (pass / fail / conditional), top-3 blockers, and the single
    kill-shot.
    Prompt shape: "Load the `eval` skill, read `<lens>.md` and run that lens on

@@ -28,26 +28,47 @@ def test_code_does_not_route_to_codex() -> None:
     assert explicit_route('write code for this') is None
 
 
-def test_codex_route_requires_explicit_second_opinion() -> None:
-    assert explicit_route('ask codex for a second opinion') == '/astra'
-    assert explicit_route('oracle this') == '/astra'
-
-
-def test_slash_astra_routes_to_astra_and_is_suppressed_in_codex() -> None:
-    assert explicit_route('/astra handle this') == '/astra'
-    assert explicit_route('/astra handle this', harness='codex') is None
+@pytest.mark.parametrize(
+    ('prompt', 'route'),
+    [
+        ('dispatch implement this change', '/dispatch'),
+        ('review this with dispatch', '/dispatch'),
+        ('dispatch this to Astra for a second opinion', '/dispatch'),
+        ('oracle this', '/oracle'),
+        ('ask codex for a second opinion', '/oracle'),
+        ('use opus for a second opinion', '/oracle'),
+        ('ask Sol for a second opinion', '/oracle'),
+        ('ask codex about this design', '/codex'),
+        ('use claude for this task', '/claude'),
+        ('ask astra about this design', '/dispatch'),
+        ('use sol for this implementation', '/dispatch'),
+        ('use fable for this', '/dispatch'),
+        ('/astra handle this', '/dispatch'),
+        ('/fable handle this', '/dispatch'),
+        ('@luna inventory these files', '/dispatch'),
+        ('/refine this with Astra', '/refine'),
+        ('@review this with Sol', '/review'),
+        ('/oracle use opus', '/oracle'),
+        ('/codex implement this', '/codex'),
+    ],
+)
+def test_task_provider_and_opinion_routes(prompt, route) -> None:
+    assert explicit_route(prompt) == route
 
 
 def test_every_route_names_a_bundled_skill() -> None:
     skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
     targets = {
         *prompt_nudge.SKILL_KEYWORDS.values(),
-        *(v for _, routes in prompt_nudge.ESCALATION_PATTERNS for v in routes.values()),
-        explicit_route('/astra handle this'),
+        *(route for _, route in prompt_nudge.MODEL_PATTERNS),
+        explicit_route('ask codex about this design'),
+        explicit_route('ask claude about this design'),
         explicit_route('oracle this'),
     }
     missing = [
-        t for t in targets if not (t and t[0] == '/' and (skills / t[1:] / 'SKILL.md').is_file())
+        target
+        for target in targets
+        if not (target and (skills / target.removeprefix('/') / 'SKILL.md').is_file())
     ]
     assert not missing
 
@@ -60,34 +81,36 @@ def test_every_route_names_a_bundled_skill() -> None:
         'use astra db for vectors',
         'ls /sol/data',
         'cd /astra',
+        '/astra/data contains vectors',
+        '/codex/data contains files',
+        'cd /claude',
         'sol configuration',
+        'fable nudge is bad',
+        'sonnet is a poem',
     ],
 )
-def test_bare_astra_and_sol_words_do_not_route(prompt) -> None:
+def test_model_like_names_and_paths_do_not_route(prompt) -> None:
     assert explicit_route(prompt) is None
 
 
-def test_ask_astra_routes_like_ask_codex() -> None:
-    assert explicit_route('ask astra about this design') == '/astra'
-
-
-def test_codex_route_suppressed_inside_codex() -> None:
-    # The harness comes from the payload codex_hook.py writes, never from the
-    # environment: an env var is inherited, and a Claude Code session started
-    # from inside Codex would read it and route as if it were Codex.
-    assert explicit_route('ask codex for a second opinion', harness='codex') is None
-
-
-def test_route_is_always_a_claude_code_spelling() -> None:
-    # codex_hook.py rewrites `/name` to `@name`. A second spelling written here
-    # would never reach that rewriter.
-    assert explicit_route('use fable for this', harness='codex') == '/fable'
-
-
-def test_fable_requires_explicit_escalation() -> None:
-    assert explicit_route('fable nudge is bad') is None
-    assert explicit_route('use fable for this') == '/fable'
-    assert explicit_route('/fable handle this') == '/fable'
+@pytest.mark.parametrize('harness', ['claude', 'codex'])
+@pytest.mark.parametrize(
+    ('prompt', 'route'),
+    [
+        ('dispatch a fresh review using Sol high', '/dispatch'),
+        ('ask codex for a second opinion', '/oracle'),
+        ('/refine the entire change with Astra', '/refine'),
+    ],
+)
+def test_both_harnesses_receive_the_requested_workflow(monkeypatch, capsys, harness, prompt, route):
+    payload = {'prompt': prompt, 'harness': harness, 'session_id': 'route-fixture'}
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    with pytest.raises(SystemExit):
+        main()
+    output = json.loads(capsys.readouterr().out)
+    context = output['hookSpecificOutput']['additionalContext']
+    assert f'info: Invoke {route}.' in context
+    assert 'the current Codex session' not in context
 
 
 def test_continue_routes_to_continue_skill() -> None:

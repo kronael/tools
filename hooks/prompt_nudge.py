@@ -59,7 +59,6 @@ SKILL_KEYWORDS = {
     'roi': '/eval',
     'scavenge': '/scavenge',
     'ship': '/ship',
-    'sonnet': '/sonnet',
     'spec': '/specs',
     'specs': '/specs',
     'tooltip': '/writing',
@@ -72,17 +71,16 @@ SKILL_KEYWORDS = {
     'writing': '/writing',
 }
 
-CODEX_PATTERNS = [
-    r'\bask\s+(?:codex|astra)\b',
-    r'\boracle\b',
-    r'\bsecond\s+opinion\b',
-]
-
-ESCALATION_PATTERNS = [
-    (r'(?<!\S)/(fable|opus)\b', {'fable': '/fable', 'opus': '/opus'}),
+MODEL_PATTERNS = [
+    (r'^\s*[/@](?:astra|sol|luna|terra|haiku|sonnet|opus|fable)(?![\w/.-])', '/dispatch'),
+    (r'\bask\s+(?:astra|sol|luna|terra|haiku|sonnet|opus|fable)\b', '/dispatch'),
     (
-        r'\b(?:use|spawn|run|invoke|switch to)\s+(fable|opus)\b',
-        {'fable': '/fable', 'opus': '/opus'},
+        r'\b(?:use|spawn|run|invoke|switch to)\s+(?:luna|terra|haiku|sonnet|opus|fable)\b',
+        '/dispatch',
+    ),
+    (
+        r'\b(?:use|spawn|run|invoke|switch to)\s+(?:astra|sol)\s+(?:for|to|at|on|with)\b',
+        '/dispatch',
     ),
 ]
 
@@ -106,22 +104,25 @@ META_PATTERNS = [
 ]
 
 
-# Claude Code spellings only. codex_hook.py rewrites `/name` to Codex's
-# `@name`, and a spelling written here instead never reaches that rewriter.
-def explicit_route(prompt, harness=None):
+def explicit_route(prompt):
     lower = prompt.lower()
-    if harness != 'codex':
-        # A leading slash command only: "use astra" is as likely the vector DB
-        # as the skill, and "/astra/data" a path.
-        if re.match(r'\s*/astra(?![\w/.-])', lower):
-            return '/astra'
-        for pattern in CODEX_PATTERNS:
-            if re.search(pattern, lower):
-                return '/astra'
-    for pattern, routes in ESCALATION_PATTERNS:
-        match = re.search(pattern, lower)
-        if match:
-            return routes.get(match.group(1))
+    command = re.match(r'\s*[/@]([a-z][a-z-]*)(?![\w/.-])', lower)
+    if command:
+        name = command.group(1)
+        if name in {'codex', 'claude', 'oracle'}:
+            return f'/{name}'
+        if name in SKILL_KEYWORDS:
+            return SKILL_KEYWORDS[name]
+    if re.search(r'\bdispatch\b', lower):
+        return '/dispatch'
+    if re.search(r'\boracle\b|\bsecond\s+opinion\b', lower):
+        return '/oracle'
+    for pattern, route in MODEL_PATTERNS:
+        if re.search(pattern, lower):
+            return route
+    provider = re.search(r'\b(?:ask|use|run|invoke)\s+(codex|claude)\b', lower)
+    if provider:
+        return f'/{provider.group(1)}'
     words = re.findall(r'\b[a-zA-Z]{2,}\b', prompt)
     for word in words:
         matched = exact_match(word, SKILL_KEYWORDS)
@@ -165,9 +166,6 @@ def is_routed(prompt, matched):
 
 
 def emit(event, text):
-    # additionalContext is the only UserPromptSubmit field the model reads;
-    # systemMessage renders in the transcript for the user and never reaches
-    # the model.
     print(
         json.dumps(
             {
@@ -202,7 +200,7 @@ def main():
         sys.exit(0)
 
     parts = []
-    matched = explicit_route(prompt, data.get('harness'))
+    matched = explicit_route(prompt)
     session_id = data.get('session_id')
 
     if prompt.strip():

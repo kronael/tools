@@ -116,7 +116,7 @@ which the OS clears on reboot.
 3. Loads ./CLAUDE.md (project conventions)
 4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills load on dispatch (`/solve`, `/<name>`) or on a description match
-6. A tier agent (`sonnet`, `opus`, `fable`, `haiku`) launched by a skill or explicitly (`/sonnet`)
+6. `dispatch` selects a task route; `claude` or `codex` launches the selected worker
 ```
 
 ## Components
