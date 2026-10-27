@@ -60,11 +60,6 @@ MARKETING = re.compile(
 THIS_PR = re.compile(r'\bthis (?:pr|pull request)\b', re.IGNORECASE)
 SHORTENED = re.compile(r'\w{4,}\.\.\.\w{2,}')
 ELLIPSIS = '…'
-RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
-TABLE = re.compile(r'^\s*\|')
-CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
-IMAGE = re.compile(r'!\[[^\]]*\]\(')
-FENCE = re.compile(r'^\s*(?:```|~~~)')
 
 PREFIX = (
     r'(?:\w+=\S*[ \t]+)*'
@@ -120,21 +115,6 @@ CAT_HEREDOC = re.compile(r'^\$\(\s*cat\s*<<')
 JSON_BODY = re.compile(r'"body"\s*:\s*"((?:[^"\\]|\\.)*)"')
 
 
-def split_prose(lines: list[str]) -> list[tuple[int, str]]:
-    return [(n, line) for n, line, fenced in walk(lines) if not fenced]
-
-
-def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
-    out = []
-    fenced = False
-    for n, line in enumerate(lines, 1):
-        if FENCE.match(line):
-            fenced = not fenced
-        else:
-            out.append((n, line, fenced))
-    return out
-
-
 def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
     problems = []
     for n, line in enumerate(lines, 1):
@@ -173,22 +153,8 @@ def lint_pr(lines: list[str]) -> list[Problem]:
             Problem(1, f'TL;DR {len(lead)} chars, cap {MAX_LEAD}: move context below the lead')
         )
     for n, line in enumerate(lines, 1):
-        if CHECKBOX.match(line):
-            problems.append(Problem(n, 'checkbox: no test plan or checklist'))
         if THIS_PR.search(line):
             problems.append(Problem(n, '"this PR": name what the change does instead'))
-        if IMAGE.search(line):
-            problems.append(Problem(n, 'image: link it instead'))
-    for n, line in split_prose(lines):
-        if RULE.match(line):
-            problems.append(Problem(n, 'horizontal rule'))
-        elif TABLE.match(line):
-            problems.append(Problem(n, 'table: explain it in prose or link it'))
-    fence = next((n for n, line in enumerate(lines, 1) if FENCE.match(line)), 0)
-    if fence:
-        problems.append(
-            Problem(fence, 'code block: explain the behavior in prose or link the code')
-        )
     return problems
 
 

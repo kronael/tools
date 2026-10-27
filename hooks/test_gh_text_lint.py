@@ -54,9 +54,9 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace(CLOSE, f'{ROBOT} {CLOSE}'), 'belongs at the start only'),
     (Kind.PR, GOOD_PR.replace('**TL;DR:**', '## Summary\n\n'), 'open with **TL;DR:**'),
     (Kind.PR, GOOD_PR.replace(CLOSE, f'## Scope\n\n{CLOSE}'), None),
-    (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), 'horizontal rule'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '| a | b |\n|---|---|\n'), 'table'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '- [ ] run the tests\n'), 'checkbox'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '| a | b |\n|---|---|\n'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- [ ] run the tests\n'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'The role renders the unit.'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, '1. The role renders the unit.'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, '- One path: the role renders the unit.'), None),
@@ -75,21 +75,21 @@ LINT_CASES = [
     (
         Kind.PR,
         GOOD_PR.replace(CLOSE, '![order panel](https://x.test/a.png)'),
-        'image',
+        None,
     ),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '- ![unit](https://example.test/u.png)'), 'image'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- ![unit](https://example.test/u.png)'), None),
     (
         Kind.PR,
         GOOD_PR.replace('Deploys', 'Deploys ![x](https://example.test/x.png)'),
-        'image: link it instead',
+        None,
     ),
     (Kind.PR, GOOD_PR.replace('Deploys', 'Deploys [the log](https://example.test/x.png)'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, ''), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'Fixes #12\n\nCloses #13'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, 'Closes #12.'), None),
     (Kind.PR, GOOD_PR.replace('the `service:` list', 'the\n`service:` list'), None),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '```\nmake test\n```\n\n' + CLOSE), 'code block'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '~~~\nmake test\n~~~\n\n' + CLOSE), 'code block'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '```\nmake test\n```\n\n' + CLOSE), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '~~~\nmake test\n~~~\n\n' + CLOSE), None),
     (Kind.PR, GOOD_PR.replace('Deploys', 'This PR deploys'), '"this PR"'),
     (Kind.PR, GOOD_PR.replace('Deploys', 'Robust deploys'), 'marketing word "Robust"'),
     (Kind.PR, GOOD_PR.replace('Deploys', 'Robustly deploys'), None),
@@ -107,6 +107,13 @@ LINT_CASES = [
     (Kind.PR, CONTEXT_PR + '\nCo-Authored-By: X <x@y>\n', 'banned attribution'),
     (Kind.PR, CONTEXT_PR + '\nA robust cache.\n', 'marketing word'),
     (Kind.PR, CONTEXT_PR + '\nSee commit deadbeef...cafe.\n', 'write it in full'),
+    (Kind.PR, CONTEXT_PR + '\n```\nCo-Authored-By: X <x@y>\n```\n', 'banned attribution'),
+    (Kind.PR, CONTEXT_PR + '\n| robust |\n|---|\n', 'marketing word'),
+    (
+        Kind.PR,
+        CONTEXT_PR + '\n![deadbeef...cafe](https://example.test/a.png)\n',
+        'write it in full',
+    ),
     (Kind.ISSUE, f'{ROBOT} ' + 'x' * 2998, None),
     (Kind.ISSUE, f'{ROBOT} ' + 'x' * 2999, '3001 chars, cap 3000'),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
@@ -135,6 +142,24 @@ def test_lint(kind: Kind, text: str, expected: str | None) -> None:
         assert problems == [], [p.text for p in problems]
     else:
         assert any(expected in p.text for p in problems), [p.text for p in problems]
+
+
+@pytest.mark.parametrize(
+    'markdown',
+    [
+        'Input | Result\n--- | ---\nmissing | skip\n',
+        '    cache = configured_cache\n',
+        '> ```\n> cache = configured_cache\n> ```\n',
+        '![result][preview]\n\n[preview]: https://example.test/preview.png\n',
+        '+ [x] Construction with a cache passes.\n',
+        '> ---\n',
+    ],
+)
+def test_supporting_markdown_passes_lint_and_post_gate(markdown, tmp_path):
+    body = CONTEXT_PR + '\n' + markdown
+    (tmp_path / 'body.md').write_text(body, encoding='utf-8')
+    assert lint(Kind.PR, body) == []
+    assert command_reason('gh pr create --title t --body-file body.md', str(tmp_path)) is None
 
 
 @pytest.mark.parametrize('draft', [CONTEXT_PR, 'short', ' \n'])
@@ -207,6 +232,7 @@ ALLOWED = [
     'gh pr edit 5 --body-file tmp/context.md',
     'gh api -X PATCH repos/o/r/pulls/5 -F body=@tmp/context.md',
     f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n## Context\n\nMore."',
+    f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n- [ ] Test."',
     'timeout 180 gh pr create --repo o/r --head h --base master --title "fix: X" --body-file tmp/pr-body.md 2>&1 | tail -3',
     'timeout -k 5 180 gh pr create --title "fix: X" --body-file tmp/pr-body.md',
     'GH_PAGER=cat gh pr create --title "fix: X" --body-file tmp/pr-body.md',
@@ -253,10 +279,6 @@ REFUSED = [
     (
         'S=tmp; gh api -X PATCH repos/o/r/pulls/176 -f body="$(cat $S/pr-body.md)"',
         'pass a literal path',
-    ),
-    (
-        f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n- [ ] Test."',
-        'checkbox',
     ),
     (f'gh pr create --title "{"x" * 80}" --body-file tmp/pr-body.md', 'title 80 chars'),
     ('gh pr edit 5 --body "no robot here"', f'must start with "{ROBOT} "'),

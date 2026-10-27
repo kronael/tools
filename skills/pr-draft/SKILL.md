@@ -49,8 +49,8 @@ TL;DR, then only the context a reviewer needs to assess the change.
    ```
    and fix every line it names until it prints `ok:`. It checks the part of
    § Format a program can check: the `**TL;DR:**` opening paragraph capped at
-   400 chars; no table, rule, code block, checkbox, image, "This PR", marketing
-   word or shortened hash; the title's length and a second "and";
+   400 chars; no "This PR", marketing word or shortened hash;
+   the title's length and a second "and";
    `🤖 ` opening the body, the robot
    nowhere else, and none of the harness footer.
    Completion criterion: the `ok:` line, which carries the size and the cut
@@ -107,12 +107,11 @@ comma list of changes — needing "and" twice means name the outcome above them.
 - **Context**: ALWAYS explain the problem, resulting behavior and consequential
   design choices, including why the approach fits existing mechanisms. ALWAYS
   state scope boundaries when omission could mislead. A simple change can fit
-  entirely in the lead; otherwise use short paragraphs, bullets or headings
-  only where they help. ALWAYS include validation or limitations when they
+  entirely in the lead; otherwise use prose or Markdown that makes the context
+  easy to assess. ALWAYS include validation or limitations when they
   materially affect confidence in the change.
 - **Closers**: ALWAYS use `Closes #N` or `Fixes #N` only for real linked issues.
 
 NEVER substitute a code inventory, chronology, generic checklist or runbook
-for that explanation. NEVER use a table, rule, checkbox, code block, image or
-"This PR"; ALWAYS use concise prose or a link. ALWAYS follow the `writing`
+for that explanation. NEVER use "This PR"; ALWAYS name the behavior. ALWAYS follow the `writing`
 skill's copy rules. NEVER hard-wrap — GitHub renders the line.
