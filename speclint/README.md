@@ -88,7 +88,7 @@ repos:
     hooks:
       - id: speclint
         name: lint specification corpora
-        entry: uvx --from 'git+https://github.com/kronael/tools.git@FULL_COMMIT_HASH#subdirectory=speclint' speclint .
+        entry: sh -c 'unset $(git rev-parse --local-env-vars); exec "$@"' -- uvx --from 'git+https://github.com/kronael/tools.git@FULL_COMMIT_HASH#subdirectory=speclint' speclint .
         language: system
         pass_filenames: false
         always_run: true
@@ -100,6 +100,9 @@ permits retirement of its last corpus. Use explicit corpus paths for unnumbered 
 discovery cannot identify. Ignored or externally stored specs need explicit local checks; CI sees
 only its checkout. Missing uvx, failed installation and malformed inputs return nonzero. See
 [pre-commit hook options](https://pre-commit.com/#new-hooks).
+
+The hook requires a POSIX shell. It clears [Git-local environment variables](https://git-scm.com/docs/githooks)
+before uvx fetches the pinned repository, so Git does not apply them to that repository.
 
 Use a separate rumdl pre-commit hook with the complete relevant Markdown scope, including unchanged
 targets. Enable and verify MD057 for file targets and MD051 for heading fragments. Cross-file

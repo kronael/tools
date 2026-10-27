@@ -137,6 +137,36 @@ def test_uvx_git_subdirectory_pin(consumer, tmp_path_factory, pytestconfig):
     source = f'git+{repo.as_uri()}@{revision}#subdirectory=speclint'
     result = run_process(['uvx', '--from', source, 'speclint', '.'], directory, env)
     assert result.returncode == 0, result.stderr
+    readme = (pytestconfig.rootpath / 'README.md').read_text()
+    config = readme.split('```yaml\n', 1)[1].split('```', 1)[0].replace(SOURCE, source)
+    (directory / '.pre-commit-config.yaml').write_text(config)
+    result = run_process([sys.executable, '-m', 'pre_commit', 'install'], directory, env)
+    assert result.returncode == 0, result.stderr
+    paths = ['.pre-commit-config.yaml', 'specs/index.md', 'specs/01-cache.md']
+    assert run_process(['git', 'add', *paths], directory, env).returncode == 0
+    git_config = (directory / '.git' / 'config').read_bytes()
+    env['UV_NO_CACHE'] = '1'
+    result = run_process(['git', 'commit', '-qm', 'Main'], directory, env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (directory / '.git' / 'config').read_bytes() == git_config
+    linked = tmp_path_factory.mktemp('linked')
+    result = run_process(['git', 'worktree', 'add', '--detach', str(linked)], directory, env)
+    assert result.returncode == 0, result.stderr
+    (linked / 'marker.txt').write_text('linked\n')
+    assert run_process(['git', 'add', 'marker.txt'], linked, env).returncode == 0
+    result = run_process(['git', 'commit', '-qm', 'Linked'], linked, env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (directory / '.git' / 'config').read_bytes() == git_config
+    assert (
+        run_process(['git', 'config', '--bool', 'core.bare'], linked, env).stdout.strip() == 'false'
+    )
+    tracked = run_process(['git', 'ls-files'], linked, env).stdout.splitlines()
+    assert tracked == [
+        '.pre-commit-config.yaml',
+        'marker.txt',
+        'specs/01-cache.md',
+        'specs/index.md',
+    ]
 
 
 def test_pre_commit_activation_and_deletion(wheel, consumer, pytestconfig):
