@@ -163,9 +163,8 @@ to the guest. `ls` and `status` then show `paused:` and qemu's reason, such as
 waiting. Free host space, then `qemubox stop` it. Each VM has a QMP control
 socket, `qmp` in its state dir. The state dir is owner-only.
 
-The overlay passes guest discards through, and `stop` trims the guest disk,
-so space freed in the guest leaves the overlay on the host. A guest that
-powers itself off skips the trim; the first `stop` after its next boot does it.
+The guest mounts the ext4 upper with continuous discard, and the disk passes
+discards through, so space freed in the guest returns to the host as it is freed.
 
 `rm` accepts several names or globs, with or without the `qemubox-` prefix,
 and fails if removal fails.

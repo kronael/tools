@@ -858,6 +858,24 @@
   a box's subagents dies with the box, and the list is version-bound, so it
   needs re-checking on Claude Code upgrades. A contract change; not shipped.
 
+- **QEMUBOX-IDLE-MISSES-ENTERING-SESSION** (MED, correctness) — open
+  (unverified; release audit 2026-10-27). A session that enters while the
+  idle checker probes Docker is not in the SSH count the checker took
+  earlier, so the checker can shut down a VM with an active session.
+  **Fix:** count sessions after the Docker probe, or hold the box lock.
+
+- **QEMUBOX-DOCKER-RESTORES-BEFORE-MOUNTS** (MED, correctness) — open
+  (unverified; release audit 2026-10-27). `qemubox/guest-init` starts
+  dockerd before the project and build mounts exist, so a container with a
+  restart policy can bind the underlying guest directory and write there,
+  not to the share. **Fix:** start dockerd after the mounts.
+
+- **QEMUBOX-UNIT-NAMES-IGNORE-STATE-DIR** (LOW, correctness) — CONFIRMED.
+  `box_unit` (`qemubox/qemubox`) names the unit `qemubox@<name>.service`
+  without `QEMUBOX_HOME`, so two state dirs with the same box name share
+  one unit; `stop` in one stops the other's VM. **Fix:** put a hash of the
+  state dir in the unit name.
+
 - **QEMUBOX-IMAGE-PACKAGES-UNUSED** (LOW, design) — owner decision, no test —
   design. `qemubox/Dockerfile` installs `ipset` and `aggregate`;
   no script in the repo calls them. `iptables` supports guest Docker;
