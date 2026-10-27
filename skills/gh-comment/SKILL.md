@@ -1,7 +1,7 @@
 ---
 name: gh-comment
 description: Post inline review comments to a GitHub PR, reply to and resolve review threads. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
-when_to_use: "posting review findings to a GitHub PR as inline comments, replying to a PR review thread, resolving a PR review thread, fetching PR review thread status, pending review conflict, batch inline comments, comment on a line outside the diff, re-review request"
+when_to_use: "post review findings to a GitHub PR as inline comments, reply to a PR review thread, resolve a PR review thread, pending review conflict, comment on a line outside the diff, re-review request"
 user-invocable: false
 ---
 
@@ -171,9 +171,10 @@ with no reply and no fix reads as dismissed unread. A bot-authored one resolves
 once replied; a human-authored one stays open for its reviewer. ALWAYS resolve
 a fixed thread with no reply, human or bot, and only once the push carrying
 the fix has landed (`git merge-base --is-ancestor <fix-sha> <headRefOid>`).
-ALWAYS show `rip -g <fix-sha>:refs/heads/<headRefName>` (the PR's head);
-NEVER push without the user's ask (WISDOM § Git). ALWAYS refresh `headRefOid`
-after the push before checking ancestry; NEVER resolve a thread this pass did not address.
+ALWAYS name `rip -g <fix-sha>:refs/heads/<headRefName>` (the PR's head) in
+the reply, pushed only inside the confirmed set (WISDOM § Git). ALWAYS
+refresh `headRefOid` after the push before checking ancestry; NEVER resolve a
+thread this pass did not address.
 
 ## Re-review request
 

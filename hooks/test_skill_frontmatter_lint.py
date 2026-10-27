@@ -11,6 +11,7 @@ from skill_frontmatter_lint import frontmatter
 from skill_frontmatter_lint import name_forms
 from skill_frontmatter_lint import parse_meta
 from skill_frontmatter_lint import process
+from skill_frontmatter_lint import run_git_ls_files
 from skill_frontmatter_lint import skill_files
 
 VALID = """---
@@ -296,6 +297,23 @@ def test_hidden_directories_are_not_scanned(tmp_path: Path) -> None:
     cache.mkdir()
     (cache / '20261010.md').write_text('Edit /home/devuser/src/x.py.\n')
     assert run_lint(tmp_path).returncode == 0
+
+
+def test_invalid_repository_marker_does_not_hide_a_leak(tmp_path: Path) -> None:
+    (tmp_path / '.git').mkdir()
+    (tmp_path / 'README.md').write_text('Clone it into /home/devuser/src.\n')
+    result = run_lint(tmp_path)
+    assert result.returncode == 2, result
+    assert 'skill-local-path' in result.stderr
+
+
+def test_invalid_git_config_remains_an_error(tmp_path: Path) -> None:
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.git' / 'config').write_text('[broken\n')
+    with pytest.raises(subprocess.CalledProcessError) as exc:
+        run_git_ls_files(tmp_path)
+    assert exc.value.returncode == 128
+    assert 'bad config' in exc.value.stderr
 
 
 def test_git_ignored_directories_are_not_scanned(tmp_path: Path) -> None:

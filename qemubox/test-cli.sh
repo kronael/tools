@@ -23,6 +23,7 @@ case "$command" in
     'umask 077 && cat > /dev/shm/qemubox-env.'*) cat > "$STUB/env" ;;
     '. /dev/shm/qemubox-env.'*)
         echo "$command" > "$STUB/command"
+        case "$command" in *'&& exec cat') cat ;; esac
         if [ -n "${STUB_HOLD:-}" ]; then
             trap 'exit 143' TERM
             sleep 10 &
@@ -60,7 +61,7 @@ STUB
     done
     printf '%s\n' '-n global' '-d codex' > "$HOME/.qemuboxrc"
     bash "$here/qemubox" -g -e MYSECRET -n cli "$PROJ" </dev/null > "$STUB/output" 2>&1
-    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=xhigh$' \
+    grep -qE '^\. (/dev/shm/qemubox-env\.[0-9]+) && rm -f \1 && cd [^ ]+ && exec codex -m gpt-6.1-sol -c model_reasoning_effort=high$' \
         "$STUB/command"
     (
         unset CLAUDE_CODE_OAUTH_TOKEN OPENAI_API_KEY CODEX_API_KEY GH_TOKEN MYSECRET
@@ -136,10 +137,20 @@ STUB
     done
     if grep -q zzsecret "$STUB/ssh.log"; then exit 1; fi
     rm "$HOME/.qemuboxrc"
+    printf 'stdin-marker\n' > "$STUB/input"
+    (cd "$PROJ" && bash "$here/qemubox" -U -n cli exec cat) \
+        < "$STUB/input" > "$STUB/stdout" 2> "$STUB/output"
+    cmp "$STUB/input" "$STUB/stdout"
     bash "$here/qemubox" -T -n cli codex --model gpt-6-astra </dev/null > "$STUB/output" 2>&1
     grep -qE '&& exec codex --model gpt-6-astra$' "$STUB/command"
     bash "$here/qemubox" -T -n cli -x gpt </dev/null > "$STUB/output" 2>&1
-    grep -qE '&& exec codex -m gpt-6-astra$' "$STUB/command"
+    grep -qE '&& exec codex -m gpt-6-astra -c model_reasoning_effort=high$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli opus --effort xhigh </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec claude --model claude-opus-5-5 --effort high --effort xhigh$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli codex -c model_reasoning_effort=xhigh </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec codex -m gpt-6.1-sol -c model_reasoning_effort=high -c model_reasoning_effort=xhigh$' "$STUB/command"
+    bash "$here/qemubox" -T -n cli codex --model gpt-5.6-terra -c model_reasoning_effort=high </dev/null > "$STUB/output" 2>&1
+    grep -qE '&& exec codex --model gpt-5.6-terra -c model_reasoning_effort=high$' "$STUB/command"
     printf '%s\n' '-v /:rw' > "$PROJ/.qemuboxrc"
     if (cd "$PROJ" && bash "$here/qemubox" -n cli exec true) </dev/null > "$STUB/output" 2>&1
     then
@@ -150,4 +161,4 @@ STUB
     rm "$PROJ/.qemuboxrc"
     grep -q 'refusing to mount sensitive path /;' "$STUB/output"
 ) > "$fixture/cli.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and non-TTY"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/cli.log"; bad "CLI rc precedence, agent tokens, -U, exit, HUP, TERM and stdin"; }

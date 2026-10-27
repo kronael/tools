@@ -1,7 +1,7 @@
 ---
 name: recall-memories
-description: Look up what prior sessions decided, tried, left open or already ran — session transcripts, tool and agent results, diary, memory, Codex history. NOT for writing entries (use diary).
-when_to_use: "what did we decide, what was the status, why did we choose, where did we discuss, did we already try this, did we already run this, do not rerun, last test run, simulation hash, earlier output, what did the agent find, subagent report, prior session, last session, last time, earlier, find context, recall, no prior context, what did codex say"
+description: Look up what prior sessions decided, tried, left open or already ran — transcripts, tool and agent results, diary, memory, Codex history. NOT for writing entries (use diary).
+when_to_use: "what did we decide, why did we choose, did we already try this, did we already run this, do not rerun, earlier output, what did the agent find, subagent report, prior session, last session, last time, recall, what did codex say"
 user-invocable: true
 argument-hint: "<question>"
 ---
@@ -162,8 +162,8 @@ or diary file), the originating project for an `-a` match, and the `cwd`
 plus rollout path for a Codex match. A fact taken from history and not
 re-checked in this turn is labelled "from session <id>, not re-checked".
 
-Long sweeps: run §2 steps 2-3 or §3 steps 1-2 in one Explore subagent
-(read-only, keeps dumps out of the main context). Its brief lists the
+For long sweeps, ALWAYS select one read-only fact-gathering worker through
+`dispatch` for §2 steps 2-3 or §3 steps 1-2. Its brief lists the
 commands above and requires the evidence line and the handles. Then run
 `show` yourself on every handle you will rely on — subagents overclaim.
 

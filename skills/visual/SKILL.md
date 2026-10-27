@@ -14,11 +14,11 @@ and adjusting. Render commands, SVG gotchas and email constraints live in
 ## Where it runs
 
 Screenshots fill a context fast. Invoked in the main thread, ALWAYS hand the
-loop to a subagent and keep the conversation here: `Agent(subagent_type:
-visual)`, the thin agent that loads this skill, or `opus` told to "Load the
-`visual` skill (Skill tool) and follow it" when the brief needs design
-judgment. Give the files, the URL or render command, and what done looks like. A
-subagent that loaded this skill runs the loop itself.
+loop to a coding worker through `dispatch` and keep the conversation here.
+An unresolved product choice goes to spec; detailed code design goes to planning.
+The worker loads this skill and follows its render loop. Give the files, the
+URL or render command, and what done looks like. A subagent that loaded this
+skill runs the loop itself.
 
 ## Core protocol
 

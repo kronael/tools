@@ -14,9 +14,10 @@ stopped.
 ## Where it runs
 
 A distillation reads a whole codebase or research set. Invoked in the main
-thread, ALWAYS run it in a background `Agent(subagent_type: distill)`, the thin
-agent that loads this skill, with the subject and scope; present `.distill/final.md` when it returns. A subagent
-that loaded this skill runs the phases itself.
+thread, ALWAYS select a fact-gathering worker through `dispatch`, with the
+subject, scope and required output; the worker loads this skill and presents
+`.distill/final.md` when it returns. A subagent that loaded this skill runs the
+phases itself.
 
 ## Start here — read the state, pick the phase
 

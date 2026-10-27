@@ -1,7 +1,7 @@
 ---
 name: emacs
-description: Emacs configuration — a package stack for completion, navigation, git, and AI. NOT for host or service configuration (use ops), NOT for writing elisp application code.
-when_to_use: set up Emacs, configure Emacs, Emacs packages, init.el, elisp config, use-package, MELPA, completion stack, vertico, orderless, marginalia, corfu, consult, avy, magit, gptel, codeium, aidermacs, vterm, AI in Emacs, Claude Code in Emacs, Emacs keybindings
+description: Emacs configuration — a package stack for completion, navigation, git and AI. NOT for host configuration (use ops) or elisp application code.
+when_to_use: "set up Emacs, configure Emacs, init.el, use-package, MELPA, vertico, orderless, corfu, consult, magit, gptel, vterm, Claude Code in Emacs, Emacs keybindings"
 ---
 
 # Emacs Setup

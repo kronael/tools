@@ -8,6 +8,9 @@ page's craft: `page.md`. Prose: `writing`.
 
 ## Files
 
+- ALWAYS keep packages, modules and utilities at the component root;
+  NEVER nest a same-name package (`text-server/text_server/`) or wrap an API component in `api/`.
+
 | Path | The one question it answers |
 |---|---|
 | `docs/<name>.html` | What is it, who can do what, how does it behave? The study page for a newcomer. |
@@ -140,28 +143,36 @@ second copy of the site:
 - ALWAYS update it in the same commit as the PLAN.md decision, FEATURES.md row,
   `BUGS.md` entry or ledger number it restates.
 
-## What `make lint` checks
+## Documentation checks
 
-ALWAYS wire these into `make lint`, so a stale doc fails the build:
+ALWAYS enforce documentation lint through pre-commit. NEVER add consumer
+lint Makefile targets or repository checker scripts; ALWAYS reuse the tools
+that own the checks:
 
-- every FEATURES.md row's test exists at its path, and every `untested` id
-  exists in `BUGS.md`;
-- every path the ARCHITECTURE.md repository map names exists;
-- every `<dir>/README.md` is linked from the nearest README or ARCHITECTURE
-  above it, every `<dir>/CLAUDE.md` or `AGENTS.md` from the one above it;
-- every page claim's link carries `data-evidence="path::exact test name"` or
-  `data-evidence="BUGS.md::<BUG-ID>"`, checked the same way;
-- every number of two or more digits in the README, FEATURES.md, the directory
-  READMEs and the page's visible text appears in the ledger. This proves
-  membership, not meaning; a changed meaning re-runs the command;
-- the checker first refuses a planted fake citation and finds a planted real
-  test, so a parser that matches nothing cannot pass;
-- every item `writing/page.md` § Before handing over marks `keeper`, each
-  with its planted failure and a stated pass condition;
-- every Markdown file passes `rumdl check .` — wrapped at the width, every
-  relative link resolving (MD057) and clean on the enabled rules
-  (`software/code.md` § Layout and formatting names the config and the hook
-  that runs it on each write).
+- rumdl owns Markdown syntax, formatting and supported links/anchors.
+  `software/code.md` § Layout and formatting owns its configuration.
+- speclint owns spec naming, status, index agreement and code references.
+  `specs/format.md` owns lifecycle and retirement; the tool README owns
+  installation and the hook example.
+
+ALWAYS check each affected complete corpus, including unchanged files that
+reference deleted files. ALWAYS use `pass_filenames: false` and `always_run:
+true` with explicit complete scopes or project discovery. A deletion-only
+commit must activate the checks. ALWAYS prove activation with valid, invalid
+and deletion-only commits, and let missing tools fail visibly.
+
+ALWAYS verify enabled rumdl rules against the pinned version: MD057 for local
+file targets and MD051 for heading fragments. Cross-file anchors need their
+Markdown targets in scope. NEVER claim external URL availability from offline
+checks. Ignored and external documents need explicit local checks.
+
+ALWAYS use tests and review for semantic claims: the cited test proves the
+behavior, a number means what the text says, the repository map describes the
+code, and the nearest documentation hub links its children. ALWAYS verify
+evidence identifiers against their sources and apply `writing/page.md` to
+page quality. NEVER replace judgment with exact sentences, document inventories,
+retired-file bans or a generic digit-membership check. `wisdom` owns the proof
+required before promoting a rule to lint.
 
 ## Instruction files
 

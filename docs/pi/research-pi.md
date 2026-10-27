@@ -1,7 +1,7 @@
 # Research: the "pi" coding-agent CLI (for a codex-style `/pi` skill)
 
 Goal: identify the `pi` / "pi agent" / π CLI the user means, and document it
-precisely enough to wrap it like our `astra` skill (one-shot, non-interactive,
+precisely enough to wrap it like the `codex` provider skill (one-shot, non-interactive,
 text on stdout).
 
 ## What pi is (+confidence)
@@ -126,7 +126,7 @@ bar (BYOK key, same as codex). Minor caveats, none blocking:
 
 ## Proposed `/pi` skill sketch
 
-Mirror the `astra` skill shape:
+Use the `codex` provider runbook for comparable launch mechanics:
 
 ```bash
 # one-shot second opinion, danger-mode is the default (no flag needed)
@@ -138,9 +138,9 @@ pi --model <newest-from-list-models>:high -p "<prompt>" </dev/null
   present; if not, tell the user to `export …_API_KEY` or run `pi` + `/login`
   once. (No `login status` command to shell out to.)
 - **Model/effort:** default to the top-ranked model from `--list-models` at
-  `--thinking high` (or `xhigh`) to match Astra's high effort.
+  `--thinking high` for an explicit Pi opinion. Use `xhigh` only on an explicit owner request.
 - **Prompt framing:** same adversarial "find the flaw / second opinion" framing
-  as the astra skill; pass via arg or stdin.
+  as the `oracle` skill; pass via arg or stdin.
 - **Output:** plain text by default (`-p`); add `--mode json` only if the skill
   needs to parse structured events.
 - **Isolation:** already YOLO — safe to run inside the tool container; document

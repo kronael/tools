@@ -15,6 +15,19 @@ engine is **basedpyright** (a drop-in pyright replacement, `uvx basedpyright`)
 whose `reportExplicitAny`/`reportAny` ban it, backed by **ruff `ANN401`** as a
 second annotation-level guard. No mypy.
 
+The `py` skill's pass-through `**kwargs: Any` is the one annotation exception.
+ALWAYS suppress only `ANN401`, `reportAny` and `reportExplicitAny` on that
+parameter, and `reportAny` on the forwarding call:
+
+```python
+def forward(
+    **kwargs: Any,  # noqa: ANN401  # pyright: ignore[reportAny, reportExplicitAny]
+) -> str:
+    return callee(**kwargs)  # pyright: ignore[reportAny]
+```
+
+NEVER widen these suppressions to a file or project.
+
 ---
 
 ## Python
@@ -75,7 +88,15 @@ select = [
   "BLE",  # BLE001 blind `except:`
   "TRY",  # swallowed / re-raised-wrong exceptions
   "S",    # S307 eval
+  "T20",  # T201 print
+  "TID",  # TID251 banned-api below
 ]
+
+# sys.stdout.write is a print that T201 cannot see: ban it, and a real print
+# carries `# noqa: T201`. sys.stdout.buffer (binary output) stays allowed.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"sys.stdout.write".msg = "a print in disguise: use print() with # noqa: T201"
+"sys.stderr.write".msg = "a print in disguise: use print(..., file=sys.stderr) with # noqa: T201"
 
 # NEVER add per-file-ignores for ANN401/PGH003/PGH004/RUF100 — that reopens
 # every hatch this page closed. per-file-ignores IS the circumvention.
@@ -85,12 +106,14 @@ select = [
 
 | The move | Blocked by |
 |---|---|
-| annotate `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| annotate a param or return `Any` | basedpyright `reportExplicitAny`; ruff `ANN401` |
+| `Any` inside a generic (`dict[str, Any]`, `list[Any]`) or on a variable (`x: Any`) | basedpyright `reportExplicitAny` only — `ANN401` sees a bare param/return `Any` and nothing else |
 | *use* an `Any` value (untyped-lib return, `cast(Any, …)`) | basedpyright `reportAny` |
 | leave a fn unannotated | basedpyright `reportUnknownParameterType`; ruff `ANN001/201/...` |
 | `# type: ignore` | basedpyright `enableTypeIgnoreComments=false`; ruff `PGH003` |
 | bare `# pyright: ignore` | basedpyright `reportIgnoreCommentWithoutRule` |
 | `# noqa` (bare/blanket) | ruff `PGH004` + `RUF100` |
+| `sys.stdout.write` / `sys.stderr.write` in place of a banned `print` | ruff `TID251` banned-api |
 | implicit `Optional` (`x: T = None`) | basedpyright; ruff `RUF013` |
 | `*args`/`**kwargs` typed `Any` | ruff `ANN401` (star-args not exempt by default) |
 | no-op `cast()` | basedpyright `reportUnnecessaryCast` |

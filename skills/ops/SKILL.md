@@ -6,6 +6,8 @@ when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, A
 
 # Ops
 
+ALWAYS apply `../software/code.md` § System changes to runtime/deployment edits, including hardening.
+
 ## Docker
 
 - ALWAYS pin image versions (NEVER :latest)

@@ -1,7 +1,7 @@
 ---
 name: ts
 description: TypeScript on Bun or Node.js. NOT for .tsx (use tsx).
-when_to_use: editing .ts files, writing TypeScript; tooling scripts, JavaScript tooling, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, package.json, NestJS, Pino; rename, move a file, ts-morph, codemod
+when_to_use: "editing .ts files, writing TypeScript; tooling scripts, .mjs checkers; new TypeScript project, bun init, bun test, biome.json, tsc --noEmit, tsconfig, NestJS, Pino; rename, move a file, ts-morph, codemod"
 ---
 
 # TypeScript Style
@@ -61,8 +61,9 @@ Read on demand, in this directory:
 - NEVER `if (x) { return y }` on one line — either braces+newline or no braces+newline
 
 ### Array Operations
-- NEVER spread when unnecessary — `filter()`, `map()`, `slice()` already create new arrays
-- NEVER `arr.push(...otherArr)` — blows call stack at >65k items. Use `concat` or loop
+- ALWAYS pass `ts-no-push-spread` and `ts-no-redundant-spread`.
+- NEVER copy a fresh array from `map()`, `filter()` or `slice()`; ALWAYS verify the
+  return type, since other receivers can require array conversion.
 
 ## Types
 - NEVER annotate a return type or a const's type that inference already produces — exported or not. ALWAYS judge every line a change adds or rewrites, including one that predates the change.
@@ -127,9 +128,8 @@ Read on demand, in this directory:
   then append `await p.save()` and run it again.
 
 ## Lints
-- Structural rules in `skills/ts/lints/` (ast-grep), proven by `make lints`:
-  `ts-no-push-spread`, `ts-no-redundant-spread` (both from Array Operations),
-  `ts-bool-fn-prefix` (`software/code.md` § Naming).
+- `lints/rules.yml` also enforces `ts-bool-fn-prefix` (`software/code.md` § Naming).
+  Adoption and verification: `astgrep` → `lints.md`. This pack covers TS, not TSX.
 - Native linters own the rest — Biome (`noExplicitAny`), or the eslint an
   existing project already runs, plus tsc. ast-grep only fills the
   kronael-specific gap; NEVER duplicate a Biome or eslint rule here.

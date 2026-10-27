@@ -1,26 +1,4 @@
 ---
-id: rs-no-unwrap
-language: rust
-severity: warning
-ignores:
-    - '**/*_test.rs'
-    - '**/tests/**'
-rule:
-    pattern: $X.unwrap()
-    not:
-        any:
-            - follows:
-                  kind: line_comment
-                  stopBy: neighbor
-            - inside:
-                  follows:
-                      kind: line_comment
-                      stopBy: neighbor
-                  stopBy: end
-message: NEVER bare .unwrap() in non-test code — use .expect("why"), propagate with ?, or justify it with a // comment on the line directly above. Tests
-    are exempt. See skill:rs.
-note: 'source: skills/rs/SKILL.md — Unwrap Safety'
----
 id: rs-no-from-value-clone
 language: rust
 severity: warning

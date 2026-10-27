@@ -14,9 +14,9 @@ Command-line utilities and Claude Code configuration.
 - [tg-fetch](tg-fetch/) — Telegram message and member collectors (telethon, env creds)
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
-- [spec-lint](spec-lint/) — lint a `specs/` corpus: numbering, status vocabulary, index rows, links, wording, code pointers
+- [speclint](speclint/) — check spec numbering, status, index agreement and code pointers; run through uvx
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `spec-lint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 
@@ -105,6 +105,7 @@ Troubleshooting:
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, sync paths, sync strategies, org overlays |
 | [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `qemubox`, and the toolkit |
 | [skills/README.md](skills/README.md) | Skill rationale, index, and workflow diagram |
+| [skills/astgrep/lints.md](skills/astgrep/lints.md) | Adopt the lint packs in a project; refine fallback and rule tests |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
 | [kronael/sync/SKILL.md](kronael/sync/SKILL.md) | Sync procedure (all paths) |

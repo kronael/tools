@@ -239,3 +239,6 @@ RUN uv cache clean \
     && cd "$BUN_INSTALL/install/global" && bun pm cache rm
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/qemubox-init"]
 WORKDIR /
+
+RUN uv cache clean && go clean -cache \
+    && bun pm cache rm && npm cache clean --force

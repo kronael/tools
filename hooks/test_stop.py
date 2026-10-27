@@ -9,6 +9,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
+from stop import NUDGE_INTERVAL
 from stop import emit
 from stop import project_slug
 
@@ -214,6 +215,23 @@ def test_stale_diary_warns_without_touching_the_file(tmp_path, home) -> None:
 
     assert 'Diary not updated in over an hour' in out['reason']
     assert diary.read_text() == before
+
+
+def test_diary_nudge_repeats_only_after_the_interval(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
+    diary = diary_path(home, repo)
+    stale = (datetime.now(tz=UTC) - timedelta(hours=2)).timestamp()
+    os.utime(diary, (stale, stale))
+
+    assert 'Diary not updated' in run_hook(repo)['reason']
+    assert run_hook(repo) is None
+    assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
+
+    stamp = repo / '.git' / 'claude-diary-nudge'
+    old = datetime.now(tz=UTC).timestamp() - NUDGE_INTERVAL
+    os.utime(stamp, (old, old))
+
+    assert 'Diary not updated' in run_hook(repo)['reason']
 
 
 def test_diary_in_the_repo_does_not_count(tmp_path) -> None:

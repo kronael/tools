@@ -1,7 +1,7 @@
 ---
 name: serena
-description: Rename a Python or Rust symbol across a project in one call through Serena's language-server rename, started on demand. NOT for Go (use go), TypeScript (use ts), finding callers (use the LSP tool) or a text change that is no symbol (use astgrep).
-when_to_use: "rename a symbol, rename a function, rename a method, rename a class, rename across files, rename_symbol, Serena, refactor rename in Python, rename in Rust, grep-and-edit rename broke something"
+description: Rename a Python or Rust symbol across a project in one call through Serena's language-server rename. NOT for Go (use go), TypeScript (use ts) or a text change (use astgrep).
+when_to_use: "rename a symbol, rename a function, rename a class, rename across files, rename_symbol, Serena, grep-and-edit rename broke something"
 user-invocable: true
 ---
 

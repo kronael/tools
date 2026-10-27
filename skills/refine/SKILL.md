@@ -1,35 +1,25 @@
 ---
 name: refine
 description: Finalize a change before it is called done — the code good and every claim it makes true. NOT for a targeted fix (use improve) or a second opinion (use oracle).
-when_to_use: "refine this, polish this, final pass before shipping, tighten this before commit, finalize the PR, before I call the PR done, settle the claims, is that actually true, verify the numbers, check the counts and the cross-references, the subagent says it is done, run the acceptance criteria, docs-only PR, spec PR, refine the changes, clean up the diff, finalize a finished feature"
+when_to_use: "refine this, polish this, final pass before shipping, finalize the PR, settle the claims, is that actually true, verify the numbers, the subagent says it is done, run the acceptance criteria, clean up the diff"
 user-invocable: true
 ---
 
 # Refine
 
-Runs in main context so the whole conversation stays visible.
-
-A change is finished when the code is good AND what it says about the tree is
-true. One pass settles both, because both are found the same way: cut the
-change into **contexts**, dispatch one read-only subagent per context, re-derive
-every finding here. A context is an aspect of the project this change touches —
-its deployment, its spec set, its data layer, its agent surface. A language
-bucket is ONE KIND of context, never the axis: a documents-only PR matches no
-code extension and still carries every claim the reviewer will trust.
-
-`/release` is the later gate (version bumps). Run this first.
+Refine runs in main context. It audits the whole scope, selects context reviews,
+verifies findings and applies confirmed fixes. Contexts are aspects such as
+code, deployment, specs or data; documents also carry claims to verify.
+`release` uses this same audit before version bumps.
 
 ## Workflow
 
-1. **Settle the ask** — resolve every noun in the request against the tree
-   before acting on it: the branch, the directory, the product name, the
-   document, the host. ALWAYS read `intent.md` first. When the user's numbers
-   disagree with what you measure, the user is naming a different object —
-   ALWAYS check the referent before correcting the number. Every separate
-   instruction in the message goes on a list and gets a verdict by step 11,
-   including the ones you will not carry out.
-   → each noun resolves to one path, ref or record, and no instruction is
-   unaccounted for.
+1. **Settle the ask** — ALWAYS read `intent.md`. Resolve each noun against the
+   tree: branch, directory, product, document or host. When measurements differ
+   from the user's numbers, ALWAYS check the referent before correcting them.
+   List every separate instruction, including those you will not carry out;
+   each gets a verdict by step 11.
+   → every noun resolves to a path, ref or record; every instruction is listed.
 
 2. **Checkpoint and validate** — uncommitted changes → `Skill(commit, "chore:
    Checkpoint before refine")`. Then build and test through the project's own
@@ -41,13 +31,29 @@ code extension and still carries every claim the reviewer will trust.
    `git diff --stat <base>...<head>`. ALWAYS take the base from the PR and the
    branch from `git branch -r`; NEVER type `origin/master` from habit — a ref
    that does not resolve and a range holding nothing print the same nothing.
-   Then list what the change asserts, each with the `file:line` stating it:
-   counts, line numbers, "there is no X", "every Y does Z", relative links,
-   acceptance criteria, commit subjects. `claims.md` names each kind and the
-   command that settles it.
+   `git diff --name-only <base>...<head> | cut -d/ -f1 | sort -u`: a top-level
+   directory outside the PR's component with no reason in the ask is a
+   drive-by finding (`code.md` § System changes).
+   List assertions with their `file:line`: counts, absence/universality claims,
+   links, acceptance and commit subjects. `claims.md` owns their verification.
    → the range resolves and every assertion carries its `file:line`.
 
-4. **Contexts** — cut the change into ≤4 contexts, one per command family —
+   ALWAYS run mechanical checks per `astgrep` → `lints.md` § Refine, and repeat after fixes at step 10.
+
+3.5. **Whole-change audit** — ALWAYS dispatch one fresh read-only audit of the
+   complete scope: the bug and fix, the plan and its implementation, or the
+   release range. Select the audit task through `dispatch`; provider runbooks
+   own the launch. NEVER use a same-model inline shortcut for this pass.
+   The audit checks intent, acceptance gaps, cross-context behavior and systemic
+   risks. It returns findings and the required context review depth.
+   ALWAYS record the audited snapshot, scope and evidence in the existing work
+   record. Reuse it for the same snapshot and scope; NEVER
+   add a duplicate broad audit. Confirmed fixes receive targeted verification;
+   a material scope or contract change requires a new audit of the affected
+   whole. ALWAYS settle audit findings in step 7 before applying them.
+   → one whole-scope audit has evidence, and its depth sizes the context reviews.
+
+4. **Contexts** — use the audit's depth to select ≤4 contexts, one per command family —
    what resolves references, what counts occurrences, what deploys, what the
    type checker reads — NEVER one per directory. Every changed path and every
    claim lands in exactly one. A code context also carries language lenses: map
@@ -81,16 +87,18 @@ code extension and still carries every claim the reviewer will trust.
    into the context that owns their path.
    → every unresolved thread carries a verdict and a reason.
 
-6. **Dispatch** — one read-only subagent per context, in parallel, each brief
-   written from `brief.md`; ALWAYS read that file before writing the first
-   brief. Launch each with `subagent_type` set by the context's heaviest tag:
-   `simplify` → `sonnet`, `correctness` → `opus` — NEVER `model=`, which
-   leaves the effort to the parent. A context whose lenses carry no tag (a
-   document context) runs as `correctness`. The subs report
-   findings with commands and outputs and NEVER edit. ALWAYS leave a context's
-   files alone in main context until its sub returns.
-   → every context has returned findings, each with the command that produced
-   it.
+6. **Dispatch reviews** — ALWAYS read `brief.md` before the first brief.
+   Select one fresh read-only review worker per required context through
+   `dispatch`, for both tags. ALWAYS obey its capacity limits and queue when
+   needed. Provider skills own native/CLI selection and explicit overrides.
+   NEVER let a same-model shortcut replace a required fresh reviewer.
+   For a small change, the whole-change audit can cover every context without
+   separate review workers; ALWAYS record that coverage explicitly.
+   A context worker reviews its assigned context itself; NEVER delegate that
+   same review again. A context without a tag runs as `correctness`.
+   The subs report findings with commands and outputs and NEVER edit.
+   ALWAYS leave a context's files alone in main context until its sub returns.
+   → every context has evidenced findings or explicit coverage by the audit.
 
 7. **Settle the reports** — re-derive each finding here with a DIFFERENTLY
    SHAPED query than the sub used: by file where it counted lines, by resolving
@@ -106,8 +114,10 @@ code extension and still carries every claim the reviewer will trust.
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
    (WISDOM § Bug triage); NEVER build one without sign-off.
    ALWAYS apply code findings under `software/code.md` § Boring code. Apply
-   serially, one context at a time, briefed from `brief.md`: `simplify` →
-   `Agent(subagent_type="improve")`, `correctness` → `opus` loading `improve`.
+   serially, one context at a time, briefed from `brief.md`.
+   ALWAYS select confirmed refinement edits as coding through `dispatch`.
+   An unresolved design choice returns to planning or spec before coding.
+   Claude workers load `improve`; Codex briefs follow `dispatch` § Brief.
    Abort a context on a failure.
    → build and test pass after each context, and no two writing subs shared a
    tree.
@@ -120,8 +130,8 @@ code extension and still carries every claim the reviewer will trust.
    → every acceptance command in the diff has been run in this turn and its
    coverage checked against a second query.
 
-10. **Document and commit** — `Agent(subagent_type="readme")` told to read the
-    `readme` skill's `sync.md`, with what changed, one line per file; it
+10. **Document and commit** — ALWAYS dispatch the docs round through `readme`
+    → `sync.md` § Where it runs, with what changed, one line per file. The worker
     reconciles `README.md`, and `ARCHITECTURE.md`/`CLAUDE.md` where the project
     keeps them, against what the code now does. ALWAYS push every
     measurement corrected in step 7 into every document that repeats it — a
@@ -153,20 +163,18 @@ code extension and still carries every claim the reviewer will trust.
     lock as abandonment — integration is the only proof. Then a
     verdict: what was settled, what was corrected, what could not be settled
     from here and why, and each step-1 instruction's outcome. NEVER push by
-    any command (`git push`, `rip -g`) without the user's ask (WISDOM § Git),
-    and NEVER `gh pr merge` or `gh pr review`. The closing report follows `report.md`.
+    any command (`git push`, `rip -g`) outside the confirmed set (WISDOM
+    § Git), and NEVER `gh pr merge` or `gh pr review`. The closing report
+    follows `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.
 
-Pass every agent `Intent:` (the user's original words), `Primary:` (files
-to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
-
 ## Review Checklist
 
-- ALWAYS scale to the change: tens of lines or three assertions → inline, 1-2
-  lenses; NEVER fan out agents over a ~40-line diff. Under `/release` the
-  first pass sets the size (release step 1.5).
+- ALWAYS scale review depth to the change: a small bug gets one scope-sized
+  audit and only necessary context reviews. NEVER skip its whole-change audit.
+  Release uses that same pass over its complete release range.
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
 - ALWAYS ask the redesign question before polishing when the code shows one of
@@ -188,14 +196,10 @@ to modify) and `Context:` (read-only reference) — NEVER a summary of the ask.
   target exports; a bare invocation's errors belong to the invocation.
 - ALWAYS open the diff behind a subagent's report before acting on it, and
   NEVER report a sub as running without the `agentId` its launch returned.
-- ALWAYS delegate the edit to a subagent carrying the `improve` skill; NEVER do
-  the improvement work in main context, and NEVER launch a sub through a
-  `claude` CLI call from Bash — the Agent tool only.
-- NEVER edit a file while a sub is reading it, and NEVER run two writing subs on
-  one tree.
-- ALWAYS route a critique, plan or creative second opinion to `oracle` instead.
+- ALWAYS delegate refinement edits through the coding route and `improve`;
+  NEVER do the improvement work in main context. Provider runbooks own
+  native and cross-provider CLI launches.
 - A language lens lives at `<skill>.md` in this directory, named for the skill
   step 4 matched — adding the file is the whole registration. One lens per `##`
-  heading, each ending in its own tag so step 6 can pick the agent type without
-  re-reading the code. NEVER copy write-time rules from a language skill into
-  its lens; a lens carries only what a refine pass goes hunting for.
+  heading, each ending in its tag so step 6 can assign the relevant hunts.
+  NEVER copy write-time rules into a lens; it carries only the refine hunts.

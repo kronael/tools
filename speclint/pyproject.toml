@@ -1,0 +1,76 @@
+[project]
+name = "speclint"
+version = "0.1.0"
+description = "Check specification naming, status, indexes and code pointers"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["markdown-it-py>=4,<5"]
+
+[project.scripts]
+speclint = "speclint:main"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["speclint.py"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["speclint.py", "pyproject.toml", "README.md", "Makefile", "test_speclint.py", "test_integration.py", "uv.lock"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff==0.12.1", "basedpyright>=1.31", "pre-commit>=4"]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.13"
+reportAny = "error"
+reportExplicitAny = "error"
+enableTypeIgnoreComments = false
+reportIgnoreCommentWithoutRule = "error"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # style/formatting — handled by ruff-format
+    "E501",   # line too long (formatter handles it)
+    "W191",   # indentation contains tabs
+    "D",      # docstrings (pydocstyle) — too noisy for utility scripts
+    "ANN",    # type annotations — not enforced
+    "TD",     # TODO comments
+    "FIX",    # fixme comments
+    "COM812", # trailing comma — conflicts with formatter
+    "ISC001", # implicit string concat — conflicts with formatter
+    "Q",      # quotes — handled by ruff-format quote-style
+
+    "EM",      # string literals in exceptions — too pedantic
+    "INP001",  # implicit namespace package — fine for hook scripts
+    "PLR09",   # too many arguments/branches/returns
+    "PLR2004", # magic values — fine for hook thresholds
+    "C901",    # too complex
+    "G004",    # f-string in logging — clearer than %s
+    "BLE001",  # blind except Exception — needed for hook resilience
+    "SIM108",  # ternary operator — readability preference
+    "PTH",     # pathlib suggestions — os.path is fine
+    "FBT",     # boolean positional args — too pedantic
+    "TRY003",  # long exception messages
+    "S101",    # assert — fine for invariants
+    "TC",      # type-checking import blocks — breaks runtime use
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*.py" = ["T20", "S603"]  # CLI prints findings; tests run the command
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+testpaths = ["test_speclint.py", "test_integration.py"]

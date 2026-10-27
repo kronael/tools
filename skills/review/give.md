@@ -1,7 +1,11 @@
 # Give — produce a review
 
-Read-only: bucket → parallel lens agents → fable deep-dive + reverification →
+Read-only: bucket → context reviews → whole-change audit + reverification →
 minimality → triage → report. Supersedes the built-in `/code-review` locally.
+
+The parent runs this orchestration. A worker assigned one context or audit
+ALWAYS performs that assignment itself and returns its evidence to the parent.
+NEVER restart the orchestration or delegate the same assignment again.
 
 ## 1. Scope
 
@@ -21,10 +25,11 @@ split into many, a new scope-key on shared storage, a type gaining a collection
 variant) read locally correct hunk-by-hunk while a structurally-guaranteed
 property silently disappears. ALWAYS check for this shape.
 
-## 3. Parallel lens agents
+## 3. Context reviews
 
-One `Agent(subagent_type="opus", run_in_background=true)`
-per bucket. Give each its lens, files, the language skills for those
+ALWAYS select one fresh read-only review worker per bucket through `dispatch`.
+Queue under its capacity limits; provider runbooks own model and effort controls.
+Give each its lens, files, the language skills for those
 extensions, and the house rules from project CLAUDE.md — without them agents
 propose fixes the project forbids. Findings only, no edits, each as
 `file:line — [lens] what / why it matters / fix if non-obvious`.
@@ -34,14 +39,17 @@ reviewer this conversation, the author's reasoning, or why a choice was made. A
 reviewer that has read the rationale ratifies it. It gets the change goal in one
 neutral sentence, the target (diff, range, or files), and the house rules; it
 re-derives everything else from the code. This holds for every agent in this
-skill, the fable pass in §4 included.
+skill, the audit in §4 included. NEVER replace a required fresh worker with
+a same-model inline opinion.
 
 ALWAYS wait for all agents before step 4.
 
-## 4. Fable deep-dive + reverification
+## 4. Whole-change audit + reverification
 
-A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailable →
-`subagent_type="opus"`; NEVER skip this pass):
+ALWAYS select one fresh read-only audit worker through `dispatch`. NEVER skip
+this pass or substitute another model when the selected route is unavailable.
+Give it these two jobs in order; send the bucket findings only after it returns
+its independent findings:
 
 1. **Fresh review** — read the diff and key files itself, hunting gross bugs,
    regression risks, and broken invariants. NEVER seed it with the step-3
@@ -50,7 +58,7 @@ A single `Agent(subagent_type="fable")` doing both jobs at once (fable unavailab
    only what is real, impactful, in changed code, and non-obvious to the author.
 
 Feed it the change goal and house rules. Final pool = its findings + the KEEPs.
-ALWAYS run this pass. ALWAYS trust its DROPs over the step-3 findings.
+ALWAYS run this pass. ALWAYS verify its KEEP and DROP evidence before triage.
 
 ## 5. Minimality
 
@@ -78,13 +86,11 @@ buckets that came back clean.
 Then log every unfixed finding to `BUGS.md` immediately, without asking, and
 record the round in the diary — one line. Then stop.
 
-## Model tier
+## Routing
 
-Standalone review → `subagent_type="opus"` for step 3. A `refine` flag pass →
-the caller picks the agent type (`subagent_type="sonnet"` for cheap high-recall
-flagging; the fixes run on the `improve` agent, Sonnet 5.5 at high, for
-`simplify` work and on `opus` for `correctness` — `refine` step 8).
-ALWAYS respect the caller's choice, and NEVER pass `model=` alone.
+ALWAYS use `dispatch` for task selection, capacity and briefs. Provider runbooks
+own launches. ALWAYS keep fact gathering separate from review judgment and
+preserve any explicit owner model or effort override.
 
 ## GitHub PR (gh)
 
@@ -98,7 +104,7 @@ REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 gh api repos/$REPO/pulls/<N>/comments --paginate   # inline comments
 ```
 
-Head SHA anchors inline comments; title/body is the change goal for fable's
+Head SHA anchors inline comments; title/body is the change goal for the audit's
 job 1. ALWAYS read existing comments and DROP anything already raised — never
 re-litigate a resolved thread.
 

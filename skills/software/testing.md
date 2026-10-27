@@ -27,6 +27,13 @@
   rather than widening the type.
 - An environment failure (missing binary, no docker, no credential) is a
   reported blocker. NEVER skip, `xfail`, or stub the dependency to get green.
+- NEVER a test whose subject is a library, the language or a helper under
+  `tests/` — a validator the test module declares, a dataclass being frozen, a
+  database feature no production query runs. Every assertion reaches
+  production code; a `tests/` helper only drives it.
+- A fixture file is its own record: NEVER a provenance file, header or
+  manifest beside it. The test that reads it fails when the data changes, and
+  the commit that added it says where it came from.
 
 ## Which tests to run
 
@@ -37,6 +44,18 @@
 - NEVER report a green focused run as done — ALWAYS name what it did not run:
   the full tier, integration, build. A focused run is evidence for the next
   iteration, not for the commit.
+
+## Proving the suite ran
+
+- NEVER report a suite green without counting what ran against what exists:
+  the fixtures the Make target names against the files on disk. A test the
+  target omits never runs and looks exactly like a passing one, and a list
+  cut with a fixed `grep -A N` window truncates silently. State both counts.
+- A model-backed feature is unverified until real weights ran end to end:
+  mocked adapters pass while the service cannot start and a threshold sits on
+  a scale nobody measured. ALWAYS keep a labelled fixture set, assert the
+  accuracy and the observed score range, and derive every threshold from
+  that range.
 
 ## Descriptions
 
@@ -50,7 +69,7 @@
 
 ## Testcontainers
 
-- Centralize setup in `tests/common/mod.rs` or the language equivalent.
+- ALWAYS centralize container setup in `tests/container_utils.rs` or the language equivalent.
 - Test app/harness structs own the container handle; RAII cleanup is part of
   the fixture contract.
 - Use dynamic ports, then run migrations after start.
@@ -80,7 +99,7 @@
 ## Pitfalls
 
 - Remove real API/database tests from unit test suites.
-- Use shared fixture modules (`conftest.py`, `common/mod.rs`) for common setup.
+- ALWAYS share fixture setup in the language's fixture module (`conftest.py`); container setup follows § Testcontainers.
 - Return `Result<()>` or the language equivalent for clean error propagation.
 - A test that fails from import/typo/fixture errors proves nothing - confirm
   the failure names the missing behavior before writing code.

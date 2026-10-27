@@ -39,8 +39,9 @@ kvs sessions                     sessions of the project: "session<TAB>keys<TAB>
 kvs lock NAME [-w S] [-n] -- CMD ARGS...   run CMD while holding the lock NAME
 ```
 
-- `-t`, `--ttl S` — the key expires S seconds after this write. `incr -t` arms the expiry when
-  it creates the key, so `incr calls -t 600` counts calls inside a 10-minute window.
+- `-t`, `--ttl S` — expiry is the current Unix second plus S. The lifetime can be almost
+  one second shorter than S. `incr -t` arms the expiry when it creates the key, so
+  `incr calls -t 600` counts calls inside a 10-minute window.
 - `-i`, `--if OLD` — compare-and-set: write only when the current value equals OLD; an empty OLD
   means "only when absent". Exit 1 when the condition fails.
 - `incr` on an absent or expired key starts at 0. A value that is not an integer is an error.
@@ -54,10 +55,13 @@ Options: `-p DIR` (project directory), `-s ID` (session), `-g` (global scope), `
 
 ## Storage
 
-One database: `$KVS_DIR/kv.db`, where `KVS_DIR` defaults to `$XDG_STATE_HOME/kvs`
+One database: `$KVS_DIR/kvs.db`, where `KVS_DIR` defaults to `$XDG_STATE_HOME/kvs`
 (`~/.local/state/kvs`). Lock files live beside it under `locks/`. One file for every project
 keeps cross-project queries (`kvs -g ls`, `kvs sessions` per project) in one place and leaves one
 WAL to checkpoint; the write rate of hooks is far below what one SQLite file serves.
+
+Database commands wait up to 5 seconds for a file lock on `kvs.db.lock` during initialization.
+This serializes WAL setup. Writes use SQLite's write lock with a 5-second busy timeout.
 
 Expired keys read as absent and are purged on the next write. Values are text; a script that
 needs structure stores JSON.
@@ -77,5 +81,5 @@ needs structure stores JSON.
 make test
 ```
 
-The suite builds `dist/kvs` and runs it from many processes at once: parallel `incr` on one
+The suite builds a temporary binary and runs it from many processes at once: parallel `incr` on one
 key loses no update, and parallel `lock` never has two holders.

@@ -5,12 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
-	"modernc.org/sqlite"
+	_ "modernc.org/sqlite"
 )
 
 const schema = `CREATE TABLE IF NOT EXISTS kv (
@@ -22,8 +21,6 @@ const schema = `CREATE TABLE IF NOT EXISTS kv (
 	updated INTEGER NOT NULL,
 	PRIMARY KEY (project, session, key)
 )`
-
-const busyRetries = 5
 
 var errAbsent = errors.New("absent")
 
@@ -52,11 +49,15 @@ type Store struct {
 	db *sql.DB
 }
 
-// Open opens or creates dir/kv.db in WAL mode.
+// Open opens or creates dir/kvs.db in WAL mode, serializing initialization.
 func Open(dir string) (*Store, error) {
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	lock, err := acquire(filepath.Join(dir, "kvs.db.lock"), 5*time.Second)
+	if err != nil {
 		return nil, err
 	}
+	// Closing releases the initialization lock; the database owns its own locks.
+	defer lock.Close() //nolint:errcheck
+
 	dsn := "file:" + filepath.Join(dir, "kvs.db") +
 		"?_txlock=immediate&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)"
 	db, err := sql.Open("sqlite", dsn)
@@ -76,30 +77,7 @@ func (s *Store) Close() error {
 	return s.db.Close()
 }
 
-func isBusy(err error) bool {
-	var sqerr *sqlite.Error
-	if errors.As(err, &sqerr) {
-		code := sqerr.Code() & 0xff
-		return code == 5 || code == 6
-	}
-	return false
-}
-
-// write runs fn inside one transaction that takes the write lock at BEGIN
-// (_txlock=immediate), retrying only when SQLite reports busy or locked.
 func (s *Store) write(fn func(tx *sql.Tx) error) error {
-	var err error
-	for attempt := 0; attempt < busyRetries; attempt++ {
-		err = s.writeOnce(fn)
-		if !isBusy(err) {
-			return err
-		}
-		time.Sleep(time.Duration(20*(attempt+1)) * time.Millisecond)
-	}
-	return err
-}
-
-func (s *Store) writeOnce(fn func(tx *sql.Tx) error) error {
 	tx, err := s.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err

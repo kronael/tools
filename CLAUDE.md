@@ -30,13 +30,12 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # PROJECTS, skills/recall-memories/test_recall.py
+make test          # PROJECTS, recall and astgrep runner tests
 make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
 make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
 make lints         # prove co-located ast-grep lint rules against fixtures
-make spec-lint     # lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)
 make skills-frontmatter-fix  # auto-fix loose SKILL.md YAML
 ```
 
@@ -177,7 +176,8 @@ the wiring being right and the tool running are different claims.
 ## Release
 
 - Canonical version = git tag + `CHANGELOG.md`, cut by the `release` skill.
-  Its first refine pass runs on Astra (`astra` skill), NEVER fable.
+  Its whole-release audit explicitly selects Codex/Astra through `dispatch`;
+  `codex` owns the launch mechanics.
 - ALWAYS bump `.claude-plugin/plugin.json` `version` to match the new tag in
   the same release. Nothing enforces it, and the drift is invisible: the
   manifest keeps reporting a version the bundle no longer is.

@@ -1,7 +1,7 @@
 ---
 name: astgrep
-description: Structural code search and rewrite with ast-grep (tree-sitter AST patterns). NOT for type-aware refactors (use the LSP/language skill) or literal search (use ripgrep). NOT for SQL — no built-in grammar.
-when_to_use: ast-grep, structural search, structural find/replace, codemod, batch refactor by pattern, rewrite a call pattern across the repo, find all usages structurally, outline, list a file's symbols, rewrite comments or docstrings, sgconfig, YAML lint rule, match by AST node kind
+description: Structural code search and rewrite with ast-grep (tree-sitter AST patterns). NOT for type-aware refactors (use the LSP or language skill), literal search (use ripgrep) or SQL (no grammar).
+when_to_use: "ast-grep, structural search, structural find/replace, codemod, rewrite a call pattern across the repo, list a file's symbols, sgconfig, YAML lint rule, promote rules to lints, project lint adoption, match by AST node kind"
 user-invocable: true
 ---
 
@@ -32,6 +32,7 @@ shadow-utils' `/usr/bin/sg`; `uv tool upgrade ast-grep-cli` recreates the shim.
 ## Commands
 
 `ast-grep run` — ad-hoc, pattern-driven. `ast-grep scan` — runs YAML rules.
+Project adoption, the bundled runner and fixture bindings: `lints.md`.
 
 ```sh
 # search

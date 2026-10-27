@@ -168,11 +168,12 @@ func TestCompareAndSet(t *testing.T) {
 
 func TestTTL(t *testing.T) {
 	h := newHarness(t)
-	h.want([]string{"set", "short", "v", "-t", "1"}, "", exitOK)
-	h.want([]string{"incr", "window", "-t", "1"}, "1", exitOK)
+	// Keys with a two-second TTL survive these commands, then expire and reset.
+	h.want([]string{"set", "short", "v", "-t", "2"}, "", exitOK)
+	h.want([]string{"incr", "window", "-t", "2"}, "1", exitOK)
 	h.want([]string{"incr", "window"}, "2", exitOK)
 	h.want([]string{"get", "short"}, "v", exitOK)
-	time.Sleep(1100 * time.Millisecond)
+	time.Sleep(2100 * time.Millisecond)
 	h.want([]string{"get", "short"}, "", exitAbsent)
 	h.want([]string{"incr", "window", "-t", "1"}, "1", exitOK)
 	h.want([]string{"set", "short", "again", "-i", ""}, "", exitOK)

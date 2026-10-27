@@ -149,8 +149,8 @@ rip feature                # push
 `/refine` runs in the main thread. It builds and tests, cuts the
 change into contexts and sends one read-only subagent per context.
 It then checks every finding again itself. Subagents that load the
-`improve` skill apply the fixes, the `readme` agent updates the
-docs, and the pass commits `refa: Apply refinements`.
+`improve` skill apply the fixes, one that loads the `readme` skill
+updates the docs, and the pass commits `refa: Apply refinements`.
 
 ## End of session
 

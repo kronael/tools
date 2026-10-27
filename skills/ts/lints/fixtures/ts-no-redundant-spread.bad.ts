@@ -1,6 +1,3 @@
-export {}
-const a = [1, 2, 3]
-const f = (n: number) => n > 1
-const g = (n: number) => n * 2
-const kept = [...a.filter(f)]
-const doubled = [...a.map(g)]
+const kept = [...[1, 2, 3].filter(n => n > 1)]
+
+const doubled = [...[1, 2, 3].map(n => n * 2)]

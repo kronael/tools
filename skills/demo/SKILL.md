@@ -1,7 +1,7 @@
 ---
 name: demo
 description: Terminal demo GIF + MP4 recordings for READMEs and social (asciinema + agg + ffmpeg). NOT for general Makefile targets (use software) or GUI screenshots (use visual).
-when_to_use: "record a demo, make demo, demo gif, demo mp4, demo video, asciinema, agg, terminal recording for README or twitter, benchmark demo gif, speed reveal, show off library speed, portrait gif"
+when_to_use: "record a demo, demo gif, demo mp4, asciinema, agg, terminal recording for README, benchmark demo gif, portrait gif"
 ---
 
 # Terminal demo recordings

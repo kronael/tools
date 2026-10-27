@@ -36,7 +36,11 @@ Done: <observable condition>.
   matches its prefixes, a grep over a projection cannot see a field you did not
   print.
 - NEVER accept a count without the matches it counted, and ALWAYS say which
-  query shape the count must come from when grep would miscount it.
+  query shape the count must come from when grep would miscount it. A count
+  of a shape the change may add — `Any`, a comment, a `print` — runs over the
+  diff's added lines (`git diff <range> | rg '^\+' | rg -c '\bAny\b'`), NEVER
+  as a tree total before and after: a total nets an addition against a
+  removal elsewhere.
 - ALWAYS demand a separate list of what the sub could NOT confirm. A report
   with no such list has folded its uncertainty into its findings.
 
@@ -52,7 +56,7 @@ still-unpushed stack — and for good once pushed.
 ```
 - Conventional commits, `type(scope): Message`, subject ≤72 characters.
 - Stage by path. NEVER `git add -A`, NEVER `--amend`, NEVER push by any
-  command, `git push` or `rip -g` (WISDOM § Git).
+  command, `git push` or `rip -g`: the parent pushes (WISDOM § Git).
 - NEVER add a `Co-Authored-By` trailer to any commit.
 - Detached HEAD only — NEVER create or attach a local branch.
 - NEVER remove recursively; delete named files only.

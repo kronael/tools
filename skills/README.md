@@ -53,7 +53,7 @@ long generation pass.
 Macros for instructions you'd otherwise type out every time:
 
 - **fin**: "finish all pending tasks without stopping for confirmation"
-- **dispatch**: "spawn this prompt as a background subagent and continue"
+- **dispatch**: "select a worker by task, show its model and effort, then delegate"
 - **next**: "park a discovered bug/TODO for later without stopping current work"
 - **ans**: "answer-only read-only mode — explain, never edit files or run shell"
 - **continue**: "resume every interrupted/paused task; if none, confirm the session is clean, suggest /recall-memories, and present where to go next"
@@ -93,15 +93,13 @@ the authoritative entry. The categories:
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `astra`, `pi`) — triage, multi-pass refinement, git flow,
+  `scavenge`, `oracle`, `pi`) — triage, multi-pass refinement, git flow,
   memory, scaffolding, second opinions, codifying public best practice.
-- **Escalation** (`haiku`, `luna`, `sonnet`, `terra`, `opus`, `fable`,
-  `oracle`, `dispatch`, `fin`) — model routing and macro aliases. Each model
-  tier has its own skill; `dispatch` is fire-and-forget at default model and
-  holds the one tier table (`dispatch` § Tiers). `luna` and `terra` run the
-  Codex fan-out and workhorse models through a native subagent or the CLI.
-  Model and effort pins follow
-  [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions).
+- **Delegation** (`dispatch`, `claude`, `codex`) — `dispatch` owns task
+  definitions, model/effort choices and capacity. Provider skills own native
+  and CLI launches. See [dispatch](dispatch/SKILL.md) for the single routing
+  matrix and [`CLAUDE.md` § Agent definitions](CLAUDE.md#agent-definitions)
+  for native bindings. `fin` owns persistence within the task's scope.
 - **Evaluation lenses** (`eval/` — CEO, CTO, red team, design craft, novice
   UX, hiring, or every lens at once) — judge a product, codebase, UI or
   engineer from a fixed perspective.
@@ -121,7 +119,10 @@ the authoritative entry. The categories:
   `research/` holds the quantitative-research runbooks: method (evidence),
   layout (organisation), traps (silent wrong numbers). Structure rules:
   [`CLAUDE.md`](CLAUDE.md) in this directory.
-- **Shared references** (`writing`, `humanize`) —
+- **Shared references** (`writing`, `humanize`, `owner`) —
+  `owner` is the person behind WISDOM: how they decide, what they check first,
+  what draws a correction and how they want to be told things; the wisdom file
+  points at it before a design answer, a plan, a review or a sub brief.
   `writing` owns the prose rules and, in its cold `page.md`, how a document or
   page is laid out; `humanize` is the AI-tells catalogue it finishes with.
   `writing` is cited by `create`, `diary`, `gh-issue`, `pr-draft`, `readme`,
@@ -145,10 +146,10 @@ Side-channels (escalation, communication) fire at any stage.
 │ specs ship                  │
 └──────────────┬──────────────┘
                │
-┌─ coding ─────▼──────────────┐         ┌─ escalation ────────┐
-│ go rs py ts tsx sh sql cli  │         │ haiku luna sonnet   │
-│ service data                ├────────►│ terra opus fable    │
-└──────────────┬──────────────┘         │ dispatch fin        │
+┌─ coding ─────▼──────────────┐         ┌─ delegation ────────┐
+│ go rs py ts tsx sh sql cli  │         │ dispatch             │
+│ service data                ├────────►│ claude codex         │
+└──────────────┬──────────────┘         │ fin                  │
                │                        └─────────────────────┘
 ┌─ quality ────▼──────────────┐
 │ review improve              │
@@ -183,10 +184,10 @@ patterns; `bugs` for the record-don't-fix queue.
 **communication** — fires after milestones at any stage. `diary` logs decisions;
 `readme` syncs docs; `wisdom` edits skills; `learn` mines history; `tweet` drafts threads.
 
-**escalation** — route to the right model/mode from any stage. `/haiku` →
-`/sonnet` → `/opus` → `/fable` increases the Claude tier; `/luna` and `/terra`
-select the Codex fan-out and workhorse models. `/dispatch` uses the default
-model and holds the tier table. `fin` runs without confirmation stops.
+**delegation** — `/dispatch` selects a task route from any stage and reports
+its model and effort. `claude` and `codex` execute that selection. Explicit
+owner choices override defaults; full capacity queues work without downgrading.
+`fin` drives the authorized work to completion.
 
 ## Working with skills
 

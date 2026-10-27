@@ -35,6 +35,7 @@ Named because they keep producing the same failures, not as a checklist —
 derive the real ones from the change.
 
 **Deployment.** Playbooks, roles, host vars, units, Dockerfiles, `cfg/`.
+ALWAYS read `software.md` § Feature PRs change runtime or deployment and § Component builds diverge from the repo, even without code.
 Settled by resolving each path from the handler that actually runs it, never by
 grepping the playbook that looks canonical. This is where a hand-written
 artifact beside the shared role hides, and where an acceptance grep misses the

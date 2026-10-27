@@ -1,7 +1,7 @@
 ---
 name: next
-description: /next — park a discovered bug or TODO without stopping, then keep working in the same turn; defer an owner's follow-up to TODO.md. NOT for bugs found during a deliberate code audit or a decision the owner owes (use /bugs), NOT for diary entries (use /diary).
-when_to_use: "park this, log this and keep going, don't fix now, note this and continue, do this next, add to TODO, defer this, note for later, later"
+description: /next — park a discovered bug or TODO without stopping; defer an owner's follow-up to TODO.md. NOT for audit findings or an owner's decision (use /bugs) or diary entries (use /diary).
+when_to_use: "park this, log this and keep going, don't fix now, do this next, add to TODO, defer this, note for later, later"
 user-invocable: true
 ---
 # /next — park and continue

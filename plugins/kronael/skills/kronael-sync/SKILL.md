@@ -1,6 +1,6 @@
 ---
 name: kronael-sync
-description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/spec-lint/qemubox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
+description: Sync Kronael into ~/.claude from Codex (bundle + CLI tools rig/udfix/speclint/qemubox), first setup included; bridge global/project CLAUDE.md, skills, and hooks into Codex. NOT for a sync inside Claude Code (use /kronael:sync) or bringing the git line up to date with origin (use merge).
 when_to_use: "@kronael-sync, sync kronael from codex, set up kronael in codex, bridge claude skills into codex, bridge hooks into codex, kronael skills missing in codex, kronael hooks missing in codex"
 ---
 
@@ -79,7 +79,7 @@ no source run without one: the top-level key
 `project_doc_fallback_filenames = ["CLAUDE.md"]` in `~/.codex/config.toml`,
 and `ln -s ~/.claude/skills ~/.agents/skills` when `~/.agents/skills` is
 absent; anything else waits for the source root.
-ALWAYS apply the native footer configuration from that canonical section too.
+ALWAYS apply the native checklist and footer configuration from that canonical section too.
 
 ## Report
 

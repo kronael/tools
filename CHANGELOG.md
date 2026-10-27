@@ -1,5 +1,130 @@
 # Changelog
 
+## [Unreleased]
+
+## [v0.4.60] — 20261027
+
+> kronael v0.4.60 — Context for PR reviewers
+>
+> PR descriptions keep a brief summary and explain the decisions reviewers need to assess.
+>
+> • PR drafting — include the problem, behavior, design choices and relevant validation.
+> • GitHub text checks — supporting Markdown passes; attribution and approval rules remain.
+> • CLI guidance — one service instance by default, with `-i/--instance` for more instances.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- PR descriptions carry necessary context below a brief TL;DR; there is no total body-length cap.
+- GitHub text checks cap the TL;DR at 400 characters and keep draft-size comparisons informational.
+- CLI guidance uses one service instance by default and `-i/--instance` for additional instances.
+
+## [v0.4.59] — 20261026
+
+> kronael v0.4.59 — qemubox bases that need no host e2fs tools
+>
+> qemubox builds its VM base image inside a container, so the host needs only Docker, tar and qemu-img.
+>
+> • qemubox — base builds drop the bsdtar, mke2fs and e2fsprogs host requirements.
+> • qemubox — `exec` passes piped stdin to the guest command.
+> • Release and squash — release runs every gate the project names, and squash never rewrites below the newest tag.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox imports the base filesystem in a disposable container; the host needs Docker, tar, qemu-img.
+- `qemubox exec` keeps piped stdin, so `qemubox exec cat < file` reaches the guest.
+- The VM base image drops installer caches.
+- Base builds need a local Docker daemon without `userns-remap`; recorded in `BUGS.md`.
+- `release` runs every release gate the project's CLAUDE.md names, with each target's variables set.
+- `squash` never rewrites below the newest tag on HEAD.
+- `code.md`: where a linter requires lowercase errors (Go ST1005), the linter wins.
+
+## [v0.4.58] — 20261026
+
+> kronael v0.4.58 — workers chosen by task
+>
+> Dispatch picks the worker for a task through one model and effort table, and model names now lead there.
+>
+> • Dispatch — one table selects model and effort per task for Claude and Codex; Terra (`gpt-6.1-terra`) does coding.
+> • Provider skills — `claude` and `codex` launch the selected model; the model-named skills are retired.
+> • Nudge — a bare model name (terra, luna, astra, haiku, sonnet, opus, fable) points to /dispatch and says which word did it.
+> • Codex — the bridge keeps native checklist tracking.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dispatch` owns task definitions, model choices, effort and concurrency; workflows name a task.
+- `claude` and `codex` own launch mechanics; `astra`, `terra`, `luna`, `haiku`, `sonnet`, `opus` and `fable` skills are removed.
+- Terra (`gpt-6.1-terra`) is the Codex coding worker; agents default to high effort.
+- The prompt nudge routes `/name` and a bare model name (not a path) to `/dispatch`; phrase patterns are gone; Sol needs `/sol`, because SOL is a coin.
+- Every route the nudge emits names the prompt text that triggered it.
+- Workflow names with digits survive dispatch.
+
+## [v0.4.57] — 20261025
+
+> kronael v0.4.57 — Project checks from the bundle
+>
+> Projects can run bundled lint rules through local hooks, and refine checks files without matching rule coverage.
+>
+> • Project hooks — scan selected Python, Rust, TypeScript and shell files.
+> • Lint rules — mechanical checks preserve semantic exceptions and native lint ownership.
+> • Refine — uncovered changed files receive bundled checks.
+> • Components — reuse existing stacks and separate runtime changes from features.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Projects can adopt bundled Python, Rust, TypeScript and shell rules through local hooks.
+- Python gains checks for type-only imports, record declarations, logger names and tuple assignments.
+- Refine checks changed files without matching rule coverage; semantic/native checks own exceptions.
+- Component guidance requires shared stacks, codecs and builds, plus separate deployment PRs.
+- Structural property, string-dispatch and unwrap checks move to semantic review or native linters.
+
+## [v0.4.56] — 20261025
+
+> kronael v0.4.56 — Codex workers by tier, stricter Python rules
+>
+> Codex workers run without an inner sandbox and open with /solve, and kvs survives parallel first use.
+>
+> • Workers — Terra builds code; Sol or Opus does reviews, refines and docs rounds.
+> • Codex — every worker runs unsandboxed and its brief starts with /solve.
+> • Python — new lints flag dict() built in place, string dispatch tables and Enum auto().
+> • Design — variants are types, aggregators own their updates, a format's version is a name.
+> • kvs — parallel processes no longer fail with SQLITE_BUSY on a fresh database.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dispatch` owns the tier table: Terra builds code, Sol (xhigh) or Opus reviews, refines, docs.
+- Codex workers run with `--dangerously-bypass-approvals-and-sandbox`; briefs open with /solve.
+- `py` lints: in-place `dict()`, string-literal case dispatch, `dict[str, Callable]` tables, `auto()`.
+- `py`: a Protocol takes the plain noun; no `Any`; read-only protocol properties allowed.
+- `software/code.md`: variants as types, aggregator methods, version as a name, row is the record.
+- `refine`: hunts pass-throughs, unread files, dropped fields, `__file__` paths, library tests.
+- Hooks: the skill lint survives a bad repository marker; only a real nested `codex` is blocked.
+- kvs: serialize database initialization to prevent SQLITE_BUSY during concurrent WAL setup.
+
+## [v0.4.55] — 20261022
+
+> kronael v0.4.55 — An owner profile and pinned sub effort
+>
+> Agents read how the owner decides before a plan or a review, and every sub runs at a set effort.
+>
+> • Owner — a new owner skill says what the owner wants and what their pushback means.
+> • Agents — four tiers remain; coding runs at high effort, plans and reviews at xhigh.
+> • SQL — functions in numbered files, tables-only migrations, one call per unit of work.
+> • Hooks — /solve nudges after an idle gap and at subagent start; no per-prompt rule blocks.
+> • Rules — extend what exists; a new module or knob is the plan's decision, not the executor's.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- New `owner` skill; the wisdom file's § The owner points at it.
+- The six skill agents are removed; a skill names its tier agent, and sync retires the old ones.
+- Sub effort: coding at high, plans and reviews at xhigh, fable at high.
+- `sql`: PL/pgSQL functions in numbered files, tables-only migrations, row locks, one call per unit.
+- `software/code.md`: one word per endpoint, extend what exists, and § System changes.
+- `software`: suite-coverage, real-weights and scope rules; `tsx`: web security rules and headers.
+- `py`: native dependencies build from source; `sys.stdout.write` as a print dodge is banned.
+- `bugs`: a long-term technical debt section; `readme`: every flow drawn as a figure.
+- Hooks: `/solve` nudge after an idle gap and at subagent start, Codex too; diary nudge throttled.
+- Plans stay in the task tool, restated per step; dated branch heads join words with underscores.
+
 ## [v0.4.54] — 20261020
 
 > kronael v0.4.54 — VMs that leave the host some memory

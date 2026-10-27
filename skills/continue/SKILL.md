@@ -1,11 +1,7 @@
 ---
 name: continue
-description: /continue — goal mode. Recall every interrupted, paused, or
-  abandoned task/plan/goal from this session and resume each. NOT for just
-  pushing the single current in-flight task without stopping (use fin).
-when_to_use: >
-  "continue", "resume", "pick up where we left off", "finish the unfinished",
-  "resume the agents", "resume the paused work", "what was left"
+description: /continue — goal mode. Recall every interrupted, paused or abandoned task from this session and resume each. NOT for pushing the single in-flight task without stopping (use fin).
+when_to_use: "continue, resume, pick up where we left off, finish the unfinished, resume the agents, what was left"
 user-invocable: true
 ---
 

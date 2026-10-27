@@ -116,10 +116,14 @@ def run_git_ls_files(root: Path) -> set[Path]:
             '--exclude-standard',
             '--directory',
         ],
-        stdout=subprocess.PIPE,
+        capture_output=True,
+        env={**os.environ, 'LC_ALL': 'C'},
         text=True,
-        check=True,
+        check=False,
     )
+    if listing.returncode == 128 and listing.stderr.startswith('fatal: not a git repository'):
+        return set()
+    listing.check_returncode()
     ignored: set[Path] = set()
     for entry in listing.stdout.split('\0'):
         path = top / entry.rstrip('/')

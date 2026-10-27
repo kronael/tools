@@ -1,7 +1,7 @@
 ---
 name: sweep
-description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs), a one-file change (use /improve) or an inline audit (use /dispatch).
-when_to_use: "sweep for similar problems, find more like this across the codebase, are there other instances of this bug class, audit the whole repo for X pattern, fix all bugs, close all gaps, parity sweep, audit X and fix it"
+description: Find a class of problem across a codebase and file each instance in BUGS.md; fix only when the owner asks. NOT for a single known bug (use /bugs) or a one-file change (use /improve).
+when_to_use: "sweep for similar problems, find more like this across the codebase, other instances of this bug class, audit the whole repo for X pattern, fix all bugs, parity sweep"
 user-invocable: true
 ---
 
@@ -14,16 +14,16 @@ prioritises rather than the sweep.
 
 ## Phase 1 — Sweep (read-only, parallel OK)
 
-Spawn read-only subs (Sonnet/Explore) to FIND issues. Group by concern; each
-sub owns one concern-bucket. Parallel is safe here — no shared writes.
+ALWAYS select read-only fact-gathering workers through `dispatch`. Review
+judgments use its review task; systemic or adversarial hunts use audit.
+Group by concern and obey capacity limits; each worker owns one concern.
 
 Output: a bucketed issue list with file + line citations. Do NOT fix during
 sweep — you will miss scope and interleave reads with writes.
 
 ### Record-only mode, which is the default
 
-Launch (Agent tool, `run_in_background: true`, general-purpose, no waiting — same
-launch shape as `/dispatch`) a background agent that audits the **entire**
+ALWAYS use `dispatch` for a background review or audit of the **entire**
 codebase for one problem CATEGORY and files each real instance as its own
 `BUGS.md` entry, per `/bugs`'s format/ID rules (read that skill first — sweep
 is the search, not the file mechanics). Record only — never fix what it finds
@@ -73,7 +73,7 @@ missed rather than checked.
 
 ## Phase 2 — Fix (sequential, one concern per sub)
 
-Spawn one opus sub per concern. Hard rules:
+ALWAYS select one coding worker through `dispatch` per settled concern. Hard rules:
 
 - **One concern per sub** — authz scope is not migrate enumeration is not
   dispatch lifecycle. If a "fix" spans concerns, split it.

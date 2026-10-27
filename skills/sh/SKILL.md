@@ -39,4 +39,6 @@ design and the boring-code rules live there. Below are shell-specific additions.
 ## Anti-patterns
 - NEVER inline `; then` or `; do`
 - NEVER unquoted variables
-- NEVER `sudo` in authored/committed scripts (ask user / parameterize privilege). The agent's own ad-hoc Bash-tool docker commands use `sudo` per WISDOM § Environment.
+- NEVER invoke `sudo` in committed scripts; ALWAYS parameterize privilege.
+  `sh-no-sudo` checks direct command names in `.sh`/`.bash`; ALWAYS review wrappers and other script paths.
+  Ad-hoc commands follow WISDOM § Environment.

@@ -1,11 +1,15 @@
 import io
 import json
+import os
+import time
 from pathlib import Path
 
+import codex_hook
 import prompt_nudge
 import pytest
 from prompt_nudge import explicit_route
 from prompt_nudge import main
+from prompt_nudge import route_with_trigger
 
 
 @pytest.fixture(autouse=True)
@@ -26,26 +30,109 @@ def test_code_does_not_route_to_codex() -> None:
     assert explicit_route('write code for this') is None
 
 
-def test_codex_route_requires_explicit_second_opinion() -> None:
-    assert explicit_route('ask codex for a second opinion') == '/astra'
-    assert explicit_route('oracle this') == '/astra'
+@pytest.mark.parametrize(
+    ('prompt', 'route'),
+    [
+        ('dispatch implement this change', '/dispatch'),
+        ('review this with dispatch', '/dispatch'),
+        ('dispatch this to Astra for a second opinion', '/dispatch'),
+        ('oracle this', '/oracle'),
+        ('ask codex for a second opinion', '/oracle'),
+        ('use opus for a second opinion', '/oracle'),
+        ('ask Sol for a second opinion', '/oracle'),
+        ('ask codex about this design', '/codex'),
+        ('use claude for this task', '/claude'),
+        ('ask astra about this design', '/dispatch'),
+        ('use Terra for this implementation', '/dispatch'),
+        ('ask Terra for a second opinion', '/oracle'),
+        ('use fable for this', '/dispatch'),
+        ('/astra handle this', '/dispatch'),
+        ('/fable handle this', '/dispatch'),
+        ('@luna inventory these files', '/dispatch'),
+        ('@terra implement this change', '/dispatch'),
+        ('do this with terra', '/dispatch'),
+        ('luna can map these files', '/dispatch'),
+        ('let sonnet do the fix', '/dispatch'),
+        ('use astra db for vectors', '/dispatch'),
+        ('sonnet is a poem', '/dispatch'),
+        ('/refine this with Astra', '/refine'),
+        ('@review this with Sol', '/review'),
+        ('/review this with Terra', '/review'),
+        ('/oracle use opus', '/oracle'),
+        ('/codex implement this', '/codex'),
+        ('/custom2/data ask codex about this', '/codex'),
+        ('@2custom.md use Terra for this', '/dispatch'),
+    ],
+)
+def test_task_provider_and_opinion_routes(prompt, route) -> None:
+    assert explicit_route(prompt) == route
 
 
-def test_slash_astra_routes_to_astra_and_is_suppressed_in_codex() -> None:
-    assert explicit_route('/astra handle this') == '/astra'
-    assert explicit_route('/astra handle this', harness='codex') is None
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        '/ans ask codex to explain this',
+        '@ans ask claude to explain this',
+        '/fix use Sol for this bug',
+        '@fix use Terra for this bug',
+        '@fix use Astra for this bug',
+        '/custom-workflow dispatch this review',
+        '/custom2 ask codex to explain this',
+        '@custom2 use Sol for this task',
+        '/2custom ask claude to explain this',
+        '@2custom use Terra for this task',
+    ],
+)
+def test_other_leading_commands_suppress_conflicting_routes(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+@pytest.mark.parametrize('harness', ['claude', 'codex'])
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        '/ans ask codex to explain this',
+        '/custom2 ask codex to explain this',
+        '@custom2 use Sol for this task',
+        '/2custom ask claude to explain this',
+        '@2custom use Terra for this task',
+    ],
+)
+def test_leading_workflow_receives_no_provider_nudge(
+    monkeypatch, capsys, tmp_path, harness, prompt
+):
+    payload = {'prompt': prompt, 'harness': harness}
+    expected = prompt_nudge.SOLVE_NUDGE
+    if harness == 'codex':
+        payload = codex_hook.normalize(payload, 'UserPromptSubmit')
+        (tmp_path / 'solve').mkdir()
+        (tmp_path / 'solve' / 'SKILL.md').write_text('')
+        monkeypatch.setattr(codex_hook, 'SKILLS_DIR', tmp_path)
+        expected = expected.replace('/solve', '@solve')
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    with pytest.raises(SystemExit):
+        main()
+    output = capsys.readouterr().out
+    if harness == 'codex':
+        output = codex_hook.translate_output(output, 'UserPromptSubmit', 'prompt_nudge')
+    output = json.loads(output)
+    context = output['hookSpecificOutput']['additionalContext']
+    assert context == expected
 
 
 def test_every_route_names_a_bundled_skill() -> None:
     skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
     targets = {
         *prompt_nudge.SKILL_KEYWORDS.values(),
-        *(v for _, routes in prompt_nudge.ESCALATION_PATTERNS for v in routes.values()),
-        explicit_route('/astra handle this'),
+        *(route for _, route in prompt_nudge.MODEL_PATTERNS),
+        explicit_route('ask codex about this design'),
+        explicit_route('ask claude about this design'),
         explicit_route('oracle this'),
     }
     missing = [
-        t for t in targets if not (t and t[0] == '/' and (skills / t[1:] / 'SKILL.md').is_file())
+        target
+        for target in targets
+        if not (target and (skills / target.removeprefix('/') / 'SKILL.md').is_file())
     ]
     assert not missing
 
@@ -55,37 +142,38 @@ def test_every_route_names_a_bundled_skill() -> None:
     [
         'use SOL as collateral on the perp',
         'run sol through the swap simulator',
-        'use astra db for vectors',
         'ls /sol/data',
         'cd /astra',
+        '/astra/data contains vectors',
+        '/codex/data contains files',
+        'cd /claude',
+        '/terra/data contains files',
         'sol configuration',
     ],
 )
-def test_bare_astra_and_sol_words_do_not_route(prompt) -> None:
+def test_model_like_names_and_paths_do_not_route(prompt) -> None:
     assert explicit_route(prompt) is None
 
 
-def test_ask_astra_routes_like_ask_codex() -> None:
-    assert explicit_route('ask astra about this design') == '/astra'
-
-
-def test_codex_route_suppressed_inside_codex() -> None:
-    # The harness comes from the payload codex_hook.py writes, never from the
-    # environment: an env var is inherited, and a Claude Code session started
-    # from inside Codex would read it and route as if it were Codex.
-    assert explicit_route('ask codex for a second opinion', harness='codex') is None
-
-
-def test_route_is_always_a_claude_code_spelling() -> None:
-    # codex_hook.py rewrites `/name` to `@name`. A second spelling written here
-    # would never reach that rewriter.
-    assert explicit_route('use fable for this', harness='codex') == '/fable'
-
-
-def test_fable_requires_explicit_escalation() -> None:
-    assert explicit_route('fable nudge is bad') is None
-    assert explicit_route('use fable for this') == '/fable'
-    assert explicit_route('/fable handle this') == '/fable'
+@pytest.mark.parametrize('harness', ['claude', 'codex'])
+@pytest.mark.parametrize(
+    ('prompt', 'route'),
+    [
+        ('dispatch a fresh review using Sol high', '/dispatch'),
+        ('use Terra for this implementation', '/dispatch'),
+        ('ask codex for a second opinion', '/oracle'),
+        ('/refine the entire change with Astra', '/refine'),
+    ],
+)
+def test_both_harnesses_receive_the_requested_workflow(monkeypatch, capsys, harness, prompt, route):
+    payload = {'prompt': prompt, 'harness': harness, 'session_id': 'route-fixture'}
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(payload)))
+    with pytest.raises(SystemExit):
+        main()
+    output = json.loads(capsys.readouterr().out)
+    context = output['hookSpecificOutput']['additionalContext']
+    assert f'info: Invoke {route} (the prompt says ' in context
+    assert 'the current Codex session' not in context
 
 
 def test_continue_routes_to_continue_skill() -> None:
@@ -103,7 +191,6 @@ def test_continue_routes_to_continue_skill() -> None:
         'novice',
         'pentest',
         'roi',
-        'security',
         'ux',
         'usability',
         'walkthrough',
@@ -118,6 +205,31 @@ def test_ship_phrasings_route_to_ship() -> None:
         assert explicit_route(prompt) == '/ship', prompt
 
 
+def test_commit_routes_to_commit() -> None:
+    assert explicit_route('commit this') == '/commit'
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'fix the failing test',
+        'design the schema',
+        'create a config file',
+        'run it in the background',
+        'add the security headers',
+        'draft the email',
+        'the inline comment is wrong',
+    ],
+)
+def test_plain_verbs_do_not_route(prompt) -> None:
+    assert explicit_route(prompt) is None
+
+
+def test_continuation_without_a_route_is_silent(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert run(monkeypatch, capsys, 'now wire it into main') == ''
+
+
 def test_output_reaches_the_model(monkeypatch, capsys) -> None:
     # Only hookSpecificOutput.additionalContext is added to the model's context;
     # systemMessage is rendered for the user alone.
@@ -127,7 +239,7 @@ def test_output_reaches_the_model(monkeypatch, capsys) -> None:
     out = json.loads(capsys.readouterr().out)
     assert 'systemMessage' not in out
     assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
-    assert 'info: Invoke /ship.' in out['hookSpecificOutput']['additionalContext']
+    assert 'info: Invoke /ship (the prompt says ' in out['hookSpecificOutput']['additionalContext']
 
 
 def test_first_prompt_nudges_solve(monkeypatch, capsys) -> None:
@@ -169,3 +281,84 @@ def test_meta_first_prompt_is_transparent(monkeypatch, capsys) -> None:
 def test_nudge_is_keyed_by_session_not_cwd(monkeypatch, capsys) -> None:
     run(monkeypatch, capsys, 'add a feature', session_id='a')
     assert prompt_nudge.SOLVE_NUDGE in run(monkeypatch, capsys, 'add a feature', session_id='b')
+
+
+def age_previous_prompt(session_id='sess', minutes=prompt_nudge.IDLE_MINUTES + 1) -> None:
+    marker = prompt_nudge.session_state('solve-nudge', session_id)
+    old = time.time() - minutes * 60
+    os.utime(marker, (old, old))
+
+
+def test_prompt_after_idle_gap_nudges_solve(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    text = run(monkeypatch, capsys, 'study this library, could we use it?')
+    assert prompt_nudge.IDLE_NUDGE in text
+    assert prompt_nudge.SOLVE_NUDGE not in text
+
+
+def test_prompt_within_the_gap_is_silent(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt(minutes=prompt_nudge.IDLE_MINUTES - 1)
+    assert prompt_nudge.IDLE_NUDGE not in run(
+        monkeypatch, capsys, 'study this library, could we use it?'
+    )
+
+
+@pytest.mark.parametrize(
+    'prompt',
+    [
+        'cont and fin',
+        'commit this',
+        '/goal finish the migration',
+        'This session is being continued from a previous conversation that ran out of context.',
+    ],
+)
+def test_routed_prompt_after_idle_gap_is_silent(monkeypatch, capsys, prompt) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    assert prompt_nudge.IDLE_NUDGE not in run(monkeypatch, capsys, prompt)
+
+
+def test_every_prompt_restamps_the_gap(monkeypatch, capsys) -> None:
+    # A routed "cont" is silent but still the previous prompt: a task-shaped
+    # prompt one minute after it is inside the gap.
+    run(monkeypatch, capsys, 'add a health endpoint')
+    age_previous_prompt()
+    run(monkeypatch, capsys, 'cont')
+    assert prompt_nudge.IDLE_NUDGE not in run(monkeypatch, capsys, 'now study this library')
+
+
+def run_subagent_start(monkeypatch, capsys, agent_type, session_id='sess'):
+    data = {
+        'hook_event_name': 'SubagentStart',
+        'session_id': session_id,
+        'agent_id': 'agent-1',
+        'agent_type': agent_type,
+    }
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
+    with pytest.raises(SystemExit):
+        main()
+    out = capsys.readouterr().out.strip()
+    return json.loads(out) if out else None
+
+
+def test_subagent_start_nudges_solve(monkeypatch, capsys) -> None:
+    out = run_subagent_start(monkeypatch, capsys, 'sonnet')
+    assert out['hookSpecificOutput']['hookEventName'] == 'SubagentStart'
+    assert out['hookSpecificOutput']['additionalContext'] == prompt_nudge.SUBAGENT_NUDGE
+
+
+def test_subagent_start_does_not_consume_the_parent_first_prompt(monkeypatch, capsys) -> None:
+    # The payload carries the parent's session id.
+    run_subagent_start(monkeypatch, capsys, 'sonnet')
+    assert prompt_nudge.SOLVE_NUDGE in run(monkeypatch, capsys, 'add a feature')
+
+
+def test_harness_agent_start_is_silent(monkeypatch, capsys) -> None:
+    assert run_subagent_start(monkeypatch, capsys, 'Explore') is None
+
+
+def test_route_names_the_text_that_triggered_it() -> None:
+    assert route_with_trigger('do this with terra') == ('/dispatch', 'terra')
+    assert route_with_trigger('cd /astra') == (None, None)

@@ -1,7 +1,7 @@
 ---
 name: eval
-description: Evaluation router — judge a product, codebase, UI or engineer from one fixed lens or from every lens at once. NOT for code review (use review), logging bugs (use bugs), the case against building (use specs) or fixing what a lens finds (use refine).
-when_to_use: "CEO evaluation, ROI, make vs buy, TCO, license risk, demo readiness; CTO evaluation, technical due diligence, production readiness, SLA bet, code audit, how do we run this; red eval, red-team review, adversarial code review, no bullshit review, find what breaks, failure-mode audit, exploitability, pentest, security-minded code audit; design review, design audit, visual design critique, contrast audit, design-system audit, is the UI good; UX walkthrough, novice walkthrough, test as a 13yo, fresh eyes, find what's confusing, usability pass, jargon; hiring eval, would you hire, top notch engineer, candidate evaluation, portfolio review, repo as hiring signal, HFT role; CISO, enterprise buyer, investor, competitor perspective, critique memo, assess this; run all evals, full evaluation, adversarial panel, evaluate from every angle"
+description: Evaluation router — judge a product, codebase, UI or engineer from one fixed lens or every lens. NOT for code review (use review), logging bugs (use bugs), the case against building (use specs) or fixing findings (use refine).
+when_to_use: "CEO evaluation, ROI, make vs buy, demo readiness; CTO evaluation, technical due diligence, production readiness; red eval, red-team review, adversarial code review, find what breaks, pentest; design review, design audit, is the UI good; UX walkthrough, novice walkthrough, test as a 13yo, usability pass; hiring eval, would you hire; CISO, investor, competitor perspective, assess this; run all evals, adversarial panel"
 argument-hint: "[ceo|cto|red|design|novice|hiring|all] [target]"
 user-invocable: true
 ---
@@ -11,6 +11,9 @@ user-invocable: true
 Judge a target from one fixed expert perspective. Read the ONE matched file,
 then follow it. Every lens is findings-only: NEVER fix during an eval — a
 real defect goes to `BUGS.md` via `/bugs`, fixes go through `refine`.
+ALWAYS select delegated evaluations as audit tasks through `dispatch`, including
+CEO, CTO and red lenses. Its capacity limits and provider runbooks apply.
+A worker assigned one lens runs it itself, without delegating it again.
 
 ## Dispatch
 

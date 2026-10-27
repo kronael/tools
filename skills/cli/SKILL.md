@@ -1,7 +1,7 @@
 ---
 name: cli
 description: CLI tools. NOT for one-off scripts (use sh).
-when_to_use: "writing a CLI tool, argparse/click/clap, adding --help or subcommands"
+when_to_use: "writing a CLI tool, argparse/click/clap, adding --help or subcommands, service instance defaults, --instance"
 ---
 
 # CLI Style
@@ -11,9 +11,10 @@ comments, design and the boring-code rules.
 
 ## Arguments
 
-- ALWAYS short flags for common ops: -c, -v, -h (old Unix style)
+- ALWAYS use short flags for common options, with long aliases: `-c/--config`, `-v/--verbose`, `-h/--help`.
 - Repeat flag for multiples: `-e ex1 -e ex2` or comma: `--hosts=h1,h2`
 - Positional: required `<identity>`, optional `[branch]`
+- ALWAYS default to one service instance; select another with `-i/--instance`, never a required positional argument.
 
 ## Config Precedence
 

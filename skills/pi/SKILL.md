@@ -1,7 +1,7 @@
 ---
 name: pi
-description: Ask the pi coding-agent CLI for a second opinion. NOT for routine lookups (use grep/read/recall-memories). NOT a Claude Agent and NOT codex — this is badlogic's `pi` CLI (a distinct model, complements /astra).
-when_to_use: "pi, ask pi, second opinion from pi, tricky algorithm, unfamiliar library, sanity check, architecture decision, disagreement after reasoning, cross-check Astra. NOT for routine lookups"
+description: Ask the pi coding-agent CLI for a second opinion — badlogic's `pi`, an explicitly selected independent engine. NOT for routine lookups (use grep/read/recall-memories).
+when_to_use: "pi, ask pi, second opinion from pi, independent Pi opinion"
 user-invocable: true
 ---
 
@@ -12,16 +12,17 @@ coding agent (badlogic/earendil, `pi.dev`) — same shape as codex: one binary,
 agent loop, its own tools (read/bash/edit/write). Methodology + citations:
 `docs/pi/research-pi.md` in the bundle source repo.
 
-Why alongside `/astra`: pi answers from a **different model** than this Claude
-harness (configurable to Gemini/GPT/Claude), so it's a real second opinion.
-Use it to cross-check Astra or when you want a non-Claude view. NEVER use a raw
-`Agent(...)` for a second opinion — use this skill or `/astra`.
+ALWAYS use this engine only for an explicit Pi request. `oracle` owns opinion
+framing and verification; `dispatch` owns task classification and capacity.
+Pi's configured model is independent of the Claude/Codex routing matrix.
+ALWAYS report the selected provider, model and effort; NEVER assume Pi uses a
+different model merely because it is a different CLI.
 
 ## Invoke
 
 pi runs in **YOLO / full-access mode by default** — no permission prompts, full
 filesystem + shell. That's the codex `--dangerously-bypass-approvals-and-sandbox`
-behavior built in, so NO sandbox flag is needed. The container is the perimeter.
+behavior built in, so NO sandbox flag is needed.
 
 ```bash
 # There is NO reliable static auth check (no `login status`; a
@@ -30,7 +31,7 @@ behavior built in, so NO sandbox flag is needed. The container is the perimeter.
 # a `404 page not found` body or non-zero exit = not authed / endpoint down.
 
 # --no-session: don't persist a rollout file (a batch loop fills the disk otherwise)
-# --thinking high: match Astra's high effort
+# Explicit Pi calls default to high; preserve the owner's effort override
 # </dev/null is REQUIRED — without it pi blocks waiting for more stdin
 pi -p --no-session --thinking high "Goal: <X>. Find the flaw in..." </dev/null
 ```
@@ -43,13 +44,14 @@ NEVER `pkill -f pi` to clean up — `pi` is a 2-char substring that matches
 unrelated processes (and your own shell). Kill by numeric PID
 (`ps -eo pid,args | grep -F 'pi -p' | grep -v grep`).
 
-## Model — newest available, high effort
+## Model and effort
 
 - Discover with `pi --list-models`; it prints the providers/models the current
   auth can reach.
 - ALWAYS inherit pi's configured default (`defaultProvider`/`defaultModel` in
   `~/.pi/agent/settings.json`) unless you have a reason to switch — it pins the
-  strongest configured model. Add `--thinking high` (or `xhigh`) for max reasoning.
+  strongest configured model. ALWAYS set `--thinking` explicitly:
+  `high` for an explicit Pi opinion unless the owner selects another effort.
 - To force a specific tier: `--model sonnet:high`, or `--provider openai --model
   <id>`. `--model <provider>/<id>` and `--model <id>:<effort>` shorthands work.
 - pi's OUT-OF-BOX default (fresh install, no login) is `google/gemini-2.5-flash`,
@@ -71,8 +73,8 @@ once and `/login`. ALWAYS report "pi isn't configured" and continue. NEVER crash
 
 ## Rules
 
-pi is a peer agent with tools and repo access, as codex is: `astra` § Rules
-owns the briefing rules — goal and entry points, adversarial framing, no
+pi is a peer agent with tools and repo access. `oracle` owns opinion framing
+and `dispatch` owns briefing — goal and entry points, adversarial framing, no
 reasoning chain pasted in, every claim verified before acting — and they
 apply to pi unchanged.
 
