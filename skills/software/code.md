@@ -246,9 +246,11 @@ your diff against every `##` heading here before calling an edit done.
   and `code-blocks` false; `exclude` names worktrees and generated files as
   `.name/` patterns — a root-anchored `/.*/` skips nothing when one file is
   named) and a pinned `rumdl` (`bun add -d --exact rumdl`, or the PyPI
-  package); `make fmt` runs `rumdl fmt .`, `make lint` runs `rumdl check .`,
-  and the PostToolUse hook runs it on every `.md` you write. A repo with no
-  config is never rewrapped.
+  package). ALWAYS use `rumdl fmt` for formatting and `rumdl check` through
+  pre-commit for enforcement; `readme/topology.md` § Documentation checks owns
+  complete scope and deletion activation. Rumdl owns Markdown syntax,
+  formatting and supported links/anchors. The PostToolUse hook formats each
+  `.md` write; it is not a commit gate. A repo with no config is never rewrapped.
 - ALWAYS one import per line — it keeps diffs clean.
 - ALWAYS name modules for their main class/function or exact job; utilities use `<what>_utils.*`.
   NEVER generic `client`, `chat`, `helpers`, `common`, `core`, `manager` or `service` names.

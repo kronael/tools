@@ -29,17 +29,13 @@
   **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
   test — skill text.
 
-- **FORM-KEEPER-SIZE-THRESHOLD-UNENFORCEABLE** (LOW, design) — proposed,
-  needs sign-off. `skills/writing/page.md:195` marks "one font family, five
-  sizes at most" a `keeper` (a `make lint` check that fails the build), but
-  `skills/create/form.md:67` and its calibration record (`:81`) measure
-  distinct rendered sizes and report the owner's accepted pages run 12–15,
-  failing only at >16 (≤5 is a "watch", never failing). A keeper at five sizes
-  fails every accepted page; the measurable fail sits at sixteen. No keeper
-  check exists yet, so nothing breaks today. **Proposal:** the owner sets the
-  enforceable number — drop the `keeper` from the five-sizes rule, or state the
-  measurable threshold (distinct rendered sizes) the keeper enforces, and point
-  `writing/page.md` and `form.md` at one owner for it. No test — design.
+- **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
+  `skills/writing/page.md` asks reviewers for five font sizes at most;
+  `skills/create/form.md` evaluates distinct rendered sizes against a limit
+  of sixteen. The criteria are manual and use different thresholds.
+  **Options:** (a) one shared threshold; (b) document different scopes.
+  **Default if nothing is decided:** retain each page's review criteria.
+  No test — design.
 
 - **RECALL-UNREADABLE-TRANSCRIPT** (MED, correctness) — CONFIRMED 2026-10-06.
   `skills/recall-memories/recall.py` `read_records` (~250) opens every
@@ -631,8 +627,7 @@
   runs root `make test` (`grep -rn recall .github` is empty);
   `test-hooks.yml` triggers on `hooks/**` only while
   `hooks/test_prompt_nudge.py:40,48` reads `skills/*/SKILL.md`, so a push
-  touching only `skills/` skips it. `make spec-lint` stays out of CI: it
-  needs `SPECS=<dir>` and this repo keeps no specs. **Fix:** add
+  touching only `skills/` skips it. **Fix:** add
   `test_recall.py` to `lint.yml.tmpl` and `skills/**` to
   the hooks path filter.
 
@@ -841,55 +836,15 @@
   `rip -g` fails inside git instead of at the parser. **Fix:** refuse an empty
   `path` after the `case`, with the "not a GitHub remote" error.
 
-## spec-lint
+## speclint
 
-- **SPEC-LINT-PHASED-CORPUS-NO-INDEX-INVISIBLE** (LOW, correctness) —
-  CONFIRMED 2026-10-13. `is_spec_corpus` (`spec-lint/spec_lint.py:151-159`)
-  globs top-level `*.md` only, so a `specs/` that keeps its files in phase
-  directories and has no `specs/index.md` is no corpus to discovery or to a
-  changed-file run. Measured in a fresh repo holding `specs/1/2-webhooks.md`:
-  `spec-lint specs/1/2-webhooks.md` prints "no spec corpus" and exits 0, while
-  `spec-lint specs` exits 1 with `spec-index-row`. A pre-commit hook that
-  passes changed files passes a corpus the explicit run fails. The xfail test
-  in `spec-lint/test_spec_lint.py` is still to write. **Fix:** count a
-  numbered file one phase directory down (`*/*.md`) as well.
-
-- **SPEC-LINT-INDEX-ROW-SHAPE-NOT-STATED** (LOW, correctness) — owner
-  decision. `check_one_index` (`spec-lint/spec_lint.py:489-491`) skips a row
-  with fewer than three cells and reads the spec link from the first cell. An
-  index row `| 2 | [2-webhooks.md](1/2-webhooks.md) | planned | hooks |`
-  under a `| # | Spec | Status | Summary |` header, or a two-column index,
-  yields a false `spec-index-row` "no row" (`:533-536`) while the row exists
-  (measured). `skills/specs/format.md` § Naming and index shows only the
-  three-column shape. **Options:** (a) widen the reader to find the link and
-  the Status cell in any column; (b) state the three-column shape, link
-  first, as the contract in `format.md`. **Default if nothing is decided:** as
-  written. The xfail test for (a) in `spec-lint/test_spec_lint.py` is still to
-  write.
-
-- **SPEC-LINT-POINTER-NOISE-SLASH-TOKENS** (LOW, correctness) — measured on a
-  160-warning corpus 2026-10-13, 43 of them new since the pointer rule
-  accepted extension-less slash paths. `pointer_path`
-  (`spec-lint/spec_lint.py:296-313`) takes any slash token, so prose such as
-  `turn/start`, `3/7`, `net/http.Server` and `kronael/candle` warns
-  `spec-pointer`. `AT_LINE` (`:76`) accepts only `-`, so `src/file.tsx:96–106`
-  with an en-dash warns "does not resolve" while `src/file.tsx:96-106`
-  resolves (measured against a 200-line file). The xfail test in
-  `spec-lint/test_spec_lint.py` is still to write. **Fix:** treat an
-  extension-less slash token as a pointer only when its first segment is an
-  existing directory of the repo, and let `AT_LINE` take `-` or `–`.
-
-- **SPEC-LINT-UNREADABLE-TARGET-RAISES** (LOW, correctness) — open (record
-  only). On Python 3.13 and older `Path.exists()` and `read_bytes()` raise
-  `PermissionError` on a target under an unreadable directory (measured on
-  Python 3.11.2: a `chmod 000` directory and a spec citing `locked/x.py` end
-  in `PermissionError: [Errno 13]`). `walk` skips such directories
-  (`is_skipped_dir`, `spec-lint/spec_lint.py:163-167`), but `resolve_pointer`'s
-  `(base / pointer).exists()` (`:368`), a link's `named.exists()` (`:480`,
-  `:545`) and `line_count`'s `read_bytes()` (`:348`) still raise when a spec
-  points into one. The xfail test in `spec-lint/test_spec_lint.py` is still to
-  write. **Fix:** catch `PermissionError` at those four sites and report the
-  pointer as unresolved.
+- **SPECLINT-POINTER-NOISE-SLASH-TOKENS** (LOW, correctness) — open.
+  `pointer_path` in `speclint/speclint.py` accepts slash tokens such as
+  `turn/start` and `3/7` as code pointers. An en-dash line range also warns
+  because `AT_LINE` accepts a hyphen. These warnings do not fail a run.
+  Measured: `speclint/test_speclint.py::test_non_file_slash_token_is_not_a_pointer`.
+  **Fix:** restrict extensionless tokens to existing directory prefixes and
+  accept an en-dash range separator.
 
 ## dockbox
 
