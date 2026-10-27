@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.60] — 20261027
+
+> kronael v0.4.60 — Context for PR reviewers
+>
+> PR descriptions keep a brief summary and explain the decisions reviewers need to assess.
+>
+> • PR drafting — include the problem, behavior, design choices and relevant validation.
+> • GitHub text checks — supporting Markdown passes; attribution and approval rules remain.
+> • CLI guidance — one service instance by default, with `-i/--instance` for more instances.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- PR descriptions carry necessary context below a brief TL;DR; there is no total body-length cap.
+- GitHub text checks cap the TL;DR at 400 characters and keep draft-size comparisons informational.
+- CLI guidance uses one service instance by default and `-i/--instance` for additional instances.
+
 ## [v0.4.59] — 20261026
 
 > kronael v0.4.59 — qemubox bases that need no host e2fs tools
