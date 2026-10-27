@@ -18,7 +18,18 @@ GOOD_PR = (
     f'{ROBOT} **TL;DR:** Deploys the collector on web1 through the `service:` list, so the playbook goes.\n\n'
     f'{CLOSE}\n'
 )
-PR_PAD_AT_CAP = 400 - len(GOOD_PR.rstrip()) + len('the playbook goes.')
+PR_PAD_AT_CAP = 400 - len(GOOD_PR.split('\n\n', maxsplit=1)[0]) + len('the playbook goes.')
+CONTEXT_PR = (
+    f'{ROBOT} **TL;DR:** Add an optional cache dependency for thumbnail jobs.\n\n'
+    'Saved jobs contain image identifiers, not live cache clients. Resuming a job '
+    'needs the configured cache to locate its source image. The existing dependency '
+    'container supplies runtime clients when the worker restores a job.\n\n'
+    'The optional field extends that container so callers can supply the cache '
+    'through the same path. Jobs without a cache keep their existing behavior. '
+    'Worker wiring and changes to image rendering remain separate work.\n\n'
+    'Validation covers construction with and without a cache. A restart test '
+    'needs the worker wiring and does not run for this field-only change.\n'
+)
 GOOD_ISSUE = f'{ROBOT} `gh pr edit` fails with 403 on a token without read:org.\n\nRepro: `gh pr edit 1 --body x`.\n'
 GOOD_COMMENT = (
     f'{ROBOT} \U0001f534 Charges `sold_qty`, the retained piece.\nFix: use the sale leg here.\n'
@@ -26,6 +37,8 @@ GOOD_COMMENT = (
 
 LINT_CASES = [
     (Kind.PR, GOOD_PR, None),
+    (Kind.PR, CONTEXT_PR, None),
+    (Kind.PR, CONTEXT_PR.replace('\n\n', '\n \n'), None),
     (Kind.ISSUE, GOOD_ISSUE, None),
     (Kind.COMMENT, GOOD_COMMENT, None),
     (Kind.PR, '', 'empty body'),
@@ -40,29 +53,29 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR + f'\n{ROBOT}\n', 'belongs at the start only'),
     (Kind.PR, GOOD_PR.replace(CLOSE, f'{ROBOT} {CLOSE}'), 'belongs at the start only'),
     (Kind.PR, GOOD_PR.replace('**TL;DR:**', '## Summary\n\n'), 'open with **TL;DR:**'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, f'## Ansible\n\n{CLOSE}'), 'header'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, f'## Scope\n\n{CLOSE}'), None),
     (Kind.PR, GOOD_PR.replace(CLOSE, f'---\n\n{CLOSE}'), 'horizontal rule'),
     (Kind.PR, GOOD_PR.replace(CLOSE, '| a | b |\n|---|---|\n'), 'table'),
     (Kind.PR, GOOD_PR.replace(CLOSE, '- [ ] run the tests\n'), 'checkbox'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, 'The role renders the unit.'), 'text after the lead'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '1. Stop the service.'), 'text after the lead'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '- One path: the role renders the unit.'), 'bullet'),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '* One path: the role renders the unit.'), 'bullet'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, 'The role renders the unit.'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '1. The role renders the unit.'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '- One path: the role renders the unit.'), None),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '* One path: the role renders the unit.'), None),
     (
         Kind.PR,
         GOOD_PR.replace(CLOSE, 'Known, deferred: the unit is not restarted.'),
-        'text after the lead',
+        None,
     ),
     (
         Kind.PR,
         GOOD_PR.replace(CLOSE, 'Contract to confirm: the unit is renamed.'),
-        'text after the lead',
+        None,
     ),
-    (Kind.PR, GOOD_PR.replace(CLOSE, '⚠️ Merge #1 first.'), 'text after the lead'),
+    (Kind.PR, GOOD_PR.replace(CLOSE, '⚠️ Merge #1 first.'), None),
     (
         Kind.PR,
         GOOD_PR.replace(CLOSE, '![order panel](https://x.test/a.png)'),
-        'text after the lead',
+        'image',
     ),
     (Kind.PR, GOOD_PR.replace(CLOSE, '- ![unit](https://example.test/u.png)'), 'image'),
     (
@@ -90,6 +103,12 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace('web1', '0x12ab…'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
+    (Kind.PR, CONTEXT_PR + f'\n{ROBOT} Context.\n', 'belongs at the start only'),
+    (Kind.PR, CONTEXT_PR + '\nCo-Authored-By: X <x@y>\n', 'banned attribution'),
+    (Kind.PR, CONTEXT_PR + '\nA robust cache.\n', 'marketing word'),
+    (Kind.PR, CONTEXT_PR + '\nSee commit deadbeef...cafe.\n', 'write it in full'),
+    (Kind.ISSUE, f'{ROBOT} ' + 'x' * 2998, None),
+    (Kind.ISSUE, f'{ROBOT} ' + 'x' * 2999, '3001 chars, cap 3000'),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro', '## Repro'), None),
     (Kind.ISSUE, GOOD_ISSUE.replace('Repro:', '- [x] 3.11\n- [ ] 3.12\n\nRepro:'), None),
     (
@@ -118,19 +137,21 @@ def test_lint(kind: Kind, text: str, expected: str | None) -> None:
         assert any(expected in p.text for p in problems), [p.text for p in problems]
 
 
-def test_lint_pr_draft_must_be_cut() -> None:
-    assert lint(Kind.PR, GOOD_PR, draft=GOOD_PR) != []
-    assert lint(Kind.PR, GOOD_PR, draft=GOOD_PR + 'more words\n') == []
-    longer = [p for p in lint(Kind.PR, GOOD_PR, draft='short') if 'DISTILL' in p.text]
-    assert longer
-
-
-@pytest.mark.xfail(
-    reason='GH-LINT-DISTILL-COUNTS-THE-TITLE: the ratio counts the title line the draft carries',
-    strict=True,
-)
-def test_lint_pr_draft_ratio_ignores_the_draft_title() -> None:
-    assert lint(Kind.PR, GOOD_PR, draft='fix: X\n\n' + GOOD_PR) != []
+@pytest.mark.parametrize('draft', [CONTEXT_PR, 'short', ' \n'])
+def test_pr_draft_size_is_informational(draft, tmp_path, monkeypatch, capsys) -> None:
+    body_file = tmp_path / 'body.md'
+    draft_file = tmp_path / 'draft.md'
+    body_file.write_text(CONTEXT_PR, encoding='utf-8')
+    draft_file.write_text(draft, encoding='utf-8')
+    monkeypatch.setattr(
+        'sys.argv', ['gh_text_lint.py', 'pr', str(body_file), '--draft', str(draft_file)]
+    )
+    assert len(CONTEXT_PR) > 400
+    assert gh_text_lint.main() == 0
+    output = capsys.readouterr().out
+    assert output.startswith('ok: pr ')
+    if draft == CONTEXT_PR:
+        assert '-> 100%' in output
 
 
 TITLE_CASES = [
@@ -155,6 +176,7 @@ def tree(tmp_path):
     (tmp_path / 'sub' / 'tmp').mkdir(parents=True)
     bad = GOOD_PR + FOOTER + '\n'
     (tmp_path / 'tmp' / 'pr-body.md').write_text(GOOD_PR, encoding='utf-8')
+    (tmp_path / 'tmp' / 'context.md').write_text(CONTEXT_PR, encoding='utf-8')
     (tmp_path / 'tmp' / 'pr body.md').write_text(GOOD_PR, encoding='utf-8')
     (tmp_path / 'tmp' / 'bad.md').write_text(bad, encoding='utf-8')
     (tmp_path / 'tmp' / 'end-robot.md').write_text(GOOD_PR + f'\n{ROBOT}\n', encoding='utf-8')
@@ -181,6 +203,10 @@ def tree(tmp_path):
 
 ALLOWED = [
     'gh pr create --title "fix: X" --body-file tmp/pr-body.md',
+    'gh pr create --title "feat: Supply the thumbnail cache" --body-file tmp/context.md',
+    'gh pr edit 5 --body-file tmp/context.md',
+    'gh api -X PATCH repos/o/r/pulls/5 -F body=@tmp/context.md',
+    f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n## Context\n\nMore."',
     'timeout 180 gh pr create --repo o/r --head h --base master --title "fix: X" --body-file tmp/pr-body.md 2>&1 | tail -3',
     'timeout -k 5 180 gh pr create --title "fix: X" --body-file tmp/pr-body.md',
     'GH_PAGER=cat gh pr create --title "fix: X" --body-file tmp/pr-body.md',
@@ -229,8 +255,8 @@ REFUSED = [
         'pass a literal path',
     ),
     (
-        f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n## Summary\n\nMore."',
-        'header',
+        f'gh pr create --title "fix: X" --body "{ROBOT} **TL;DR:** Stuff.\n\n- [ ] Test."',
+        'checkbox',
     ),
     (f'gh pr create --title "{"x" * 80}" --body-file tmp/pr-body.md', 'title 80 chars'),
     ('gh pr edit 5 --body "no robot here"', f'must start with "{ROBOT} "'),

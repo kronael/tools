@@ -604,16 +604,6 @@
   `hooks/test_skill_frontmatter_lint.py::test_leak_scan_flags_a_macos_account_named_like_the_container`.
   **Fix:** exempt the two names under `/home/` only.
 
-- **GH-LINT-DISTILL-COUNTS-THE-TITLE** (LOW, correctness) — CONFIRMED at
-  63ad23b. `lint` (`hooks/gh_text_lint.py:213`) flags `DISTILL cut nothing`
-  only when the body is at least as long as the whole draft, and pr-draft
-  step 2 writes the title into `tmp/pr-draft.md` above the body, so a body
-  the cut left untouched passes by the title's length:
-  `lint(Kind.PR, body, draft='fix: X\n\n' + body)` → `[]`. Measured:
-  `hooks/test_gh_text_lint.py::test_lint_pr_draft_ratio_ignores_the_draft_title`.
-  **Fix:** compare against the draft below its title line, or require a
-  real cut ratio (the `ok:` line already prints one).
-
 - **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-16, no
   test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py` and read
   by no hook; `KRONAEL_CODEX_HOOK_DEBUG` (`codex_hook.py`) appears in no doc.

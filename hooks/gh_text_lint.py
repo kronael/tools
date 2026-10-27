@@ -21,7 +21,6 @@ import os
 import re
 import sys
 from dataclasses import dataclass
-from dataclasses import replace
 from enum import Enum
 
 
@@ -42,7 +41,8 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.PR: 400, Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_CHARS = {Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_LEAD = 400
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
 BANNED = (
@@ -60,13 +60,10 @@ MARKETING = re.compile(
 THIS_PR = re.compile(r'\bthis (?:pr|pull request)\b', re.IGNORECASE)
 SHORTENED = re.compile(r'\w{4,}\.\.\.\w{2,}')
 ELLIPSIS = '…'
-HEADER = re.compile(r'^#{1,6}\s')
 RULE = re.compile(r'^\s*(?:-{3,}|\*{3,}|_{3,})\s*$')
 TABLE = re.compile(r'^\s*\|')
 CHECKBOX = re.compile(r'^\s*[-*]\s+\[[ xX]\]')
 IMAGE = re.compile(r'!\[[^\]]*\]\(')
-BULLET = re.compile(r'^\s*[-*+]\s')
-CLOSER = re.compile(r'^(?:[Cc]los\w*|[Ff]ix\w*|[Rr]esolv\w*) #\d+')
 FENCE = re.compile(r'^\s*(?:```|~~~)')
 
 PREFIX = (
@@ -138,39 +135,6 @@ def walk(lines: list[str]) -> list[tuple[int, str, bool]]:
     return out
 
 
-@dataclass(frozen=True)
-class Element:
-    """One unit of a PR body: the lead, a closer, or a stray bullet or
-    paragraph, with its continuation lines joined."""
-
-    line: int
-    kind: str
-    text: str
-
-
-def split_elements(prose: list[tuple[int, str]]) -> list[Element]:
-    out: list[Element] = []
-    after_blank = True
-    for n, line in prose:
-        text = line.strip()
-        if not text:
-            after_blank = True
-            continue
-        starts = BULLET.match(line) or CLOSER.match(line)
-        if out and not after_blank and not starts:
-            out[-1] = replace(out[-1], text=f'{out[-1].text} {text}')
-        elif BULLET.match(line):
-            out.append(Element(n, 'bullet', text))
-        elif CLOSER.match(line):
-            out.append(Element(n, 'closer', text))
-        elif not out:
-            out.append(Element(n, 'lead', text))
-        else:
-            out.append(Element(n, 'paragraph', text))
-        after_blank = False
-    return out
-
-
 def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
     problems = []
     for n, line in enumerate(lines, 1):
@@ -183,7 +147,7 @@ def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
         if ELLIPSIS in line or SHORTENED.search(line):
             problems.append(Problem(n, 'shortened address, hash or sentence: write it in full'))
         problems += [Problem(n, f'marketing word "{m.group()}"') for m in MARKETING.finditer(line)]
-    if len(body) > MAX_CHARS[kind]:
+    if kind in MAX_CHARS and len(body) > MAX_CHARS[kind]:
         problems.append(Problem(0, f'{len(body)} chars, cap {MAX_CHARS[kind]}: cut, or link a doc'))
     return problems
 
@@ -203,6 +167,11 @@ def lint_pr(lines: list[str]) -> list[Problem]:
     first = next((line for line in lines if line.strip()), '')
     if not first.removeprefix(ROBOT + ' ').startswith(TLDR):
         problems.append(Problem(1, f'open with {TLDR} and the outcome, not a header or narrative'))
+    lead = re.split(r'\n\s*\n', '\n'.join(lines).lstrip(), maxsplit=1)[0]
+    if len(lead) > MAX_LEAD:
+        problems.append(
+            Problem(1, f'TL;DR {len(lead)} chars, cap {MAX_LEAD}: move context below the lead')
+        )
     for n, line in enumerate(lines, 1):
         if CHECKBOX.match(line):
             problems.append(Problem(n, 'checkbox: no test plan or checklist'))
@@ -210,39 +179,16 @@ def lint_pr(lines: list[str]) -> list[Problem]:
             problems.append(Problem(n, '"this PR": name what the change does instead'))
         if IMAGE.search(line):
             problems.append(Problem(n, 'image: link it instead'))
-    prose = []
     for n, line in split_prose(lines):
-        if HEADER.match(line):
-            problems.append(Problem(n, 'header: the body is the TL;DR, no sections'))
-        elif RULE.match(line):
+        if RULE.match(line):
             problems.append(Problem(n, 'horizontal rule'))
         elif TABLE.match(line):
-            problems.append(Problem(n, 'table: cut it or fold it into the TL;DR'))
-        else:
-            prose.append((n, line))
+            problems.append(Problem(n, 'table: explain it in prose or link it'))
     fence = next((n for n, line in enumerate(lines, 1) if FENCE.match(line)), 0)
     if fence:
         problems.append(
-            Problem(fence, 'code block: the diff shows code, the TL;DR says what it does')
+            Problem(fence, 'code block: explain the behavior in prose or link the code')
         )
-    return problems + lint_elements(split_elements(prose))
-
-
-def lint_elements(elements: list[Element]) -> list[Problem]:
-    problems = []
-    for e in elements:
-        if e.kind == 'bullet':
-            problems.append(
-                Problem(e.line, 'bullet: the body is the TL;DR; fold the reason into it or cut it')
-            )
-        elif e.kind == 'paragraph':
-            problems.append(
-                Problem(
-                    e.line,
-                    'text after the lead: one paragraph only, then `Closes #N` lines;'
-                    ' fold what matters into the TL;DR',
-                )
-            )
     return problems
 
 
@@ -255,9 +201,7 @@ def lint_title(title: str) -> list[Problem]:
     return problems
 
 
-def lint(
-    kind: Kind, text: str, title: str | None = None, draft: str | None = None
-) -> list[Problem]:
+def lint(kind: Kind, text: str, title: str | None = None) -> list[Problem]:
     body = text.rstrip()
     if not body:
         return [Problem(0, 'empty body')]
@@ -266,12 +210,6 @@ def lint(
     problems += lint_opener(lines)
     if kind is Kind.PR:
         problems += lint_pr(lines)
-        if draft is not None and len(body) >= len(draft.rstrip()):
-            problems.append(
-                Problem(
-                    0, f'DISTILL cut nothing: body {len(body)} chars, draft {len(draft.rstrip())}'
-                )
-            )
     if title is not None:
         problems += lint_title(title)
     return problems
@@ -537,7 +475,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description='Lint text bound for GitHub')
     parser.add_argument('kind', choices=[k.value for k in Kind])
     parser.add_argument('file')
-    parser.add_argument('--draft', help='the uncut first version; the body must be shorter')
+    parser.add_argument('--draft', help='the first version, for an informational size comparison')
     parser.add_argument('--title', help='the PR title to check beside the body')
     args = parser.parse_args()
     with open(args.file, encoding='utf-8') as fh:
@@ -546,7 +484,7 @@ def main() -> int:
     if args.draft:
         with open(args.draft, encoding='utf-8') as fh:
             draft = fh.read()
-    problems = lint(Kind(args.kind), text, args.title, draft)
+    problems = lint(Kind(args.kind), text, args.title)
     for p in problems:
         where = f'{args.file}:{p.line}' if p.line else args.file
         print(f'{where}: {p.text}')
@@ -554,7 +492,8 @@ def main() -> int:
         print(f'fail: {len(problems)} problem(s)')
         return 1
     n = len(text.rstrip())
-    cut = f', draft {len(draft.rstrip())} -> {100 * n // len(draft.rstrip())}%' if draft else ''
+    draft_size = len(draft.rstrip()) if draft is not None else 0
+    cut = f', draft {draft_size} -> {100 * n // draft_size}%' if draft_size else ''
     print(f'ok: {args.kind} {n} chars{cut}')
     return 0
 
