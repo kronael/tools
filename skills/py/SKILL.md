@@ -126,6 +126,8 @@ Python-specific additions and deltas.
 - Python-specific short vars: `ts`, `ms` for time
 - NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
 - NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
+- ALWAYS guard hot optional instrumentation with `if __debug__:` — `-O` drops the whole block, argument construction included, so production pays nothing; a runtime flag still builds the arguments. ALWAYS write `__debug__` as the first operand (`if __debug__ and on:`) — second, the preceding load and branch survive the optimizer
+- NEVER adopt `-O`/`PYTHONOPTIMIZE=1` before running the suite under it — it strips every `assert` as well
 - ALWAYS pass `py-no-tuple-assignment` and `py-no-dict-call`.
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
