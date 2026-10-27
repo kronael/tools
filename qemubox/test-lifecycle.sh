@@ -56,6 +56,23 @@ run_state_test() {
 }
 regression "state: inactive or failed unit is stopped, else QMP decides" run_state_test
 
+legacy_vm_test() {
+    ROOT="$fixture/legacy"
+    mkdir -p "$ROOT/old"
+    echo disk > "$ROOT/old/disk.qcow2"
+    systemctl() { echo inactive; }
+    cp "$(command -v sleep)" "$fixture/qemu-system-x86_64"
+    "$fixture/qemu-system-x86_64" 30 &
+    echo "$!" > "$ROOT/old/pid"
+    trap 'kill "$(cat "$ROOT/old/pid")"' EXIT
+    [ "$(run_state old)" = legacy ]
+    if remove_box old 2> "$fixture/legacy-err"; then exit 1; fi
+    grep -q "stop it with: kill $(cat "$ROOT/old/pid")" "$fixture/legacy-err"
+    [ -f "$ROOT/old/disk.qcow2" ]
+    [ -z "$(stopped_boxes 0)" ]
+}
+regression "state: a running pre-systemd VM is never removed as stopped" legacy_vm_test
+
 service_commands_test() {
     regression_setup
     mv "$ROOT" "$ROOT with spaces"

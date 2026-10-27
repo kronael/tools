@@ -412,10 +412,26 @@ print(reply["return"].get("status", ""))
 EOF
 }
 
+# A VM started before systemd units has no unit; its QEMU pid is in $dir/pid.
+legacy_pid() {
+    local pid
+    pid=$(cat "$(box_dir "$1")/pid" 2>/dev/null) || return 1
+    [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+    [[ "$(cat "/proc/$pid/comm" 2>/dev/null)" == qemu-system* ]] || return 1
+    echo "$pid"
+}
+
 run_state() {
     local state
     case "$(unit_state "$1")" in
-        inactive|failed) echo stopped; return 0 ;;
+        inactive|failed)
+            if legacy_pid "$1" >/dev/null
+            then
+                echo legacy
+            else
+                echo stopped
+            fi
+            return 0 ;;
     esac
     state=$(qmp_box "$1" query-status) || state="?"
     case "$state" in
@@ -925,6 +941,12 @@ shutdown_box() {
 }
 
 stop_box() {
+    local pid
+    if pid=$(legacy_pid "$1")
+    then
+        echo "qemubox-$1 runs without a systemd unit; stop it with: kill $pid" >&2
+        return 1
+    fi
     if [ "${2:-}" = force ]
     then
         systemctl --user kill --kill-who=main -s SIGTERM \
