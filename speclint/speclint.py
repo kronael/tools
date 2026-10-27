@@ -152,20 +152,17 @@ def spec_files(root: Path) -> list[Path]:
     )
 
 
-def frontmatter(text: str) -> tuple[str, str] | None:
+def status_of(text: str) -> str | None:
     if not text.startswith('---\n'):
         return None
     match = BOUNDARY.search(text, 4)
     if match is None:
         return None
-    return text[4 : match.start()], text[match.end() :].lstrip('\n')
-
-
-def status_of(text: str) -> str | None:
-    split = frontmatter(text)
-    if split is None:
-        return None
-    lines = [line for line in split[0].splitlines() if line.strip() and not line.startswith('#')]
+    lines = [
+        line
+        for line in text[4 : match.start()].splitlines()
+        if line.strip() and not line.startswith('#')
+    ]
     if len(lines) != 1:
         return ''
     match = STATUS.fullmatch(lines[0])
