@@ -64,8 +64,9 @@ sign or colon is excluded. A path segment starting with `YYYYMMDD` or `NN` is a 
 
 Pointers resolve from the spec's directory, corpus, component and ancestors through the nearest Git
 repository root. A unique matching trailing path in that repository also resolves; the component's
-file wins over a sibling's copy. Ambiguity warns. Fenced code is excluded. Pointer warnings do not
-verify a requirement or infer implementation status.
+file wins over a sibling's copy. Ambiguity warns. Only Markdown inline code spans are checked;
+fences, HTML comments and escaped backticks are excluded. Pointer warnings do not verify a requirement
+or infer implementation status.
 
 ## Install and pre-commit
 

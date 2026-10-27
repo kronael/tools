@@ -8,12 +8,26 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import cast
 from urllib.parse import unquote
 
 from markdown_it import MarkdownIt
+from markdown_it.rules_inline import backtick
+from markdown_it.rules_inline.state_inline import StateInline
 from markdown_it.tree import SyntaxTreeNode
 
+
+def is_code_span(state: StateInline, silent: bool) -> bool:
+    start = state.pos
+    count = len(state.tokens)
+    matched = backtick(state, silent)
+    if len(state.tokens) > count and state.tokens[-1].type == 'code_inline':
+        state.tokens[-1].meta['line'] = state.src.count('\n', 0, start)
+    return matched
+
+
 MARKDOWN = MarkdownIt('commonmark').enable('table')
+MARKDOWN.inline.ruler.at('backticks', is_code_span)
 STATUSES = ('draft', 'experiment', 'planned', 'partial', 'shipped', 'reference')
 NUMBERED = re.compile(r'^(\d+)-[a-z0-9]+(?:-[a-z0-9]+)*\.md$')
 NOT_SPECS = frozenset({'index.md', 'CLAUDE.md', 'AGENTS.md'})
@@ -22,9 +36,6 @@ PHASE_DEPTH = 2
 BOUNDARY = re.compile(r'^---\s*$', re.MULTILINE)
 STATUS = re.compile(r"""status: +(?:([a-z]+)|'([a-z]+)'|"([a-z]+)")(?: +#.*)? *""")
 SCHEME = re.compile(r'^[a-z][a-z0-9+.-]*:')
-FENCE = re.compile(r'^\s*(`{3,}|~{3,})')
-CLOSING_FENCE = re.compile(r'^\s*(`{3,}|~{3,})\s*$')
-TICKED = re.compile(r'`([^`\n]+)`')
 AT_LINE = re.compile(r':(\d+)(?:-(\d+))?$')
 SUFFIX = re.compile(r'\.[a-z][a-z0-9+]{0,9}$')
 NOT_IN_PATH = frozenset(' \t*?{}<>$|"\'()[]=,;!`')
@@ -167,28 +178,6 @@ def status_of(text: str) -> str | None:
         return ''
     match = STATUS.fullmatch(lines[0])
     return next(group for group in match.groups() if group) if match else ''
-
-
-def prose(text: str) -> list[tuple[int, str]]:
-    outside: list[tuple[int, str]] = []
-    opened = ''
-    for number, line in enumerate(text.splitlines(), start=1):
-        fence = FENCE.match(line)
-        if fence and not opened:
-            opened = fence.group(1)
-            continue
-        closing = CLOSING_FENCE.match(line)
-        if (
-            opened
-            and closing
-            and closing.group(1)[0] == opened[0]
-            and len(closing.group(1)) >= len(opened)
-        ):
-            opened = ''
-            continue
-        if not opened:
-            outside.append((number, line))
-    return outside
 
 
 def link_target(target: str) -> str | None:
@@ -434,9 +423,14 @@ def check_index(root: Path, files: list[Path], repo: Path) -> list[Finding]:
 def check_pointers(root: Path, path: Path, text: str) -> list[Finding]:
     repo = repo_root(root.absolute().parent)
     findings: list[Finding] = []
-    for number, line in prose(text):
-        for match in TICKED.finditer(line):
-            token = match.group(1)
+    for block in MARKDOWN.parse(text):
+        if block.type != 'inline' or block.map is None or block.children is None:
+            continue
+        for child in block.children:
+            if child.type != 'code_inline':
+                continue
+            token = child.content
+            number = block.map[0] + cast(int, child.meta['line']) + 1
             pointer = pointer_path(token)
             if pointer is None:
                 continue

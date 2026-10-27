@@ -9,6 +9,7 @@ import pytest
 
 from speclint import Severity
 from speclint import check_corpus
+from speclint import check_pointers
 from speclint import indexed_files
 from speclint import run
 from speclint import spec_roots
@@ -184,6 +185,41 @@ def test_unresolved_pointer_warns(tmp_path: Path) -> None:
     assert [item.rule for item in found] == ['spec-pointer']
     assert 'does not resolve under' in found[0].message
     assert run([root], verbose=False) == 0
+
+
+@pytest.mark.parametrize(
+    'example',
+    [
+        '```\n`src/example.py`\n```',
+        '> ```\n> `src/example.py`\n> ```',
+        '- ```\n  `src/example.py`\n  ```',
+        '> - ```\n>   `src/example.py`\n>   ```',
+        '<!-- `src/example.py` -->',
+        r'\`src/example.py\`',
+    ],
+)
+def test_pointer_only_in_markdown_prose(tmp_path, example):
+    root = corpus(tmp_path)
+    text = example + '\n\n`src/real.py`\n'
+    found = check_pointers(root, root / '01-auth.md', text)
+    assert len(found) == 1
+    assert f':{len(example.splitlines()) + 2}: [spec-pointer]' in found[0].message
+    assert '`src/real.py`' in found[0].message
+
+
+def test_pointer_line_in_multiline_prose_and_table(tmp_path):
+    root = corpus(tmp_path)
+    text = (
+        'First line `src/one.py`\n`src/two.py` and `src/three.py`\n\n'
+        '| Example |\n|---|\n| `src/four.py` |\n'
+    )
+    found = check_pointers(root, root / '01-auth.md', text)
+    assert [item.message.split(': [spec-pointer]')[0].rsplit(':', 1)[1] for item in found] == [
+        '1',
+        '2',
+        '2',
+        '6',
+    ]
 
 
 def test_prose_backtick_is_not_a_pointer(tmp_path: Path) -> None:
