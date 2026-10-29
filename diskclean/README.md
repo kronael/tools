@@ -48,12 +48,12 @@ Then it shows the tool prunes with one y/N for all of them:
   uses, and `docker builder prune -f`.
 - `qemubox prune` removes base sets no VM uses and stops running VMs that sit
   idle for over four hours. It removes no VM; `qemubox rm --stopped <hours>`
-  does. `dockbox prune 0` removes idle and exited boxes.
+  does.
 - Anonymous docker volumes that no container uses. Only volumes with a
   64-character hex name count. Named volumes stay.
 
 The prunes run only at level 2. diskclean lists the size of each cache before
-it asks. The dockbox and qemubox images need a rebuild after this.
+it asks. The qemubox images need a rebuild after this.
 
 ## Every kind has a proof
 

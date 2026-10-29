@@ -41,7 +41,7 @@ class Problem:
 ROBOT = '\U0001f916'
 TLDR = '**TL;DR:**'
 SKILL = {Kind.PR: 'pr-draft', Kind.ISSUE: 'gh-issue', Kind.COMMENT: 'gh-comment'}
-MAX_CHARS = {Kind.ISSUE: 3000, Kind.COMMENT: 240}
+MAX_CHARS = {Kind.PR: 1000, Kind.ISSUE: 3000, Kind.COMMENT: 240}
 MAX_LEAD = 400
 MAX_TITLE = 72
 SHOWN_PROBLEMS = 4
@@ -127,7 +127,7 @@ def lint_common(kind: Kind, lines: list[str], body: str) -> list[Problem]:
         if ELLIPSIS in line or SHORTENED.search(line):
             problems.append(Problem(n, 'shortened address, hash or sentence: write it in full'))
         problems += [Problem(n, f'marketing word "{m.group()}"') for m in MARKETING.finditer(line)]
-    if kind in MAX_CHARS and len(body) > MAX_CHARS[kind]:
+    if len(body) > MAX_CHARS[kind]:
         problems.append(Problem(0, f'{len(body)} chars, cap {MAX_CHARS[kind]}: cut, or link a doc'))
     return problems
 

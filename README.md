@@ -6,7 +6,6 @@ Command-line utilities and Claude Code configuration.
 
 - [udfix](udfix/) — fix or lint (`--lint`) Unicode box-drawing junction chars in ASCII diagrams (stdin → stdout)
 - [kvs](kvs/) — key-value store on one SQLite file for scripts and hooks: get, set, incr, del, ls, sessions and a flock-style `lock`, scoped by project and session
-- [dockbox](dockbox/) — gVisor sandbox for Claude Code or Codex; requires `runsc-dockbox`
 - [qemubox](qemubox/) — persistent QEMU VM for daily coding, with shared projects and agent config
 - [bhctl](bhctl/) — bluetooth headphones: hi-fi playback, headset mic, or disconnect
 - [diskclean](diskclean/) — free disk space in two levels, stalest first, with a proof per kind: build dirs inside projects at level 1; toolchains, tool caches and unused docker images at level 2
@@ -17,7 +16,7 @@ Command-line utilities and Claude Code configuration.
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 - [speclint](speclint/) — check spec numbering, status, index agreement and code pointers; run through uvx
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `dockbox`, `qemubox`, `gloww`, `speclint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 
@@ -104,7 +103,7 @@ Troubleshooting:
 | [CLAUDE.md](CLAUDE.md) | Repo conventions for Claude Code (auto-loaded each session) |
 | [AGENTS.md](AGENTS.md) | Codex / non-Claude agent notes + pointer to the canonical sync |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Repo shape, sync paths, sync strategies, org overlays |
-| [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `dockbox`, and the toolkit |
+| [COOKBOOK.md](COOKBOOK.md) | Daily git recipes — detached-HEAD with `rig`, `qemubox`, and the toolkit |
 | [skills/README.md](skills/README.md) | Skill rationale, index, and workflow diagram |
 | [skills/astgrep/lints.md](skills/astgrep/lints.md) | Adopt the lint packs in a project; refine fallback and rule tests |
 | [hooks/README.md](hooks/README.md) | Hook system overview |

@@ -2,6 +2,38 @@
 
 ## [Unreleased]
 
+## [v0.4.61] — 20261027
+
+> kronael v0.4.61 — qemubox VMs under systemd
+>
+> qemubox runs each VM as a systemd user unit on a shared read-only rootfs, and dockbox is retired.
+>
+> • VMs — systemd user units, virtiofs shares, a pinned fast-boot kernel and native Docker.
+> • Disk — one shared rootfs per image and a persistent ext4 upper per VM.
+> • Startup — SSH opens before Docker, and RAM grows to the configured size after boot.
+> • Old VMs — a qcow2 VM must be removed and launched again; a running one is never removed as stopped.
+> • dockbox — removed; qemubox is the one sandbox launcher.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Breaking
+
+- qemubox VMs run as systemd user units: systemd 254+, `loginctl enable-linger` and `virtiofsd` are required.
+- A VM with a `disk.qcow2` refuses to launch; run `qemubox rm <name>`, then launch again.
+- The host needs GNU tar and e2fsprogs again; bsdtar and qemu-img are no longer needed.
+- dockbox is removed with its sync, CI and docs entries.
+
+### Changed
+
+- Host directories reach the guest through virtiofs; a share daemon exit stops its VM.
+- Each image publishes one read-only rootfs; each VM keeps its writes in an ext4 upper.
+- The guest boots a pinned kernel and initrd, with tini as init and native Docker.
+- Guest swap and bounded workload reclaim; RAM grows through virtio-mem after SSH is ready.
+- A VM paused on a host I/O error resumes without losing its sessions.
+- Guest SSH host keys survive reboots; a guest panic or reboot stops QEMU.
+- `qemubox ls` aligns its columns; a project's no-ephemeral default is honored.
+- `qemubox stop` and `rm` refuse a running VM started by the previous launcher and print its kill command.
+
 ## [v0.4.60] — 20261027
 
 > kronael v0.4.60 — Context for PR reviewers

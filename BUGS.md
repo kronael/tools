@@ -44,7 +44,9 @@
   `~/.claude/projects/-/399a5e4c-d151-43d2-8aeb-292ba1c6b8a1.jsonl`, in a
   root-owned dir a session run as root from `/` left.
   Reproduce: `python3 ~/.claude/skills/recall-memories/recall.py results -t
-  Agent 'NEEDS TELLING'`. **Fix:** skip the file with one stderr line naming it.
+  Agent 'NEEDS TELLING'`. A dangling symlink to a subagent transcript in a
+  container home stops it the same way with `FileNotFoundError` (2026-10-21).
+  **Fix:** catch `OSError`, skip the file with one stderr line naming it.
 
 - **SYNC-CDPATH-NO-OPT-OUT** (LOW, design) — proposed. `kronael/sync`
   step 8 writes the CDPATH block on every sync (`SKILL.md` step 8,
@@ -124,11 +126,9 @@
 - **BOX-HAIKU-PIN-BEHIND-AGENT-PIN** (LOW, config) — CONFIRMED at HEAD
   2026-10-16, no test — config. `agents/haiku.md` pins the `haiku` alias,
   which Claude Code resolves to the latest Haiku (`claude-haiku-5-5` in
-  2.1.301), while `dockbox haiku` (`dockbox/dockbox:78`) and `qemubox haiku`
-  (`qemubox/qemubox:1280`) start Claude Code on the dated previous model
-  `claude-haiku-4-5-20251001`; `dockbox/test.sh:383`, `tests/drift_test.sh:22`
-  and `qemubox/test-parity.sh:21` pin that string. **Fix:** the box aliases
-  take `claude-haiku-5-5` and the three tests follow.
+  2.1.301), while `qemubox haiku` starts Claude Code on the dated previous model
+  `claude-haiku-4-5-20251001`; `qemubox/test-parity.sh` pins that string.
+  **Fix:** the box alias takes `claude-haiku-5-5` and the test follows.
 
 - **BUGS-SIGN-OFF-ENTRIES-PREDATE-OPTIONS** (LOW, docs) — owner decision, no
   test — docs. `skills/bugs/SKILL.md` § Entry format requires `**Options:**`
@@ -591,14 +591,6 @@
   **Fix:** search the text for each doc's own name forms instead of
   tokenizing the text.
 
-- **SKILL-LINT-LOCAL-PATH-EXEMPTS-MACOS-ACCOUNTS** (LOW, correctness) —
-  CONFIRMED at 63ad23b. `LOCAL_PATH` (`hooks/skill_frontmatter_lint.py:79`)
-  applies the `dockbox`/`claude` container-HOME exemption under `/Users/` as
-  well as `/home/`, so the macOS account paths `/Users/claude/x` and
-  `/Users/dockbox/x` pass the leak scan; the container HOME is only ever
-  under `/home/`. Measured:
-  `hooks/test_skill_frontmatter_lint.py::test_leak_scan_flags_a_macos_account_named_like_the_container`.
-  **Fix:** exempt the two names under `/home/` only.
 
 - **HOOKS-ENV-NAMES-UNDOCUMENTED** (LOW, docs) — CONFIRMED 2026-10-16, no
   test — docs. `KRONAEL_IN_CODEX` is stripped in `hooks/test_stop.py` and read
@@ -846,28 +838,10 @@
   **Fix:** restrict extensionless tokens to existing directory prefixes and
   accept an en-dash range separator.
 
-## dockbox
-
-- **DOCKBOX-LIFECYCLE-UNSERIALIZED** (MED, design) — needs sign-off. Nothing
-  serializes creating, entering and removing a box, so two invocations for
-  the same project can remove each other's box. (a) A leaving session drops
-  its marker and lists the marker dir (`dockbox/dockbox:552-553`), then
-  force-removes the box on an empty listing (`:544-545`). A second invocation
-  that passed the running check (`:549`) and writes its marker (`:530`)
-  between that listing and the removal has its box removed under it; one
-  that writes it just after the removal exits with no message, since `:530`
-  discards the error. (b) Two launchers for a project with no box both pass
-  the same check (`:549`), and the second's pre-run `docker rm -f -v`
-  (`:707`) removes the box the first just started (`:709`), with any session
-  already in it. `prune` probes an idle box and removes it in two steps
-  (`:292-296`), so a session entering between them is removed the same way.
-  **Fix:** a per-box host lock (e.g. `flock`) held across marker
-  registration, the empty-listing-to-removal step, and creation — a new
-  lifecycle contract; no test — design.
+## qemubox
 
 - **BOXES-SHARE-CLAUDE-RUNTIME-STATE** (MED, design) — needs sign-off.
-  Both boxes bind the whole `~/.claude` rw (`dockbox/dockbox:12`,
-  `qemubox/qemubox` `assemble_mounts`), which holds persistent state the
+  VMs bind the whole `~/.claude` rw (`qemubox/qemubox` `assemble_mounts`). It holds persistent state the
   contract wants shared (`projects/`, `memory`, `skills`, `settings.json`,
   `.credentials.json`) and per-process runtime state it does not: besides
   `sessions/` (a private tmpfs per box) the installed Claude Code
@@ -878,113 +852,71 @@
   (port and auth token of a host IDE server, reachable from a `-H` box),
   and the host's `claude agents` daemon state mixes with box state.
   **Proposal:** split the bind — persistent dirs stay shared, runtime dirs
-  become per-box tmpfs like `sessions/` — in both tools. Tradeoffs: the
+  become per-box tmpfs like `sessions/`. Tradeoffs: the
   host's agent view stops listing box background sessions (it already
   cannot attach to them: their sockets are box-private), `tasks/` output of
   a box's subagents dies with the box, and the list is version-bound, so it
   needs re-checking on Claude Code upgrades. A contract change; not shipped.
 
-- **DOCKBOX-NAT-FLOWS-ON-CARRIER-BLIP** (LOW, design) — open (unverified).
-  The journal shows the Wi-Fi link dropping and re-acquiring the same DHCP
-  lease within 2-5 s several times a day (`journalctl -u systemd-networkd`,
-  "wlan0: Lost carrier" then "DHCPv4 address 192.168.0.153/24"). networkd
-  removes the address on carrier loss; the kernel's MASQUERADE target then
-  flushes every conntrack entry NATed to it (`nf_nat_masquerade.c`,
-  `masq_inet_event`). A host socket survives the blip (TCP retransmits once
-  the address is back); a bridge box's flow survives only if its next packet
-  is outbound, so a fresh NAT entry with the same port is created. If the
-  server speaks first — a streaming API response — the packet finds no entry
-  and no local socket, the host answers RST and the box's connection dies.
-  Reproducing needs a Wi-Fi toggle, which this audit did not do. `-H` has
-  no NAT and none of this. **Fix:** none in dockbox short of host network;
-  document, or test and close.
+- **QEMUBOX-IDLE-MISSES-ENTERING-SESSION** (MED, correctness) — open
+  (unverified; release audit 2026-10-27). A session that enters while the
+  idle checker probes Docker is not in the SSH count the checker took
+  earlier, so the checker can shut down a VM with an active session.
+  **Fix:** count sessions after the Docker probe, or hold the box lock.
 
-- **DOCKBOX-TMP-FILES-LEAK** (LOW, ops) — CONFIRMED at HEAD 2026-10-13, no
-  test — ops. Each launch that creates a box writes the settings copy and the sandbox note to
-  `mktemp` files (`dockbox/dockbox:589,711`) and bind-mounts them into the
-  box; nothing removes them afterwards, neither `leave_session`'s `docker rm`
-  nor `dockbox rm`, so every box leaves two files in the host `/tmp`.
-  **Fix:** write both under a per-box dir in `~/.local/share/dockbox/` and
-  remove that dir with the box.
+- **QEMUBOX-DOCKER-RESTORES-BEFORE-MOUNTS** (MED, correctness) — open
+  (unverified; release audit 2026-10-27). `qemubox/guest-init` starts
+  dockerd before the project and build mounts exist, so a container with a
+  restart policy can bind the underlying guest directory and write there,
+  not to the share. **Fix:** start dockerd after the mounts.
 
-- **DOCKBOX-IMAGE-PACKAGES-UNUSED** (LOW, design) — owner decision, no test —
-  design. `dockbox/Dockerfile:20` installs `iptables ipset iproute2 dnsutils
-  aggregate`; no script in the repo uses them (`grep -rnw` over dockbox,
-  qemubox and the docs finds nothing) and the egress lockdown they served was
-  rejected, though `iproute2` and `dnsutils` still give a box `ip`, `ss` and
-  `dig` at the prompt. **Options:** (a) drop `iptables ipset aggregate` at the
-  next image rebuild; (b) keep all five. **Default if nothing is decided:**
+- **QEMUBOX-UNIT-NAMES-IGNORE-STATE-DIR** (LOW, correctness) — CONFIRMED.
+  `box_unit` (`qemubox/qemubox`) names the unit `qemubox@<name>.service`
+  without `QEMUBOX_HOME`, so two state dirs with the same box name share
+  one unit; `stop` in one stops the other's VM. **Fix:** put a hash of the
+  state dir in the unit name.
+
+- **QEMUBOX-IMAGE-PACKAGES-UNUSED** (LOW, design) — owner decision, no test —
+  design. `qemubox/Dockerfile` installs `ipset` and `aggregate`;
+  no script in the repo calls them. `iptables` supports guest Docker;
+  `iproute2` and `dnsutils` give the guest `ip`, `ss` and `dig`.
+  **Options:** (a) drop `ipset aggregate` at the next image rebuild;
+  (b) keep both. **Default if nothing is decided:**
   (b).
 
-- **BOX-RAW-PUSH-RECIPE-BESIDE-GHPUSH** (LOW, design) — owner decision.
-  `dockbox/dockbox:207-216` puts a raw push recipe in the box's guidance,
-  `git -c credential.helper= -c credential.helper='!gh auth git-credential'
-  <fetch|push|ls-remote> https://github.com/<owner>/<repo>.git <refspec>`,
-  asserted by `dockbox/test.sh:468`. `skills/global/SKILL.md:122-130` names
-  `rip -g` and `rif -g` (rig) as the agent's push and fetch, so the recipe is
-  a second push path in another form. It matches neither `Bash(git push*)`
-  (the command starts `git -c`) nor `Bash(rip -g *refs/heads/master*)`
-  (`settings-recommended.json:18,25`), so a push to master through it meets
-  no ask rule. **Options:** (a) route the box at `rip -g`/`rif -g`, which
-  needs rig in the image (`grep -n -w rig dockbox/Dockerfile` is empty);
-  (b) keep the recipe and add an ask rule for it. **Default if nothing is
-  decided:** as written. No test — design.
+- **QEMUBOX-MAN-CACHE-OWNERSHIP** (LOW, ops) — confirmed in the production
+  guest, no test — ops. The rootfs export collapses every image owner to
+  guest root in `qemubox/qemubox:900`. The man-db trigger runs as `man` and
+  cannot update the root-owned directories under `/var/cache/man`; package
+  installation succeeds but prints permission errors. **Fix:** give the
+  manual cache its service ownership on the writable guest filesystem.
 
-## qemubox
+- **QEMUBOX-ACCELERATION-LOG-USES-LAUNCHER-GROUPS** (LOW, ops) — open,
+  no test — ops. `start_box` checks KVM access in the launcher while
+  `run_qemu` checks it in the user manager at `qemubox/qemubox:623,723`.
+  When only the manager has a newly added KVM group, the launcher says
+  software emulation but QEMU runs with `-enable-kvm`. **Fix:** report
+  acceleration from the process that starts QEMU. Deferred as a temporary
+  group-membership mismatch.
 
-- **QEMUBOX-HOSTKEY-PER-BOOT** (MED) — `qemubox-init` deletes and regenerates
-  the guest SSH host keys at every boot (`dockbox/Dockerfile` vm stage,
-  `rm -f /etc/ssh/ssh_host_*`), while `known_hosts` is written only at VM start.
-  A guest reboot (e.g. a kernel panic) changes the key, every qemubox SSH
-  call fails host-key verification, and `rm`, `stop` and attach wait.
-  **Fix:** generate host keys once per VM disk (skip when present).
+- **QEMUBOX-KERNEL-PRUNE-DURING-LAUNCH** (LOW, ops) — open, no test — ops.
+  `run_qemu` reads `base/kernel/current` before it waits for share sockets
+  at `qemubox/qemubox:708`. A concurrent kernel rebuild can publish a new
+  pointer and `prune_bases` can delete the selected artifacts before QEMU
+  opens them at `qemubox/qemubox:1131`. Source review only; no runtime
+  reproduction. A launch then fails with a missing kernel or initrd.
+  **Fix:** retain the selected artifacts through launch. This rare race
+  remains deferred under the disposable-VM policy.
 
-- **QEMUBOX-PANIC-REBOOTS** (MED) — QEMU runs without `-no-reboot`, so a guest
-  panic reboots the guest in place instead of ending the QEMU process;
-  qemubox still sees it as running. **Fix:** add `-no-reboot` (and
-  `panic=-1` on the kernel command line) so a panic stops the VM.
-
-- **QEMUBOX-PAUSED-NO-AUTORESUME** (MED, usability) — needs sign-off.
-  When the host disk fills, QEMU pauses the guest with `io-error`.
-  `wait_ready` (`qemubox/qemubox:375`) then only prints "free space, then run
-  qemubox stop", so the owner must stop the VM and start it again by hand,
-  even after space is back. `stop_box` already resumes over QMP
-  (`qemubox:873`). **Fix (proposal):** in `wait_ready`, on `paused:io-error`
-  check free space under `$ROOT`; above a margin, send QMP `cont` and keep
-  waiting; below it, print the free and needed space and exit. Same check in
-  `qemubox ls`/`status` so a paused VM shows how to recover.
-
-- **QEMUBOX-9P-TO-VIRTIOFS** (MED, design) — needs sign-off.
-  Host paths reach the guest over 9p (`qemubox/qemubox:596`, `:761`,
-  mount at `:805-808`). 9p is slow on many small files and weak on locks and
-  mmap, so the Codex SQLite DB must live in the guest `/tmp`. virtiofs fixes
-  both; `virtiofsd` is installed here at `/usr/lib/virtiofsd`. **Fix
-  (proposal):** per share, start one `virtiofsd --socket-path=<box>/<tag>.sock
-  --shared-dir=<src>` (plus `--readonly` for ro), add
-  `-chardev socket,id=<tag>,path=<sock> -device vhost-user-fs-pci,chardev=<tag>,tag=<tag>`,
-  and back guest RAM with `-object memory-backend-memfd,id=mem,size=$MEM,share=on
-  -numa node,memdev=mem` (vhost-user needs shared memory); the guest mounts
-  `-t virtiofs <tag> <dest>`. `stop_box` kills the daemons; the base kernel
-  needs `CONFIG_VIRTIO_FS`. Open: the guest identity mapping that
-  `security_model=none` gives 9p, and memfd with a 64 GiB guest.
-  Mac: QEMU's virtiofs needs `virtiofsd`, which is Linux-only (unverified);
-  on macOS virtiofs comes from Virtualization.framework, a second backend.
-
-- **QEMUBOX-NO-SERVICE-MANAGER** (MED, design) — needs sign-off.
-  A VM lives as a detached QEMU process that qemubox starts on first attach;
-  nothing restarts it after a pause, a crash or a reboot, and stop/start go
-  through the qemubox CLI only. **Fix (proposal):** a systemd user template
-  `qemubox@.service` (`ExecStart` = qemubox boot-only for `%i`, `ExecStop` =
-  `qemubox stop %i`, `Restart=on-failure`), plus `qemubox enable|disable
-  <name>`; the CLI attach then only connects over SSH. A path or timer unit
-  could resume `io-error` guests when free space returns. With
-  QEMUBOX-9P-TO-VIRTIOFS, each share becomes `qemubox-fs@<box>-<tag>.service`
-  (one `virtiofsd`) that `qemubox@<box>` Requires and orders After, so
-  systemd starts and stops the daemons with the VM and qemubox drops its PID
-  and kill logic; a `-v` share on a running VM goes through
-  `systemd-run --user`. Open: the 4h idle prune and `qemubox stop` must stop
-  the unit, never kill the process, or systemd restarts the VM. Linux only;
-  a Mac port would need launchd.
+- **QEMUBOX-SSH-READS-TERMINAL** (LOW, ux) — open (record only), no test.
+  `ssh_plain_box` (`qemubox/qemubox:548`) runs `ssh` without `-n`, so every
+  helper SSH call reads the terminal. A `qemubox rm <box> &` job stops on
+  SIGTTIN at the `fstrim` call and looks like it waits for input until `fg`.
+  On 2026-10-21 both the `fstrim` and the `poweroff` SSH calls then failed,
+  cause not found, and `rm` sat the full 90 s guest wait before QMP `quit`.
+  Part 3 runs the shutdown as `ExecStop` with no terminal; the other helper
+  calls (`ls`, start-up) keep the read. **Fix:** `ssh -n` in `ssh_plain_box`,
+  except the calls that feed a heredoc.
 
 - **QEMUBOX-NO-EGRESS-FILTER** (HIGH, hardening) — needs sign-off.
   `qemubox/README.md:227-233` states the gap plainly — live `~/.claude` /
@@ -1008,70 +940,6 @@
   Unmeasured: that slirp actually drops guest DNS under `restrict=on` — the
   documentation says the guest is "not able to contact the host", and no one
   has tested it here, because this box has no `/dev/kvm` access.
-
-- **QEMUBOX-STOP-LOCK-TIMEOUT-SAYS-NOT-READY** (LOW, ux) — deliberate limit,
-  2026-10-12. `qemubox stop` and `stop -f` take the VM lock through
-  `lock_box` (`qemubox/qemubox`), whose `QEMUBOX_READY_TIMEOUT` wait (180 s)
-  ends in `ready_error`: "VM qemubox-x not ready; serial log:" plus the
-  serial tail. A stop blocked by a launch that holds the lock while it waits
-  on a wedged guest gets that message, which names the wrong cause, and exits
-  1 without signalling qemu. The idle check (`stop_after_linger`,
-  `qemubox/qemubox:386`) takes the lock the same way, so a check blocked for
-  180 s writes the same `ready_error` into `idle.log` and ends, where a failed
-  session count retries. **Fix:** `lock_box` reports the lock wait
-  itself ("lock on qemubox-x held for 180 s"), leaving `ready_error` to
-  `wait_ready`; test: a held lock, `QEMUBOX_READY_TIMEOUT=1`, `stop_boxes -f`.
-
-- **QEMUBOX-LINGER-CHECK-SHARES-PGID** (MED, design) — proposed.
-  `linger_box` (`qemubox/qemubox:422`) backgrounds the idle check with `&`
-  from the leaving session's shell, which runs without job control, so the
-  check keeps the session's process group: a shell that sourced the script
-  and called `linger_box` saw the check report that shell's PGID. `trap ''
-  HUP` covers a terminal hangup, but a signal to the group — a multiplexer
-  or supervisor tearing the job down, `kill -- -<pgid>` — ends the check
-  with the session and the VM never powers off. **Proposal:** start the
-  check under `setsid` so it owns its session and process group; test: the
-  check's PGID differs from the launcher's. No test — design.
-
-- **QEMUBOX-GUEST-GROUP-NOT-CRASH-SAFE** (MED, ops) — open (record only), no
-  test — ops; CONFIRMED 2026-10-14 on a scratch box. `qemubox-init`
-  (`dockbox/Dockerfile`, the `vm` stage) rewrites `/etc/group` on every boot
-  in one loop over the host groups: for each, `sed -i` deletes its line and
-  `printf >>` appends the new one. A qemu stop
-  without a guest shutdown (`qemubox stop -f`, or the escalation after the
-  90 s wait) soon after boot loses the appended data but keeps the file
-  size, so `/etc/group` ends in NUL bytes (28 on the scratch box). The next
-  boot fails at `getent group "$user_gid"`: `qemubox-init` exits, `ssh` never
-  starts, and the launch ends in "not ready" after `QEMUBOX_READY_TIMEOUT`.
-  A boot after a longer uptime recovers once the appends reach the disk.
-  **Fix:** write the whole new `/etc/group` (and `/etc/passwd`, `/etc/shadow`)
-  to a temp file, `sync` it, and `mv` it into place.
-
-- **QEMUBOX-TMP-BOX-LINGERS** (LOW, design) — owner decision. A `-T` box
-  (`qemubox/qemubox:1491`) lingers like any other: after its session exits,
-  `qemubox-tmp` keeps `/tmp/work` on the guest tmpfs for `QEMUBOX_LINGER`
-  seconds (default 1200), and a second `qemubox -T` in that window joins the
-  VM and finds the earlier scratch files, while `qemubox/README.md:71-74`
-  says only that power-off clears `/tmp/work`. **Options:** (a) `LINGER=0`
-  for `-T` unless `QEMUBOX_LINGER` is set explicitly; (b) document the
-  window in README § Usage. **Default if nothing is decided:** (b). No test
-  — design.
-
-- **QEMUBOX-TMP-STACKED-TMPFS** (LOW, ops) — open (record only), no test —
-  ops. `setup_guest_tmp` (`qemubox/qemubox:591-594`) mounts a tmpfs over
-  `/tmp` on every boot, and systemd's `tmp.mount` already mounted one there,
-  so guest `/tmp` is two stacked tmpfs mounts and the first is hidden.
-  Unverified here: no VM was booted. Check with `findmnt /tmp` in a guest.
-  **Fix:** size the existing mount with `mount -o remount,size=75% /tmp`
-  instead of stacking a second one.
-
-- **QEMUBOX-POWEROFF-LEAVES-READY-NOT-STOPPED** (LOW, ops) — open (record
-  only), no test — ops. After a guest poweroff, `leave_session` only reports
-  it (`qemubox/qemubox:453`). A later `stop_box` returns early because the VM
-  is not running (`:836`), so `ready` and `pid` stay and `stopped` (`:877`)
-  is never written. `prune` then dates the box from the directory mtime
-  (`:1122`), not from the poweroff. **Fix:** record the stop in the poweroff
-  branch of `leave_session`.
 
 - **QEMUBOX-CODEX-MEMORIES-PRIVATE-DB** (MED, correctness) — open (record
   only), unverified, no test — correctness. Each session sets
@@ -1128,10 +996,16 @@
 
 ## Root Makefile
 
+- **ROOT-MAKE-FORCED-CI-TREATS-TEMPLATE-AS-PROJECT** (LOW, config) — open,
+  no test — config. `make -B gen-ci` selects the root `test-%` pattern
+  while remaking `.github/templates/test-go.yml.tmpl`. The recipe runs
+  `make -C .github/templates/go.yml.tmpl test` and fails before generating CI.
+  **Fix:** constrain project test targets so template names cannot match them.
+
 - **ROOT-MAKE-CLEAN-UNINSTALLS** (LOW, docs) — CONFIRMED 2026-10-10, no
   test — docs. Root `make clean` runs each project's `clean`; `bhctl`,
   `qemubox` and `rig` delete their installed binaries (and rig's symlinks),
-  `dockbox` also runs `docker rmi dockbox`; `udfix` and `gloww` only clean
+  `udfix` and `gloww` only clean
   the build. `CLAUDE.md` § Commands and the READMEs do not say so. **Fix:**
   say it in `CLAUDE.md` § Commands.
 
@@ -1201,30 +1075,20 @@
 
 ## Ruled not a defect
 
-- **QEMUBOX-DOCKBOX-UX-DUP** (LOW, duplication) — not a defect. The two tools
-  duplicate flag parsing, the tool/model table, `ls`/`rm`/`prune`, and the
-  lifecycle block. A shared sourced file would violate the repo's "tools are
-  independent, no imports" rule (`CLAUDE.md`); `tests/drift_test.sh` is the
-  accepted lightweight guard instead.
+- **QEMUBOX-DOCKER-VM-BOUNDARY** (LOW, design) — not a defect. Guest Docker
+  uses the VM's process and network boundaries. It needs no extra isolation
+  mode or flag. `-D` explicitly selects host Docker through socket forwarding.
 
-- **DOCKBOX-PROJECT-ENV-REACHES-ROOT** (MED, security) — not a defect. A
-  project `.dockboxrc` `-e` variable reaches root in the box (dockbox-init runs
-  as root with the container env, and sessions enter as root before `setpriv`),
-  so `-e LD_PRELOAD=<repo file>` runs code as root there. dockbox is a decently
-  isolated env, not a jail: root inside the box is within its design.
+- **BOXES-DOCKER-SOCKET-CROSSES-BOXES** (MED, isolation) — not a defect.
+  Qemubox's `-D` forwards the host Docker socket over SSH. The agent can then
+  manage host containers. Project `.qemuboxrc` cannot set `-D`; the flag is an
+  explicit grant of host access. Guest Docker uses its own socket without `-D`.
 
-- **BOXES-DOCKER-SOCKET-CROSSES-BOXES** (MED, isolation) — not a defect. `-D`
-  binds `/var/run/docker.sock` into a dockbox and forwards it into a qemubox
-  over SSH; either agent can then `docker exec` into every dockbox on the
-  host. That is the flag's purpose (building images, running containers)
-  and the project `.dockboxrc`/`.qemuboxrc` cannot set it, so it is an
-  explicit per-box grant. Both READMEs say it crosses the box wall.
-
-- **DOCKBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. dockbox mounts
-  `~/.claude` and `~/.codex` rw, API tokens included (`dockbox/dockbox:12,18`).
+- **QEMUBOX-CREDS-MOUNTED-RW** (MED, hardening) — not a defect. Qemubox shares
+  `~/.claude` and `~/.codex` rw, API tokens included (`qemubox/qemubox` `assemble_mounts`).
   Claude Code and Codex both rewrite their token files on login refresh, so a
   ro or redacted token breaks auth inside the box. The README already says
-  dockbox is not a boundary for hostile code.
+  qemubox is not a boundary for hostile code with shared credentials.
 
 - **SKILL-LINT-NO-ORG-REF-CHECK** (LOW, coverage) — not a defect. `CLAUDE.md`
   bans local paths, org-specific refs and secrets in source;

@@ -40,19 +40,19 @@ TL;DR, then only the context a reviewer needs to assess the change.
    absence from the default head isn't proof it's free to change — and say it
    in the body. ALWAYS disclose a verified-but-unfixed issue that affects the
    review. This file is the draft, NEVER the deliverable.
-3. DISTILL — write the concise version to `tmp/pr-body.md`: body only, opening
-   with `🤖 ` before `**TL;DR:**`. ALWAYS cut repetition and filler while
-   preserving the reasoning required by § Format. NEVER cut necessary context
-   to meet a reduction ratio; an already concise draft can stay unchanged. Run
+3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, opening
+   with `🤖 ` before `**TL;DR:**`. Cut what § Format bans first, then
+   repetition and filler, until `wc -m tmp/pr-body.md` is under the cap.
+   NEVER cut the reason behind a decision to reach a ratio; an already short
+   draft can stay unchanged. Run
    ```
    python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'
    ```
    and fix every line it names until it prints `ok:`. It checks the part of
    § Format a program can check: the `**TL;DR:**` opening paragraph capped at
-   400 chars; no "This PR", marketing word or shortened hash;
-   the title's length and a second "and";
-   `🤖 ` opening the body, the robot
-   nowhere else, and none of the harness footer.
+   400 chars and the body at 1,000 in all; no "This PR", marketing word or
+   shortened hash; the title's length and a second "and"; `🤖 ` opening the
+   body, the robot nowhere else, and none of the harness footer.
    Completion criterion: the `ok:` line, which carries the size and the cut
    ratio for information only.
 4. REVIEW-ON-WISDOM — the checks no program runs, over `tmp/pr-body.md`: every
@@ -99,19 +99,20 @@ when the branch or commits carry one; default `type(scope): outcome` with
 `fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
-**Body**: ALWAYS scale detail to the change; no fixed sections or total-length cap.
+**Body**, under 1,000 chars in all (the lint's cap; a ceiling, not a target —
+a one-line fix is the lead alone):
 
 - **Lead**: ALWAYS open with `🤖 **TL;DR:**` and one to three sentences naming
   the outcome. ALWAYS keep this paragraph at most 400 chars, including the
   prefix. Attribution follows WISDOM § Git.
-- **Context**: ALWAYS explain the problem, resulting behavior and consequential
-  design choices, including why the approach fits existing mechanisms. ALWAYS
-  state scope boundaries when omission could mislead. A simple change can fit
-  entirely in the lead; otherwise use prose or Markdown that makes the context
-  easy to assess. ALWAYS include validation or limitations when they
-  materially affect confidence in the change.
+- **Context**: the problem, and the reason behind each design choice a reader
+  would not guess from the diff — why it fits the existing mechanism, what it
+  deliberately leaves out, a verified-but-unfixed issue. A simple change fits
+  entirely in the lead; otherwise short paragraphs or bullets.
 - **Closers**: ALWAYS use `Closes #N` or `Fixes #N` only for real linked issues.
 
-NEVER substitute a code inventory, chronology, generic checklist or runbook
-for that explanation. NEVER use "This PR"; ALWAYS name the behavior. ALWAYS follow the `writing`
-skill's copy rules. NEVER hard-wrap — GitHub renders the line.
+NEVER in a body: what the diff already shows (a file list, a rename, a value,
+a code tour); a test, lint, CI, audit or review result; history (what was
+tried, earlier commits, reviews, pushes); a checklist or runbook; "This PR".
+ALWAYS follow the `writing` skill's copy rules. NEVER hard-wrap — GitHub
+renders the line.

@@ -14,4 +14,3 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - run: make -C qemubox test
-            - run: bash tests/drift_test.sh
