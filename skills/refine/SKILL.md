@@ -33,7 +33,8 @@ code, deployment, specs or data; documents also carry claims to verify.
    that does not resolve and a range holding nothing print the same nothing.
    `git diff --name-only <base>...<head> | cut -d/ -f1 | sort -u`: a top-level
    directory outside the PR's component with no reason in the ask is a
-   drive-by finding (`code.md` § System changes).
+   drive-by finding (`code.md` § System changes); `software.md` § Changes the
+   ask cannot explain carries the per-file, added-`.md` and line-count hunts.
    List assertions with their `file:line`: counts, absence/universality claims,
    links, acceptance and commit subjects. `claims.md` owns their verification.
    → the range resolves and every assertion carries its `file:line`.
@@ -70,9 +71,9 @@ code, deployment, specs or data; documents also carry claims to verify.
    minimisation, a new path grown beside an old one the change should have
    changed or deleted, cross-boundary leaks and coupling between packages) or
    `correctness` (bugs, logic errors, edge cases). `contexts.md` carries the
-   recurring contexts and what each one's sub must be handed; `py.md`, `ts.md`
-   and `tsx.md` carry the per-language lenses, `software.md` the `code.md` lens
-   every code context reads.
+   recurring contexts and what each one's sub must be handed; `py.md`, `sql.md`,
+   `ts.md` and `tsx.md` carry the per-language lenses, `software.md` the
+   `code.md` lens every code context reads.
    → every path and claim sits in exactly one context, and each context names
    its lenses and its command family.
 
@@ -84,7 +85,10 @@ code, deployment, specs or data; documents also carry claims to verify.
    invariant or a `BUGS.md` by-design entry is WON'T-FIX. Automated reviewers
    skew false-positive: ALWAYS verify the premise against the code. An
    out-of-scope core-logic change is flagged, never applied. FIX items fold
-   into the context that owns their path.
+   into the context that owns their path. A thread the owner wrote is an
+   instruction, resolved or not: ALWAYS read every owner comment on the PR
+   before settling a finding, and NEVER rule one WON'T-FIX against a plan or
+   a reviewer — the plan yields.
    → every unresolved thread carries a verdict and a reason.
 
 6. **Dispatch reviews** — ALWAYS read `brief.md` before the first brief.
@@ -112,7 +116,8 @@ code, deployment, specs or data; documents also carry claims to verify.
 8. **Triage and apply** — DROP a finding that targets unused code (grep first),
    conflicts with the ask, or survived step 7 only as
    an assertion. A survivor needing a redesign goes to `BUGS.md` as `proposed`
-   (WISDOM § Bug triage); NEVER build one without sign-off.
+   (WISDOM § Bug triage); NEVER build one without sign-off. A lint, type or
+   formatter failure is fixed here, NEVER recorded.
    ALWAYS apply code findings under `software/code.md` § Boring code. Apply
    serially, one context at a time, briefed from `brief.md`.
    ALWAYS select confirmed refinement edits as coding through `dispatch`.
@@ -144,7 +149,9 @@ code, deployment, specs or data; documents also carry claims to verify.
     subjects ≤72 characters, one logical change each, NO `Co-Authored-By`
     trailer, detached HEAD. ALWAYS do this before any push — a pushed
     violation is permanent, and WISDOM § Git bans amend, force-push and a
-    squash of a pushed commit. Reply
+    squash of a pushed commit. ALWAYS read the open PR's body against
+    `pr-draft` § Format — the cap, no results, no history — and rewrite it
+    through `pr-draft` when it fails. Reply
     to each step-5 WON'T-FIX thread, and each FIX that step 8 deferred, with the
     invariant or `BUGS.md` entry it matches, via `gh-comment` — its distill and
     review-on-wisdom phases and its sign-off gate. A FIX thread gets no reply
