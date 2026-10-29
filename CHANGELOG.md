@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [v0.4.62] — 20261029
+
+> kronael v0.4.62 — Refine hunts the recurring slop
+>
+> A refine pass now checks for the shapes the owner keeps sending back: dead guards, second names, kept old paths, drive-by files and tests that prove nothing.
+>
+> • Refine — lenses for checks that guard nothing, hashes and registries with no reader, thin many-parameter wrappers.
+> • Refine — one name per thing across schema, wire, code and docs; comment sweeps cover every touched file, `lib/` included.
+> • Refine — a `sql` lens for per-row round trips and alias style; owner PR comments are instructions, never WON'T-FIX.
+> • Code rules — no check for a state the types or the real call already reject; a config section switches a feature, never an `enabled` flag.
+> • Settings — the Task checklist tools are on for every model.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `refine/software.md`: lenses for checks that guard nothing, kept old paths, drive-by files and added `.md` reports, hashes and registries with no reader, tests that assert source text or stay green on a broken subject.
+- `refine/py.md`: typing dodges over added lines (`Any`, `object`, `getattr`, string sets, needless `| None`) and locks or buckets that protect nothing.
+- `refine/sql.md`: round trips that grow with the batch, `AS` column aliases, statements away from their function.
+- `refine/SKILL.md`: owner-authored PR threads are instructions; lint and type failures are fixed, never recorded; the PR body is checked against `pr-draft` § Format.
+- `code.md`: no check for a state already rejected by types, the boundary parser or the real call; a feature is switched by its config section, never an `enabled` flag or a default.
+- `settings-recommended.json`: `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` keeps `TaskCreate`/`TaskUpdate` available on every model.
+- `pr-draft`: the PR body is capped at 1,000 characters below the TL;DR.
+- `py`: hot optional instrumentation sits behind `if __debug__:` so `-O` drops it.
+
 ## [v0.4.61] — 20261027
 
 > kronael v0.4.61 — qemubox VMs under systemd
