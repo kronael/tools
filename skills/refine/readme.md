@@ -21,6 +21,7 @@ reads to pick the agent type.
   hit is a finding: state what is true now (WISDOM § Documentation).
 - ALWAYS weigh a changed doc's length against the feature it describes: a page
   longer than the code path it explains is a finding, cut to the invariants.
+  Count prose and tables, never the code excerpts a spec quotes.
 
 ## One reader at a time `correctness`
 
