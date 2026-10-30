@@ -108,6 +108,10 @@ your diff against every `##` heading here before calling an edit done.
   solution.
 - ALWAYS add code only for a measured unmet requirement that subtraction and
   those simplifications cannot satisfy.
+- NEVER a check for a state the types, the boundary parser or the real call
+  already reject, or that no caller produces — a guard, cap, length limit,
+  regex, `exists` test or start-up probe that never fires reads as a
+  requirement and is a liability. ALWAYS let the first real call fail.
 - NEVER braid components: if A cannot be understood without tracking B's
   state, separate them — braided code grows combinatorially, separated code
   composes linearly. ALWAYS minimise state and make what remains explicit; an
@@ -281,6 +285,9 @@ your diff against every `##` heading here before calling an edit done.
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second.
 - ALWAYS use singular TOML array-of-tables names (`[[model]]`, `[[service]]`): each header introduces one entry, an exception to plural collection names.
+- ALWAYS switch a feature by the presence of its config section; NEVER an
+  `enabled` flag or an empty-list default. ALWAYS require every value the
+  deployment must choose; NEVER a default in code for one.
 - `make` for build/lint/test/clean and debug builds: `make test` = fast unit
   (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
   production data.

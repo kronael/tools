@@ -71,13 +71,9 @@ PRELOADED = frozenset({'SKILL.md', 'CLAUDE.md', 'AGENTS.md'})
 # stand for a root `manim.md`. The lookbehind keeps `contexts.md` from yielding
 # `ts.md`; it admits `/` so a path still starts after `../` or `~/`.
 PATH_TOKEN = re.compile(r'(?<![\w.-])[\w-][\w.-]*(?:/[\w.-]+)*\.md')
-# A home path naming a real account leaks the authoring machine. A one-character
-# account segment is this bundle's placeholder for an illustrative path
-# (`/home/u/app/x` teaches the project-slug transform), so it stays. So do
-# `/home/dockbox` and `/home/claude`: the HOME of this repo's own container
-# user (dockbox/README.md, CHANGELOG.md), which names no authoring machine.
-# Only the whole segment is exempt; `/home/dockbox-2` is somebody's account.
-LOCAL_PATH = re.compile(r'/(?:home|Users)/(?!(?:dockbox|claude)(?![\w.-]))[A-Za-z0-9._-]{2,}')
+LOCAL_PATH = re.compile(r'/(?:home|Users)/[A-Za-z0-9._-]{2,}')
+HISTORICAL_CHANGELOG = Path(__file__).resolve().parent.parent / 'CHANGELOG.md'
+HISTORICAL_HOMES = frozenset({'/home/dockbox', '/home/claude'})
 SECRET = re.compile(
     r'sk-ant-[\w-]{8,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY'
 )
@@ -411,6 +407,7 @@ def check_reachable(path: Path) -> list[Finding]:
 
 def check_leaks(doc: Path) -> list[Finding]:
     text = doc.read_text()
+    is_historical = doc.resolve() == HISTORICAL_CHANGELOG
     rules = [('skill-secret', SECRET, 'a credential shape')]
     if ALLOW_LOCAL_PATH not in text.splitlines():
         rules.append(
@@ -424,7 +421,10 @@ def check_leaks(doc: Path) -> list[Finding]:
     findings: list[Finding] = []
     for offset, line in enumerate(text.splitlines(), start=1):
         for rule, pattern, why in rules:
-            if pattern.search(line):
+            matches = list(pattern.finditer(line))
+            if rule == 'skill-local-path' and is_historical:
+                matches = [match for match in matches if match.group() not in HISTORICAL_HOMES]
+            if matches:
                 findings.append(
                     Finding(
                         Severity.ERROR,

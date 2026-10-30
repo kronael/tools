@@ -4,5 +4,10 @@
 udfix/udfix
 !codex/
 !codex/AGENTS.md
-!dockbox/
-!dockbox/Dockerfile
+!qemubox/
+!qemubox/Dockerfile
+!qemubox/Dockerfile.kernel
+!qemubox/kernel.fragment
+!qemubox/initrd-init
+!qemubox/guest-init
+!qemubox/qemubox-codex-bridge

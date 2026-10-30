@@ -98,10 +98,10 @@ transcript — Codex, a payload without the field — refuses too: the user
 submits by hand. Posting the review without `event` stays PENDING and needs
 no ask. The lint is WISDOM § Git
 made checkable: `🤖 ` before the first word and the robot nowhere else, none
-of the harness footer, and the `**TL;DR:**` opening paragraph capped at 400 chars.
-Supporting Markdown is allowed; `pr-draft` owns the judgment
-about useful context. Comments have a 240-char cap; issues have a 3,000-char
-cap. Marketing words and shortened hashes fail. By hand: `python3
+of the harness footer, the `**TL;DR:**` opening paragraph capped at 400 chars
+and the PR body at 1,000 in all. Supporting Markdown is allowed; `pr-draft`
+owns the judgment about useful context. Comments have a 240-char cap; issues
+have a 3,000-char cap. Marketing words and shortened hashes fail. By hand: `python3
 ~/.claude/hooks/gh_text_lint.py pr|issue|comment <file>`, with `--draft` and
 `--title` for a PR; `pr-draft`, `gh-issue` and `gh-comment` run it as their
 completion criterion.

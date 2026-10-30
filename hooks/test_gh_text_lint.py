@@ -103,6 +103,8 @@ LINT_CASES = [
     (Kind.PR, GOOD_PR.replace('web1', '0x12ab…'), 'write it in full'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP + 'x'), 'chars, cap 400'),
     (Kind.PR, GOOD_PR.replace('the playbook goes.', 'x' * PR_PAD_AT_CAP), None),
+    (Kind.PR, CONTEXT_PR + '\n' + 'x' * (999 - len(CONTEXT_PR)) + '\n', None),
+    (Kind.PR, CONTEXT_PR + '\n' + 'x' * (1000 - len(CONTEXT_PR)) + '\n', 'chars, cap 1000'),
     (Kind.PR, CONTEXT_PR + f'\n{ROBOT} Context.\n', 'belongs at the start only'),
     (Kind.PR, CONTEXT_PR + '\nCo-Authored-By: X <x@y>\n', 'banned attribution'),
     (Kind.PR, CONTEXT_PR + '\nA robust cache.\n', 'marketing word'),

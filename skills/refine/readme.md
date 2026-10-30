@@ -16,6 +16,11 @@ reads to pick the agent type.
 
 - Prose tells are the `humanize` catalogue. A page's structural tells — headers,
   boxes, layout, sources, links, diagrams, contrast — are `writing/page.md`.
+- ALWAYS grep the changed docs for history narration — `rg -n -i 'previously|
+  used to|no longer|renamed from|as before|backward|legacy|rollback'` — each
+  hit is a finding: state what is true now (WISDOM § Documentation).
+- ALWAYS weigh a changed doc's length against the feature it describes: a page
+  longer than the code path it explains is a finding, cut to the invariants.
 
 ## One reader at a time `correctness`
 

@@ -30,11 +30,20 @@ reads to pick the agent type.
   name, written once).
 - ALWAYS compare added/renamed module and package names with their main symbol or job;
   ALWAYS flag generic/partial names or utility basenames violating § Layout and formatting.
+  A module named for a category that holds one source (`streaming/chats.py` holding
+  Telegram) is named for what it holds (`telegram.py`).
+- ALWAYS read one thing's name across every layer the range touches — table
+  column, wire field, code, docs, config key, log key. Two words for it
+  (`client` in the schema, `receiver` in the code) is a finding, renamed
+  everywhere in this change; NEVER kept on one layer "for compatibility".
 
 ## Comments the baseline bans `simplify`
 
 - ALWAYS list every comment in each touched FILE, not only in the hunks
-  (`grep -nE '^\s*(//|#|--|/\*|\*)'`); ALWAYS flag those outside § Comments' exceptions.
+  (`grep -nE '^\s*(//|#|--|/\*|\*)'`), in every component the range touches,
+  `lib/` and test files included; ALWAYS flag those outside § Comments'
+  exceptions. A sweep scoped to the hunks or to one component is itself a
+  finding: rerun it over the whole touched set.
 - ALWAYS read a surviving doc comment against its item: on a private item, or
   restating the signature, it is a finding.
 - ALWAYS check the comment directly above a log, warn or error call — a
@@ -55,7 +64,18 @@ reads to pick the agent type.
   '^\+\s*(async )?def '`) whose body is one or two statements: one that only
   forwards its arguments to one call and wraps or renames the result
   (`read_catalog` = `get_markets(…)` then `Catalog(…)`) is a finding: inline
-  it at its callers (§ Boring code).
+  it at its callers (§ Boring code). One that takes five or more parameters
+  says the type it feeds bundles too much: pass the record (`py.md` § Data).
+- ALWAYS grep the added lines for a callable chosen then called
+  (`f = a if cond else b` followed by `f(…)`, a `download = …` indirection):
+  write the `if`/`else` with the two calls (§ Boring code).
+- ALWAYS name the reader for every hash, fingerprint, checksum, version
+  constant, provenance field or registry the range adds (`rg -n -i
+  'hash|fingerprint|checksum|provenance|VERSION|registry|register\('` over
+  the added lines). No reader in the tree today is a finding: compare the
+  fields, write the version in the module name (§ Design), delete the rest.
+  A registry filled by import side effects or decorators is explicit
+  assembly in `main` respelled; wire the instances where the reader sees them.
 - ALWAYS trace consumers of each runtime or test asset the range adds
   (`git diff --name-only --diff-filter=A <range>`): search its name, then check
   glob discovery, directory scans and configuration. An asset with no consumer
@@ -87,12 +107,44 @@ reads to pick the agent type.
   generic or macro — where a plain `if` or loop does the job is a finding,
   rewritten plain (§ Boring code).
 
+## Checks that guard nothing `simplify`
+
+- ALWAYS list every check the range adds — `git diff <range> | rg '^\+' |
+  rg -n 'if not |raise |assert |re\.(fullmatch|match)|\.exists\(|ge=|le=|
+  max_|_limit|_cap\b|timeout|enabled'` — and, for each, name the production
+  input that reaches it. A condition the types, the boundary parser or the
+  real call already reject, or that no caller can produce, is a finding:
+  delete it (`code.md` § Boring code: a check that never fires reads as a
+  requirement). A start-up probe for a tool or login the first real call
+  would fail on, a byte or length cap with no measured need, an `IF EXISTS`
+  guard inside a transactional migration: the same finding.
+- ALWAYS read each config key, flag, default, docker or unit parameter the
+  range adds against its callers: a value no deployment sets to a second
+  value today is a constant or a deletion, NEVER a knob (§ Boring code: a knob
+  is the owner's decision). A feature is switched by the presence of its
+  config section, NEVER an `enabled` flag or an empty-list default (`code.md`
+  § House conventions). A required value gets no default in code.
+
 ## Second path beside the first `simplify`
 
 - ALWAYS grep the tree for the mechanism each new guard, helper, table, log
   site or config key duplicates — same verb, same table, same env var. A
   second path where the original could be extended is a finding
   (`software/code.md` § System changes).
+- ALWAYS grep the added lines and the PR text for the kept-old-path words —
+  `rg -n -i 'legacy|backward|compat|fallback|rollback|deprecated|_old\b|old_|
+  before-'` — each is a finding: delete the old path and move forward only;
+  git holds every version (WISDOM § Documentation, `owner` § The smallest
+  shape wins).
+- ALWAYS list every unit, container, service, database, schema, CLI entry or
+  process the range adds (`git diff --name-only <range> | rg
+  'ansible|Dockerfile|\.service|migrations|main\.py'`): one beside an
+  existing component that owns the same data or loop is a finding unless a
+  privilege boundary forces it — a loop joins the owning process as a
+  coroutine, a table joins the owning schema (`code.md` § System changes).
+- ALWAYS treat a parsing or validation helper set the range adds beside the
+  project's codec or boundary pydantic (`validation_utils.py`, `to_int`,
+  `to_money`) as a second structurer: a finding, replaced by the codec.
 - ALWAYS grep shared-library public names and maintained upstream dependencies already in use; replace helpers they provide.
 - ALWAYS compare function bodies across components; put a helper two components need in the shared library once.
 - ALWAYS compare new layers with a sibling's framework, routes, config loader, logging and `main`;
@@ -131,6 +183,18 @@ reads to pick the agent type.
   (`rg -n 'assert .*== *<module>\.'`) and its patches for the project's own
   modules (`rg -n "patch\('<project>"`): a mirror assertion or a mocked own
   module proves nothing (`testing.md` § What an assertion proves).
+- ALWAYS grep added tests for assertions on source text, file names,
+  migration numbers or fixture provenance (`rg -n "read_text\(|\.sql'|00[0-9]-|
+  provenance"`): each is a finding (`testing.md` § Scope and layout, § What
+  an assertion proves).
+- ALWAYS break the subject of one added or converted test per module —
+  invert its condition or revert the fix — and run the test: green both ways
+  proves nothing, and a conversion that stays green on the broken subject
+  weakened the test it replaced.
+- ALWAYS list every production parameter, kwarg or `None` default the range
+  adds that only tests pass (`rg -n '<param>=' -g '!**/test*'` returns no
+  production caller): a finding, patched at the use site instead (`py`
+  § Testing).
 
 ## Swallowed, softened and retried errors `correctness`
 
@@ -168,6 +232,21 @@ reads to pick the agent type.
   root should hold it (§ Layout and formatting).
 - ALWAYS inspect changed component trees for same-name nesting, redundant `api/` wrappers and nested utility modules.
   ALWAYS flag wrappers violating `readme/topology.md` § Files.
+
+## Changes the ask cannot explain `simplify`
+
+- ALWAYS group `git diff --stat <range>` by top-level directory and read every
+  file against the nouns of the ask: a touched sibling component, `lib/` or
+  `ansible/` the ask never named, an added `__init__.py`, a formatted file the
+  change did not need, a regenerated workflow — each is a finding, reverted or
+  parked (`code.md` § System changes: no drive-by). State the added-line count
+  beside the ask's size; "why is it 16k lines" is the owner's next question.
+- ALWAYS list every `.md` the range adds (`git diff --name-only
+  --diff-filter=A <range> -- '*.md'`): one outside README, ARCHITECTURE,
+  CHANGELOG, `specs/` and `BUGS.md` — a plan, report, summary or analysis —
+  is a finding, deleted (WISDOM § Documentation).
+- ALWAYS check an open PR that holds one job: a second PR or branch opened for
+  the same job, or a copy of files in place of a change to them, is a finding.
 
 ## Deleted without being understood `correctness`
 

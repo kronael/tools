@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
-# Unit tests for qemubox's pure helpers. Sources the script with QEMUBOX_LIB=1
-# so the CLI never runs and no VM is booted; asserts the security-load-bearing
-# behavior (name guard, rm matcher, -v path parse, port derivation, and the
-# per-flag 9p mount matrix).
 set -uo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 fixture="$(mktemp -d)"
 trap 'rm -rf "$fixture"' EXIT
 
-# Fixture home holding the agent-config dirs assemble_mounts probes for.
 export HOME="$fixture/home"
 export QEMUBOX_HOME="$fixture/state"
 mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$QEMUBOX_HOME"
@@ -17,7 +12,51 @@ PROJ="$fixture/proj"; mkdir -p "$PROJ"
 
 # shellcheck disable=SC1090
 QEMUBOX_LIB=1 . "$here/qemubox"
-set +e  # sourcing turned on set -e; take back control for assertions
+set +e
+unexpected_docker() {
+    echo 'A unit test attempted an unstubbed Docker command' >&2
+    return 99
+}
+QEMUBOX_DOCKER=unexpected_docker
+
+systemd_log="$fixture/systemd.log"
+systemctl() {
+    printf 'systemctl %s\n' "$*" >> "$systemd_log"
+    case "$2" in
+        is-active) echo inactive; return 3 ;;
+        show) echo "${memory_current:-[not set]}" ;;
+    esac
+}
+systemd-run() {
+    printf 'systemd-run %s\n' "$*" >> "$systemd_log"
+    local arg
+    for arg in "$@"
+    do
+        case "$arg" in
+            --socket-path=*)
+                python3 - "${arg#*=}" <<'PY'
+import socket
+import sys
+with socket.socket(socket.AF_UNIX) as sock:
+    sock.bind(sys.argv[1])
+PY
+                ;;
+        esac
+    done
+}
+journalctl() { printf 'journalctl %s\n' "$*" >> "$systemd_log"; }
+loginctl() { echo yes; }
+ss() { :; }
+timeout() {
+    if [[ "$2" = ssh ]]
+    then
+        return 0
+    fi
+    command timeout "$@"
+}
+fake_qemu="$fixture/fake-qemu"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "$QEMU_ARGS"\n' > "$fake_qemu"
+chmod +x "$fake_qemu"
 
 pass=0; fail=0
 ok()   { pass=$((pass+1)); }
@@ -26,7 +65,6 @@ eq()   { [ "$2" = "$3" ] && ok || bad "$1: expected '$3' got '$2'"; }
 true_() { if eval "$2"; then ok; else bad "$1"; fi; }
 false_(){ if eval "$2"; then bad "$1"; else ok; fi; }
 
-# exits with code $1 when run in a subshell? (guards use exit, so run isolated)
 exits() { ( eval "$2" ) >/dev/null 2>&1; [ "$?" = "$1" ] && ok || bad "$3"; }
 
 regression() {
@@ -37,11 +75,17 @@ regression() {
 
 regression_setup() {
     ROOT="$fixture/refine-$BASHPID"
-    mkdir -p "$ROOT/base"
+    mkdir -p "$ROOT/base/fixture/rootfs/opt/qemubox" "$ROOT/base/kernel/fixture"
+    touch "$ROOT/base/fixture/rootfs/opt/qemubox/memory-hotplug"
     echo fixture > "$ROOT/base/current"
-    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
+    echo fixture > "$ROOT/base/kernel/current"
+    echo complete > "$ROOT/base/fixture/exported"
+    for file in bzImage initrd kernel.config
+    do
+        echo base > "$ROOT/base/kernel/fixture/$file"
+    done
     dirs=()
-    qemu-img() { touch "$dir/disk.qcow2"; }
+    mkfs.ext4() { :; }
 }
 
 eq "box_name plain" "$(box_name repo)" "repo"
@@ -102,7 +146,6 @@ eq "port_for reads persisted \$dir/port" "$(port_for pbx)" "54321"
 
 source "$here/test-mounts.sh"
 
-## guest note ---------------------------------------------------------------
 run_assemble
 persist_builds=""; eph_no_tmpfs=""; stage_ephemeral "$eph"
 network=1; gout="$(guest_note myhost "$eph")"
@@ -132,11 +175,10 @@ true_ "-T note names the tmpfs workdir" \
     '[[ "$gout" == *"working dir /tmp/work is guest tmpfs"* ]]'
 tmp_session=""
 
-## status_box ---------------------------------------------------------------
 mkdir -p "$QEMUBOX_HOME/sbx"
 sout="$(status_box sbx)"
-true_ "status: process stopped" '[[ "$sout" == *process=stopped* ]]'
-true_ "status: boot pending"    '[[ "$sout" == *boot=pending* ]]'
+true_ "status: unit inactive" '[[ "$sout" == *unit=inactive* ]]'
+true_ "status: state stopped" '[[ "$sout" == *state=stopped* ]]'
 exits 1 'status_box nonexistent-xyz' "status errors on unknown box"
 
 eq "default RAM" "$MEM" "24576"
@@ -147,66 +189,67 @@ eq "guest home matches passwd" "$GUEST_HOME" "$(getent passwd "$(id -u)" | cut -
 
 (
     set -e
-    mkdir -p "$ROOT/base"
-    printf '%s\n' fixture > "$ROOT/base/current"
-    for suffix in qcow2 vmlinuz initrd; do echo base > "$ROOT/base/fixture.$suffix"; done
-    qemu-img() { printf '%s\n' "$@" > "$fixture/qemu-img.args"; touch "$dir/disk.qcow2"; }
+    regression_setup
+    mkfs.ext4() { printf '%s\n' "$@" >> "$fixture/mkfs.args"; }
     ensure_box identitybox
     head -4 "$ROOT/identitybox/config/identity" > "$fixture/actual-identity"
     printf '%s\n' "$(id -un)" "$(id -u)" "$(id -g)" "$GUEST_HOME" > "$fixture/want-identity"
     cmp "$fixture/actual-identity" "$fixture/want-identity"
     cmp "$ROOT/identitybox/key.pub" "$ROOT/identitybox/config/authorized_keys"
     [ "$(cat "$ROOT/identitybox/image-id")" = fixture ]
-    [ "$(tail -1 "$fixture/qemu-img.args")" = 40G ]
-    QEMU=fake_qemu
-    fake_qemu() { printf '%s\n' "$@" > "$fixture/qemu.args"; }
+    [ "$(stat -c %s "$ROOT/identitybox/upper.raw")" = 42949672960 ]
+    [ "$(tail -1 "$fixture/mkfs.args")" = "$ROOT/identitybox/upper.raw.tmp" ]
     missing_deps() { :; }
-    ssh_plain_box() { :; }
-    assemble_mounts() { :; }
-    setup_guest_tmp() { :; }
-    mount_host_paths() { :; }
-    setup_guest_builds() { :; }
-    setup_guest_runtime() { ! flock -n "$ROOT/.locks/identitybox" true; }
-    setup_guest_sessions() { :; }
-    setup_guest_limits() { :; }
-    sync_guest_clock() { :; }
+    dirs=("$PROJ"); name=identitybox; network=""; untrusted=""
+    : > "$systemd_log"
     start_box identitybox
-    [ -f "$ROOT/identitybox/ready" ]
     if flock -n "$ROOT/.locks/identitybox" true; then exit 1; fi
     unlock_box
-    echo retained > "$ROOT/identitybox/disk.qcow2"
+    grep -qF -- "-E QEMUBOX_HOME=$ROOT -E QEMUBOX_MEM=24576 -E QEMUBOX_CPUS=4 -E QEMUBOX_QEMU=qemu-system-x86_64 " "$systemd_log"
+    grep -q -- '-p TimeoutStartSec=180 -p TimeoutStopSec=10 -p TimeoutStopFailureMode=kill' "$systemd_log"
+    grep -qFx "$PROJ"$'\t'"$PROJ"$'\t'rw \
+        < <(cut -f2- "$ROOT/identitybox/config/mounts")
+    [ "$(tail -2 "$ROOT/identitybox/config/mounts" | head -1)" = \
+        cfg$'\t'"$ROOT/identitybox/config"$'\t'/run/qemubox/config$'\t'ro ]
+    [ "$(tail -1 "$ROOT/identitybox/config/mounts")" = \
+        root$'\t'"$ROOT/base/fixture/rootfs"$'\t'/.qemubox/lower$'\t'ro ]
+    [ "$(cat "$ROOT/identitybox/net")" = off ]
+    grep -q 'CLAUDE_SANDBOX=qemubox' "$ROOT/identitybox/config/CLAUDE.md"
+    echo retained > "$ROOT/identitybox/upper.raw"
     ensure_box identitybox
-    [ "$(cat "$ROOT/identitybox/disk.qcow2")" = retained ]
+    [ "$(cat "$ROOT/identitybox/upper.raw")" = retained ]
+    [ "$(wc -l < "$fixture/mkfs.args")" = 3 ]
+    (QEMU="$fake_qemu" QEMU_ARGS="$fixture/qemu.args" run_qemu identitybox)
     grep -Fx -- '-kernel' "$fixture/qemu.args"
+    grep -Fx -- '-nodefaults' "$fixture/qemu.args"
     grep -Fx -- '-initrd' "$fixture/qemu.args"
-    grep -Fx -- 'root=/dev/vda rw console=ttyS0 noresume loglevel=5' "$fixture/qemu.args"
+    grep -Fx -- 'console=ttyS0 reboot=t panic=-1 loglevel=5 ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off memhp_default_state=online' "$fixture/qemu.args"
+    grep -Fx -- 'file=upper.raw,if=virtio,format=raw,discard=unmap,detect-zeroes=unmap' "$fixture/qemu.args"
+    grep -Fx -- "$ROOT/base/kernel/fixture/bzImage" "$fixture/qemu.args"
+    grep -Fx -- "$ROOT/base/kernel/fixture/initrd" "$fixture/qemu.args"
     grep -Fx -- 'virtio-balloon-pci,free-page-reporting=on' "$fixture/qemu.args"
-    grep -F -- 'mount_tag=qbxcfg,security_model=none,readonly=on' "$fixture/qemu.args"
-    if grep -q 'seed.iso' "$fixture/qemu.args"; then exit 1; fi
+    grep -Fx -- 'socket,id=cfg,path=cfg.sock' "$fixture/qemu.args"
+    grep -Fx -- 'vhost-user-fs-pci,queue-size=1024,chardev=cfg,tag=cfg' \
+        "$fixture/qemu.args"
+    grep -Fx -- 'memory-backend-memfd,id=mem,size=2048M,share=on' \
+        "$fixture/qemu.args"
+    grep -Fx -- node,memdev=mem "$fixture/qemu.args"
+    [ "$(grep -Fxc -- -chardev "$fixture/qemu.args")" = \
+        "$(wc -l < "$ROOT/identitybox/config/mounts")" ]
+    grep -Fx -- "user,model=virtio,restrict=on,hostfwd=tcp:127.0.0.1:$(cat "$ROOT/identitybox/port")-:22" "$fixture/qemu.args"
+    [ "$(grep -A1 -Fx -- -serial "$fixture/qemu.args" | tail -1)" = stdio ]
+    if grep -qE -- '^-(virtfs|daemonize|pidfile)$|seed.iso' "$fixture/qemu.args"; then exit 1; fi
+    : > "$systemd_log"
+    systemctl() { printf 'systemctl %s\n' "$*" >> "$systemd_log"; echo active; }
+    qmp_box() { echo running; }
+    rm "$ROOT/identitybox/net"
+    start_box identitybox
+    unlock_box
+    [ ! -e "$ROOT/identitybox/net" ]
+    if grep -q systemd-run "$systemd_log"; then exit 1; fi
 ) >"$fixture/boot-test.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/boot-test.log"; bad "identity and boot"; }
-rm -f "$ROOT/base/fixture.vmlinuz"
-exits 1 'ensure_box identitybox' "missing recorded base refuses VM"
-
-fake_docker() {
-    case "$1" in
-        build) return 0 ;;
-        image) printf 'sha256:%064d\n' 0 ;;
-        create) echo fixture-container ;;
-        export)
-            echo "$tmp/rootfs.tar" > "$fixture/export-path"
-            echo partial
-            return 42 ;;
-        rm) echo "$2" > "$fixture/removed-container" ;;
-    esac
-}
-QEMUBOX_DOCKER=fake_docker
-qemu-img() { :; }
-exits 42 'build_base' "export failure stays visible"
-eq "failed export container removed" "$(cat "$fixture/removed-container")" "fixture-container"
-false_ "failed export temp dir removed" '[ -d "$(dirname "$(cat "$fixture/export-path")")" ]'
-unset QEMUBOX_DOCKER
-unset -f qemu-img
+source "$here/test-base.sh"
 
 source "$here/test-lifecycle.sh"
 source "$here/test-parity.sh"
@@ -214,7 +257,11 @@ source "$here/test-cli.sh"
 
 source "$here/test-refine.sh"
 source "$here/test-image.sh"
+source "$here/test-guest.sh"
+source "$here/test-memory.sh"
+source "$here/test-resume.sh"
 source "$here/test-boot.sh"
+source "$here/test-kernel.sh"
 
 echo "qemubox/test.sh: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

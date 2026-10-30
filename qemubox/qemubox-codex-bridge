@@ -2,7 +2,10 @@
 set -eu
 [ -d "$HOME/.claude/skills" ] || exit 0
 mkdir -p "$HOME/.agents"
-[ -e "$HOME/.agents/skills" ] || ln -s ../.claude/skills "$HOME/.agents/skills"
+if [ ! -e "$HOME/.agents/skills" ] && [ ! -L "$HOME/.agents/skills" ]
+then
+    ln -s ../.claude/skills "$HOME/.agents/skills"
+fi
 [ -f "$HOME/.claude/CLAUDE.md" ] || exit 0
 if [ -L "$HOME/.codex/AGENTS.md" ]
 then
@@ -16,4 +19,4 @@ then
 fi
 mkdir -p "$HOME/.codex"
 rm -f "$HOME/.codex/AGENTS.md"
-cp /opt/dockbox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"
+cp /opt/qemubox/codex-AGENTS.md "$HOME/.codex/AGENTS.md"
