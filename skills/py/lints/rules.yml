@@ -269,3 +269,18 @@ rule:
         stopBy: end
 message: Build a pydantic TypeAdapter once as a module-level constant; NEVER inside a function, where every call compiles a new validator. See skill:py.
 note: 'source: skills/py/SKILL.md — Named Data Structures'
+---
+id: py-no-conditional-none-return
+language: python
+severity: warning
+rule:
+    kind: return_statement
+    has:
+        kind: conditional_expression
+        stopBy:
+            not:
+                kind: parenthesized_expression
+        has:
+            kind: none
+message: NEVER return a conditional expression that yields None — guard first, if not row return None, then return the value plainly. See skill:py.
+note: 'source: skills/py/SKILL.md — Style'

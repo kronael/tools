@@ -26,7 +26,7 @@ Python-specific additions and deltas.
 - NEVER move imports into type-only branches; ALWAYS keep them available at runtime,
   including compound or negated `TYPE_CHECKING` guards.
 - ALWAYS pass `py-no-type-checking-imports` and `py-no-lambda-default-factory`.
-- NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
+- NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only; a return whose None cannot happen raises instead
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 - ALWAYS declare a `Protocol`'s data members as read-only `@property`s — a plain class then satisfies it with plain assignments (`name = 'x'`, `lists = ()`, `server = Server()`). NEVER a bare `name: str` or `ClassVar` member in a protocol a class implements by assignment, unless code reads it off the class itself: a mutable member is invariant, so a subtype value fails.
 - ALWAYS name a `Protocol` by the plain noun of the thing it describes (`Venue`, `Job`, `Server`); an implementation is often `<Qualifier><Noun>` (`BinanceVenue`) but takes any fitting name. `<Verb>able` when it promises one or a few methods and nothing else (`Runnable`: `run()`). NEVER a suffix or prefix that only says it is a protocol: `VenueLike`, `VenueProtocol`, `VenueInterface`, `IVenue`
@@ -130,6 +130,9 @@ Python-specific additions and deltas.
 - ALWAYS guard hot optional instrumentation with `if __debug__:` — `-O` drops the whole block, argument construction included, so production pays nothing; a runtime flag still builds the arguments. ALWAYS write `__debug__` as the first operand (`if __debug__ and on:`) — second, the preceding load and branch survive the optimizer
 - NEVER adopt `-O`/`PYTHONOPTIMIZE=1` before running the suite under it — it strips every `assert` as well
 - ALWAYS pass `py-no-tuple-assignment` and `py-no-dict-call`.
+- ALWAYS write the None guard of a nullable return first — `if not row: return None`,
+  then `return StoredObservation(**row)` — NEVER `return X if cond else None`; lint
+  `py-no-conditional-none-return`. Whether the return may be None at all: § Type Annotations
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
