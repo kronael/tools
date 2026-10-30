@@ -297,3 +297,25 @@ rule:
 message: 'NEVER compare an Enum member with == or != — use is / is not on a value of the enum type; read the enum field, or convert a str first: ExchangeName(s)
     is ExchangeName.X. A class constant that is not an enum takes # ast-grep-ignore: py-enum-is. See skill:py.'
 note: 'source: skills/py/SKILL.md — Type Annotations'
+---
+id: py-replace-method
+language: python
+severity: warning
+rule:
+    any:
+        - kind: call
+          has:
+              field: function
+              regex: ^dataclasses\.replace$
+        - kind: dotted_name
+          regex: ^replace$
+          inside:
+              kind: import_from_statement
+              stopBy:
+                  kind: import_from_statement
+              has:
+                  field: module_name
+                  regex: ^dataclasses$
+message: "NEVER dataclasses.replace(obj, ...) — mix the project's WithReplace into the dataclass and call obj.replace(...). The mixin's own body and a dataclass\
+    \ you do not own take # ast-grep-ignore: py-replace-method. See skill:py."
+note: 'source: skills/py/SKILL.md — Named Data Structures'

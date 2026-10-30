@@ -82,7 +82,7 @@ Python-specific additions and deltas.
 - ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
-- ALWAYS a `dataclass` for application-owned records, return values, parameter bundles and messages; lint `py-no-typeddict`.
+- ALWAYS a `dataclass` for application-owned records, return values, parameter bundles and messages; lints `py-no-typeddict`, `py-no-namedtuple`.
 - For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
   on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
   NEVER dispatch application records through a string-keyed callable table or `KIND`/`VERSION` `ClassVar`: the stored
@@ -100,7 +100,7 @@ Python-specific additions and deltas.
 - ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
-- ALWAYS pass `py-no-namedtuple`.
+- ALWAYS mix the project's `WithReplace` (`def replace(self, **kwargs) -> Self`) into a dataclass callers copy with changes and call `obj.replace(...)` — NEVER `dataclasses.replace(obj, ...)`: a method is the class's own, so the class can override it; lint `py-replace-method`.
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
