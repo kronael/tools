@@ -40,6 +40,10 @@ tooling — scaffold with `bunx create-next-app@latest --biome`, never `npx`.
 - Server Actions for form submission, `useActionState` for validation
 - ALWAYS forms work without JS (progressive enhancement)
 
+## Testing
+- `../software/testing.md` § Kinds: a hook and the request layer have no
+  vitest test, the play journeys drive them. NEVER `vi.mock` an own module.
+
 ## Styling
 - ALWAYS use theme variables, NEVER hardcoded colours — not HEX, not a Tailwind
   palette entry, not an arbitrary value: `bg-card text-foreground border-border`,

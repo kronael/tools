@@ -11,16 +11,43 @@
 - **unit**: fast, no external deps (<5s)
 - **e2e**: self-contained, including testcontainers
 - **smoke**: against a running API, commonly pytest + Playwright
+- **play**: the Play kind below, self-contained like e2e (`make play`)
 - The `make test` / `test-all` / `smoke` tiers: `code.md` § House conventions.
 - Unit tests live next to the code (`*_test.go`, `test_*.py`); integration
   tests in a dedicated `tests/` directory
 
+## Kinds
+
+Three kinds, each proving one thing; a test that fits none is not written.
+
+- Component (unit): one unit with plain values or typed props in, output
+  checked; loading, empty and error states are inputs. NEVER `fetch` or a
+  fixture server.
+- API: every module with plain values; a function that reads or writes the
+  database runs on the testcontainers fixture, NEVER on a patch of an own
+  query function; HTTP tests through the app on the same fixture prove the
+  contract — what the API answers.
+- Play: user journeys end to end through the built frontend, the real API and
+  testcontainers Postgres, one per journey the FLOWS doc names, data created
+  through the API calls the UI makes. A UI state is a component test, a
+  refusal an API test. Least code: one migrated template database and
+  `CREATE DATABASE ... TEMPLATE` per test; one API process per worker on its
+  own port and database; `storageState` once per worker; `page.clock`. A slow
+  or lost answer is the real answer held or aborted with a route, NEVER a
+  rewritten body.
+- Fake ONLY what you cannot run — a third party at the API's outbound client,
+  the clock, randomness. NEVER an own module (that tests the fake) and NEVER
+  the own API contract: a fake answers differently from the real API, and
+  every fix adds fake code.
+- Assertions update themselves — `toMatchAriaSnapshot`
+  (`--update-snapshots=changed`), `toMatchInlineSnapshot` (`-u`),
+  `inline-snapshot` (`--inline-snapshot=fix`) — on deterministic output (fixed
+  clock and ids). ALWAYS read a snapshot change in the diff like code.
+
 ## Scope and layout
 
 - Prefer the real thing: integration/e2e wherever the seam is cheap (container
-  DB, real handler, tmpdir I/O). Mock ONLY what you cannot run — paid or
-  third-party APIs, clocks, randomness, cloud SDKs. NEVER mock your own modules
-  to keep a unit test tidy; that tests the mocks.
+  DB, real handler, tmpdir I/O); what is faked: § Kinds.
 - Test features, not fixes: a runtime failure means fix the code — add a test
   only where the feature itself lacks coverage.
 - Test config objects match the target type exactly; omit unknown properties
