@@ -255,3 +255,17 @@ rule:
                   - kind: tuple
 message: Assign independent values on separate lines; NEVER a, b = x, y. Unpacking one returned value is allowed. See skill:py.
 note: 'source: skills/py/SKILL.md — Style'
+---
+id: py-typeadapter-module-level
+language: python
+severity: warning
+rule:
+    kind: call
+    has:
+        field: function
+        regex: ^(pydantic\.)?TypeAdapter$
+    inside:
+        kind: function_definition
+        stopBy: end
+message: Build a pydantic TypeAdapter once as a module-level constant; NEVER inside a function, where every call compiles a new validator. See skill:py.
+note: 'source: skills/py/SKILL.md — Named Data Structures'

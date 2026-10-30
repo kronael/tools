@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -90,8 +90,9 @@ Python-specific additions and deltas.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
-- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`;
-  NEVER add dacite, cattrs or hand-written `cls(**d)` beside it.
+- ALWAYS build a pydantic `TypeAdapter` once as a module-level constant (`FRAME = TypeAdapter(Frame)`); lint `py-typeadapter-module-level`.
+- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`, the program's
+  own stored JSON (a row's `contents`) included; NEVER add a `TypeAdapter`, dacite, cattrs or hand-written `cls(**d)` beside it.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a
