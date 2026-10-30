@@ -42,7 +42,7 @@ tooling — scaffold with `bunx create-next-app@latest --biome`, never `npx`.
 
 ## Testing
 - `../software/testing.md` § Kinds: a hook and the request layer have no
-  vitest test, the play journeys drive them. NEVER `vi.mock` an own module.
+  vitest test, the play journeys drive them.
 
 ## Styling
 - ALWAYS use theme variables, NEVER hardcoded colours — not HEX, not a Tailwind

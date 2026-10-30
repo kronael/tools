@@ -18,7 +18,7 @@
 
 ## Kinds
 
-Three kinds, each proving one thing; a test that fits none is not written.
+For self-contained tests: three kinds, each proving one thing; a test that fits none is not written.
 
 - Component (unit): one unit with plain values or typed props in, output
   checked; loading, empty and error states are inputs. NEVER `fetch` or a

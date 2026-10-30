@@ -263,7 +263,7 @@ rule:
     kind: call
     has:
         field: function
-        regex: ^(pydantic\.)?TypeAdapter$
+        regex: ^(pydantic\.)?TypeAdapter(\[.*\])?$
     inside:
         kind: function_definition
         stopBy: end
