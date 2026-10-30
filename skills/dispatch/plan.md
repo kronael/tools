@@ -40,7 +40,8 @@ and a gate, and no unresolved owner decision blocks its execution.
 
 ## 2. Brief
 
-ALWAYS select a coding worker for an implementation step through `SKILL.md`.
+ALWAYS select a coding worker for an implementation step, a documentation
+worker for a docs step, through `SKILL.md`.
 Pass the step's accepted decisions verbatim as constraints, with the plan path,
 owned files and gate. ALWAYS tell the worker to stop and report if source
 contradicts the plan, rather than inventing a workaround.

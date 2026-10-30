@@ -110,7 +110,8 @@ gate, and no unresolved owner decision blocks the first step.
 
 ### 4. Implement and verify each step
 
-ALWAYS select each settled implementation step as coding through `dispatch`.
+ALWAYS select each settled implementation step through `dispatch`: code as
+coding, docs as documentation.
 `runtime.md` covers unavailable launch capabilities.
 Follow `worktree` for isolation and reconciliation. Parallel work needs
 independent owned paths and dependencies. Read-only investigations may

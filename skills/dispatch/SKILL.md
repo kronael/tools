@@ -1,7 +1,7 @@
 ---
 name: dispatch
 description: Delegate work by task, with an explicit model and effort. NOT for a second-opinion workflow (use oracle) or end-to-end delivery (use ship).
-when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker"
+when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker, documentation worker, docs worker"
 user-invocable: true
 ---
 
@@ -14,22 +14,26 @@ task and its scope; `claude` and `codex` own provider launch mechanics.
 ## Task routing
 
 ALWAYS classify by the requested output, not the file extension or the word
-“design.” A product contract is a spec; exact code edits form a plan; a
-challenge to the contract or plan is a review or audit. Skill text and shared
-library code follow the same distinction as other artifacts.
+“design.” A product contract is a spec; exact code edits form a plan; written
+docs are documentation; a challenge to the contract or plan is a review or
+audit. Skill text and shared library code follow the same distinction as other
+artifacts.
 
 | Task | Requested output and boundary | Claude model / effort | Codex model / effort | Group |
 |---|---|---|---|---|
 | Mechanical | Named-file inventories, exact searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / high | `gpt-6-luna` / high | Lightweight |
-| Coding | Implement a settled plan, investigate a bug, gather nontrivial facts, or make settled document changes | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
+| Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
+| Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
 | Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / xhigh | `gpt-6.1-sol` / xhigh | Judgment |
 
 ALWAYS keep Luna within the mechanical boundary; it is not the coding
-workhorse. Sol uses different efforts for different tasks. A fix found by a
-review or audit is coding; an unresolved contract returns to spec or planning.
+workhorse. NEVER route documentation to Coding or Terra, a settled doc edit
+included — ALWAYS select Documentation. Sol uses different efforts for
+different tasks. A fix found by a review or audit is coding, or documentation
+when it changes docs; an unresolved contract returns to spec or planning.
 
 ALWAYS use the current harness's provider unless the owner selects another.
 A provider-only request keeps the task's model and effort from that column.
@@ -53,8 +57,9 @@ NEVER run a spec, implementation and review on one inherited model setting.
 
 ALWAYS count active workers by task group across providers and launch methods:
 at most 2 Lightweight, 2 Implementation and 1 Judgment worker. Planning,
-review, audit and spec share the Judgment slot. Native workers, CLI processes
-and built-in agents all count; a stricter runtime limit also applies.
+review, audit, spec and documentation share the Judgment slot. Native workers,
+CLI processes and built-in agents all count; a stricter runtime limit also
+applies.
 
 Only the owner lifts a cap, explicitly for a named task after seeing the
 proposed launches. ALWAYS end that lift with its task. NEVER change the task

@@ -115,7 +115,8 @@ code, deployment, specs or data; documents also carry claims to verify.
    (WISDOM § Bug triage); NEVER build one without sign-off.
    ALWAYS apply code findings under `software/code.md` § Boring code. Apply
    serially, one context at a time, briefed from `brief.md`.
-   ALWAYS select confirmed refinement edits as coding through `dispatch`.
+   ALWAYS select confirmed refinement edits through `dispatch`: code edits as
+   coding, doc edits as documentation.
    An unresolved design choice returns to planning or spec before coding.
    Claude workers load `improve`; Codex briefs follow `dispatch` § Brief.
    Abort a context on a failure.
@@ -196,7 +197,8 @@ code, deployment, specs or data; documents also carry claims to verify.
   target exports; a bare invocation's errors belong to the invocation.
 - ALWAYS open the diff behind a subagent's report before acting on it, and
   NEVER report a sub as running without the `agentId` its launch returned.
-- ALWAYS delegate refinement edits through the coding route and `improve`;
+- ALWAYS delegate refinement edits through the coding or documentation route
+  and `improve`;
   NEVER do the improvement work in main context. Provider runbooks own
   native and cross-provider CLI launches.
 - A language lens lives at `<skill>.md` in this directory, named for the skill

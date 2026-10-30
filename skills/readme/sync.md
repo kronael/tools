@@ -12,10 +12,11 @@ For a whole doc set, the parent ALWAYS selects a read-only review worker through
 behaviour. The reviewer uses the protocol below as checks and returns evidenced
 discrepancies and proposed moves; NEVER edit during this review.
 
-The parent ALWAYS verifies the findings, then selects a coding worker through
-`dispatch` for confirmed document changes. The coding worker applies only those
-changes using the same protocol. A worker assigned either phase ALWAYS performs
-that phase itself; NEVER delegate the assignment again. A one-fact fix runs inline.
+The parent ALWAYS verifies the findings, then selects a documentation worker
+through `dispatch` for the confirmed changes. The documentation worker applies
+only those changes using the same protocol. A worker assigned either phase
+ALWAYS performs that phase itself; NEVER delegate the assignment again. A
+one-fact fix runs inline.
 
 ## Protocol
 
