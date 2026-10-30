@@ -38,9 +38,9 @@ and model requests reach `/dispatch`; `oracle` and `second opinion` reach
 `/oracle`. Provider requests reach `/codex` or `/claude`. Both harnesses use
 the same routes. Codex translates installed skill names to `@name`; it never
 replaces a requested fresh worker with the current session. The original prompt
-retains model and effort overrides for the selected skill. `learn` is deliberately NOT a route — `/learn` is
-invoked only explicitly or by `memory_nudge.py`, never because the word
-appeared in a prompt.
+retains model and effort overrides for the selected skill. The word `learn`
+has no keyword route. `memory_nudge.py` requests its memory pass; the model
+must invoke the skill.
 
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
@@ -188,28 +188,13 @@ The hook reports a missing or stale diary entry and never writes a header —
 run `/diary` deliberately when a session is worth recording. Pure script, no
 LLM call, NEVER pushes.
 
-### memory_nudge.py (PreCompact + Stop)
+### memory_nudge.py (SessionStart compact + Stop)
 
-Reminds the assistant to evaluate the session for memory-worthy content
-(corrections, confirmed decisions, project facts, reference pointers) and save
-it via the auto-memory mechanism or `/learn` — much rarer than the diary
-nudge, tied to the moment context would otherwise be lost:
-
-- **PreCompact** — always nudges (manual or auto). Emits `systemMessage`, the
-  idiom `local.py`/`reclaude.py` use on PreCompact. Also writes a
-  per-session `done` marker so the Stop fallback below stays quiet.
-- **Stop** — the fallback for sessions that never compact. Fires **at most
-  once per session**, on the first Stop where either `SESSION_THRESHOLD`
-  (30 min) wall-clock has elapsed OR `STOP_COUNT_THRESHOLD` (3) Stops have
-  occurred. The count path covers *short* sessions that never near 30 min;
-  one/two-turn trivia stays under the count and never nudges. Emits
-  `hookSpecificOutput.additionalContext`, like `stop.py`'s PostToolUse path.
-
-State: the session-keyed stamps `memory-nudge-{start,done}-{session_id}` in `~/.claude/state` (`lib/state.py`). The `start`
-file holds `started_ts count`. Pure script, no LLM call, NEVER pushes.
-
-`codex-hooks.json` does not wire it: Codex runs `stop` on Stop and `local` +
-`reclaude` on PreCompact only.
+Requests `/learn`'s memory pass against the recorded session transcript after
+compaction, with a once-per-session Stop fallback. The request covers qualifying
+durable memory only. It does not authorize skill or lint edits or prove that
+learn ran. Codex does not wire this hook.
+Delivery, timing and state: [memory nudge flow](ARCHITECTURE.md#memory_nudgepy-sessionstart-compact--stop).
 
 ## Tests
 

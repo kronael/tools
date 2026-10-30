@@ -122,7 +122,14 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/reclaude.py",
             "timeout": 500
-          },
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/memory_nudge.py",

@@ -19,7 +19,8 @@ Claude stops ──> Stop ──> stop.py       (commit + diary block)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md)
                           ──> reclaude.py     (RECLAUDE.md + preservation note)
-                          ──> memory_nudge.py (session memory, unconditional)
+
+Compaction complete ──► SessionStart (compact) ──► memory_nudge.py (memory pass request)
 ```
 
 Claude event/matcher wiring is owned by `../settings-recommended.json`.
@@ -262,29 +263,44 @@ checkout, for a submodule or a `--separate-git-dir` repo; the slug follows
 that path, and `../skills/diary/SKILL.md` § Where it lives names the same
 tree. Change both together. Outside a repo the hook checks nothing.
 
-### memory_nudge.py (PreCompact + Stop)
+### memory_nudge.py (SessionStart compact + Stop)
 
-**Input:** JSON with `cwd`, `session_id`, `stop_hook_active`, and hook event
-identity (`hook_event`/`hook_event_name`/`hookEventName`, read via
-`lib/state.py`).
-**Output:** `PreCompact` → `{"ok": true, "systemMessage": "..."}` (local.py /
-reclaude.py idiom). `Stop` → `hookSpecificOutput.additionalContext` (stop.py
-PostToolUse idiom). Silent otherwise.
+**Input:** JSON with `session_id`, `stop_hook_active`, `source`, and hook
+event identity (`hook_event`/`hook_event_name`/`hookEventName`, read via
+`lib/state.py`). The recommended `SessionStart` matcher is `compact`.
+**Output:** `hookSpecificOutput.additionalContext`, with `hookEventName`
+set to `SessionStart` or `Stop`. Silent on other events or on `SessionStart`
+with another source.
+
+The prompt requests `/learn`'s memory pass against the recorded session
+transcript. It requests the shared evidence check, qualifying durable memory,
+and a report of what qualified or that nothing qualified. It does not invoke
+the skill or lint pass. Emitting the request does not prove that the model
+runs learn or saves memory.
+
+`SessionStart` supplies context after compaction. Claude discards
+`PreCompact.systemMessage`, so the memory nudge uses the supported
+`additionalContext` field. Event contracts:
+[SessionStart](https://code.claude.com/docs/en/hooks#sessionstart),
+[PreCompact](https://code.claude.com/docs/en/hooks#precompact).
 
 **Flow:**
-1. Bail if `stop_hook_active` is set.
-2. On `PreCompact`: always emit the memory-review nudge, then write a
-   per-session `done` marker so the Stop fallback stays silent.
+1. Exit silently if `stop_hook_active` is set, to prevent recursion.
+2. On `SessionStart` with `source: compact`, emit after each manual or auto
+   compaction. Write the session's `done` marker to suppress later Stop nudges.
+   An existing marker does not suppress another compact event.
 3. On `Stop`: silent if the `done` marker exists. Otherwise read the `start`
    file (`started_ts count`); the first Stop just records `now 1` and waits.
-   Each later Stop bumps the count; once `now - started >= SESSION_THRESHOLD`
-   (30 min) OR `count >= STOP_COUNT_THRESHOLD` (3), emit once and mark `done`.
-   The count gate is what reaches *short* sessions that never compact and
-   never approach 30 min.
+   Each later Stop increments the count. Emit when either 30 minutes pass
+   since the first Stop (`SESSION_THRESHOLD`) or the count reaches 3
+   (`STOP_COUNT_THRESHOLD`). Mark `done` to keep this fallback once per session.
 
-State: the `memory-nudge-{start,done}-{session_id}` stamps in `~/.claude/state` (`lib/state.py`). Much lower
-frequency than stop.py's recurring diary/commit nudges — at most once via
-PreCompact plus at most once via the Stop fallback. Pure script, no LLM call.
+**State:** `memory-nudge-{start,done}-{session_id}` in `~/.claude/state`
+(`lib/state.py`), keyed by session rather than `cwd`. The marker records
+emission, not completion of learn. Pure script, no LLM call. Never blocks or pushes.
+
+The Codex adapter has no `memory_nudge` target, and `codex-hooks.json` does
+not wire this hook. The shared skills do not imply automatic Codex delivery.
 
 ## Error Handling
 

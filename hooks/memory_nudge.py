@@ -2,10 +2,7 @@
 """Memory nudge: prompt a session memory review, far less often than diary.
 
 Fires on:
-- PreCompact (both "manual" and "auto" triggers) — always. Compaction is the
-  moment context would otherwise be lost, so it's the natural low-frequency
-  trigger the user asked for; it happens at most a handful of times per
-  session, unlike the diary nudge's every-10-min/100-tool-calls cadence.
+- SessionStart with source "compact" — after each compaction.
 - Stop — at most ONCE per session, as a fallback for sessions that end
   without ever compacting. Fires on the first Stop where EITHER the session
   has run past SESSION_THRESHOLD wall-clock OR at least STOP_COUNT_THRESHOLD
@@ -18,8 +15,7 @@ Once-per-session state lives in ~/.claude/state, keyed by session_id alone
 (see lib/state.py), so the Stop nudge stays once per session even when the
 session changes directory.
 
-No LLM call. Never blocks. Emits additionalContext (Stop) or systemMessage
-(the idiom local.py/reclaude.py use on PreCompact).
+No LLM call. Never blocks. Emits additionalContext for SessionStart or Stop.
 """
 
 import contextlib
@@ -35,15 +31,24 @@ SESSION_THRESHOLD = 1800
 STOP_COUNT_THRESHOLD = 3
 
 NUDGE_TEXT = (
-    "Session memory check: invoke /learn's memory pass for this session "
-    'before context is lost. Follow its evidence check and save only '
+    "Session memory check: invoke /learn's memory pass to review the recorded "
+    'session transcript. Follow its evidence check and save only '
     'qualifying durable memory. This nudge does not invoke the skill or '
     'lint pass. Report what qualified, or that nothing qualified.'
 )
 
 
-def emit_precompact():
-    print(json.dumps({'ok': True, 'systemMessage': NUDGE_TEXT}))
+def emit_compact():
+    print(
+        json.dumps(
+            {
+                'hookSpecificOutput': {
+                    'hookEventName': 'SessionStart',
+                    'additionalContext': NUDGE_TEXT,
+                },
+            }
+        )
+    )
 
 
 def emit_stop():
@@ -95,8 +100,8 @@ def main():
     event = hook_event(data)
     session_id = data.get('session_id') or 'default'
 
-    if event == 'PreCompact':
-        emit_precompact()
+    if event == 'SessionStart' and data.get('source') == 'compact':
+        emit_compact()
         touch_done(session_state('memory-nudge-done', session_id))
         sys.exit(0)
 

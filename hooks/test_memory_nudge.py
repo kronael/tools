@@ -29,18 +29,39 @@ def base(tmp_path, event, **extra):
     }
 
 
-def test_precompact_emits_and_marks_done(tmp_path, monkeypatch, capsys, state_root):
-    out = run(monkeypatch, capsys, base(tmp_path, 'PreCompact'))
+def test_compact_emits_and_marks_done(tmp_path, monkeypatch, capsys, state_root):
+    out = run(monkeypatch, capsys, base(tmp_path, 'SessionStart', source='compact'))
 
-    assert out == {'ok': True, 'systemMessage': memory_nudge.NUDGE_TEXT}
+    assert out == {
+        'hookSpecificOutput': {
+            'hookEventName': 'SessionStart',
+            'additionalContext': memory_nudge.NUDGE_TEXT,
+        }
+    }
     assert (state_root / 'memory-nudge-done-sess').exists()
 
 
-def test_precompact_suppresses_later_stop(tmp_path, monkeypatch, capsys):
-    run(monkeypatch, capsys, base(tmp_path, 'PreCompact'))
-    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
+def test_compact_suppresses_later_stop(tmp_path, monkeypatch, capsys):
+    run(monkeypatch, capsys, base(tmp_path, 'SessionStart', source='compact'))
+    for _ in range(memory_nudge.STOP_COUNT_THRESHOLD):
+        assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
 
-    assert out is None
+
+@pytest.mark.parametrize('source', ['startup', 'resume', 'unknown', None])
+def test_other_session_starts_leave_stop_fallback(tmp_path, monkeypatch, capsys, source):
+    assert run(monkeypatch, capsys, base(tmp_path, 'SessionStart', source=source)) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
+    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
+    assert out['hookSpecificOutput']['additionalContext'] == memory_nudge.NUDGE_TEXT
+
+
+def test_precompact_leaves_stop_fallback(tmp_path, monkeypatch, capsys):
+    assert run(monkeypatch, capsys, base(tmp_path, 'PreCompact')) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'Stop')) is None
+    out = run(monkeypatch, capsys, base(tmp_path, 'Stop'))
+    assert out['hookSpecificOutput']['additionalContext'] == memory_nudge.NUDGE_TEXT
 
 
 def test_first_stop_is_silent_and_records(tmp_path, monkeypatch, capsys, state_root):

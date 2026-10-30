@@ -113,7 +113,7 @@ which the OS clears on reboot.
 1. Claude Code starts in a project
 2. Loads ~/.claude/CLAUDE.md (global wisdom)
 3. Loads ./CLAUDE.md (project conventions)
-4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
+4. Hooks fire on SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills load on dispatch (`/solve`, `/<name>`) or on a description match
 6. `dispatch` selects a task route; `claude` or `codex` launches the selected worker
 ```
