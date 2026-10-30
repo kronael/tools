@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [v0.4.64] — 20261030
+
+> kronael v0.4.64 — Specs read as the architecture after the change
+>
+> A spec now shows where a change fits with marked diagrams and quoted code, so a reviewer sees the change without the conversation.
+>
+> • Specs — each change section opens with a figure marking new, changed and removed parts.
+> • Specs — a table only adds what a figure cannot show; no per-file tables of line pointers.
+> • Specs — current and proposed code quoted where it changes; excerpts are not counted as length.
+> • Specs — each open question names its case and a recommendation.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs/format.md`: the spec body is the architecture document after the change; figures marked `(new)`, `(changed)`, `(removed)`; tables, code excerpts and open questions rules; points at `readme`, `writing` and `diagrams`.
+- `specs/spec-first.md`: a spec written during a code change follows `format.md`.
+- `refine/readme.md`: doc length weighs prose and tables, never a spec's code excerpts.
+
 ## [v0.4.63] — 20261030
 
 > kronael v0.4.63 — Three test kinds and docs to their own worker
