@@ -35,15 +35,10 @@ SESSION_THRESHOLD = 1800
 STOP_COUNT_THRESHOLD = 3
 
 NUDGE_TEXT = (
-    'Session memory check: before this context is lost, evaluate the '
-    'conversation for anything worth persisting long-term — user '
-    'corrections, confirmed approaches/decisions, durable project facts, '
-    'reference pointers. Save qualifying items via the auto-memory '
-    'mechanism (frontmatter name/description/metadata.type: '
-    'user/feedback/project/reference, indexed in MEMORY.md), or run '
-    '/learn for a fuller extraction pass — /learn covers both '
-    'session-memory evaluation and skill/pattern extraction. Skip if '
-    'nothing qualifies; do not force it.'
+    "Session memory check: invoke /learn's memory pass for this session "
+    'before context is lost. Follow its evidence check and save only '
+    'qualifying durable memory. This nudge does not invoke the skill or '
+    'lint pass. Report what qualified, or that nothing qualified.'
 )
 
 

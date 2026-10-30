@@ -77,7 +77,8 @@ ALWAYS read exactly the matched file when the request needs this workflow.
 
 ALWAYS take spec-sized, mostly unattended delivery to `ship`. A routine lookup
 stays in direct tools. A small unrequested delegation stays inline under
-`plan.md`'s size gate; an explicit request to dispatch still delegates it.
+`plan.md`'s size gate unless its owning workflow requires context isolation.
+An explicit request to dispatch still delegates it.
 
 For a single bounded task, ALWAYS launch in the background when the runtime
 supports it and continue independent work. When the result is needed next,
