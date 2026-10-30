@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [v0.4.63] — 20261030
+
+> kronael v0.4.63 — Three test kinds and docs to their own worker
+>
+> Tests come in three kinds that fake only third parties, and documentation edits get their own worker route.
+>
+> • Testing — component, API and play kinds; fake only what you cannot run, never an own module.
+> • Dispatch — a Documentation task sends doc and skill text to Sol or Opus, never the coding worker.
+> • Python — build a `TypeAdapter` once at module level; decode stored JSON with the project's `from_dict`.
+> • Python — guard a nullable return first; two new lints flag both patterns.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/testing.md`: component, API and play kinds for self-contained tests; fakes only for third parties, the clock and randomness.
+- `dispatch`: a Documentation task routes doc edits to Sol or Opus; refine, ship, improve and readme sync use it.
+- `py`: module-level `TypeAdapter` and `from_dict` for stored JSON; nullable returns guard first.
+- `py` lints: `py-typeadapter-module-level` and `py-no-conditional-none-return`.
+- `tsx`: hooks and the request layer get no vitest test; play journeys drive them.
+
 ## [v0.4.62] — 20261029
 
 > kronael v0.4.62 — Refine hunts the recurring slop
