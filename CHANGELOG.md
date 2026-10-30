@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.65] — 20261030
+
+> kronael v0.4.65 — Recall routing and workflow evidence
+>
+> Automatic worker selection and transcript evidence keep recall and learning tied to recorded actions.
+>
+> • Recall — known records stay direct; exploratory extraction uses dispatch workers.
+> • Learn — the memory pass checks required actions against recorded tool use.
+> • Hooks — compaction nudges request the memory pass through SessionStart context.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Recall delegates transcript extraction before broad reads and verifies the cited evidence.
+- Learn checks required workflow actions against the session record without waiting for corrections.
+- Compaction memory nudges use SessionStart context; Stop remains the fallback.
+
 ## [v0.4.64] — 20261030
 
 > kronael v0.4.64 — Specs read as the architecture after the change
