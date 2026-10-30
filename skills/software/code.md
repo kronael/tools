@@ -28,6 +28,12 @@ your diff against every `##` heading here before calling an edit done.
   models named `<Word>Request` and `<Word>Response`: `/v1/react` → `react()`
   in `react.py`, `ReactRequest`, `ReactResponse`; NEVER `reactions.py`, NEVER
   `ReactIn`/`ReactOut`, NEVER a `stream()` on `/v1/ws`.
+- ALWAYS name a constant, parser or adapter after the type it holds, as its
+  neighbours do: beside `META = TypeAdapter(Meta)`, a `TypeAdapter(list[Meta])`
+  is `METAS`. NEVER turn a vendor's endpoint or field name into a new term
+  (`ALL_PERP_METAS` from `allPerpMetas`).
+- ALWAYS spell plurals as English does: `dexes`, `read_dexes`; NEVER clip
+  one to fit (`dexs`).
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
 - ALWAYS name a parameter or local after its own type or the domain concept it
@@ -216,8 +222,7 @@ your diff against every `##` heading here before calling an edit done.
   after sign-off on its `BUGS.md` proposal (WISDOM § Bug triage).
 - NEVER improve beyond what the task asks — no drive-by cleanup, rename or
   feature in the same change; park it (`next`, `bugs`).
-- ALWAYS put service runtime/deployment changes in a separate PR with owner sign-off;
-  NEVER change container user, HOME, mounts, units or host paths in a feature PR.
+- ALWAYS apply § Review sign-off to shared-library behavior and runtime changes.
 - ALWAYS retry inside a job or request only a failure that returns fast —
   refused or reset connection, a cut body, a rate-limit answer — on short
   delays (1, 1, 2, 5 s) under one deadline per call. NEVER retry a timeout
@@ -236,6 +241,26 @@ your diff against every `##` heading here before calling an edit done.
   not after a blind substitution has landed. AST tools (`ruff --fix`, LibCST,
   ast-grep, a language server's rename) rewrite syntax nodes, not strings, and
   are not this.
+
+## Review sign-off
+
+- ALWAYS put shared-library behavior and runtime/deployment changes in dedicated
+  review PRs, separate from feature work. ALWAYS split unrelated shared changes.
+- ALWAYS prepare the complete diff and review before seeking sign-off. ALWAYS
+  identify the PR, head and base SHAs, findings and unresolved risks. ALWAYS
+  show changed runtime settings, including vars and config, with old and new
+  values; NEVER expose credentials.
+- Before merging or deploying, ALWAYS obtain an owner-designated human's
+  explicit sign-off on the presented review and scope. ALWAYS record the
+  acknowledgement and its source with the PR, review and revision evidence.
+  NEVER treat a plan approval, CI, automated review, agent summary or command
+  permission as review sign-off.
+- ALWAYS check the resulting diff and current revision before merging or
+  deploying. ALWAYS renew sign-off if the presented behavior, relevant diff,
+  unresolved findings or runtime settings materially change. An immaterial
+  base update does not invalidate sign-off after that check.
+- NEVER manufacture a human approval or bypass a required review. ALWAYS
+  report agent guidance, local hooks and GitHub protection separately.
 
 ## Layout and formatting
 
