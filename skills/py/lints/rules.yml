@@ -284,3 +284,16 @@ rule:
             kind: none
 message: NEVER return a conditional expression that yields None — guard first, if not row return None, then return the value plainly. See skill:py.
 note: 'source: skills/py/SKILL.md — Style'
+---
+id: py-enum-is
+language: python
+severity: warning
+rule:
+    kind: comparison_operator
+    regex: \s(==|!=)\s
+    has:
+        kind: attribute
+        regex: ^[A-Z][A-Za-z0-9]*\.[A-Z][A-Z0-9_]*$
+message: 'NEVER compare an Enum member with == or != — use is / is not on a value of the enum type; read the enum field, or convert a str first: ExchangeName(s)
+    is ExchangeName.X. A class constant that is not an enum takes # ast-grep-ignore: py-enum-is. See skill:py.'
+note: 'source: skills/py/SKILL.md — Type Annotations'
