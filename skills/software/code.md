@@ -98,6 +98,10 @@ your diff against every `##` heading here before calling an edit done.
   write simpler than you are capable of, clarity over cleverness.
 - ALWAYS pick the construct that takes the least mental model when two are
   equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
+- ALWAYS bind a value once, from one expression, when every part is known at
+  the binding: `changes = follows + unfollows`. NEVER assign it and then grow
+  it with `+=`, `append` or `update`; a loop that adds under a condition
+  stays a loop.
 - ALWAYS copy a thing two or three times before you abstract it. Every line is
   a liability, deletion lowers cost, and a premature abstraction freezes the
   wrong shape in place. ALWAYS design for replaceability.
