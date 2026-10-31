@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [v0.4.67] — 20261031
+
+> kronael v0.4.67 — The spec carries the module map
+>
+> Planners settle a change's modules inside its spec, and generated files are plain make targets.
+>
+> • Specs — one YAML module map per spec: each file's job, its key names and what it never does.
+> • Planning — the planner writes or completes the map; workers build each module from its entry.
+> • Make — a generated file is a file target on its sources, written through a temporary file.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs/format.md` owns the module map block; `dispatch/plan.md` and `ship` have the planner write it and the workers build from it.
+- `mk` § Generated files: a generated file is a file target named by its path, with its sources as prerequisites.
+
 ## [v0.4.66] — 20261031
 
 > kronael v0.4.66 — Bugs live with the code they describe
