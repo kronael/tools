@@ -56,14 +56,17 @@ or cuts them before promotion. NEVER infer implementation completion from lint.
    change's boxes among the unchanged neighbours they connect to, marked as
    § Figures says. The reader sees where the change sits before any detail.
    A change that alters one flow draws it once, here.
-4. **One section per flow, layout or relation the change alters**, each
+4. **Module map** — one YAML block under the figure: every file the change
+   adds or alters, with its job, the public names that carry the design and
+   what it never does (§ Module map).
+5. **One section per flow, layout or relation the change alters**, each
    opening with its figure after the change, then the current and the
    proposed excerpt of the code at the place it changes (§ Code excerpts),
    then the WHY in a few sentences: the decision and its one caveat. A
    change too small for a figure is too small for a section.
-5. **Open questions** — `draft` or `reference` only, numbered, each as § Open questions
+6. **Open questions** — `draft` or `reference` only, numbered, each as § Open questions
    says.
-6. **Contract** — a refactor or removal spec only: the baseline numbers
+7. **Contract** — a refactor or removal spec only: the baseline numbers
    measured before the first edit, and the exact edit each gate performs.
 
 ALWAYS keep the sections in this order. ALWAYS let the figure carry the
@@ -97,6 +100,40 @@ only marks.
 - ALWAYS draw only the neighbours the change connects to. NEVER the rest of
   the system: a figure the change does not touch belongs to ARCHITECTURE.md,
   linked in one line.
+
+## Module map
+
+The module map is the spec's scaffold: the files the change adds or alters,
+written as one YAML block under the § Where it fits figure. It is the whole
+interface between the spec and the code, and the only per-file listing a spec
+holds. `dispatch` → `plan.md` § Module map owns who writes it and who builds
+from it.
+
+- ALWAYS one entry per new or changed file, marked as the figure marks its
+  boxes: `path`, `job` in one line, `names` — the few public names that carry
+  the design, a record with its fields, the main functions with short
+  signatures — and `never`, what the file never does.
+- NEVER a body, a private name, a helper or a parameter list the design does
+  not turn on: a map that lists everything is the module itself, written
+  twice. NEVER a stub file in the tree in the map's place.
+
+```yaml
+- path: src/feed/filter.py (new)
+  job: drops the rows no subscriber asked for
+  names:
+    - "Rule(symbol: str, min_size: int)"
+    - "keep(rows: list[Row], rules: list[Rule]) -> list[Row]"
+  never: reads the store or holds state between calls
+- path: src/feed/producer.py (changed)
+  job: emits events to the filter
+  names:
+    - "emit(event: Event) -> None"
+  never: writes rows itself
+```
+
+What generalizes: two entries, one name or two each, a `never` that names
+the boundary a reader would otherwise test for; the signatures are short
+enough that a worker builds the real module from them.
 
 ## Tables
 
@@ -215,6 +252,9 @@ mechanical part of each. Everything else is a judgement — ALWAYS review:
 - the spec opens with a definition, the sections run in § Body's order, and
   every section that alters a flow opens with its figure after the change,
   marked `(new)`, `(changed)`, `(removed)`, with the unchanged neighbours drawn
+- the module map lists each new or changed file once with its job, the public
+  names that carry the design and its `never`; no body, private name or
+  parameter list the design does not turn on
 - every table adds a value per row the figure cannot show; none restates a
   figure or lists readers, files or steps with `path:line` cells
 - the code at each place it changes is quoted current and proposed; untouched

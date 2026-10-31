@@ -10,6 +10,6 @@ spec governs nothing; the docs hold the state.
 - ALWAYS write the minimal spec first, shaped by `format.md`, when a change
   adds a structure no spec covers; the code without it is incomplete.
 - NEVER contradict a neighbouring in-flight spec — ALWAYS read them first.
-- An in-flight spec reaches the tree through the scaffold (`dispatch` →
-  `plan.md` § Scaffold): each governed module carries its part of the spec
-  beside the names it governs until the step that fills them.
+- The spec's module map (`format.md` § Module map) is the interface the code
+  answers to; `dispatch` → `plan.md` § Module map owns who writes it and who
+  builds from it.

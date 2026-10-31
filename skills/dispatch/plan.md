@@ -38,26 +38,18 @@ change. Keep a status and snapshot SHA per step.
 Completion criterion: source supports the plan, every step has explicit choices
 and a gate, and no unresolved owner decision blocks its execution.
 
-## 2. Scaffold
+## 2. Module map
 
-The plan's Step 1 is the scaffold, and the planning worker writes it into the
-tree before any coding worker starts. ALWAYS create every new module at its
-final path holding its public names — records, enums, constants, function and
-method signatures with their types — and add each new public name to the
-existing module that owns it. ALWAYS leave every body unimplemented: it raises
-the language's unimplemented error and nothing else. ALWAYS carry the spec's
-intent for that module in short comments and code samples beside the names
-they govern, so the spec is distributed across the files it governs;
-`software/code.md` § Comments owns when a scaffold comment goes.
+The planner's interface step. When the change has a spec (`specs` →
+`spec-first.md`), ALWAYS write or complete its module map (`specs` →
+`format.md` § Module map) before the first coding step, so every name § 1
+settles stands in the spec beside its figure. The map is the scaffold:
+NEVER write a stub module into the tree — a file exists once the step that
+builds it lands the real module with its tests. A coding worker builds its
+step's modules straight from their entries.
 
-ALWAYS keep the gates green: the project's lint and type checks pass on the
-scaffold, and no test imports a scaffolded name before the step that fills it.
-ALWAYS review and commit the scaffold under § 4 before the first coding step;
-its diff is the plan's interfaces made concrete.
-
-Completion criterion: every new path and public name the plan names exists in
-the tree with its signature, the gate passes, and the scaffold commit is
-recorded as Step 1.
+Completion criterion: every file a step owns has its entry, every
+cross-cutting name § 1 settles appears in one, and the spec holds the block.
 
 ## 3. Brief
 
@@ -65,9 +57,10 @@ ALWAYS select a coding worker for an implementation step, a documentation
 worker for a docs step, through `SKILL.md`.
 Pass the step's accepted decisions verbatim as constraints, with the plan path,
 owned files and gate. ALWAYS tell the worker to stop and report if source
-contradicts the plan, rather than inventing a workaround. A scaffolded
-signature is a settled decision: ALWAYS brief the worker to fill the bodies
-against it, and to stop and report when one must change — NEVER to change it.
+contradicts the plan, rather than inventing a workaround. A mapped name is a
+settled decision: ALWAYS brief the worker to build the module from its entry
+(§ 2), and to stop and report when a mapped name must change — NEVER to
+change it.
 
 ALWAYS give it the goal and the relevant decisions, not the planner's reasoning.
 ALWAYS ask for changed paths, each command and output, and every deviation.
@@ -86,8 +79,8 @@ then run the gate yourself before the next dependent step. Delegated judgment
 uses the review task; the parent still accepts its evidence.
 
 - ALWAYS inspect deleted or skipped tests, loosened assertions, new lint
-  suppressions, swallowed errors, stubs and TODOs, and a scaffold comment or
-  unimplemented raise left in a body the step filled.
+  suppressions, swallowed errors, stubs and TODOs, and a mapped name changed
+  or missing (§ 2).
 - ALWAYS search the whole repo for a renamed or removed name, including docs,
   configs and tests. NEVER rely on the worker's changed-file list alone.
 - ALWAYS fix a small missed call site or name in the parent and report it.
