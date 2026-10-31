@@ -28,17 +28,16 @@ your diff against every `##` heading here before calling an edit done.
   models named `<Word>Request` and `<Word>Response`: `/v1/react` → `react()`
   in `react.py`, `ReactRequest`, `ReactResponse`; NEVER `reactions.py`, NEVER
   `ReactIn`/`ReactOut`, NEVER a `stream()` on `/v1/ws`.
-- ALWAYS name a constant, parser or adapter after the type it holds, as its
-  neighbours do: beside `META = TypeAdapter(Meta)`, a `TypeAdapter(list[Meta])`
-  is `METAS`. NEVER turn a vendor's endpoint or field name into a new term
-  (`ALL_PERP_METAS` from `allPerpMetas`).
-- ALWAYS spell plurals as English does: `dexes`, `read_dexes`; NEVER clip
-  one to fit (`dexs`).
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
-- ALWAYS name a parameter or local after its own type or the domain concept it
-  holds, NEVER a role you invented: `scope: &WithdrawerTracker` →
-  `tracker: &WithdrawerTracker`.
+- ALWAYS name a parameter, local, constant or adapter after its own type or
+  the domain concept it holds, as its neighbours do; NEVER a role you invented
+  or a vendor's endpoint or field name: `scope: &WithdrawerTracker` →
+  `tracker: &WithdrawerTracker`; beside `META = TypeAdapter(Meta)`, a
+  `TypeAdapter(list[Meta])` is `METAS`, NEVER `ALL_PERP_METAS` from
+  `allPerpMetas`.
+- ALWAYS the English plural: `dexes`, `read_dexes`; NEVER a clipped one
+  (`dexs`).
 - NEVER rename what already has a name — no alias, intermediate binding or
   import rename. A rename erases where the value came from and makes the reader
   hold two names for one thing.
