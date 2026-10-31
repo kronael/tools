@@ -66,9 +66,9 @@ read it before a design answer, a plan, a review or a sub brief.
 
 ## Bug triage
 
-- RECORD bugs found during any check in `BUGS.md` at project root; fix ONLY when
-  the user asks. It is the review queue — log it, move on, let them prioritise;
-  `/bugs` owns entry format and pruning. The drift is fixing as you find during
+- RECORD bugs found during any check in the `BUGS.md` of the project that owns
+  the code; fix ONLY when the user asks. It is the review queue — log it, move
+  on, let them prioritise; `/bugs` owns placement, entry format and pruning. The drift is fixing as you find during
   an audit: it destroys the queue and produces a large unrequested diff.
 - A redesign (new contract, changed control flow, cross-cutting) goes into
   `BUGS.md` as a proposal FIRST and ships only after sign-off.

@@ -6,7 +6,7 @@ when_to_use: "log this bug, open issues, what's broken, prune BUGS.md, audit-rec
 
 # Bugs
 
-`BUGS.md` at the project root holds exactly three things:
+A `BUGS.md` holds exactly three things:
 
 1. **What is open** — defects still true of the code, and the decisions the
    owner still owes (a redesign, a deliberate limit, a licence or product call).
@@ -23,6 +23,18 @@ did.
 
 (Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
 project already has.)
+
+## Where it lives
+
+- ALWAYS record an entry in the `BUGS.md` of the project or component that
+  owns the code — the same directory that owns its `CLAUDE.md` and `README.md`
+  (`server/BUGS.md`, `news-collector/BUGS.md`). NEVER put a component's entry
+  in the repository root.
+- ALWAYS keep cross-cutting entries in the root `BUGS.md`, and ALWAYS name
+  every component `BUGS.md` in the root's opening lines so a reader finds it.
+  A new component file adds its line there in the same commit.
+- ALWAYS search every queue before recording or answering "is it known":
+  `git ls-files '*BUGS.md'`.
 
 ## Bug Triage Protocol — record, don't fix
 
@@ -155,7 +167,7 @@ line is a claim, not evidence.
 ## Aggregation (optional)
 
 If a project accumulates issue reports in multiple scratch files, consolidate
-into root `BUGS.md` on request (`aggregate`): enumerate the scratch entries
-read-only, fold them into the subject sections above, and note in each scratch
-file "Consolidated to root `BUGS.md` <date>". The owner wipes the scratch
+into the owning `BUGS.md` on request (`aggregate`): enumerate the scratch
+entries read-only, fold them into the subject sections above, and note in each
+scratch file "Consolidated to `<path>/BUGS.md` <date>". The owner wipes the scratch
 files after the merge.
