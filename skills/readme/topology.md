@@ -18,7 +18,7 @@ page's craft: `page.md`. Prose: `writing`.
 | `PLAN.md` | Why is it split this way, and which decisions must stay true? |
 | `ARCHITECTURE.md` | Where does each piece live, and how does each flow run? |
 | `FEATURES.md` | What does it do today, and which test proves it? |
-| `BUGS.md` | What is open: defects, deliberate limits, decisions owed? Format: `bugs`. |
+| `BUGS.md`, `<dir>/BUGS.md` | What is open: defects, deliberate limits, decisions owed? Placement and format: `bugs`. |
 | `TODO.md` | What is deferred and not yet a spec? Format: `next` § Later. |
 | `specs/<NN>-<topic>.md` | What change is in flight, and why? No row above links it. Format: `specs`. |
 | `<dir>/README.md` | What does this directory implement, and how is it used? |

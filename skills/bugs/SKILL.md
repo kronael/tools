@@ -21,20 +21,19 @@ review pass, no counts of what was verified. That narrative belongs in
 the diary. A reader opens `BUGS.md` to learn what is broken, not what someone
 did.
 
-(Filename is uppercase `BUGS.md`. Some projects use lowercase — match what the
-project already has.)
-
 ## Where it lives
 
-- ALWAYS record an entry in the `BUGS.md` of the project or component that
-  owns the code — the same directory that owns its `CLAUDE.md` and `README.md`
-  (`server/BUGS.md`, `news-collector/BUGS.md`). NEVER put a component's entry
+- ALWAYS record an entry in the `BUGS.md` of the component that owns the
+  code — beside that directory's `CLAUDE.md` and `README.md`, the hierarchy
+  `readme` → `topology.md` § Instruction files sets. NEVER a component's entry
   in the repository root.
 - ALWAYS keep cross-cutting entries in the root `BUGS.md`, and ALWAYS name
-  every component `BUGS.md` in the root's opening lines so a reader finds it.
-  A new component file adds its line there in the same commit.
+  every component `BUGS.md` in its opening lines — a new component file adds
+  its line in the same commit.
 - ALWAYS search every queue before recording or answering "is it known":
   `git ls-files '*BUGS.md'`.
+- ALWAYS match the case the project already uses: uppercase `BUGS.md` by
+  default, lowercase where the project has it.
 
 ## Bug Triage Protocol — record, don't fix
 
