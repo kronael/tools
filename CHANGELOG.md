@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.66] — 20261031
+
+> kronael v0.4.66 — Bugs live with the code they describe
+>
+> Each project keeps its own bug queue, and four new house rules cover naming and Python records.
+>
+> • Bugs — an entry goes in the BUGS.md of the component that owns the code; the root names every queue.
+> • Code — bind a value once from one expression; name adapters after their type; English plurals.
+> • Python — enum members compare with `is`; dataclasses copy through their own `replace`.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bugs`, `next` and the global bug-triage rule place an entry in the owning component's `BUGS.md`; the root keeps cross-cutting entries and names each component file.
+- `software/code.md` binds a value once from one expression and names constants and adapters after their type.
+- `py` states the enum, `replace` and list-join rules as ALWAYS/NEVER, with lints `py-enum-is` and `py-replace-method`.
+
 ## [v0.4.65] — 20261030
 
 > kronael v0.4.65 — Recall routing and workflow evidence
