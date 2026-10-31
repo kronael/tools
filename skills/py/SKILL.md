@@ -32,7 +32,7 @@ Python-specific additions and deltas.
 - ALWAYS name a `Protocol` by the plain noun of the thing it describes (`Venue`, `Job`, `Server`); an implementation is often `<Qualifier><Noun>` (`BinanceVenue`) but takes any fitting name. `<Verb>able` when it promises one or a few methods and nothing else (`Runnable`: `run()`). NEVER a suffix or prefix that only says it is a protocol: `VenueLike`, `VenueProtocol`, `VenueInterface`, `IVenue`
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
-- Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`; compare a value of the enum type, never a `str` field against a `StrEnum` member (read the enum field, or convert: `ExchangeName(s) is ...`); lint `py-enum-is`
+- ALWAYS compare enum members with `is` / `is not`, NEVER `==` / `!=` — members are singletons: `if status is GameStatus.LOST:`. ALWAYS compare a value of the enum type — read the enum field, or convert a `str` first (`ExchangeName(s) is ExchangeName.X`); NEVER a `str` field against a `StrEnum` member. Lint `py-enum-is`.
 - ALWAYS pass `py-no-enum-auto`.
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature, with the narrow suppressions in `../software/strict-typing.md` — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 - NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
@@ -100,7 +100,7 @@ Python-specific additions and deltas.
 - ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
-- ALWAYS mix the project's `WithReplace` (`def replace(self, **kwargs) -> Self`) into a dataclass callers copy with changes and call `obj.replace(...)` — NEVER `dataclasses.replace(obj, ...)`: a method is the class's own, so the class can override it; lint `py-replace-method`.
+- ALWAYS copy a dataclass with changes through its own method, `obj.replace(qty=2)` — the project's one `WithReplace` mixin (`def replace(self, **kwargs) -> Self`), added where none exists — NEVER `dataclasses.replace(obj, ...)`: a method is the class's own to override; lint `py-replace-method`.
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
@@ -135,7 +135,8 @@ Python-specific additions and deltas.
   `py-no-conditional-none-return`. Whether the return may be None at all: § Type Annotations
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
-- For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`. ALWAYS join a fixed head and a comprehension with `+`: `['perp'] + [d.name for d in dexes]`, NEVER a splat inside the literal (`['perp', *(d.name for d in dexes)]`)
+- For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
+- ALWAYS join a fixed head and a comprehension with `+`: `['perp'] + [d.name for d in dexes]`; NEVER a splat inside the literal (`['perp', *(d.name for d in dexes)]`)
 - NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name (PEP 701 permits the nesting; readability bans it)
 
 ## Package Structure
