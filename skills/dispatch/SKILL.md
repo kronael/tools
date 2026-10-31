@@ -24,7 +24,7 @@ artifacts.
 | Mechanical | Named-file inventories, exact searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / high | `gpt-6-luna` / high | Lightweight |
 | Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
 | Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
-| Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates; write the scaffold (`plan.md` § Scaffold) | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
 | Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / xhigh | `gpt-6.1-sol` / xhigh | Judgment |

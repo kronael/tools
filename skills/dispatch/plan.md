@@ -38,13 +38,36 @@ change. Keep a status and snapshot SHA per step.
 Completion criterion: source supports the plan, every step has explicit choices
 and a gate, and no unresolved owner decision blocks its execution.
 
-## 2. Brief
+## 2. Scaffold
+
+The plan's Step 1 is the scaffold, and the planning worker writes it into the
+tree before any coding worker starts. ALWAYS create every new module at its
+final path holding its public names — records, enums, constants, function and
+method signatures with their types — and add each new public name to the
+existing module that owns it. ALWAYS leave every body unimplemented: it raises
+the language's unimplemented error and nothing else. ALWAYS carry the spec's
+intent for that module in short comments and code samples beside the names
+they govern, so the spec is distributed across the files it governs;
+`software/code.md` § Comments owns when a scaffold comment goes.
+
+ALWAYS keep the gates green: the project's lint and type checks pass on the
+scaffold, and no test imports a scaffolded name before the step that fills it.
+ALWAYS review and commit the scaffold under § 4 before the first coding step;
+its diff is the plan's interfaces made concrete.
+
+Completion criterion: every new path and public name the plan names exists in
+the tree with its signature, the gate passes, and the scaffold commit is
+recorded as Step 1.
+
+## 3. Brief
 
 ALWAYS select a coding worker for an implementation step, a documentation
 worker for a docs step, through `SKILL.md`.
 Pass the step's accepted decisions verbatim as constraints, with the plan path,
 owned files and gate. ALWAYS tell the worker to stop and report if source
-contradicts the plan, rather than inventing a workaround.
+contradicts the plan, rather than inventing a workaround. A scaffolded
+signature is a settled decision: ALWAYS brief the worker to fill the bodies
+against it, and to stop and report when one must change — NEVER to change it.
 
 ALWAYS give it the goal and the relevant decisions, not the planner's reasoning.
 ALWAYS ask for changed paths, each command and output, and every deviation.
@@ -52,7 +75,7 @@ ALWAYS ask for changed paths, each command and output, and every deviation.
 Completion criterion: a reader without this conversation can execute the brief
 without making a design choice the plan already settled.
 
-## 3. Review each step
+## 4. Review each step
 
 Before a step, ALWAYS record its snapshot SHA in the plan. `git stash create`
 prints one without changing the tree or stash list; on a clean tree, use
@@ -63,7 +86,8 @@ then run the gate yourself before the next dependent step. Delegated judgment
 uses the review task; the parent still accepts its evidence.
 
 - ALWAYS inspect deleted or skipped tests, loosened assertions, new lint
-  suppressions, swallowed errors, stubs and TODOs.
+  suppressions, swallowed errors, stubs and TODOs, and a scaffold comment or
+  unimplemented raise left in a body the step filled.
 - ALWAYS search the whole repo for a renamed or removed name, including docs,
   configs and tests. NEVER rely on the worker's changed-file list alone.
 - ALWAYS fix a small missed call site or name in the parent and report it.
@@ -72,7 +96,7 @@ uses the review task; the parent still accepts its evidence.
 Completion criterion: the parent's gate passes, the full diff is read, and the
 plan records the accepted snapshot and evidence.
 
-## 4. Recover
+## 5. Recover
 
 On failure, ALWAYS inspect the tree before retrying. Restore only the step's
 owned changes from its snapshot, or revert its commit. Delete newly created
@@ -88,7 +112,7 @@ before executing its dependent steps. `ship` owns its own repair limits.
 Completion criterion: the step passes its gate, or the plan records the revised
 design, unresolved decision and next valid route.
 
-## 5. Close
+## 6. Close
 
 ALWAYS run the project's required full test and lint targets after the last
 step, plus an end-to-end check of the goal. ALWAYS use `refine` for its scoped

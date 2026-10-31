@@ -49,6 +49,9 @@ reads to pick the agent type.
 - ALWAYS check the comment directly above a log, warn or error call — a
   paraphrase of that message is the most common miss. So are line numbers,
   ticket IDs and history notes (`was`, `old`, `legacy`).
+- ALWAYS flag a scaffold comment or unimplemented raise in a body whose step
+  the work record marks verified (`dispatch` → `plan.md` § Scaffold); only a
+  body no verified step owns keeps them.
 
 ## Abstraction that does not pay `simplify`
 

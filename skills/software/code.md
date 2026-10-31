@@ -90,6 +90,11 @@ your diff against every `##` heading here before calling an edit done.
 - A config file is not code: the reason beside an entry — a lint `ignore`
   list, a CI matrix, host vars — stays, because the entry has no name, type
   or body to carry it. A sweep deletes nothing there.
+- A scaffold comment (`dispatch` → `plan.md` § Scaffold) is build scaffolding,
+  exempt only while its body is unimplemented: the sweep of the step that
+  fills the body deletes it together with the unimplemented raise, and leaves
+  the scaffold of every body still unfilled. One left in a filled body is the
+  defect this section names.
 
 ## Boring code
 
