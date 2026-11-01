@@ -60,7 +60,7 @@ your diff against every `##` heading here before calling an edit done.
   keeps the concept's name: `u` → `url`, `s` → `slot`, `e` → `epoch`.
 - NEVER `o`, `O`, `l`, `I` — they read as `0` and `1`.
 - ALWAYS `main` for the entrypoint.
-- ALWAYS short file extensions and short CLI flags: `.jsonl` → `.jl`.
+- ALWAYS short file extensions and short CLI flags: `.yaml` → `.yml`, `.jsonl` → `.jl`.
 
 ## Comments
 
