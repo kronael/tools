@@ -349,12 +349,10 @@ def test_marker_opts_a_file_out_of_the_path_rule(tmp_path: Path) -> None:
     assert check_leaks(doc) == []
 
 
-@pytest.mark.xfail(
-    reason='SKILL-LINT-LOCAL-PATH-EXEMPTS-MACOS-ACCOUNTS: the container-HOME exemption covers /Users/',
-    strict=True,
+@pytest.mark.parametrize(
+    'home', ['/Users/claude', '/Users/dockbox', '/home/claude', '/home/dockbox']
 )
-@pytest.mark.parametrize('home', ['/Users/claude', '/Users/dockbox'])
-def test_leak_scan_flags_a_macos_account_named_like_the_container(
+def test_leak_scan_flags_retired_container_accounts_in_active_docs(
     tmp_path: Path, home: str
 ) -> None:
     doc = tmp_path / 'README.md'
@@ -380,21 +378,35 @@ def test_secret_has_no_opt_out(tmp_path: Path) -> None:
     assert 'skill-secret' in rules(check_leaks(doc), Severity.ERROR)
 
 
-def test_container_home_is_not_a_leak(tmp_path: Path) -> None:
-    """dockbox pins its container HOME; that path names no authoring machine."""
-    doc = tmp_path / 'README.md'
-    doc.write_text(
-        '`~/.claude` -> `/home/dockbox/.claude` (rw); older images used /home/claude/.\n'
-    )
+def test_root_changelog_preserves_exact_historical_homes(tmp_path: Path, monkeypatch) -> None:
+    doc = tmp_path / 'CHANGELOG.md'
+    monkeypatch.setattr('skill_frontmatter_lint.HISTORICAL_CHANGELOG', doc)
+    doc.write_text('`/home/dockbox/.claude` and `/home/claude/.local/bin`.\n')
     assert check_leaks(doc) == []
+    nested = tmp_path / 'tool' / 'CHANGELOG.md'
+    nested.parent.mkdir()
+    nested.write_text(doc.read_text())
+    assert 'skill-local-path' in rules(check_leaks(nested), Severity.ERROR)
 
 
-def test_container_account_prefix_is_not_the_exemption(tmp_path: Path) -> None:
-    """Only the whole segment is the container HOME; `dockbox-2` is another account."""
-    doc = tmp_path / 'README.md'
-    for leak in '/home/claude-user', '/home/claude.local', '/home/dockbox-2', '/home/dockbox.old':
+def test_root_changelog_exempts_no_other_homes_or_secrets(tmp_path: Path, monkeypatch) -> None:
+    doc = tmp_path / 'CHANGELOG.md'
+    monkeypatch.setattr('skill_frontmatter_lint.HISTORICAL_CHANGELOG', doc)
+    for leak in (
+        '/home/claude-user',
+        '/home/claude.local',
+        '/home/dockbox-2',
+        '/home/dockbox.old',
+        '/Users/dockbox',
+        '/Users/claude',
+        '/home/devuser',
+    ):
         doc.write_text(f'Work in {leak}/src.\n')
         assert 'skill-local-path' in rules(check_leaks(doc), Severity.ERROR), leak
+    doc.write_text('/home/dockbox/.claude and /home/devuser/src.\n')
+    assert 'skill-local-path' in rules(check_leaks(doc), Severity.ERROR)
+    doc.write_text('/home/dockbox/.claude and sk-ant-oat01-abcdefgh\n')
+    assert 'skill-secret' in rules(check_leaks(doc), Severity.ERROR)
 
 
 def test_sibling_path_lints_its_owning_skill(tmp_path: Path) -> None:

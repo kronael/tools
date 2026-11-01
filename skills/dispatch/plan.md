@@ -38,12 +38,29 @@ change. Keep a status and snapshot SHA per step.
 Completion criterion: source supports the plan, every step has explicit choices
 and a gate, and no unresolved owner decision blocks its execution.
 
-## 2. Brief
+## 2. Module map
 
-ALWAYS select a coding worker for an implementation step through `SKILL.md`.
+The planner's interface step. When the change has a spec (`specs` →
+`spec-first.md`), ALWAYS write or complete its module map (`specs` →
+`format.md` § Module map) before the first coding step, so every name § 1
+settles stands in the spec beside its figure. The map is the scaffold:
+NEVER write a stub module into the tree — a file exists once the step that
+builds it lands the real module with its tests. A coding worker builds its
+step's modules straight from their entries.
+
+Completion criterion: every file a step owns has its entry, every
+cross-cutting name § 1 settles appears in one, and the spec holds the block.
+
+## 3. Brief
+
+ALWAYS select a coding worker for an implementation step, a documentation
+worker for a docs step, through `SKILL.md`.
 Pass the step's accepted decisions verbatim as constraints, with the plan path,
 owned files and gate. ALWAYS tell the worker to stop and report if source
-contradicts the plan, rather than inventing a workaround.
+contradicts the plan, rather than inventing a workaround. A mapped name is a
+settled decision: ALWAYS brief the worker to build the module from its entry
+(§ 2), and to stop and report when a mapped name must change — NEVER to
+change it.
 
 ALWAYS give it the goal and the relevant decisions, not the planner's reasoning.
 ALWAYS ask for changed paths, each command and output, and every deviation.
@@ -51,7 +68,7 @@ ALWAYS ask for changed paths, each command and output, and every deviation.
 Completion criterion: a reader without this conversation can execute the brief
 without making a design choice the plan already settled.
 
-## 3. Review each step
+## 4. Review each step
 
 Before a step, ALWAYS record its snapshot SHA in the plan. `git stash create`
 prints one without changing the tree or stash list; on a clean tree, use
@@ -62,7 +79,8 @@ then run the gate yourself before the next dependent step. Delegated judgment
 uses the review task; the parent still accepts its evidence.
 
 - ALWAYS inspect deleted or skipped tests, loosened assertions, new lint
-  suppressions, swallowed errors, stubs and TODOs.
+  suppressions, swallowed errors, stubs and TODOs, and a mapped name changed
+  or missing (§ 2).
 - ALWAYS search the whole repo for a renamed or removed name, including docs,
   configs and tests. NEVER rely on the worker's changed-file list alone.
 - ALWAYS fix a small missed call site or name in the parent and report it.
@@ -71,7 +89,7 @@ uses the review task; the parent still accepts its evidence.
 Completion criterion: the parent's gate passes, the full diff is read, and the
 plan records the accepted snapshot and evidence.
 
-## 4. Recover
+## 5. Recover
 
 On failure, ALWAYS inspect the tree before retrying. Restore only the step's
 owned changes from its snapshot, or revert its commit. Delete newly created
@@ -87,7 +105,7 @@ before executing its dependent steps. `ship` owns its own repair limits.
 Completion criterion: the step passes its gate, or the plan records the revised
 design, unresolved decision and next valid route.
 
-## 5. Close
+## 6. Close
 
 ALWAYS run the project's required full test and lint targets after the last
 step, plus an end-to-end check of the goal. ALWAYS use `refine` for its scoped

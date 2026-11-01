@@ -1,18 +1,46 @@
-image_init="$fixture/image-init"
-awk '/^RUN printf/{block=$0;next} {block=block ORS $0}
-    / > \/usr\/local\/bin\/qemubox-init &&/{print block}' "$here/../dockbox/Dockerfile" |
-    sed '1s/^RUN //; s|> /usr/local/bin/qemubox-init.*|> "$image_init"|' > "$fixture/extract-init"
-source "$fixture/extract-init"
+image_init="$here/guest-init"
+
+codex_wrapper_test() {
+    awk '/^    && printf.*#!\/bin\/sh/ && !/poweroff/ {
+            emit=1;sub(/^    && /, "")}
+        emit {print}
+        emit && / > \/usr\/local\/bin\/codex/ {exit}' "$here/Dockerfile" |
+        sed 's|> /usr/local/bin/codex|> "$fixture/emitted-codex"|' \
+        > "$fixture/extract-codex"
+    source "$fixture/extract-codex"
+    sed 's|/opt/dev-tools/bun/bin/codex|"$QEMUBOX_TEST_CODEX"|;
+         s|/usr/local/bin/qemubox-codex-bridge|sh "$QEMUBOX_TEST_BRIDGE"|' \
+        "$fixture/emitted-codex" > "$fixture/codex-wrapper"
+    grep -Fq 'exec "$QEMUBOX_TEST_CODEX" ' "$fixture/codex-wrapper"
+    cat > "$fixture/fake-codex" <<'EOF'
+#!/bin/sh
+printf '%s\0' "$CODEX_HOME" "$CODEX_SQLITE_HOME" "$@" > "$QEMUBOX_TEST_ARGS"
+EOF
+    chmod +x "$fixture/fake-codex"
+    CODEX_HOME="$HOME/.codex" CODEX_SQLITE_HOME=/tmp/codex-sqlite \
+        QEMUBOX_TEST_CODEX="$fixture/fake-codex" \
+        QEMUBOX_TEST_BRIDGE="$here/qemubox-codex-bridge" \
+        QEMUBOX_TEST_ARGS="$fixture/codex-args" \
+        sh "$fixture/codex-wrapper" resume 'session with spaces' \
+            -c 'model_reasoning_effort="xhigh"' '' 'literal $HOME $(false)'
+    printf '%s\0' "$HOME/.codex" /tmp/codex-sqlite \
+        --no-daemon --dangerously-bypass-approvals-and-sandbox \
+        resume 'session with spaces' -c 'model_reasoning_effort="xhigh"' \
+        '' 'literal $HOME $(false)' > "$fixture/want-codex-args"
+    cmp "$fixture/want-codex-args" "$fixture/codex-args"
+}
+regression "guest Codex avoids the shared daemon and preserves user arguments" \
+    codex_wrapper_test
 
 sshd_test() {
-    grep -q "'StreamLocalBindUnlink yes'" "$here/../dockbox/Dockerfile"
+    grep -q "'StreamLocalBindUnlink yes'" "$here/Dockerfile"
 }
 regression "guest sshd replaces stale Unix sockets" sshd_test
 
 docker_cli_test() {
-    sed '/^FROM dockbox AS vm/,$d' "$here/../dockbox/Dockerfile" | grep -qw docker-cli
+    sed '/^FROM qemubox AS vm/,$d' "$here/Dockerfile" | grep -qw docker-cli
 }
-regression "both images install docker-cli" docker_cli_test
+regression "guest image installs docker-cli" docker_cli_test
 
 timezone_test() {
     regression_setup
@@ -20,46 +48,82 @@ timezone_test() {
     ensure_box timezone
     [ "$(sed -n '6p' "$ROOT/timezone/config/identity")" = Etc/UTC ]
     mkdir -p "$fixture/zone/etc" "$fixture/zone/run/qemubox/config"
-    cp "$ROOT/timezone/config/identity" "$fixture/zone/run/qemubox/config/identity"
-    sed '/^passwd_entry=/,$d' "$image_init" |
-        sed "s|/etc/|$fixture/zone/etc/|g; s|/run/|$fixture/zone/run/|g; s|/proc/sys/kernel/hostname|/dev/null|g" > "$fixture/zone-init"
-    modprobe() { :; }; mount() { :; }
-    export -f modprobe mount
+    cp "$ROOT/timezone/config/identity" \
+        "$fixture/zone/run/qemubox/config/identity"
+    awk '/^{/ {emit=1} emit {print}
+        /^ln -sf .*zone.*localtime/ {exit}' "$image_init" |
+        sed "s|/etc/|$fixture/zone/etc/|g; s|/run/|$fixture/zone/run/|g" \
+        > "$fixture/zone-init"
+    export fixture
     bash "$fixture/zone-init"
-    [ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]
-    if grep -q '^RUN for key in TZ ' "$here/../dockbox/Dockerfile"; then exit 1; fi
+    [[ "$(readlink "$fixture/zone/etc/localtime")" = /usr/share/zoneinfo/Etc/UTC ]]
+    if grep -q '^RUN for key in TZ ' "$here/Dockerfile"; then exit 1; fi
 }
 regression "identity and init set the UTC time zone" timezone_test
 
 groups_test() {
-    mkdir -p "$fixture/groups"
-    printf '%s\n' 'systemd-journal:x:998:journaluser' 'wheel:x:10:other' > "$fixture/groups/group"
-    sed -n '/^for group in /,/^done/p' "$image_init" |
-        sed "s|/etc/group|$fixture/groups/group|g" > "$fixture/group-init"
+    local prefix="$fixture/groups"
+    mkdir -p "$prefix/etc"
+    printf '%s\n' 'systemd-journal:x:998:journaluser' 'wheel:x:10:other' \
+        'docker:x:997:dockeruser' > "$prefix/etc/group"
+    printf '%s\n' 'systemd-journal:!::journaluser' 'wheel:!::other' \
+        'docker:!::dockeruser' > "$prefix/etc/gshadow"
+    printf '%s\n' 'root:x:0:0:root:/root:/bin/bash' > "$prefix/etc/passwd"
+    printf '%s\n' 'root:!:19000:0:99999:7:::' > "$prefix/etc/shadow"
+    printf '%s\n' 'PASS_MAX_DAYS 99999' 'PASS_MIN_DAYS 0' 'PASS_WARN_AGE 7' \
+        > "$prefix/etc/login.defs"
+    sed -n '/^groups=.*getent group docker/,/^echo .*ALL=(ALL)/p' \
+        "$image_init" | sed '$d' > "$fixture/group-init"
     getent() {
-        awk -F: -v key="$2" '$1==key || $3==key {found=1;print} END {exit !found}' "$fixture/groups/group"
+        awk -F: -v key="$2" \
+            '$1==key || $3==key {found=1;print} END {exit !found}' \
+            "$prefix/etc/$1"
     }
-    export fixture
-    export -f getent
-    username=guest; groups='998:wheel 999: 1001:bad.name 1002:wheel'
-    export username groups
-    bash "$fixture/group-init"
-    bash "$fixture/group-init"
-    grep -qx 'systemd-journal:x:998:journaluser,guest' "$fixture/groups/group"
-    grep -qx 'hostgrp999:x:999:guest' "$fixture/groups/group"
-    grep -qx 'hostgrp1001:x:1001:guest' "$fixture/groups/group"
-    grep -qx 'hostgrp1002:x:1002:guest' "$fixture/groups/group"
-    [ "$(cut -d: -f3 "$fixture/groups/group" | sort -u | wc -l)" = 5 ]
-    [ "$(wc -l < "$fixture/groups/group")" = 5 ]
+    groupadd() { command groupadd -P "$prefix" "$@"; }
+    useradd() { command useradd -P "$prefix" "$@"; }
+    usermod() { command usermod -P "$prefix" "$@"; }
+    export prefix
+    export -f getent groupadd useradd usermod
+    username=guest; user_uid=2001; user_gid=999; home_dir=/home/guest
+    groups='998:wheel 999: 1001:bad.name 1002:wheel'
+    export username user_uid user_gid home_dir groups
+    bash -e "$fixture/group-init"
+    bash -e "$fixture/group-init"
+    grep -qx 'systemd-journal:x:998:journaluser,guest' "$prefix/etc/group"
+    grep -qx 'hostgrp999:x:999:guest' "$prefix/etc/group"
+    grep -qx 'hostgrp1001:x:1001:guest' "$prefix/etc/group"
+    grep -qx 'hostgrp1002:x:1002:guest' "$prefix/etc/group"
+    grep -qx 'docker:x:997:dockeruser,guest' "$prefix/etc/group"
+    grep -qx 'guest:x:2001:999::/home/guest:/bin/bash' "$prefix/etc/passwd"
+    grep -qxE 'guest:!:[0-9]+:0?:99999:7:::' "$prefix/etc/shadow"
+    [ "$(cut -d: -f3 "$prefix/etc/group" | sort -u | wc -l)" = 6 ]
+    [ "$(wc -l < "$prefix/etc/group")" = 6 ]
+    printf '%s\n' 'root:!:19000:0:99999:7:::' > "$prefix/etc/shadow"
+    bash -e "$fixture/group-init"
+    grep -qxE 'guest:!:[0-9]+:0?:99999:7:::' "$prefix/etc/shadow"
+    if user_uid=2002 bash -e "$fixture/group-init" 2> "$fixture/group-conflict"
+    then
+        return 1
+    fi
+    grep -q 'conflicting user guest' "$fixture/group-conflict"
+    if home_dir=/other bash -e "$fixture/group-init"
+    then
+        return 1
+    fi
 }
-regression "init preserves gid membership and sanitizes missing or invalid names" groups_test
+regression "init preserves memberships and sanitizes group names" groups_test
 
 host_groups_test() {
     regression_setup
     untrusted=""
     getent() {
         if [ "$1" = group ]; then
-            if [ "$2" = "$(id -g)" ]; then echo "bad group:x:$2:"; else return 2; fi
+            if [[ "$2" = "$(id -g)" ]]
+            then
+                echo "bad group:x:$2:"
+            else
+                return 2
+            fi
         else
             command getent "$@"
         fi
@@ -68,7 +132,8 @@ host_groups_test() {
     groups=$(sed -n '5p' "$ROOT/hostgroups/config/identity")
     for gid in $(id -G); do [[ "$groups" = *"$gid:hostgrp$gid "* ]]; done
 }
-regression "host identity sanitizes group names before tokenizing" host_groups_test
+regression "host identity sanitizes group names before tokenizing" \
+    host_groups_test
 
 forward_test() {
     mkdir -p "$fixture/ssh-bin"
@@ -90,69 +155,23 @@ build_dep_test() {
     }
     fake_docker() { touch "$fixture/unexpected-build"; return 43; }
     QEMUBOX_DOCKER=fake_docker
-    for missing in fake_docker qemu-img tar flock; do
+    for missing in fake_docker tar sha256sum
+    do
         if build_base 2> "$fixture/deps-error"; then exit 1; fi
         [ ! -f "$fixture/unexpected-build" ]
         grep -q "Missing:.*$missing" "$fixture/deps-error"
     done
 }
-regression "missing build dependencies fail before Docker build or export" build_dep_test
+regression "missing dependencies fail before Docker build or export" \
+    build_dep_test
 
-build_import_test() {
+gnu_tar_test() {
     regression_setup
-    command() {
-        case "${2:-}" in bsdtar|mke2fs) return 1 ;; esac
-        builtin command "$@"
-    }
-    mkdir -p "$ROOT/export/boot"
-    printf kernel > "$ROOT/export/boot/vmlinuz-fixture"
-    printf initrd > "$ROOT/export/boot/initrd.img-fixture"
-    touch "$ROOT/export/.dockerenv"
-    fake_docker() {
-        case "$1" in
-            build) : ;;
-            image) printf 'sha256:%064d\n' 0 ;;
-            create) echo fixture-container ;;
-            export) tar -C "$ROOT/export" -cf - .dockerenv boot ;;
-            rm) : ;;
-            run)
-                local expected=(run --rm --network none --user 0:0
-                    --entrypoint /bin/sh -v "$tmp:/qemubox" "$image_id" -ec)
-                [ "${*:1:12}" = "${expected[*]}" ]
-                [ "${@: -1}" = "$(id -u):$(id -g)" ]
-                [ "$(tar -xOf "$tmp/rootfs.tar" boot/vmlinuz-fixture)" = kernel ]
-                [ "$import_rc" = 0 ] || return "$import_rc"
-                printf raw > "$tmp/rootfs.raw"
-                ;;
-        esac
-    }
-    qemu-img() { printf qcow2 > "${@: -1}"; }
+    fake_docker() { touch "$fixture/unexpected-tar-build"; return 43; }
+    tar() { echo 'bsdtar'; }
     QEMUBOX_DOCKER=fake_docker
-    import_rc=47
-    set +e
-    (set -e; build_base)
-    rc=$?
-    set -e
-    [ "$rc" = 47 ]
-    [ "$(cat "$ROOT/base/current")" = fixture ]
-    [ ! -f "$ROOT/base/$(printf '%064d' 0).qcow2" ]
-    import_rc=0
-    build_base
-    [ "$(cat "$ROOT/base/current")" = "$(printf '%064d' 0)" ]
-    [ "$(cat "$ROOT/base/$(cat "$ROOT/base/current").qcow2")" = qcow2 ]
+    if build_base 2> "$fixture/tar-error"; then exit 1; fi
+    [ ! -f "$fixture/unexpected-tar-build" ]
+    grep -q 'Missing: GNU tar' "$fixture/tar-error"
 }
-regression "image import needs no host tools and fails before publication" build_import_test
-
-temp_test() {
-    regression_setup
-    mktemp() { echo "$*" > "$fixture/mktemp-args"; command mktemp "$@"; }
-    fake_docker() { return 43; }
-    QEMUBOX_DOCKER=fake_docker
-    set +e
-    (set -e; build_base)
-    rc=$?
-    set -e
-    [ "$rc" = 43 ]
-    [ "$(cat "$fixture/mktemp-args")" = -d ]
-}
-regression "build temporary directory follows mktemp default" temp_test
+regression "build requires GNU tar before building" gnu_tar_test

@@ -1,9 +1,9 @@
 ---
-name: Test — dockbox
+name: Test — speclint
 
 on:
     push:
-        paths: [dockbox/**]
+        paths: [speclint/**, ruff.toml]
     pull_request:
         branches: [master]
 
@@ -13,5 +13,5 @@ jobs:
         timeout-minutes: 5
         steps:
             - uses: actions/checkout@v4
-            - run: make -C dockbox test
-            - run: bash tests/drift_test.sh
+            - uses: astral-sh/setup-uv@v6
+            - run: make -C speclint prepare check right test integration build

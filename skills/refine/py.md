@@ -39,6 +39,13 @@ reads to pick the agent type.
   dataclass unless it meets a tuple exception in `py` § Named Data Structures.
 - ALWAYS compare added wire models and field-copy conversions with upstream exports;
   ALWAYS flag replacements for standard types (`software/code.md` § Design; `py` § Named Data Structures).
+- ALWAYS grep the added lines, never the tree total, for the typing dodges —
+  `git diff <range> | rg '^\+' | rg -n '\bAny\b|: object\b|getattr\(|hasattr\(|
+  == ?[\x27"][a-z_]+[\x27"]'` — each is a finding: name the shape, read the
+  declared field, make the closed set an Enum (`py` § Type Annotations,
+  § getattr/setattr). A `| None` on a field or return where `None` cannot
+  occur, and the `assert x is not None` at each caller it breeds, is the same
+  finding: return the value and raise where it is missing.
 
 ## Less source `simplify`
 
@@ -49,6 +56,17 @@ reads to pick the agent type.
 - NEVER defensive generator plumbing: no `aclose()`, `aclosing` or
   `try`/`finally` around a generator or iterator that holds no resource of its
   own; exhaustion or `asyncio.run` shutdown finalizes it.
+
+## Primitives that protect nothing `simplify`
+
+- ALWAYS name, for every `Lock`, `Semaphore`, `Condition`, `Event`, `Queue`
+  or bucket the range adds, the interleaving or bound it enforces. Between two
+  awaits nothing else runs, so a lock around a non-awaiting section protects
+  nothing; a second bucket or limiter where one budget exists is a finding
+  (`software.md` § Abstraction that does not pay, fan-out bullet).
+- ALWAYS read every `gather`/`TaskGroup` over network calls the range adds:
+  N calls with no semaphore is N requests at once.
+- Added SQL text in `.py` strings reads the `sql.md` lens in this directory.
 
 ## Config `correctness`
 

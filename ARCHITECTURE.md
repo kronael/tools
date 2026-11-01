@@ -22,7 +22,6 @@ BUGS.md                     open issues
 NOTICE                      upstream attribution
 docs/                       research notes behind individual skills
 skills/astgrep/check.py      lint runner and fixture harness (make lints)
-tests/                      repo-level tests (qemubox/dockbox alias drift)
 .github/                    CI workflows, generated from .github/templates/
 sgconfig.yml                ast-grep config listing the skill lint rule dirs
 udfix/, kvs/, rig/, ...   standalone CLI tools (each independent; inventory in README.md)
@@ -114,7 +113,7 @@ which the OS clears on reboot.
 1. Claude Code starts in a project
 2. Loads ~/.claude/CLAUDE.md (global wisdom)
 3. Loads ./CLAUDE.md (project conventions)
-4. Hooks fire on UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
+4. Hooks fire on SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop / PreCompact
 5. Skills load on dispatch (`/solve`, `/<name>`) or on a description match
 6. `dispatch` selects a task route; `claude` or `codex` launches the selected worker
 ```
@@ -149,13 +148,10 @@ Claude Code copies a plugin from a git or GitHub marketplace into
 `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/`. A plugin from a
 marketplace added by local path loads in place from the checkout, and a box
 that does not mount the checkout misses it. The sync never touches
-`~/.claude/plugins`, and both boxes mount it read-only, so the copied skills
-load on the host and in the boxes, with two limits:
+`~/.claude/plugins`, and qemubox mounts it read-only, so the copied skills
+load on the host and in the VMs, with one limit:
 
 - `qemubox -U` mounts no host config and no plugins.
-- dockbox writes the box's `settings.json`, which holds `enabledPlugins`, once
-  when it creates the box. A box created before the install keeps the plugin
-  disabled until the box is recreated.
 
 Codex never loads a Claude plugin. It reads skills from `~/.agents/skills`,
 which the Codex bridge links to `~/.claude/skills`, and installs its own

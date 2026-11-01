@@ -30,9 +30,14 @@ your diff against every `##` heading here before calling an edit done.
   `ReactIn`/`ReactOut`, NEVER a `stream()` on `/v1/ws`.
 - ALWAYS use the domain's word, NEVER a synonym you prefer — the column and the
   surrounding code say `withdrawer`: `owners_of` → `withdrawers_of`.
-- ALWAYS name a parameter or local after its own type or the domain concept it
-  holds, NEVER a role you invented: `scope: &WithdrawerTracker` →
-  `tracker: &WithdrawerTracker`.
+- ALWAYS name a parameter, local, constant or adapter after its own type or
+  the domain concept it holds, as its neighbours do; NEVER a role you invented
+  or a vendor's endpoint or field name: `scope: &WithdrawerTracker` →
+  `tracker: &WithdrawerTracker`; beside `META = TypeAdapter(Meta)`, a
+  `TypeAdapter(list[Meta])` is `METAS`, NEVER `ALL_PERP_METAS` from
+  `allPerpMetas`.
+- ALWAYS the English plural: `dexes`, `read_dexes`; NEVER a clipped one
+  (`dexs`).
 - NEVER rename what already has a name — no alias, intermediate binding or
   import rename. A rename erases where the value came from and makes the reader
   hold two names for one thing.
@@ -92,6 +97,10 @@ your diff against every `##` heading here before calling an edit done.
   write simpler than you are capable of, clarity over cleverness.
 - ALWAYS pick the construct that takes the least mental model when two are
   equivalent: a combinator chain with a non-trivial body → a plain `for` loop.
+- ALWAYS bind a value once, from one expression, when every part is known at
+  the binding: `changes = follows + unfollows`. NEVER assign it and then grow
+  it with `+=`, `append` or `update`; a loop that adds under a condition
+  stays a loop.
 - ALWAYS copy a thing two or three times before you abstract it. Every line is
   a liability, deletion lowers cost, and a premature abstraction freezes the
   wrong shape in place. ALWAYS design for replaceability.
@@ -108,6 +117,10 @@ your diff against every `##` heading here before calling an edit done.
   solution.
 - ALWAYS add code only for a measured unmet requirement that subtraction and
   those simplifications cannot satisfy.
+- NEVER a check for a state the types, the boundary parser or the real call
+  already reject, or that no caller produces — a guard, cap, length limit,
+  regex, `exists` test or start-up probe that never fires reads as a
+  requirement and is a liability. ALWAYS let the first real call fail.
 - NEVER braid components: if A cannot be understood without tracking B's
   state, separate them — braided code grows combinatorially, separated code
   composes linearly. ALWAYS minimise state and make what remains explicit; an
@@ -246,9 +259,11 @@ your diff against every `##` heading here before calling an edit done.
   and `code-blocks` false; `exclude` names worktrees and generated files as
   `.name/` patterns — a root-anchored `/.*/` skips nothing when one file is
   named) and a pinned `rumdl` (`bun add -d --exact rumdl`, or the PyPI
-  package); `make fmt` runs `rumdl fmt .`, `make lint` runs `rumdl check .`,
-  and the PostToolUse hook runs it on every `.md` you write. A repo with no
-  config is never rewrapped.
+  package). ALWAYS use `rumdl fmt` for formatting and `rumdl check` through
+  pre-commit for enforcement; `readme/topology.md` § Documentation checks owns
+  complete scope and deletion activation. Rumdl owns Markdown syntax,
+  formatting and supported links/anchors. The PostToolUse hook formats each
+  `.md` write; it is not a commit gate. A repo with no config is never rewrapped.
 - ALWAYS one import per line — it keeps diffs clean.
 - ALWAYS name modules for their main class/function or exact job; utilities use `<what>_utils.*`.
   NEVER generic `client`, `chat`, `helpers`, `common`, `core`, `manager` or `service` names.
@@ -279,6 +294,9 @@ your diff against every `##` heading here before calling an edit done.
   (`RPC_URL`). Reach for a file only when the shape is genuinely nested: TOML as
   first CLI param, api keys as second.
 - ALWAYS use singular TOML array-of-tables names (`[[model]]`, `[[service]]`): each header introduces one entry, an exception to plural collection names.
+- ALWAYS switch a feature by the presence of its config section; NEVER an
+  `enabled` flag or an empty-list default. ALWAYS require every value the
+  deployment must choose; NEVER a default in code for one.
 - `make` for build/lint/test/clean and debug builds: `make test` = fast unit
   (<5s), `make test-all` = unit + integration, what CI runs, `make smoke` =
   production data.

@@ -122,7 +122,14 @@
             "type": "command",
             "command": "python3 ~/.claude/hooks/reclaude.py",
             "timeout": 500
-          },
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
           {
             "type": "command",
             "command": "python3 ~/.claude/hooks/memory_nudge.py",
@@ -159,7 +166,8 @@
     "sessionUrl": false
   },
   "env": {
-    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0",
+    "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
   },
   "outputStyle": "caveman",
   "cleanupPeriodDays": 3650000,

@@ -65,12 +65,23 @@ $(TOOL_A): ; $(call DOWNLOAD,https://...,abc...,...)
   `$$t` or other shell vars that must survive into the recipe unexpanded.
 - Mixing `:=` and `=` across per-target vars is fine and expected.
 
+## Generated files
+
+- ALWAYS make a file the build generates a file target named by its path, with
+  the sources it is built from as prerequisites:
+  `api/openapi.json: api/app.py $(wildcard api/handlers/*.py)`. NEVER a phony
+  name for it (`make openapi`): `make <path>` says what it writes, and the
+  mtime check skips a file that is up to date.
+- ALWAYS write the target through a temporary file in its recipe
+  (`... > $@.tmp && mv $@.tmp $@`), so a failed run leaves no partial file
+  that looks up to date.
+
 ## Tool downloads
 
 - ALWAYS pin SHA256 alongside URL.
 - Verify with `sha256sum -c --quiet` before extracting.
-- Use a file target (e.g. `.hooks/kustomize`), NEVER `.PHONY`. Make's file-mtime
-  cache then naturally skips re-downloads.
+- A downloaded tool is a generated file (§ Generated files): its file target
+  (e.g. `.hooks/kustomize`) skips the download when it exists.
 
 ## Canonical phony targets
 

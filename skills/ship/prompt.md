@@ -14,9 +14,11 @@ prior decisions. Existing spec/plan [paths] is input to verify.
 Write or update [absolute work-record path] using the fields below. Map
 every acceptance item to a deliverable and an observable check. Keep steps
 small enough for a worker to finish with its gate. Respect completed commits
-after verifying their code, and research the remaining work. Return the plan
-path, supporting code references and material decisions the owner must
-settle. Planning only. Implementation and public actions are out of scope.
+after verifying their code, and research the remaining work. Write or
+complete the spec's module map (`dispatch` → `plan.md` § Module map).
+Return the plan path, supporting code references and material decisions the
+owner must settle. Planning only. Implementation and public actions are out
+of scope.
 
 The planner gets the owner brief and source paths, never the orchestrator's
 conclusions.
@@ -28,8 +30,10 @@ Deliver Step [N] of [absolute work-record path] in [assigned worktree] from
 are [scope, exclusions, hammer cases, limits and destination].
 
 Read the plan for context, applicable CLAUDE.md and the matched domain
-skills. Own [paths]. [Other paths] are read-only context. Deliver this
-step's behavior and acceptance checks. Later steps are outside your task.
+skills. Own [paths]. [Other paths] are read-only context. Build this step's
+modules from their entries in the spec's module map; a mapped name that must
+change stops the step with a report. Deliver this step's behavior and
+acceptance checks. Later steps are outside your task.
 Gate: [exact command] → [expected result]. Return changed paths, gate
 output, remaining issues, and any logical commits under the `commit` skill.
 Public actions belong to the main agent and their approval gates.

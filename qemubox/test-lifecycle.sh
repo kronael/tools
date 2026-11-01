@@ -9,7 +9,9 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
     ROOT="$fixture/removal"
     mkdir -p "$ROOT/one" "$ROOT/two" "$ROOT/keep"
     echo disk > "$ROOT/one/disk.qcow2"
-    echo disk > "$ROOT/two/disk.qcow2"
+    echo disk > "$ROOT/two/upper.raw"
+    touch "$ROOT/one/root.sock.pid" "$ROOT/one/cfg.sock.pid" \
+        "$ROOT/two/qbx0.sock.pid" "$ROOT/two/capture.sock.pid"
     remove_boxes qemubox-one 'tw*'
     [ ! -d "$ROOT/one" ]
     [ ! -d "$ROOT/two" ]
@@ -26,9 +28,7 @@ exits 2 'stop_boxes --bad one' "stop rejects unknown options"
     set -e
     ROOT="$fixture/stopping"
     mkdir -p "$ROOT/one" "$ROOT/two" "$ROOT/down"
-    running() { [ "$1" != down ]; }
-    lock_box() { locked=1; }
-    unlock_box() { locked=""; }
+    run_state() { if [ "$1" = down ]; then echo stopped; else echo running; fi; }
     stop_box() { echo "$1 ${2:-graceful}" >> "$fixture/stop-args"; }
     stop_boxes qemubox-one
     stop_boxes two -f
@@ -43,86 +43,416 @@ exits 2 'stop_boxes --bad one' "stop rejects unknown options"
 ) > "$fixture/stop.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/stop.log"; bad "stop: -f anywhere, -a, rm matching, stopped boxes skipped"; }
 
-stop_modes_test() {
+run_state_test() {
+    unit=failed
+    systemctl() { echo "$unit"; }
+    qmp_box() { echo io-error; }
+    [ "$(run_state vm)" = stopped ]
+    unit=active
+    [ "$(run_state vm)" = paused:io-error ]
+    unit=activating
+    qmp_box() { return 1; }
+    [ "$(run_state vm)" = "?" ]
+}
+regression "state: inactive or failed unit is stopped, else QMP decides" run_state_test
+
+legacy_vm_test() {
+    ROOT="$fixture/legacy"
+    mkdir -p "$ROOT/old"
+    echo disk > "$ROOT/old/disk.qcow2"
+    systemctl() { echo inactive; }
+    cp "$(command -v sleep)" "$fixture/qemu-system-x86_64"
+    "$fixture/qemu-system-x86_64" 30 &
+    echo "$!" > "$ROOT/old/pid"
+    trap 'kill "$(cat "$ROOT/old/pid")"' EXIT
+    [ "$(run_state old)" = legacy ]
+    if remove_box old 2> "$fixture/legacy-err"; then exit 1; fi
+    grep -q "stop it with: kill $(cat "$ROOT/old/pid")" "$fixture/legacy-err"
+    [ -f "$ROOT/old/disk.qcow2" ]
+    [ -z "$(stopped_boxes 0)" ]
+}
+regression "state: a running pre-systemd VM is never removed as stopped" legacy_vm_test
+
+service_commands_test() {
     regression_setup
-    mkdir -p "$ROOT/vm"
-    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
-    vm_pid=$!
-    trap 'kill "$vm_pid" 2>/dev/null || true; wait "$vm_pid" 2>/dev/null || true' EXIT
-    echo "$vm_pid" > "$ROOT/vm/pid"
-    touch "$ROOT/vm/ready"
-    sleep 0.05
-    ssh_plain_box() { echo "$*" >> "$fixture/stop-ssh"; }
-    stop_box vm force 2> "$fixture/stop-force.log"
-    [ ! -e "$fixture/stop-ssh" ]
-    grep -q 'sending SIGTERM' "$fixture/stop-force.log"
-    [ ! -e "$ROOT/vm/pid" ]
-    [ ! -e "$ROOT/vm/ready" ]
-    [ -f "$ROOT/vm/stopped" ]
-    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
-    vm_pid=$!
-    echo "$vm_pid" > "$ROOT/vm/pid"
-    sleep 0.05
-    ssh_plain_box() { echo "$*" >> "$fixture/stop-ssh"; kill "$vm_pid"; }
-    stop_box vm 2> "$fixture/stop-graceful.log"
-    grep -q 'sudo poweroff' "$fixture/stop-ssh"
-    grep -q 'waiting up to 90s for guest shutdown' "$fixture/stop-graceful.log"
-    if grep -q SIGTERM "$fixture/stop-graceful.log"; then exit 1; fi
-    [ ! -e "$ROOT/vm/pid" ]
-    [ -f "$ROOT/vm/stopped" ]
-    bash -c 'exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
-    vm_pid=$!
-    echo "$vm_pid" > "$ROOT/vm/pid"
-    sleep 0.05
-    ssh_plain_box() { :; }
-    sleep() { :; }
-    stop_box vm 2> "$fixture/stop-escalate.log"
-    grep -q 'waiting up to 90s' "$fixture/stop-escalate.log"
-    grep -q 'sending SIGTERM' "$fixture/stop-escalate.log"
-    if grep -q SIGKILL "$fixture/stop-escalate.log"; then exit 1; fi
-    [ ! -e "$ROOT/vm/pid" ]
-    [ -f "$ROOT/vm/stopped" ]
-    bash -c 'trap "" TERM; exec -a "$1" sleep 30' -- "file=$ROOT/vm/disk.qcow2,if=virtio" &
-    vm_pid=$!
-    echo "$vm_pid" > "$ROOT/vm/pid"
-    command sleep 0.05
-    stop_box vm force 2> "$fixture/stop-kill.log"
-    grep -q 'sending SIGTERM' "$fixture/stop-kill.log"
-    grep -q 'sending SIGKILL' "$fixture/stop-kill.log"
-    [ ! -e "$ROOT/vm/pid" ]
+    mv "$ROOT" "$ROOT with spaces"
+    ROOT="$ROOT with spaces"
+    SELF="$fixture/source directory/qemubox"
+    mkdir -p "${SELF%/*}"
+    printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$SELF"
+    chmod 644 "$SELF"
+    untrusted=""
+    missing_deps() { :; }
+    assemble_mounts() { mount_tags=(); mount_srcs=(); mount_dests=(); mount_modes=(); }
+    systemd-run() { printf '%s\0' "$@" > "$fixture/service-args"; }
+    start_box vm
+    unlock_box
+    python3 - "$fixture/service-args" "$SELF" "$ROOT/vm/stopped" <<'PY'
+import pathlib
+import shlex
+import subprocess
+import sys
+
+args = pathlib.Path(sys.argv[1]).read_bytes().decode().split("\0")[:-1]
+properties = {}
+index = 0
+while args[index].startswith("-"):
+    if args[index] in ("-p", "-E"):
+        if args[index] == "-p":
+            key, value = args[index + 1].split("=", 1)
+            properties[key] = value
+        index += 1
+    index += 1
+source = sys.argv[2]
+command = args[index:]
+assert subprocess.check_output(command, text=True) == "_vm\nvm\n"
+assert command == ["/bin/bash", source, "_vm", "vm"]
+for key, action in (("ExecStartPost", "_ready"), ("ExecStop", "_stop"),
+                    ("ExecStopPost", "_cleanup")):
+    command = shlex.split(properties[key])
+    assert subprocess.check_output(command, text=True) == f"{action}\nvm\n"
+    assert command == ["/bin/bash", source, action, "vm"]
+stopped = pathlib.Path(sys.argv[3])
+assert not stopped.exists()
+PY
+    cleanup_box vm
     [ -f "$ROOT/vm/stopped" ]
 }
-regression "stop -f signals qemu without a guest shutdown; graceful asks first" stop_modes_test
+regression "unit commands run a non-executable source with spaces and stamp stop completion" \
+    service_commands_test
 
-(
-    set -e
-    sleep() { :; }
-    running() { return 0; }
-    if wait_stopped vm 3; then exit 1; fi
-    running() { return 1; }
-    wait_stopped vm 3
-) > "$fixture/wait.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/wait.log"; bad "wait_stopped reports a timeout"; }
+stop_unit_test() {
+    : > "$systemd_log"
+    stop_box vm
+    [ "$(cat "$systemd_log")" = 'systemctl --user stop qemubox@vm.service' ]
+    : > "$systemd_log"
+    run_state() { echo running; }
+    sleep() { echo 'Stop must use the systemd deadline' >&2; return 1; }
+    stop_box vm force
+    [ "$(cat "$systemd_log")" = $'systemctl --user kill --kill-who=main -s SIGTERM qemubox@vm.service\nsystemctl --user stop qemubox@vm.service' ]
+}
+regression "stop asks systemd; -f sends SIGTERM then uses the manager stop deadline" stop_unit_test
+
+shutdown_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm/config"
+    printf 'cfg\t%s\t/run/qemubox/config\tro\n' "$ROOT/vm/config" \
+        > "$ROOT/vm/config/mounts"
+    systemctl() { return 0; }
+    ssh_plain_box() { echo "$*" >> "$fixture/shutdown-ssh"; }
+    qmp_box() { echo "$2" >> "$fixture/shutdown-qmp"; }
+    unset MAINPID
+    shutdown_box vm
+    [ ! -e "$ROOT/vm/stopped" ]
+    [ ! -e "$fixture/shutdown-ssh" ]
+    [ ! -e "$fixture/shutdown-qmp" ]
+    sleep 30 &
+    MAINPID=$!
+    ssh_plain_box() {
+        [ ! -e "$ROOT/vm/stopped" ]
+        echo "$*" >> "$fixture/shutdown-ssh"
+        [ "$3" = kill ] || return 0
+        kill "$MAINPID"
+        wait "$MAINPID" || true
+    }
+    shutdown_box vm
+    [ "$(cat "$fixture/shutdown-qmp")" = cont ]
+    [ "$(cat "$fixture/shutdown-ssh")" = 'vm sudo kill -TERM 1' ]
+    [ ! -e "$ROOT/vm/stopped" ]
+}
+regression "_stop resumes and powers off a live guest; returns at once after qemu" shutdown_test
+
+shutdown_missing_share_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm/config"
+    printf 'qbx0\t%s\t/project\trw\ncfg\t%s\t/run/qemubox/config\tro\n' \
+        "$PROJ" "$ROOT/vm/config" > "$ROOT/vm/config/mounts"
+    sleep 30 &
+    MAINPID=$!
+    trap 'kill "$MAINPID" 2>/dev/null || true; wait "$MAINPID" 2>/dev/null || true' EXIT
+    systemctl() {
+        printf '%s\n' "$*" >> "$fixture/share-health"
+        [ "${!#}" != qemubox-fs@vm-cfg.service ]
+    }
+    ssh_plain_box() { touch "$fixture/bad-shutdown-ssh"; }
+    qmp_box() { touch "$fixture/bad-shutdown-qmp"; }
+    shutdown_box vm
+    [ "$(wc -l < "$fixture/share-health")" = 2 ]
+    [ ! -e "$fixture/bad-shutdown-ssh" ]
+    [ ! -e "$fixture/bad-shutdown-qmp" ]
+}
+regression "lost share skips guest shutdown so systemd can terminate QEMU" \
+    shutdown_missing_share_test
+
+check_test() {
+    regression_setup
+    run_state() { echo running; }
+    mkdir -p "$ROOT/vm"
+    : > "$systemd_log"
+    check_box vm
+    echo 60 > "$ROOT/vm/idle"
+    check_box vm
+    touch -d '2 minutes ago' "$ROOT/vm/idle"
+    session_count() { echo 1; }
+    check_box vm
+    [ ! -s "$systemd_log" ]
+    session_count() { echo 0; }
+    check_box vm 2> "$fixture/check.err"
+    [ "$(cat "$systemd_log")" = 'systemctl --user stop --no-block qemubox@vm.service' ]
+    grep -q 'no session for 60s' "$fixture/check.err"
+}
+regression "_check stops only a box idle past its linger with no session" check_test
+
+check_count_failure_test() {
+    regression_setup
+    run_state() { echo running; }
+    mkdir -p "$ROOT/vm"
+    echo 0 > "$ROOT/vm/idle"
+    ss() { echo 'Session probe failed' >&2; return 17; }
+    : > "$systemd_log"
+    if check_box vm 2> "$fixture/count-error"
+    then
+        return 1
+    else
+        [ "$?" -eq 17 ]
+    fi
+    [ ! -s "$systemd_log" ]
+    grep -qx 'Session probe failed' "$fixture/count-error"
+}
+regression "failed session lookup preserves its error and never stops the VM" \
+    check_count_failure_test
+
+list_count_failure_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm"
+    run_state() { echo running; }
+    ssh_plain_box() { return 1; }
+    ss() { return 17; }
+    [[ "$(list_boxes)" = *$'running\t?\t'* ]]
+}
+regression "failed session lookup displays unknown use in the VM list" \
+    list_count_failure_test
+
+session_count_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm"
+    echo 43210 > "$ROOT/vm/port"
+    ss() { echo "$*" > "$fixture/ss-args"; printf 'a\nb\n'; }
+    [ "$(session_count vm)" = 2 ]
+    [ "$(cat "$fixture/ss-args")" = '-Htn state established ( dport = :43210 )' ]
+}
+regression "sessions are established connections to the box port" session_count_test
+
+leave_test() {
+    regression_setup
+    run_state() { echo running; }
+    name=vm; session_pid=""
+    mkdir -p "$ROOT/vm"
+    echo disk > "$ROOT/vm/upper.raw"
+    : > "$systemd_log"
+    (LINGER=1; leave_session) 2> "$fixture/leave.err"
+    [ "$(cat "$ROOT/vm/idle")" = 1 ]
+    [ ! -s "$systemd_log" ]
+    grep -q 'stops after 1s with no session' "$fixture/leave.err"
+    (LINGER=0; leave_session) 2> /dev/null
+    [ "$(cat "$ROOT/vm/idle")" = 0 ]
+    [ "$(cat "$systemd_log")" = 'systemctl --user stop --no-block qemubox@vm.service' ]
+    [ "$(cat "$ROOT/vm/upper.raw")" = disk ]
+}
+regression "leaving stamps idle; QEMUBOX_LINGER=0 stops at once" leave_test
+
+setup_test() {
+    regression_setup
+    mkdir -p "$ROOT/vm/config"
+    printf '%s\n' 24576 22528 > "$ROOT/vm/config/memory"
+    wait_ready() { echo "$1" > "$fixture/setup-ready"; }
+    qmp_box() { :; }
+    SELF="$fixture/check source/qemubox"
+    mkdir -p "${SELF%/*}"
+    printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$SELF"
+    chmod 644 "$SELF"
+    systemd-run() {
+        printf 'systemd-run %s\n' "$*" >> "$systemd_log"
+        while [[ "$1" = -* ]]
+        do
+            [ "$1" != -E ] || shift
+            shift
+        done
+        "$@" > "$fixture/check-command"
+    }
+    LINGER=77
+    : > "$systemd_log"
+    setup_box vm
+    [ "$(cat "$ROOT/vm/idle")" = 77 ]
+    [ "$(cat "$fixture/setup-ready")" = vm ]
+    grep -qxF "systemd-run --user --collect --quiet --unit=qemubox-check@vm --on-active=60 --on-unit-active=60 --timer-property=AccuracySec=1s --timer-property=BindsTo=qemubox@vm.service -E QEMUBOX_HOME=$ROOT -E PATH=$PATH -E QEMUBOX_RESUME_FREE=2048 /bin/bash $SELF _check vm" "$systemd_log"
+    [ "$(cat "$fixture/check-command")" = $'_check\nvm' ]
+}
+regression "_ready waits for the guest, stamps idle and arms the check" setup_test
+
+linger_test() {
+    command() { return 0; }
+    find_virtiofsd() { echo "$fixture/readonly-virtiofsd"; }
+    printf '#!/bin/sh\necho --readonly\n' > "$fixture/readonly-virtiofsd"
+    chmod +x "$fixture/readonly-virtiofsd"
+    loginctl() { echo no; }
+    if (missing_deps) 2> "$fixture/linger.err"; then exit 1; fi
+    grep -q "loginctl enable-linger $(id -un)" "$fixture/linger.err"
+    loginctl() { echo yes; }
+    (missing_deps)
+}
+regression "launch requires lingering and names the command" linger_test
+
+virtiofsd_deps_test() {
+    mkdir -p "$fixture/bin"
+    printf '#!/bin/sh\necho --readonly\n' > "$fixture/bin/virtiofsd"
+    chmod +x "$fixture/bin/virtiofsd"
+    PATH="$fixture/bin:$PATH"
+    [ "$(find_virtiofsd)" = "$fixture/bin/virtiofsd" ]
+    command() {
+        if [ "$1" = -v ] && [ "$2" = virtiofsd ]
+        then
+            printf '%s\n' "$fixture/bin/virtiofsd"
+        fi
+    }
+    loginctl() { echo yes; }
+    (missing_deps)
+    printf '#!/bin/sh\necho legacy-help\n' > "$fixture/bin/virtiofsd"
+    if (missing_deps) 2> "$fixture/readonly-error"
+    then
+        return 1
+    fi
+    grep -q 'needs --readonly support' "$fixture/readonly-error"
+    find_virtiofsd() { return 1; }
+    if (missing_deps) 2> "$fixture/missing-virtiofsd"
+    then
+        return 1
+    fi
+    grep -qx 'Missing: virtiofsd' "$fixture/missing-virtiofsd"
+}
+regression "PATH virtiofsd wins; missing and writable-only daemons refuse launch" \
+    virtiofsd_deps_test
+
+share_units_test() {
+    regression_setup
+    stage_capture() { :; }
+    untrusted=1
+    mkdir -p "$fixture/unit,share \$literal"
+    assemble_mounts() {
+        reset_mounts
+        add_mount "$fixture/unit,share \$literal" /readonly ro
+        add_mount "$PROJ" /writable rw
+    }
+    find_virtiofsd() { echo /fake/virtiofsd; }
+    missing_deps() { :; }
+    local calls=0
+    systemd-run() {
+        calls=$((calls + 1))
+        printf '%s\0' "$@" > "$fixture/share-unit-$calls"
+    }
+    start_box shares
+    unlock_box
+    python3 - "$fixture" "$ROOT/shares" <<'PY'
+import pathlib
+import sys
+
+fixture, box = map(pathlib.Path, sys.argv[1:])
+units = [f"qemubox-fs@shares-{tag}.service"
+         for tag in ("qbx0", "qbx1", "cfg", "root")]
+for n, (tag, source, readonly) in enumerate([
+    ("qbx0", fixture / "unit,share $literal", True),
+    ("qbx1", fixture / "proj", False),
+    ("cfg", box / "config", True),
+    ("root", box.parent / "base/fixture/rootfs", True),
+], 1):
+    args = (fixture / f"share-unit-{n}").read_bytes().decode().split("\0")[:-1]
+    assert f"--unit=qemubox-fs@shares-{tag}.service" in args
+    assert "--service-type=exec" in args
+    assert "--expand-environment=no" in args
+    assert "PartOf=qemubox@shares.service" in args
+    cleanup = f'ExecStopPost=:/usr/bin/rm -f "{box}/{tag}.sock"'
+    assert f'{cleanup} "{box}/{tag}.sock.pid"' in args
+    command = args[args.index("/fake/virtiofsd"):]
+    expected = ["/fake/virtiofsd", f"--socket-path={box}/{tag}.sock",
+                f"--shared-dir={source}", "--sandbox=none"]
+    if readonly:
+        expected.append("--readonly")
+    if tag == "root":
+        import os
+        expected += ["--cache=always", "--translate-uid", f"map:0:{os.getuid()}:1",
+                     "--translate-gid", f"map:0:{os.getgid()}:1"]
+    assert command == expected, command
+args = (fixture / "share-unit-5").read_bytes().decode().split("\0")[:-1]
+for key in ("BindsTo", "After"):
+    assert f"{key}={' '.join(units)}" in args
+assert "QEMUBOX_READY_TIMEOUT=180" in args
+assert "QEMUBOX_RESUME_FREE=2048" in args
+PY
+    : > "$systemd_log"
+    cleanup_box shares
+    [ "$(cat "$systemd_log")" = \
+        'systemctl --user stop --no-block qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service qemubox-fs@shares-root.service' ]
+    [ -f "$ROOT/shares/stopped" ]
+}
+regression "share units enforce readonly, include cfg, order QEMU and stop at teardown" \
+    share_units_test
+
+share_failure_test() {
+    regression_setup
+    stage_capture() { :; }
+    untrusted=1
+    assemble_mounts() {
+        reset_mounts
+        add_mount "$PROJ" /first rw
+        add_mount "$PROJ" /second ro
+    }
+    missing_deps() { :; }
+    find_virtiofsd() { echo /fake/virtiofsd; }
+    local failed=qemubox-fs@shares-qbx1.service
+    systemd-run() {
+        printf '%s\n' "$*" >> "$fixture/share-failure-units"
+        [[ " $* " != *" --unit=$failed "* ]]
+    }
+    : > "$systemd_log"
+    if start_box shares
+    then
+        return 1
+    fi
+    unlock_box
+    grep -Fxq \
+        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service' \
+        "$systemd_log"
+    ! grep -q 'shares-cfg' "$systemd_log"
+    ! grep -q -- '--unit=qemubox@shares.service' "$fixture/share-failure-units"
+    failed=qemubox@shares.service
+    : > "$systemd_log"
+    if start_box shares
+    then
+        return 1
+    fi
+    unlock_box
+    grep -Fxq \
+        'systemctl --user stop qemubox-fs@shares-qbx0.service qemubox-fs@shares-qbx1.service qemubox-fs@shares-cfg.service qemubox-fs@shares-root.service' \
+        "$systemd_log"
+    grep -q 'journalctl --user -u qemubox@shares.service' "$systemd_log"
+}
+regression "daemon startup failure and VM startup failure stop every started share" \
+    share_failure_test
 
 (
     set -e
     ROOT="$fixture/pruning"
-    mkdir -p "$ROOT"/{old,young,busy,failed,stopped,recent}
-    for n in old young busy failed; do touch "$ROOT/$n/ready"; done
-    for n in stopped recent; do touch "$ROOT/$n/stopped"; done
-    touch -d '5 hours ago' "$ROOT/old/ready" "$ROOT/busy/ready" "$ROOT/failed/ready"
-    touch -d '3 hours ago' "$ROOT/stopped/stopped"
-    running() { [[ "$1" != stopped && "$1" != recent ]]; }
-    session_markers() {
-        case "$1" in busy) echo 123;; failed) return 1;; esac
-    }
-    stop_box() { echo "$1" >> "$fixture/stopped-idle"; }
-    remove_box() { echo "$1" >> "$fixture/pruned"; }
-    if prune_boxes; then exit 1; fi
-    [ ! -e "$fixture/pruned" ]
-    [ "$(cat "$fixture/stopped-idle")" = old ]
+    mkdir -p "$ROOT"/{old,young,busy,stopped,booting}
+    for n in old young busy stopped; do echo 1200 > "$ROOT/$n/idle"; done
+    touch -d '5 hours ago' "$ROOT"/{old,busy,stopped}/idle
+    run_state() { if [ "$1" = stopped ]; then echo stopped; else echo running; fi; }
+    session_count() { if [ "$1" = busy ]; then echo 1; else echo 0; fi; }
+    : > "$systemd_log"
+    prune_boxes 2> /dev/null
+    [ "$(cat "$systemd_log")" = 'systemctl --user stop --no-block qemubox@old.service' ]
+    [ -d "$ROOT/stopped" ]
 ) > "$fixture/prune.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/prune.log"; bad "prune grace, busy and failed count; removes no VM"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/prune.log"; bad "prune stops only boxes idle 4h with no session; removes no VM"; }
 
 (
     set -e
@@ -130,7 +460,7 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     mkdir -p "$ROOT"/{old,recent,up,base}
     touch "$ROOT/old/stopped" "$ROOT/recent/stopped"
     touch -d '3 hours ago' "$ROOT/old/stopped"
-    running() { [ "$1" = up ]; }
+    run_state() { if [ "$1" = up ]; then echo running; else echo stopped; fi; }
     remove_box() { echo "$1" >> "$fixture/rm-stopped.removed"; }
     [ "$(remove_boxes --stopped 2)" = qemubox-old ]
     [ "$(cat "$fixture/rm-stopped.removed")" = old ]
@@ -142,7 +472,7 @@ regression "stop -f signals qemu without a guest shutdown; graceful asks first" 
     mkdir -p "$ROOT"/{old,restarted,flipped,base}
     touch -d '3 hours ago' "$ROOT"/{old,restarted,flipped}/stopped
     up=""
-    running() { [ "$1" = "$up" ]; }
+    run_state() { if [ "$1" = "$up" ]; then echo running; else echo stopped; fi; }
     lock_box() {
         case "$1" in
             restarted) touch "$ROOT/restarted/stopped" ;;
@@ -163,197 +493,54 @@ exits 2 'remove_boxes --stopped 2 one' "rm --stopped takes no names"
     set -e
     ROOT="$fixture/listing"
     mkdir -p "$ROOT/vm"
-    echo $$ > "$ROOT/vm/pid"
-    echo disk > "$ROOT/vm/disk.qcow2"
-    running() { return 0; }
-    session_markers() { echo 123; }
+    echo disk > "$ROOT/vm/upper.raw"
+    run_state() { echo running; }
+    session_count() { echo 1; }
+    memory_current=10485760
     ssh_plain_box() { printf '%s\n' 'x[$(touch "$fixture/pwned")0]' 1 1 1; }
     list_boxes > /dev/null
     [ ! -e "$fixture/pwned" ]
     ssh_plain_box() { printf '%s\n' 100 40 30 10; }
-    [[ "$(list_boxes)" = *$'\t60K\t20K\t10K\t'* ]]
+    [[ "$(list_boxes)" = *$'running\tbusy\t10M\t60K\t20K\t10K\t'* ]]
+    grep -qx 'systemctl --user show -p MemoryCurrent --value qemubox@vm.service' "$systemd_log"
     unset -f ssh_plain_box
     output=$(list_boxes)
     [[ "$output" = NAME$'\t'STATUS$'\t'USE$'\t'RAM$'\t'USED$'\t'CACHE$'\t'TMPFS$'\t'DISK$'\t'PATH* ]]
-    [[ "$output" = *$'running\tbusy\t'*[0-9KMG]* ]]
-    session_markers() { :; }
-    [[ "$(list_boxes)" = *$'running\tidle\t'* ]]
-    session_markers() { return 1; }
-    [[ "$(list_boxes)" = *$'running\t?\t'* ]]
+    session_count() { echo 0; }
+    memory_current='[not set]'
+    [[ "$(list_boxes)" = *$'running\tidle\t?\t'* ]]
 ) > "$fixture/list.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/list.log"; bad "ls columns and marker states"; }
-
-(
-    ROOT="$fixture/leave"
-    name=vm; sid=123; session_pid=""; locked=""
-    LINGER=0
-    mkdir -p "$ROOT/vm"
-    echo disk > "$ROOT/vm/disk.qcow2"
-    running() { return 0; }
-    ssh_plain_box() { echo "$2" > "$fixture/leave-command"; }
-    session_markers() { :; }
-    stop_box() { touch "$fixture/stopped"; }
-    leave_session
-) 2> "$fixture/leave.err"
-eq "last session preserves disk" "$(cat "$fixture/leave/vm/disk.qcow2")" disk
-true_ "QEMUBOX_LINGER=0 powers off at once" '[ -f "$fixture/stopped" ]'
-false_ "QEMUBOX_LINGER=0 stamps no idle" '[ -e "$fixture/leave/vm/idle" ]'
-eq "exit removes own marker" "$(cat "$fixture/leave-command")" \
-    'sudo rm -f /run/qemubox/sess/123'
-for mode in busy failed; do
-    (
-        name=vm; sid=123; session_pid=""; locked=""
-        running() { return 0; }
-        ssh_plain_box() { :; }
-        session_markers() { [ "$mode" = busy ] && echo 456; }
-        stop_box() { touch "$fixture/incorrect-stop-$mode"; }
-        leave_session
-    ) >/dev/null 2>&1
-    false_ "$mode count keeps VM" '[ -f "$fixture/incorrect-stop-$mode" ]'
-done
-(
-    name=vm; sid=123; session_pid=""; locked=""
-    running() { [ ! -e "$fixture/guest-down" ]; }
-    ssh_plain_box() { echo "kex_exchange_identification: reset" >&2; return 255; }
-    sleep() { touch "$fixture/guest-down"; }
-    stop_box() { touch "$fixture/incorrect-stop-poweroff"; }
-    leave_session
-) 2> "$fixture/poweroff.err"
-eq "a guest poweroff ends the session cleanly" "$?" 0
-true_ "a guest poweroff is reported as such" 'grep -q "powered off during the session" "$fixture/poweroff.err"'
-false_ "a guest poweroff hides the ssh error" 'grep -q "kex_exchange" "$fixture/poweroff.err"'
-false_ "a guest poweroff is not a kept VM" 'grep -q "keeping qemubox-vm running" "$fixture/poweroff.err"'
-false_ "a guest poweroff signals nothing" '[ -f "$fixture/incorrect-stop-poweroff" ]'
-(
-    name=vm; sid=123; session_pid=""; locked=""
-    running() { return 0; }
-    ssh_plain_box() { echo "kex_exchange_identification: reset" >&2; return 255; }
-    sleep() { :; }
-    stop_box() { touch "$fixture/incorrect-stop-marker"; }
-    leave_session
-) 2> "$fixture/marker.err"
-eq "a failed marker removal on a live VM exits 1" "$?" 1
-true_ "a failed marker removal keeps the VM" 'grep -q "keeping qemubox-vm running" "$fixture/marker.err"'
-true_ "a failed marker removal shows the ssh error" 'grep -q "kex_exchange" "$fixture/marker.err"'
-false_ "a failed marker removal signals nothing" '[ -f "$fixture/incorrect-stop-marker" ]'
-
-(
-    set -e
-    ROOT="$fixture/token"
-    mkdir -p "$ROOT/vm"
-    if has_idle_token vm mine; then exit 1; fi
-    echo mine > "$ROOT/vm/idle"
-    has_idle_token vm mine
-    if has_idle_token vm newer; then exit 1; fi
-) > "$fixture/token.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/token.log"; bad "idle stamp holds one token"; }
-
-for scen in superseded retry busy stale down
-do
-    (
-        ROOT="$fixture/linger-$scen"
-        mkdir -p "$ROOT/vm"
-        echo mine > "$ROOT/vm/idle"
-        LINGER=1
-        sleep() { command sleep 0.05; }
-        running() { return 0; }
-        session_markers() { :; }
-        stop_box() { touch "$fixture/linger-$scen-stopped"; }
-        case "$scen" in
-            superseded) echo newer > "$ROOT/vm/idle" ;;
-            retry|busy)
-                session_markers() {
-                    [ -e "$ROOT/retried" ] || { touch "$ROOT/retried"; return 1; }
-                    [ "$scen" = retry ] || echo 456
-                } ;;
-            stale)
-                touch -d '5 hours ago' "$ROOT/vm/idle"
-                session_markers() { return 1; } ;;
-            down) running() { return 1; } ;;
-        esac
-        stop_after_linger vm mine
-        echo "rc=$?"
-    ) > "$fixture/linger-$scen.log" 2>&1
-done
-false_ "superseded check leaves the VM" '[ -e "$fixture/linger-superseded-stopped" ]'
-true_ "superseded check says so" \
-    'grep -q "stamped idle again" "$fixture/linger-superseded.log"'
-true_ "failed count retries, then powers off" '[ -e "$fixture/linger-retry-stopped" ]'
-true_ "retry is logged" 'grep -q "retrying in 1s" "$fixture/linger-retry.log"'
-false_ "busy after a retry leaves the VM" '[ -e "$fixture/linger-busy-stopped" ]'
-true_ "busy is logged" 'grep -q "is busy; leaving it" "$fixture/linger-busy.log"'
-false_ "count failing 4h after the last exit gives up" \
-    '[ -e "$fixture/linger-stale-stopped" ]'
-true_ "giving up is logged" 'grep -q "giving up" "$fixture/linger-stale.log"'
-eq "giving up returns 1" "$(tail -1 "$fixture/linger-stale.log")" "rc=1"
-false_ "stopped VM is left alone" '[ -e "$fixture/linger-down-stopped" ]'
-
-(
-    ROOT="$fixture/leave-linger"
-    name=vm; sid=123; session_pid=""; locked=""
-    LINGER=1
-    mkdir -p "$ROOT/vm"
-    running() { return 0; }
-    ssh_plain_box() { :; }
-    session_markers() { :; }
-    stop_box() { touch "$fixture/linger-stopped"; }
-    leave_session
-) 2> "$fixture/leave-linger.err"
-false_ "last session lingers instead of stopping at once" '[ -f "$fixture/linger-stopped" ]'
-true_ "last session stamps idle with a token" '[ -s "$fixture/leave-linger/vm/idle" ]'
-true_ "exit announces the linger" 'grep -q "powers off after 1s" "$fixture/leave-linger.err"'
-for ((i = 0; i < 300; i++))
-do
-    [ ! -f "$fixture/linger-stopped" ] || break
-    sleep 0.01
-done
-true_ "detached check powers off after the linger" '[ -f "$fixture/linger-stopped" ]'
-true_ "detached check logs its decision" \
-    'grep -q "powering off qemubox-vm" "$fixture/leave-linger/vm/idle.log"'
-
-(
-    set -e
-    ROOT="$fixture/leave-nostderr"
-    name=vm; sid=123; session_pid=""; locked=""
-    LINGER=1
-    mkdir -p "$ROOT/vm"
-    running() { return 0; }
-    ssh_plain_box() { :; }
-    session_markers() { :; }
-    stop_box() { touch "$fixture/nostderr-stopped"; }
-    leave_session
-) 2>/dev/full
-for ((i = 0; i < 300; i++))
-do
-    [ ! -f "$fixture/nostderr-stopped" ] || break
-    sleep 0.01
-done
-true_ "last session with a dead stderr still arms the idle stop" \
-    '[ -f "$fixture/nostderr-stopped" ]'
+[ "$?" -eq 0 ] && ok || { cat "$fixture/list.log"; bad "ls columns from systemd and the session count"; }
 
 (
     set -e
     ROOT="$fixture/readiness"
-    name=vm; mkdir -p "$ROOT/vm"
-    echo 'serial failure evidence' > "$ROOT/vm/serial.log"
-    QEMUBOX_READY_TIMEOUT=1
-    ssh_plain_box() { :; }
-    if wait_ready vm session 2> "$fixture/timeout"; then exit 1; fi
-    grep -q 'serial failure evidence' "$fixture/timeout"
-    touch "$ROOT/vm/ready"
-    wait_ready vm session
+    mkdir -p "$ROOT/vm"
+    sleep() { :; }
+    ssh_plain_box() { [ -e "$fixture/guest-ready" ] || { touch "$fixture/guest-ready"; return 255; }; }
+    run_state() { echo running; }
+    wait_ready vm
+    [ -e "$fixture/guest-ready" ]
+    rm "$fixture/guest-ready"
+    run_state() { echo paused:prelaunch; }
+    if wait_ready vm 2> "$fixture/paused"; then exit 1; fi
+    grep -q 'is paused:prelaunch' "$fixture/paused"
+    : > "$systemd_log"
+    ready_error vm 2> /dev/null
+    grep -qx 'journalctl --user -u qemubox@vm.service -n 40 --no-pager' "$systemd_log"
     lock_box vm
     (
-        locked=""
         lock_box vm
         echo acquired > "$fixture/acquired"
         unlock_box
     ) &
     waiter=$!
-    sleep 0.1
+    command sleep 0.1
     [ ! -f "$fixture/acquired" ]
+    if (QEMUBOX_READY_TIMEOUT=0.1; lock_box vm) 2> "$fixture/lock.err"; then exit 1; fi
+    grep -q 'stayed locked by another launch or rm' "$fixture/lock.err"
     unlock_box
     wait "$waiter"
     [ -f "$fixture/acquired" ]
 ) > "$fixture/ready.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/ready.log"; bad "ready gate, serial tail and lock wait"; }
+[ "$?" -eq 0 ] && ok || { cat "$fixture/ready.log"; bad "ready wait, paused refusal, journal tail and lock wait"; }

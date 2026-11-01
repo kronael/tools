@@ -89,7 +89,8 @@ line are explicit, with material owner decisions answered.
 ALWAYS select a fresh planning worker through `dispatch`, with no conversation
 fork. High-level product contracts use the spec task before detailed planning.
 The planner
-researches the live code and writes or updates the work record. Existing
+researches the live code, writes or updates the work record and writes or
+completes the spec's module map (`dispatch` → `plan.md` § Module map). Existing
 plans and specs are inputs to verify, not authority about code. Read
 `prompt.md` for the brief and plan fields.
 
@@ -110,7 +111,10 @@ gate, and no unresolved owner decision blocks the first step.
 
 ### 4. Implement and verify each step
 
-ALWAYS select each settled implementation step as coding through `dispatch`.
+ALWAYS select each settled implementation step through `dispatch`: code as
+coding, docs as documentation. A coding worker builds each module from its
+module-map entry; a change to a mapped name returns to planning
+(`dispatch` → `plan.md` § Brief).
 `runtime.md` covers unavailable launch capabilities.
 Follow `worktree` for isolation and reconciliation. Parallel work needs
 independent owned paths and dependencies. Read-only investigations may

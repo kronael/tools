@@ -30,13 +30,12 @@ authoring config, not application code.
 ## Commands
 
 ```sh
-make test          # PROJECTS, drift checks, recall and astgrep runner tests
+make test          # PROJECTS, recall and astgrep runner tests
 make test-<dir>    # one project, e.g. make test-udfix
 make workflows     # regenerate PROJECTS from */Makefile (test+clean targets)
 make gen-ci        # regenerate .github/workflows/ from .github/templates/
 make clean         # clean projects + sweep __pycache__
 make lints         # prove co-located ast-grep lint rules against fixtures
-make spec-lint     # lint a specs/ corpus against skills/specs/format.md (SPECS=<dir>)
 make skills-frontmatter-fix  # auto-fix loose SKILL.md YAML
 ```
 
@@ -45,7 +44,7 @@ make skills-frontmatter-fix  # auto-fix loose SKILL.md YAML
   `test_*.py` does not run until it is added to that list — the suite passes
   while silently skipping it. `local.py` and `reclaude.py` carry no tests.
 - **CLI tools**: each has its own Makefile — `cd <tool> && make install`
-  (installs to `~/.local/bin`). `dockbox` also has `make image`.
+  (installs to `~/.local/bin`). `qemubox` also has `make image`.
 - **Python scripts** (`tw-fetch`, `tg-fetch`, `dc-fetch`): `uv run main.py`
   (PEP 723 inline deps, no separate install).
 - **Lint**: pre-commit runs ruff + ruff-format + json/yaml/toml checks.

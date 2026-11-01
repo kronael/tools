@@ -53,7 +53,7 @@ run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
 ALWAYS apply those groups only when selected; tool installation runs separately.
 
 ALWAYS run steps 7-8 on every sync, first setup included: install missing
-external tools and refresh the listed repo CLI tools, including dockbox.
+external tools and refresh the listed repo CLI tools, including qemubox.
 NEVER ask for tool-install confirmation — a sync authorizes these installs.
 Every later sync skips the questionnaire and applies step 5's always-apply
 set. Other settings still confirm before applying.
@@ -166,7 +166,7 @@ set. Other settings still confirm before applying.
    Completion criterion: each tool runs or has a reported installation blocker.
 
 8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix, kvs,
-   spec-lint, diskclean and dockbox always, from their dirs at `SRC` (else point to
+   speclint, diskclean and qemubox always, from their dirs at `SRC` (else point to
    `cd <tool> && make install` from a clone) — and write its CDPATH block into
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.

@@ -181,38 +181,36 @@ passes — every item there is one the owner otherwise prompts for.
 
 ALWAYS run every item on a standalone page — an explainer or a onepager — in
 this order; a README or an app's own UI runs the items that apply to it
-(render, contrast, boxes, names). `keeper` marks an item a check in `make
-lint` enforces (`readme/topology.md` § What `make lint` checks), trusted only
-once it has failed on a planted violation. A sub's "looks fine" settles
-nothing: read the pixels yourself (`visual` skill).
+(render, contrast, boxes, names). These are review criteria, not claims of
+automatic enforcement. `readme/topology.md` § Documentation checks owns lint
+and its limits. A sub's "looks fine" settles nothing: ALWAYS read the pixels
+yourself (`visual` skill).
 
 1. Facts first, on every later pass (`refine` lens `readme.md`): a style pass
    alone polishes a page that is wrong.
 2. Rendered at 1440 and 375, light and dark, read as viewport screenshots —
-   a full-page capture is too tall to judge. `keeper`: overflow, contrast.
+   a full-page capture is too tall to judge. ALWAYS check overflow and contrast.
 3. Text fills its box: no clipped line, no empty bottom beside a full
    neighbour, no card wider than its measure.
-4. One font family, five sizes at most, body ≥16px. `keeper`
-5. Word budget met, counted as § Density defines. `keeper`
+4. One font family, five sizes at most, body ≥16px.
+5. Word budget met, counted as § Density defines.
 6. Every term glossed at first use or cut; the term list is "Glossary".
 7. No mechanics that decide nothing (§ Density): no rent, payer, depth or
    layout talk outside the one cost figure and a wire format the page is
-   about. `keeper`: a banned-word list, that figure and that format exempt.
+   about. ALWAYS judge each term in its context.
 8. When sibling pages or a project brand exist, the brand block, tokens and
-   names match them. `keeper`
+   names match them.
 9. First screen is one claim answering the question the page was asked;
    every heading, box header and figure title follows the `SKILL.md`
    heading rule — a claim, or a reader's question its first sentence
-   answers; "Glossary" is the one label allowed. `keeper`: "Overview",
-   "Details", "Notes", an "X: Y" title.
+   answers; "Glossary" is the one label allowed.
 10. Each figure checked against the code and test it cites by a reader who
     did not draw it.
 11. Every claim and identifier resolves through its section's sources note,
-    and every link resolves. `keeper`
+    and every link resolves.
 12. No work-record prose: step ids, phase names, planned tests, what the
-    session did. `keeper`: ids outside links.
-13. A number or error code is explained once. `keeper`: a code in two
-    explanation blocks.
+    session did.
+13. A number or error code is explained once.
 14. Sections in the order the owning skill sets (`readme/page.md`,
     `readme/onepager.md`); each limit one plain claim.
 15. A maintained page is edited in place, one writer at a time — NEVER a

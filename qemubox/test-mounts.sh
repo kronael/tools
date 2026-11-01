@@ -23,21 +23,24 @@ done
 eq "default: no per-slug mount" "$(mount_mode "$slug_dest")" ""
 eq "default: single-file config ro" "$(mount_mode /mnt/qemubox-home)" "ro"
 eq "default: shell history rw" "$(mount_mode /mnt/qemubox-history)" "rw"
-true_ "history shares host inode" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
+true_ "history shares host inode" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'
 echo history-test >> "$ROOT/testbox/history/history"
-eq "history writes reach host" "$(cat "$HOME/.dockbox_history")" "history-test"
+eq "history writes reach host" "$(cat "$HOME/.qemubox_history")" "history-test"
 mount_args=$(qemu_mount_args)
 for i in "${!mount_tags[@]}"; do
-    ro=""; [ "${mount_modes[$i]}" = ro ] && ro=",readonly=on"
-    true_ "qemu export ${mount_dests[$i]}" 'grep -Fxq "local,path=${mount_srcs[$i]},mount_tag=${mount_tags[$i]},security_model=none$ro" <<< "$mount_args"'
+    true_ "qemu socket ${mount_dests[$i]}" \
+        'grep -Fxq "socket,id=${mount_tags[$i]},path=${mount_tags[$i]}.sock" <<< "$mount_args"'
+    true_ "qemu device ${mount_dests[$i]}" \
+        'grep -Fxq "vhost-user-fs-pci,queue-size=1024,chardev=${mount_tags[$i]},tag=${mount_tags[$i]}" <<< "$mount_args"'
 done
+false_ "virtiofs exports use no -virtfs" 'grep -q -- -virtfs <<< "$mount_args"'
 
 printf '{"fixture":true}\n' > "$HOME/.claude.json"
 stage_host_cfg "$ROOT/testbox/hostcfg"
 true_ "claude.json staged intact" 'cmp "$HOME/.claude.json" "$ROOT/testbox/hostcfg/.claude.json"'
-false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.dockbox_history" ]'
+false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.qemubox_history" ]'
 run_assemble
-true_ "history staging supports re-entry" '[ "$HOME/.dockbox_history" -ef "$ROOT/testbox/history/history" ]'
+true_ "history staging supports re-entry" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'
 
 run_assemble 'untrusted=1'
 eq   "untrusted: project still rw"     "$(mount_mode "$PROJ")" "rw"
@@ -80,55 +83,36 @@ eq "-T stages no project overmount" "${#paths[@]}" 1
 dirs=("$PROJ"); eph_no_tmpfs=""
 exits 1 'set -e; dirs=("$fixture/missing"); stage_ephemeral "$eph"' "failed find stops launch"
 
-(
-    ssh_stream_box() { cat > "$fixture/guest-builds.sh"; }
-    setup_guest_builds testbox
-)
-(
-    set -e
-    mount() { printf '%s\n' "$*" >> "$fixture/mounts"; }
-    mkdir() { :; }
-    chown() { printf '%s\n' "$*" >> "$fixture/chown"; }
-    export -f mount mkdir chown
-    export fixture
-    printf '%s\0' tmpfs "$PROJ/space dir/node_modules" > "$eph"
-    bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    key=$(realpath -e "$PROJ/space dir/node_modules" | sha256sum); key=${key%% *}
-    grep -Fx -- "--bind /tmp/qemubox-builds/$key $PROJ/space dir/node_modules" "$fixture/mounts"
-    grep -Fx -- "1234:5678 /tmp/qemubox-builds/$key" "$fixture/chown"
-    ! grep -q -- "-t tmpfs" "$fixture/mounts"
-    printf '%s\0' disk "$PROJ/node_modules" > "$eph"
-    bash "$fixture/guest-builds.sh" 1234 5678 "$eph"
-    key=$(realpath -e "$PROJ/node_modules" | sha256sum); key=${key%% *}
-    grep -Fx -- "--bind /var/lib/qemubox/builds/$key $PROJ/node_modules" "$fixture/mounts"
-    grep -Fx -- "1234:5678 /var/lib/qemubox/builds/$key" "$fixture/chown"
-    mount() { echo "mount denied" >&2; return 32; }
-    export -f mount
-    for mode in tmpfs disk; do
-        printf '%s\0' "$mode" "$PROJ/node_modules" > "$eph"
-        if bash "$fixture/guest-builds.sh" 1234 5678 "$eph"; then exit 1; else
-            [ "$?" -eq 32 ]
-        fi
-    done
-) > "$fixture/build-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/build-tests.log"; bad "guest build mounts and failures"; }
+tab_dir="$fixture/tab"$'\t'"dir"
+mkdir -p "$tab_dir"
+exits 2 'add_mount "$tab_dir" /x rw' "a tab in a share path is refused"
+exits 2 'add_mount "$PROJ" "$tab_dir" rw' \
+    "a tab in a share destination is refused"
+newline_dir="$fixture/newline"$'\n'"dir"
+mkdir -p "$newline_dir"
+exits 2 'add_mount "$newline_dir" /x rw' \
+    "a newline in a share source is refused"
+exits 2 'add_mount "$PROJ" "$newline_dir" rw' \
+    "a newline in a share destination is refused"
+comma_dir="$fixture/comma,dir"
+mkdir -p "$comma_dir"
+true_ "commas in share paths are accepted" \
+    'reset_mounts; add_mount "$comma_dir" /comma,dest ro; [ "${mount_srcs[0]}" = "$comma_dir" ] && [ "${mount_dests[0]}" = /comma,dest ]'
 
-(
-    set -e
-    ssh_stream_box() { bash -c "$2"; }
-    sudo() { "$@"; }
-    mount() { echo "$*" >> "$fixture/tmp-mounts"; }
-    install() { echo "$*" >> "$fixture/tmp-installs"; }
-    export fixture
-    export -f sudo mount install
-    setup_guest_tmp testbox
-    grep -Fx -- '-t tmpfs -o rw,exec,mode=1777,size=75% tmpfs /tmp' "$fixture/tmp-mounts"
-    grep -Fx -- "-d -o $(id -u) -g $(id -g) /tmp/cargo-target" "$fixture/tmp-installs"
-    [ "$(wc -l < "$fixture/tmp-mounts")" = 1 ]
-) > "$fixture/tmp-tests.log" 2>&1
-[ "$?" -eq 0 ] && ok || { cat "$fixture/tmp-tests.log"; bad "guest tmp cap and cargo-target dir"; }
-
-exits 32 'set -e; ssh_stream_box() { return 32; }; setup_guest_tmp testbox' \
-    "failed tmp mount stops launch"
-exits 32 'set -e; ssh_plain_box() { case "$2" in *"sudo mount"*) return 32;; esac; }; mount_host_paths testbox' \
-    "failed 9p mount stops launch"
+canonical_newline_test() {
+    untrusted=1
+    dirs=()
+    extra_modes=(ro)
+    mkdir -p "$fixture/target" "$fixture/target"$'\n'
+    ln -s "$fixture/target"$'\n' "$fixture/volume-link"
+    extra_dirs=("$fixture/volume-link")
+    if (assemble_mounts) 2> "$fixture/canonical-error"
+    then
+        return 1
+    else
+        [ "$?" = 2 ]
+    fi
+    grep -q 'containing tab or newline' "$fixture/canonical-error"
+}
+regression "a canonical share path keeps its trailing newline and refuses the prefix path" \
+    canonical_newline_test

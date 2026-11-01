@@ -1,0 +1,311 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+docker_pid=""
+sshd_pid=""
+reclaim_pid=""
+setup_swap() {
+    local swap bytes capacity size
+    read -r swap < /run/qemubox/config/swap || return
+    [[ "$swap" =~ ^[0-9]{1,9}$ ]] || {
+        echo 'Invalid guest swap size in MiB' >&2
+        return 1
+    }
+    bytes=$((10#$swap * 1048576))
+    ((bytes > 0)) || return 0
+    [[ "$(findmnt -n -o FSTYPE -T /.qemubox)" = ext4 ]] || {
+        echo 'Guest swap requires direct ext4 storage at /.qemubox' >&2
+        return 1
+    }
+    capacity=$(df -B1 --output=size /.qemubox | tail -1) || return
+    ((bytes < capacity)) || {
+        echo "Guest swap request $swap MiB leaves no filesystem capacity" >&2
+        return 1
+    }
+    if [[ -e /.qemubox/swap || -L /.qemubox/swap ]]
+    then
+        [[ -f /.qemubox/swap && ! -L /.qemubox/swap ]] || {
+            echo 'Guest swap path must be a regular file' >&2
+            return 1
+        }
+        size=$(stat -c %s /.qemubox/swap) || return
+        [[ "$size" = "$bytes" ]] || {
+            echo "Guest swap stores $size bytes; requested $bytes; use 0 or a matching QEMUBOX_SWAP" >&2
+            return 1
+        }
+    else
+        install -m 600 /dev/null /.qemubox/swap.new || return
+        fallocate -l "$bytes" /.qemubox/swap.new || return
+        mkswap /.qemubox/swap.new || return
+        mv /.qemubox/swap.new /.qemubox/swap || return
+    fi
+    chmod 600 /.qemubox/swap || return
+    swapon /.qemubox/swap
+}
+
+reclaim_memory_loop() {
+    local mem_total before after bytes error rc
+    local cgroup=/sys/fs/cgroup/qemubox
+    export LC_ALL=C
+    while sleep 60
+    do
+        mem_total=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+        read -r before < "$cgroup/memory.current"
+        bytes=$((before - mem_total * 512))
+        ((bytes > 0)) || continue
+        ((bytes <= 1073741824)) || bytes=1073741824
+        rc=0
+        error=$({ printf '%s\n' "$bytes" > "$cgroup/memory.reclaim"; } 2>&1) || rc=$?
+        read -r after < "$cgroup/memory.current"
+        ((rc != 0)) || continue
+        printf '%s\n' "$error" >&2
+        if [[ "$error" = *'Resource temporarily unavailable'* &&
+            -w "$cgroup/memory.reclaim" ]]
+        then
+            echo "qemubox: reclaim shortfall: requested=$bytes before=$before after=$after" >&2
+        else
+            echo "qemubox-init: memory.reclaim failed: before=$before after=$after" >&2
+            return 1
+        fi
+    done
+}
+
+shutdown() {
+    local rc=$? pid deadline=$((SECONDS + 5))
+    trap - EXIT ERR TERM INT
+    set +e
+    [[ ! -f /run/qemubox/ready ]] || rm -- /run/qemubox/ready
+    kill -TERM -1 2>/dev/null
+    for pid in $sshd_pid $docker_pid $reclaim_pid
+    do
+        while kill -0 "$pid" 2>/dev/null && ((SECONDS < deadline))
+        do
+            sleep 0.1
+        done
+    done
+    kill -KILL -1 2>/dev/null
+    for pid in $sshd_pid $docker_pid $reclaim_pid
+    do
+        wait "$pid" 2>/dev/null
+    done
+    sync
+    /bin/busybox reboot -f
+    exit "$rc"
+}
+trap shutdown EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
+trap 'echo "qemubox-init: failed at line $LINENO" >&2' ERR
+
+mount -t tmpfs -o mode=755 tmpfs /run
+mkdir -p /dev/pts /dev/shm /sys/fs/cgroup /run/qemubox/config /run/sshd
+mount -t devpts -o gid=5,mode=620 devpts /dev/pts
+mount -t tmpfs -o mode=1777 tmpfs /dev/shm
+ln -sf /proc/self/fd /dev/fd
+ln -sf /proc/self/fd/0 /dev/stdin
+ln -sf /proc/self/fd/1 /dev/stdout
+ln -sf /proc/self/fd/2 /dev/stderr
+mount -t cgroup2 none /sys/fs/cgroup
+mount -t virtiofs -o ro cfg /run/qemubox/config
+printf 'nameserver 10.0.2.3\n' > /run/resolv.conf
+ln -sf /run/resolv.conf /etc/resolv.conf
+ip link set lo up
+printf '127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s\n' \
+    "$(cat /proc/sys/kernel/hostname)" > /etc/hosts
+{
+    read -r username
+    read -r user_uid
+    read -r user_gid
+    IFS= read -r home_dir
+    read -r groups
+    IFS= read -r zone
+} < /run/qemubox/config/identity
+[[ "$username" =~ ^[A-Za-z0-9_-]+$ && "$user_uid" =~ ^[0-9]+$ &&
+    "$user_gid" =~ ^[0-9]+$ && "$home_dir" = /* && "$home_dir" != *:* ]]
+[[ "$user_uid" != 0 ]]
+[[ "$zone" != /* && "$zone" != *..* && -f "/usr/share/zoneinfo/$zone" ]]
+ln -sf "/usr/share/zoneinfo/$zone" /etc/localtime
+
+groups="$groups $(getent group docker | cut -d: -f3):docker"
+members=()
+for group in $groups
+do
+    gid=${group%%:*}
+    gname=${group#*:}
+    [[ "$gid" =~ ^[0-9]+$ ]]
+    [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"
+    if entry=$(getent group "$gid")
+    then
+        gname=${entry%%:*}
+    else
+        if getent group "$gname" >/dev/null
+        then
+            gname="hostgrp$gid"
+        fi
+        groupadd -g "$gid" "$gname"
+    fi
+    members+=("$gname")
+done
+getent group "$user_gid" >/dev/null
+passwd_entry="$username:x:$user_uid:$user_gid::$home_dir:/bin/bash"
+if entry=$(getent passwd "$user_uid")
+then
+    [[ "$entry" = "$passwd_entry" ]]
+else
+    if getent passwd "$username" >/dev/null
+    then
+        echo "qemubox-init: conflicting user $username" >&2
+        exit 1
+    fi
+    useradd -M -N -u "$user_uid" -g "$user_gid" -d "$home_dir" \
+        -s /bin/bash -c '' -p '!' "$username"
+fi
+if ! getent shadow "$username" >/dev/null
+then
+    usermod -p '!' "$username"
+fi
+usermod -aG "$(IFS=,; echo "${members[*]}")" "$username"
+echo "$username ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/qemubox
+chmod 0440 /etc/sudoers.d/qemubox
+visudo -cf /etc/sudoers.d/qemubox
+
+read -ra controllers < /sys/fs/cgroup/cgroup.controllers
+printf '+%s ' "${controllers[@]}" > /sys/fs/cgroup/cgroup.subtree_control
+mkdir -p /sys/fs/cgroup/qemubox
+printf '+%s ' "${controllers[@]}" > \
+    /sys/fs/cgroup/qemubox/cgroup.subtree_control
+mkdir -p /sys/fs/cgroup/qemubox/{sessions,docker,services}
+for path in docker containerd
+do
+    mkdir -p "/.qemubox/$path" "/var/lib/$path"
+    mount --bind "/.qemubox/$path" "/var/lib/$path"
+done
+(
+    echo "$BASHPID" > /sys/fs/cgroup/qemubox/services/cgroup.procs
+    exec dockerd --exec-opt native.cgroupdriver=cgroupfs \
+        --cgroup-parent=/qemubox/docker --shutdown-timeout=3
+) &
+docker_pid=$!
+
+setup_swap
+read -r memory < /run/qemubox/config/memory
+tmp_kib=$(awk -v memory="$memory" '/^SwapTotal:/ {swap = $2}
+    END {print int(3 * (memory * 1024 + swap) / 4)}' /proc/meminfo)
+mount -t tmpfs -o "rw,exec,mode=1777,size=${tmp_kib}k" tmpfs /tmp
+install -d -o "$user_uid" -g "$user_gid" /tmp/cargo-target
+mode=untrusted
+while IFS=$'\t' read -r tag src dest access
+do
+    [[ "$tag" != cfg && "$tag" != root ]] || continue
+    [[ "$access" = ro || "$access" = rw ]]
+    path=$dest
+    missing=()
+    while [[ ! -d "$path" ]]
+    do
+        missing+=("$path")
+        path=$(dirname "$path")
+    done
+    for ((i=${#missing[@]}-1; i>=0; i--))
+    do
+        install -d -m 755 -o "$user_uid" -g "$user_gid" -- "${missing[$i]}"
+    done
+    mount -t virtiofs -o "$access" "$tag" "$dest"
+    if [[ "$tag" = capture ]]
+    then
+        touch /tmp/capture.png
+        mount --bind "$dest/capture.png" /tmp/capture.png
+        mount -o remount,bind,ro /tmp/capture.png
+    fi
+    if [[ -f "$dest/.qemuboxrc" ]]
+    then
+        mount --bind /dev/null "$dest/.qemuboxrc"
+        mount -o remount,bind,ro "$dest/.qemuboxrc"
+    fi
+    [[ "$dest" != /mnt/qemubox-home ]] || mode=trusted
+done < /run/qemubox/config/mounts
+{
+    IFS= read -r -d '' backing
+    case "$backing" in
+        tmpfs) root=/tmp/qemubox-builds ;;
+        disk) root=/var/lib/qemubox/builds ;;
+        *) echo "Invalid build mount mode: $backing" >&2; exit 1 ;;
+    esac
+    while IFS= read -r -d '' path
+    do
+        mkdir -p -- "$path"
+        key=$(realpath -e -- "$path" | sha256sum)
+        backing="$root/${key%% *}"
+        mkdir -p "$backing"
+        chown "$user_uid:$user_gid" "$backing"
+        mount --bind "$backing" "$path"
+    done
+} < /run/qemubox/config/ephemeral
+
+mkdir -p "$home_dir/.ssh" "$home_dir/.docker/run" "$home_dir/.gnupg" \
+    /etc/claude-code /etc/security/limits.d
+chown "$user_uid:$user_gid" "$home_dir" "$home_dir/.ssh" \
+    "$home_dir/.docker" "$home_dir/.docker/run" "$home_dir/.gnupg"
+chmod 700 "$home_dir/.ssh" "$home_dir/.gnupg"
+install -m 600 -o "$user_uid" -g "$user_gid" \
+    /run/qemubox/config/authorized_keys "$home_dir/.ssh/authorized_keys"
+cp /run/qemubox/config/CLAUDE.md /etc/claude-code/CLAUDE.md
+printf '%s - nice -20\n%s - rtprio 99\n%s - memlock unlimited\n' \
+    "$username" "$username" "$username" > /etc/security/limits.d/90-qemubox.conf
+if [[ "$mode" = trusted ]]
+then
+    if [[ -f /mnt/qemubox-home/.claude.json ]]
+    then
+        ln -sf /mnt/qemubox-home/.claude.json /tmp/host-claude.json
+    fi
+    for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+    do
+        if [[ -f "/mnt/qemubox-home/$rel" ]]
+        then
+            ln -sf "/mnt/qemubox-home/$rel" "$home_dir/$rel"
+        fi
+    done
+    if [[ -f /mnt/qemubox-history/history ]]
+    then
+        for rel in .bash_history .zsh_history
+        do
+            touch "$home_dir/$rel"
+            chown "$user_uid:$user_gid" "$home_dir/$rel"
+            mount --bind /mnt/qemubox-history/history "$home_dir/$rel"
+        done
+    fi
+    if [[ ! -d "$home_dir/.claude/sessions" ]]
+    then
+        install -d -m 700 -o "$user_uid" -g "$user_gid" \
+            "$home_dir/.claude/sessions"
+    fi
+    mount -t tmpfs -o "mode=0700,uid=$user_uid,gid=$user_gid" \
+        tmpfs "$home_dir/.claude/sessions"
+    runuser -u "$username" -- /usr/local/bin/qemubox-codex-bridge
+fi
+ssh-keygen -A
+/usr/sbin/sshd -t
+(
+    echo "$BASHPID" > /sys/fs/cgroup/qemubox/sessions/cgroup.procs
+    exec /usr/sbin/sshd -D -e
+) &
+sshd_pid=$!
+kill -0 "$docker_pid" "$sshd_pid"
+reclaim_memory_loop &
+reclaim_pid=$!
+touch /run/qemubox/ready
+echo 'qemubox: ready'
+deadline=$((SECONDS + 30))
+until timeout 1 docker info >/dev/null 2>&1
+do
+    kill -0 "$docker_pid" "$sshd_pid"
+    ((SECONDS < deadline)) || {
+        echo 'qemubox-init: Docker startup timed out' >&2
+        exit 1
+    }
+    sleep 0.05
+done
+kill -0 "$docker_pid" "$sshd_pid"
+rc=0
+wait -n "$docker_pid" "$sshd_pid" "$reclaim_pid" || rc=$?
+echo "qemubox-init: required service exited with status $rc" >&2
+exit 1

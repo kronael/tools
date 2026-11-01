@@ -2,6 +2,160 @@
 
 ## [Unreleased]
 
+## [v0.4.67] — 20261031
+
+> kronael v0.4.67 — The spec carries the module map
+>
+> Planners settle a change's modules inside its spec, and generated files are plain make targets.
+>
+> • Specs — one YAML module map per spec: each file's job, its key names and what it never does.
+> • Planning — the planner writes or completes the map; workers build each module from its entry.
+> • Make — a generated file is a file target on its sources, written through a temporary file.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs/format.md` owns the module map block; `dispatch/plan.md` and `ship` have the planner write it and the workers build from it.
+- `mk` § Generated files: a generated file is a file target named by its path, with its sources as prerequisites.
+
+## [v0.4.66] — 20261031
+
+> kronael v0.4.66 — Bugs live with the code they describe
+>
+> Each project keeps its own bug queue, and four new house rules cover naming and Python records.
+>
+> • Bugs — an entry goes in the BUGS.md of the component that owns the code; the root names every queue.
+> • Code — bind a value once from one expression; name adapters after their type; English plurals.
+> • Python — enum members compare with `is`; dataclasses copy through their own `replace`.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `bugs`, `next` and the global bug-triage rule place an entry in the owning component's `BUGS.md`; the root keeps cross-cutting entries and names each component file.
+- `software/code.md` binds a value once from one expression and names constants and adapters after their type.
+- `py` states the enum, `replace` and list-join rules as ALWAYS/NEVER, with lints `py-enum-is` and `py-replace-method`.
+
+## [v0.4.65] — 20261030
+
+> kronael v0.4.65 — Recall routing and workflow evidence
+>
+> Automatic worker selection and transcript evidence keep recall and learning tied to recorded actions.
+>
+> • Recall — known records stay direct; exploratory extraction uses dispatch workers.
+> • Learn — the memory pass checks required actions against recorded tool use.
+> • Hooks — compaction nudges request the memory pass through SessionStart context.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Recall delegates transcript extraction before broad reads and verifies the cited evidence.
+- Learn checks required workflow actions against the session record without waiting for corrections.
+- Compaction memory nudges use SessionStart context; Stop remains the fallback.
+
+## [v0.4.64] — 20261030
+
+> kronael v0.4.64 — Specs read as the architecture after the change
+>
+> A spec now shows where a change fits with marked diagrams and quoted code, so a reviewer sees the change without the conversation.
+>
+> • Specs — each change section opens with a figure marking new, changed and removed parts.
+> • Specs — a table only adds what a figure cannot show; no per-file tables of line pointers.
+> • Specs — current and proposed code quoted where it changes; excerpts are not counted as length.
+> • Specs — each open question names its case and a recommendation.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `specs/format.md`: the spec body is the architecture document after the change; figures marked `(new)`, `(changed)`, `(removed)`; tables, code excerpts and open questions rules; points at `readme`, `writing` and `diagrams`.
+- `specs/spec-first.md`: a spec written during a code change follows `format.md`.
+- `refine/readme.md`: doc length weighs prose and tables, never a spec's code excerpts.
+
+## [v0.4.63] — 20261030
+
+> kronael v0.4.63 — Three test kinds and docs to their own worker
+>
+> Tests come in three kinds that fake only third parties, and documentation edits get their own worker route.
+>
+> • Testing — component, API and play kinds; fake only what you cannot run, never an own module.
+> • Dispatch — a Documentation task sends doc and skill text to Sol or Opus, never the coding worker.
+> • Python — build a `TypeAdapter` once at module level; decode stored JSON with the project's `from_dict`.
+> • Python — guard a nullable return first; two new lints flag both patterns.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/testing.md`: component, API and play kinds for self-contained tests; fakes only for third parties, the clock and randomness.
+- `dispatch`: a Documentation task routes doc edits to Sol or Opus; refine, ship, improve and readme sync use it.
+- `py`: module-level `TypeAdapter` and `from_dict` for stored JSON; nullable returns guard first.
+- `py` lints: `py-typeadapter-module-level` and `py-no-conditional-none-return`.
+- `tsx`: hooks and the request layer get no vitest test; play journeys drive them.
+
+## [v0.4.62] — 20261029
+
+> kronael v0.4.62 — Refine hunts the recurring slop
+>
+> A refine pass now checks for the shapes the owner keeps sending back: dead guards, second names, kept old paths, drive-by files and tests that prove nothing.
+>
+> • Refine — lenses for checks that guard nothing, hashes and registries with no reader, thin many-parameter wrappers.
+> • Refine — one name per thing across schema, wire, code and docs; comment sweeps cover every touched file, `lib/` included.
+> • Refine — a `sql` lens for per-row round trips and alias style; owner PR comments are instructions, never WON'T-FIX.
+> • Code rules — no check for a state the types or the real call already reject; a config section switches a feature, never an `enabled` flag.
+> • Settings — the Task checklist tools are on for every model.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `refine/software.md`: lenses for checks that guard nothing, kept old paths, drive-by files and added `.md` reports, hashes and registries with no reader, tests that assert source text or stay green on a broken subject.
+- `refine/py.md`: typing dodges over added lines (`Any`, `object`, `getattr`, string sets, needless `| None`) and locks or buckets that protect nothing.
+- `refine/sql.md`: round trips that grow with the batch, `AS` column aliases, statements away from their function.
+- `refine/SKILL.md`: owner-authored PR threads are instructions; lint and type failures are fixed, never recorded; the PR body is checked against `pr-draft` § Format.
+- `code.md`: no check for a state already rejected by types, the boundary parser or the real call; a feature is switched by its config section, never an `enabled` flag or a default.
+- `settings-recommended.json`: `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` keeps `TaskCreate`/`TaskUpdate` available on every model.
+- `pr-draft`: the PR body is capped at 1,000 characters below the TL;DR.
+- `py`: hot optional instrumentation sits behind `if __debug__:` so `-O` drops it.
+
+## [v0.4.61] — 20261027
+
+> kronael v0.4.61 — qemubox VMs under systemd
+>
+> qemubox runs each VM as a systemd user unit on a shared read-only rootfs, and dockbox is retired.
+>
+> • VMs — systemd user units, virtiofs shares, a pinned fast-boot kernel and native Docker.
+> • Disk — one shared rootfs per image and a persistent ext4 upper per VM.
+> • Startup — SSH opens before Docker, and RAM grows to the configured size after boot.
+> • Old VMs — a qcow2 VM must be removed and launched again; a running one is never removed as stopped.
+> • dockbox — removed; qemubox is the one sandbox launcher.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Breaking
+
+- qemubox VMs run as systemd user units: systemd 254+, `loginctl enable-linger` and `virtiofsd` are required.
+- A VM with a `disk.qcow2` refuses to launch; run `qemubox rm <name>`, then launch again.
+- The host needs GNU tar and e2fsprogs again; bsdtar and qemu-img are no longer needed.
+- dockbox is removed with its sync, CI and docs entries.
+
+### Changed
+
+- Host directories reach the guest through virtiofs; a share daemon exit stops its VM.
+- Each image publishes one read-only rootfs; each VM keeps its writes in an ext4 upper.
+- The guest boots a pinned kernel and initrd, with tini as init and native Docker.
+- Guest swap and bounded workload reclaim; RAM grows through virtio-mem after SSH is ready.
+- A VM paused on a host I/O error resumes without losing its sessions.
+- Guest SSH host keys survive reboots; a guest panic or reboot stops QEMU.
+- `qemubox ls` aligns its columns; a project's no-ephemeral default is honored.
+- `qemubox stop` and `rm` refuse a running VM started by the previous launcher and print its kill command.
+
+## [v0.4.60] — 20261027
+
+> kronael v0.4.60 — Context for PR reviewers
+>
+> PR descriptions keep a brief summary and explain the decisions reviewers need to assess.
+>
+> • PR drafting — include the problem, behavior, design choices and relevant validation.
+> • GitHub text checks — supporting Markdown passes; attribution and approval rules remain.
+> • CLI guidance — one service instance by default, with `-i/--instance` for more instances.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- PR descriptions carry necessary context below a brief TL;DR; there is no total body-length cap.
+- GitHub text checks cap the TL;DR at 400 characters and keep draft-size comparisons informational.
+- CLI guidance uses one service instance by default and `-i/--instance` for additional instances.
+
 ## [v0.4.59] — 20261026
 
 > kronael v0.4.59 — qemubox bases that need no host e2fs tools

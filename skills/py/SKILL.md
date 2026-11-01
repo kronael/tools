@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -26,13 +26,13 @@ Python-specific additions and deltas.
 - NEVER move imports into type-only branches; ALWAYS keep them available at runtime,
   including compound or negated `TYPE_CHECKING` guards.
 - ALWAYS pass `py-no-type-checking-imports` and `py-no-lambda-default-factory`.
-- NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only
+- NEVER reflexively add `| None` — if a field is always set at construction give it a real default (`x: float = 0.0`), not `x: float | None = None`. `| None` is for genuine sentinels / optional deps / nullable returns only; a return whose None cannot happen raises instead
 - ALWAYS `typing.Protocol` for duck-typed interfaces; use `abc.ABC` only when runtime `isinstance` is required
 - ALWAYS declare a `Protocol`'s data members as read-only `@property`s — a plain class then satisfies it with plain assignments (`name = 'x'`, `lists = ()`, `server = Server()`). NEVER a bare `name: str` or `ClassVar` member in a protocol a class implements by assignment, unless code reads it off the class itself: a mutable member is invariant, so a subtype value fails.
 - ALWAYS name a `Protocol` by the plain noun of the thing it describes (`Venue`, `Job`, `Server`); an implementation is often `<Qualifier><Noun>` (`BinanceVenue`) but takes any fitting name. `<Verb>able` when it promises one or a few methods and nothing else (`Runnable`: `run()`). NEVER a suffix or prefix that only says it is a protocol: `VenueLike`, `VenueProtocol`, `VenueInterface`, `IVenue`
 - NEVER introduce `Protocol` or broad duck typing only for tests/fakes — ALWAYS type production code from production contracts
 - NEVER `Literal['a', 'b']` for domain values — ALWAYS use `enum.Enum` (or `str, Enum` for pydantic/TOML compat). `Literal` is only for narrowing external/library types you do not own.
-- Compare enum members with `is` / `is not`, not `==` / `!=` — enums are singletons; `is` makes the identity check explicit: `if status is GameStatus.LOST:` not `if status == GameStatus.LOST:`
+- ALWAYS compare enum members with `is` / `is not`, NEVER `==` / `!=` — members are singletons: `if status is GameStatus.LOST:`. ALWAYS compare a value of the enum type — read the enum field, or convert a `str` first (`ExchangeName(s) is ExchangeName.X`); NEVER a `str` field against a `StrEnum` member. Lint `py-enum-is`.
 - ALWAYS pass `py-no-enum-auto`.
 - Forward a pass-through `**kwargs` as plain `**kwargs: Any` to a callee that owns the real typed signature, with the narrow suppressions in `../software/strict-typing.md` — NEVER `Unpack` over a kwargs `TypedDict` (§ Named Data Structures bans declaring one anyway): the machinery costs more than the duplication it removes
 - NEVER widen an annotation to `object` to silence a checker complaint — ALWAYS read what the values actually are and name that (`Mapping[str, str]`, never `Mapping[str, object]`). A dodge annotation switches the checker off at the one place it was working. `object` is right only for a value genuinely never inspected, such as a discarded callback return
@@ -82,7 +82,7 @@ Python-specific additions and deltas.
 - ALWAYS asyncpg direct, NEVER SQLAlchemy. A database module — one call per operation, lists in and out, a batch as one `jsonb` or array parameter — is the `sql` skill § Database Modules.
 
 ## Named Data Structures
-- ALWAYS a `dataclass` for application-owned records, return values, parameter bundles and messages; lint `py-no-typeddict`.
+- ALWAYS a `dataclass` for application-owned records, return values, parameter bundles and messages; lints `py-no-typeddict`, `py-no-namedtuple`.
 - For `../software/code.md` § Design, ALWAYS use one `@dataclass(frozen=True)` per variant
   on one `Protocol` or small base; dispatch with `isinstance(sample, Quote)` / `case Quote():`.
   NEVER dispatch application records through a string-keyed callable table or `KIND`/`VERSION` `ClassVar`: the stored
@@ -90,8 +90,9 @@ Python-specific additions and deltas.
 - ALWAYS confine pydantic to the input/output boundary that needs validation or coercion —
   external API JSON, HTTP bodies, config files; NEVER a pydantic model for a value born inside
   the program: the validation costs and catches nothing there.
-- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`;
-  NEVER add dacite, cattrs or hand-written `cls(**d)` beside it.
+- ALWAYS build a pydantic `TypeAdapter` once as a module-level constant (`FRAME = TypeAdapter(Frame)`); lint `py-typeadapter-module-level`.
+- Except for upstream codecs (`software/code.md` § Design), ALWAYS use the project's `from_dict`/`to_dict`, the program's
+  own stored JSON (a row's `contents`) included; NEVER add a `TypeAdapter`, dacite, cattrs or hand-written `cls(**d)` beside it.
 - ALWAYS put a constructor that only derives a record from its own inputs on the record as a
   classmethod (`Changes.of(writes)`), and a value computed from its own fields as a property —
   NEVER a method that does I/O, reads config or uses another layer's types; that stays a
@@ -99,7 +100,7 @@ Python-specific additions and deltas.
 - ALWAYS build a record from a row of the program's own SQL with `Record(**row)`, the SQL naming
   its output columns as the fields — NEVER `Record(row['a'], row['b'], ...)`; `**row` fails on a
   missing or extra column.
-- ALWAYS pass `py-no-namedtuple`.
+- ALWAYS copy a dataclass with changes through its own method, `obj.replace(qty=2)` — the project's one `WithReplace` mixin (`def replace(self, **kwargs) -> Self`), added where none exists — NEVER `dataclasses.replace(obj, ...)`: a method is the class's own to override; lint `py-replace-method`.
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
 - ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
@@ -126,10 +127,16 @@ Python-specific additions and deltas.
 - Python-specific short vars: `ts`, `ms` for time
 - NEVER `sys.path` modification — ALWAYS set PYTHONPATH or install the package
 - NEVER `global` keyword except trivial scripts or signal handlers — ALWAYS pass state explicitly
+- ALWAYS guard hot optional instrumentation with `if __debug__:` — `-O` drops the whole block, argument construction included, so production pays nothing; a runtime flag still builds the arguments. ALWAYS write `__debug__` as the first operand (`if __debug__ and on:`) — second, the preceding load and branch survive the optimizer
+- NEVER adopt `-O`/`PYTHONOPTIMIZE=1` before running the suite under it — it strips every `assert` as well
 - ALWAYS pass `py-no-tuple-assignment` and `py-no-dict-call`.
+- ALWAYS write the None guard of a nullable return first — `if not row: return None`,
+  then `return StoredObservation(**row)` — NEVER `return X if cond else None`; lint
+  `py-no-conditional-none-return`. Whether the return may be None at all: § Type Annotations
 - Emptiness by truthiness: `if not xs` / `if xs`, NEVER `len(xs) == 0` / `len(xs) > 0` (works for any `__len__`/`__bool__` type)
 - NEVER rewrite an expression into an equivalent form for its own sake (`Field(None)` → `Field(default=None)`, adding/removing a redundant `# noqa`) — keep diffs to real changes
 - For small fixed sequences used only by a `for` loop, prefer comma iteration: `for x in A, B:` not `for x in [A, B]` or `for x in (A, B)`
+- ALWAYS join a fixed head and a comprehension with `+`: `['perp'] + [d.name for d in dexes]`; NEVER a splat inside the literal (`['perp', *(d.name for d in dexes)]`)
 - NEVER contort an f-string to fit its own quotes — no same-quote nesting, no `chr(39)`, no expression reshaped to dodge a brace. ALWAYS bind the value to a local on the line above and interpolate the bare name (PEP 701 permits the nesting; readability bans it)
 
 ## Package Structure
@@ -175,10 +182,10 @@ Python-specific additions and deltas.
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
 - Testcontainers and the fixture directory centralize in `conftest.py`: one fixture returning `pytestconfig.rootpath / '<tree>/tests/assets'` — NEVER `Path(__file__)` (`code.md` § Layout and formatting)
-- ALWAYS build properly shaped test doubles (`Mock` / `MagicMock` with explicit
-  attrs or a small fake class); NEVER make production code tolerate incomplete
-  fakes
-- NEVER add production parameters solely to replace functions in tests — ALWAYS patch the symbol at its use site when a test needs substitution; keep dependency parameters for real production dependencies.
+- ALWAYS build properly shaped doubles of a third party (`Mock` / `MagicMock`
+  with explicit attrs or a small fake class); NEVER make production code
+  tolerate incomplete fakes
+- NEVER add production parameters solely to replace functions in tests — ALWAYS patch the third-party symbol at its use site; what is faked: `../software/testing.md` § Kinds.
 - Tests stay loose: `# pyright: basic`, and annotate a test only where it documents a contract — NEVER type-fit fixtures, fakes or test functions to strict; NEVER weaken production annotations for fake convenience
 
 ## Subprocesses

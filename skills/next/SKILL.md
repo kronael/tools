@@ -18,8 +18,8 @@ working in the same turn.
 
 ## What to record
 
-If it looks like a bug: append an entry to `BUGS.md` at project root, in the
-`bugs` skill's § Entry format (create the file if missing).
+If it looks like a bug: append an entry to the owning project's `BUGS.md`
+(`bugs` § Where it lives), in its § Entry format (create the file if missing).
 
 If it looks like a feature or general TODO for this session: add it via the
 `TodoWrite` tool as a new pending task. NEVER write a session TODO to

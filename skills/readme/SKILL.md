@@ -1,7 +1,7 @@
 ---
 name: readme
 description: Router for project-facing documentation — README/ARCHITECTURE sync, repo and doc layout, section order in one page, the public onepager, the HTML explainer. NOT for design specs (use specs) or how a doc reads (use writing).
-when_to_use: "update the readme, sync README ARCHITECTURE CHANGELOG after shipping; repo layout, README vs ARCHITECTURE vs FEATURES split, how-to-read-this index, numbers ledger, per-directory CLAUDE.md or AGENTS.md, what to gitignore, do we need a CHANGELOG; docs site, VitePress, doc snippets; integration guide, API reference page layout, order sections in one document, diataxis; onepager, exec summary, public page for the project; explainer page, docs/*.html"
+when_to_use: "documentation lint, pre-commit doc checks; update the readme, sync README ARCHITECTURE CHANGELOG after shipping; repo layout, README vs ARCHITECTURE vs FEATURES split, how-to-read-this index, numbers ledger, per-directory CLAUDE.md or AGENTS.md, what to gitignore, do we need a CHANGELOG; docs site, VitePress, doc snippets; integration guide, API reference page layout, order sections in one document, diataxis; onepager, exec summary, public page for the project; explainer page, docs/*.html"
 user-invocable: true
 ---
 
@@ -20,7 +20,7 @@ that stays complete and true, no limit, alternative or why cut
 | If you need | Read |
 |---|---|
 | to bring existing docs back in line with shipped code — README, ARCHITECTURE, CHANGELOG edits, the sync protocol and where it runs; the README opening order (what, link row, status line, why, how to start) and the one status wording; the cost rule (formula with every term, one figure it reproduces); doc code taken from compiled, tested files by region include, the README example copied from a guide region | `sync.md` |
-| to decide WHICH file a fact belongs in, or to lay out a repo and its docs — the house layout: one home per fact and per section, a diagram beside the list it illustrates, README, PLAN (why), ARCHITECTURE (where), FEATURES (a test per row), BUGS, the study page, the numbers ledger `verified.md`, the doc tree beside the code and `<dir>/README.md`, instruction files (CLAUDE.md or AGENTS.md) per directory, the reading order, README as a docs-site hub, generated counts vs typed measured figures, the examples-index verdict column, what `make lint` checks, what is tracked and what stays local, CHANGELOG or not | `topology.md` |
+| to decide which file owns a fact, lay out a repo and its docs, link a documentation hub, place instruction files, manage the numbers ledger, or enforce documentation checks through pre-commit while keeping semantic review separate | `topology.md` |
 | the order of sections INSIDE one integration guide, API-reference page or example page — guide vs reference shape, examples before or after parameters, where errors go, Diátaxis on one page, an example or recipe page from Status to What has been tested, and the doc-site sidebar order (guide groups, then reference) | `shape.md` |
 | one self-contained public HTML page for a stranger — what it is, who it is for, what is different, what it costs, what to do next, published to the web root | `onepager.md` |
 | one HTML explainer page under `docs/` for someone who will use or change the code — what it holds and in what order (the answer first, how the parts fit, limits, one block per flow, the decide section last), the CEO, CTO and novice lenses, the fact pass on refine; how it reads and looks is the `writing` skill | `page.md` |

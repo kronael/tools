@@ -15,8 +15,9 @@ design — ALWAYS load it first.
 ## Where it runs
 
 Invoked in the main thread, ALWAYS hand the work to a subagent and keep the
-conversation here. ALWAYS select settled edits as coding through `dispatch`;
-an unresolved design choice returns to planning or spec before implementation.
+conversation here. ALWAYS select settled edits through `dispatch` — code as
+coding, docs as documentation; an unresolved design choice returns to planning
+or spec before implementation.
 ALWAYS brief through `dispatch` § Brief
 with `Intent:` (the user's words), `Primary:` (files to modify) and
 `Context:` (read-only reference). NEVER summarize the owner's request —

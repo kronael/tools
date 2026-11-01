@@ -1,0 +1,20 @@
+#!/bin/busybox sh
+set -eu
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+/bin/busybox --install -s /bin
+mkdir -p /dev /proc /sys /lower /upper /root
+mount -t devtmpfs devtmpfs /dev
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t virtiofs -o ro root /lower
+mount -t ext4 -o discard /dev/vda /upper
+mkdir -p /upper/data /upper/work /upper/lower
+mount -t overlay overlay \
+    -o lowerdir=/lower,upperdir=/upper/data,workdir=/upper/work /root
+mkdir -p /root/.qemubox /root/dev /root/proc /root/sys
+mount --move /upper /root/.qemubox
+mount --move /lower /root/.qemubox/lower
+mount --move /dev /root/dev
+mount --move /proc /root/proc
+mount --move /sys /root/sys
+exec switch_root /root /usr/bin/tini -- /usr/local/bin/qemubox-init

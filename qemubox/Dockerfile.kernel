@@ -1,0 +1,45 @@
+FROM debian@sha256:913f6706df59a68922d1dd08f78c2476560a8d367897200a6005b00e5f67c2d5 AS build
+SHELL ["/bin/bash", "-Eeuo", "pipefail", "-c"]
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential bc bison flex libelf-dev libssl-dev perl curl \
+    ca-certificates xz-utils cpio gzip busybox-static
+ARG LINUX_VERSION=6.12.114
+ARG LINUX_SHA256=7a8589912bd7a8adb07fed074283652cf482a35facef8954554654f0154b4af3
+ARG FIRECRACKER_REF=95f868c8e345b1cc8faccd1a3c910b4989dc3f58
+ARG FIRECRACKER_SHA256=153ca1b40f3312bfb40b7587b471ea548a915f98f480f0d0892a1537957a2147
+ARG FIRECRACKER_SOURCE=https://raw.githubusercontent.com/firecracker-microvm/firecracker
+ARG FIRECRACKER_CONFIG=resources/guest_configs/microvm-kernel-ci-x86_64-6.1.config
+ENV SOURCE_DATE_EPOCH=1792571486 \
+    KBUILD_BUILD_TIMESTAMP="2026-10-21 08:31:26 UTC" \
+    KBUILD_BUILD_USER=qemubox KBUILD_BUILD_HOST=builder KBUILD_BUILD_VERSION=1
+WORKDIR /src
+RUN curl -fsSL --connect-timeout 15 --max-time 300 \
+        "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-$LINUX_VERSION.tar.xz" \
+        -o linux.tar.xz \
+    && curl -fsSL --connect-timeout 15 --max-time 120 \
+        "$FIRECRACKER_SOURCE/$FIRECRACKER_REF/$FIRECRACKER_CONFIG" \
+        -o firecracker.config
+RUN printf '%s  %s\n' \
+        "$LINUX_SHA256" linux.tar.xz \
+        "$FIRECRACKER_SHA256" firecracker.config | sha256sum -c -
+RUN tar -xf linux.tar.xz --strip-components=1
+COPY qemubox/kernel.fragment .
+RUN scripts/kconfig/merge_config.sh -m firecracker.config kernel.fragment \
+    && make olddefconfig \
+    && ! grep -qE '^CONFIG_[[:alnum:]_]+=m$' .config \
+    && make -j8 bzImage \
+    && install -Dm644 arch/x86/boot/bzImage /out/bzImage \
+    && install -m644 .config /out/kernel.config
+COPY qemubox/initrd-init /initrd/init
+RUN mkdir -p /initrd/bin \
+    && install -m755 /bin/busybox /initrd/bin/busybox \
+    && chmod 755 /initrd/init \
+    && busybox sh -n /initrd/init \
+    && cd /initrd \
+    && find . -exec touch -h -d "@$SOURCE_DATE_EPOCH" {} + \
+    && find . -print0 | LC_ALL=C sort -z \
+        | cpio --null --create --format=newc --reproducible --owner=0:0 \
+        | gzip -n > /out/initrd
+FROM scratch
+COPY --from=build /out/ /
+USER 65534:65534

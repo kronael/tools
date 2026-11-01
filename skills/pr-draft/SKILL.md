@@ -1,7 +1,7 @@
 ---
 name: pr-draft
 description: Draft or rewrite a PR description. NOT for commit messages (use commit).
-when_to_use: "draft a PR, open a PR, write the PR description, PR body, update the PR description, PR body too long, gh pr create refused, gh_text_lint"
+when_to_use: "draft a PR, open a PR, write the PR description, PR body, update the PR description, PR body too long, PR lacks context, gh pr create refused, gh_text_lint"
 user-invocable: true
 ---
 
@@ -14,8 +14,8 @@ refuses one that fails `gh_text_lint.py` (step 3), `--fill`, `--web` and a
 body file it cannot read — a body that posts through a direct gh call has
 passed the lint.
 
-The body is a TL;DR. The reviewer reads the title, the diff and the commits;
-the body says only what they cannot.
+ALWAYS make the description understandable without the conversation: a brief
+TL;DR, then only the context a reviewer needs to assess the change.
 
 ## Workflow
 
@@ -38,27 +38,26 @@ the body says only what they cannot.
    sell a change to a wire-visible contract (event name, API field, route) as
    neutral — verify it against what's documented or already emitted, since
    absence from the default head isn't proof it's free to change — and say it
-   in the TL;DR. A verified-but-unfixed issue goes into the TL;DR too, never
-   dropped to look clean. This file is the draft, NEVER the deliverable.
+   in the body. ALWAYS disclose a verified-but-unfixed issue that affects the
+   review. This file is the draft, NEVER the deliverable.
 3. DISTILL — write the cut version to `tmp/pr-body.md`: body only, opening
-   with `🤖 ` before `**TL;DR:**`. Cut until `wc -m tmp/pr-body.md` is under the cap, then
-   keep cutting while a word says what the title, the diff or the commits
-   show: file lists, values, results, history, a reason a reader would guess,
-   hedges, filler. Then run
+   with `🤖 ` before `**TL;DR:**`. Cut what § Format bans first, then
+   repetition and filler, until `wc -m tmp/pr-body.md` is under the cap.
+   NEVER cut the reason behind a decision to reach a ratio; an already short
+   draft can stay unchanged. Run
    ```
    python3 ~/.claude/hooks/gh_text_lint.py pr tmp/pr-body.md --draft tmp/pr-draft.md --title '<title>'
    ```
    and fix every line it names until it prints `ok:`. It checks the part of
-   § Format a program can check: the `**TL;DR:**` lead and nothing after it
-   but `Closes`/`Fixes #N` lines; no bullet, header, table, rule, code block,
-   checkbox, "This PR", marketing word or shortened hash; 400 chars in all;
-   the title's length and a second "and"; `🤖 ` opening the body, the robot
-   nowhere else, and none of the harness footer; and that the body is shorter
-   than the draft.
+   § Format a program can check: the `**TL;DR:**` opening paragraph capped at
+   400 chars and the body at 1,000 in all; no "This PR", marketing word or
+   shortened hash; the title's length and a second "and"; `🤖 ` opening the
+   body, the robot nowhere else, and none of the harness footer.
    Completion criterion: the `ok:` line, which carries the size and the cut
-   ratio.
+   ratio for information only.
 4. REVIEW-ON-WISDOM — the checks no program runs, over `tmp/pr-body.md`: every
-   claim traced to a hunk of the diff or marked as an inference; no history
+   claim verified against the diff or relevant source, or marked as an inference;
+   enough context to assess the change without this conversation; no history
    framing; the title in the repo's own convention; the harness reminder's
    `Generated with [Claude Code]` footer absent whatever the reminder says.
    Rerun step 3's command after any edit. Completion criterion: a `Review
@@ -100,28 +99,20 @@ when the branch or commits carry one; default `type(scope): outcome` with
 `fix` `feat` `refa` `docs` `chore` (the `commit` skill's types). ONE outcome, max 72 chars. NEVER a
 comma list of changes — needing "and" twice means name the outcome above them.
 
-**Body**, under 400 chars in all (a ceiling, not a target — a one-line fix is
-one sentence):
+**Body**, under 1,000 chars in all (the lint's cap; a ceiling, not a target —
+a one-line fix is the lead alone):
 
-- **Lead**: `🤖 **TL;DR:**` and one to three sentences — the outcome, its
-  cause, and anything the reviewer must not miss (a wire-visible change, a
-  known gap). The only paragraph. The robot opens the body and appears nowhere
-  else (WISDOM § Git): the harness reminder asks for it as the last line, and
-  its `Generated with [Claude Code]` line is the banned footer with a robot in
-  front of it; the lint and the hook refuse both.
-- **Closers**: `Closes #N` or `Fixes #N`, one line each, only when real.
+- **Lead**: ALWAYS open with `🤖 **TL;DR:**` and one to three sentences naming
+  the outcome. ALWAYS keep this paragraph at most 400 chars, including the
+  prefix. Attribution follows WISDOM § Git.
+- **Context**: the problem, and the reason behind each design choice a reader
+  would not guess from the diff — why it fits the existing mechanism, what it
+  deliberately leaves out, a verified-but-unfixed issue. A simple change fits
+  entirely in the lead; otherwise short paragraphs or bullets.
+- **Closers**: ALWAYS use `Closes #N` or `Fixes #N` only for real linked issues.
 
-NEVER in a body: a bullet, header, table, rule, checkbox, code block or image;
-"This PR"; a file list, rename or value the diff shows; a test, lint or CI
-result; history (what was tried, earlier commits, reviews, pushes); a runbook.
-Prose follows the `writing` skill's copy rules. NEVER hard-wrap — GitHub
+NEVER in a body: what the diff already shows (a file list, a rename, a value,
+a code tour); a test, lint, CI, audit or review result; history (what was
+tried, earlier commits, reviews, pushes); a checklist or runbook; "This PR".
+ALWAYS follow the `writing` skill's copy rules. NEVER hard-wrap — GitHub
 renders the line.
-
-Example — generalize the shape, not the topic:
-```
-feat(checkout): Send quote and payment events to analytics
-
-🤖 **TL;DR:** Checkout reports quote drop-off and payment outcomes to analytics, not only to server logs. Payment is read at `captured`, so a voided charge reports `pending` forever.
-
-Closes #212
-```

@@ -1,11 +1,9 @@
-FROM debian:forky AS dockbox
+FROM debian:forky AS qemubox
 
 ENV TZ=UTC
 
 ARG CLAUDE_CODE_VERSION=latest
 
-# Base apt deps. gh isn't packaged in forky's apt — add GitHub CLI's
-# official repo before installing it.
 RUN apt-get update && apt-get install -y --no-install-recommends \
   wget curl ca-certificates gnupg2 \
   && mkdir -p -m 755 /etc/apt/keyrings \
@@ -23,9 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   bubblewrap socat gosu libicu78 \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# All tool homes live in /opt/dev-tools — world-readable so any runtime UID
-# can use them. No /home/<user> dependencies anywhere. Node comes from nvm,
-# not from a baked base image — respects per-project .nvmrc at runtime.
 ENV DEVCONTAINER=true \
     SHELL=/bin/zsh \
     EDITOR=nano \
@@ -47,14 +42,10 @@ ENV DEVCONTAINER=true \
     DOTNET_ROOT=/opt/dev-tools/dotnet \
     PATH=/usr/local/bin:/opt/dev-tools/uv/bin:/opt/dev-tools/cargo/bin:/opt/dev-tools/bun/bin:/opt/dev-tools/goroot/bin:/opt/dev-tools/go/bin:/opt/dev-tools/dotnet:/usr/local/share/npm-global/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
-RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace /home/dockbox
+RUN mkdir -p /opt/dev-tools/nvm /usr/local/share/npm-global /workspace
 
 WORKDIR /workspace
 
-# Install nvm + default LTS node first so subsequent RUNs can use npm/npx/corepack.
-# Symlink the default node's binaries to /usr/local/bin so they're on PATH
-# without sourcing nvm.sh in every RUN. Runtime users can still `nvm use` per
-# project (the wrapper sources nvm.sh, so .nvmrc / nvm install <ver> works).
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash && \
     unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
     nvm install --lts && nvm alias default 'lts/*' && \
@@ -67,7 +58,6 @@ RUN ARCH=$(dpkg --print-architecture) && \
   dpkg -i "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb" && \
   rm "git-delta_${GIT_DELTA_VERSION}_${ARCH}.deb"
 
-# gcloud CLI — needed for GCS operations (gcs_cached_download, gsutil, etc.)
 RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
       | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
@@ -77,8 +67,6 @@ RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Chromium runtime deps installed manually — playwright --with-deps uses a
-# hardcoded list that predates Debian forky's t64 rename and missing font pkgs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
   libnspr4 libnss3 libglib2.0-0 libdbus-1-3 libdrm2 \
   libatk1.0-0t64 libatk-bridge2.0-0 libcups2t64 \
@@ -110,7 +98,6 @@ RUN ARCH=$(uname -m) && \
   curl -fsSL "https://github.com/nushell/nushell/releases/download/${NU_VERSION}/nu-${NU_VERSION}-${ARCH}-unknown-linux-gnu.tar.gz" \
   | tar xz --strip-components=1 -C /opt/dev-tools/cargo/bin
 
-# uv installer writes to $HOME/.local/bin by default; move into /opt
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
   mkdir -p /opt/dev-tools/uv/bin && \
   mv /root/.local/bin/uv /opt/dev-tools/uv/bin/ && \
@@ -120,8 +107,6 @@ RUN for t in pre-commit bandit pip-audit semgrep; do uv tool install "$t"; done
 
 RUN curl -fsSL https://get.sdkman.io | bash
 
-# .NET SDK (LTS) — installed under /opt/dev-tools, in PATH so `dotnet` works
-# inside dockbox without per-project overrides.
 RUN curl -fsSL https://dot.net/v1/dotnet-install.sh \
   | bash -s -- --install-dir /opt/dev-tools/dotnet --channel LTS
 
@@ -144,19 +129,12 @@ RUN curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main
 
 RUN bunx puppeteer browsers install chrome
 
-# system-wide zshrc — every zsh user loads this
 RUN mkdir -p /etc/zsh && printf '%s\n' \
   '[ -r /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh' \
   '[ -r /usr/share/doc/fzf/examples/completion.zsh ] && source /usr/share/doc/fzf/examples/completion.zsh' \
   'export HISTFILE="$HOME/.zsh_history"' \
   > /etc/zsh/zshrc
 
-# claude wrapper at /usr/local/bin. Sources nvm.sh so per-project .nvmrc is
-# honored; falls back to the symlinked default node otherwise. jq strips the
-# host's native-install keys so the container's bun claude doesn't warn about a
-# ~/.local/bin/claude that only exists on the host, and pins diffSidebarOpen so
-# the diff tab stays closed (it is global config in ~/.claude.json, not a
-# settings.json key, so it cannot be shipped in settings-recommended.json).
 RUN printf '#!/bin/sh\n\
 [ -f /tmp/host-claude.json ] && { jq "del(.installMethod,.autoUpdates,.autoUpdatesProtectedForNative) + {diffSidebarOpen:false}" /tmp/host-claude.json > "$HOME/.claude.json" 2>/dev/null || cp /tmp/host-claude.json "$HOME/.claude.json"; }\n\
 [ -f "$HOME/.claude.json" ] || echo "{\"hasCompletedOnboarding\":true,\"diffSidebarOpen\":false}" > "$HOME/.claude.json"\n\
@@ -166,22 +144,8 @@ unset NPM_CONFIG_PREFIX\n\
 exec /opt/dev-tools/bun/bin/claude --dangerously-skip-permissions "$@"\n' \
   > /usr/local/bin/claude && chmod +x /usr/local/bin/claude
 
-COPY dockbox/dockbox-init dockbox/dockbox-docker \
-    dockbox/dockbox-codex-bridge /usr/local/bin/
+RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace
 
-# World-readable + writable tooling so any runtime UID can use it
-RUN chmod -R a+rwX /opt/dev-tools /usr/local/share/npm-global /workspace /home/dockbox
-
-# Tools the codemap, serena, astgrep, py and create skills call, below the big
-# chmod so adding one rebuilds only this layer and the tail. A pinned uv Python
-# lands in /opt (not root's 0700 home) so any runtime UID can run the tool.
-# SERENA_HOME keeps Serena's config, logs and per-project caches out of every
-# repo and out of $HOME, which changes with the runtime user. manim's pycairo
-# and manimpango build from source against the cairo and pango headers, with
-# clang: gcc lands only in the tail; its LaTeX template needs standalone.cls
-# (texlive-latex-extra). Bytecode compiles at build, so a fresh box neither
-# recompiles nor prints pydub's SyntaxWarnings. ripwire is the release binary only,
-# checked against its published sha256.
 ARG RIPWIRE_VERSION=0.6.5
 ENV UV_PYTHON_INSTALL_DIR=/opt/dev-tools/uv/python \
     SERENA_HOME=/opt/dev-tools/serena
@@ -214,50 +178,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && ripwire --version \
   && chmod -R a+rwX /opt/dev-tools/uv /opt/dev-tools/serena
 
-# Kronael block for dockbox-codex-bridge, read only at container start. Below
-# the big chmod so editing the block keeps that layer cached.
-COPY codex/AGENTS.md /opt/dockbox/codex-AGENTS.md
-
-# claude + codex CLIs last, in a cache-busted layer, so every `make image`
-# refreshes them to latest without re-running the heavier layers above. The
-# Makefile passes a fresh AGENTS_CACHEBUST each build to defeat the layer cache;
-# pin by building with --build-arg CLAUDE_CODE_VERSION=<v>. chmod only the bun
-# install tree so the big chmod above stays cached. Both CLIs install via bun
-# (--trust runs claude-code's postinstall so its bundled ripgrep is fetched).
 ARG AGENTS_CACHEBUST=0
 RUN echo "agents cachebust: $AGENTS_CACHEBUST" \
   && bun install -g --trust @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
   && bun install -g @openai/codex \
   && chmod -R a+rwX /opt/dev-tools/bun
 
-# gcc sits in this late layer, which every build reruns anyway: psycopg2 and
-# other sdists call x86_64-linux-gnu-gcc, which clang does not provide.
 RUN apt-get update && apt-get install -y --no-install-recommends docker-cli gcc \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# GitHub's published host keys, so the first git or ssh to github.com does not
-# stop on an unknown-host prompt.
 RUN printf '%s\n' \
     'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' \
     'github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=' \
     >> /etc/ssh/ssh_known_hosts
 
-FROM dockbox AS vm
+FROM qemubox AS vm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    linux-image-amd64 initramfs-tools systemd-sysv udev dbus kmod \
-    openssh-server systemd-timesyncd systemd-resolved e2fsprogs \
+    openssh-server e2fsprogs tini busybox-static \
     && apt-get clean && rm -f /var/lib/apt/lists/*_* \
     && rm -f /usr/sbin/policy-rc.d /etc/apt/apt.conf.d/docker-* \
-       /etc/dpkg/dpkg.cfg.d/docker-* /etc/ssh/ssh_host_* \
-    && printf '%s\n' virtio_pci virtio_blk ext4 >> /etc/initramfs-tools/modules \
-    && update-initramfs -u -k all \
-    && systemctl disable docker.service containerd.service docker.socket \
-    && systemctl enable systemd-networkd systemd-resolved systemd-timesyncd ssh \
-    && systemctl mask ssh.socket \
-    && truncate -s 0 /etc/machine-id \
-    && rm -f /var/lib/dbus/machine-id \
-    && ln -s /etc/machine-id /var/lib/dbus/machine-id
+       /etc/dpkg/dpkg.cfg.d/docker-* /etc/ssh/ssh_host_* /sbin/poweroff \
+    && printf '%s\n' '#!/bin/sh' 'kill -TERM 1' > /sbin/poweroff \
+    && chmod 755 /sbin/poweroff
 
 RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     CLAUDE_CODE_DISABLE_AUTOUPDATE NPM_CONFIG_PREFIX NVM_DIR BUN_INSTALL \
@@ -270,97 +213,31 @@ RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
     done \
     && echo '. /etc/profile.d/dev-tools.sh' >> /etc/zsh/zshenv
 
-RUN mkdir -p /etc/systemd/network /etc/systemd/system/ssh.service.d \
-    && printf '%s\n' '[Match]' 'Name=en* eth*' '[Network]' 'DHCP=yes' \
-       > /etc/systemd/network/20-qemubox.network \
-    && printf '%s\n' '[Unit]' 'Requires=qemubox-init.service' \
-       'After=qemubox-init.service' > /etc/systemd/system/ssh.service.d/qemubox.conf \
-    && printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
-       'PermitRootLogin no' 'StreamLocalBindUnlink yes' > /etc/ssh/sshd_config.d/qemubox.conf \
-    && printf '%s\n' '[Unit]' 'After=local-fs.target' 'Before=ssh.service' \
-       '[Service]' 'Type=oneshot' 'ExecStart=/usr/local/bin/qemubox-init' \
-       'StandardOutput=journal+console' 'StandardError=journal+console' \
-       'RemainAfterExit=yes' '[Install]' 'WantedBy=multi-user.target' \
-       > /etc/systemd/system/qemubox-init.service \
-    && systemctl enable qemubox-init.service
+RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
+       'PermitRootLogin no' 'StreamLocalBindUnlink yes' \
+       > /etc/ssh/sshd_config.d/qemubox.conf \
+    && sed -i '/pam_systemd.so/d' /etc/pam.d/common-session \
+    && settings='--settings '\''{"sandbox":{"enabled":false}}'\''' \
+    && sed -i -e '\|nvm.sh|d' \
+       -e "s/--dangerously-skip-permissions /&$settings /" \
+       /usr/local/bin/claude \
+    && printf '%s\n' '#!/bin/sh' \
+       '/usr/local/bin/qemubox-codex-bridge || exit $?' \
+       'exec /opt/dev-tools/bun/bin/codex --no-daemon \' \
+       '    --dangerously-bypass-approvals-and-sandbox "$@"' \
+       > /usr/local/bin/codex \
+    && chmod 755 /usr/local/bin/codex
 
-RUN printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'set -Eeuo pipefail' \
-    'trap '"'"'echo "qemubox-init: failed at line $LINENO" >&2'"'"' ERR' \
-    '' \
-    'printf '"'"'127.0.0.1 localhost\n::1 localhost\n127.0.1.1 %s\n'"'"' "$(cat /proc/sys/kernel/hostname)" > /etc/hosts' \
-    'mkdir -p /run/qemubox/config' \
-    'modprobe -a 9p 9pnet_virtio' \
-    'mount -t 9p -o trans=virtio,version=9p2000.L,ro qbxcfg /run/qemubox/config' \
-    '{' \
-    '    read -r username' \
-    '    read -r user_uid' \
-    '    read -r user_gid' \
-    '    IFS= read -r home_dir' \
-    '    read -r groups' \
-    '    IFS= read -r zone' \
-    '} < /run/qemubox/config/identity' \
-    '[[ "$username" =~ ^[A-Za-z0-9_-]+$ && "$user_uid" =~ ^[0-9]+$ &&' \
-    '    "$user_gid" =~ ^[0-9]+$ && "$home_dir" = /* && "$home_dir" != *:* ]]' \
-    '[[ "$user_uid" != 0 ]]' \
-    '[[ "$zone" != /* && "$zone" != *..* && -f "/usr/share/zoneinfo/$zone" ]]' \
-    'ln -sf "/usr/share/zoneinfo/$zone" /etc/localtime' \
-    '' \
-    'passwd_entry="$username:x:$user_uid:$user_gid::$home_dir:/bin/bash"' \
-    'if entry=$(getent passwd "$user_uid")' \
-    then \
-    '    [[ "$entry" = "$passwd_entry" ]]' \
-    else \
-    '    if getent passwd "$username" >/dev/null' \
-    '    then' \
-    '        echo "qemubox-init: conflicting user $username" >&2' \
-    '        exit 1' \
-    '    fi' \
-    '    echo "$passwd_entry" >> /etc/passwd' \
-    fi \
-    'if ! getent shadow "$username" >/dev/null' \
-    then \
-    '    echo "$username:!:19000:0:99999:7:::" >> /etc/shadow' \
-    fi \
-    'for group in $groups' \
-    do \
-    '    gid=${group%%:*}' \
-    '    gname=${group#*:}' \
-    '    [[ "$gid" =~ ^[0-9]+$ ]]' \
-    '    [[ "$gname" =~ ^[A-Za-z0-9_-]+$ ]] || gname="hostgrp$gid"' \
-    '    if entry=$(getent group "$gid")' \
-    '    then' \
-    '        gname=${entry%%:*}' \
-    '        members=${entry##*:}' \
-    '    else' \
-    '        members=""' \
-    '        getent group "$gname" >/dev/null && gname="hostgrp$gid"' \
-    '    fi' \
-    '    case ",$members," in' \
-    '        *",$username,"*) ;;' \
-    '        *) members="${members:+$members,}$username" ;;' \
-    '    esac' \
-    '    sed -i "/^$gname:/d" /etc/group' \
-    '    printf "%s:x:%s:%s\\n" "$gname" "$gid" "$members" >> /etc/group' \
-    done \
-    'getent group "$user_gid" >/dev/null' \
-    'echo "$username ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/qemubox' \
-    'chmod 0440 /etc/sudoers.d/qemubox' \
-    'visudo -cf /etc/sudoers.d/qemubox' \
-    'mkdir -p "$home_dir/.ssh"' \
-    'chown "$user_uid:$user_gid" "$home_dir" "$home_dir/.ssh"' \
-    'chmod 700 "$home_dir/.ssh"' \
-    'install -m 600 -o "$user_uid" -g "$user_gid" \' \
-    '    /run/qemubox/config/authorized_keys "$home_dir/.ssh/authorized_keys"' \
-    'rm -f /etc/ssh/ssh_host_*' \
-    'ssh-keygen -A' \
-    'ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf' \
-    'resize2fs /dev/vda' \
-    'touch /run/qemubox/ready' \
-    'echo '"'"'qemubox: ready'"'"'' \
-    > /usr/local/bin/qemubox-init && chmod 755 /usr/local/bin/qemubox-init
-ENTRYPOINT ["/sbin/init"]
+COPY codex/AGENTS.md /opt/qemubox/codex-AGENTS.md
+COPY qemubox/qemubox-codex-bridge /usr/local/bin/qemubox-codex-bridge
+COPY qemubox/guest-init /usr/local/bin/qemubox-init
+RUN chmod 755 /usr/local/bin/qemubox-init /usr/local/bin/qemubox-codex-bridge \
+    && touch /opt/qemubox/memory-hotplug
+RUN uv cache clean \
+    && go clean -cache -modcache \
+    && npm cache clean --force \
+    && cd "$BUN_INSTALL/install/global" && bun pm cache rm
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/qemubox-init"]
 WORKDIR /
 
 RUN uv cache clean && go clean -cache \
