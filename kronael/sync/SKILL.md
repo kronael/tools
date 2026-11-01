@@ -48,16 +48,15 @@ leaves `~/.claude/` untouched.
 A **first sync** = neither `~/.claude/CLAUDE.md` nor `~/.claude/skills/`
 exists. Before any write, explain sync in 2-3 lines and ask which groups to
 run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
-(default on — nothing else works without it), **Settings** (step 5),
-**External tools** (step 7 core), **CLI tools** rig/udfix/spec-lint + CDPATH, **dockbox**
-(needs Docker), **Heavy** security-audit + video, **ripwire**, and **Server memory**
+(default on — nothing else works without it), **Settings** (step 5), and **Server memory**
 (`reference.md` § Server memory; NEVER offer when `CLAUDE_SANDBOX` is set).
-Run ONLY the opted-in groups.
+ALWAYS apply those groups only when selected; tool installation runs separately.
 
-Every later sync skips the questionnaire but ALWAYS still runs step 5's
-always-apply set and steps 7-8 —
-NEVER skip tools or dockbox silently; a stale binary or an un-offered dep is
-the failure. Settings still confirm before applying.
+ALWAYS run steps 7-8 on every sync, first setup included: install missing
+external tools and refresh the listed repo CLI tools, including dockbox.
+NEVER ask for tool-install confirmation — a sync authorizes these installs.
+Every later sync skips the questionnaire and applies step 5's always-apply
+set. Other settings still confirm before applying.
 
 ## Steps
 
@@ -160,14 +159,14 @@ the failure. Settings still confirm before applying.
    is true and `tui.status_line` equals the ordered array in `reference.md`
    § Codex bridge. Configuration alone does not prove tool exposure.
 
-7. **External tools.** `which` each; install the missing **Core** batch from
-   `reference.md` § External tool commands (ask once), then ask separately for
-   **Security-audit** and **Video**. Offer **ripwire** (§ ripwire) on its own
-   ask: SHOW the curl-pipe one-liner and let the user run it.
-   Completion criterion: each tool is present, installed, or declined.
+7. **External tools.** ALWAYS check and install missing **Core**,
+   **Security-audit**, **Video** and **ripwire** tools from `reference.md`
+   § External tool commands and § ripwire, including their dependencies.
+   ALWAYS verify each installed CLI runs; NEVER treat `which` alone as proof.
+   Completion criterion: each tool runs or has a reported installation blocker.
 
 8. **CLI tools.** (Re)install per `reference.md` § CLI tools — rig, udfix, kvs,
-   spec-lint and diskclean always, dockbox on its own ask, from their dirs at `SRC` (else point to
+   spec-lint, diskclean and dockbox always, from their dirs at `SRC` (else point to
    `cd <tool> && make install` from a clone) — and write its CDPATH block into
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.

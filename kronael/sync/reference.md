@@ -645,9 +645,10 @@ project `.codex/` config and enabled plugins — Kronael writes
 
 ## External tool commands (step 7)
 
-Run `which <tool>` first; skip if present and recent.
+ALWAYS check each CLI runs; install it when missing or unusable.
+ALWAYS skip a working, recent external tool; the CLI tools below refresh every sync.
 
-**Core** — ask once, install as a batch:
+**Core** — ALWAYS install the missing tools as a batch:
 
 | Tool | Command | Skills |
 |------|---------|--------|
@@ -694,27 +695,27 @@ touches it. After `serena init`, set three keys in
 - `excluded_tools: [onboarding, list_memories, read_memory, write_memory, edit_memory, rename_memory, delete_memory]`
   — memory lives in Claude Code auto-memory and the diary; NEVER a second store.
 
-**Security audit** — ask separately (large, optional):
+**Security audit** — ALWAYS install the missing tools:
 
 | Tool | Command | Skills |
 |------|---------|--------|
 | `bandit` | `uv tool install bandit` | /eval (red) |
 | `pip-audit` | `uv tool install pip-audit` | /eval (red) |
 | `semgrep` | `uv tool install semgrep` | /eval (red) |
-| `govulncheck` | `go install golang.org/x/vuln/cmd/govulncheck@latest` | /eval (red) |
+| `govulncheck` | `GOBIN="$HOME/.local/bin" go install golang.org/x/vuln/cmd/govulncheck@latest` | /eval (red) |
 | `trufflehog` | download `linux_amd64.tar.gz` from github.com/trufflesecurity/trufflehog/releases into `~/.local/bin` (NOT `go install` — its go.mod `replace` directives make `go install` refuse) | /eval (red) |
 | `gitleaks` | download from github.com/gitleaks/gitleaks releases | /eval (red) |
 
-**Video rendering** — ask separately (heavy, rarely needed):
+**Video rendering** — ALWAYS install the missing tools and native dependencies:
 
 | Tool | Command | Skills |
 |------|---------|--------|
-| `manim` | `uv tool install -p 3.13 manim`; `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm`; the template needs `standalone.cls`), output needs `ffmpeg` | /create (manim) |
+| `manim` | `uv tool install -p 3.13 manim`; native dependencies: `pkg-config`, Cairo and Pango development headers (apt `libcairo2-dev libpango1.0-dev`); `MathTex` needs `latex` and `dvisvgm` (apt `texlive-latex-base texlive-latex-recommended texlive-latex-extra dvisvgm`; the template needs `standalone.cls`), output needs `ffmpeg` | /create (manim) |
 | `faster-whisper` | library, no CLI — the render script pulls it via `uv run --with faster-whisper`; NEVER `uv tool install` it (no entrypoints) | /create (video render) |
 
 ## ripwire — deterministic codebase maps for agents (step 7)
 
-Optional, ask separately. `ripwire` (redhat-et, Apache-2.0) hands a coding
+ALWAYS install ripwire when missing. `ripwire` (redhat-et, Apache-2.0) hands a coding
 agent a ranked, deterministic call-graph map of a repo — relevant symbols,
 callers, change-risk, tests to run — instead of blind grepping. Offline C++
 binary: no API key, no embeddings, no daemon, no network calls. The `codemap`
@@ -757,7 +758,7 @@ one toolchain is missing — report that tool skipped and continue.
 | `spec-lint` | `cd spec-lint && make install` | the `specs` skill's linter; python3 only |
 | `diskclean` | `cd diskclean && make install` | frees disk space in two levels (`-1`, `-2`), each asks y/N; `-l` lists only; bash only |
 | CDPATH | the block below, in `~/.bashrc` | `cd <project>` from `~/app`, `~/wk`, `~/sandbox`; always |
-| `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; ask separately |
+| `dockbox` | `cd dockbox && make install` | builds a Docker image — needs Docker; refresh every sync |
 
 The CDPATH block is a plain shell variable, not exported by the block: a
 script that inherits CDPATH can `cd` somewhere unexpected. Its first entry is
