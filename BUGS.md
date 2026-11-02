@@ -434,13 +434,6 @@
   hooks/prompt_nudge.py`. **Fix:** a precedence rule (workflow verbs before
   nouns, or all matches listed) — a routing redesign.
 
-- **LEARN-HOOK-WIRED-NOWHERE** (LOW, dead code) — CONFIRMED at HEAD 2026-09-25.
-  `hooks/learn.py` is a complete lifecycle hook that no event invokes:
-  `settings-recommended.json` wires `prompt_nudge.py`, `pretool_nudge.py`,
-  `style_nudge.py`, `stop.py` and `memory_nudge.py`, and none of them is it. Reproduce:
-  `grep -c learn.py settings-recommended.json` → 0. **Fix:** the maintainer's
-  call — wire it to an event, or drop it.
-
 - **STOP-CLAUDE-EVAL-NO-PRODUCER** (LOW, config) — needs sign-off.
   `hooks/stop.py:163` suppresses the commit/diary block when `CLAUDE_EVAL` is
   set. Nothing sets it: its other hits are `hooks/test_stop.py:19`, which

@@ -3,7 +3,7 @@
 
 Tests JSON parse guards, null/type guards, word-boundary matching,
 keyword routing, and negation handling for the hooks that ship with
-this template: nudge.py, local.py, learn.py, stop.py.
+this template: nudge.py, local.py, stop.py.
 """
 
 import json
@@ -80,8 +80,6 @@ class HooksTestSuite:
         self.test('local.py - empty input', 'local.py', '')
         self.test('local.py - bad JSON', 'local.py', '{x:')
         self.test('local.py - array input', 'local.py', '[]')
-        self.test('learn.py - empty input', 'learn.py', '')
-        self.test('learn.py - bad JSON', 'learn.py', '{incomplete json')
         self.test('stop.py - empty input', 'stop.py', '')
         self.test('stop.py - bad JSON', 'stop.py', '{bad')
 
