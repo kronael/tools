@@ -378,10 +378,14 @@
   v0.4.41 hooks, wiring, gate and skills on the owner's word that the caveman
   style and its hooks stay as refined here; the merge commit names every path.
   The redesign lives at `origin/master` 3f4c9be77383943d79eaea51c3bff4858a431807.
-  **Options:** (a) adopt the redesign with this line's `caveman.md` as the
-  measured source (`style_nudge` caps 20/5/2 already match; drop its 25-line
-  report tier); (b) stay on the v0.4.41 hooks. **Default if nothing is
-  decided:** (b). No test — design.
+  `hooks/style_lint.py` now measures the final reply at Stop with the same
+  20/5/2 caps and blocks once for a rewrite, without kvs, levels or the
+  per-prompt pointer: the measured gap was the block, not the reminder
+  (13 replies in one session, 2 over the ceiling, 5 more over the 12-line
+  action tier). **Options:** (a) adopt the rest of the redesign (`kvs`,
+  `lib/reminder.py`, the escalation levels); (b) stay on the v0.4.41 hooks
+  plus `style_lint.py`. **Default if nothing is decided:** (b). No test —
+  design.
 
 - **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
   `skills/writing/SKILL.md` § Language (upstream) and

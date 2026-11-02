@@ -2,7 +2,8 @@
 
 Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
 unsafe-command blocks, a GitHub text gate, Markdown formatting, commit/diary
-stop checks and a session memory nudge. Scripts install to `~/.claude/hooks/`.
+stop checks, a caveman budget block and a session memory nudge. Scripts
+install to `~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
 its `hooks` block is merged into `~/.claude/settings.json` by the install
@@ -195,6 +196,15 @@ compaction, with a once-per-session Stop fallback. The request covers qualifying
 durable memory only. It does not authorize skill or lint edits or prove that
 learn ran. Codex does not wire this hook.
 Delivery, timing and state: [memory nudge flow](ARCHITECTURE.md#memory_nudgepy-sessionstart-compact--stop).
+
+### style_lint.py (Stop)
+
+Measures `last_assistant_message` against `../output-styles/caveman.md`
+§ Budget — 20 rendered 80-column lines outside code fences, 5 bullets per
+list, 2 sentences per bullet — and blocks once with the measured miss and a
+rewrite request. Silent unless `~/.claude/settings.json` selects `caveman`,
+and on the rewrite turn (`stop_hook_active`). `test_style_lint.py` pins the
+caps to the style file. Codex does not wire it.
 
 ## Tests
 
