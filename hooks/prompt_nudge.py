@@ -47,6 +47,7 @@ SKILL_KEYWORDS = {
     'flowchart': '/diagrams',
     'humanize': '/humanize',
     'improve': '/improve',
+    'learn': '/learn',
     'merge': '/merge',
     'microcopy': '/writing',
     'novice': '/eval',

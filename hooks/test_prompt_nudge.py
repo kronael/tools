@@ -68,6 +68,11 @@ def test_task_provider_and_opinion_routes(prompt, route) -> None:
     assert explicit_route(prompt) == route
 
 
+def test_learn_in_prose_routes_to_learn() -> None:
+    assert explicit_route('learn from sessions it also does not work') == '/learn'
+    assert explicit_route('learn from this session') == '/learn'
+
+
 @pytest.mark.parametrize(
     'prompt',
     [

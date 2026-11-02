@@ -1,7 +1,7 @@
 ---
 name: learn
-description: /learn — turn session history into memory entries, skills, or lint rules. NOT for writing a skill from scratch (use wisdom); the word "learn" in a prompt is no trigger.
-when_to_use: "learn from this session, save this pattern, extract reusable patterns, session memory check, save memory, remember this, make this correction a rule, check whether the workflow ran, check recall routing"
+description: /learn — turn session history into memory entries, skills, or lint rules. NOT for writing a skill from scratch (use wisdom).
+when_to_use: "learn from sessions, learn from this session, save this pattern, extract reusable patterns, session memory check, save memory, remember this, make this correction a rule, check whether the workflow ran, check recall routing"
 user-invocable: true
 ---
 
