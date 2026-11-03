@@ -152,8 +152,6 @@ PR body with the robot. These win.
 - NEVER marketing language in docs, comments, specs or commit messages. A repo
   description, tagline or other public-facing pitch is the owner's copy: set it
   verbatim and NEVER re-litigate the wording, in review or in an eval report.
-- NEVER add a licence: no `LICENSE` file, `license` field or licence line in a
-  README. The owner's code is all rights reserved by default.
 - ALWAYS write every address, signature and hash in full — in docs, code
   comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
 - NEVER publish to claude.ai hosting (Artifact tool, uploads): local HTML/MD files the user opens.
