@@ -21,7 +21,9 @@ may keep that session's transcripts under another slug. `mkdir -p` the dir
 before the first write. Append to today's entry; create if missing.
 
 A standalone document goes beside it as `YYYYMMDD-<name>.md` — see "Named
-companions" below.
+companions" below. `YYYY-WNN.md` and `YYYY-MM.md` beside it are the week and
+month levels; `compact-memories` writes them, the Stop hook nudges when one
+is due.
 
 This section owns the dir — every other file points here. ALWAYS address
 the diary by absolute path from every worktree: the dir is keyed on the main

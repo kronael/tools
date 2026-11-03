@@ -97,7 +97,8 @@ ALWAYS start at §3 step 2. The sequence below covers decision and open-item rec
 
 1. **Curated layer.** MEMORY.md is already loaded. Read the 2-3 newest
    diary entries in full (`ls -t <diary>/*.md | head -3`, `<diary>` named
-   in `diary` § Where it lives), grep `<diary>/*.md` and
+   in `diary` § Where it lives) and, when the question spans more than a few
+   days, the newest `<diary>/YYYY-WNN.md` and `YYYY-MM.md`; grep `<diary>/*.md` and
    `~/.claude/projects/<slug>/memory/*.md` for the topic, then read and grep
    `<repo root>/.diary/` read-only when it exists. Use exact branches,
    PR numbers, file and report paths, and hashes as search terms for step 2.

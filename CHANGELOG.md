@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - diskclean kind `worktree`: removes a clean linked git worktree whose HEAD is on a remote; ignored files other than caches keep it.
+- **Diary levels.** `compact-memories` distills the last completed week or month of the diary into `YYYY-WNN.md` or `YYYY-MM.md` beside the day entries; the Stop hook nudges it when a period has sources and no file. `recall-memories` reads the newest level files for a question that spans days. The format is the one arizuko's `compact-memories` writes.
 
 ## [v0.4.70] — 20261104
 
