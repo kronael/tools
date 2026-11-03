@@ -64,7 +64,9 @@ code, deployment, specs or data; documents also carry claims to verify.
    directory, NEVER assume which exist. A document context (`docs/**`,
    `README.md`, `ARCHITECTURE.md`) reads the `readme.md` lens here beside the
    `claims.md` sections that apply. ALWAYS hand each context the chunks of the
-   live WISDOM that govern it — NEVER a frozen checklist. A validation gate a
+   live WISDOM that govern it — NEVER a frozen checklist — and the `CLAUDE.md`
+   files on the path to each of its files, whose broken rules are findings that
+   quote the rule (`software.md` § Rules the instruction files state). A validation gate a
    lens names that the test target misses (a typecheck) runs once the lens is
    read, and again at step 10. ALWAYS seed the correctness lenses from
    `defaults.md`. Tag each lens `simplify` (reuse, dead code,

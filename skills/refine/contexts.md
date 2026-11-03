@@ -23,6 +23,11 @@ Beyond `brief.md`'s four blocks, a context's brief names:
   section and prior subagent report that asserts something about this context.
   These are upstream and they are wrong more often than the code: ALWAYS have
   the sub re-measure what they state rather than build on it.
+- **its instruction files** — the repo root `CLAUDE.md` and every directory
+  `CLAUDE.md` on the path to each changed file. These are rules, not claims:
+  ALWAYS have the sub read every changed path against every rule in them and
+  report each broken rule quoted (`software.md` § Rules the instruction files
+  state); NEVER a paraphrase, which cannot be checked against the file.
 - **its command family** — the one that settles claims here, named explicitly,
   so the sub does not reach for grep by reflex
 - **its lenses** — for a code context, the `<skill>.md` files in this directory
