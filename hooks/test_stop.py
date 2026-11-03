@@ -193,6 +193,66 @@ def test_clean_repo_with_a_fresh_diary_is_silent(tmp_path, home) -> None:
     assert run_hook(repo, env={'KRONAEL_HOOK_EVENT': 'PostToolUse'}) is None
 
 
+def last_week_days():
+    """The seven YYYYMMDD of the last completed ISO week, and its label."""
+    today = datetime.now(tz=UTC).date()
+    monday = today - timedelta(days=today.weekday() + 7)
+    return [(monday + timedelta(days=i)).strftime('%Y%m%d') for i in range(7)], monday.strftime(
+        '%G-W%V'
+    )
+
+
+def test_week_rollup_nudged_until_the_week_file_exists(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
+    days, week = last_week_days()
+    diary = diary_path(home, repo).parent
+    (diary / f'{days[2]}.md').write_text('---\nsummary: wed\n---\n')
+
+    out = run_hook(repo)
+
+    assert out['reason'] == f'Diary week {week} has no rollup. Run /compact-memories diary week.'
+    (diary / f'{week}.md').write_text('---\nsummary: week\n---\n')
+    os.remove(repo / '.git' / 'claude-diary-nudge')
+    out = run_hook(repo)
+    assert out is None or 'diary week' not in out['reason']
+
+
+def test_month_rollup_nudged_from_a_week_file_of_last_month(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
+    diary = diary_path(home, repo).parent
+    first = datetime.now(tz=UTC).date().replace(day=1)
+    last_month = first - timedelta(days=1)
+    mid = last_month.replace(day=15)
+    week_of_mid = mid.strftime('%G-W%V')
+    assert datetime.fromisocalendar(mid.isocalendar()[0], mid.isocalendar()[1], 1).strftime(
+        '%Y-%m'
+    ) == last_month.strftime('%Y-%m')
+    (diary / f'{week_of_mid}.md').write_text('---\nsummary: week\n---\n')
+
+    out = run_hook(repo)
+
+    assert (
+        out['reason']
+        == f'Diary month {last_month:%Y-%m} has no rollup. Run /compact-memories diary month.'
+    )
+    (diary / f'{last_month:%Y-%m}.md').write_text('---\nsummary: month\n---\n')
+    os.remove(repo / '.git' / 'claude-diary-nudge')
+    assert run_hook(repo) is None
+
+
+def test_day_files_outside_last_week_nudge_nothing(tmp_path, home) -> None:
+    repo = make_repo(tmp_path, home)
+    diary = diary_path(home, repo).parent
+    days, _ = last_week_days()
+    before = (
+        datetime.strptime(days[0], '%Y%m%d').replace(tzinfo=UTC) - timedelta(days=1)
+    ).strftime('%Y%m%d')
+    (diary / f'{before}.md').write_text('---\nsummary: older\n---\n')
+    (diary / '20260101-report.md').write_text('companion\n')
+
+    assert run_hook(repo) is None
+
+
 def test_missing_diary_warns_without_writing_a_file(tmp_path, home) -> None:
     git(tmp_path, 'init', '-q')
     commit(tmp_path, 'a.txt', 'one\n', 'feat: first')

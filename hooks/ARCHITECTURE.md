@@ -248,7 +248,10 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
    when the `claude-diary-nudge` stamp is missing or at least `NUDGE_INTERVAL`
    old, and re-stamp. The directory need not exist; a repo without one is
-   nudged to start it.
+   nudged to start it. The same stamp covers the rollups (`rollups_due`): the
+   last completed ISO week with a day file and no `YYYY-WNN.md`, and the last
+   completed month with a week file and no `YYYY-MM.md`, each nudge
+   `/compact-memories diary <level>`.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale
