@@ -147,6 +147,16 @@ reads to pick the agent type.
   `to_money`) as a second structurer: a finding, replaced by the codec.
 - ALWAYS grep shared-library public names and maintained upstream dependencies already in use; replace helpers they provide.
 - ALWAYS compare function bodies across components; put a helper two components need in the shared library once.
+- ALWAYS name, for each thing the range fetches, parses, stores or serves — a
+  source, a feed, a parser, a client of a provider, a store — the component of
+  the same repo that owns it: grep the other components' `README.md`,
+  `ARCHITECTURE.md` and `CLAUDE.md` for the noun, and read what each
+  instruction file says its component owns or must not grow. A second
+  implementation in another component, or a wrapper around the owner's output
+  that reshapes what the owner already serves, is a finding whatever the
+  component's merge freedom: replaced by a call to the owner, or routed to the
+  owner's `BUGS.md` when the owner lacks what the caller needs (`code.md`
+  § System changes).
 - ALWAYS compare new layers with a sibling's framework, routes, config loader, logging and `main`;
   ALWAYS flag departures or dependencies duplicating a role (§ System changes).
 - ALWAYS check a fix that changes a contract or control flow across modules
@@ -156,6 +166,25 @@ reads to pick the agent type.
   (encode|to_row|to_wire|as_row)'` over the added files): a record copied
   field by field into the row it is stored as is two shapes of one record
   (§ Design: the row is the record).
+
+## Rules the instruction files state `correctness`
+
+- ALWAYS list the instruction files that govern each changed path — the repo
+  root `CLAUDE.md` and every `CLAUDE.md` in a directory on the path to the
+  file: `git diff --name-only <range> | while read -r f; do d=$f; while d=$(dirname
+  "$d") && [ "$d" != . ]; do [ -f "$d/CLAUDE.md" ] && echo "$d/CLAUDE.md"; done;
+  done | sort -u`, plus `CLAUDE.md` at the root — and read every rule in each,
+  including the documents a rule says to read first, against the changed
+  paths under it. A sweep over the root file alone, or over the component's
+  file alone, is itself a finding: rerun it over the whole set.
+- ALWAYS report a broken rule as a finding that quotes the rule verbatim with
+  its file and section beside the `file:line` that breaks it. NEVER a
+  paraphrase, and NEVER a rule the file does not hold — a reviewer's own
+  preference is not a finding here.
+- ALWAYS check the range against the merge terms the root file states for
+  its paths (an owner-approval section, a sign-off rule): a path under one with
+  no approved plan or accepting review comment on the PR is a finding that
+  blocks the merge, never one to settle by applying a fix.
 
 ## Component moves change the code `correctness`
 
