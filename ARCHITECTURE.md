@@ -14,6 +14,7 @@ output-styles/              bundle — response output style (caveman)
 commands/                   bundle — slash commands (caveman)
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
 codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
+arizuko.yml                 arizuko package manifest (kronael-tools)
 codex/AGENTS.md             Kronael block merged into ~/.codex/AGENTS.md
 RECLAUDE.md                 bundle file installed as ~/.claude/RECLAUDE.md; no hook reads it (BUGS.md RECLAUDE-MD-UNREAD)
 AGENTS.md                   notes for non-Claude agents (Codex)
@@ -59,6 +60,33 @@ The procedure is documented in
 [`kronael/sync/SKILL.md`](kronael/sync/SKILL.md) — the single source of
 truth for all paths. Codex/non-Claude agents follow
 [`AGENTS.md`](AGENTS.md).
+
+## arizuko package
+
+`arizuko.yml` makes the repo the arizuko package `kronael-tools`:
+`arizuko package add github.com/kronael/tools`. arizuko installs core first,
+then this package, so a skill or hook here replaces core's copy of the same
+name, and `package sync` prints each replacement. The guest reads the same
+files at the same native paths, `~/.claude/skills/<name>` and
+`~/.claude/hooks/<name>`, mounted read-only.
+
+The `install` step runs on the arizuko host and keeps what works in a chat
+agent's guest:
+
+- Skills: all of `skills/` except `diary`, `solve`, `recall-memories` and
+  `compact-memories`, whose core versions read arizuko's memory layout
+  (`~/diary`, `~/episodes`, `~/facts`), and `global`, `owner`, `emacs` and
+  `server-init`, which describe this host.
+- Hooks: `prompt_nudge.py` and `pretool_nudge.py` with `gh_text_lint.py`,
+  `codex_hook.py` and `lib/`. The step writes their entries from
+  `settings-recommended.json` to `.claude/settings.json` and from
+  `codex-hooks.json` to `.codex/hooks.json`, with `~/` as `/home/node/`: a
+  guest hook command gets no shell. `stop.py`, `memory_nudge.py` and
+  `style_lint.py` block a Stop on a host diary, a host memory pass or the
+  caveman style, and `local.py` and `reclaude.py` read files the guest lacks.
+- `speclint`: built with uv into the package, at `/usr/local/bin/speclint`.
+- No manual: the root `CLAUDE.md` holds this repo's conventions, so the step
+  removes it from the package.
 
 ## Why hybrid (plugin + sync step)
 

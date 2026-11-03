@@ -61,6 +61,9 @@ Full rationale: [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--sync-step).
   [`kronael/sync/reference.md` § Settings](kronael/sync/reference.md#settings-step-5)
   are applied on every sync without asking.
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
+- **arizuko package** (`arizuko.yml`) — the skills and hooks that work in an
+  arizuko agent, installed with `arizuko package add github.com/kronael/tools`;
+  see [ARCHITECTURE.md § arizuko package](ARCHITECTURE.md#arizuko-package).
 
 Repo layout: [ARCHITECTURE.md § Repo shape](ARCHITECTURE.md#repo-shape).
 
