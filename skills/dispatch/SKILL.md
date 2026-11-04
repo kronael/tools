@@ -21,7 +21,7 @@ artifacts.
 
 | Task | Requested output and boundary | Claude model / effort | Codex model / effort | Group |
 |---|---|---|---|---|
-| Sweep | List every call site, reference or match, or collect text that only feeds another agent; no conclusion of its own | Haiku / low, or Sonnet / low for a wide tree | `gpt-6-luna` / low | Lightweight |
+| Sweep | List every call site, reference or match, or collect text that only feeds another agent; no conclusion of its own | Haiku / medium, or Sonnet / low for a wide tree | `gpt-6-luna` / medium | Lightweight |
 | Mechanical | Named-file inventories, searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / medium | `gpt-6-luna` / medium | Lightweight |
 | Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / medium | `gpt-6.1-terra` / medium | Implementation |
 | Algorithm | Find or solve an algorithm — a search, an optimization, a numeric or concurrency design — even when the output is code | Opus / high | `gpt-6.1-sol` / high | Judgment |
@@ -33,7 +33,7 @@ artifacts.
 
 Effort is medium unless the row says otherwise. The dispatching planner MAY
 raise a review to high for a risky change, and MAY keep a repeated run of one
-task at medium; it reports the changed effort with the launch. ONLY a sweep
+task at medium; it reports the changed effort with the launch. ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 
