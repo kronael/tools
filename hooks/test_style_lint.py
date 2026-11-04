@@ -146,3 +146,18 @@ def test_main_reads_stdin(home, monkeypatch, capsys) -> None:
     style_lint.main()
 
     assert json.loads(capsys.readouterr().out)['decision'] == 'block'
+
+
+def test_a_blank_line_does_not_split_a_list() -> None:
+    spaced = '\n\n'.join(f'- item {n}' for n in range(CAP_BULLETS + 1))
+    assert measure(spaced)['bullets'] == CAP_BULLETS + 1
+
+
+def test_a_continuation_line_counts_toward_its_bullet() -> None:
+    text = '- One. Two.\n  Three.'
+    assert measure(text)['sentences'] == 3
+
+
+def test_a_link_counts_its_label_not_its_url() -> None:
+    url = 'https://example.com/' + 'x' * 200
+    assert visible(f'[short label]({url})') == 'short label'

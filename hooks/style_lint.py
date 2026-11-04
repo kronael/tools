@@ -23,10 +23,11 @@ FENCE = re.compile(r'^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1[ \t]*$', re.MULTILINE)
 BULLET = re.compile(r'^\s*(?:[-*+]|\d+[.)])\s+')
 INLINE_CODE = re.compile(r'`[^`]*`')
 SENTENCE_END = re.compile(r'[.!?](?=\s|$)')
+LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
 
 
 def visible(message):
-    return FENCE.sub('', message).strip()
+    return LINK.sub(r'\1', FENCE.sub('', message)).strip()
 
 
 def rendered_lines(text):
@@ -45,6 +46,11 @@ def measure(text):
         if BULLET.match(line):
             run += 1
             bullet_sentences.append(sentences(BULLET.sub('', line)))
+            continue
+        if run and not line.strip():
+            continue
+        if run and line[:1].isspace():
+            bullet_sentences[-1] += sentences(line)
             continue
         if run:
             lists.append(run)
