@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [v0.4.70] — 20261104
+
+> kronael v0.4.70 — Haiku sweeps at medium
+>
+> A sweep on Haiku runs at medium effort; only a Sonnet sweep over a wide tree runs at low.
+>
+> • Dispatch — Sweep is Haiku / medium, or Sonnet / low for a wide tree.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.69] — 20261104
 
 > kronael v0.4.69 — Sweeps run light
