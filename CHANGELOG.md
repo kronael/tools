@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [v0.4.68] — 20261104
+
+> kronael v0.4.68 — Effort that fits the task
+>
+> Workers run at medium effort unless their task needs high, and the caveman check measures what the terminal shows.
+>
+> • Dispatch — medium by default; planning, specs, audits and a new algorithm task run at high; low is never used.
+> • Bindings — sonnet and haiku pin medium; a launch passes the selected effort when it differs from the pin.
+> • Caveman check — a spaced list, a bullet's continuation line and a link label count as the reader sees them.
+> • Hooks — the Stop hook blocks a reply over the caveman budget; a prose learn request routes to /learn.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `dispatch` owns the effort column; the planner may raise a review or keep a repeated run at medium and reports the change.
+- `refine` checks changed paths against their CLAUDE.md rules; `sync` installs every listed tool.
+
 ## [v0.4.67] — 20261031
 
 > kronael v0.4.67 — The spec carries the module map
