@@ -34,6 +34,14 @@ listed rows.
 A `target` dir loses everything except `target/deploy`, because that dir holds
 program keypairs.
 
+A `worktree` goes through `git worktree remove --force`, so git also drops its
+registration. Its commits stay on the remote. A worktree that holds an ignored
+entry other than the cache dirs above or a dir with `CACHEDIR.TAG` is kept as
+`ignored files`, because a `tmp/` report or a local secret is not rebuildable.
+The proof uses the remote-tracking refs as they are, so fetch first. The last
+use of a worktree comes from file and git times only, because `git status`
+reads every file.
+
 ## Level 2 removes global toolchains, caches, boxes and images
 
 Level 2 runs level 1, then lists the global dirs of kinds `rustup`,
@@ -70,6 +78,7 @@ proof holds.
 | 1 | `pycache` | `__pycache__` | a `.pyc` file inside |
 | 1 | `toolcache` | `.pytest_cache`, `.ruff_cache`, `.mypy_cache` | `CACHEDIR.TAG` with the standard signature on its first line |
 | 1 | `gomod` | `pkg/mod` | `cache/download` inside and a `go.mod` in the project |
+| 1 | `worktree` | a linked git worktree, found by its `.git` file | a clean tree, a HEAD that a remote-tracking ref contains, and only rebuildable ignored dirs |
 | 2 | `rustup` | numbered toolchains, such as `1.82.0-x86_64-unknown-linux-gnu`, in the rustup home | `bin/rustc` inside |
 | 2 | `platform-tools` | Solana `v<number>.<number>` dirs in the cache home | `platform-tools` inside |
 | 2 | `pipenv` | each dir in `~/.local/share/virtualenvs` | `pyvenv.cfg` and `.project` inside |
