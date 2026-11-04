@@ -1449,7 +1449,7 @@ Where Docker requires sudo, set `DOCKBOX_DOCKER='sudo -n docker'`.
   `RECAP_BUDGET` deadline, the `RECAP_COMMITS`/`RECAP_PATHS` caps and the
   landed/dirty/stuck builders. Claude Code generates its own recap from the
   conversation — the away summary, keyed `awaySummaryEnabled` and shown as
-  *recap* in `/config`, with `/recap` as the on-demand form — so a second one
+  _recap_ in `/config`, with `/recap` as the on-demand form — so a second one
   meant two summaries at every stop, and the git one spoke even on a quiet turn
   (`since 07:48Z: no commits`). The hook is back to the commit and diary nudges.
   `awaySummaryEnabled` is deliberately left unset, at Claude Code's default.
@@ -2330,6 +2330,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `doc-topology` skill: structure project docs by the question each file answers (README/ARCHITECTURE/notes/compare/facts) plus a how-to-read index and anti-marketing discipline.
 - New skills `finalize-crate`, `go-gl` (native OpenGL desktop apps in Go), `speed-demo` (benchmark-reveal GIFs), and `port-to-go` (faithful into-Go transcode with differential traces).
 - install: an installed-release marker in `~/.claude/kronael-install-manifest.json` (version, git commit/describe, timestamp) with a per-file sha baseline; preflight reports the installed→source delta and which releases a reinstall will apply.
@@ -2337,6 +2338,7 @@ file answers to that name.
 - Codex: global guidance now loads every applicable `CLAUDE.md` alongside `AGENTS.md` and applies the `caveman` response policy without replacing user rules.
 
 ### Changed
+
 - Eval family: `hacker-eval` → `red-eval`, `eye-13yo` → `13yo-eval`; added LLM-behavior / anti-fabrication guards and best-practice grounding.
 - `merge` skill (renamed from `merge-trivial`) now drives merges, rebases, and cherry-picks to completion, finishing by operation type.
 - `software` router folded `testing` in as `software/testing.md`; `release` tagging is collision-safe and re-points tags orphaned by a rebase.
@@ -2346,6 +2348,7 @@ file answers to that name.
 - Plugin manifests (`.claude-plugin`, `.codex-plugin`) bumped to 0.3.65 to track the release.
 
 ### Fixed
+
 - `finalize-crate` / `red-eval` frontmatter: quoted colons so YAML parses the real description (they were loading with an H1 fallback).
 - `udfix`: 64 KB line-limit and trailing-newline handling; strengthened tests.
 
@@ -2417,6 +2420,7 @@ file answers to that name.
 - Captured four skills that existed only in local installs into source, org-specific examples genericized: `assess` (adversarial ceo/cto/ciso/buyer/investor/competitor critique → `.ship/critique-*.md`), `later` (defer to `TODO.md`; recurring items point at `/schedule`), `sweep-fix-verify` (gating checklist for multi-step / multi-subagent changes — verify writes not just runs), `worktree` (per-subagent git-worktree isolation).
 
 ## [v0.3.60] — 20260720
+
 > kronael v0.3.60 — tighter replies, tougher discipline
 >
 > Replies cap at ~17 lines with the point last, /merge now finishes rebases and cherry-picks, and a fail-loud engineering discipline joins the wisdom.
@@ -2449,10 +2453,12 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `software/dynamic-analysis.md`: new runbook for runtime/dynamic checkers wired as `make test`/CI targets (never pre-commit) — Go (`-race`, `-shuffle`, `-fuzz`, goleak, `-asan`/`-msan`, govulncheck), Rust (Miri, `-Zsanitizer`, cargo careful, loom, cargo-fuzz, nextest, cargo-mutants), Python (`-X dev -W error`, faulthandler, pytest-randomly, hypothesis, pytest-memray, free-threaded ThreadSanitizer).
 - `software/strict-typing.md`: Go section — golangci-lint v2 set (`errcheck` with `check-type-assertions`, `staticcheck`, `govet`, `errorlint`, `bodyclose`, `exhaustive`, `nolintlint` `require-specific`/`require-explanation`, …) with the escape-hatch→linter table.
 
 ### Changed
+
 - `go` / `rs` / `py` skills link to the `strict-typing` and `dynamic-analysis` runbooks for their linter set and test-target checkers; `software` router dispatch table, `when_to_use`, and edit-reference updated to route on them.
 
 ## [v0.3.58] — 20260719
@@ -2496,16 +2502,19 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `memory_nudge` hook: low-frequency Stop/PreCompact nudge to evaluate the session for memory-worthy facts and persist them; wired into `settings-recommended.json` (Stop + PreCompact), with tests.
 - `go`: always build binaries into `dist/` — GoReleaser's default output, so dev and release builds share one gitignored dir.
 
 ### Changed
+
 - `global` wisdom: added a hard "NEVER recursive removal (`rm -r`/`-rf`/`-R`)" rule — delete explicitly named files or leave cleanup to the user.
 - `codex`: load the global wisdom file by default.
 - `dockbox`: build the latest claude + codex in a cache-busted final layer.
 - bundle sync: back-ported runtime-only skill edits into source; dropped deprecated skills (`create-code-presentation`, `gh-fix`, `gh-review`) now folded into the create/review routers.
 
 ### Fixed
+
 - `ruff`: pin `hooks/**` to the py39 target so `ruff-format` never rewrites to 3.14-only syntax (paren-free `except A, B:`, PEP 758) that SyntaxErrors on older interpreters.
 
 ## [v0.3.55] — 20260713
@@ -2682,7 +2691,7 @@ file answers to that name.
 > con and fin are now framed as distinct goal-scoped modes instead of con reading as "fin plus a context-recovery step."
 >
 > • `con` reframed as goal mode: recall every interrupted/paused/abandoned task, plan, or goal from the session (not just live agent processes) and drive each to actual completion — its own persistence requirement, not borrowed `/fin` semantics
-> • `fin` reframed to pair with it: drive the *current* goal to completion, explicitly narrower in scope than `con`'s multi-goal recall
+> • `fin` reframed to pair with it: drive the _current_ goal to completion, explicitly narrower in scope than `con`'s multi-goal recall
 > • mechanics of both skills unchanged — description/intro wording only
 >
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
@@ -2705,6 +2714,7 @@ file answers to that name.
 - skills: added `sweep` (background agent audits the entire codebase for one bug category and files each real instance as its own `BUGS.md` entry per `/bugs`'s format/ID rules; record-only) and `con` (resumes every interrupted/paused/unfinished agent and task from the current session — memory + diary + in-flight agent inventory — then drives everything to completion under `/fin` semantics). Indexed in `skills/README.md`'s Shortcuts section.
 - skills: de-collided `con`'s "keep going" `when_to_use` trigger from `fin`'s pre-existing "keep going" trigger (fin already owns continuing the current in-flight task without stopping; con is specifically about resuming interrupted/paused work). Added cross `NOT for ...` clauses to both descriptions; reworded `con`'s trigger to "resume the paused work".
 - `.claude-plugin/plugin.json`: version bump `0.3.33` → `0.3.43` (had drifted since the last bump at v0.3.33; brought back in step with the release version).
+
 ## [v0.3.42] — 20260706
 
 > kronael v0.3.42 — pi upgraded to gpt-5.5
@@ -2716,6 +2726,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - pi: default model `gpt-5.2-codex` → `gpt-5.5` — skill doc + `~/.pi/agent/settings.json`.
 
 ## [v0.3.41] — 20260706
@@ -2732,6 +2743,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - software: `strict-typing.md` — config-only settings that make effective
   typing un-circumventable. Python via basedpyright (`reportAny`,
   `reportExplicitAny`, `enableTypeIgnoreComments = false`) + ruff (`ANN401`,
@@ -2744,10 +2756,12 @@ file answers to that name.
   ast-grep.
 
 ### Changed
+
 - skills: model-tier routing — sonnet = investigation, opus = implementation;
   `/sub` auto-tier router with haiku/sonnet/opus proactive triggers.
 
 ### Fixed
+
 - pi: auth check no longer treats `settings.json` presence as being logged in.
 
 ## [v0.3.40] — 20260703
@@ -3423,13 +3437,16 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox`: `/tmp` mounted as tmpfs — scratch stays ephemeral
 - dockbox image: `libpq-dev` + `libssl-dev` — postgres and openssl-sys Rust crates
 
 ### Changed
+
 - `dockbox`: auto-detects past session via `~/.claude/projects/<slug>/*.jsonl`; `--resume` only when session exists; `-N` flag removed
 
 ### Fixed
+
 - dockbox image: chromium deps installed explicitly, `--with-deps` dropped — Playwright on Debian forky (t64 transition)
 - oracle skill: `/dev/null` piped to codex exec — unblocks stdin hang
 - hooks: diary nudge fixed for monorepos; `git_run` refactored
@@ -3445,6 +3462,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox -N` — new-session flag; omits the default `--resume` passed to claude
 
 ## [v0.3.9] — 20260605
@@ -3459,6 +3477,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - `dockbox`: passes `--resume` to `claude` by default; non-claude entrypoints unaffected
 - `skills/fix/SKILL.md`: auto-loads `./capture.png` or `/tmp/capture.png` when no clear target is given
 
@@ -3473,6 +3492,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - `dockbox sh` — if the container is already running, execs into it via `docker exec -it <name> /bin/zsh` instead of printing an error
 
 ## [v0.3.7] — 20260604
@@ -3489,9 +3509,11 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox sh` subcommand — drops into `/bin/zsh` with the full dockbox setup; all flags (`-G`, `-S`, `-D`, etc.) still apply
 
 ### Changed
+
 - `dockbox`: `CARGO_TARGET_DIR=/tmp/cargo-target` set unconditionally; dedicated tmpfs mounted at that path — Cargo builds stay in RAM, host `target/` untouched
 - `skills/commit/SKILL.md` — subject rule: capitalize first word after the type colon (`feat: Add` not `feat: add`)
 - `skills/global/SKILL.md` — added question-spending rule (synced from installed CLAUDE.md)
@@ -3509,6 +3531,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - `dockbox`: `dist` and `build` removed from `EPHEMERAL_DIRS` — tmpfs-mounting them caused EBUSY when build tools did `rm -rf dist`; container now writes to host path directly
 - `skills/commit/SKILL.md` — rewritten to conventional commits format (`feat:`, `fix:`, `chore:` etc.), imperative mood, breaking change rules; trimmed from 80 → 38 lines
 - `settings-recommended.json` — stop prompt suggestions disabled
@@ -3524,6 +3547,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Fixed
+
 - `pkg-config` missing from dockbox apt install — `hidapi`/`libudev`-dependent Rust crates now build inside the container
 
 ## [v0.3.4] — 20260531
@@ -3543,6 +3567,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox -G` flag — mounts `~/.config/gcloud` ro (opt-in, like `-g` for GH tokens); silently skipped when absent
 - `google-cloud-cli` installed in dockbox image via apt; `gcloud`, `gsutil`, `bq` on PATH
 - `skills/create-video-render/examples/ant_coordination.py` — headless ant stigmergy renderer: 4 variants (`default`, `race`, `bloom`, `chaos`), `--speed N` timelapse, `--gif`, `--text` / `--cards JSON` per-element text overlays with fade timing
@@ -3551,6 +3576,7 @@ file answers to that name.
 - `skills/specs/SKILL.md` — experiment lifecycle (`draft` → `planned` → `partial` → `shipped`); draft status blocks implementation
 
 ### Changed
+
 - `create-video-render` skill restructured: top-level `SKILL.md` is engine index; per-engine detail in `flavors/` (Remotion, Manim, Motion Canvas, DynamicalSystems.jl, Bevy headless, GPU fields/swarm, shaders)
 - Dockbox ephemeral `find` capped at `maxdepth 4` — prevents ARG_MAX overflow on deep pnpm/yarn workspaces
 - Commit skill nudge throttled to once per 10 min and reworded to emphasise coherent-chunk splitting
@@ -3558,6 +3584,7 @@ file answers to that name.
 - `skills/ts/SKILL.md` — if-guard style: omit braces, indent body on next line (matches project style scan)
 
 ### Fixed
+
 - Ant simulation: food sources repositioned to midscreen (y≈0.45); scouts pre-seeded near food so trails form from frame 1, not after random discovery
 
 ## [v0.3.3] — 20260526
@@ -3574,14 +3601,17 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `research/skill-libraries-cannot-evolve-themselves.md` — single ~3500-word writeup merging the per-topic research notes into one publishable piece (sources, design history, eval-set recipe)
 - `skills/content-video/SKILL.md` — short-form video script skill with a brand-agnostic de-branding rule
 
 ### Changed
+
 - `skills/oracle/SKILL.md` — recommends `--dangerously-bypass-approvals-and-sandbox` for codex inside dockbox (codex's own sandbox blocks file reads silently and yields empty findings); load-bearing warning marks it host-unsafe
 - `dockbox/dockbox` — both tmpfs mounts (`/home/dockbox` and ephemeral overmounts) now use `:rw,exec,mode=1777` so binaries in `node_modules/.bin` can execute (Docker's default `--tmpfs` is `noexec`)
 
 ### Removed
+
 - `usage-patterns/` directory — not useful
 - All brand-name mentions across tracked docs (`specs/1-ripclaude.md`, removed `usage-patterns/`); content-video's de-branding rule rewritten to itself be brand-agnostic
 
@@ -3598,6 +3628,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `make` (GNU Make 4.4.1) in the dockbox image via apt
 - `dotnet` SDK (LTS) installed under `/opt/dev-tools/dotnet/`; `DOTNET_ROOT` env set; `dotnet` on PATH; `libicu78` apt-installed so `dotnet` doesn't crash on globalization init
 - `dockbox -S` flag → passes `DOCKBOX_SUDO=1` to the container; `dockbox-init` writes `/etc/sudoers.d/dockbox-<user>` with `NOPASSWD:ALL` so the runtime user can `sudo apt install X` during a session; a `/etc/shadow` entry is also added so PAM doesn't reject the account
@@ -3605,11 +3636,13 @@ file answers to that name.
 - `make clean` at repo root, sweeping `__pycache__/` across subdirs; per-subdir `clean` targets
 
 ### Changed
+
 - `research/library-drift.md` cites SkillsBench (arXiv 2602.12670) as its own paper rather than a "companion benchmark"
 - Root Makefile + `hooks/Makefile` get `.DEFAULT_GOAL := help` so bare `make` prints help instead of running tests
 - Hook test assertions in `pretool_nudge.py` now check the exact expected skill string (was matching only the literal "follow ")
 
 ### Fixed
+
 - `dockbox-init`: `set -eu` guard + numeric validation on `DOCKBOX_UID` / `DOCKBOX_GID` (malicious non-numeric values fall back to 1000 instead of corrupting `/etc/passwd`)
 - `dockbox-init`: handles unset `DOCKBOX_EPH_PATHS` under `set -u` (was crashing with "parameter not set")
 - `dotnet-install.sh` invoked via `bash`, not `sh` (the installer uses bash redirection syntax)
@@ -3628,6 +3661,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `yq`, `bc` packages in the dockbox image; `gh` via github-cli signed apt repo
 - `DISABLE_AUTOUPDATER=1` + `CLAUDE_CODE_DISABLE_AUTOUPDATE=1` env in image — claude-code never self-updates inside dockbox
 - `dockbox-init` registers the runtime user in `/etc/passwd`, defaults CMD to `/bin/zsh`, surfaces chown failures
@@ -3636,12 +3670,14 @@ file answers to that name.
 - `specs/2-hermes-skill-autoimprove.md` rewritten to the bundle eval loop architecture (DSPy MIPROv2 style)
 
 ### Changed
+
 - Base image: `node:lts` → `debian:forky`. Node now comes from nvm only, symlinked to `/usr/local/bin` so build-time npm/npx work without sourcing `nvm.sh`
 - All dev-tool homes moved to `/opt/dev-tools/{cargo,rustup,nvm,bun,goroot,go,sdkman,uv}/` (world-readable; portable across UIDs)
 - `pretool_nudge.py` refactored into orthogonal `skill_for` / `extract_path` / `process` functions; top-level swallow-all wrapper
 - `DOCKBOX_USER` is sanitized inside `dockbox-init` (only `[A-Za-z0-9_-]` allowed) — prevents `/etc/passwd` injection
 
 ### Fixed
+
 - `dockbox-init`: `gosu` no longer errors when CMD is empty (defaults to `/bin/zsh`)
 - `dockbox-init`: chown failures now print warnings to stderr instead of being silent
 - `pretool_nudge.py`: hook can no longer block a tool call by raising a Traceback (top-level except in `main`)
@@ -3661,6 +3697,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - `dockbox/Dockerfile` rewritten: no `ARG UID`, no `useradd`, no `USER` directive. Tools install to `/opt/dev-tools/{cargo, rustup, nvm, bun, go, sdkman, uv}/`, `npm-global` stays at `/usr/local/share/npm-global/`. Final `chmod -R a+rwX /opt/dev-tools` makes everything usable by any runtime UID.
 - `dockbox-init` (image-baked) now reads `$DOCKBOX_UID`, `$DOCKBOX_GID`, `$DOCKBOX_USER` to register `/etc/passwd` + `/etc/group` entries, top-level-chown `$HOME` and every `$DOCKBOX_EPH_PATHS` entry, then `exec gosu $UID:$GID "$@"`.
 - `dockbox` script always passes `--user 0:0` and the UID/GID/USER env vars; always mounts a tmpfs `$HOME` at `/home/dockbox`; bind-mount destinations switched from `/home/claude/*` to `/home/dockbox/*`.
@@ -3670,6 +3707,7 @@ file answers to that name.
 - `dockbox/README.md` and `CLAUDE.md` updated to describe the new model.
 
 ### Breaking
+
 - Old containers must be removed (`dockbox rm`) before upgrading; their bind-mount paths (`/home/claude/*`) no longer exist in the new image.
 - Anything outside the dockbox script that references `/home/claude/...` paths inside the container (`.dockboxrc` extras, custom skills) must move to `/home/dockbox/...`.
 
@@ -3685,6 +3723,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Changed
+
 - dockbox always passes `--user 0:0` and `DOCKBOX_EPH_PATHS` to the container when any ephemeral overmounts are active; `dockbox-init` chowns then `gosu`-drops to `claude` regardless of backend
 - tmpfs overmounts mount with plain `--tmpfs <path>` (no `uid=`/`gid=`) — ownership is set by the entrypoint chown, not the mount option
 - `dockbox/README.md` and `CLAUDE.md` updated to describe the unified ownership flow
@@ -3702,10 +3741,12 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox -T` — disk-backed anonymous Docker volume backend for ephemeral overmounts (default is tmpfs)
 - Dockerfile: `gosu` package and `/usr/local/bin/dockbox-init` entrypoint that chowns paths listed in `DOCKBOX_EPH_PATHS` (when running as root) then drops to `claude`
 
 ### Changed
+
 - dockbox ephemeral overmounts default to kernel tmpfs (`--tmpfs <path>:uid=...,gid=...,mode=0755`) — no host footprint, owned by container user at mount, gone with the container
 - v0.2.6 host-stash mechanism (`/tmp/dockbox-eph/<name>/`) removed; not needed since both new backends own the mount correctly
 - `dockbox/README.md` "Ephemeral builds" section: two-backend model documented, trade-offs spelled out
@@ -3722,9 +3763,11 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Fixed
+
 - dockbox: anonymous-volume overmounts (v0.2.4) were owned by root, breaking `pnpm install` and similar with EACCES — switched to host-side stash dirs at `/tmp/dockbox-eph/<container>/` bind-mounted in, owned by the host user (UID-matched with container `claude`)
 
 ### Changed
+
 - dockbox script no longer `exec`s docker; runs in foreground so an `EXIT` trap can clean up the stash
 - `dockbox/README.md` "Ephemeral builds" section updated to describe the new bind-mount mechanism
 
@@ -3737,6 +3780,7 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - dockbox: `rustup component add clippy rustfmt` (alongside existing rust-analyzer)
 
 ## [v0.2.4] — 20260522
@@ -3752,12 +3796,14 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - Dockerfile envs: `CARGO_TARGET_DIR=/home/claude/.cache/cargo-target` and `UV_PROJECT_ENVIRONMENT=/home/claude/.cache/uv-venv` — Rust and uv builds now go to container-ephemeral paths
 - dockbox: default-on ephemeral overmount for `node_modules .next dist build .turbo .cache` — recursive under workdir, anonymous Docker volumes, gone on `--rm`
 - `dockbox -P` / `--no-ephemeral` opt-out flag to bind-mount build dirs from host instead
 - `dockbox/README.md` — "Ephemeral builds" section explaining the model + trade-offs + first-run surprise
 
 ### Changed
+
 - global skill: ban `gh` push-to-remote (`gh pr create/merge`, `gh pr review --approve`, `gh release create`, `gh repo create`) alongside existing `git push` ban
 - `settings-recommended.json` deny rules: same `gh` commands hard-blocked at the harness level, not just by skill text
 
@@ -3774,10 +3820,12 @@ file answers to that name.
 > Full notes: github.com/kronael/tools/blob/master/CHANGELOG.md
 
 ### Added
+
 - `dockbox -g` flag forwards `GH_TOKEN` and/or `GITHUB_TOKEN` from host env
 - `tg-fetch/users.py` — group participants snapshot to JSONL
 
 ### Changed
+
 - dockbox: `nvm install node` (latest stable, was pinned `22`)
 - dockbox pinned-tool bumps: git-delta 0.18.2 → 0.19.2, nvm 0.40.1 → 0.40.4, zsh-in-docker 1.2.0 → 1.2.1, nushell 0.110.0 → 0.112.2
 - dockbox auto-latest tools (pnpm, bun, rustup, go, gopls, uv, claude-code, codex, pi-coding-agent, agent-browser, pyright, typescript, ship, playwright, puppeteer) now rebuild against current upstream
@@ -3792,17 +3840,20 @@ file answers to that name.
 > • oracle + explore skills from origin
 
 ### Added
+
 - oracle skill: codex CLI second-opinion
 - explore skill: read-only codebase exploration mode
 - ops: container hardening (USER non-root, HEALTHCHECK, `--init`/dumb-init)
 
 ### Changed
+
 - `agent-browser` skill renamed to `browse` — CLI is still `agent-browser`, skill name is not
 - All changes from v0.2.1 skill quality pass (see below)
 
 ## [v0.2.1] — 20260513
 
 ### Changed
+
 - Skill quality pass: 21 skills refined against 10 top-tier external repos (anthropics/skills, obra/superpowers, wshobson, voltagent, hesreallyhim, qdhenry, 0xfurai, alirezarezvani, lst97). Every change filtered through 2+ source corroboration + codex (oracle) critique + wisdom-skill terseness pass.
 - meta (wisdom, global, learn, specs, sub): description=triggers; offload heavy content to references/; completion claims need evidence; verify subagent results; transcript reading + N≥2 rule for skill extraction; specs anti-pattern list + self-review checklist; sub never bare prompt.
 - workflow (ship, refine, fin, recall-memories, distill, testing): refine triage substep; recall-memories freshness check; testing verify-failure-for-right-reason; distill trigger-form description; fin grind-harder framing.
