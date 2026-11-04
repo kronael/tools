@@ -1,7 +1,7 @@
 ---
 name: dispatch
 description: Delegate work by task, with an explicit model and effort. NOT for a second-opinion workflow (use oracle) or end-to-end delivery (use ship).
-when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker, documentation worker, docs worker"
+when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker, documentation worker, docs worker, algorithm worker, effort"
 user-invocable: true
 ---
 
@@ -21,13 +21,19 @@ artifacts.
 
 | Task | Requested output and boundary | Claude model / effort | Codex model / effort | Group |
 |---|---|---|---|---|
-| Mechanical | Named-file inventories, exact searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / high | `gpt-6-luna` / high | Lightweight |
-| Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
-| Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Mechanical | Named-file inventories, searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / medium | `gpt-6-luna` / medium | Lightweight |
+| Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / medium | `gpt-6.1-terra` / medium | Implementation |
+| Algorithm | Find or solve an algorithm — a search, an optimization, a numeric or concurrency design — even when the output is code | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / medium | `gpt-6.1-sol` / medium | Judgment |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates; write or complete the spec's module map (`plan.md` § Module map) | Opus / high | `gpt-6.1-sol` / high | Judgment |
-| Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / medium | `gpt-6.1-sol` / medium | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
-| Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / xhigh | `gpt-6.1-sol` / xhigh | Judgment |
+| Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / high | `gpt-6.1-sol` / high | Judgment |
+
+Effort is medium unless the row says high. The dispatching planner MAY raise
+a review to high for a risky change, and MAY keep a repeated run of one task at
+medium; it reports the changed effort with the launch. NEVER use low: a search
+errs toward including more.
 
 ALWAYS keep Luna within the mechanical boundary; it is not the coding
 workhorse. NEVER route documentation to Coding or Terra, a settled doc edit
