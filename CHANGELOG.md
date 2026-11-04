@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- diskclean kind `worktree`: removes a clean linked git worktree whose HEAD is on a remote; ignored files other than caches keep it.
+
 ## [v0.4.70] — 20261104
 
 > kronael v0.4.70 — Haiku sweeps at medium
