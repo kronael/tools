@@ -381,8 +381,7 @@
   `hooks/style_lint.py` now measures the final reply at Stop with the same
   20/5/2 caps and blocks once for a rewrite, without kvs, levels or the
   per-prompt pointer: the measured gap was the block, not the reminder
-  (13 replies in one session, 2 over the ceiling, 5 more over the 12-line
-  action tier). **Options:** (a) adopt the rest of the redesign (`kvs`,
+  (replies over the ceiling kept appearing while the reminder alone was on). **Options:** (a) adopt the rest of the redesign (`kvs`,
   `lib/reminder.py`, the escalation levels); (b) stay on the v0.4.41 hooks
   plus `style_lint.py`. **Default if nothing is decided:** (b). No test —
   design.

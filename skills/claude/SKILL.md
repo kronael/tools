@@ -17,6 +17,8 @@ In Claude Code, ALWAYS prefer a native Agent launch with an available matching
 agent definition. `skills/CLAUDE.md` § Agent definitions owns those bindings.
 ALWAYS inspect the definition's actual model and effort before using it;
 `model:` alone on a launch does not load an agent's effort pin.
+When the selected effort differs from the binding's pin, ALWAYS pass the
+launch's effort control with the selected value.
 
 For the selected standard model, ALWAYS use its lowercase agent type. For
 Opus/xhigh, ALWAYS use the `spec` agent binding when the native tool cannot
