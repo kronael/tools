@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [v0.4.69] — 20261104
+
+> kronael v0.4.69 — Sweeps run light
+>
+> A sweep that only lists call sites or collects text for another agent runs on Haiku or Sonnet at low effort.
+>
+> • Dispatch — a new Sweep task, the only one at low; its list is input the next agent checks.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.68] — 20261104
 
 > kronael v0.4.68 — Effort that fits the task
