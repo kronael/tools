@@ -10,6 +10,8 @@ socksium -p 9050 example.com   # other port, open a url
 - The script deletes the profile when Chromium exits.
 - Chromium sends DNS lookups through the proxy, not to the local resolver.
 - WebRTC sends no UDP outside the proxy.
+- Localhost addresses also go through the proxy, so pages cannot reach local
+  services.
 - With no proxy on the port, the script stops and prints the ssh command.
 
 Arguments after `-p port` go to Chromium: a url or a Chromium flag.

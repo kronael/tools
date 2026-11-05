@@ -30,6 +30,6 @@ dir=$(mktemp -d -t socksium.XXXXXX)
 trap 'rm -rf -- "$dir"' EXIT
 
 chromium --user-data-dir="$dir" --no-first-run --no-default-browser-check \
-    --proxy-server="socks5://127.0.0.1:$port" \
+    --proxy-server="socks5://127.0.0.1:$port" --proxy-bypass-list="<-loopback>" \
     --host-resolver-rules="MAP * ~NOTFOUND , EXCLUDE 127.0.0.1" \
     --force-webrtc-ip-handling-policy=disable_non_proxied_udp "$@"
