@@ -15,8 +15,9 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 - [speclint](speclint/) — check spec numbering, status, index agreement and code pointers; run through uvx
+- [socksium](socksium/) — chromium on a throwaway profile through a SOCKS5 proxy (default port 1080)
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`, `socksium`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 

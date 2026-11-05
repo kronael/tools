@@ -1,0 +1,31 @@
+#!/bin/bash
+# socksium - chromium on a throwaway profile through a SOCKS5 proxy.
+set -euo pipefail
+
+case ${1:-} in
+-h | --help)
+    cat <<'USAGE'
+usage: socksium [port] [url...]
+
+Starts chromium with a fresh profile, deleted on exit, and sends all
+traffic and DNS through socks5://127.0.0.1:<port> (default 1080).
+
+  ssh -D 1080 -N somehost &    open the tunnel
+  socksium                     browse through it
+  socksium 9050 example.com    other port, open a url
+
+CHROMIUM overrides the browser binary.
+USAGE
+    exit
+    ;;
+esac
+
+port=1080
+[[ ${1:-} =~ ^[0-9]+$ ]] && port=$1 && shift
+dir=$(mktemp -d -t socksium.XXXXXX)
+trap 'rm -rf -- "$dir"' EXIT
+
+"${CHROMIUM:-chromium}" --user-data-dir="$dir" --no-first-run \
+    --no-default-browser-check \
+    --proxy-server="socks5://127.0.0.1:$port" \
+    --host-resolver-rules="MAP * ~NOTFOUND , EXCLUDE 127.0.0.1" "$@"
