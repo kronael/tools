@@ -1,31 +1,35 @@
 #!/bin/bash
-# socksium - chromium on a throwaway profile through a SOCKS5 proxy.
-set -euo pipefail
+set -Eeuo pipefail
 
+usage="usage: socksium [-p port] [url]  (port default 1080)"
+port=1080
 case ${1:-} in
 -h | --help)
-    cat <<'USAGE'
-usage: socksium [port] [url...]
-
-Starts chromium with a fresh profile, deleted on exit, and sends all
-traffic and DNS through socks5://127.0.0.1:<port> (default 1080).
-
-  ssh -D 1080 -N somehost &    open the tunnel
-  socksium                     browse through it
-  socksium 9050 example.com    other port, open a url
-
-CHROMIUM overrides the browser binary.
-USAGE
+    echo "$usage"
     exit
+    ;;
+-p | --port)
+    if [[ ! ${2:-} =~ ^[0-9]+$ ]]
+    then
+        echo "Bad port '${2:-}'. $usage" >&2
+        exit 1
+    fi
+    port=$2
+    shift 2
     ;;
 esac
 
-port=1080
-[[ ${1:-} =~ ^[0-9]+$ ]] && port=$1 && shift
+if ! : 2>/dev/null </dev/tcp/127.0.0.1/"$port"
+then
+    echo "No SOCKS proxy on 127.0.0.1:$port." \
+        "Start one: ssh -D $port -N -f user@host" >&2
+    exit 1
+fi
+
 dir=$(mktemp -d -t socksium.XXXXXX)
 trap 'rm -rf -- "$dir"' EXIT
 
-"${CHROMIUM:-chromium}" --user-data-dir="$dir" --no-first-run \
-    --no-default-browser-check \
+chromium --user-data-dir="$dir" --no-first-run --no-default-browser-check \
     --proxy-server="socks5://127.0.0.1:$port" \
-    --host-resolver-rules="MAP * ~NOTFOUND , EXCLUDE 127.0.0.1" "$@"
+    --host-resolver-rules="MAP * ~NOTFOUND , EXCLUDE 127.0.0.1" \
+    --force-webrtc-ip-handling-policy=disable_non_proxied_udp "$@"
