@@ -623,7 +623,11 @@ def describe(problems: list[Problem]) -> str:
 
 
 def quoted_spans(code: str) -> list[tuple[int, int]]:
-    return [(m.start(), m.end()) for m in re.finditer(r"\"(?:\\[\s\S]|[^\"\\])*\"|'[^']*'", code)]
+    return [
+        m.span('quoted')
+        for m in re.finditer(r"\\[\s\S]|(?P<quoted>\"(?:\\[\s\S]|[^\"\\])*\"|'[^']*')", code)
+        if m.group('quoted') is not None
+    ]
 
 
 def find_posts(code: str) -> list[tuple[int, Kind, bool]]:

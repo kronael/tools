@@ -681,3 +681,9 @@ def test_quoted_brace_text_is_not_a_github_command():
     command = 'printf "%s\\n" "{ gh pr review 1 --approve --body bad; }"'
     assert command_action(command) is Action.NONE
     assert command_reason(command) is None
+
+
+def test_escaped_quote_does_not_hide_github_command():
+    command = 'printf \\"; gh pr review 1 --approve --body "bad"'
+    assert command_action(command) is Action.APPROVE
+    assert 'text refused' in command_reason(command)
