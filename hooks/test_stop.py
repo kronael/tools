@@ -12,6 +12,7 @@ import pytest
 from stop import NUDGE_INTERVAL
 from stop import emit
 from stop import project_slug
+from stop import rollups_due
 
 HOOK = Path(__file__).with_name('stop.py')
 ENV = {
@@ -101,7 +102,9 @@ def run_hook(repo, env=None, **payload):
     )
     assert r.returncode == 0, r.stderr
     assert r.stderr == ''
-    return json.loads(r.stdout) if r.stdout else None
+    if not r.stdout:
+        return None
+    return json.loads(r.stdout)
 
 
 def test_project_slug_replaces_every_non_alphanumeric() -> None:
@@ -210,7 +213,10 @@ def test_week_rollup_nudged_until_the_week_file_exists(tmp_path, home) -> None:
 
     out = run_hook(repo)
 
-    assert out['reason'] == f'Diary week {week} has no rollup. Run /compact-memories diary week.'
+    assert (
+        out['reason']
+        == f'Diary week {week} has no rollup. Run /compact-memories diary week {week}.'
+    )
     (diary / f'{week}.md').write_text('---\nsummary: week\n---\n')
     os.remove(repo / '.git' / 'claude-diary-nudge')
     out = run_hook(repo)
@@ -231,26 +237,55 @@ def test_month_rollup_nudged_from_a_week_file_of_last_month(tmp_path, home) -> N
 
     out = run_hook(repo)
 
+    final_monday = last_month - timedelta(days=last_month.weekday())
+    if datetime.now(tz=UTC).date() < final_monday + timedelta(days=7):
+        assert out is None
+        return
+
     assert (
         out['reason']
-        == f'Diary month {last_month:%Y-%m} has no rollup. Run /compact-memories diary month.'
+        == f'Diary month {last_month:%Y-%m} has no rollup. Run /compact-memories diary month {last_month:%Y-%m}.'
     )
     (diary / f'{last_month:%Y-%m}.md').write_text('---\nsummary: month\n---\n')
     os.remove(repo / '.git' / 'claude-diary-nudge')
     assert run_hook(repo) is None
 
 
-def test_day_files_outside_last_week_nudge_nothing(tmp_path, home) -> None:
+def test_day_files_outside_automatic_periods_nudge_nothing(tmp_path, home) -> None:
     repo = make_repo(tmp_path, home)
     diary = diary_path(home, repo).parent
     days, _ = last_week_days()
     before = (
-        datetime.strptime(days[0], '%Y%m%d').replace(tzinfo=UTC) - timedelta(days=1)
+        datetime.strptime(days[0], '%Y%m%d').replace(tzinfo=UTC) - timedelta(days=70)
     ).strftime('%Y%m%d')
     (diary / f'{before}.md').write_text('---\nsummary: older\n---\n')
     (diary / '20260101-report.md').write_text('companion\n')
 
     assert run_hook(repo) is None
+
+
+@pytest.mark.parametrize(
+    ('date', 'files', 'expected'),
+    [
+        ('2026-11-01', ['2026-W40', '2026-W41', '2026-W42', '2026-W43'], []),
+        (
+            '2026-11-02',
+            ['2026-W40', '2026-W41', '2026-W42', '2026-W43', '20261030'],
+            [('week', '2026-W44')],
+        ),
+        ('2026-11-02', ['2026-W44', '20261030'], [('month', '2026-10')]),
+        ('2026-11-02', ['2026-W44', '20261008'], [('week', '2026-W41')]),
+        ('2026-11-02', ['20261008', '20261030'], [('week', '2026-W41'), ('week', '2026-W44')]),
+        ('2026-11-02', ['20261101'], [('week', '2026-W44')]),
+        ('2021-01-04', ['20210101'], [('week', '2020-W53')]),
+        ('2021-01-04', ['20210101', '2020-W53'], [('month', '2020-12')]),
+        ('2026-11-02', ['20261030-report', '2026-W44-notes'], []),
+    ],
+)
+def test_month_requires_complete_monday_owned_weeks(tmp_path, date, files, expected):
+    for name in files:
+        (tmp_path / f'{name}.md').touch()
+    assert rollups_due(tmp_path, datetime.fromisoformat(date).replace(tzinfo=UTC)) == expected
 
 
 def test_missing_diary_warns_without_writing_a_file(tmp_path, home) -> None:

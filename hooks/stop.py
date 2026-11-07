@@ -37,7 +37,9 @@ def git_dir(cwd):
 
 def git_path(cwd, name):
     gd = git_dir(cwd)
-    return None if gd is None else os.path.join(gd, name)
+    if gd is None:
+        return None
+    return os.path.join(gd, name)
 
 
 def main_tree(cwd):
@@ -74,15 +76,27 @@ def rollups_due(diary, now):
     days = {(monday + timedelta(days=i)).strftime('%Y%m%d') + '.md' for i in range(7)}
     if f'{week}.md' not in names and days & names:
         due.append(('week', week))
-    month = (now.date().replace(day=1) - timedelta(days=1)).strftime('%Y-%m')
-    weeks = [n for n in names if re.fullmatch(r'\d{4}-W\d{2}\.md', n)]
-    in_month = [
-        n
-        for n in weeks
-        if datetime.fromisocalendar(int(n[:4]), int(n[6:8]), 1).strftime('%Y-%m') == month
-    ]
-    if f'{month}.md' not in names and in_month:
-        due.append(('month', month))
+    last = now.date().replace(day=1) - timedelta(days=1)
+    month = last.strftime('%Y-%m')
+    if f'{month}.md' not in names:
+        first = last.replace(day=1)
+        current = first + timedelta(days=(-first.weekday()) % 7)
+        missing = False
+        sources = False
+        while current <= last:
+            period = current.strftime('%G-W%V')
+            week_file = f'{period}.md'
+            days = {(current + timedelta(days=i)).strftime('%Y%m%d') + '.md' for i in range(7)}
+            sources |= week_file in names
+            if days & names and week_file not in names:
+                missing = True
+                item = ('week', period)
+                if current + timedelta(days=7) <= now.date() and item not in due:
+                    due.append(item)
+            current += timedelta(days=7)
+        due.sort(key=lambda item: item[1])
+        if current <= now.date() and sources and not missing:
+            due.append(('month', month))
     return due
 
 
@@ -175,7 +189,7 @@ def nudges(cwd, now):
             )
         for level, period in rollups_due(os.path.dirname(path), now):
             lines.append(
-                f'Diary {level} {period} has no rollup. Run /compact-memories diary {level}.'
+                f'Diary {level} {period} has no rollup. Run /compact-memories diary {level} {period}.'
             )
         if lines and nudge_due(stamp, now):
             parts.append('\n'.join(lines))
