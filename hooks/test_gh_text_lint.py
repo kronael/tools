@@ -675,3 +675,9 @@ def test_braces_and_heredoc_expansions(command, expected):
 )
 def test_braces_and_heredoc_expansions_run_content_gate(command):
     assert 'text refused' in command_reason(command)
+
+
+def test_quoted_brace_text_is_not_a_github_command():
+    command = 'printf "%s\\n" "{ gh pr review 1 --approve --body bad; }"'
+    assert command_action(command) is Action.NONE
+    assert command_reason(command) is None

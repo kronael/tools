@@ -622,12 +622,18 @@ def describe(problems: list[Problem]) -> str:
     return shown + (f' (+{more} more)' if more > 0 else '')
 
 
+def quoted_spans(code: str) -> list[tuple[int, int]]:
+    return [(m.start(), m.end()) for m in re.finditer(r"\"(?:\\[\s\S]|[^\"\\])*\"|'[^']*'", code)]
+
+
 def find_posts(code: str) -> list[tuple[int, Kind, bool]]:
     """(position, kind, body required) per gh invocation that posts, in command order."""
     hits = {}
+    spans = quoted_spans(code)
     for pattern, kind, required in POSTS:
         for m in pattern.finditer(code):
-            hits.setdefault(m.start('gh'), (kind, required))
+            if not any(start < m.start('gh') < end for start, end in spans):
+                hits.setdefault(m.start('gh'), (kind, required))
     return [(at, *hits[at]) for at in sorted(hits)]
 
 
@@ -777,8 +783,11 @@ def command_reason(
             )
             if reason:
                 return reason
+        spans = quoted_spans(code)
         for match in re.finditer(GH + r'api\b)', code):
             at = match.start('gh')
+            if any(start < at < end for start, end in spans):
+                continue
             segment = code[at:]
             if not re.search(r'\bgraphql\b', segment):
                 continue
@@ -827,13 +836,11 @@ def command_action(command: str, cwd: str | None = None) -> Action:
         lambda m: '' if m.group().startswith('#') else m.group(),
         code,
     )
-    quoted_spans = [
-        (m.start(), m.end()) for m in re.finditer(r"\"(?:\\[\s\S]|[^\"\\])*\"|'[^']*'", code)
-    ]
+    spans = quoted_spans(code)
     matches = [
         m
         for m in re.finditer(GH + r')', code)
-        if not any(start < m.start('gh') < end for start, end in quoted_spans)
+        if not any(start < m.start('gh') < end for start, end in spans)
     ]
     for match in matches:
         action = github_action(
