@@ -5,6 +5,11 @@ here="$(cd "$(dirname "$0")" && pwd)"
 fixture="$(mktemp -d)"
 trap 'rm -rf "$fixture"' EXIT
 
+mkdir -p "$fixture/unit-bin"
+printf '#!/bin/sh\n[ "$1" = --help ] || exit 1\necho --readonly\n' > "$fixture/unit-bin/virtiofsd"
+chmod +x "$fixture/unit-bin/virtiofsd"
+export PATH="$fixture/unit-bin:$PATH"
+
 export HOME="$fixture/home"
 export QEMUBOX_HOME="$fixture/state"
 mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$QEMUBOX_HOME"
