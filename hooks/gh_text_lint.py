@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import sys
 from dataclasses import dataclass
 from enum import Enum
@@ -28,6 +29,13 @@ class Kind(str, Enum):
     PR = 'pr'
     ISSUE = 'issue'
     COMMENT = 'comment'
+
+
+class Action(str, Enum):
+    NONE = 'none'
+    SUBMIT = 'submit'
+    APPROVE = 'approve'
+    MERGE = 'merge'
 
 
 @dataclass(frozen=True)
@@ -66,29 +74,32 @@ PREFIX = (
     r'(?:(?:env|command|exec|timeout|sudo|nice|nohup)[ \t]+(?:\S+[ \t]+)*?)?'
     r'(?:\S*/)?'
 )
-GH = r'(?:^|[;&|(\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*' + PREFIX + r'(?P<gh>gh\s+'
-API = GH + r'api\b[^\n|;&]*'
+GH_OPTIONS = r'(?:[ \t]+(?:--repo[ =]|-R[ \t]*)\S+)*\s+'
+REPO_OPTIONS = r'(?:[ \t]+(?:--repo[ =]|-R[ \t]*)\S+)*\s+'
+GH = (
+    r'(?:^|[;&|(\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*'
+    + PREFIX
+    + r'(?P<gh>gh'
+    + GH_OPTIONS
+)
+API = GH + r"""api\b(?:[^'"\n|;&]|'[^']*'|"(?:[^"\\]|\\.)*")*(?:['"][^\s'"]*)?"""
+GRAPHQL_ENDPOINT = r"""(?:https?://[^\s/'"]+)?/?graphql/?(?:\?[^\s'"]*)?"""
 POSTS = (
     (re.compile(GH + r'pr\s+create\b)'), Kind.PR, True),
     (re.compile(GH + r'pr\s+edit\b)'), Kind.PR, False),
     (re.compile(GH + r'issue\s+create\b)'), Kind.ISSUE, True),
     (re.compile(GH + r'issue\s+edit\b)'), Kind.ISSUE, False),
     (re.compile(GH + r'(?:pr|issue)\s+comment\b)'), Kind.COMMENT, True),
-    (re.compile(GH + r'pr\s+review\b)'), Kind.COMMENT, False),
+    (re.compile(GH + r'pr' + REPO_OPTIONS + r'review\b)'), Kind.COMMENT, False),
     (re.compile(API + r'(?:/reviews|/comments|/replies)\b)'), Kind.COMMENT, False),
-    (re.compile(API + r'\bsubmitPullRequestReview\b)'), Kind.COMMENT, False),
+    (re.compile(API + r'\b(?:add|submit)PullRequestReview\b)'), Kind.COMMENT, False),
     (re.compile(API + r'\bpulls/\d+(?![\w/]))'), Kind.PR, False),
     (re.compile(API + r'\bissues/\d+(?![\w/]))'), Kind.ISSUE, False),
 )
 SUBMIT_ASK = 'SUBMIT REVIEW'
-ARGS = r'[^\n|;&]*'
-SUBMITS = (
-    re.compile(r'^gh\s+pr\s+review\b'),
-    re.compile(r'^gh\s+api\b' + ARGS + r'/reviews/[^/\s]+/events\b'),
-    re.compile(r'^gh\s+api\b' + ARGS + r'\bsubmitPullRequestReview\b'),
-)
-REVIEWS = re.compile(r'^gh\s+api\b' + ARGS + r'/reviews(?![\w/])')
-EVENT_FLAG = re.compile(r'(?:-f|-F|--field|--raw-field)[ =]["\']?event=')
+CLI_REVIEW = re.compile(r'^gh' + GH_OPTIONS + r'pr' + REPO_OPTIONS + r'review\b')
+API_REVIEW = re.compile(r'/pulls/[^/\s]+/reviews(?:/[^/\s]+/events)?/?(?:\?\S*)?$')
+GRAPHQL_REVIEW = re.compile(r'\b(?:submit|add)PullRequestReview\s*\(')
 USER = b'"user"'
 TOOL_RESULT = b'"content":[{"type":"tool_result"'
 SUBMIT_REFUSED = (
@@ -104,7 +115,7 @@ CD = re.compile(r'(?:^|[;&|(\n]|\b(?:then|do)\s)\s*cd\s+([^\s;&|)]+)')
 QUOTED = r'(?:"((?:[^"\\]|\\.)*)"|\'([^\']*)\'|([^\s;&|)]+))'
 INPUT = re.compile(r'--input[ =]' + QUOTED)
 BODY_FILE = re.compile(
-    r'(?:--body-file[ =]|(?:-F|--field)\s+body=@|(?<!\S)-F\s+(?![\w-]+=))' + QUOTED
+    r'(?:--body-file[ =]|(?:-F|--field)\s+body=@|(?<!\S)-F\s+(?!["\']?[\w\[\]-]+=))' + QUOTED
 )
 BODY_TEXT = re.compile(
     r'(?:--body[ =]|(?<!\S)-b\s+|(?:-f|-F|--field|--raw-field)\s+body=)' + QUOTED
@@ -225,7 +236,9 @@ def json_bodies(text: str) -> list[str]:
 
 def heredoc_in(segment: str, docs: list[str]) -> str | None:
     m = MARKED.search(segment)
-    return docs[int(m.group(1))] if m else None
+    if not m:
+        return None
+    return docs[int(m.group(1))]
 
 
 def input_json(segment: str, docs: list[str], cwd: str) -> str | None:
@@ -242,12 +255,66 @@ def input_json(segment: str, docs: list[str], cwd: str) -> str | None:
     return doc
 
 
+def graphql_review_bodies(segment: str, data: dict | None, cwd: str) -> list[str]:
+    query = data.get('query', '') if data else ''
+    bodies = []
+    tokens = shlex.split(segment)
+    for index, token in enumerate(tokens):
+        if token in {'-f', '-F', '--field', '--raw-field'} and index + 1 < len(tokens):
+            field = tokens[index + 1]
+        elif token.startswith(('-fquery=', '-Fquery=')):
+            field = token[2:]
+        elif token.startswith(('--field=query=', '--raw-field=query=')):
+            field = token.partition('=')[2]
+        else:
+            continue
+        if field.startswith('query='):
+            query = field.partition('=')[2]
+            typed = token in {'-F', '--field'} or token.startswith(('-F', '--field='))
+            if typed and query.startswith('@'):
+                query = read_file(query[1:], cwd)
+        elif data is None and re.match(r'(?:\w+\[)+body\]=', field):
+            value = field.partition('=')[2]
+            typed = token in {'-F', '--field'} or token.startswith(('-F', '--field='))
+            bodies.append(read_file(value[1:], cwd) if typed and value.startswith('@') else value)
+    if not isinstance(query, str) or not GRAPHQL_REVIEW.search(query):
+        return []
+    delimiters = re.sub(
+        r'"""[\s\S]*?"""|"(?:[^"\\]|\\.)*"|#[^\n]*',
+        lambda m: ' ' * len(m.group()),
+        query,
+    )
+    if '"' in delimiters:
+        raise OSError('cannot inspect GraphQL strings')
+    for review in GRAPHQL_REVIEW.finditer(delimiters):
+        depth = 1
+        end = review.end()
+        while end < len(delimiters) and depth:
+            depth += (delimiters[end] == '(') - (delimiters[end] == ')')
+            end += 1
+        if depth:
+            raise OSError('cannot inspect GraphQL review arguments')
+        args = query[review.end() : end - 1]
+        masked_args = delimiters[review.end() : end - 1]
+        for field in re.finditer(r'\bbody\s*:', masked_args):
+            if not args[field.end() :].lstrip().startswith('"'):
+                raise OSError('cannot inspect GraphQL review body')
+        bodies.extend(
+            json.loads(match.group(1))
+            for match in re.finditer(r'\bbody\s*:\s*("(?:[^"\\]|\\.)*")', args)
+        )
+    return bodies
+
+
 def read_bodies(segment: str, docs: list[str], cwd: str) -> list[str]:
     """Every body text the segment posts; OSError names a body it cannot read."""
     doc = heredoc_in(segment, docs)
     given = input_json(segment, docs, cwd)
     if given is not None:
-        return json_bodies(given)
+        data = json.loads(given)
+        return json_bodies(given) + graphql_review_bodies(
+            segment, data if isinstance(data, dict) else None, cwd
+        )
     named = BODY_FILE.search(segment)
     if named:
         path = quoted(named)
@@ -258,7 +325,7 @@ def read_bodies(segment: str, docs: list[str], cwd: str) -> list[str]:
         return [doc]
     inline = BODY_TEXT.search(segment)
     if not inline:
-        return []
+        return graphql_review_bodies(segment, None, cwd) if 'graphql' in segment else []
     text = quoted(inline)
     if CAT_HEREDOC.match(text):
         if doc is None:
@@ -280,26 +347,202 @@ def effective_cwd(code: str, cwd: str) -> str:
     return cwd
 
 
-def has_event(text: str) -> bool:
+def github_action(segment: str, docs: list[str], cwd: str) -> Action:
+    values = []
+    parts = []
+    offset = 0
+    for match in re.finditer(r"""'[^']*'|"(?:\\[\s\S]|[^"\\])*"|\\[\s\S]""", segment):
+        parts.append(segment[offset : match.start()])
+        parts.append(f'\x00q{len(values)}\x00')
+        values.append(shlex.split(match.group())[0])
+        offset = match.end()
+    parts.append(segment[offset:])
+    lexer = shlex.shlex(''.join(parts), posix=True, punctuation_chars=';&|\n')
+    lexer.whitespace = ' \t\r'
+    lexer.whitespace_split = True
+    lexer.commenters = ''
+    tokens = []
+    for token in lexer:
+        if token and not token.strip(';&|\n'):
+            break
+        word = token
+        for index, value in enumerate(values):
+            word = word.replace(f'\x00q{index}\x00', value)
+        tokens.append(word)
+    if re.match(r'^gh' + GH_OPTIONS + r'pr' + REPO_OPTIONS + r'merge\b', segment):
+        words = iter(tokens)
+        for word in words:
+            if word in {'--subject', '-t', '--body', '-b', '--author-email', '--repo', '-R'}:
+                next(words, None)
+            elif word in {'--help', '-h', '--disable-auto'}:
+                return Action.NONE
+        return Action.MERGE
+    if CLI_REVIEW.match(segment):
+        findings = False
+        approval = False
+        help_requested = False
+        words = iter(tokens)
+        for word in words:
+            if word in {'--body', '-b', '--body-file', '-F', '--repo', '-R'}:
+                next(words, None)
+                continue
+            if word.startswith(('--body=', '--body-file=', '--repo=', '-R')):
+                continue
+            help_requested |= word in {'--help', '-h'}
+            approval |= word == '--approve' or word.startswith('--approve=')
+            if word.startswith('-') and not word.startswith('--'):
+                flags = word[1:].split('b', 1)[0]
+                approval |= 'a' in flags
+                findings |= bool(set(flags) & {'c', 'r'})
+            findings |= word in {
+                '--comment',
+                '--request-changes',
+                '--comment=true',
+                '--request-changes=true',
+            }
+        if help_requested:
+            return Action.NONE
+        return Action.SUBMIT if findings and not approval else Action.APPROVE
+    if not re.match(r'^gh' + GH_OPTIONS + r'api\b', segment):
+        return Action.NONE
+    graphql = any(re.fullmatch(GRAPHQL_ENDPOINT, t) for t in tokens)
+    endpoint = next((t for t in tokens if API_REVIEW.search(t)), '')
+    merge = next(
+        (t for t in tokens if re.search(r'/pulls/[^/\s]+/merge(?:-async)?/?(?:\?\S*)?$', t)), ''
+    )
+    if not graphql and not endpoint and not merge:
+        return Action.NONE
+    fields = {}
+    method = ''
+    words = iter(tokens)
+    for token in words:
+        if token in {'--help', '-h'}:
+            return Action.NONE
+        if token in {'--method', '-X'}:
+            method = next(words, '')
+        elif token in {
+            '--cache',
+            '--header',
+            '-H',
+            '--hostname',
+            '--input',
+            '--jq',
+            '-q',
+            '--preview',
+            '-p',
+            '--template',
+            '-t',
+        }:
+            next(words, None)
+        elif token.startswith('--method='):
+            method = token.partition('=')[2]
+        elif token.startswith('-X'):
+            method = token[2:]
+        elif token in {'-f', '-F', '--field', '--raw-field'}:
+            raw = token in {'-f', '--raw-field'}
+            field = next(words, '')
+            key, _, value = field.partition('=')
+            fields[key] = read_file(value[1:], cwd) if not raw and value.startswith('@') else value
+        elif token.startswith(('--field=', '--raw-field=', '-f', '-F')):
+            raw = token.startswith(('--raw-field=', '-f'))
+            field = token.partition('=')[2] if token.startswith('--') else token[2:]
+            key, _, value = field.partition('=')
+            fields[key] = read_file(value[1:], cwd) if not raw and value.startswith('@') else value
+    if method.upper() in {'GET', 'HEAD', 'OPTIONS', 'DELETE'}:
+        return Action.NONE
+    if merge:
+        return Action.MERGE if method.upper() == 'PUT' else Action.NONE
+    if (
+        not method
+        and not fields
+        and '--input' not in tokens
+        and not any(t.startswith('--input=') for t in tokens)
+    ):
+        return Action.NONE
+    text = input_json(segment, docs, cwd)
     try:
-        data = json.loads(text)
+        data = json.loads(text) if text is not None else {}
     except json.JSONDecodeError as err:
         raise OSError(f'cannot parse the JSON body: {err}') from err
-    return isinstance(data, dict) and 'event' in data
+    if not isinstance(data, dict):
+        raise OSError('cannot inspect the review JSON: pass an object')
+    if text is not None:
+        fields = {}
+    if not graphql:
+        event = fields.get('event', data.get('event'))
+        if event == 'APPROVE':
+            return Action.APPROVE
+        if event is not None and event not in ('COMMENT', 'REQUEST_CHANGES', 'DISMISS'):
+            raise OSError('cannot inspect the review event: pass a literal event')
+        return Action.SUBMIT if event is not None or '/events' in endpoint else Action.NONE
 
-
-def is_submit(segment: str, docs: list[str], cwd: str) -> bool:
-    """Whether the gh invocation submits a review: `gh pr review`, the
-    `/reviews/<id>/events` call, a `/reviews` POST carrying `event`, or the
-    submitPullRequestReview mutation. A pending post carries no `event`."""
-    if any(p.match(segment) for p in SUBMITS):
-        return True
-    if not REVIEWS.match(segment):
-        return False
-    if EVENT_FLAG.search(segment):
-        return True
-    text = input_json(segment, docs, cwd)
-    return text is not None and has_event(text)
+    query = fields.get('query', data.get('query', ''))
+    if not isinstance(query, str):
+        raise OSError('cannot inspect the GraphQL query: pass literal query text')
+    query = re.sub(r'"""[\s\S]*?"""|"(?:[^"\\]|\\.)*"|#[^\n]*', '', query)
+    if not re.search(r'^\s*(?:\{|(?:query|mutation|subscription)\b)', query):
+        raise OSError('cannot inspect the GraphQL query: pass literal query text')
+    if not re.search(r'\bmutation\b', query):
+        return Action.NONE
+    merge_mutation = bool(
+        re.search(
+            r'\b(?:mergePullRequest|enablePullRequestAutoMerge|enqueuePullRequest)\s*\(', query
+        )
+    )
+    reviews = list(GRAPHQL_REVIEW.finditer(query))
+    if not reviews:
+        return Action.MERGE if merge_mutation else Action.NONE
+    variables = data.get('variables', {})
+    if not isinstance(variables, dict):
+        raise OSError('cannot inspect GraphQL variables')
+    result = Action.NONE
+    for review in reviews:
+        start = review.end()
+        depth = 1
+        end = start
+        while end < len(query) and depth:
+            depth += (query[end] == '(') - (query[end] == ')')
+            end += 1
+        if depth:
+            raise OSError('cannot inspect GraphQL mutation arguments')
+        args = query[start : end - 1]
+        event_match = re.search(r'\bevent\s*:\s*(\$?\w+)', args)
+        input_match = re.search(r'\binput\s*:\s*\$(\w+)', args)
+        event = None
+        if event_match:
+            event = event_match.group(1)
+            if event.startswith('$'):
+                name = event[1:]
+                default = re.search(
+                    r'\$' + re.escape(name) + r'\s*:\s*[^=,)]+\s*=\s*(\w+)', query[: review.start()]
+                )
+                event = fields.get(name, variables.get(name, default.group(1) if default else None))
+        elif input_match:
+            name = input_match.group(1)
+            value = variables.get(name, fields.get(name))
+            if isinstance(value, dict):
+                event = value.get('event')
+            else:
+                event = fields.get(f'{name}[event]', fields.get(f'variables[{name}][event]'))
+                if event is None:
+                    default = re.search(
+                        r'\$' + re.escape(name) + r'\s*:\s*[^=,)]+\s*=\s*\{([^}]*)\}',
+                        query[: review.start()],
+                    )
+                    if default:
+                        default_event = re.search(r'\bevent\s*:\s*(\w+)', default.group(1))
+                        event = default_event.group(1) if default_event else None
+                    else:
+                        raise OSError('cannot inspect GraphQL review input')
+        elif not re.search(r'\binput\s*:\s*\{', args):
+            raise OSError('cannot inspect GraphQL review input')
+        if event == 'APPROVE':
+            result = Action.APPROVE
+        elif event is not None and event not in ('COMMENT', 'REQUEST_CHANGES', 'DISMISS'):
+            raise OSError('cannot inspect GraphQL review event')
+        elif result is Action.NONE and (event is not None or review.group().startswith('submit')):
+            result = Action.SUBMIT
+    return Action.MERGE if merge_mutation else result
 
 
 def iter_lines_reversed(path: str, chunk: int = 1 << 16):
@@ -387,13 +630,14 @@ def segment_reason(
     transcript_path: str | None = None,
 ) -> str | None:
     try:
-        if is_submit(segment, docs, cwd) and SUBMIT_ASK not in latest_prompt(transcript_path):
-            return SUBMIT_REFUSED
+        action = github_action(segment, docs, cwd)
         bodies = read_bodies(segment, docs, cwd)
     except OSError as err:
         return str(err)
     if not bodies:
         if not required:
+            if action is Action.SUBMIT and SUBMIT_ASK not in latest_prompt(transcript_path):
+                return SUBMIT_REFUSED
             return None
         return (
             f'{kind.value} body not found in the command: write it with the {SKILL[kind]} skill,'
@@ -407,7 +651,71 @@ def segment_reason(
                 f'GitHub {kind.value} text refused: {describe(problems)}. Fix it per the'
                 f' {SKILL[kind]} skill: python3 ~/.claude/hooks/gh_text_lint.py {kind.value} <file>'
             )
+    if action is Action.SUBMIT and SUBMIT_ASK not in latest_prompt(transcript_path):
+        return SUBMIT_REFUSED
     return None
+
+
+def shell_substitutions(code: str) -> tuple[str, list[tuple[int, str]]]:
+    substitutions = []
+    masked = list(code)
+    index = 0
+    quote = ''
+    while index < len(code):
+        char = code[index]
+        if char == "'" and quote != '"':
+            quote = '' if quote == "'" else "'"
+        elif char == '"' and quote != "'":
+            quote = '' if quote == '"' else '"'
+        elif char == '\\' and quote != "'":
+            index += 2
+            continue
+        elif char == '#' and not quote and (index == 0 or code[index - 1] in ' \t\n;&|('):
+            end = code.find('\n', index)
+            index = len(code) if end < 0 else end
+            continue
+        elif quote != "'" and (code.startswith('$(', index) or char == '`'):
+            start = index
+            backtick = char == '`'
+            index += 1 if backtick else 2
+            body_start = index
+            depth = 1
+            inner_quote = ''
+            while index < len(code):
+                inner = code[index]
+                if inner == '\\' and inner_quote != "'":
+                    index += 2
+                    continue
+                if (
+                    inner == '#'
+                    and not inner_quote
+                    and (index == body_start or code[index - 1] in ' \t\n;&|(')
+                ):
+                    newline = code.find('\n', index)
+                    index = len(code) if newline < 0 else newline
+                    continue
+                if backtick:
+                    if inner == '`':
+                        break
+                elif inner == "'" and inner_quote != '"':
+                    inner_quote = '' if inner_quote == "'" else "'"
+                elif inner == '"' and inner_quote != "'":
+                    inner_quote = '' if inner_quote == '"' else '"'
+                elif not inner_quote and inner == '(':
+                    depth += 1
+                elif not inner_quote and inner == ')':
+                    depth -= 1
+                    if not depth:
+                        break
+                index += 1
+            if index >= len(code):
+                raise OSError('cannot inspect an incomplete command substitution')
+            substitutions.append((start, code[body_start:index]))
+            for offset in range(start, index + 1):
+                if masked[offset] != '\n':
+                    masked[offset] = ' '
+        index += 1
+    return ''.join(masked), substitutions
 
 
 def command_reason(
@@ -419,7 +727,18 @@ def command_reason(
     try:
         code, docs = mark_heredocs(command)
         code = CONTINUATION.sub('', code)
+        masked, substitutions = shell_substitutions(code)
+        for at, nested in substitutions:
+            expanded = MARKED.sub(lambda m: docs[int(m.group(1))], nested)
+            reason = command_reason(
+                expanded, effective_cwd(code[:at], cwd or os.getcwd()), transcript_path
+            )
+            if reason:
+                return reason
         posts = find_posts(code)
+        if substitutions and not any(at < substitutions[0][0] for at, _, _ in posts):
+            code = masked
+            posts = find_posts(code)
         ends = [at for at, _, _ in posts[1:]] + [len(code)]
         for (at, kind, required), end in zip(posts, ends):
             reason = segment_reason(
@@ -432,9 +751,75 @@ def command_reason(
             )
             if reason:
                 return reason
+        for match in re.finditer(GH + r'api\b)', code):
+            at = match.start('gh')
+            segment = code[at:]
+            if not re.search(r'\bgraphql\b', segment):
+                continue
+            workdir = effective_cwd(code[:at], cwd or os.getcwd())
+            text = input_json(segment, docs, workdir)
+            data = json.loads(text) if text is not None else {}
+            query = data.get('query', segment) if isinstance(data, dict) else segment
+            review_bodies = graphql_review_bodies(
+                segment, data if isinstance(data, dict) else None, workdir
+            )
+            action = github_action(segment, docs, workdir)
+            if (
+                review_bodies
+                or action in {Action.APPROVE, Action.SUBMIT}
+                or (
+                    isinstance(query, str)
+                    and re.search(r'\bmutation\b', query)
+                    and GRAPHQL_REVIEW.search(query)
+                )
+            ):
+                reason = segment_reason(
+                    segment, docs, workdir, Kind.COMMENT, False, transcript_path
+                )
+                if reason:
+                    return reason
     except Exception as err:
         return f'the GitHub text gate failed on this command ({err!r}): fix gh_text_lint.py first'
     return None
+
+
+def command_action(command: str, cwd: str | None = None) -> Action:
+    """Classify the visible GitHub actions in a command."""
+    code, docs = mark_heredocs(command)
+    code = CONTINUATION.sub('', code)
+    code, substitutions = shell_substitutions(code)
+    result = Action.NONE
+    for at, nested in substitutions:
+        expanded = MARKED.sub(lambda m: docs[int(m.group(1))], nested)
+        action = command_action(expanded, effective_cwd(code[:at], cwd or os.getcwd()))
+        if action is Action.MERGE:
+            return action
+        if action is Action.APPROVE or (action is Action.SUBMIT and result is Action.NONE):
+            result = action
+    code = re.sub(
+        r"""'[^']*'|"(?:\\[\s\S]|[^"\\])*"|\\[\s\S]|(?<![^\s;&|()])#[^\n]*""",
+        lambda m: '' if m.group().startswith('#') else m.group(),
+        code,
+    )
+    quoted_spans = [
+        (m.start(), m.end()) for m in re.finditer(r"\"(?:\\[\s\S]|[^\"\\])*\"|'[^']*'", code)
+    ]
+    matches = [
+        m
+        for m in re.finditer(GH + r')', code)
+        if not any(start < m.start('gh') < end for start, end in quoted_spans)
+    ]
+    for match in matches:
+        action = github_action(
+            code[match.start('gh') :],
+            docs,
+            effective_cwd(code[: match.start('gh')], cwd or os.getcwd()),
+        )
+        if action is Action.MERGE:
+            return action
+        if action is Action.APPROVE or (action is Action.SUBMIT and result is Action.NONE):
+            result = action
+    return result
 
 
 def main() -> int:

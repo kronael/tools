@@ -1,9 +1,14 @@
+import io
 import json
+import sys
 from pathlib import Path
 
 import pytest
+from codex_hook import TARGETS
+from codex_hook import main
 from codex_hook import normalize
 from codex_hook import translate_output
+from pretool_nudge import process
 
 
 def install_skills(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *names: str) -> None:
@@ -180,3 +185,72 @@ def test_translate_output_keeps_precompact_block_for_codex() -> None:
         'PreCompact',
     )
     assert json.loads(output) == {'decision': 'block', 'reason': 'finish summary first'}
+
+
+def test_targeted_action_denial_survives_codex_translation():
+    command = 'gh pr merge 1'
+    payload = normalize({'tool_name': 'Bash', 'tool_input': {'command': command}}, 'PreToolUse')
+    output = process(payload)
+    translated = json.loads(translate_output(json.dumps(output), 'PreToolUse'))
+    decision = translated['hookSpecificOutput']
+    assert decision['permissionDecision'] == 'deny'
+    assert command in decision['permissionDecisionReason']
+
+
+@pytest.mark.parametrize(('tool', 'key'), [('Bash', 'command'), ('exec_command', 'cmd')])
+@pytest.mark.parametrize(
+    ('command', 'decision'),
+    [
+        (
+            (
+                'gh -R example/demo pr merge 1 --squash '
+                '--match-head-commit 0123456789abcdef0123456789abcdef01234567'
+            ),
+            'deny',
+        ),
+        ('gh pr review 1 --approve --body "🤖 Checked the diff."', 'deny'),
+        (
+            (
+                'gh -R example/demo api repos/example/demo/pulls/1/reviews '
+                '-f event=APPROVE -f body="🤖 Checked the diff."'
+            ),
+            'deny',
+        ),
+        ('gh pr review 1 --approve --body "invalid body"', 'block'),
+        ('gh pr merge --help', None),
+        ('git push origin HEAD:refs/heads/20261027_demo', None),
+    ],
+)
+def test_command_path_runs_hook_and_preserves_decision(
+    monkeypatch, capsys, tmp_path, pytestconfig, tool, key, command, decision
+):
+    hook = pytestconfig.rootpath / 'pretool_nudge.py'
+    monkeypatch.setitem(TARGETS, 'pretool_nudge', [sys.executable, str(hook)])
+    monkeypatch.setattr(sys, 'argv', ['codex_hook.py', 'PreToolUse', 'pretool_nudge'])
+    payload = {
+        'cwd': str(tmp_path),
+        'tool_name': tool,
+        'tool_input': {key: command},
+        'permission_mode': 'dontAsk',
+    }
+    monkeypatch.setattr(sys, 'stdin', io.StringIO(json.dumps(payload)))
+    main()
+    captured = capsys.readouterr()
+    assert not captured.err
+    if decision is None:
+        assert not captured.out
+        return
+    output = json.loads(captured.out)
+    if decision == 'block':
+        assert output['decision'] == 'block'
+        assert 'text refused' in output['reason']
+        return
+    result = output['hookSpecificOutput']
+    assert result['hookEventName'] == 'PreToolUse'
+    assert result['permissionDecision'] == 'deny'
+    assert (
+        'Codex PreToolUse hooks cannot request command approval'
+        in result['permissionDecisionReason']
+    )
+    assert command in result['permissionDecisionReason']
+    assert 'Run directly' not in result['permissionDecisionReason']

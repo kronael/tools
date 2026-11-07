@@ -6,7 +6,9 @@ import time
 import gh_text_lint
 import pytest
 from gh_text_lint import SUBMIT_ASK
+from gh_text_lint import Action
 from gh_text_lint import Kind
+from gh_text_lint import command_action
 from gh_text_lint import command_reason
 from gh_text_lint import latest_prompt
 from gh_text_lint import lint
@@ -296,7 +298,7 @@ REFUSED = [
     ),
     ('gh pr comment 176 --body "Looks wrong to me."', f'must start with "{ROBOT} "'),
     ('gh pr comment 176 --body-file tmp/end-robot.md', 'belongs at the start only'),
-    ('gh pr review 176 --comment --body "Looks good, ship it"', 'review submit refused'),
+    ('gh pr review 176 --comment --body "Looks good, ship it"', 'must start with'),
     (
         "gh api repos/o/r/pulls/176/reviews --method POST --input - <<'EOF'\n"
         '{"commit_id": "abc", "comments": [{"path": "a.py", "line": 1, "body": "Overflows at u64::MAX."}]}\nEOF',
@@ -381,16 +383,14 @@ NOT_THE_USER = {
 }
 
 SUBMITS = [
-    'gh pr review 176 --approve',
     f'gh pr review 176 --comment --body "{ROBOT} Looks right."',
     f'gh pr review 176 -r -b "{ROBOT} Overflows at u64::MAX."',
     'gh api repos/o/r/pulls/176/reviews/1/events --method POST --input - <<\'EOF\'\n{"event":"COMMENT","body":""}\nEOF',
     'gh api repos/o/r/pulls/176/reviews/$PENDING/events -f event=COMMENT',
     'gh api repos/o/r/pulls/176/reviews --method POST --input tmp/submit.json',
     'gh api repos/o/r/pulls/176/reviews --method POST --input - <<\'EOF\'\n{"commit_id": "abc", "event": "COMMENT", "comments": []}\nEOF',
-    'gh api repos/o/r/pulls/176/reviews -F commit_id=abc -f event=APPROVE',
     "gh api graphql -f query='mutation($id:ID!){submitPullRequestReview(input:{pullRequestReviewId:$id,event:COMMENT}){pullRequestReview{id}}}' -f id=PRR_1",
-    'gh api repos/o/r/pulls/176/reviews/1 --method DELETE && gh pr review 176 --approve',
+    'gh api repos/o/r/pulls/176/reviews/1 --method DELETE && gh pr review 176 --comment',
 ]
 
 PENDING = [
@@ -498,3 +498,148 @@ def test_command_reason_keeps_the_wrapper_prefix_on_one_line() -> None:
     start = time.perf_counter()
     assert command_reason(command, '/') is None
     assert time.perf_counter() - start < 0.5
+
+
+@pytest.mark.parametrize(
+    ('command', 'expected'),
+    [
+        ('gh -R example/demo api -X POST repos/o/r/pulls/1/reviews -f event=APPROVE', 'approve'),
+        ('gh pr review 1 --approve', 'approve'),
+        ('gh pr review 1 --body "--approve" --comment', 'submit'),
+        ('gh pr merge 1 --auto', 'merge'),
+        ('gh pr merge 1 --disable-auto', 'none'),
+        ('gh api -X PUT repos/o/r/pulls/1/merge-async', 'merge'),
+        ('gh api repos/o/r/pulls/1/merge -X GET', 'none'),
+        ('gh api repos/o/r/pulls/1/reviews', 'none'),
+        ('git push origin HEAD', 'none'),
+        ('echo "gh pr merge 1"', 'none'),
+        ("gh api graphql -f query='query { viewer { login } } # mergePullRequest('", 'none'),
+        (
+            "gh api graphql -f query='mutation { q: enqueuePullRequest(input:{pullRequestId:1}) { clientMutationId } }'",
+            'merge',
+        ),
+        (
+            "gh api graphql -f query='mutation($input: ReviewInput!){ addPullRequestReview(input:$input){ clientMutationId } }' -f 'input[event]=APPROVE'",
+            'approve',
+        ),
+    ],
+)
+def test_command_action_cases(command, expected):
+    assert command_action(command).value == expected
+
+
+def test_opaque_graphql_review_is_refused():
+    with pytest.raises(OSError, match='cannot inspect'):
+        command_action(
+            "gh api graphql -f query='mutation($input: ReviewInput!){ addPullRequestReview(input:$input){ clientMutationId } }'"
+        )
+
+
+def test_review_input_files_and_ambiguous_mutations(tmp_path):
+    source = tmp_path / 'input.json'
+    source.write_text(json.dumps({'event': 'APPROVE'}))
+    assert (
+        command_action('gh api repos/o/r/pulls/1/reviews --input input.json', str(tmp_path))
+        is Action.APPROVE
+    )
+    source.write_text(
+        json.dumps(
+            {
+                'query': 'mutation($input: X!){addPullRequestReview(input:$input){clientMutationId}}',
+                'variables': {'input': {'event': 'APPROVE'}},
+            }
+        )
+    )
+    assert command_action('gh api graphql --input input.json', str(tmp_path)) is Action.APPROVE
+    with pytest.raises(OSError, match='cannot inspect'):
+        command_action(
+            "gh api graphql -f query='mutation($x: X!){addPullRequestReview(input:{event:APPROVE}){id} addPullRequestReview(input:$x){id}}'"
+        )
+
+
+def test_merge_body_help_is_not_a_help_request():
+    assert command_action('gh pr merge 1 --body "--disable-auto"') is Action.MERGE
+
+
+def test_graphql_file_text_is_checked_before_approval(tmp_path):
+    source = tmp_path / 'input.json'
+    source.write_text(
+        json.dumps(
+            {
+                'query': 'mutation($input: X!){addPullRequestReview(input:$input){id}}',
+                'variables': {'input': {'event': 'APPROVE', 'body': 'bad text'}},
+            }
+        )
+    )
+    assert 'text refused' in command_reason('gh api graphql --input input.json', str(tmp_path))
+
+
+def test_graphql_literal_text_is_checked_before_approval():
+    command = 'gh api graphql -f query=\'mutation { addPullRequestReview(input:{event:APPROVE, body:"bad"}) { id } }\''
+    assert 'text refused' in command_reason(command)
+
+
+def test_input_body_event_takes_precedence_over_query_fields(tmp_path):
+    (tmp_path / 'input.json').write_text(json.dumps({'event': 'APPROVE'}))
+    command = 'gh api repos/o/r/pulls/1/reviews --input input.json -f event=COMMENT'
+    assert command_action(command, str(tmp_path)) is Action.APPROVE
+
+
+def test_graphql_nested_field_body_is_checked():
+    command = (
+        "gh api graphql -f query='mutation($input:X!){addPullRequestReview(input:$input){id}}' "
+        "-f 'input[event]=APPROVE' -f 'input[body]=bad'"
+    )
+    assert 'text refused' in command_reason(command)
+
+
+def test_graphql_query_file_text_is_checked(tmp_path):
+    (tmp_path / 'query.graphql').write_text(
+        'mutation { addPullRequestReview(input:{event:APPROVE, body:"bad"}){id} }'
+    )
+    assert 'text refused' in command_reason('gh api graphql -F query=@query.graphql', str(tmp_path))
+
+
+@pytest.mark.parametrize(
+    ('command', 'expected'),
+    [
+        ('echo "$(gh pr merge 1)"', Action.MERGE),
+        ('echo "`gh pr review 1 --approve`"', Action.APPROVE),
+        ('echo "$(gh pr \\\nmerge 1)"', Action.MERGE),
+        ('echo "gh pr merge 1"', Action.NONE),
+        ("echo '$(gh pr merge 1)'", Action.NONE),
+        ('echo "\\$(gh pr merge 1)"', Action.NONE),
+        ('echo ok # $(gh pr merge 1)', Action.NONE),
+    ],
+)
+def test_shell_substitutions(command, expected):
+    assert command_action(command) is expected
+
+
+@pytest.mark.parametrize('body', ['bad)', 'bad(', 'bad\\" ) still bad'])
+def test_graphql_body_parentheses_are_not_delimiters(body):
+    query = (
+        'mutation { addPullRequestReview(input:{event:APPROVE, body:'
+        + json.dumps(body)
+        + '}) { id } }'
+    )
+    command = "gh api graphql -f query='" + query + "'"
+    assert 'text refused' in command_reason(command)
+
+
+def test_substitution_runs_content_gate():
+    command = 'echo "$(gh pr review 1 --approve --body \'bad\')"'
+    assert 'text refused' in command_reason(command)
+
+
+def test_nested_substitution_action():
+    assert command_action('echo "$(echo "$(gh pr merge 1)")"') is Action.MERGE
+
+
+def test_graphql_unresolved_body_is_refused():
+    command = "gh api graphql -f query='mutation($text:String!){addPullRequestReview(input:{event:APPROVE,body:$text}){id}}'"
+    assert 'cannot inspect GraphQL review body' in command_reason(command)
+
+
+def test_substitution_comment_does_not_close_the_command():
+    assert command_action('echo "$( # ) ignored\n gh pr merge 1\n)"') is Action.MERGE

@@ -99,13 +99,11 @@ ranges of a modified one (`gh pr diff <PR> | grep -A<N> "diff --git.*<filename>"
 
 ## Submit
 
-A submitted review cannot be taken back. After the pending POST, report the
-review `html_url` and comment count, then STOP and ask the user to say
-`SUBMIT REVIEW`. ALWAYS submit ONLY when the user's own latest message contains
-those words; "yes", "ok", "post", "go", "all of them", "ship it", approval of
-the text and an answer to another question NEVER count — ask again. The hook
-refuses the call otherwise. The one path: `POST /pulls/<PR>/reviews/<id>/events`,
-`--input -`, heredoc `{"event":"COMMENT","body":""}` — NEVER `gh pr review`.
+After the pending POST, ALWAYS report the review `html_url` and comment count.
+ALWAYS ask for `SUBMIT REVIEW` unless the user's latest message contains those words.
+NEVER treat other consent as that instruction; the hook refuses the call.
+ALWAYS submit findings with `POST /pulls/<PR>/reviews/<id>/events`, `--input -`,
+and heredoc `{"event":"COMMENT","body":""}` — NEVER `gh pr review`. Approving reviews follow WISDOM § Git.
 
 ## Fallback: general comment
 
@@ -197,7 +195,7 @@ gh pr comment <PR> --body "🤖 @<reviewer> <verb + object>. Please re-review."
   — a full-prose finding pasted into a PR comment is a defect
 - ALWAYS re-read a distilled body against the draft before posting: check that
   the cut did not take the re-raise clause, a file:line, or the failing input
-- ALWAYS leave the review PENDING — submitting is § Submit, on `SUBMIT REVIEW` only
+- ALWAYS leave a findings review PENDING — submitting is § Submit, on `SUBMIT REVIEW` only
 - ALWAYS batch inline comments into one POST — NEVER loop individual calls
 - ALWAYS fall back to a general PR comment with explicit `file:line` if a line is outside the diff
 - ALWAYS return the review `html_url` from the API response

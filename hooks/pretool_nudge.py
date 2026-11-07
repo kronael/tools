@@ -14,6 +14,8 @@ import shutil
 import subprocess
 import sys
 
+from gh_text_lint import Action
+from gh_text_lint import command_action
 from gh_text_lint import command_reason
 from gh_text_lint import mark_heredocs
 from lib.state import hook_event
@@ -246,6 +248,40 @@ def process(data: object) -> dict | None:
         refused = command_reason(command, data.get('cwd'), data.get('transcript_path'))
         if refused:
             return {'decision': 'block', 'reason': f'block: {refused}'}
+        try:
+            action = command_action(command, data.get('cwd'))
+        except Exception as err:
+            return {'decision': 'block', 'reason': f'block: cannot inspect GitHub action ({err})'}
+        if action in {Action.APPROVE, Action.MERGE}:
+            label = 'approving review' if action is Action.APPROVE else 'PR merge'
+            mode = data.get('permission_mode')
+            if data.get('harness') == 'codex':
+                decision = 'deny'
+                reason = (
+                    'Codex PreToolUse hooks cannot request command approval; '
+                    f'this {label} is blocked. A human can run it directly or '
+                    'use a supported interactive Claude session. '
+                    f'Pending command: {command}'
+                )
+            elif mode is not None and mode not in {
+                'default',
+                'manual',
+                'acceptEdits',
+                'plan',
+                'auto',
+            }:
+                decision = 'deny'
+                reason = f'This permission mode cannot prompt for the {label}.'
+            else:
+                decision = 'ask'
+                reason = f'Approve this {label} command.'
+            return {
+                'hookSpecificOutput': {
+                    'hookEventName': 'PreToolUse',
+                    'permissionDecision': decision,
+                    'permissionDecisionReason': reason,
+                }
+            }
         return None
 
     if not isinstance(data, dict) or data.get('tool_name') not in TOOLS_OF_INTEREST:
@@ -332,7 +368,7 @@ def format_markdown(data: object) -> dict | None:
     return None
 
 
-def already_seen(cache_file: str, key: str) -> bool:
+def has_seen(cache_file: str, key: str) -> bool:
     """Side-effecting: True if key is in cache. Silent on OSError."""
     try:
         with open(cache_file, encoding='utf-8', errors='replace') as fh:
@@ -365,7 +401,8 @@ def main() -> None:
     # A block is a ban and must fire on EVERY unsafe command. The dedup cache
     # below keys on (skill, path); a Bash call carries neither, so all of them
     # share one key and the second unsafe command in a session goes through.
-    if result.get('decision') == 'block':
+    hook_output = result.get('hookSpecificOutput', {})
+    if result.get('decision') == 'block' or 'permissionDecision' in hook_output:
         with contextlib.suppress(OSError, ValueError):
             print(json.dumps(result))
         return
@@ -378,7 +415,7 @@ def main() -> None:
     key = f'{skill}\t{path}'
     with contextlib.suppress(OSError):
         os.makedirs(cache_dir, exist_ok=True)
-    if already_seen(cache_file, key):
+    if has_seen(cache_file, key):
         return
     remember(cache_file, key)
     with contextlib.suppress(OSError, ValueError):

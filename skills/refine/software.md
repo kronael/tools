@@ -191,10 +191,13 @@ reads to pick the agent type.
 - ALWAYS diff each copy raw against its source revision/path; ALWAYS flag missing evidence or differences
   without a listed destination constraint (§ System changes).
 
-## Feature PRs change runtime or deployment `correctness`
+## Shared behavior and runtime changes lack review sign-off `correctness`
 
-- ALWAYS inspect the whole PR for runtime/deployment changes listed in § System changes;
-  ALWAYS flag changes bundled with features or lacking owner sign-off.
+- ALWAYS inspect the whole PR against `software/code.md` § Review sign-off,
+  including vars and config. ALWAYS flag mixed feature/shared behavior PRs,
+  unrelated shared changes and missing human review evidence.
+- ALWAYS check whether any change since sign-off is material to the reviewed
+  scope before requiring a new review.
 
 ## Component builds diverge from the repo `simplify`
 
