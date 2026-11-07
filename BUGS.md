@@ -970,13 +970,6 @@
 
 ## diskclean
 
-- **DISKCLEAN-WORKTREE-DEPLOY-KEYS** (HIGH, data loss) — PLAUSIBLE, from the
-  release audit 2026-11-05, not reproduced. The worktree removal check near
-  `diskclean/diskclean:200` accepts an ignored `target/` as a whole, so it
-  removes a worktree that holds `target/deploy` keypairs, which the README
-  says diskclean keeps. **Fix:** keep a worktree that contains
-  `target/deploy`, and cover it in `test.sh` with such a fixture.
-
 - **DISKCLEAN-LINKED-TOOLCHAIN** (HIGH, data loss) — level 2 uninstalls a
   linked rustup toolchain whose name starts with a version. The filter
   `^[0-9.]+-[^ ]+$` in `level2` (`diskclean/diskclean`) matches a toolchain

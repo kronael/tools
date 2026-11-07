@@ -38,6 +38,9 @@ A `worktree` goes through `git worktree remove --force`, so git also drops its
 registration. Its commits stay on the remote. A worktree that holds an ignored
 entry other than the cache dirs above or a dir with `CACHEDIR.TAG` is kept as
 `ignored files`, because a `tmp/` report or a local secret is not rebuildable.
+A worktree with ignored `target/deploy` artifacts is also kept, including a
+nested crate's artifacts or artifacts inside an ignored cache directory.
+A worktree with only rebuildable ignored caches remains removable.
 The proof uses the remote-tracking refs as they are, so fetch first. The last
 use of a worktree comes from file and git times only, because `git status`
 reads every file.
