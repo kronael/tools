@@ -185,9 +185,13 @@ returns the block reason for a posting command, or None; the CLI prints
 
 The rules are WISDOM § Git and the Format section of the posting skill, kept
 to what a program can check. `mark_heredocs` replaces each heredoc's content
-with a marker so it is never read as a command, backslash-newline
-continuations are joined, and `find_posts` locates every gh
-invocation that posts, and each one is checked over its own slice of the
+with a marker. The shell scan inspects executable command substitutions in
+unquoted heredocs, including tab-stripping heredocs. Quoted or escaped
+delimiters suppress expansion. Escaped substitution markers and plain command
+prose remain literal. The scan also recognizes executable brace groups and
+respects shell escapes and quoted command text. Backslash-newline
+continuations are joined, and `find_posts` locates visible gh
+invocations that post. Each one is checked over its own slice of the
 command with the `cd` calls before it applied to `cwd`. `read_bodies` finds
 the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
 `-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
@@ -277,10 +281,16 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
    when the `claude-diary-nudge` stamp is missing or at least `NUDGE_INTERVAL`
    old, and re-stamp. The directory need not exist; a repo without one is
-   nudged to start it. The same stamp covers the rollups (`rollups_due`): the
-   last completed ISO week with a day file and no `YYYY-WNN.md`, and the last
-   completed month with a week file and no `YYYY-MM.md`, each nudge
-   `/compact-memories diary <level>`.
+   nudged to start it. The same stamp covers `rollups_due`, which checks the
+   last completed ISO week and last calendar month. A missing week with daily
+   entries receives `/compact-memories diary week <YYYY-WNN>`.
+   The month owns weeks whose Monday falls in that month, including all seven
+   days of each week. Missing completed weeks with daily entries receive exact
+   period nudges in chronological order. The missing month receives
+   `/compact-memories diary month <YYYY-MM>` only after its final assigned week
+   ends at UTC midnight, every assigned week with daily entries has a summary,
+   and at least one weekly summary exists. Existing rollups are skipped;
+   the hook does not scan historical periods or refresh existing files.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale

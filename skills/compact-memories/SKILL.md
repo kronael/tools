@@ -11,22 +11,29 @@ argument-hint: "diary <week|month> [period]"
 The diary has levels: `YYYYMMDD.md` written as the work happens (`diary`),
 `YYYY-WNN.md` for an ISO week, `YYYY-MM.md` for a month — one flat directory,
 the period in the name. A level is distilled from the level below it with one
-method; the Stop hook (`hooks/stop.py`) nudges when the last completed period
-has sources and no file. arizuko runs the same skill on a cron and adds the
+method; the Stop hook (`hooks/stop.py`) checks the last completed week and
+last calendar month. It names each missing period, including source weeks
+required by that month. arizuko runs the same skill on a cron and adds the
 `episodes` lens; here the only lens is `diary`.
 
 ## Protocol
 
-1. **Period.** The last fully elapsed unit before now (UTC), never the current
-   one: `date -u` and shell math, `date -u -d "<date>" +%G-W%V` for the ISO
-   week. A third argument overrides it in the level's format
-   (`/compact-memories diary week 2026-W43`), for a backfill; it also
-   overwrites an existing file.
-2. **Sources.** `week`: the `YYYYMMDD.md` of the week, Monday to Sunday.
-   `month`: the `YYYY-W*.md` whose Monday falls in the month. The directory is
-   `diary` § Where it lives.
-3. **Outcome.** No source: write nothing. The file exists and no period was
-   given: write nothing. Else distill and write.
+1. **Period.** ALWAYS select the last completed ISO week or last calendar month
+   in UTC unless a third argument names a period. ALWAYS use the level's format,
+   such as `/compact-memories diary week 2026-W43`. An explicit period permits
+   rewriting an existing file after the source checks below.
+2. **Sources.** ALWAYS read from `diary` § Where it lives. For `week`, ALWAYS
+   use its `YYYYMMDD.md` files from Monday through Sunday. For `month`, ALWAYS
+   use weekly summaries whose Monday falls in that month. A source week spans
+   all seven days, including days in the next month. Before any monthly write,
+   ALWAYS wait until UTC midnight seven days after the month's final Monday.
+   ALWAYS identify every assigned week with daily entries but no weekly summary.
+   ALWAYS create those summaries with explicit week periods, oldest first,
+   before writing the month. An explicit monthly period NEVER bypasses readiness.
+3. **Outcome.** With no sources, ALWAYS write nothing. If the file exists and
+   no period was given, ALWAYS write nothing. Otherwise, ALWAYS distill and write
+   only after the source checks pass. NEVER scan older periods or refresh existing
+   files automatically.
 4. **Distill.** Rank by what the owner said or decided. Keep a correction
    verbatim, a deliverable the owner accepted, a blocker. Drop the agent's own
    conclusions, routine runs and dead ends. The file is shorter than its
