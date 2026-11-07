@@ -1,51 +1,52 @@
+---
 name: kronael-tools
 install: |
-  set -eu
-  python3 - "$PREFIX" <<'PY'
-  import json
-  import shutil
-  import sys
-  from pathlib import Path
+    set -eu
+    python3 - "$PREFIX" <<'PY'
+    import json
+    import shutil
+    import sys
+    from pathlib import Path
 
-  prefix = Path(sys.argv[1])
-  (prefix / 'CLAUDE.md').unlink()  # this repo's conventions, not an agent manual
-  # diary, solve, recall-memories, compact-memories: core keeps the arizuko
-  # memory layout (~/diary, ~/episodes, ~/facts). The rest serve this host only.
-  skip = {'diary', 'solve', 'recall-memories', 'compact-memories',
-          'global', 'owner', 'emacs', 'server-init'}
-  for name in skip:
-      shutil.rmtree(prefix / 'skills' / name)
-  hooks = {'prompt_nudge', 'pretool_nudge'}
-  keep = {'lib', 'gh_text_lint.py', 'codex_hook.py'} | {h + '.py' for h in hooks}
-  for path in (prefix / 'hooks').iterdir():
-      if path.name not in keep:
-          shutil.rmtree(path) if path.is_dir() else path.unlink()
+    prefix = Path(sys.argv[1])
+    (prefix / 'CLAUDE.md').unlink()  # this repo's conventions, not an agent manual
+    # diary, solve, recall-memories, compact-memories: core keeps the arizuko
+    # memory layout (~/diary, ~/episodes, ~/facts). The rest serve this host only.
+    skip = {'diary', 'solve', 'recall-memories', 'compact-memories',
+            'global', 'owner', 'emacs', 'server-init'}
+    for name in skip:
+        shutil.rmtree(prefix / 'skills' / name)
+    hooks = {'prompt_nudge', 'pretool_nudge'}
+    keep = {'lib', 'gh_text_lint.py', 'codex_hook.py'} | {h + '.py' for h in hooks}
+    for path in (prefix / 'hooks').iterdir():
+        if path.name not in keep:
+            shutil.rmtree(path) if path.is_dir() else path.unlink()
 
-  def wiring(source):
-      out = {}
-      for event, entries in json.loads(Path(source).read_text())['hooks'].items():
-          for entry in entries:
-              kept = [dict(h, command=h['command'].replace('~/', '/home/node/'))
-                      for h in entry['hooks']
-                      if Path(h['command'].split()[-1]).stem in hooks]
-              if kept:
-                  out.setdefault(event, []).append(dict(entry, hooks=kept))
-      return json.dumps({'hooks': out}, indent=2) + '\n'
+    def wiring(source):
+        out = {}
+        for event, entries in json.loads(Path(source).read_text())['hooks'].items():
+            for entry in entries:
+                kept = [dict(h, command=h['command'].replace('~/', '/home/node/'))
+                        for h in entry['hooks']
+                        if Path(h['command'].split()[-1]).stem in hooks]
+                if kept:
+                    out.setdefault(event, []).append(dict(entry, hooks=kept))
+        return json.dumps({'hooks': out}, indent=2) + '\n'
 
-  for target, source in (('.claude/settings.json', 'settings-recommended.json'),
-                         ('.codex/hooks.json', 'codex-hooks.json')):
-      (prefix / target).parent.mkdir(exist_ok=True)
-      (prefix / target).write_text(wiring(source))
-  PY
-  export UV_PYTHON_INSTALL_DIR="$PREFIX/python"
-  uv python install --no-bin 3.13
-  python=$(uv python find --managed-python 3.13)
-  ln -s "$(basename "$(dirname "$(dirname "$python")")")" "$PREFIX/python/runtime"
-  uv pip install --python "$python" --target "$PREFIX/lib/speclint" ./speclint
-  mkdir -p "$PREFIX/bin"
-  cat > "$PREFIX/bin/speclint" <<'SH'
-  #!/bin/sh
-  export PYTHONPATH=/opt/arizuko/packages/kronael-tools/lib/speclint
-  exec /opt/arizuko/packages/kronael-tools/python/runtime/bin/python3.13 -m speclint "$@"
-  SH
-  chmod +x "$PREFIX/bin/speclint"
+    for target, source in (('.claude/settings.json', 'settings-recommended.json'),
+                           ('.codex/hooks.json', 'codex-hooks.json')):
+        (prefix / target).parent.mkdir(exist_ok=True)
+        (prefix / target).write_text(wiring(source))
+    PY
+    export UV_PYTHON_INSTALL_DIR="$PREFIX/python"
+    uv python install --no-bin 3.13
+    python=$(uv python find --managed-python 3.13)
+    ln -s "$(basename "$(dirname "$(dirname "$python")")")" "$PREFIX/python/runtime"
+    uv pip install --python "$python" --target "$PREFIX/lib/speclint" ./speclint
+    mkdir -p "$PREFIX/bin"
+    cat > "$PREFIX/bin/speclint" <<'SH'
+    #!/bin/sh
+    export PYTHONPATH=/opt/arizuko/packages/kronael-tools/lib/speclint
+    exec /opt/arizuko/packages/kronael-tools/python/runtime/bin/python3.13 -m speclint "$@"
+    SH
+    chmod +x "$PREFIX/bin/speclint"
