@@ -88,10 +88,13 @@ PR body with the robot. These win.
 - NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
   local commits are squashed only through `/squash`.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
-  --show-current` prints nothing). NEVER create a local branch, no exception:
-  no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
-  `master`/`main` — a bare `switch`/`checkout <name>` creates the branch from
-  `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
+  --show-current` prints nothing). NEVER create a local branch: no `switch -c`,
+  `checkout -b`, `git branch <name>`. The one exception is the `worktree-<name>`
+  branch the harness's EnterWorktree tool attaches in `.claude/worktrees/<name>`:
+  ALWAYS leave it attached; its commits still publish by SHA to a dated head,
+  NEVER by the branch name. NEVER check out or attach `master`/`main` — a bare
+  `switch`/`checkout <name>` creates the branch from `origin/<name>`; ALWAYS
+  `git switch --detach origin/<name>`.
 - ALWAYS read the remote through its tracking refs: `git fetch origin`, then
   `origin/<default head>` as the merge, rebase, diff or worktree base, where
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code

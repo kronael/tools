@@ -58,7 +58,8 @@ still-unpushed stack — and for good once pushed.
 - Stage by path. NEVER `git add -A`, NEVER `--amend`, NEVER push by any
   command, `git push` or `rip -g`: the parent pushes (WISDOM § Git).
 - NEVER add a `Co-Authored-By` trailer to any commit.
-- Detached HEAD only — NEVER create or attach a local branch.
+- Detached HEAD only — NEVER create or attach a local branch; a `worktree-<name>`
+  branch the harness attached stays (WISDOM § Git).
 - NEVER remove recursively; delete named files only.
 - A fix that changes a contract or the control flow goes to `BUGS.md` as
   `proposed` — do not build it.
