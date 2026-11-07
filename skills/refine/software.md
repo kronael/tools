@@ -112,8 +112,8 @@ reads to pick the agent type.
 - ALWAYS list every check the range adds — `git diff <range> | rg '^\+' |
   rg -n 'if not |raise |assert |re\.(fullmatch|match)|\.exists\(|ge=|le=|
   max_|_limit|_cap\b|timeout|enabled'` — and, for each, name the production
-  input that reaches it. A condition the types, the boundary parser or the
-  real call already reject, or that no caller can produce, is a finding:
+  input that reaches it. A condition the types, boundary parser, library or
+  runtime already rejects, or that no caller can produce, is a finding:
   delete it (`code.md` § Boring code: a check that never fires reads as a
   requirement). A start-up probe for a tool or login the first real call
   would fail on, a byte or length cap with no measured need, an `IF EXISTS`

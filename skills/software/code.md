@@ -117,10 +117,11 @@ your diff against every `##` heading here before calling an edit done.
   solution.
 - ALWAYS add code only for a measured unmet requirement that subtraction and
   those simplifications cannot satisfy.
-- NEVER a check for a state the types, the boundary parser or the real call
-  already reject, or that no caller produces — a guard, cap, length limit,
+- NEVER duplicate a protection the types, boundary parser, library or runtime
+  already provide, or check a state no caller produces — a guard, cap, length limit,
   regex, `exists` test or start-up probe that never fires reads as a
-  requirement and is a liability. ALWAYS let the first real call fail.
+  requirement and is a liability. ALWAYS use the owning protection and let the
+  first real call fail. ALWAYS add a check only for a concrete uncovered failure.
 - NEVER braid components: if A cannot be understood without tracking B's
   state, separate them — braided code grows combinatorially, separated code
   composes linearly. ALWAYS minimise state and make what remains explicit; an
