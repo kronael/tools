@@ -643,3 +643,35 @@ def test_graphql_unresolved_body_is_refused():
 
 def test_substitution_comment_does_not_close_the_command():
     assert command_action('echo "$( # ) ignored\n gh pr merge 1\n)"') is Action.MERGE
+
+
+@pytest.mark.parametrize(
+    ('command', 'expected'),
+    [
+        ('{ gh pr merge 1; }', Action.MERGE),
+        ('{ gh pr review 1 --approve; }', Action.APPROVE),
+        ('{ gh pr review 1 --comment; }', Action.SUBMIT),
+        ('echo "{ gh pr merge 1; }"', Action.NONE),
+        ('cat <<EOF\n# " \' $(gh pr merge 1)\nEOF', Action.MERGE),
+        ('cat <<-EOF\n\t`gh pr review 1 --approve`\n\tEOF', Action.APPROVE),
+        ("cat <<'EOF'\n$(gh pr merge 1)\nEOF", Action.NONE),
+        ('cat <<E"OF"\n$(gh pr merge 1)\nEOF', Action.NONE),
+        ('cat <<\\EOF\n$(gh pr merge 1)\nEOF', Action.NONE),
+        ('cat <<EOF\n\\$(gh pr merge 1) \\`gh pr merge 1\\`\nEOF', Action.NONE),
+        ('cat <<EOF\ngh pr merge 1\nEOF', Action.NONE),
+        ("cat <<<'EOF'\ngh pr merge 1\nEOF", Action.MERGE),
+    ],
+)
+def test_braces_and_heredoc_expansions(command, expected):
+    assert command_action(command) is expected
+
+
+@pytest.mark.parametrize(
+    'command',
+    [
+        '{ gh pr review 1 --approve --body bad; }',
+        'cat <<EOF\n# " $(gh pr review 1 --approve --body bad)\nEOF',
+    ],
+)
+def test_braces_and_heredoc_expansions_run_content_gate(command):
+    assert 'text refused' in command_reason(command)

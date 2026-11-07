@@ -579,3 +579,12 @@ def test_action_does_not_override_text_lint():
     )
     assert output['decision'] == 'block'
     assert 'text refused' in output['reason']
+
+
+@pytest.mark.parametrize('command', ['{ gh pr merge 1; }', 'cat <<EOF\n$(gh pr merge 1)\nEOF'])
+@pytest.mark.parametrize(('mode', 'decision'), [('default', 'ask'), ('dontAsk', 'deny')])
+def test_grouped_action_permission(command, mode, decision):
+    output = process(
+        {'tool_name': 'Bash', 'tool_input': {'command': command}, 'permission_mode': mode}
+    )
+    assert output['hookSpecificOutput']['permissionDecision'] == decision

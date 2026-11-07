@@ -77,7 +77,7 @@ PREFIX = (
 GH_OPTIONS = r'(?:[ \t]+(?:--repo[ =]|-R[ \t]*)\S+)*\s+'
 REPO_OPTIONS = r'(?:[ \t]+(?:--repo[ =]|-R[ \t]*)\S+)*\s+'
 GH = (
-    r'(?:^|[;&|(\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*'
+    r'(?:^|[;&|({\n!]|\$\(|\b(?:if|then|else|elif|do|while|until)\s)\s*'
     + PREFIX
     + r'(?P<gh>gh'
     + GH_OPTIONS
@@ -107,7 +107,7 @@ SUBMIT_REFUSED = (
     ' A submitted review cannot be taken back: leave it PENDING, report its id and ask'
     f' the user to say {SUBMIT_ASK} (gh-comment § Submit)'
 )
-HEREDOC = re.compile(r'<<-?\s*([\'"]?)(\w+)\1[^\n]*\n(.*?)\n[ \t]*\2[ \t]*(?:\n|$)', re.DOTALL)
+HEREDOC = re.compile(r"""(?<!<)<<(?!<)-?[ \t]*((?:\w+|'[^']*'|"[^"]*"|\\.)+)[^\n]*\n""")
 CONTINUATION = re.compile(r'\\\n')
 MARK = '\x00'
 MARKED = re.compile(f'{MARK}(\\d+){MARK}')
@@ -196,13 +196,23 @@ def mark_heredocs(command: str) -> tuple[str, list[str]]:
     """The command with each heredoc's content replaced by a marker, and the contents."""
     docs = []
 
-    def swap(m: re.Match) -> str:
-        docs.append(m.group(3))
-        head = m.group(0)[: m.start(3) - m.start()]
-        tail = m.group(0)[m.end(3) - m.start() :]
-        return f'{head}{MARK}{len(docs) - 1}{MARK}{tail}'
-
-    return HEREDOC.sub(swap, command), docs
+    parts = []
+    offset = 0
+    while match := HEREDOC.search(command, offset):
+        delimiter = shlex.split(match.group(1))[0]
+        end = re.search(
+            r'(?m)^[ \t]*' + re.escape(delimiter) + r'[ \t]*(?:\n|$)', command[match.end() :]
+        )
+        if not end:
+            break
+        body_end = match.end() + end.start()
+        body = command[match.end() : body_end].removesuffix('\n')
+        docs.append(body)
+        parts.append(command[offset : match.end()])
+        parts.append(f'{MARK}{len(docs) - 1}{MARK}\n')
+        offset = body_end
+    parts.append(command[offset:])
+    return ''.join(parts), docs
 
 
 def quoted(m: re.Match) -> str:
@@ -656,21 +666,37 @@ def segment_reason(
     return None
 
 
-def shell_substitutions(code: str) -> tuple[str, list[tuple[int, str]]]:
+def shell_substitutions(
+    code: str, docs: list[str] | None = None, *, heredoc: bool = False
+) -> tuple[str, list[tuple[int, str]]]:
     substitutions = []
     masked = list(code)
     index = 0
     quote = ''
     while index < len(code):
         char = code[index]
-        if char == "'" and quote != '"':
+        marker = MARKED.match(code, index) if docs is not None else None
+        if marker:
+            line_start = code.rfind('\n', 0, index - 1) + 1
+            header = HEREDOC.search(code, line_start, index)
+            if header and not any(c in header.group(1) for c in '\'"\\'):
+                _, nested = shell_substitutions(docs[int(marker.group(1))], heredoc=True)
+                substitutions.extend((index, body) for _, body in nested)
+            index = marker.end()
+            continue
+        if not heredoc and char == "'" and quote != '"':
             quote = '' if quote == "'" else "'"
-        elif char == '"' and quote != "'":
+        elif not heredoc and char == '"' and quote != "'":
             quote = '' if quote == '"' else '"'
         elif char == '\\' and quote != "'":
             index += 2
             continue
-        elif char == '#' and not quote and (index == 0 or code[index - 1] in ' \t\n;&|('):
+        elif (
+            not heredoc
+            and char == '#'
+            and not quote
+            and (index == 0 or code[index - 1] in ' \t\n;&|(')
+        ):
             end = code.find('\n', index)
             index = len(code) if end < 0 else end
             continue
@@ -727,7 +753,7 @@ def command_reason(
     try:
         code, docs = mark_heredocs(command)
         code = CONTINUATION.sub('', code)
-        masked, substitutions = shell_substitutions(code)
+        masked, substitutions = shell_substitutions(code, docs)
         for at, nested in substitutions:
             expanded = MARKED.sub(lambda m: docs[int(m.group(1))], nested)
             reason = command_reason(
@@ -787,7 +813,7 @@ def command_action(command: str, cwd: str | None = None) -> Action:
     """Classify the visible GitHub actions in a command."""
     code, docs = mark_heredocs(command)
     code = CONTINUATION.sub('', code)
-    code, substitutions = shell_substitutions(code)
+    code, substitutions = shell_substitutions(code, docs)
     result = Action.NONE
     for at, nested in substitutions:
         expanded = MARKED.sub(lambda m: docs[int(m.group(1))], nested)
