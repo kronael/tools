@@ -80,8 +80,8 @@ agent's guest:
 - Hooks: `prompt_nudge.py` and `pretool_nudge.py` with `gh_text_lint.py`,
   `codex_hook.py` and `lib/`. The step writes their entries from
   `settings-recommended.json` to `.claude/settings.json` and from
-  `codex-hooks.json` to `.codex/hooks.json`, with `~/` as `/home/node/`: a
-  guest hook command gets no shell. `stop.py`, `memory_nudge.py` and
+  `codex-hooks.json` to `.codex/hooks.json`, with `~/` expanded to the guest
+  user's home directory: a guest hook command gets no shell. `stop.py`, `memory_nudge.py` and
   `style_lint.py` block a Stop on a host diary, a host memory pass or the
   caveman style, and `local.py` and `reclaude.py` read files the guest lacks.
 - `speclint`: built with uv into the package, at `/usr/local/bin/speclint`.
