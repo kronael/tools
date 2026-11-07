@@ -692,11 +692,11 @@ check "-k prunes reaches the prunes" has "stub docker system df" "$out"
 git_q() { git -c user.name=t -c user.email=t@t -c init.defaultBranch=main "$@" >/dev/null 2>&1; }
 git_q init --bare "$work/remote.git"
 git_q clone "$work/remote.git" "$work/wt/repo"
-printf 'tmp/\nnode_modules/\n' > "$work/wt/repo/.gitignore"
+printf 'tmp/\nnode_modules/\ntarget/\ncache/\n' > "$work/wt/repo/.gitignore"
 git_q -C "$work/wt/repo" add .gitignore
 git_q -C "$work/wt/repo" commit -m base
 git_q -C "$work/wt/repo" push origin HEAD:main
-for name in pushed dirty local scratch cached
+for name in pushed dirty local scratch cached rootdeploy nesteddeploy taggeddeploy
 do
     git_q -C "$work/wt/repo" worktree add --detach "$work/wt/repo/.$name"
 done
@@ -704,6 +704,11 @@ touch "$work/wt/repo/.dirty/new.txt"
 git_q -C "$work/wt/repo/.local" commit --allow-empty -m local
 mkdir -p "$work/wt/repo/.scratch/tmp" "$work/wt/repo/.cached/node_modules"
 touch "$work/wt/repo/.scratch/tmp/report.md"
+mk_files "$work/wt/repo/.cached/target/debug/obj" \
+    "$work/wt/repo/.rootdeploy/target/deploy/keypair.json" \
+    "$work/wt/repo/.nesteddeploy/crate/target/deploy/keypair.json" \
+    "$work/wt/repo/.taggeddeploy/cache/CACHEDIR.TAG" \
+    "$work/wt/repo/.taggeddeploy/cache/target/deploy/keypair.json"
 age_tree "$work/wt" 400
 out=$(./diskclean -l -k worktree "$work/wt")
 check "worktree lists a pushed clean one" \
@@ -712,10 +717,23 @@ check "worktree lists one with only rebuildable ignored dirs" \
     test -n "$(grep -E ' worktree +wt/repo/.cached$' <<< "$out")"
 check "worktree skips a dirty one" lacks "wt/repo/.dirty" "$out"
 check "worktree skips an unpushed one" lacks "wt/repo/.local" "$out"
-check "worktree keeps one with ignored files" has "1 ignored files (wt/repo/.scratch)" "$out"
+check "worktree keeps one with ignored files" has "4 ignored files" "$out"
+check "worktree does not list root deploy" \
+    test -z "$(grep -E ' worktree +wt/repo/.rootdeploy$' <<< "$out")"
+check "worktree does not list nested deploy" \
+    test -z "$(grep -E ' worktree +wt/repo/.nesteddeploy$' <<< "$out")"
+check "worktree does not list tagged cache deploy" \
+    test -z "$(grep -E ' worktree +wt/repo/.taggeddeploy$' <<< "$out")"
 check "worktree never lists the main tree" lacks "wt/repo  " "$out"
 out=$(echo y | ./diskclean -k worktree "$work/wt")
 check "worktree removes the pushed one" test ! -e "$work/wt/repo/.pushed"
+check "worktree removes the cache-only one" test ! -e "$work/wt/repo/.cached"
+check "worktree keeps root deploy keypair" \
+    test -f "$work/wt/repo/.rootdeploy/target/deploy/keypair.json"
+check "worktree keeps nested deploy keypair" \
+    test -f "$work/wt/repo/.nesteddeploy/crate/target/deploy/keypair.json"
+check "worktree keeps tagged cache deploy keypair" \
+    test -f "$work/wt/repo/.taggeddeploy/cache/target/deploy/keypair.json"
 check "worktree unregisters it" \
     lacks ".pushed" "$(git -C "$work/wt/repo" worktree list)"
 check "worktree keeps the dirty one" test -e "$work/wt/repo/.dirty/new.txt"

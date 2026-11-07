@@ -196,6 +196,8 @@ has_kept_ignored() {
     while IFS= read -r entry
     do
         entry=${entry%/}
+        [[ -z $(find "$1/$entry" -type d -name target \
+            -exec test -e '{}/deploy' \; -print -quit) ]] || return 0
         case ${entry##*/} in
             node_modules|target|.pnpm-store|.next|.venv|venv|__pycache__) ;;
             .pytest_cache|.ruff_cache|.mypy_cache) ;;
