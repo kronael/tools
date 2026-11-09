@@ -9,6 +9,9 @@ user-invocable: true
 
 Drive the current goal to completion. Don't stop until it's actually done.
 
+ALWAYS preserve WISDOM § Git and `software/code.md` § Review sign-off.
+NEVER treat finish mode as human sign-off; ALWAYS prepare the reviewable result first.
+
 ## Behavior
 
 1. **No stopping early** — Continue working through all pending tasks

@@ -13,6 +13,7 @@ import subprocess
 import sys
 from datetime import UTC
 from datetime import datetime
+from datetime import timedelta
 
 NUDGE_INTERVAL = 600
 
@@ -36,7 +37,9 @@ def git_dir(cwd):
 
 def git_path(cwd, name):
     gd = git_dir(cwd)
-    return None if gd is None else os.path.join(gd, name)
+    if gd is None:
+        return None
+    return os.path.join(gd, name)
 
 
 def main_tree(cwd):
@@ -52,14 +55,49 @@ def project_slug(path):
     return re.sub(r'[^A-Za-z0-9]', '-', path)
 
 
+def diary_dir(main):
+    """~/.claude/projects/<slug>/diary, keyed on the main tree."""
+    return os.path.join(os.path.expanduser('~/.claude/projects'), project_slug(main), 'diary')
+
+
 def diary_file(main, now):
-    """~/.claude/projects/<slug>/diary/YYYYMMDD.md, keyed on the main tree."""
-    return os.path.join(
-        os.path.expanduser('~/.claude/projects'),
-        project_slug(main),
-        'diary',
-        now.strftime('%Y%m%d') + '.md',
-    )
+    return os.path.join(diary_dir(main), now.strftime('%Y%m%d') + '.md')
+
+
+def rollups_due(diary, now):
+    """(level, period) of each last completed period with a source file and no rollup."""
+    try:
+        names = set(os.listdir(diary))
+    except OSError:
+        return []
+    due = []
+    monday = (now - timedelta(days=now.weekday() + 7)).date()
+    week = monday.strftime('%G-W%V')
+    days = {(monday + timedelta(days=i)).strftime('%Y%m%d') + '.md' for i in range(7)}
+    if f'{week}.md' not in names and days & names:
+        due.append(('week', week))
+    last = now.date().replace(day=1) - timedelta(days=1)
+    month = last.strftime('%Y-%m')
+    if f'{month}.md' not in names:
+        first = last.replace(day=1)
+        current = first + timedelta(days=(-first.weekday()) % 7)
+        missing = False
+        sources = False
+        while current <= last:
+            period = current.strftime('%G-W%V')
+            week_file = f'{period}.md'
+            days = {(current + timedelta(days=i)).strftime('%Y%m%d') + '.md' for i in range(7)}
+            sources |= week_file in names
+            if days & names and week_file not in names:
+                missing = True
+                item = ('week', period)
+                if current + timedelta(days=7) <= now.date() and item not in due:
+                    due.append(item)
+            current += timedelta(days=7)
+        due.sort(key=lambda item: item[1])
+        if current <= now.date() and sources and not missing:
+            due.append(('month', month))
+    return due
 
 
 def write_stamp(path, text):
@@ -141,16 +179,20 @@ def nudges(cwd, now):
         stamp = git_path(cwd, 'claude-diary-nudge')
         path = diary_file(main, now)
         hhmm = now.strftime('%H:%M %Y-%m-%d')
-        msg = None
+        lines = []
         if not os.path.exists(path):
-            msg = f'No diary entry for today (now {hhmm}). Run /diary.'
+            lines.append(f'No diary entry for today (now {hhmm}). Run /diary.')
         elif now.timestamp() - os.path.getmtime(path) > 3600:
-            msg = (
+            lines.append(
                 f'Diary not updated in over an hour (now {hhmm}). '
                 'Run /diary deliberately if there is work to record.'
             )
-        if msg and nudge_due(stamp, now):
-            parts.append(msg)
+        for level, period in rollups_due(os.path.dirname(path), now):
+            lines.append(
+                f'Diary {level} {period} has no rollup. Run /compact-memories diary {level} {period}.'
+            )
+        if lines and nudge_due(stamp, now):
+            parts.append('\n'.join(lines))
             if stamp is not None:
                 write_stamp(stamp, now.isoformat())
     return parts

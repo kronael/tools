@@ -88,10 +88,13 @@ PR body with the robot. These win.
 - NEVER `git add -A`, NEVER `--amend`. NEVER squash a pushed commit; unpushed
   local commits are squashed only through `/squash`.
 - ALWAYS detached HEAD, in the main tree and in every worktree (`git branch
-  --show-current` prints nothing). NEVER create a local branch, no exception:
-  no `switch -c`, `checkout -b`, `git branch <name>`. NEVER check out or attach
-  `master`/`main` — a bare `switch`/`checkout <name>` creates the branch from
-  `origin/<name>`; ALWAYS `git switch --detach origin/<name>`.
+  --show-current` prints nothing). NEVER create a local branch: no `switch -c`,
+  `checkout -b`, `git branch <name>`. The one exception is the `worktree-<name>`
+  branch the harness's EnterWorktree tool attaches in `.claude/worktrees/<name>`:
+  ALWAYS leave it attached; its commits still publish by SHA to a dated head,
+  NEVER by the branch name. NEVER check out or attach `master`/`main` — a bare
+  `switch`/`checkout <name>` creates the branch from `origin/<name>`; ALWAYS
+  `git switch --detach origin/<name>`.
 - ALWAYS read the remote through its tracking refs: `git fetch origin`, then
   `origin/<default head>` as the merge, rebase, diff or worktree base, where
   `git ls-remote --symref origin HEAD` names the default head. NEVER hard-code
@@ -112,11 +115,20 @@ PR body with the robot. These win.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs a separate
-  explicit approval naming it, given AFTER the refspec is shown; "push it" and "ship it" are NEVER that approval.
-- NEVER approve a PR on the owner's behalf (`gh pr review --approve`). Merging
-  a PR and pushing to `<default head>` ask the user first; opening a PR or
-  rewriting its body needs no approval once its text passed the two phases below.
+  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs explicit
+  authorization naming it; "push it" and "ship it" alone are NEVER that authorization.
+- ALWAYS submit each authorized approving review or PR merge through the native
+  execution tool and its command-approval path. NEVER add a separate chat gate
+  for command consent. ALWAYS use the supported approval request when permitted
+  by the active tool and session restrictions. NEVER infer that normal execution
+  is forbidden from `approval_policy=never` or an unseen dialog alone; ALWAYS
+  report the actual tool decision. NEVER bypass a refusal or change permission
+  settings to proceed. NEVER treat chat, environment state, an agent's receipt
+  or successful execution as proof of a fresh human command approval.
+  ALWAYS preserve bot attribution; NEVER claim an agent-written review is
+  human-authored. Hook limits: `~/.claude/hooks/ARCHITECTURE.md` § pretool_nudge.py.
+- ALWAYS apply `software/code.md` § Review sign-off to shared-library and
+  runtime changes. Command consent does not replace that review.
 - ALWAYS post PR comments with `/gh-comment` and write a PR body with
   `/pr-draft` — NEVER freehand; they hold the shape, cap, REST path and `🤖`.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body,

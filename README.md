@@ -15,8 +15,9 @@ Command-line utilities and Claude Code configuration.
 - [dc-fetch](dc-fetch/) — Discord channel archiver (discum, `DISCORD_TOKEN` env)
 - [gloww](gloww/) — read markdown with glow at the terminal's real width
 - [speclint](speclint/) — check spec numbering, status, index agreement and code pointers; run through uvx
+- [socksium](socksium/) — chromium on a throwaway profile through a SOCKS5 proxy (default port 1080)
 
-Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`):
+Makefile tools (`udfix`, `kvs`, `rig`, `bhctl`, `diskclean`, `qemubox`, `gloww`, `speclint`, `socksium`):
 `cd <tool> && make install`. PEP 723 scripts (`tw-fetch`, `tg-fetch`,
 `dc-fetch`): `uv run main.py`.
 
@@ -61,6 +62,9 @@ Full rationale: [ARCHITECTURE.md](ARCHITECTURE.md#why-hybrid-plugin--sync-step).
   [`kronael/sync/reference.md` § Settings](kronael/sync/reference.md#settings-step-5)
   are applied on every sync without asking.
 - **The `global` skill** — development wisdom installed as `~/.claude/CLAUDE.md`.
+- **arizuko package** (`arizuko.yml`) — the skills and hooks that work in an
+  arizuko agent, installed with `arizuko package add github.com/kronael/tools`;
+  see [ARCHITECTURE.md § arizuko package](ARCHITECTURE.md#arizuko-package).
 
 Repo layout: [ARCHITECTURE.md § Repo shape](ARCHITECTURE.md#repo-shape).
 

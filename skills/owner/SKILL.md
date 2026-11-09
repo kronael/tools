@@ -68,10 +68,11 @@ criticizes, the cheaper ones ship.
 
 ## Production and shared layers are theirs
 
-- NEVER wire a component to a host, write to a production database, or change
-  a shared deployment role, template or library behaviour unasked. ALWAYS
-  propose the change and wait for the yes.
+- NEVER wire a component to a host or write to a production database unasked.
+  ALWAYS prepare the concrete change for the owner's decision.
+- ALWAYS apply `software/code.md` § Review sign-off to shared-library behavior
+  and runtime changes, including vars and config.
 - ALWAYS treat a permission refusal as their policy. NEVER hunt for a spelling
   that passes.
-- ALWAYS land a bug fix in the PR in hand. Only a behaviour change gets its own
-  PR.
+- ALWAYS keep fixes that preserve the approved contract in the PR in hand.
+  Shared behavior and runtime changes follow the review sign-off rule.

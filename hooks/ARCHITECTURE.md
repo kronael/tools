@@ -110,6 +110,7 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 `transcript_path`, and the event (`hook_event_name`, read via
 `lib/state.py`).
 **Output:** `{"decision": "block", "reason": "..."}`,
+`hookSpecificOutput.permissionDecision` with its reason,
 `hookSpecificOutput.additionalContext`, or silent.
 
 **PostToolUse flow** (`format_markdown`):
@@ -128,14 +129,23 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
 
 **PreToolUse flow:**
 1. For shell tools (`Bash`, Codex `exec_command`), `unsafe_command_reason`
-   applies the shell guards documented in `README.md` § pretool_nudge.py. Then
-   `gh_text_lint.command_reason`: each `gh` invocation in the call that posts a
+   applies the shell guards documented in `README.md` § pretool_nudge.py.
+   Codex calls also reject recursive `codex resume` or `codex exec resume`.
+   Then `gh_text_lint.command_reason` checks each `gh` invocation that posts a
    PR body, an issue body or a comment is blocked when the body it carries
    fails the lint, cannot be read, or is required and absent. The reason names
    the failing lines and the skill that owns the text. A segment that submits
-   a review (`is_submit`) is blocked unless `latest_prompt(transcript_path)`
-   — the newest record the user typed, read from the transcript's tail —
-   contains `SUBMIT REVIEW`; no transcript blocks.
+   findings, where `github_action` returns `SUBMIT`, is blocked unless the
+   latest human prompt contains `SUBMIT REVIEW`; no transcript blocks.
+   Then `command_action` checks for an approving review or PR merge.
+   Claude receives a `PreToolUse` native
+   `ask` in `default`, `manual`, `acceptEdits`, `plan`, `auto`, or when the
+   mode is absent. `bypassPermissions`, `dontAsk` and unknown explicit modes
+   receive `deny`. This hook returns `deny` to Codex with the pending command:
+   the adapter forwards this decision. The denial directs the human to execute
+   the command or use a supported interactive Claude session.
+   Each decision is emitted on every call, outside the
+   file-nudge dedup cache.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
 3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
@@ -148,6 +158,23 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    `CODE_SKILLS`.
 Codex sees `<skill>` as `@py`, `@go`, etc.
 
+The action check covers visible supported `gh` commands. It does not enforce
+GitHub branch protection or cover arbitrary scripts, aliases, curl, browsers or
+all MCP tools. Disabled, untrusted, failing or timed-out hooks cannot protect a
+call. A configured interactive host must still demonstrate its prompt behavior.
+The installed hook and its active wiring determine which guard runs; an edited
+source file does not prove that the runtime uses it.
+
+Native tool approval is separate from hook output. Submit an authorized command
+through the native execution tool within the active session restrictions. Use
+its approval request when supported and permitted; do not add a chat gate or
+change permission settings. `approval_policy=never` prevents approval requests,
+not all normal command execution. A missing dialog alone does not establish a
+refusal. Report the actual tool result; success does not prove a fresh human
+approval. A hook or tool denial remains binding. In Codex, `PermissionRequest`
+handles a request that already exists; it cannot create one from `PreToolUse`.
+See the [Codex hook contract](https://learn.chatgpt.com/docs/hooks#pretooluse).
+
 ### gh_text_lint.py (library + CLI)
 
 **Input:** a text kind (`pr`, `issue`, `comment`) and the text, or a shell
@@ -158,17 +185,23 @@ returns the block reason for a posting command, or None; the CLI prints
 
 The rules are WISDOM § Git and the Format section of the posting skill, kept
 to what a program can check. `mark_heredocs` replaces each heredoc's content
-with a marker so it is never read as a command, backslash-newline
-continuations are joined, and `find_posts` locates every gh
-invocation that posts, and each one is checked over its own slice of the
+with a marker. The shell scan inspects executable command substitutions in
+unquoted heredocs, including tab-stripping heredocs. Quoted or escaped
+delimiters suppress expansion. Escaped substitution markers and plain command
+prose remain literal. The scan also recognizes executable brace groups and
+respects shell escapes and quoted command text. Backslash-newline
+continuations are joined, and `find_posts` locates visible gh
+invocations that post. Each one is checked over its own slice of the
 command with the `cd` calls before it applied to `cwd`. `read_bodies` finds
 the text a slice posts in `--input` JSON (file or heredoc), `--body-file`,
 `-F <file>`, `-F body=@<file>`, a heredoc, or the inline `--body` (literal or
 `$(cat <path>)`); a `$VAR` path, stdin, a missing or undecodable file,
 unparsable JSON or a command substitution is an OSError the gate reports, and
-any other exception becomes the block reason. `is_submit` recognises the
-submitting forms (`SUBMITS`, and a `/reviews` POST with `event` in its
-`--input` JSON or `-f`/`-F` field); `latest_prompt` walks the transcript
+any other exception becomes the block reason. `github_action` recognises review
+submissions, approvals and merges in CLI, REST and GraphQL forms; ambiguous
+relevant input is refused. GraphQL inspection is bounded: block-string bodies
+and unresolved body values are refused. `command_action` checks each visible
+invocation, including command substitutions. `latest_prompt` walks the transcript
 backwards in 64 KiB chunks, skips tool-result lines before parsing, and
 returns the first `type: user` record that is not `isMeta`, not `isSidechain`
 and whose `origin.kind` is `human` or absent. Imported by `pretool_nudge.py`;
@@ -248,7 +281,16 @@ advisory `hookSpecificOutput.additionalContext` on PostToolUse, or silent.
    today's `YYYYMMDD.md` (UTC). Missing or >1h stale → append a diary nudge
    when the `claude-diary-nudge` stamp is missing or at least `NUDGE_INTERVAL`
    old, and re-stamp. The directory need not exist; a repo without one is
-   nudged to start it.
+   nudged to start it. The same stamp covers `rollups_due`, which checks the
+   last completed ISO week and last calendar month. A missing week with daily
+   entries receives `/compact-memories diary week <YYYY-WNN>`.
+   The month owns weeks whose Monday falls in that month, including all seven
+   days of each week. Missing completed weeks with daily entries receive exact
+   period nudges in chronological order. The missing month receives
+   `/compact-memories diary month <YYYY-MM>` only after its final assigned week
+   ends at UTC midnight, every assigned week with daily entries has a summary,
+   and at least one weekly summary exists. Existing rollups are skipped;
+   the hook does not scan historical periods or refresh existing files.
 5. Real Stop blocks with the combined message and stops there. Periodic
    PostToolUse emits the same message as advisory context only.
 Pure script, no LLM call. NEVER pushes. The hook reports a missing or stale

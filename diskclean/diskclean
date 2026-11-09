@@ -33,6 +33,7 @@ kinds_table() {
 1 pycache         compiled python files
 1 toolcache       pytest, ruff and mypy caches
 1 gomod           project-local go module cache
+1 worktree        linked git worktree, clean, HEAD on a remote
 2 rustup          numbered rustup toolchains
 2 platform-tools  Solana platform-tools versions
 2 pipenv          pipenv virtualenvs
@@ -114,7 +115,7 @@ walk_projects() {
         prune+=(-name "$name" -o)
     done
     find "$@" -xdev -mindepth 1 \
-        \( "${prune[@]}" \( -path "$home/.*" ! -path "$home/.*/*" \) \) \
+        -type d \( "${prune[@]}" \( -path "$home/.*" ! -path "$home/.*/*" \) \) \
         -prune -o "${match[@]}"
 }
 
@@ -157,6 +158,7 @@ project_dir() {
         pipenv)
             read -r dir < "$2/.project" || true
             echo "$dir" ;;
+        worktree) echo "$2" ;;
         rustup|platform-tools|browsers) ;;
         *) echo "${2%/*}" ;;
     esac
@@ -176,7 +178,33 @@ is_proven() {
                 [[ $line == "Signature: 8a477f597d28d172789f06886806bc55" ]] ;;
         gomod) [[ -d $2/cache/download &&
             -f $(project_dir gomod "$2")/go.mod ]] ;;
+        worktree) is_pushed_worktree "$2" ;;
     esac
+}
+
+is_pushed_worktree() {
+    local line status remote
+    [[ -f $1/.git ]] && read -r line < "$1/.git" &&
+        [[ $line == "gitdir: "*/worktrees/* ]] || return 1
+    status=$(git --no-optional-locks -C "$1" status --porcelain 2>/dev/null) || return 1
+    remote=$(git -C "$1" branch -r --contains HEAD 2>/dev/null) || return 1
+    [[ -z $status && -n $remote ]]
+}
+
+has_kept_ignored() {
+    local entry
+    while IFS= read -r entry
+    do
+        entry=${entry%/}
+        [[ -z $(find "$1/$entry" -type d -name target \
+            -exec test -e '{}/deploy' \; -print -quit) ]] || return 0
+        case ${entry##*/} in
+            node_modules|target|.pnpm-store|.next|.venv|venv|__pycache__) ;;
+            .pytest_cache|.ruff_cache|.mypy_cache) ;;
+            *) [[ -f $1/$entry/CACHEDIR.TAG ]] || return 0 ;;
+        esac
+    done < <(git --no-optional-locks -C "$1" status --porcelain --ignored | sed -n 's/^!! //p')
+    return 1
 }
 
 measure_kb() {
@@ -202,8 +230,10 @@ has_atime() {
 }
 
 project_activity() {
+    local git=$1/.git
+    [[ ! -f $git ]] || read -r _ git < "$git"
     {
-        stat -c %Y "$1"/.git/{index,HEAD,logs/HEAD,FETCH_HEAD} 2>/dev/null ||
+        stat -c %Y "$git"/{index,HEAD,logs/HEAD,FETCH_HEAD} 2>/dev/null ||
             true
         find "$1" -xdev -mindepth 1 \
             \( -name .git -o "${dir_match[@]}" \) -prune -o \
@@ -213,7 +243,7 @@ project_activity() {
 
 last_use_of() {
     local dir=$1 project=$2 depth=$3 read_expr=(-false)
-    if has_atime "$dir"
+    if [[ ! -f $dir/.git ]] && has_atime "$dir"
     then
         read_expr=(-type f ! -name CACHEDIR.TAG ! -name .project -printf '%A@\n')
     fi
@@ -286,9 +316,12 @@ candidate_reason() {
     elif is_mount_point "$dir"
     then
         echo "mount point"
-    elif [[ -e $dir/.git ]]
+    elif [[ $kind != worktree && -e $dir/.git ]]
     then
         echo "holds .git"
+    elif [[ $kind == worktree ]] && has_kept_ignored "$dir"
+    then
+        echo "ignored files"
     elif ! is_l2 "$kind" && [[ $(project_dir "$kind" "$dir") == "$home" ]]
     then
         echo "project is home"
@@ -333,6 +366,13 @@ candidates() {
         do
             printf '%s\0%s\0' "$(kind_of "$dir")" "$dir"
         done < <(walk_projects dir_walk "${roots[@]}")
+        if want worktree && command -v git >/dev/null
+        then
+            while IFS= read -r -d '' dir
+            do
+                printf 'worktree\0%s\0' "${dir%/.git}"
+            done < <(walk_projects worktree_walk "${roots[@]}")
+        fi
         return 0
     fi
     for row in "${l2_rows[@]}"
@@ -383,6 +423,7 @@ remove_candidate() {
         target) find "$2" -mindepth 1 -maxdepth 1 ! -name deploy \
             -exec rm -rf --one-file-system -- {} + ;;
         gomod) chmod -R u+w -- "$2" && rm -rf --one-file-system -- "$2" ;;
+        worktree) git -C "$2" worktree remove --force "$2" ;;
         *) rm -rf --one-file-system -- "$2" ;;
     esac
 }
@@ -567,6 +608,7 @@ dir_match=(-path '*/node_modules' -o -path '*/target' -o -path '*/.pnpm-store'
     -o -path '*/__pycache__' -o -path '*/.pytest_cache'
     -o -path '*/.ruff_cache' -o -path '*/.mypy_cache' -o -path '*/pkg/mod')
 dir_walk=(-type d \( "${dir_match[@]}" \) -prune -print0)
+worktree_walk=(\( "${dir_match[@]}" \) -prune -o -type f -name .git -print0)
 pin_walk=(\( "${dir_match[@]}" \) -prune -o -type f
     \( -name rust-toolchain -o -name rust-toolchain.toml \) -print0)
 l2_rows=(

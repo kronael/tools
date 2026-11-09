@@ -31,6 +31,5 @@ in fixes too.
 
 - ALWAYS route GitHub posting through the `gh-comment` skill — its distill and
   review-on-wisdom phases, approval gate and `🤖` prefix.
-- NEVER `gh pr merge` or `gh pr review`. A review is submitted only on the
-  user's ask, through the permission dialog the hook raises on the submit
-  (`gh-comment` § Submit).
+- ALWAYS submit findings reviews through `gh-comment` § Submit. For approving
+  reviews and merges, ALWAYS follow WISDOM § Git's command consent rule.

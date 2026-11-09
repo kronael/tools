@@ -1,6 +1,29 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.71] — 20261107
+
+> kronael v0.4.71 — Safer cleanup and command checks
+>
+> Cleanup keeps deployment keys, GitHub actions receive command checks, and monthly summaries wait for complete weekly sources.
+>
+> • GitHub — approval and merge hooks request native consent or deny unsupported modes.
+> • diskclean — worktree cleanup keeps deployment keys, including nested target paths.
+> • Diary — compacts daily notes into weekly and monthly summaries with source filenames.
+> • socksium — opens a temporary Chromium profile through a checked SOCKS5 proxy.
+> • Dispatch — fixed-rule merges and semantic conflicts use distinct worker tasks.
+> • Packages — shared skills and selected hooks install into an agent guest.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Codex approval and merge hooks deny these calls; interactive Claude modes request native approval.
+- Worktree cleanup retains `target/deploy` artifacts at any depth, including inside tagged caches.
+- Text and action checks cover brace groups and unquoted heredoc expansions; printed text stays literal.
+- Monthly summaries require all daily-backed weekly summaries after the final source week ends.
+- Harness-created worktree branches stay attached; authored worktrees remain detached.
+
+### Operator note
+
+The GitHub hook checks visible supported `gh` commands. It does not replace branch protection.
 
 ## [v0.4.70] — 20261104
 

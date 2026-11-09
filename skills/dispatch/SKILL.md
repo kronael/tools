@@ -22,12 +22,12 @@ artifacts.
 | Task | Requested output and boundary | Claude model / effort | Codex model / effort | Group |
 |---|---|---|---|---|
 | Sweep | List every call site, reference or match, or collect text that only feeds another agent; no conclusion of its own | Haiku / medium, or Sonnet / low for a wide tree | `gpt-6-luna` / medium | Lightweight |
-| Mechanical | Named-file inventories, searches, one-file summaries or bounded exact edits; no unresolved judgment | Haiku / medium | `gpt-6-luna` / medium | Lightweight |
-| Coding | Implement a settled plan, investigate a bug or gather nontrivial facts | Sonnet / medium | `gpt-6.1-terra` / medium | Implementation |
+| Mechanical | Named-file inventories, searches, one-file summaries, bounded exact edits outside docs, or merges and rebases with stated conflict rules; no unresolved judgment | Haiku / medium | `gpt-6-luna` / medium | Lightweight |
+| Coding | Implement settled code or test changes beyond Mechanical, resolve semantic conflicts, investigate a bug or gather nontrivial facts | Sonnet / medium | `gpt-6.1-terra` / medium | Implementation |
 | Algorithm | Find or solve an algorithm — a search, an optimization, a numeric or concurrency design — even when the output is code | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates; write or complete the spec's module map (`plan.md` § Module map) | Opus / high | `gpt-6.1-sol` / high | Judgment |
-| Review | Judge code or a detailed plan; verify claims and reconcile documentation with the implementation | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Review | Judge code, specs or detailed plans for correctness and consistency; verify claims against the implementation; systemic risks use Audit | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
 | Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / high | `gpt-6.1-sol` / high | Judgment |
 
@@ -38,11 +38,10 @@ change's context; every other Judgment task runs on Opus. ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 
-ALWAYS keep Luna within the mechanical boundary; it is not the coding
-workhorse. NEVER route documentation to Coding or Terra, a settled doc edit
-included — ALWAYS select Documentation. A fix found by a review or audit is
-coding, or documentation when it changes docs; an unresolved contract returns
-to spec or planning.
+ALWAYS keep Luna within Sweep or Mechanical and doc edits within Documentation.
+ALWAYS reclassify when the requested output changes, before continuing.
+Unresolved product contracts return to Spec; unresolved implementation designs
+return to Planning. Algorithm work uses Algorithm.
 
 ALWAYS use the current harness's provider unless the owner selects another.
 A provider-only request keeps the task's model and effort from that column.
@@ -65,8 +64,8 @@ NEVER run a spec, implementation and review on one inherited model setting.
 ## Capacity
 
 ALWAYS count active workers by task group across providers and launch methods:
-at most 2 Lightweight, 2 Implementation and 1 Judgment worker. Planning,
-review, audit, spec and documentation share the Judgment slot. Native workers,
+at most 2 Lightweight, 2 Implementation and 1 Judgment worker. Algorithm,
+planning, review, audit, spec and documentation share the Judgment slot. Native workers,
 CLI processes and built-in agents all count; a stricter runtime limit also
 applies.
 

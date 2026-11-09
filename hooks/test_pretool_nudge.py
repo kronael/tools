@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import subprocess
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,31 @@ from pretool_nudge import skill_for
 
 HOOKS_DIR = Path(__file__).resolve().parent
 LONG_LINE = '# Title\n\n' + 'word ' * 40 + '\n'
+
+
+def test_recommended_permissions_allow_only_push_commands_without_asking() -> None:
+    settings = json.loads((HOOKS_DIR.parent / 'settings-recommended.json').read_text())
+    allow = settings['permissions']['allow']
+    ask = settings['permissions']['ask']
+    for command in (
+        'git push',
+        'git push origin HEAD',
+        'rip',
+        'rip -g HEAD:refs/heads/master',
+        'rig push',
+        'rig push -g HEAD:refs/heads/main',
+        'rig p',
+        'rig p origin',
+    ):
+        assert any(fnmatchcase(f'Bash({command})', pattern) for pattern in allow), command
+        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
+    for command in ('rig fetch origin', 'rig pull origin', 'rig status'):
+        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in allow), command
+    for command in ('gh pr merge --help', 'gh pr merge 1 --disable-auto', 'gh pr review --approve'):
+        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
+    for command in ('git pull origin', 'rsync src dst', 'gh release create v1', 'gh repo create x'):
+        assert any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
+
 
 SKILL_CASES = [
     ('foo.go', '/go'),
@@ -502,3 +528,63 @@ def test_post_tool_nudge_prints_a_note_as_its_only_output(tmp_path) -> None:
         },
     }
     assert doc.read_text() == LONG_LINE
+
+
+@pytest.mark.parametrize(
+    ('mode', 'decision'),
+    [
+        (None, 'ask'),
+        ('default', 'ask'),
+        ('manual', 'ask'),
+        ('acceptEdits', 'ask'),
+        ('plan', 'ask'),
+        ('auto', 'ask'),
+        ('bypassPermissions', 'deny'),
+        ('dontAsk', 'deny'),
+        ('unknown', 'deny'),
+    ],
+)
+def test_action_permission_modes(mode, decision):
+    payload = {'tool_name': 'Bash', 'tool_input': {'command': 'gh pr merge 1'}}
+    if mode is not None:
+        payload['permission_mode'] = mode
+    output = process(payload)['hookSpecificOutput']
+    assert output['hookEventName'] == 'PreToolUse'
+    assert output['permissionDecision'] == decision
+
+
+def test_action_fires_each_time(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv('HOME', str(tmp_path))
+    payload = json.dumps(
+        {
+            'tool_name': 'Bash',
+            'session_id': 'same',
+            'tool_input': {'command': 'gh pr review 1 --approve'},
+        }
+    )
+    for _ in range(2):
+        monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+        main()
+        assert (
+            json.loads(capsys.readouterr().out)['hookSpecificOutput']['permissionDecision'] == 'ask'
+        )
+
+
+def test_action_does_not_override_text_lint():
+    output = process(
+        {
+            'tool_name': 'Bash',
+            'tool_input': {'command': 'gh pr review 1 --approve --body "invalid body"'},
+        }
+    )
+    assert output['decision'] == 'block'
+    assert 'text refused' in output['reason']
+
+
+@pytest.mark.parametrize('command', ['{ gh pr merge 1; }', 'cat <<EOF\n$(gh pr merge 1)\nEOF'])
+@pytest.mark.parametrize(('mode', 'decision'), [('default', 'ask'), ('dontAsk', 'deny')])
+def test_grouped_action_permission(command, mode, decision):
+    output = process(
+        {'tool_name': 'Bash', 'tool_input': {'command': command}, 'permission_mode': mode}
+    )
+    assert output['hookSpecificOutput']['permissionDecision'] == decision
