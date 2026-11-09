@@ -171,9 +171,10 @@ PR body with the robot. These win.
   step and high-level subagent run, updating status the moment it changes.
   When absent or prohibited, ALWAYS report the gap and maintain the existing plan or
   work record. NEVER invent tool calls or substitute goals or threads for a
-  checklist. While work spans several turns, ALWAYS restate the whole numbered plan in chat — every
-  open workstream with its status — after each step and whenever the user asks
-  where things stand (`dispatch` → `plan.md`).
+  checklist. While work spans several turns, ALWAYS close each step with one
+  line in chat — the step done, the next one, how many stay open — and restate
+  the whole numbered plan, every open workstream with its status, only when
+  the user asks where things stand (`dispatch` → `plan.md`).
 - ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
   implementation: source-grounded planning, bounded coding steps and the
   parent's diff review before each dependent step. Its small-change gate
