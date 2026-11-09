@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.4.73] — 20261109
+
+> kronael v0.4.73 — Stop hook noise on record
+>
+> The three Stop hooks were measured against real sessions, and each noise source is now an open proposal.
+>
+> • Reply budget — a blocked reply is resent in full, so the reader sees it twice.
+> • Commit nudge — it blocks on files a parallel worker is still editing.
+> • Memory check — its Stop context continues the turn, often mid-task.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `BUGS.md` records the three Stop hook proposals; hook behaviour is unchanged until the owner decides.
+
 ## [v0.4.72] — 20261109
 
 > kronael v0.4.72 — Host facts load on demand
