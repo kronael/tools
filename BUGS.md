@@ -413,6 +413,42 @@
 
 ## Hooks
 
+- **STYLE-LINT-BLOCK-RESENDS-A-SHOWN-REPLY** (MED, design) — needs sign-off.
+  Stop runs after the reply is on screen, so `hooks/style_lint.py` cannot
+  retract it; `reason()` asks to "Send the final answer again", and the user
+  reads the answer twice. Measured over three days of sessions: about one
+  Stop in five blocked, nearly every block answered by a text-only resend
+  that reuses most of the blocked reply's words, and about a third of the
+  resends still over a cap. No miscount found: the flagged bullets do hold 3+
+  sentences. **Options:** (a) advisory: write the measured miss to
+  `session_state`, and `prompt_nudge.py` injects it at the next prompt,
+  nothing blocks; (b) drop the hook and keep the budget in the output style
+  alone; (c) keep the block. **Default if nothing is decided:** (c). No test
+  — design.
+
+- **STOP-COMMIT-NUDGE-BLAMES-OTHER-WRITERS** (MED, design) — needs sign-off.
+  `hooks/stop.py` `nudges()` blocks on every dirty tracked file under the
+  payload `cwd`; it cannot tell the session's edits from a Codex worker's or
+  a background agent's in the same tree, or in a worker's worktree the
+  session `cd`'d into. Measured over three days of sessions that drive
+  workers: about one commit block in ten led to a commit; the rest were
+  answered "that change belongs to the worker". Ownership by the session's
+  `Edit`/`Write` paths would silence most of them, and also a real case where
+  the session edited with `sed -i` in Bash. **Options:** (a) block only on a
+  dirty file whose mtime falls inside one of the session's own tool calls in
+  `transcript_path` (covers Bash edits; one transcript read per Stop, tens of
+  MB for a long session); (b) `Edit`/`Write`/`MultiEdit`/`NotebookEdit` paths
+  only; (c) keep. **Default if nothing is decided:** (c). No test — design.
+
+- **MEMORY-NUDGE-STOP-CONTEXT-CONTINUES-THE-TURN** (LOW, design) — needs
+  sign-off. `hooks/memory_nudge.py`'s docstring says "Never blocks", but
+  Claude Code answers Stop `additionalContext` with a new assistant turn, the
+  same as a block. With `STOP_COUNT_THRESHOLD = 3`, a session that drives
+  workers reaches the nudge minutes in, while they still run, so the memory
+  pass lands mid-task. Most of these nudges did end in a memory write.
+  **Options:** (a) fire on the time threshold alone; (b) keep, and correct
+  the docstring. **Default if nothing is decided:** (b). No test — design.
+
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51
