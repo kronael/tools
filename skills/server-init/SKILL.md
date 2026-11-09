@@ -1,112 +1,56 @@
 ---
 name: server-init
-description: Build or refresh this host's server memory, the skill server-<hostname> — what runs here and where things live. NOT for a service's Dockerfile or unit (use ops) or inside qemubox.
-when_to_use: "server-init, server memory, map this server, scan this host, what runs on this machine, services and ports on this host, refresh the server memory, machine facts in LOCAL.md"
+description: Load this server's facts — `/etc/server/CLAUDE.md`, `/etc/motd` and the host's own notes — before work that touches the machine; build or refresh them with the init half. NOT for a service's Dockerfile or unit (use ops).
+when_to_use: "this server, this host, this machine, server facts, server memory, which port, which service, restart a service, service logs, deploy here, how is X deployed, data dir, web root, publish a page, cron job, disk full, where does the space go, motd, /etc/server/CLAUDE.md, server-init, map this server, scan this host, new server, refresh the server facts"
 ---
 
-# Server init
+# Server facts
 
-Builds `~/.claude/skills/server-<hostname>/SKILL.md`, one host's memory: its
-role, layout, services and publishing paths. Only its description sits in the
-skill listing; the body loads when a task needs the machine and grows as work
-finds facts. Named per host, so a `~/.claude` shared between machines keeps one
-memory each.
+One file per machine holds what runs on it and where things live:
+`/etc/server/CLAUDE.md`, on the host itself, root-owned and world-readable.
+Nothing loads it automatically, so this skill is the only way in. Claude Code
+reads `CLAUDE.md` from the working directory's ancestors (stopping before `/`),
+from directories under the working directory as files there are read, and
+from `/etc/claude-code/CLAUDE.md`; Codex reads project docs from the git root
+down to the working directory. No session works under `/etc/server/`, so the
+facts stay out of every context until a task needs the machine.
 
-Where a machine fact goes: a note every session on this machine must see goes in
-`/etc/claude-code/CLAUDE.md`, Claude Code's managed file — qemubox
-pre-writes it, and on a host it is written only when already writable, NEVER
-with sudo; a fact about this host goes in its `server-<hostname>` skill.
+## Load
 
-## Steps
+1. **Read the facts.** `cat /etc/server/CLAUDE.md`. Absent → say this host has
+   no facts file and offer the init (below). NEVER guess a port, path or unit
+   from another machine's facts — ALWAYS measure it on this one.
+   Completion criterion: the file was read, or its absence was stated.
 
-1. **Refuse in a sandbox.** `CLAUDE_SANDBOX` set, or `/etc/claude-code/CLAUDE.md`
-   naming qemubox → stop and say so. NEVER build a memory from a
-   box: its services and paths describe the sandbox, not the host. ALWAYS use
-   the launcher's note for sandbox facts.
-   Completion criterion: `CLAUDE_SANDBOX` is empty and no sandbox note exists.
+2. **Read the host's own notes.** `/etc/motd`, `/run/motd.dynamic`,
+   `/etc/issue`, and `/etc/claude-code/CLAUDE.md` when it exists (inside a
+   sandbox box it is the launcher's note and describes the box, not the host).
+   They are written by provisioning; a line that disagrees with the facts file
+   is a fact to check, not to trust.
+   Completion criterion: each note that exists was read.
 
-2. **Name the target.** `host=$(hostname -s)`, target
-   `~/.claude/skills/server-$host/SKILL.md`. It exists → this run is a refresh:
-   read it first; every later step keeps what it holds.
-   Completion criterion: the target path and "new" or "refresh" are stated.
-
-3. **Scan, read-only.** NEVER sudo, NEVER start, stop, restart or reload
-   anything. A command that needs root → record the gap ("docker: socket needs
-   root"), NEVER a guess.
-   - identity: `hostname -f`, `/etc/os-release`, `systemd-detect-virt`,
-     `nproc`, `free -h`, `df -h -x tmpfs -x devtmpfs`
-   - services: `systemctl list-units --type=service --state=running
-     --no-pager`, the same with `--user`, `docker ps --format
-     '{{.Names}}\t{{.Image}}\t{{.Ports}}'`
-   - ports: `ss -ltnp` (another user's process shows without a name)
-   - layout: `ls /srv /srv/* /opt /var/www /home`; web roots and names from
-     `/etc/nginx/sites-enabled/*` or `/etc/caddy/Caddyfile`
-   - schedules: `crontab -l`, `ls /etc/cron.d`, `systemctl list-timers
-     --no-pager`
-   - facts already written: `~/.claude/LOCAL.md` and `~/.claude/CLAUDE.md`
-     (paths, publishing rules, hosts they name)
-   Completion criterion: each line above ran, or its gap is recorded.
-
-4. **Ask what a scan cannot know.** AskUserQuestion, at most 5, only the ones
-   still open after step 3: the host's role; what matters most or is
-   off-limits; where publishing goes; where secrets live (a pointer, NEVER a
-   value).
-   Completion criterion: each question answered or skipped by the user.
-
-5. **Draft** from the template below. ALWAYS keep the body under 200 lines and
-   every line a fact an agent would otherwise rediscover — NEVER paste raw
-   `df` or package lists a command answers in one call. Refresh → keep every
-   hand-added fact the scan cannot see; change only what the scan proves stale.
-   Completion criterion: the draft's `name` is `server-<host>`, equal to its
-   directory.
-
-6. **Write.** New → write it. Existing → show `diff -u` of the old file against
-   the draft and ask; NEVER overwrite without that answer. NEVER write a secret
-   value. NEVER edit `LOCAL.md` — list which of its lines the memory now covers
-   and leave their removal to the user.
-   Completion criterion: `python3 ~/.claude/hooks/skill_frontmatter_lint.py
-   ~/.claude/skills/server-<host>` reports no error.
-
-## Template
-
-````markdown
----
-name: server-<host>
-description: Server memory for host <host> — role, services, ports, data dirs, web roots, publishing. Applies only where `hostname -s` prints <host>. NOT for any other machine (use its own server-<hostname>).
-when_to_use: "<host>, this server, this host, this machine, which port, which service, restart a service, service logs, deploy here, data dir, web root, publish a page, cron job"
-user-invocable: false
----
-
-# <host>
-
-## Identity
-<fqdn>, <OS>, <virt or bare metal>. Role: <one line>. Last verified <YYYY-MM-DD>.
-
-## Layout
-- `<path>` — <what lives there, who owns it>
-
-## Services
-| unit or container | port | restart | logs |
-|---|---|---|---|
-
-## Publishing
-- <where pages go, what serves them, the URL they land at>
-
-## Secrets
-Pointers only, in `~/.claude/LOCAL.md`. NEVER a value in this file.
+3. **Check before acting.** The facts file carries a "Last verified" date. A
+   fact the task acts on — free disk, a port, a unit or container name, a
+   deploy command — ALWAYS gets one command to confirm it first. NEVER act on a
+   stale number.
+   Completion criterion: every fact the task acts on was confirmed live.
 
 ## Upkeep
-- A fact here is wrong or missing → fix it in this file in the same turn and
-  bump "Last verified".
-- NEVER edit this file from inside qemubox: it describes the host.
-- Drifted beyond a few lines → re-run `/server-init`.
-````
+
+- A fact wrong or missing → fix it in `/etc/server/CLAUDE.md` in the same turn
+  (`sudo`, that file only) and bump "Last verified". NEVER fix a provisioning
+  note (`/etc/motd`) by hand — ALWAYS record the drift in the facts file.
+- Drifted beyond a few lines, or no facts file → run the init: ALWAYS read
+  `init.md` in this directory and follow it. It runs natively on the host,
+  NEVER inside a sandbox box.
+- NEVER copy host facts into a skill, a memory entry or `~/.claude/` — ALWAYS
+  keep them in the machine's own file, so a shared `~/.claude` carries no host
+  names and each host keeps its own.
+- NEVER move the facts to an auto-loaded path (`/etc/claude-code/CLAUDE.md`, a
+  project tree) — ALWAYS keep `/etc/server/`, outside every working directory.
 
 ## Review Checklist
 
-- Ran on the host: `CLAUDE_SANDBOX` empty, no sandbox note.
-- No sudo, no service touched, no write outside
-  `~/.claude/skills/server-<host>/`.
-- A refresh showed the diff and had an answer before writing.
-- No secret value in the memory; `LOCAL.md` unchanged.
-- The memory carries its Upkeep section and passes the frontmatter lint.
+- The facts file and the host notes were read before the machine was touched.
+- Every fact acted on was confirmed by a command in this turn.
+- A wrong fact was fixed in `/etc/server/CLAUDE.md`, nowhere else.

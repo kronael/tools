@@ -787,9 +787,10 @@ print('CDPATH block written' + (f'; ~/.bashrc also sets it: {others}' if others 
 PY
 ```
 
-## Server memory
+## Server facts
 
-For opted-in first syncs only, follow `skills/server-init/SKILL.md` at the
+For opted-in first syncs only, follow `skills/server-init/init.md` at the
 source root after the bundle and tools are installed. It scans the host
-read-only and writes `~/.claude/skills/server-<hostname>/`. NEVER run it when
-`CLAUDE_SANDBOX` is set: the launcher writes the box's sandbox note.
+read-only and writes `/etc/server/CLAUDE.md`, with sudo for that one file.
+NEVER run it when `CLAUDE_SANDBOX` is set: the launcher writes the box's
+sandbox note.

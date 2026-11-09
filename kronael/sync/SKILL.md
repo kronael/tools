@@ -48,8 +48,8 @@ leaves `~/.claude/` untouched.
 A **first sync** = neither `~/.claude/CLAUDE.md` nor `~/.claude/skills/`
 exists. Before any write, explain sync in 2-3 lines and ask which groups to
 run (Claude: AskUserQuestion multiSelect; Codex: numbered options): **Bundle**
-(default on — nothing else works without it), **Settings** (step 5), and **Server memory**
-(`reference.md` § Server memory; NEVER offer when `CLAUDE_SANDBOX` is set).
+(default on — nothing else works without it), **Settings** (step 5), and **Server facts**
+(`reference.md` § Server facts; NEVER offer when `CLAUDE_SANDBOX` is set).
 ALWAYS apply those groups only when selected; tool installation runs separately.
 
 ALWAYS run steps 7-8 on every sync, first setup included: install missing
@@ -171,8 +171,8 @@ set. Other settings still confirm before applying.
    `~/.bashrc`. One missing toolchain skips that tool, never the sync.
    Completion criterion: each tool installed or skipped with the reason.
 
-9. **Server memory and report.** For opted-in first syncs, follow
-   `reference.md` § Server memory after step 8. Report written/skipped.
+9. **Server facts and report.** For opted-in first syncs, follow
+   `reference.md` § Server facts after step 8. Report written/skipped.
    Release delta (installed → source, or "first tracked sync");
    class counts; files merged into the repo (uncommitted — the owner reviews
    and commits; push is separate) and hunks moved to `LOCAL.md`; kept paths;

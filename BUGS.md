@@ -20,15 +20,6 @@
   the one-line descriptions, or exempt the toolkit in the skill; no test — the
   skill text and the Makefiles.
 
-- **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
-  2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
-  `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
-  (Arch here) has no `hostname` binary: `command not found`, so the target
-  name comes out empty, and step 3's `hostname -f` fails the same way.
-  `uname -n` prints the stored hostname, which may be a full domain name.
-  **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
-  test — skill text.
-
 - **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
   `skills/writing/page.md` asks reviewers for five font sizes at most;
   `skills/create/form.md` evaluates distinct rendered sizes against a limit
