@@ -1,7 +1,7 @@
 ---
 name: ops
 description: DevOps and deployment. Dockerfile, systemd, GitHub Actions, monitoring, Ansible. NOT for app code (use language skill).
-when_to_use: "Dockerfile, docker-compose, systemd services, GitHub Actions CI, Ansible playbooks, monitoring setup, PID files"
+when_to_use: "deploy existing app, publish HTML preview, make image, Dockerfile, docker-compose, systemd services, GitHub Actions CI, Ansible playbooks, monitoring setup, PID files"
 ---
 
 # Ops
@@ -40,6 +40,10 @@ ALWAYS apply `../software/code.md` § System changes to runtime/deployment edits
 
 ## Process
 
+- ALWAYS identify the project's build target, deployment command and serving
+  host before deploying. NEVER treat a missing target, stopped preview or HTTP
+  404 as permission to create another hosting path — ALWAYS report the exact
+  blocker and continue work within the project's deployment workflow.
 - Killing processes: WISDOM § Shell
 - PID files for dev only
 - Graceful SIGINT/SIGTERM shutdown is the app's: `../software/code.md` § Design

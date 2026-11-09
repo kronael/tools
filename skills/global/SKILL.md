@@ -166,7 +166,9 @@ PR body with the robot. These win.
   verbatim and NEVER re-litigate the wording, in review or in an eval report.
 - ALWAYS write every address, signature and hash in full — in docs, code
   comments, HTML pages and GitHub text alike. NEVER shorten one with "…".
-- NEVER publish to claude.ai hosting (Artifact tool, uploads): local HTML/MD files the user opens.
+- NEVER use the Sites plugin, its skills or its tools, or publish to claude.ai
+  hosting (Artifact tool, uploads). ALWAYS use the project's own deployment
+  workflow; HTML/MD files stay local unless the user requests deployment.
 
 ## Agents
 
