@@ -40,10 +40,7 @@ ALWAYS apply `../software/code.md` § System changes to runtime/deployment edits
 
 ## Process
 
-- ALWAYS identify the project's build target, deployment command and serving
-  host before deploying. NEVER treat a missing target, stopped preview or HTTP
-  404 as permission to create another hosting path — ALWAYS report the exact
-  blocker and continue work within the project's deployment workflow.
+- ALWAYS follow the project's deployment instructions; if none exist, ask the user.
 - Killing processes: WISDOM § Shell
 - PID files for dev only
 - Graceful SIGINT/SIGTERM shutdown is the app's: `../software/code.md` § Design
