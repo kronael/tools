@@ -1,6 +1,20 @@
 # Changelog
 
-## [Unreleased]
+## [v0.4.72] — 20261109
+
+> kronael v0.4.72 — Host facts load on demand
+>
+> Agents load host facts for machine work, report shorter progress updates, and use higher effort for judgment tasks.
+>
+> • Server facts — load facts and provisioning notes before work on the machine.
+> • Progress — close each step in one line and show the full plan only when asked.
+> • Dispatch — run judgment tasks one effort level above coding.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `server-init` loads `/etc/server/CLAUDE.md` and keeps setup instructions in `init.md`.
+- Progress updates close each step in one line and show the full plan only when asked.
+- Judgment tasks default to high effort while coding defaults to medium effort.
 
 ### Operator note
 
