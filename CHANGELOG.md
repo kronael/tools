@@ -1,5 +1,26 @@
 # Changelog
 
+## [Unreleased]
+
+### Operator note
+
+Sync carries kept private skills forward. It does not transfer their facts to
+`/etc/server/CLAUDE.md`.
+
+Confirm the current host with `uname -n`.
+If present, read this host's
+`~/.claude/skills/server-<hostname>/SKILL.md` before drafting.
+Follow the [initializer](skills/server-init/init.md) natively on that host.
+Preserve hand-added facts that a scan cannot recover.
+Verify live values and mark unresolved facts as unverified.
+Keep secret values out of the world-readable facts file.
+Use secret pointers only, and keep private facts out of this public repo.
+
+After checking the facts file, ask the owner whether to retire that host's
+private skill and adjust its `.keep` coverage.
+Do not remove the skill or change `.keep` without that explicit decision.
+Leave every other host's skills and keep coverage untouched.
+
 ## [v0.4.71] — 20261107
 
 > kronael v0.4.71 — Safer cleanup and command checks

@@ -22,8 +22,9 @@ NEVER with sudo. Everything else about the host goes in `/etc/server/CLAUDE.md`.
    answer wrongly or not at all inside it. ALWAYS run the scan with the
    command sandbox off. `sudo` is for reading only — `docker`, `ss -p`, `du`
    over root-owned trees, root-owned config.
-   Completion criterion: `systemctl list-units` and `sudo docker ps` both
-   answer.
+   ALWAYS record missing service tools or access failures as gaps in step 4.
+   Completion criterion: the shell runs on the target host with the command
+   sandbox off.
 
 3. **Name the target.** `/etc/server/CLAUDE.md`. It exists → this run is a
    refresh: read it first; every later step keeps what it holds.

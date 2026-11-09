@@ -76,7 +76,7 @@ agent's guest:
 - Skills: all of `skills/` except `diary`, `solve`, `recall-memories` and
   `compact-memories`, whose core versions read arizuko's memory layout
   (`~/diary`, `~/episodes`, `~/facts`), and `global`, `owner`, `emacs` and
-  `server-init`, which describe this host.
+  `server-init`, which serve host sessions.
 - Hooks: `prompt_nudge.py` and `pretool_nudge.py` with `gh_text_lint.py`,
   `codex_hook.py` and `lib/`. The step writes their entries from
   `settings-recommended.json` to `.claude/settings.json` and from
