@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, pyproject.toml, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -167,6 +167,8 @@ Python-specific additions and deltas.
 
 ## Build
 - uv for packages, pyright for types
+- ALWAYS keep `pyproject.toml` and other build config to what is needed, defaults implicit,
+  and recheck each entry by removing it — NEVER a `[build-system]` uv builds without.
 - NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`): its
   bundled libssl segfaults beside `ssl` — ALWAYS the source build, the builder given the
   dev headers (`libpq-dev`).
