@@ -37,14 +37,11 @@ reach for a package layout only when justified.
 ```toml
 [project.scripts]
 mytool = "mytool.mytool:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["mytool", "lib"]
 ```
+
+NEVER add `[build-system]` or any other entry before something needs it (`py` § Build).
+ALWAYS read the file list of the wheel `uv build` makes: a backend earns its place when
+that list is wrong or the build fails.
 
 Run from anywhere off GitHub:
 ```
@@ -54,6 +51,5 @@ uvx --from git+https://github.com/<owner>/<repo> mytool ...
 - The CLI module name conventionally matches the package name
   (`mypkg/mypkg.py:main`) so `uvx mypkg` lines up cleanly.
 - Local dev: `uvx --from . mytool ...` reproduces the github flow.
-- Bundle assets inside the package dir — hatchling picks them up via
-  `packages = [...]`.
+- Bundle assets inside the package dir; without a backend the wheel leaves them out.
 

@@ -74,3 +74,5 @@ reads to pick the agent type.
   `strict` list; a test file opts down with `# pyright: basic`.
 - NEVER a formatter workaround (`# fmt: skip`) the pinned formatter config
   already makes redundant.
+- ALWAYS check each `pyproject.toml` and other build config the range touches
+  against `py` § Build.
