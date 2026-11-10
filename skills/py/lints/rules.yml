@@ -319,3 +319,12 @@ rule:
 message: "NEVER dataclasses.replace(obj, ...) — mix the project's WithReplace into the dataclass and call obj.replace(...). The mixin's own body and a dataclass\
     \ you do not own take # ast-grep-ignore: py-replace-method. See skill:py."
 note: 'source: skills/py/SKILL.md — Named Data Structures'
+---
+id: py-no-file-rule-switch
+language: python
+severity: warning
+rule:
+    kind: comment
+    regex: ^#\s*(pyright:.*\breport\w+\s*=|ruff:\s*noqa:)
+message: NEVER switch a checker rule off for a whole file — ignore the one line, naming its rule and the reason. See skill:software code.md.
+note: 'source: skills/software/code.md — Comments'
