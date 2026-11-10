@@ -32,4 +32,4 @@ in fixes too.
 - ALWAYS route GitHub posting through the `gh-comment` skill — its distill and
   review-on-wisdom phases, approval gate and `🤖` prefix.
 - ALWAYS submit findings reviews through `gh-comment` § Submit. For approving
-  reviews and merges, ALWAYS follow WISDOM § Git's command consent rule.
+  reviews and merges, ALWAYS follow WISDOM § Git's permission-prompt rule.

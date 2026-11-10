@@ -89,7 +89,7 @@ NEVER change an existing PR's title — the PATCH sends `body` alone, never
 `title`. Rewrite the title ONLY when the user explicitly asks; otherwise the
 author's title stands even if it doesn't match your body.
 
-NEVER open a second PR for an existing one, and NEVER `gh pr merge` (WISDOM § Git).
+NEVER open a second PR for an existing one. A merge goes through the permission prompt (WISDOM § Git).
 
 ## Format
 
