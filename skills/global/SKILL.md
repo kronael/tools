@@ -59,6 +59,8 @@ read it before a design answer, a plan, a review or a sub brief.
   temp path, and NEVER move a build between target directories — each switch
   costs a full rebuild and splits the cache across mounts. Out of space: SAY so
   and stop; freeing or resizing the directory is the maintainer's call.
+- ALWAYS load `wisdom` before changing an instruction file — this file, a `CLAUDE.md`, a
+  skill, anything an agent reads as rules — by any route: edit tool, shell or git plumbing.
 - ALWAYS sync `~/.claude/` edits into the tools repo (`kronael/sync`; LOCAL.md).
 - This file and loaded SKILL.md files are collectively "WISDOM".
 

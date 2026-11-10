@@ -1,6 +1,6 @@
 ---
 name: wisdom
-description: Write or edit SKILL.md or CLAUDE.md. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
+description: Write or edit SKILL.md, CLAUDE.md or any other instruction file. NOT for general code (use go/rs/py/ts), mining history (use learn), or researching/codifying public best practice into a skill (use scavenge).
 when_to_use: "creating a new skill, adding a rule to CLAUDE.md, fixing a skill description, ALWAYS/NEVER statements, skill not triggering, skill frontmatter, when_to_use, skill lint failed, promote rules to lints, does this rule earn its context, trim an always-loaded file, instruction tags"
 ---
 
