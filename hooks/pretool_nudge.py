@@ -288,7 +288,8 @@ def process(data: object) -> dict | None:
                     'permissionDecisionReason': reason,
                 }
             }
-        if any(skill_for(word) == '/wisdom' for word in re.split(r'[\s\'"`=<>|;&(){}]+', command)):
+        words = re.split(r'[\s\'"`=<>|;&(){},:]+', command)
+        if any(skill_for(word) == '/wisdom' for word in words):
             return {
                 'hookSpecificOutput': {
                     'hookEventName': 'PreToolUse',
