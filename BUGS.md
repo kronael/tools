@@ -388,13 +388,10 @@
   v0.4.41 hooks, wiring, gate and skills on the owner's word that the caveman
   style and its hooks stay as refined here; the merge commit names every path.
   The redesign lives at `origin/master` 3f4c9be77383943d79eaea51c3bff4858a431807.
-  `hooks/style_lint.py` now measures the final reply at Stop with the same
-  20/5/2 caps and blocks once for a rewrite, without kvs, levels or the
-  per-prompt pointer: the measured gap was the block, not the reminder
-  (replies over the ceiling kept appearing while the reminder alone was on). **Options:** (a) adopt the rest of the redesign (`kvs`,
-  `lib/reminder.py`, the escalation levels); (b) stay on the v0.4.41 hooks
-  plus `style_lint.py`. **Default if nothing is decided:** (b). No test —
-  design.
+  This line has no reply-budget hook (CAVEMAN-BUDGET-HAS-NO-HOOK).
+  **Options:** (a) adopt the rest of the redesign (`kvs`,
+  `lib/reminder.py`, the escalation levels); (b) stay on the v0.4.41 hooks.
+  **Default if nothing is decided:** (b). No test — design.
 
 - **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
   `skills/writing/SKILL.md` § Language (upstream) and
@@ -438,19 +435,6 @@
   `CLAUDE.local.md` and a shell command run from inside a skill directory
   (`sed -i ... notes.md`) get no nudge; WISDOM § Environment states the rule
   for every instruction file. No test — design.
-
-- **STYLE-LINT-BLOCK-RESENDS-A-SHOWN-REPLY** (MED, design) — needs sign-off.
-  Stop runs after the reply is on screen, so `hooks/style_lint.py` cannot
-  retract it; `reason()` asks to "Send the final answer again", and the user
-  reads the answer twice. Measured over three days of sessions: about one
-  Stop in five blocked, nearly every block answered by a text-only resend
-  that reuses most of the blocked reply's words, and about a third of the
-  resends still over a cap. No miscount found: the flagged bullets do hold 3+
-  sentences. **Options:** (a) advisory: write the measured miss to
-  `session_state`, and `prompt_nudge.py` injects it at the next prompt,
-  nothing blocks; (b) drop the hook and keep the budget in the output style
-  alone; (c) keep the block. **Default if nothing is decided:** (c). No test
-  — design.
 
 - **STOP-COMMIT-NUDGE-BLAMES-OTHER-WRITERS** (MED, design) — needs sign-off.
   `hooks/stop.py` `nudges()` blocks on every dirty tracked file under the
@@ -1123,6 +1107,12 @@
   `.gitignore`. Waits for the owner.
 
 ## Ruled not a defect
+
+- **CAVEMAN-BUDGET-HAS-NO-HOOK** (LOW, design) — not a defect. No hook
+  measures a reply against `output-styles/caveman.md` § Budget. A Stop hook
+  runs after the reply is on screen: a block cannot retract the reply, and the
+  rewrite it requests is a second copy for the user to read. The output style
+  states the budget before the reply is written.
 
 - **QEMUBOX-DOCKER-VM-BOUNDARY** (LOW, design) — not a defect. Guest Docker
   uses the VM's process and network boundaries. It needs no extra isolation

@@ -146,6 +146,7 @@ RETIRED = {  # names the bundle shipped and dropped
     'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'hooks/spec_lint.py', 'hooks/test_spec_lint.py',
+    'hooks/style_lint.py', 'hooks/test_style_lint.py',
     'output-styles/80-caveman.md',
 }
 

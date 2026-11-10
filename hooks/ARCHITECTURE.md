@@ -16,7 +16,6 @@ Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe blo
 
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
                       ──> memory_nudge.py (session memory, once/session fallback)
-                      ──> style_lint.py (caveman budget block, once per turn)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md)
                           ──> reclaude.py     (RECLAUDE.md + preservation note)
@@ -347,33 +346,6 @@ emission, not completion of learn. Pure script, no LLM call. Never blocks or pus
 
 The Codex adapter has no `memory_nudge` target, and `codex-hooks.json` does
 not wire this hook. The shared skills do not imply automatic Codex delivery.
-
-### style_lint.py (Stop)
-
-**Input:** JSON with `last_assistant_message` and `stop_hook_active`;
-`~/.claude/settings.json` `outputStyle`.
-**Output:** `{"decision": "block", "reason": "..."}` naming every broken
-Budget rule, or silent.
-
-The caps are `../output-styles/caveman.md` § Budget, held as constants:
-`CAP_LINES` 20 rendered 80-column lines, `CAP_BULLETS` 5 per list,
-`CAP_SENTENCES` 2 per bullet. `test_style_lint.py` asserts the style file
-still states the same numbers.
-
-**Flow:**
-1. Silent unless `outputStyle` is `caveman`, and on the rewrite turn
-   (`stop_hook_active`), so a reply is measured once.
-2. Drop fenced code (the Budget puts code and diffs outside the count), then
-   count rendered lines (`ceil(len/80)` per source line), the longest bullet
-   run, and the most sentences in one bullet (inline code is one word).
-3. Over any cap: block with the measured values and the rewrite request. The
-   reason names the two exemptions the model decides: code fences and a
-   document the user asked for.
-
-The hook cannot tell the fact, action and explanation tiers apart, so it
-holds only the 20-line ceiling; the ≤12 action tier stays with the style
-file. Pure script, no state, no transcript read. Codex does not wire it:
-`outputStyle` is a Claude Code setting.
 
 ## Error Handling
 
