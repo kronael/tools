@@ -1,5 +1,93 @@
 # Changelog
 
+## [v0.4.75] — 20261110
+
+> kronael v0.4.75 — Lean build config, guarded rules
+>
+> Build config keeps only needed entries, every instruction-file change goes through wisdom, and file-wide checker switches are banned.
+>
+> • Build config — pyproject.toml carries only what is needed; each entry is rechecked by removal.
+> • Wisdom — load it before changing any instruction file, by edit tool, shell or git plumbing.
+> • Nudges — skill sibling files and shell commands that name an instruction file point to wisdom.
+> • Checkers — a pragma that switches a rule off for a whole file is banned; ignore the one line.
+> • Lint — py-no-file-rule-switch flags a pyright report switch and a coded file noqa.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `py` § Build, uvx page: build config holds only what is needed; no default `[build-system]`.
+- WISDOM § Environment: load `wisdom` before changing any instruction file, whatever writes it.
+- The pretool nudge maps a `.md` under `skills/` to `/wisdom` and `pyproject.toml` to `/py`.
+- A shell command that names an instruction file gets the `/wisdom` nudge once per session.
+- `code.md` bans file-wide checker switches; lint `py-no-file-rule-switch` flags them.
+
+## [v0.4.74] — 20261110
+
+> kronael v0.4.74 — Publishing asks, never blocks
+>
+> Every push, PR approval, PR merge and GitHub release now raises the permission prompt, even in bypass mode.
+>
+> • Push — git push, rip and rig push prompt instead of running unasked.
+> • Approve and merge — the hook asks in every Claude mode instead of denying in bypass mode.
+> • Release — creating a GitHub release prompts instead of being blocked outright.
+> • Rules — one permission rule per command, duplicates and dead patterns removed.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Every push (`git push`, `rip`, `rig push`, `rig p`) is a settings `ask` rule, no longer `allow`.
+- An approving review or PR merge asks in every Claude mode; Codex still denies it.
+- `gh release create` asks instead of being blocked by the hook.
+- Recommended settings add the `rsync * --delete*` deny and replace the dead `git add [^-]*` allow.
+- WISDOM § Git names the permission prompt as the gate for these actions.
+
+## [v0.4.73] — 20261109
+
+> kronael v0.4.73 — Stop hook noise on record
+>
+> The three Stop hooks were measured against real sessions, and each noise source is now an open proposal.
+>
+> • Reply budget — a blocked reply is resent in full, so the reader sees it twice.
+> • Commit nudge — it blocks on files a parallel worker is still editing.
+> • Memory check — its Stop context continues the turn, often mid-task.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `BUGS.md` records the three Stop hook proposals; hook behaviour is unchanged until the owner decides.
+
+## [v0.4.72] — 20261109
+
+> kronael v0.4.72 — Host facts load on demand
+>
+> Agents load host facts for machine work, report shorter progress updates, and use higher effort for judgment tasks.
+>
+> • Server facts — load facts and provisioning notes before work on the machine.
+> • Progress — close each step in one line and show the full plan only when asked.
+> • Dispatch — run judgment tasks one effort level above coding.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `server-init` loads `/etc/server/CLAUDE.md` and keeps setup instructions in `init.md`.
+- Progress updates close each step in one line and show the full plan only when asked.
+- Judgment tasks default to high effort while coding defaults to medium effort.
+
+### Operator note
+
+Sync carries kept private skills forward. It does not transfer their facts to
+`/etc/server/CLAUDE.md`.
+
+Confirm the current host with `uname -n`.
+If present, read this host's
+`~/.claude/skills/server-<hostname>/SKILL.md` before drafting.
+Follow the [initializer](skills/server-init/init.md) natively on that host.
+Preserve hand-added facts that a scan cannot recover.
+Verify live values and mark unresolved facts as unverified.
+Keep secret values out of the world-readable facts file.
+Use secret pointers only, and keep private facts out of this public repo.
+
+After checking the facts file, ask the owner whether to retire that host's
+private skill and adjust its `.keep` coverage.
+Do not remove the skill or change `.keep` without that explicit decision.
+Leave every other host's skills and keep coverage untouched.
+
 ## [v0.4.71] — 20261107
 
 > kronael v0.4.71 — Safer cleanup and command checks

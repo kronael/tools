@@ -25,15 +25,16 @@ artifacts.
 | Mechanical | Named-file inventories, searches, one-file summaries, bounded exact edits outside docs, or merges and rebases with stated conflict rules; no unresolved judgment | Haiku / medium | `gpt-6-luna` / medium | Lightweight |
 | Coding | Implement settled code or test changes beyond Mechanical, resolve semantic conflicts, investigate a bug or gather nontrivial facts | Sonnet / medium | `gpt-6.1-terra` / medium | Implementation |
 | Algorithm | Find or solve an algorithm — a search, an optimization, a numeric or concurrency design — even when the output is code | Opus / high | `gpt-6.1-sol` / high | Judgment |
-| Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / medium | `gpt-6.1-sol` / medium | Judgment |
+| Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates; write or complete the spec's module map (`plan.md` § Module map) | Opus / high | `gpt-6.1-sol` / high | Judgment |
-| Review | Judge code, specs or detailed plans for correctness and consistency; verify claims against the implementation; systemic risks use Audit | Opus / medium | `gpt-6.1-sol` / medium | Judgment |
+| Review | Judge code, specs or detailed plans for correctness and consistency; verify claims against the implementation; systemic risks use Audit | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
 | Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / high | `gpt-6.1-sol` / high | Judgment |
 
-Effort is medium unless the row says otherwise. The dispatching planner MAY
-raise a review to high for a risky change, and MAY keep a repeated run of one
-task at medium; it reports the changed effort with the launch. ONLY a Sonnet sweep
+A Judgment task ALWAYS runs one effort level above Coding: high while Coding
+is medium. ALWAYS move every Judgment row with a change to Coding's effort.
+On Claude, Fable runs ONLY Audit, the task whose judgment rests on a whole
+change's context; every other Judgment task runs on Opus. ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 

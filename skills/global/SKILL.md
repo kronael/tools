@@ -119,18 +119,15 @@ PR body with the robot. These win.
   head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
   `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs explicit
   authorization naming it; "push it" and "ship it" alone are NEVER that authorization.
-- ALWAYS submit each authorized approving review or PR merge through the native
-  execution tool and its command-approval path. NEVER add a separate chat gate
-  for command consent. ALWAYS use the supported approval request when permitted
-  by the active tool and session restrictions. NEVER infer that normal execution
-  is forbidden from `approval_policy=never` or an unseen dialog alone; ALWAYS
-  report the actual tool decision. NEVER bypass a refusal or change permission
-  settings to proceed. NEVER treat chat, environment state, an agent's receipt
-  or successful execution as proof of a fresh human command approval.
-  ALWAYS preserve bot attribution; NEVER claim an agent-written review is
-  human-authored. Hook limits: `~/.claude/hooks/ARCHITECTURE.md` § pretool_nudge.py.
+- The permission prompt is the approval gate for a push, an approving review,
+  a PR merge and `gh release create`: settings `ask` rules and the
+  `pretool_nudge.py` hook raise it in every mode. ALWAYS run an authorized
+  one through the native tool and report its actual decision. NEVER add a chat
+  gate, bypass a refusal or change permission settings to proceed. NEVER claim
+  an agent-written review is human-authored. Hook limits:
+  `~/.claude/hooks/ARCHITECTURE.md` § pretool_nudge.py.
 - ALWAYS apply `software/code.md` § Review sign-off to shared-library and
-  runtime changes. Command consent does not replace that review.
+  runtime changes. A permission prompt does not replace that review.
 - ALWAYS post PR comments with `/gh-comment` and write a PR body with
   `/pr-draft` — NEVER freehand; they hold the shape, cap, REST path and `🤖`.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body,
@@ -186,9 +183,10 @@ PR body with the robot. These win.
   step and high-level subagent run, updating status the moment it changes.
   When absent or prohibited, ALWAYS report the gap and maintain the existing plan or
   work record. NEVER invent tool calls or substitute goals or threads for a
-  checklist. While work spans several turns, ALWAYS restate the whole numbered plan in chat — every
-  open workstream with its status — after each step and whenever the user asks
-  where things stand (`dispatch` → `plan.md`).
+  checklist. While work spans several turns, ALWAYS close each step with one
+  line in chat — the step done, the next one, how many stay open — and restate
+  the whole numbered plan, every open workstream with its status, only when
+  the user asks where things stand (`dispatch` → `plan.md`).
 - ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
   implementation: source-grounded planning, bounded coding steps and the
   parent's diff review before each dependent step. Its small-change gate

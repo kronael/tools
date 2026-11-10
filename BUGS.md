@@ -30,14 +30,14 @@
   the one-line descriptions, or exempt the toolkit in the skill; no test — the
   skill text and the Makefiles.
 
-- **SERVER-INIT-HOSTNAME-MISSING** (LOW, correctness) — CONFIRMED at HEAD
-  2026-10-10. `skills/server-init/SKILL.md` step 2 and its template run
-  `hostname -s`, and step 3 runs `hostname -f`. A host without inetutils
-  (Arch here) has no `hostname` binary: `command not found`, so the target
-  name comes out empty, and step 3's `hostname -f` fails the same way.
-  `uname -n` prints the stored hostname, which may be a full domain name.
-  **Fix:** in step 2 and the template, `h=$(uname -n)` and `${h%%.*}`; no
-  test — skill text.
+- **REVIEW-SUBMIT-CHAT-GATE** (LOW, design) — needs sign-off. A push,
+  approval, merge and `gh release create` ask through the permission prompt,
+  but a findings-review submit still needs `SUBMIT REVIEW` in the user's newest
+  message (`hooks/gh_text_lint.py` `SUBMIT_REFUSED`), a second gate mechanism.
+  **Options:** (a) `Action.SUBMIT` returns `ask` like an approval and the
+  `SUBMIT REVIEW` rule leaves `gh-comment`, `review` and the hook docs;
+  (b) keep the chat word. **Default if nothing is decided:** (b). No test —
+  design.
 
 - **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
   `skills/writing/page.md` asks reviewers for five font sizes at most;
@@ -438,6 +438,42 @@
   `CLAUDE.local.md` and a shell command run from inside a skill directory
   (`sed -i ... notes.md`) get no nudge; WISDOM § Environment states the rule
   for every instruction file. No test — design.
+
+- **STYLE-LINT-BLOCK-RESENDS-A-SHOWN-REPLY** (MED, design) — needs sign-off.
+  Stop runs after the reply is on screen, so `hooks/style_lint.py` cannot
+  retract it; `reason()` asks to "Send the final answer again", and the user
+  reads the answer twice. Measured over three days of sessions: about one
+  Stop in five blocked, nearly every block answered by a text-only resend
+  that reuses most of the blocked reply's words, and about a third of the
+  resends still over a cap. No miscount found: the flagged bullets do hold 3+
+  sentences. **Options:** (a) advisory: write the measured miss to
+  `session_state`, and `prompt_nudge.py` injects it at the next prompt,
+  nothing blocks; (b) drop the hook and keep the budget in the output style
+  alone; (c) keep the block. **Default if nothing is decided:** (c). No test
+  — design.
+
+- **STOP-COMMIT-NUDGE-BLAMES-OTHER-WRITERS** (MED, design) — needs sign-off.
+  `hooks/stop.py` `nudges()` blocks on every dirty tracked file under the
+  payload `cwd`; it cannot tell the session's edits from a Codex worker's or
+  a background agent's in the same tree, or in a worker's worktree the
+  session `cd`'d into. Measured over three days of sessions that drive
+  workers: about one commit block in ten led to a commit; the rest were
+  answered "that change belongs to the worker". Ownership by the session's
+  `Edit`/`Write` paths would silence most of them, and also a real case where
+  the session edited with `sed -i` in Bash. **Options:** (a) block only on a
+  dirty file whose mtime falls inside one of the session's own tool calls in
+  `transcript_path` (covers Bash edits; one transcript read per Stop, tens of
+  MB for a long session); (b) `Edit`/`Write`/`MultiEdit`/`NotebookEdit` paths
+  only; (c) keep. **Default if nothing is decided:** (c). No test — design.
+
+- **MEMORY-NUDGE-STOP-CONTEXT-CONTINUES-THE-TURN** (LOW, design) — needs
+  sign-off. `hooks/memory_nudge.py`'s docstring says "Never blocks", but
+  Claude Code answers Stop `additionalContext` with a new assistant turn, the
+  same as a block. With `STOP_COUNT_THRESHOLD = 3`, a session that drives
+  workers reaches the nudge minutes in, while they still run, so the memory
+  pass lands mid-task. Most of these nudges did end in a memory write.
+  **Options:** (a) fire on the time threshold alone; (b) keep, and correct
+  the docstring. **Default if nothing is decided:** (b). No test — design.
 
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
