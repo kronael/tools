@@ -256,6 +256,38 @@ def test_process_allows_safe_commands(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
 
 
+@pytest.mark.xfail(
+    reason='PRETOOL-HTTPS-REMOTE-GUARD-READS-RAW-TEXT: a quoted key or path hides the write',
+    strict=True,
+)
+@pytest.mark.parametrize(
+    'command',
+    [
+        'git config "remote.origin.url" https://github.com/owner/repo.git',
+        'git -C "repo with spaces" remote add origin https://github.com/owner/repo.git',
+    ],
+)
+def test_process_blocks_a_quoted_https_remote_write(command: str) -> None:
+    result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
+    assert result is not None
+    assert result['decision'] == 'block'
+
+
+@pytest.mark.xfail(
+    reason='PRETOOL-HTTPS-REMOTE-GUARD-READS-RAW-TEXT: a removal or a read is blocked as a write',
+    strict=True,
+)
+@pytest.mark.parametrize(
+    'command',
+    [
+        'git remote set-url --delete origin https://github.com/owner/repo.git',
+        'git config --get remote.origin.url https://github.com/owner/repo.git',
+    ],
+)
+def test_process_allows_an_https_remote_removal_or_read(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
 ROBOT = '\U0001f916'
 GOOD_PR = f'{ROBOT} **TL;DR:** Deploys the collector through the service list.\n'
 

@@ -12,6 +12,16 @@
   `printf 'x: int = "wrong"  # type: ignore\n' > t.py && uvx basedpyright t.py`;
   no test — docs.
 
+- **CODE-DATA-CHECK-RULE-READS-AS-A-STREAM-BAN** (LOW, docs) — owner decision.
+  `skills/software/code.md` § Design bans a completeness or correctness check
+  "inside the running loop" and wants it once, "where the data is loaded". A
+  collector receives its data inside the loop, and `skills/data/SKILL.md`
+  requires a field and type check before every insert. The rule's reason
+  ("re-tests what loading already knew") holds for input loaded before the
+  run; the rule does not state that scope. **Options:** (a) scope the rule to
+  input loaded before the run; (b) keep. **Default if nothing is decided:**
+  (b). No test — docs.
+
 - **TOOLS-PYTHON-LINT-DEBT** (LOW, config) — bundled checks report thirteen
   existing violations outside lint fixtures: four predicate names in
   `hooks/pretool_nudge.py:335` and `skills/recall-memories/recall.py:161,169,802`,
@@ -622,6 +632,18 @@
   patterns that name a bare command, and drop the dead ask entry; (b) leave
   both — phrase commit messages around the words. **Default if nothing is
   decided:** (b). No test — design.
+
+- **PRETOOL-HTTPS-REMOTE-GUARD-READS-RAW-TEXT** (LOW, correctness) — CONFIRMED
+  at 665f2f1. The two `HTTPS remote` patterns in `UNSAFE_COMMAND_PATTERNS`
+  (`hooks/pretool_nudge.py:38-39`) match raw command text. A quoted key or a
+  quoted `-C` path hides a write: `git config "remote.origin.url" https://…`
+  and `git -C "repo with spaces" remote add origin https://…` pass. A removal
+  and a read are blocked as writes: `git remote set-url --delete origin
+  https://…` and `git config --get remote.origin.url https://…`. **Fix:**
+  split the command with `shlex` and read the git subcommand and its flags
+  before the URL test. Measured:
+  `hooks/test_pretool_nudge.py::test_process_blocks_a_quoted_https_remote_write`,
+  `hooks/test_pretool_nudge.py::test_process_allows_an_https_remote_removal_or_read`.
 
 - **SKILL-LINT-PATH-TOKEN-SKIPS-SPACED-NAMES** (LOW, correctness) — CONFIRMED
   at 63ad23b. `PATH_TOKEN` (`hooks/skill_frontmatter_lint.py:72`) admits only
