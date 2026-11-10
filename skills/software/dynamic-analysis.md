@@ -73,7 +73,20 @@ Targets: `miri`, `test-san`, `fuzz`, `mutants`.
   `TSAN_OPTIONS` log_path, and give pytest-xdist a faulthandler timeout so a
   hang doesn't stall CI.
 
-Targets: default `test` runs `-X dev -W error`; add `test-prop`, `test-mem`.
+- **mutmut** (>=3.8) — mutation testing: copies the source to `mutants/`, changes
+  one operator or constant at a time and runs the tests; a surviving mutant is a
+  missing test or dead code. ALWAYS put it in a `mutation` uv group, NEVER `dev`
+  (an image that installs `dev` ships it). ALWAYS configure `[tool.mutmut]` in
+  `pyproject.toml`: `source_paths` (logic modules only), `do_not_mutate`,
+  `also_copy` (files the tests import but nothing mutates) and
+  `pytest_add_cli_args` (unit tests only). ALWAYS list `mutants/` in
+  `.gitignore` and the pyright excludes. `make mut` runs `uv run --group
+  mutation mutmut run $(MUTANTS)`, then `mutmut results`; `MUTANTS` narrows it
+  to the changed modules, since a whole package takes hours. ALWAYS run it
+  before calling a refactor's suite enough; turn each survivor into a test or a
+  `BUGS.md` entry, NEVER a bare `# pragma: no mutate`.
+
+Targets: default `test` runs `-X dev -W error`; add `test-prop`, `test-mem`, `mut`.
 
 ---
 
