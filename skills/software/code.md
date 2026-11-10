@@ -87,6 +87,10 @@ your diff against every `##` heading here before calling an edit done.
 - A machine-read marker is not a comment: a `// #region <name>` doc anchor
   (`readme` skill) and a lint or type pragma (`//nolint:`, `# noqa`,
   `# type: ignore`, `// @ts-expect-error`) stay.
+- NEVER a pragma that switches a checker rule off for a whole file (`# pyright:
+  reportX=false`, `# ruff: noqa: X`; lint `py-no-file-rule-switch`). ALWAYS ignore the one
+  line, naming its rule and the reason; a mode comment a language skill prescribes
+  (`# pyright: basic` on a test) stays.
 - A config file is not code: the reason beside an entry — a lint `ignore`
   list, a CI matrix, host vars — stays, because the entry has no name, type
   or body to carry it. A sweep deletes nothing there.
