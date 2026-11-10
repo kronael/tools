@@ -168,7 +168,7 @@ Python-specific additions and deltas.
 ## Build
 - uv for packages, pyright for types
 - ALWAYS keep `pyproject.toml` and other build config to what is needed, defaults implicit,
-  and recheck each entry by removing it — NEVER a `[build-system]` uv builds without.
+  and recheck each entry by removing it: one nothing misses stays out, even `[build-system]`.
 - NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`): its
   bundled libssl segfaults beside `ssl` — ALWAYS the source build, the builder given the
   dev headers (`libpq-dev`).

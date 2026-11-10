@@ -39,9 +39,9 @@ reach for a package layout only when justified.
 mytool = "mytool.mytool:main"
 ```
 
-NEVER add `[build-system]` or any other entry before something needs it (`py` § Build).
-ALWAYS read the file list of the wheel `uv build` makes: a backend earns its place when
-that list is wrong or the build fails.
+NEVER add `[build-system]` or any other entry before something fails without it (`py`
+§ Build). ALWAYS check by running the tool the way its users do and reading the file list
+of the wheel `uv build` makes.
 
 Run from anywhere off GitHub:
 ```
@@ -51,5 +51,5 @@ uvx --from git+https://github.com/<owner>/<repo> mytool ...
 - The CLI module name conventionally matches the package name
   (`mypkg/mypkg.py:main`) so `uvx mypkg` lines up cleanly.
 - Local dev: `uvx --from . mytool ...` reproduces the github flow.
-- Bundle assets inside the package dir; without a backend the wheel leaves them out.
+- Bundle assets inside the package dir, and confirm the wheel's file list carries them.
 

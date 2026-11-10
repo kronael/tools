@@ -325,6 +325,6 @@ language: python
 severity: warning
 rule:
     kind: comment
-    regex: ^#\s*(pyright:.*\breport\w+\s*=|ruff:\s*noqa:)
+    regex: ^#\s*(pyright:.*\breport\w+\s*=\s*(false|none)\b|(ruff|flake8):\s*noqa:)
 message: NEVER switch a checker rule off for a whole file — ignore the one line, naming its rule and the reason. See skill:software code.md.
 note: 'source: skills/software/code.md — Comments'

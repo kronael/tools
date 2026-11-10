@@ -44,8 +44,8 @@ Proven blind spot: stock pyright `strict` errors on an *unannotated* param
 (`reportUnknownParameterType`) but stays silent on an explicit `def f(x: Any)`.
 basedpyright's `reportExplicitAny` closes exactly that; ruff `ANN401` double-covers it.
 
-ALWAYS set the tables below once per repo: in the config its projects already share when
-one exists, in `pyproject.toml` otherwise — NEVER a copy per project (`py` § Build).
+The tables below go wherever the repo already keeps that tool's settings — a config its
+projects share when there is one, `pyproject.toml` otherwise (`py` § Build).
 
 ### basedpyright — `pyproject.toml`
 

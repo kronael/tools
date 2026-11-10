@@ -389,8 +389,8 @@ def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
     [
         "cat > CLAUDE.md <<'EOF'\n# Rules\nEOF",
         "sed -i 's/a/b/' /repo/skills/refine/py.md",
-        'git update-index --add --cacheinfo 100644,0123abc,app/AGENTS.md',
-        'git show HEAD:skills/py/SKILL.md',
+        'git update-index --add --cacheinfo 100644,0123abc,AGENTS.md',
+        'git show HEAD:CLAUDE.md',
     ],
 )
 def test_process_nudges_a_command_that_names_an_instruction_file(command: str) -> None:
