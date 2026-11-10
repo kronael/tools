@@ -2,6 +2,16 @@
 
 ## Bundle
 
+- **STRICT-TYPING-STATES-A-DEFAULT** (LOW, docs) — CONFIRMED 2026-11-10.
+  `skills/software/strict-typing.md` § basedpyright lists
+  `enableTypeIgnoreComments = false` among "only the non-default lines" with
+  the comment "default true". That default is stock pyright's: basedpyright
+  1.40.2 with no config already reports the error behind a `# type: ignore`,
+  so the line states a default, against `py` § Build. **Fix:** drop the line,
+  or mark it as needed under stock pyright only. Reproduce with
+  `printf 'x: int = "wrong"  # type: ignore\n' > t.py && uvx basedpyright t.py`;
+  no test — docs.
+
 - **TOOLS-PYTHON-LINT-DEBT** (LOW, config) — bundled checks report thirteen
   existing violations outside lint fixtures: four predicate names in
   `hooks/pretool_nudge.py:335` and `skills/recall-memories/recall.py:161,169,802`,
@@ -421,6 +431,13 @@
   is decided:** (b).
 
 ## Hooks
+
+- **WISDOM-NUDGE-FOLLOWS-NAMES** (LOW, design) — deliberate limit. The
+  `/wisdom` nudge in `hooks/pretool_nudge.py` keys on a file name (`SKILL.md`,
+  `CLAUDE.md`, `AGENTS.md`) or a `skills` path component. `.claude/rules/*.md`,
+  `CLAUDE.local.md` and a shell command run from inside a skill directory
+  (`sed -i ... notes.md`) get no nudge; WISDOM § Environment states the rule
+  for every instruction file. No test — design.
 
 - **STYLE-LINT-BLOCK-RESENDS-A-SHOWN-REPLY** (MED, design) — needs sign-off.
   Stop runs after the reply is on screen, so `hooks/style_lint.py` cannot
