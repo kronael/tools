@@ -153,6 +153,9 @@ BLOCK_CASES = [
     'git checkout -b feature',
     'git switch -c feature',
     'git worktree add /repo/.wt origin/master',
+    'cd /repo && git remote set-url origin https://github.com/owner/repo',
+    'git -C /repo remote add fork "https://github.com/owner/repo.git"',
+    'git config remote.origin.pushurl https://github.com/owner/repo.git',
     'gh release create v1.0.0 --notes x',
     'killall node',
     'rm -rf tmp/build',
@@ -166,6 +169,8 @@ NONBLOCK_CASES = [
     'git checkout master',
     'git checkout -- file.py',
     'git worktree add --detach /repo/.wt origin/master',
+    'git remote set-url origin git@github.com:owner/repo.git',
+    'git config --get remote.origin.url && curl https://example.test',
     'git status',
 ]
 

@@ -34,6 +34,8 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)git\s+rebase\b[^\n;|&]*\s(?:-i|--interactive)\b', 'git rebase -i'),
     (r'(?<!\S)git\s+(?:checkout|switch)\b[^\n;|&]*\s-[bBcC]\b', 'git branch creation'),
     (r'(?<!\S)git\s+worktree\s+add\b(?![^\n;|&]*--detach)', 'git worktree add without --detach'),
+    (r'(?<!\S)git\s+(?:-C\s+\S+\s+)?remote\s+(?:add|set-url)\b[^\n;|&]*https://', 'HTTPS remote'),
+    (r'(?<!\S)git\s+(?:-C\s+\S+\s+)?config[^\n;|&]*\sremote\.\S+url\s+\S*https://', 'HTTPS remote'),
     (r'(?<!\S)gh\s+release\s+create\b', 'gh release create'),
     (r'(?<!\S)killall\b', 'killall'),
     (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
