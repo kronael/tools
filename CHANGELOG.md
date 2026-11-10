@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.4.74] — 20261110
+
+> kronael v0.4.74 — Publishing asks, never blocks
+>
+> Every push, PR approval, PR merge and GitHub release now raises the permission prompt, even in bypass mode.
+>
+> • Push — git push, rip and rig push prompt instead of running unasked.
+> • Approve and merge — the hook asks in every Claude mode instead of denying in bypass mode.
+> • Release — creating a GitHub release prompts instead of being blocked outright.
+> • Rules — one permission rule per command, duplicates and dead patterns removed.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Every push (`git push`, `rip`, `rig push`, `rig p`) is a settings `ask` rule, no longer `allow`.
+- An approving review or PR merge asks in every Claude mode; Codex still denies it.
+- `gh release create` asks instead of being blocked by the hook.
+- Recommended settings add the `rsync * --delete*` deny and replace the dead `git add [^-]*` allow.
+- WISDOM § Git names the permission prompt as the gate for these actions.
+
 ## [v0.4.73] — 20261109
 
 > kronael v0.4.73 — Stop hook noise on record
