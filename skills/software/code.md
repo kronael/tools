@@ -179,6 +179,10 @@ your diff against every `##` heading here before calling an edit done.
 - ALWAYS validate input before it reaches persistence, and ALWAYS compare a
   field once, against the value the code itself derives for it; NEVER a second
   check against a constant that repeats the first — the two drift apart.
+- NEVER check data completeness or correctness inside the running loop or after
+  the run: that check re-tests what loading already knew and adds a second exit
+  path. ALWAYS check it once, where the data is loaded and the run is set up,
+  and fail before the first step.
 - ALWAYS return an error from library code — a crate, a package, a module
   another program imports — and let only the top level, `main` or a test,
   decide to crash: a panic inside a library takes every caller down. Enforce
