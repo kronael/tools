@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.76] — 20261110
+
+> kronael v0.4.76 — Replies show once
+>
+> The Stop hook no longer blocks a reply over the caveman budget, so an answer is not sent twice.
+>
+> • Reply budget — the output style alone states it; no hook asks for a second copy of an answer.
+> • Git remotes — the pretool hook blocks a command that writes an HTTPS URL into a git remote.
+> • Hosting — pages and files never go to OpenAI or Anthropic hosting; ops owns deployment.
+> • Mutation tests — the software skill carries a mutmut setup and a make mut target.
+> • Data checks — check data once at load and setup, never inside the running loop.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- The Stop hook `style_lint.py` is removed; the output style alone states the caveman budget.
+- Sync from an older install prints `UNRESOLVED` for the hook's Stop entry; step 3 unwires it.
+- The pretool hook blocks `https://` in `git remote add`, `set-url` and `git config remote.*.url`.
+- WISDOM bans OpenAI and Anthropic hosting; heads and run tags share the `YYYYMMDD_<tag>` format.
+- `software`: check data at load and setup, never in the running loop; mutmut setup, `make mut`.
+
 ## [v0.4.75] — 20261110
 
 > kronael v0.4.75 — Lean build config, guarded rules
