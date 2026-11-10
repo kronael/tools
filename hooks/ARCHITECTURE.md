@@ -145,10 +145,13 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    decision. The denial directs the human to execute the command or use an
    interactive Claude session.
    Each decision is emitted on every call, outside the
-   file-nudge dedup cache.
+   file-nudge dedup cache. A command that passes them and names a file step 3
+   maps to `/wisdom` gets that nudge; commands share one dedup key, so it
+   fires once per session.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit
    `apply_patch` file headers.
-3. Map path to a skill: special filenames first (`Makefile` → `/mk`,
+3. Map path to a skill: special filenames first (an instruction file →
+   `/wisdom`, `pyproject.toml` → `/py`, `Makefile` → `/mk`,
    `Dockerfile`/compose/workflows → `/ops`), then extension via
    `EXT_SKILLS` (`.rs` → `/rs`, `.html` → `/htmx`, ...).
 4. Dedupe per session+file via `~/.claude/tmp/extnudge/{sid}.txt` so

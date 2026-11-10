@@ -107,6 +107,12 @@ SKILL_CASES = [
     ('SKILL.md', '/wisdom'),
     ('/repo/CLAUDE.md', '/wisdom'),
     ('AGENTS.md', '/wisdom'),
+    ('/repo/skills/refine/py.md', '/wisdom'),
+    ('skills/software/notes.md', '/wisdom'),
+    ('/repo/skills/tool.py', '/py'),
+    ('/repo/myskills/notes.md', None),
+    ('/repo/docs/skills.md', None),
+    ('/repo/app/pyproject.toml', '/py'),
     ('foo.xyz', None),
     ('foo', None),
     ('README', None),
@@ -376,6 +382,42 @@ def test_process_blocks_recursive_removal_without_force(command: str) -> None:
 )
 def test_process_allows_nonrecursive_and_lookalikes(command: str) -> None:
     assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+@pytest.mark.parametrize(
+    'command',
+    [
+        "cat > CLAUDE.md <<'EOF'\n# Rules\nEOF",
+        "sed -i 's/a/b/' /repo/skills/refine/py.md",
+        'git update-index --add --cacheinfo 100644,0123abc,app/AGENTS.md',
+        'git show HEAD:skills/py/SKILL.md',
+    ],
+)
+def test_process_nudges_a_command_that_names_an_instruction_file(command: str) -> None:
+    result = process({'tool_name': 'Bash', 'tool_input': {'command': command}})
+    assert 'follow /wisdom conventions' in result['hookSpecificOutput']['additionalContext']
+
+
+@pytest.mark.parametrize('command', ['cat README.md', 'ls skills', 'grep -r CLAUDE docs/guide.md'])
+def test_process_is_silent_on_a_command_without_an_instruction_file(command: str) -> None:
+    assert process({'tool_name': 'Bash', 'tool_input': {'command': command}}) is None
+
+
+def test_main_nudges_a_command_once_per_session(tmp_path, monkeypatch, capsys) -> None:
+    monkeypatch.setenv('HOME', str(tmp_path))
+    payload = json.dumps(
+        {
+            'tool_name': 'Bash',
+            'session_id': 'same-session',
+            'tool_input': {'command': 'tee -a CLAUDE.md'},
+        }
+    )
+    monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+    main()
+    assert '/wisdom' in capsys.readouterr().out
+    monkeypatch.setattr('sys.stdin', io.StringIO(payload))
+    main()
+    assert capsys.readouterr().out == ''
 
 
 def test_main_blocks_every_time_not_only_once(tmp_path, monkeypatch, capsys) -> None:

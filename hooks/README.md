@@ -69,7 +69,10 @@ Maps the touched file to a language skill by extension/filename
 (`EXT_SKILLS` and `skill_for` in the source: `.rs` → `/rs`,
 `Dockerfile` → `/ops`, ...) and emits a "follow X conventions" context
 nudge, once per session+file; for a code skill (`CODE_SKILLS`) the nudge
-adds "Read ~/.claude/skills/software/code.md first." It also blocks the
+adds "Read ~/.claude/skills/software/code.md first." An instruction file —
+`SKILL.md`, `CLAUDE.md`, `AGENTS.md`, a `.md` under a `skills/` directory —
+maps to `/wisdom`, and a shell command that names one gets that nudge once per
+session. It also blocks the
 unsafe shell commands `UNSAFE_COMMAND_PATTERNS` in `pretool_nudge.py` names,
 and Codex `resume` commands inside Codex. Independent workers, auth checks and
 help commands are permitted. A push, PR merge, approving review or `gh release
