@@ -116,8 +116,9 @@ PR body with the robot. These win.
   the SSH origin refuses a fetch, `rif -g <refspec>` reads it the same way.
 - NEVER push to `<default head>` on a general request — ALWAYS default to a dated
   `YYYYMMDD_<tag>` head and offer the PR, and send an open PR's fix to its own
-  head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens:
-  `20261017_db1_disk`, not `20261017_db1-disk`. `<default head>` needs explicit
+  head by SHA. `<tag>` is lowercase words joined by underscores, NEVER hyphens,
+  in a branch head and a run's report directory alike: `20261017_db1_disk`, not
+  `20261017_db1-disk`. `<default head>` needs explicit
   authorization naming it; "push it" and "ship it" alone are NEVER that authorization.
 - The permission prompt is the approval gate for a push, an approving review,
   a PR merge and `gh release create`: settings `ask` rules and the
