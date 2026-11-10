@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.75] — 20261110
+
+> kronael v0.4.75 — Lean build config, guarded rules
+>
+> Build config keeps only needed entries, every instruction-file change goes through wisdom, and file-wide checker switches are banned.
+>
+> • Build config — pyproject.toml carries only what is needed; each entry is rechecked by removal.
+> • Wisdom — load it before changing any instruction file, by edit tool, shell or git plumbing.
+> • Nudges — skill sibling files and shell commands that name an instruction file point to wisdom.
+> • Checkers — a pragma that switches a rule off for a whole file is banned; ignore the one line.
+> • Lint — py-no-file-rule-switch flags a pyright report switch and a coded file noqa.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `py` § Build, uvx page: build config holds only what is needed; no default `[build-system]`.
+- WISDOM § Environment: load `wisdom` before changing any instruction file, whatever writes it.
+- The pretool nudge maps a `.md` under `skills/` to `/wisdom` and `pyproject.toml` to `/py`.
+- A shell command that names an instruction file gets the `/wisdom` nudge once per session.
+- `code.md` bans file-wide checker switches; lint `py-no-file-rule-switch` flags them.
+
 ## [v0.4.74] — 20261110
 
 > kronael v0.4.74 — Publishing asks, never blocks
