@@ -450,6 +450,14 @@
   MB for a long session); (b) `Edit`/`Write`/`MultiEdit`/`NotebookEdit` paths
   only; (c) keep. **Default if nothing is decided:** (c). No test — design.
 
+- **STOP-DIARY-BLOCK-REPEATS-THE-ANSWER** (LOW, design) — needs sign-off.
+  `hooks/stop.py` blocks a Stop while the diary is due, after the answer is on
+  screen. The model writes the entry and closes the turn; measured over two
+  weeks of sessions, about one diary block in six closes on a repeat of the
+  answer the block interrupted. No commit block did. **Options:** (a) the
+  diary reason asks for a one-line close in place of the answer; (b) keep.
+  **Default if nothing is decided:** (b). No test — design.
+
 - **MEMORY-NUDGE-STOP-CONTEXT-CONTINUES-THE-TURN** (LOW, design) — needs
   sign-off. `hooks/memory_nudge.py`'s docstring says "Never blocks", but
   Claude Code answers Stop `additionalContext` with a new assistant turn, the
