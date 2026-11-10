@@ -1,7 +1,7 @@
 ---
 name: software
-description: Router for engineering knowledge — the language-agnostic code baseline plus engineering runbooks. NOT for language idioms (use go/rs/py/ts/sh/sql) or terse Docker/systemd rules (ops).
-when_to_use: "writing or reviewing code in any language, naming, comments policy, file layout; writing tests, test failure diagnosis, testcontainers; Python uv Dockerfile, .dockerignore; Makefile for uv, CI targets; Ansible docker-service role; logging format, Prometheus metrics, SLO alerts; PEP 723 script, uvx; strict typing config; rename a symbol, language server not found, claude mcp add; race detector, sanitizers, fuzzing, Miri; fast JS for V8; money as float, checked overflow; refactor stack, stacked PR; NOTICE file, attribution"
+description: "Router for engineering knowledge — the language-agnostic code baseline plus engineering runbooks. NOT for language idioms (use go/rs/py/ts/sh/sql) or terse Docker/systemd rules (ops)."
+when_to_use: "writing or reviewing code in any language, naming, comments policy, file layout; writing tests, test failure diagnosis, testcontainers; Python uv Dockerfile, .dockerignore; Makefile for uv, CI targets; Ansible docker-service role; logging format, Prometheus metrics, SLO alerts; PEP 723 script, uvx; strict typing config; rename a symbol, language server not found, claude mcp add; race detector, sanitizers, fuzzing, Miri; fast JS for V8; money as float, checked overflow; refactor stack, stacked PR; NOTICE file, attribution, mutation testing, mutmut, make mut"
 ---
 
 # Software — runbook router
@@ -20,7 +20,7 @@ Paths are relative to this directory.
 | to hand someone a Python tool: PEP 723 single-file scripts run by uvx, when a package layout is needed instead | `uvx-tools.md` |
 | lint/type config a future edit cannot loosen — exact strict flags per language (py basedpyright+ruff, ts biome or eslint, go golangci-lint) and the holes config cannot close | `strict-typing.md` |
 | which tool renames a symbol, finds callers or implementers, or replaces text across files (`LSP` tool vs the `serena` skill); a language server that will not start — install, the PATH failure that causes most of it, gopls MCP registration, sandbox caveats | `lsp.md` |
-| to catch bugs no type checker sees, wired as make targets: race detector, ASan/TSan/MSan/LSan, Miri, fuzzing, leak and property testing (go, rust, py) | `dynamic-analysis.md` |
+| to catch bugs no type checker sees, wired as make targets: race detector, ASan/TSan/MSan/LSan, Miri, fuzzing, leak and property testing, mutation testing (mutmut, cargo mutants, `make mut`) (go, rust, py) | `dynamic-analysis.md` |
 | JS/TS that must be fast under V8: hidden classes, inline caches, elements kinds, deopts, typed arrays, Wasm/N-API boundary cost, and how GraalVM/Truffle differs | `js-perf.md` |
 | exact arithmetic for money/token amounts: integer vs fixed-point vs arbitrary precision, deriving the overflow bound, round-once-at-the-edge, checked add | `money.md` |
 | re-shipping an unreviewable branch as a reviewable stack: tests before the refactor, mutation-proven vs tautological tests, deletion oracles, byte-neutral and AST-proven moves, dead-parameter proofs, the freeze run, diffstat split, long runs (one writer per output, verified PIDs), merging the base forward through pushed layers, the evidence each branch carries, landing a native GitHub stack (merge-async, refused retargets, missing merge ref) | `refactor-stack.md` |
