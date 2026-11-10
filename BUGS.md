@@ -20,6 +20,15 @@
   the one-line descriptions, or exempt the toolkit in the skill; no test — the
   skill text and the Makefiles.
 
+- **REVIEW-SUBMIT-CHAT-GATE** (LOW, design) — needs sign-off. A push,
+  approval, merge and `gh release create` ask through the permission prompt,
+  but a findings-review submit still needs `SUBMIT REVIEW` in the user's newest
+  message (`hooks/gh_text_lint.py` `SUBMIT_REFUSED`), a second gate mechanism.
+  **Options:** (a) `Action.SUBMIT` returns `ask` like an approval and the
+  `SUBMIT REVIEW` rule leaves `gh-comment`, `review` and the hook docs;
+  (b) keep the chat word. **Default if nothing is decided:** (b). No test —
+  design.
+
 - **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
   `skills/writing/page.md` asks reviewers for five font sizes at most;
   `skills/create/form.md` evaluates distinct rendered sizes against a limit
