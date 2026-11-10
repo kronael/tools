@@ -71,6 +71,10 @@ def skill_for(path: str) -> str | None:
     lower = os.path.basename(path).lower()
     if lower == 'skill.md' or lower in ('claude.md', 'agents.md'):
         return '/wisdom'
+    if lower.endswith('.md') and 'skills' in path.split('/')[:-1]:
+        return '/wisdom'
+    if lower == 'pyproject.toml':
+        return '/py'
     if lower in ('makefile', 'gnumakefile') or lower.endswith(('.mk', '.make')):
         return '/mk'
     if lower == 'dockerfile' or lower.startswith('dockerfile.'):
@@ -283,6 +287,13 @@ def process(data: object) -> dict | None:
                     'permissionDecision': decision,
                     'permissionDecisionReason': reason,
                 }
+            }
+        if any(skill_for(word) == '/wisdom' for word in re.split(r'[\s\'"`=<>|;&(){}]+', command)):
+            return {
+                'hookSpecificOutput': {
+                    'hookEventName': 'PreToolUse',
+                    'additionalContext': 'The command names an instruction file — follow /wisdom conventions before changing it.',
+                },
             }
         return None
 
