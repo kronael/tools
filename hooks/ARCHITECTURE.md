@@ -138,12 +138,12 @@ Codex sees matched Kronael routes as `@skill` instead of `/skill`.
    findings, where `github_action` returns `SUBMIT`, is blocked unless the
    latest human prompt contains `SUBMIT REVIEW`; no transcript blocks.
    Then `command_action` checks for an approving review or PR merge.
-   Claude receives a `PreToolUse` native
-   `ask` in `default`, `manual`, `acceptEdits`, `plan`, `auto`, or when the
-   mode is absent. `bypassPermissions`, `dontAsk` and unknown explicit modes
-   receive `deny`. This hook returns `deny` to Codex with the pending command:
-   the adapter forwards this decision. The denial directs the human to execute
-   the command or use a supported interactive Claude session.
+   Claude receives a `PreToolUse` native `ask` in every permission mode; a
+   mode that cannot show the prompt (`-p`, `dontAsk`) denies it there. This
+   hook returns `deny` to Codex with the pending command, because a Codex
+   `PreToolUse` hook cannot request approval: the adapter forwards this
+   decision. The denial directs the human to execute the command or use an
+   interactive Claude session.
    Each decision is emitted on every call, outside the
    file-nudge dedup cache.
 2. For file tools, extract `file_path`, `notebook_path`, or explicit

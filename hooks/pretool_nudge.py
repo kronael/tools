@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# PreToolUse hook: block unsafe commands, unlinted GitHub text and an unasked review submit, and emit per-language file nudges.
+# PreToolUse hook: block unsafe commands, unlinted GitHub text and an unasked review submit,
+# ask before an approving review or PR merge, and emit per-language file nudges.
 # PostToolUse, fed by post_tool_nudge.sh: reflow a written Markdown file when
 # its repository opted in with a root .rumdl.toml.
 # Production: silent-fail on any error, except an unsafe command is blocked and the GitHub text gate refuses on its own error.
@@ -34,12 +35,8 @@ UNSAFE_COMMAND_PATTERNS = (
     (r'(?<!\S)git\s+rebase\b[^\n;|&]*\s(?:-i|--interactive)\b', 'git rebase -i'),
     (r'(?<!\S)git\s+(?:checkout|switch)\b[^\n;|&]*\s-[bBcC]\b', 'git branch creation'),
     (r'(?<!\S)git\s+worktree\s+add\b(?![^\n;|&]*--detach)', 'git worktree add without --detach'),
-    (r'(?<!\S)gh\s+release\s+create\b', 'gh release create'),
     (r'(?<!\S)killall\b', 'killall'),
-    (r'(?<!\S)rm\s+-[^\s;|&]*r[^\s;|&]*f\b', 'rm -rf'),
-    (r'(?<!\S)rm\s+-[^\s;|&]*f[^\s;|&]*r\b', 'rm -rf'),
-    # Any recursive removal, not only -rf: -r, -R and --recursive delete
-    # trees just as thoroughly, and the deny rules ban all three.
+    # -r, -R and --recursive, with or without -f: the deny rules ban all three.
     (r'(?<!\S)rm\s+(?:-[a-zA-Z]*[rR]|--recursive)', 'recursive rm'),
 )
 
@@ -254,7 +251,6 @@ def process(data: object) -> dict | None:
             return {'decision': 'block', 'reason': f'block: cannot inspect GitHub action ({err})'}
         if action in {Action.APPROVE, Action.MERGE}:
             label = 'approving review' if action is Action.APPROVE else 'PR merge'
-            mode = data.get('permission_mode')
             if data.get('harness') == 'codex':
                 decision = 'deny'
                 reason = (
@@ -263,15 +259,6 @@ def process(data: object) -> dict | None:
                     'use a supported interactive Claude session. '
                     f'Pending command: {command}'
                 )
-            elif mode is not None and mode not in {
-                'default',
-                'manual',
-                'acceptEdits',
-                'plan',
-                'auto',
-            }:
-                decision = 'deny'
-                reason = f'This permission mode cannot prompt for the {label}.'
             else:
                 decision = 'ask'
                 reason = f'Approve this {label} command.'

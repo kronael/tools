@@ -20,10 +20,19 @@ HOOKS_DIR = Path(__file__).resolve().parent
 LONG_LINE = '# Title\n\n' + 'word ' * 40 + '\n'
 
 
-def test_recommended_permissions_allow_only_push_commands_without_asking() -> None:
-    settings = json.loads((HOOKS_DIR.parent / 'settings-recommended.json').read_text())
-    allow = settings['permissions']['allow']
-    ask = settings['permissions']['ask']
+def rule_matches(command: str, pattern: str) -> bool:
+    """Claude Code rule matching: `*` is the only wildcard, and a trailing ` *`
+    also matches the bare command."""
+    rule = pattern.replace('[', '[[]')
+    if fnmatchcase(f'Bash({command})', rule):
+        return True
+    return rule.endswith(' *)') and fnmatchcase(f'Bash({command})', rule[:-3] + ')')
+
+
+def test_recommended_permissions_ask_before_every_publish() -> None:
+    permissions = json.loads((HOOKS_DIR.parent / 'settings-recommended.json').read_text())[
+        'permissions'
+    ]
     for command in (
         'git push',
         'git push origin HEAD',
@@ -33,15 +42,32 @@ def test_recommended_permissions_allow_only_push_commands_without_asking() -> No
         'rig push -g HEAD:refs/heads/main',
         'rig p',
         'rig p origin',
+        'gh pr merge 1 --merge',
+        'gh pr review --approve',
+        'gh pr review 1 --approve',
+        'gh release create v1',
+        'gh repo create x',
+        'git pull origin',
+        'rsync src dst',
     ):
-        assert any(fnmatchcase(f'Bash({command})', pattern) for pattern in allow), command
-        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
-    for command in ('rig fetch origin', 'rig pull origin', 'rig status'):
-        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in allow), command
-    for command in ('gh pr merge --help', 'gh pr merge 1 --disable-auto', 'gh pr review --approve'):
-        assert not any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
-    for command in ('git pull origin', 'rsync src dst', 'gh release create v1', 'gh repo create x'):
-        assert any(fnmatchcase(f'Bash({command})', pattern) for pattern in ask), command
+        assert any(rule_matches(command, rule) for rule in permissions['ask']), command
+        assert not any(rule_matches(command, rule) for rule in permissions['deny']), command
+    for command in ('rig fetch origin', 'rig pull origin', 'gh pr review 1 --comment'):
+        assert not any(rule_matches(command, rule) for rule in permissions['ask']), command
+    assert any(rule_matches('rsync -a --delete src dst', rule) for rule in permissions['deny'])
+
+
+def test_recommended_permissions_have_no_redundant_rule() -> None:
+    permissions = json.loads((HOOKS_DIR.parent / 'settings-recommended.json').read_text())[
+        'permissions'
+    ]
+    rules = [rule for kind in ('allow', 'ask', 'deny') for rule in permissions[kind]]
+    assert len(rules) == len(set(rules))
+    for kind in ('allow', 'ask', 'deny'):
+        for rule in permissions[kind]:
+            others = [other for other in permissions[kind] if other != rule]
+            body = rule[rule.index('(') + 1 : -1]
+            assert not any(rule_matches(body, other) for other in others), rule
 
 
 SKILL_CASES = [
@@ -153,13 +179,14 @@ BLOCK_CASES = [
     'git checkout -b feature',
     'git switch -c feature',
     'git worktree add /repo/.wt origin/master',
-    'gh release create v1.0.0 --notes x',
     'killall node',
     'rm -rf tmp/build',
+    'rm -fr tmp/build',
 ]
 
 NONBLOCK_CASES = [
     'git push',
+    'gh release create v1.0.0 --notes x',
     'git commit -m "normal message"',
     'git merge origin/master',
     'git rebase origin/master',
@@ -539,9 +566,9 @@ def test_post_tool_nudge_prints_a_note_as_its_only_output(tmp_path) -> None:
         ('acceptEdits', 'ask'),
         ('plan', 'ask'),
         ('auto', 'ask'),
-        ('bypassPermissions', 'deny'),
-        ('dontAsk', 'deny'),
-        ('unknown', 'deny'),
+        ('bypassPermissions', 'ask'),
+        ('dontAsk', 'ask'),
+        ('unknown', 'ask'),
     ],
 )
 def test_action_permission_modes(mode, decision):
@@ -582,7 +609,7 @@ def test_action_does_not_override_text_lint():
 
 
 @pytest.mark.parametrize('command', ['{ gh pr merge 1; }', 'cat <<EOF\n$(gh pr merge 1)\nEOF'])
-@pytest.mark.parametrize(('mode', 'decision'), [('default', 'ask'), ('dontAsk', 'deny')])
+@pytest.mark.parametrize(('mode', 'decision'), [('default', 'ask'), ('bypassPermissions', 'ask')])
 def test_grouped_action_permission(command, mode, decision):
     output = process(
         {'tool_name': 'Bash', 'tool_input': {'command': command}, 'permission_mode': mode}
