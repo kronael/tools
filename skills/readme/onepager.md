@@ -17,6 +17,8 @@ decision they face before drafting; the project README records them.
    makes; NEVER write it as engineers talking to engineers.
 3. **How it works** — 3–5 numbered steps or one diagram. The only section
    allowed domain vocabulary, and it defines each term inline.
+   Money-flow and pass/fail graphics follow `writing/page.md`
+   § Small explanatory graphics.
 4. **What is different** — comparison against real alternatives, named. A
    comparison against nobody reads as marketing.
 5. **Limits** — what works today, what does not, what is assumed —
