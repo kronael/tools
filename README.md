@@ -112,6 +112,7 @@ Troubleshooting:
 | [skills/astgrep/lints.md](skills/astgrep/lints.md) | Adopt the lint packs in a project; refine fallback and rule tests |
 | [hooks/README.md](hooks/README.md) | Hook system overview |
 | [hooks/ARCHITECTURE.md](hooks/ARCHITECTURE.md) | Per-hook data flow |
+| [qemubox/ARCHITECTURE.md](qemubox/ARCHITECTURE.md) | qemubox boot path, boot time budget, gpg forwarding |
 | [kronael/sync/SKILL.md](kronael/sync/SKILL.md) | Sync procedure (all paths) |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 | [BUGS.md](BUGS.md) | Open issues |

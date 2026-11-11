@@ -7,6 +7,7 @@ config are shared with the host. The VM powers off twenty minutes after its
 last session exits; its disk and guest home survive the next launch.
 `qemubox rm` deletes the disk.
 Build tmpfs mounts last for one boot. Files written to host shares remain.
+Boot path, boot time and `-K` signing internals: [ARCHITECTURE](ARCHITECTURE.md).
 
 ## Install
 
@@ -137,6 +138,8 @@ it holds; `QEMUBOX_LINGER=0` stops it as the last session exits. A launch that
 dies before its session leaves the VM to the timer. The disk stays on the
 host; the next launch boots that disk and keeps files in the guest home.
 `qemubox rm` deletes it.
+A launch into a running VM skips the boot and opens only the session, so a
+larger `QEMUBOX_LINGER` keeps re-entry fast for longer.
 A missing recorded base image refuses launch with a `qemubox rm` hint.
 Each disk records trusted or `-U` mode. A mismatch or missing trust record
 refuses launch; use `-n` for another box or `qemubox rm` to delete the disk.
