@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.4.79] — 20261111
+
+> kronael v0.4.79 — qemubox boots faster
+>
+> A qemubox VM reached its first guest program 0.8 s sooner in a nested test, and its boot path is documented.
+>
+> • PCI — the kernel skips 255 absent PCI buses, a 448 ms probe in the test.
+> • RAM — the VM boots with 1 GiB and grows to its ceiling after SSH starts.
+> • SSH — a new VM disk gets one Ed25519 host key, about 0.14 s faster.
+> • gpg — staging drops an old pubring.gpg that hid newly exported keys.
+> • Docs — qemubox/ARCHITECTURE.md holds the boot path, boot time per phase and -K signing.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox boots with `pci=lastbus=0` and 1 GiB; the rest of `QEMUBOX_MEM` arrives after SSH starts.
+- The guest creates only an Ed25519 SSH host key, and sshd serves only that key.
+- Key staging deletes every staged `pubring.*` before it writes the export.
+- `qemubox/ARCHITECTURE.md`: boot path, measured boot phases, options not adopted, the `-K` flow.
+
+### Operator note
+
+- Run `make -C qemubox install` on the host. The host-key change needs the rebuilt base:
+  `qemubox rm <name>` moves a box to it.
+- Boot timings are from nested KVM; the full-image timing on the host is still open.
+
 ## [v0.4.78] — 20261111
 
 > kronael v0.4.78 — qemubox signs with your gpg keys
