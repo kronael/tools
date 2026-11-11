@@ -30,8 +30,6 @@ decision they face before drafting; the project README records them.
 
 ## Money offers — a page that asks the reader to spend money
 
-Sources and the audit behind each rule: `docs/onepager-copy/` in the tools repo.
-
 - ALWAYS put what the reader pays and can lose in the same block as what they
   get, the first block included; NEVER only in a footer or disclosures
   section (FCA COBS 4.5.2R(2), FINRA 2210(d)(1)).
