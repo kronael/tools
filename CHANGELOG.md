@@ -1,5 +1,27 @@
 # Changelog
 
+## [v0.4.78] — 20261111
+
+> kronael v0.4.78 — qemubox signs with your gpg keys
+>
+> A qemubox guest started with -K can sign with your gpg keys but cannot export them.
+>
+> • Public keys — the guest gets them from any GnuPG store, keyboxd included.
+> • -K — forwards gpg-agent's restricted socket: signing works, secret-key export is refused.
+> • gpg.conf — an armor or output line on the host leaves the staged keys intact.
+> • qemubox rm — removes a box that holds an old pubring.gpg.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox stages the host's public keys with `gpg --export`, whatever store the host uses.
+- `-K` forwards gpg-agent's extra socket; the guest can sign and decrypt, not export secret keys.
+- `qemubox rm` removes every staged `pubring.*` file.
+
+### Operator note
+
+- Run `make -C qemubox install` on the host. A box on a base older than v0.4.61 runs systemd,
+  and its gpg ignores the forwarded agent: remove it with `qemubox rm <name>`.
+
 ## [v0.4.77] — 20261111
 
 > kronael v0.4.77 — Money pages show the cost
