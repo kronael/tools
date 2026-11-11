@@ -257,7 +257,7 @@ then
     then
         ln -sf /mnt/qemubox-home/.claude.json /tmp/host-claude.json
     fi
-    for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+    for rel in .gitconfig .gnupg/pubring.kbx
     do
         if [[ -f "/mnt/qemubox-home/$rel" ]]
         then

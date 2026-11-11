@@ -226,7 +226,7 @@ before it starts the tool, so no value reaches an SSH command line, which every 
 read in `/proc`.
 
 Other home paths require an explicit mount or forwarding flag.
-`~/.gitconfig` and gpg **public** keyrings are staged read-only.
+`~/.gitconfig` and an export of the gpg **public** keys are staged read-only.
 The Dockerfile's Claude wrapper reads the staged, read-only
 `/tmp/host-claude.json` and writes a private writable `~/.claude.json`.
 It passes `--settings '{"sandbox":{"enabled":false}}'` in the VM so the

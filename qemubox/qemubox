@@ -45,7 +45,7 @@ mount_srcs=()
 mount_dests=()
 mount_modes=()
 
-host_cfg_files=(.claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg)
+host_cfg_files=(.claude.json .gitconfig)
 
 usage() {
     cat <<EOF
@@ -667,6 +667,13 @@ stage_host_cfg() {
             rm -f "$cfg/$rel"
         fi
     done
+    keys="$cfg/.gnupg/pubring.kbx"
+    if [ -d "${GNUPGHOME:-$HOME/.gnupg}" ] &&
+        gpg --export > "$keys" 2>/dev/null && [ -s "$keys" ]
+    then
+        return 0
+    fi
+    rm -f "$keys"
 }
 
 qemu_mount_args() {
@@ -975,7 +982,7 @@ remove_box() {
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port" "$dir/qmp"
     rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock" \
         "$dir/root.sock" "$dir/capture.sock" "$dir"/*.sock.pid
-    for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
+    for rel in "${host_cfg_files[@]}" .gnupg/pubring.kbx; do rm -f "$dir/hostcfg/$rel"; done
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
     then

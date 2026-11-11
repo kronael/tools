@@ -11,6 +11,7 @@ chmod +x "$fixture/unit-bin/virtiofsd"
 export PATH="$fixture/unit-bin:$PATH"
 
 export HOME="$fixture/home"
+export GNUPGHOME="$fixture/gnupg"
 export QEMUBOX_HOME="$fixture/state"
 mkdir -p "$HOME/.claude" "$HOME/.codex" "$HOME/.agents" "$QEMUBOX_HOME"
 PROJ="$fixture/proj"; mkdir -p "$PROJ"

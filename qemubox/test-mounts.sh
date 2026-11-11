@@ -38,6 +38,17 @@ false_ "virtiofs exports use no -virtfs" 'grep -q -- -virtfs <<< "$mount_args"'
 printf '{"fixture":true}\n' > "$HOME/.claude.json"
 stage_host_cfg "$ROOT/testbox/hostcfg"
 true_ "claude.json staged intact" 'cmp "$HOME/.claude.json" "$ROOT/testbox/hostcfg/.claude.json"'
+false_ "no gpg home: no key export" '[ -e "$ROOT/testbox/hostcfg/.gnupg/pubring.kbx" ]'
+false_ "no gpg home: none created" '[ -e "$GNUPGHOME" ]'
+mkdir -m 700 "$GNUPGHOME" "$fixture/gpg-read"
+gpg --batch --pinentry-mode loopback --passphrase '' \
+    --quick-gen-key fixture ed25519 sign never 2>/dev/null
+gpgconf --kill all
+gpgconf --remove-socketdir
+stage_host_cfg "$ROOT/testbox/hostcfg"
+cp "$ROOT/testbox/hostcfg/.gnupg/pubring.kbx" "$fixture/gpg-read/"
+true_ "gpg public keys staged as a keyring" \
+    'gpg --homedir "$fixture/gpg-read" --list-keys fixture >/dev/null 2>&1'
 false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.qemubox_history" ]'
 run_assemble
 true_ "history staging supports re-entry" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'

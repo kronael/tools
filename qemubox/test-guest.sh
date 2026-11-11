@@ -73,7 +73,7 @@ guest_home_test() {
     chmod 700 "$dir/home/.claude/sessions"
     printf 'public key\n' > "$dir/config/authorized_keys"
     printf 'guest guidance\n' > "$dir/config/CLAUDE.md"
-    for rel in .claude.json .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+    for rel in .claude.json .gitconfig .gnupg/pubring.kbx
     do
         printf 'host config\n' > "$dir/mnt/qemubox-home/$rel"
     done
@@ -100,7 +100,7 @@ guest_home_test() {
     [[ "$(stat -c %a "$dir/home/.ssh")" = 700 ]]
     [[ "$(stat -c %a "$dir/home/.gnupg")" = 700 ]]
     cmp "$dir/config/CLAUDE.md" "$dir/etc/claude-code/CLAUDE.md"
-    for rel in .gitconfig .gnupg/pubring.kbx .gnupg/pubring.gpg
+    for rel in .gitconfig .gnupg/pubring.kbx
     do
         [[ "$(readlink "$dir/home/$rel")" = "$dir/mnt/qemubox-home/$rel" ]]
     done
