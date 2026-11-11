@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.80] — 20261111
+
+> kronael v0.4.80 — Graphics on money pages
+>
+> A onepager's money flow or pass/fail test now has rules for a small graphic that a lay reader can follow.
+>
+> • Reading order — a clear start and direction, each branch labelled where it leads.
+> • Labels — short labels sit beside what they explain.
+> • No interaction needed — the main point shows without clicks; any control works by keyboard.
+> • Accessible — each drawing carries a full text equivalent, amounts and branches included.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `writing/page.md` § Small explanatory graphics: sourced rules for onepager money-flow and pass/fail drawings.
+- `readme/onepager.md`: How it works points to those rules.
+- `writing/page.md` § Diagrams: the architecture-first figure applies to technical documentation.
+
 ## [v0.4.79] — 20261111
 
 > kronael v0.4.79 — qemubox boots faster
