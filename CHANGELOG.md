@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.81] — 20261111
+
+> kronael v0.4.81 — Mocks, not recorder classes
+>
+> A Python test double is now built from Mock; a hand-written class that only records a call is banned.
+>
+> • py — doubles use Mock / MagicMock and call_args; a fake class only for state kept across calls.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.80] — 20261111
 
 > kronael v0.4.80 — Graphics on money pages
