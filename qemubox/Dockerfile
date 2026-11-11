@@ -215,6 +215,7 @@ RUN for key in DEVCONTAINER SHELL EDITOR VISUAL DISABLE_AUTOUPDATER \
 
 RUN printf '%s\n' 'PasswordAuthentication no' 'KbdInteractiveAuthentication no' \
        'PermitRootLogin no' 'StreamLocalBindUnlink yes' \
+       'HostKey /etc/ssh/ssh_host_ed25519_key' \
        > /etc/ssh/sshd_config.d/qemubox.conf \
     && sed -i '/pam_systemd.so/d' /etc/pam.d/common-session \
     && settings='--settings '\''{"sandbox":{"enabled":false}}'\''' \

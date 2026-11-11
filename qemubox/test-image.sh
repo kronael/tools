@@ -37,6 +37,11 @@ sshd_test() {
 }
 regression "guest sshd replaces stale Unix sockets" sshd_test
 
+host_key_test() {
+    grep -q "'HostKey /etc/ssh/ssh_host_ed25519_key'" "$here/Dockerfile"
+}
+regression "guest sshd serves only its Ed25519 host key" host_key_test
+
 docker_cli_test() {
     sed '/^FROM qemubox AS vm/,$d' "$here/Dockerfile" | grep -qw docker-cli
 }

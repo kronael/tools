@@ -282,7 +282,8 @@ then
         tmpfs "$home_dir/.claude/sessions"
     runuser -u "$username" -- /usr/local/bin/qemubox-codex-bridge
 fi
-ssh-keygen -A
+[[ -f /etc/ssh/ssh_host_ed25519_key ]] ||
+    ssh-keygen -q -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key
 /usr/sbin/sshd -t
 (
     echo "$BASHPID" > /sys/fs/cgroup/qemubox/sessions/cgroup.procs

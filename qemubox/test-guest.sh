@@ -79,7 +79,7 @@ guest_home_test() {
     done
     touch "$dir/mnt/qemubox-history/history"
     awk '/^mkdir -p .*home_dir.*ssh/ {emit=1}
-        /^ssh-keygen -A/ {exit} emit {print}' "$here/guest-init" |
+        /ssh_host_ed25519_key/ {exit} emit {print}' "$here/guest-init" |
         sed "s|/run/qemubox/config|$dir/config|g;
              s|/etc/|$dir/etc/|g;
              s|/mnt/|$dir/mnt/|g;
@@ -154,7 +154,7 @@ EOF
         /^shutdown\(\)/ {exit} emit {print}' "$here/guest-init" |
         sed "s|/sys/fs/cgroup/qemubox|$dir/cgroup|g" \
         >> "$dir/services-init"
-    awk '/^ssh-keygen -A/ {emit=1} emit {print}' "$here/guest-init" |
+    awk '/ssh_host_ed25519_key/ {emit=1} emit {print}' "$here/guest-init" |
         sed "s|/usr/sbin/sshd|$dir/bin/sshd|g;
              s|/sys/fs/cgroup/qemubox/sessions|$dir/sessions|g;
              s|/run/qemubox/ready|$dir/ready|g" >> "$dir/services-init"
