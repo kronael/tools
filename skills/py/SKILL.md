@@ -184,9 +184,10 @@ Python-specific additions and deltas.
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
 - Testcontainers and the fixture directory centralize in `conftest.py`: one fixture returning `pytestconfig.rootpath / '<tree>/tests/assets'` — NEVER `Path(__file__)` (`code.md` § Layout and formatting)
-- ALWAYS build properly shaped doubles of a third party (`Mock` / `MagicMock`
-  with explicit attrs or a small fake class); NEVER make production code
-  tolerate incomplete fakes
+- ALWAYS build properly shaped doubles of a third party from `Mock` / `MagicMock` with explicit
+  attrs (`create_autospec` when the signature must be enforced) and read `call_args`; NEVER
+  hand-write a class that only records a call or returns a canned value — a fake class needs real
+  behaviour: state that changes across calls. NEVER make production code tolerate incomplete fakes
 - NEVER add production parameters solely to replace functions in tests — ALWAYS patch the third-party symbol at its use site; what is faked: `../software/testing.md` § Kinds.
 - Tests stay loose: `# pyright: basic`, and annotate a test only where it documents a contract — NEVER type-fit fixtures, fakes or test functions to strict; NEVER weaken production annotations for fake convenience
 
