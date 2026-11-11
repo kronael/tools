@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.77] — 20261111
+
+> kronael v0.4.77 — Money pages show the cost
+>
+> A onepager that asks the reader to spend money now puts cost and possible loss next to the gain.
+>
+> • Money offers — what you pay and can lose sits beside what you get, net of every cost.
+> • Estimates — a forecast is labelled as one, with its main condition; past results keep their dates.
+> • Results — show every recorded result or the typical one, never the best period.
+> • Readers — name the page's reader and their decision before drafting.
+> • Links — a link or button says what the reader gets; never "Learn more".
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `readme/onepager.md` § Money offers: cost and loss beside the gain, net figures, labelled estimates.
+- `readme/onepager.md`: name the reader and their decision before drafting.
+- `writing`: link and button labels name what the reader gets.
+
 ## [v0.4.76] — 20261110
 
 > kronael v0.4.76 — Replies show once
