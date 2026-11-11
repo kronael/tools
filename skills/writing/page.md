@@ -146,9 +146,8 @@ passes — every item there is one the owner otherwise prompts for.
 - ALWAYS draw a flow faithful to the code and the test it cites: one actor per
   lifeline, the real sequence end to end, which-is-which labelled on the
   picture, not in the prose, a rollback or compensation labelled as one.
-  NEVER merge unrelated scenarios; branches of one process may share a
-  figure. NEVER draw a reversal the code does not make, or a generic
-  illustration where a real worked case exists.
+  NEVER two scenarios merged into one figure, a reversal the code does not
+  make, or a generic illustration where a real worked case exists.
 - ALWAYS show in a refusal figure what was tried and the check that stops it;
   a bare refusal proves nothing.
 - One colour means one actor, or one origin (built here, already deployed by
@@ -176,25 +175,26 @@ passes — every item there is one the owner otherwise prompts for.
 
 For a public onepager's money flow or a test with pass/fail outcomes:
 
-- ALWAYS show a clear start and reading direction. ALWAYS label each
-  decision path with its condition and show each outcome at its
-  destination. [1]
-- ALWAYS put short labels beside what they explain, and ALWAYS remove marks
-  unrelated to the message. [2]
-- ALWAYS show the main explanation without interaction. ALWAYS add a control
-  only for a need a static figure cannot meet [3], and ALWAYS make it
-  keyboard-operable [6, SC 2.1.1].
+- ALWAYS show a clear start and reading direction. ALWAYS draw a test's pass
+  and fail outcomes as branches of one figure, label each path with its
+  condition and show each outcome at its destination. [1]
+- ALWAYS put short labels beside what they explain. [2] Removing marks
+  follows `eval/design/rubric.md` #9.
+- ALWAYS show the main explanation without interaction, a house rule
+  stricter than [3]. ALWAYS add a control only for a need a static figure
+  cannot meet [3], and ALWAYS make it keyboard-operable [6, SC 2.1.1].
 - ALWAYS link an informative inline SVG's `<title>` with `aria-labelledby`,
   holding a simple flow's full information. [4] ALWAYS give a complex flow a
   complete text equivalent, branches and amounts included, reachable from its
-  accessible name or caption. [5] This text survives § Density pruning.
+  accessible name or caption. [5] ALWAYS preserve this text during § Density
+  pruning.
 - Contrast follows § Contrast, non-colour cues `eval/design/rubric.md` #4,
   phone layout and render checks § Layout and § Before handing over.
 
 Sources: [1] ONS,
 [Diagram design](https://service-manual.ons.gov.uk/brand-guidelines/application/diagram-design);
-ASQ, [Flowchart](https://asq.org/quality-resources/flowchart), both undated,
-accessed 2026-11-11. [2] Mayer,
+accessed 2026-11-11; ASQ, [Flowchart](https://asq.org/quality-resources/flowchart),
+reviewed June 2025. [2] Mayer,
 [Using multimedia for e-learning](https://doi.org/10.1111/jcal.12197),
 2017-06-13; CDC,
 [Clear Communication Index User Guide](https://www.cdc.gov/ccindex/pdf/clear-communication-user-guide.pdf),
