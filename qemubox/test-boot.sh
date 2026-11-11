@@ -117,16 +117,18 @@ PY
         "$fixture/socket-qemu"
     [ "$(grep -A1 -Fx -- -m "$fixture/socket-qemu" | tail -1)" = 768M ]
     [ "$(grep -Fxc -- -chardev "$fixture/socket-qemu")" = 2 ]
+    grep -q '^console=ttyS0 .* pci=lastbus=0' "$fixture/socket-qemu"
     ! grep -qE 'maxmem|id=vmem|virtio-mem-pci' "$fixture/socket-qemu"
     local value expected boot extra
-    for value in 2048 2049 2175 2177 24576
+    for value in 1024 1025 1151 1153 2177 24576
     do
         case "$value" in
-            2048) expected=2048M; boot=2048; extra=0 ;;
-            2049) expected=2049M; boot=2049; extra=0 ;;
-            2175) expected=2175M; boot=2175; extra=0 ;;
-            2177) expected=2049M,maxmem=2177M; boot=2049; extra=128 ;;
-            24576) expected=2048M,maxmem=24576M; boot=2048; extra=22528 ;;
+            1024) expected=1024M; boot=1024; extra=0 ;;
+            1025) expected=1025M; boot=1025; extra=0 ;;
+            1151) expected=1151M; boot=1151; extra=0 ;;
+            1153) expected=1025M,maxmem=1153M; boot=1025; extra=128 ;;
+            2177) expected=1025M,maxmem=2177M; boot=1025; extra=1152 ;;
+            24576) expected=1024M,maxmem=24576M; boot=1024; extra=23552 ;;
         esac
         MEM="$value" ensure_box sockets
         (MEM=1 QEMU="$fake_qemu" \
@@ -178,7 +180,7 @@ with socket.socket(socket.AF_UNIX) as listener:
     listener.bind(sys.argv[1])
     listener.listen()
     pathlib.Path(sys.argv[2]).touch()
-    for size in [None, 134217728, 23622320128]:
+    for size in [None, 134217728, 24696061952]:
         sock, _ = listener.accept()
         with sock, sock.makefile("rw") as qmp:
             qmp.write('{"QMP": {}}\n')
@@ -200,7 +202,7 @@ with socket.socket(socket.AF_UNIX) as listener:
                     },
                 }
                 reply = {"return": {}}
-                if size == 23622320128:
+                if size == 24696061952:
                     reply = {"error": {"desc": "growth rejected"}}
             qmp.write('{"event": "MEMORY_DEVICE_SIZE_CHANGE"}\n')
             qmp.write(json.dumps(reply) + "\n")
@@ -220,10 +222,10 @@ PY
         [[ -f "$fixture/qmp-ready" ]]
         echo timer >> "$fixture/qmp-timers"
     }
-    MEM=2175 ensure_box vm
+    MEM=1151 ensure_box vm
     MEM=1 setup_box vm
     [[ "$(wc -l < "$fixture/qmp-timers")" = 1 ]]
-    MEM=2177 ensure_box vm
+    MEM=1153 ensure_box vm
     MEM=1 setup_box vm
     [[ "$(wc -l < "$fixture/qmp-timers")" = 2 ]]
     MEM=24576 ensure_box vm

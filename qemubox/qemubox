@@ -126,7 +126,7 @@ Environment: QEMUBOX_MEM=24576 QEMUBOX_CPUS=4 QEMUBOX_DISK=40G
              QEMUBOX_SWAP=16384 MiB on guest ext4; 0 disables
              QEMUBOX_QEMU=qemu-system-x86_64 (the qemu binary)
 Memory: QEMUBOX_MEM sets the RAM ceiling in positive decimal MiB.
-        The VM boots near 2 GiB and requests the remaining RAM after SSH starts.
+        The VM boots near 1 GiB and requests the remaining RAM after SSH starts.
         The host backs guest RAM as the guest touches it. Free-page reporting
         can return freed pages, subject to QEMU and virtiofs support.
         Guest /tmp is capped at 75% of configured RAM and active swap combined.
@@ -333,7 +333,7 @@ ensure_box() {
     }
     if [[ -f "$base/opt/qemubox/memory-hotplug" ]]
     then
-        extra=$((MEM > 2048 ? (MEM - 2048) / 128 * 128 : 0))
+        extra=$((MEM > 1024 ? (MEM - 1024) / 128 * 128 : 0))
     fi
     [ -f "$dir/key" ] || {
         note "creating SSH key for qemubox-$name"
@@ -875,7 +875,7 @@ run_qemu() {
     mapfile -t mounts < <(qemu_mount_args)
     qemu_acceleration
     [ "$(cat "$dir/net")" = off ] || restrict=""
-    append='console=ttyS0 reboot=t panic=-1 loglevel=5'
+    append='console=ttyS0 reboot=t panic=-1 loglevel=5 pci=lastbus=0'
     append+=' ip=10.0.2.15::10.0.2.2:255.255.255.0:qemubox:eth0:off'
     append+=' memhp_default_state=online'
     cd "$dir"

@@ -325,11 +325,11 @@ port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the too
 ## Memory
 
 A VM has a 24 GiB RAM ceiling, set by `QEMUBOX_MEM=24576` in positive decimal MiB.
-Images with memory hotplug support boot with 2 GiB plus any remainder below 128 MiB.
+Images with memory hotplug support boot with 1 GiB plus any remainder below 128 MiB.
 Memory growth requires QEMU 8.2 or newer.
 After SSH starts, the launcher requests the remaining RAM in 128 MiB blocks.
 RAM grows in the background. The launcher does not wait for all RAM to come online.
-For ceilings below 2176 MiB, all configured RAM is present at boot.
+For ceilings below 1152 MiB, all configured RAM is present at boot.
 Boxes pinned to images without memory hotplug support boot with all configured RAM.
 The launcher accepts one to nine decimal digits and preserves the exact ceiling.
 `QEMUBOX_SWAP=16384` requests 16 GiB of guest swap in MiB. Set `QEMUBOX_SWAP=0`

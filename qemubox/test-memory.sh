@@ -31,11 +31,11 @@ memory_config_test() {
     fi
     [[ ! -e "$ROOT/invalid-cli" ]]
     MEM=24576 untrusted="" ensure_box memdefault
-    [[ "$(cat "$ROOT/memdefault/config/memory")" = $'24576\n22528' ]]
+    [[ "$(cat "$ROOT/memdefault/config/memory")" = $'24576\n23552' ]]
     MEM=0008 untrusted="" ensure_box memdecimal
     [[ "$(cat "$ROOT/memdecimal/config/memory")" = $'8\n0' ]]
-    MEM=2177 untrusted="" ensure_box memodd
-    [[ "$(cat "$ROOT/memodd/config/memory")" = $'2177\n128' ]]
+    MEM=1153 untrusted="" ensure_box memodd
+    [[ "$(cat "$ROOT/memodd/config/memory")" = $'1153\n128' ]]
 }
 regression 'memory validates before box files and serializes positive decimal MiB' \
     memory_config_test
