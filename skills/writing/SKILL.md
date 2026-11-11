@@ -84,6 +84,9 @@ dictionary, Issue 9, 2025, asd-ste100.org).
   read as separate items, and put the full path or test name in the href or
   title. In a document, citations go in the section's one sources note
   (`page.md` § Sources and links), NEVER inside the explanation.
+- ALWAYS make a link or button name what the reader gets on the click,
+  "[Read the disclosures]"; NEVER "Learn more" or "Click here" (NN/g,
+  better link labels).
 - ALWAYS finish longer prose with the `humanize` pass: it strips AI-isms and
   restores voice. For informational and technical prose, ALWAYS keep the
   shared language rules when that pass suggests fragments, idioms, or slang.

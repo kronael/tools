@@ -3,7 +3,8 @@
 One page. A stranger decides in 60 seconds whether this matters to them.
 Everything else is a link. ALWAYS read the project's record first — README,
 plan/specs, BUGS.md, the record dir's `critique-*.md` (`ship` § Work record); NEVER let the page assert
-what a critique on file already refuted.
+what a critique on file already refuted. ALWAYS name the page's reader and the
+decision they face before drafting; the project README records them.
 
 ## Sections — this order; cut any with nothing true to say
 
@@ -26,6 +27,30 @@ what a critique on file already refuted.
    produced; NEVER invent one.
 7. **Next step** — the one action a convinced reader takes, with the link. A
    negative critique verdict on file is named here, not hidden.
+
+## Money offers — a page that asks the reader to spend money
+
+Sources and the audit behind each rule: `docs/onepager-copy/` in the tools repo.
+
+- ALWAYS put what the reader pays and can lose in the same block as what they
+  get, the first block included; NEVER only in a footer or disclosures
+  section (FCA COBS 4.5.2R(2), FINRA 2210(d)(1)).
+- ALWAYS state a return or payout with every cost the reader bears already
+  subtracted in that figure (FTC earnings-claim guidance Q13, SEC Marketing
+  Rule on net results).
+- ALWAYS show every recorded result with its count, or the typical one; NEVER
+  the best result or a chosen period as the example (FTC Q13, Q16).
+- ALWAYS state a loss as an amount and its condition in the offer's own
+  terms; NEVER a generic warning line (FCA risk-warning testing).
+- ALWAYS write a past result in the past tense with its dates, and mark an
+  estimate as an estimate with its main condition beside it; NEVER word
+  either as what the reader will get (FINRA 2210(d)(1)(B), (F)).
+- ALWAYS give money in and money out before a percentage, and a rate as a
+  count over a named group, "3 of 7 accounts" (Gigerenzer et al. 2007).
+- ALWAYS state a reward to the person who shares the link in the body when
+  the record shows one (FTC Endorsement Guides).
+- These rules govern where facts sit and how they are qualified. The owner's
+  headline and pitch stay verbatim (WISDOM § Documentation).
 
 ## Rules
 
