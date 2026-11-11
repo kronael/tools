@@ -120,12 +120,13 @@ PY
     grep -q '^console=ttyS0 .* pci=lastbus=0' "$fixture/socket-qemu"
     ! grep -qE 'maxmem|id=vmem|virtio-mem-pci' "$fixture/socket-qemu"
     local value expected boot extra
-    for value in 1024 1025 1151 1153 2177 24576
+    for value in 1024 1025 1151 1152 1153 2177 24576
     do
         case "$value" in
             1024) expected=1024M; boot=1024; extra=0 ;;
             1025) expected=1025M; boot=1025; extra=0 ;;
             1151) expected=1151M; boot=1151; extra=0 ;;
+            1152) expected=1024M,maxmem=1152M; boot=1024; extra=128 ;;
             1153) expected=1025M,maxmem=1153M; boot=1025; extra=128 ;;
             2177) expected=1025M,maxmem=2177M; boot=1025; extra=1152 ;;
             24576) expected=1024M,maxmem=24576M; boot=1024; extra=23552 ;;
