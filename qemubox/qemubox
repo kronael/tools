@@ -668,6 +668,7 @@ stage_host_cfg() {
         fi
     done
     keys="$cfg/.gnupg/pubring.kbx"
+    rm -f "$cfg"/.gnupg/pubring.*
     if [ -d "${GNUPGHOME:-$HOME/.gnupg}" ] &&
         gpg --no-armor --output - --export > "$keys" 2>/dev/null && [ -s "$keys" ]
     then

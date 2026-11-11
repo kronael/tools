@@ -45,7 +45,10 @@ gpg --batch --pinentry-mode loopback --passphrase '' \
     --quick-gen-key fixture ed25519 sign never 2>/dev/null
 gpgconf --kill all
 gpgconf --remove-socketdir
+touch "$ROOT/testbox/hostcfg/.gnupg/pubring.gpg"
 stage_host_cfg "$ROOT/testbox/hostcfg"
+false_ "staging drops a legacy keyring that would shadow the export" \
+    '[ -e "$ROOT/testbox/hostcfg/.gnupg/pubring.gpg" ]'
 cp "$ROOT/testbox/hostcfg/.gnupg/pubring.kbx" "$fixture/gpg-read/"
 true_ "gpg public keys staged as a keyring" \
     'gpg --homedir "$fixture/gpg-read" --list-keys fixture >/dev/null 2>&1'
