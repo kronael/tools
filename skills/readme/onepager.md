@@ -32,19 +32,23 @@ decision they face before drafting; the project README records them.
 
 - ALWAYS put what the reader pays and can lose in the same block as what they
   get, the first block included; NEVER only in a footer or disclosures
-  section (FCA COBS 4.5.2R(2), FINRA 2210(d)(1)).
-- ALWAYS state a return or payout with every cost the reader bears already
-  subtracted in that figure (FTC earnings-claim guidance Q13, SEC Marketing
-  Rule on net results).
+  section (FCA COBS 4.5.2R(2), FINRA 2210(d)(1)). These offer facts are
+  exempt from `writing/page.md`'s say-it-once and one-cost-figure rules.
+- ALWAYS name a figure as payout, cost or net profit, and give the net
+  profit after every cost the reader bears beside any gross payout; NEVER a
+  gross payout alone as what the reader earns (FTC earnings-claim guidance
+  Q13, SEC Marketing Rule on gross and net).
 - ALWAYS show every recorded result with its count, or the typical one; NEVER
   the best result or a chosen period as the example (FTC Q13, Q16).
 - ALWAYS state a loss as an amount and its condition in the offer's own
-  terms; NEVER a generic warning line (FCA risk-warning testing).
+  terms; NEVER a generic warning line. House rule: the FCA's risk-warning
+  testing covers generic full-loss warnings only.
 - ALWAYS write a past result in the past tense with its dates, and mark an
   estimate as an estimate with its main condition beside it; NEVER word
   either as what the reader will get (FINRA 2210(d)(1)(B), (F)).
-- ALWAYS give money in and money out before a percentage, and a rate as a
-  count over a named group, "3 of 7 accounts" (Gigerenzer et al. 2007).
+- ALWAYS give a chance of an event as a count over a named group, "3 of 7
+  accounts" (Gigerenzer et al. 2007). House rule: money in and money out
+  come before a percentage.
 - ALWAYS state a reward to the person who shares the link in the body when
   the record shows one (FTC Endorsement Guides).
 - These rules govern where facts sit and how they are qualified. The owner's
