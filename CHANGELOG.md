@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.82] — 20261111
+
+> kronael v0.4.82 — tests/, never test/
+>
+> A Python test directory is now named tests/, because the standard library's own test package can hide a test/ folder.
+>
+> • py — name the test directory tests/; a test/ folder without __init__.py loses to Python's stdlib test package.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.81] — 20261111
 
 > kronael v0.4.81 — Mocks, not recorder classes
