@@ -245,8 +245,11 @@ stays inside the VM; `docker run --network host` uses the guest's network.
 
 Each VM gets its own SSH key on a localhost-only forwarded port, so guests can't reach or
 log into each other. `-A` forwards your SSH agent, `-D` the Docker socket (and with it
-access to host containers), `-K` the gpg-agent (commit signing; off by
+access to host containers), `-K` the gpg-agent's restricted extra socket (off by
 default), `-G` mounts `~/.config/gcloud` ro, `-g` forwards `GH_TOKEN`/`GITHUB_TOKEN`.
+
+Through the `-K` socket the guest can sign and decrypt with your keys while the session
+lasts. It cannot export your secret keys: the agent answers "Forbidden".
 
 `-H` is an egress kill-switch: it disables the guest's outbound network. `-U`
 (or `--untrusted`) goes further — it injects **no** host config or credentials

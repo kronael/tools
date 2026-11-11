@@ -21,6 +21,18 @@ exits 2 'remove_boxes --bad' "rm rejects unknown options"
 ) > "$fixture/removal.log" 2>&1
 [ "$?" -eq 0 ] && ok || { cat "$fixture/removal.log"; bad "rm multiple targets and failures"; }
 
+(
+    set -e
+    ROOT="$fixture/removal-hostcfg"
+    mkdir -p "$ROOT/staged/hostcfg/.gnupg"
+    echo disk > "$ROOT/staged/disk.qcow2"
+    touch "$ROOT/staged/hostcfg/.claude.json" "$ROOT/staged/hostcfg/.gitconfig" \
+        "$ROOT/staged/hostcfg/.gnupg/pubring.kbx" "$ROOT/staged/hostcfg/.gnupg/pubring.gpg"
+    remove_box staged
+    [ ! -e "$ROOT/staged" ]
+) > "$fixture/removal-hostcfg.log" 2>&1
+[ "$?" -eq 0 ] && ok || { cat "$fixture/removal-hostcfg.log"; bad "rm removes every staged pubring file"; }
+
 exits 2 'stop_boxes' "stop requires names"
 exits 2 'stop_boxes -f' "stop -f alone requires names"
 exits 2 'stop_boxes --bad one' "stop rejects unknown options"

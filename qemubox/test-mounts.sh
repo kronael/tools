@@ -49,6 +49,16 @@ stage_host_cfg "$ROOT/testbox/hostcfg"
 cp "$ROOT/testbox/hostcfg/.gnupg/pubring.kbx" "$fixture/gpg-read/"
 true_ "gpg public keys staged as a keyring" \
     'gpg --homedir "$fixture/gpg-read" --list-keys fixture >/dev/null 2>&1'
+printf 'armor\noutput %s\n' "$fixture/gpg-out" > "$GNUPGHOME/gpg.conf"
+mkdir -m 700 "$fixture/gpg-conf-read"
+stage_host_cfg "$ROOT/testbox/hostcfg"
+gpgconf --kill all
+gpgconf --remove-socketdir
+cp "$ROOT/testbox/hostcfg/.gnupg/pubring.kbx" "$fixture/gpg-conf-read/"
+true_ "gpg.conf armor and output do not change the staged keyring" \
+    'gpg --homedir "$fixture/gpg-conf-read" --list-keys fixture >/dev/null 2>&1'
+false_ "gpg.conf output file is left untouched" '[ -e "$fixture/gpg-out" ]'
+rm -f "$GNUPGHOME/gpg.conf"
 false_ "history excluded from ro staging" '[ -e "$ROOT/testbox/hostcfg/.qemubox_history" ]'
 run_assemble
 true_ "history staging supports re-entry" '[ "$HOME/.qemubox_history" -ef "$ROOT/testbox/history/history" ]'

@@ -669,7 +669,7 @@ stage_host_cfg() {
     done
     keys="$cfg/.gnupg/pubring.kbx"
     if [ -d "${GNUPGHOME:-$HOME/.gnupg}" ] &&
-        gpg --export > "$keys" 2>/dev/null && [ -s "$keys" ]
+        gpg --no-armor --output - --export > "$keys" 2>/dev/null && [ -s "$keys" ]
     then
         return 0
     fi
@@ -918,8 +918,8 @@ setup_box() {
 }
 
 detect_gpg() {
-    gpg_sock="$(gpgconf --list-dirs agent-socket 2>/dev/null || true)"
-    if [ -S "$gpg_sock" ] && gpg-connect-agent /bye >/dev/null 2>&1; then
+    gpg_sock="$(gpgconf --list-dirs agent-extra-socket 2>/dev/null || true)"
+    if [ -S "$gpg_sock" ] && gpg-connect-agent -S "$gpg_sock" /bye >/dev/null 2>&1; then
         note "forwarding gpg-agent into qemubox-$name over SSH"
         return
     fi
@@ -982,7 +982,8 @@ remove_box() {
     rm -f "$dir/serial.log" "$dir/pid" "$dir/known_hosts" "$dir/key" "$dir/key.pub" "$dir/.lock" "$dir/port" "$dir/qmp"
     rm -f "$dir/idle" "$dir/idle.log" "$dir"/qbx*.sock "$dir/cfg.sock" \
         "$dir/root.sock" "$dir/capture.sock" "$dir"/*.sock.pid
-    for rel in "${host_cfg_files[@]}" .gnupg/pubring.kbx; do rm -f "$dir/hostcfg/$rel"; done
+    for rel in "${host_cfg_files[@]}"; do rm -f "$dir/hostcfg/$rel"; done
+    rm -f "$dir"/hostcfg/.gnupg/pubring.*
     rm -f "$dir/history/history"
     if [ -d "$dir/history" ]
     then
