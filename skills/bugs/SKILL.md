@@ -32,6 +32,9 @@ did.
   its line in the same commit.
 - ALWAYS search every queue before recording or answering "is it known":
   `git ls-files '*BUGS.md'`.
+- NEVER keep a second queue file (`TEST-BUGS.md` and the like) — ALWAYS record a
+  test that passes without verifying what it claims as a `test` entry in the
+  owning `BUGS.md`.
 - ALWAYS match the case the project already uses: uppercase `BUGS.md` by
   default, lowercase where the project has it.
 
@@ -85,7 +88,7 @@ add entries in the file's own format, NEVER convert it, and NEVER ask to.
 - **SEVERITY** — `CRITICAL | HIGH | MED | LOW` (or `MED-HIGH`).
 - **type** — one word for the class: `latency`, `correctness`, `docs`,
   `design`, `duplication`, `perf`, `ops`, `config`, `resource/DoS`,
-  `hardening`, `traceability`.
+  `hardening`, `traceability`, `test`.
 - **body** — concrete `file:line` cites, the failure/why, and often a
   **Fix:** sketch. Multi-line prose is fine for a hard one.
 - **test** — cites the failing test that proves it:
