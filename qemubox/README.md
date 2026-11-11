@@ -318,8 +318,7 @@ New mount parent directories belong to the user; existing parents keep their own
 
 State lives in `~/.local/share/qemubox` (override with `QEMUBOX_HOME`). Each box pins
 a base image ID and has a sparse `upper.raw` ext4 disk, sized by `QEMUBOX_DISK`
-(default 40G). The guest combines the read-only rootfs lower with that disk
-through overlayfs. Writes allocate host disk blocks; ext4 discard releases
+(default 40G). Writes allocate host disk blocks; ext4 discard releases
 deleted blocks. The base image stays while current or referenced.
 `rm` deletes a box's upper, key, config, known-hosts,
 port, network mode and idle and stopped stamps. `QEMUBOX_SOURCE` selects the tools source repository.
