@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, pyproject.toml, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; test directory name, No module named test, dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, pyproject.toml, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -183,6 +183,7 @@ Python-specific additions and deltas.
 ## Testing
 - ALWAYS `python -m pytest` not `pytest` directly (package discovery)
 - Set PYTHONPATH once at Makefile top, not per target
+- ALWAYS name the test directory `tests/` — NEVER `test/`: Debian's stdlib ships a regular `test` package that wins over an `__init__`-less `test/` wherever it sits on `sys.path` (`No module named 'test.<x>'`)
 - Testcontainers and the fixture directory centralize in `conftest.py`: one fixture returning `pytestconfig.rootpath / '<tree>/tests/assets'` — NEVER `Path(__file__)` (`code.md` § Layout and formatting)
 - ALWAYS build properly shaped doubles of a third party from `Mock` / `MagicMock` with explicit
   attrs (`create_autospec` when the signature must be enforced) and read `call_args`; a fake class
