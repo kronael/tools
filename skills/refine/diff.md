@@ -1,8 +1,9 @@
 # Diff gates
 
-Two checks over the range step 3 resolved. Both run on every change, whatever
-its size, at step 3 and again after the fixes at step 10. A hit is a finding
-fixed at step 8: NEVER recorded for later, NEVER settled by an explanation.
+Checks over the range step 3 resolved. The first two run on every change,
+whatever its size, and the mutation run on every change to core logic, at
+step 3 and again after the fixes at step 10. A hit is a finding fixed at step
+8: NEVER recorded for later, NEVER settled by an explanation.
 
 ## Module-relative paths
 
@@ -79,3 +80,19 @@ resolves no alias, follows no control flow and reads no pytest configuration.
   assertion, an expected error or an expected value is classified the same way.
 - The script compares what tests state. Whether a check runs, or exercises
   production code, is `software.md` § Tests that prove nothing.
+
+## Mutation run on changed core logic
+
+When the range changes Python that decides or computes — not wiring,
+configuration, tests or docs — ALWAYS run, from each changed component:
+
+```sh
+python3 ~/.claude/skills/software/mut_changed.py <base>
+```
+
+Exit 0: no survivor on a changed line; 1: survivors listed; 2: failed check.
+
+- ALWAYS settle every listed survivor the way `software/dynamic-analysis.md`
+  § Python states: a test that kills it, or `equivalent` with its reason.
+- ALWAYS quote the script's last line in the closing report. Exit 2 is NEVER a
+  clean result, and `scope empty` NEVER proves a change that edits logic.

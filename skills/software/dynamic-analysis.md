@@ -75,18 +75,36 @@ Targets: `miri`, `test-san`, `fuzz`, `mutants`.
 
 - **mutmut** (>=3.8) — mutation testing: copies the source to `mutants/`, changes
   one operator or constant at a time and runs the tests; a surviving mutant is a
-  missing test or dead code. ALWAYS put it in a `mutation` uv group, NEVER `dev`
-  (an image that installs `dev` ships it). ALWAYS configure `[tool.mutmut]` in
-  `pyproject.toml`: `source_paths` (logic modules only), `do_not_mutate`,
-  `also_copy` (files the tests import but nothing mutates) and
-  `pytest_add_cli_args` (unit tests only). ALWAYS list `mutants/` in
-  `.gitignore` and the pyright excludes. `make mut` runs `uv run --group
-  mutation mutmut run $(MUTANTS)`, then `mutmut results`; `MUTANTS` narrows it
-  to the changed modules, since a whole package takes hours. ALWAYS run it
-  before calling a refactor's suite enough; turn each survivor into a test or a
-  `BUGS.md` entry, NEVER a bare `# pragma: no mutate`.
+  missing test or dead code. ALWAYS run it on a change through `mut_changed.py`
+  beside this file, and before calling a refactor's suite enough:
 
-Targets: default `test` runs `-X dev -W error`; add `test-prop`, `test-mem`, `mut`.
+  ```sh
+  python3 ~/.claude/skills/software/mut_changed.py <base> [<component dir>]
+  ```
+
+  It mutates only the changed `*.py` under mutmut's `source_paths`, tests
+  excluded, by writing `only_mutate` into `[tool.mutmut]` for the run. It runs
+  `uv run --no-sync --with 'mutmut>=3.8'` under a `MemoryMax` scope
+  (`--memory`, default 4G), `--max-children 4` and `nice -n 19`, then restores
+  `pyproject.toml` byte for byte and moves `mutants/` to a temp directory it
+  names. It lists the survivors on changed lines only — added lines and the
+  neighbours of a deletion — each with `mutmut show`. Exit 0: none; 1:
+  survivors listed; 2: failed check. `scope empty` exits 0 and mutated nothing.
+  - NEVER run bare `mutmut run` on a package — ALWAYS the script: mutmut 3
+    takes no scope on its command line, and generating every mutant of a large
+    `source_paths` ran past a 6 GB cgroup.
+  - ALWAYS settle each survivor as a test that fails with the mutant's diff
+    applied, or as `equivalent` with the reason no input tells it apart, named
+    in the closing report. NEVER a bare `# pragma: no mutate`.
+  - A project needs no make target and no uv group; the project venv and
+    `uv.lock` stay untouched. ALWAYS keep `[tool.mutmut]` only for what the
+    script cannot guess: `pytest_add_cli_args` (unit tests only),
+    `also_copy` (files the tests import outside `source_paths`), and
+    `source_paths` where mutmut's guess — `lib`, `src`, the directory's own
+    name — is wrong. Without it the run takes pytest's own test selection;
+    mutmut adds `-x`.
+
+Targets: default `test` runs `-X dev -W error`; add `test-prop`, `test-mem`.
 
 ---
 

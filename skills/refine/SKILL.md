@@ -40,8 +40,9 @@ code, deployment, specs or data; documents also carry claims to verify.
    → the range resolves and every assertion carries its `file:line`.
 
    ALWAYS run the mechanical checks over the range — `astgrep` → `lints.md`
-   § Refine, and both gates in `diff.md`: module-relative paths in added lines,
-   and test checks removed or changed — and repeat them after fixes at step 10.
+   § Refine, and the gates in `diff.md`: module-relative paths in added lines,
+   test checks removed or changed, and the mutation run on changed core logic
+   — and repeat them after fixes at step 10.
    → every gate hit is fixed, or kept under the exception or reason `diff.md` names.
 
 3.5. **Whole-change audit** — ALWAYS dispatch one fresh read-only audit of the
@@ -166,8 +167,9 @@ code, deployment, specs or data; documents also carry claims to verify.
 - ALWAYS scale review depth to the change: a small bug gets one scope-sized
   audit and only necessary context reviews. NEVER skip its whole-change audit.
   Release uses that same pass over its complete release range.
-- ALWAYS run both `diff.md` gates on every change, the smallest included, and
-  fix each hit; NEVER settle one by explaining it.
+- ALWAYS run the `diff.md` gates — the first two on every change, the smallest
+  included, the mutation run on changed core logic — and fix each hit; NEVER
+  settle one by explaining it.
 - NEVER report a number without reading what it counted, and NEVER take the
   second number from the shape that produced the first.
 - ALWAYS ask the redesign question before polishing when the code shows one of

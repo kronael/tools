@@ -66,6 +66,7 @@ test: $(addprefix test-,$(PROJECTS))
 	$(PYTEST) -q skills/recall-memories/test_recall.py
 	$(PYTEST) -q skills/astgrep/test_check.py
 	$(PYTEST) -q skills/refine/test_assertions.py
+	$(PYTEST) -q skills/software/test_mut_changed.py
 	@echo "all tests passed ($(PROJECTS))"
 
 clean: $(addprefix clean-,$(PROJECTS))
