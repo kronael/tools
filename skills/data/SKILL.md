@@ -93,3 +93,8 @@ comments, design and the boring-code rules.
 - Loader = path in, DataFrame out. NEVER clean in loaders — that's ingestion.
 - Filesystem is pipeline state. NEVER track pipeline progress in state.json. ALWAYS gate work on output existence; continue day-loops past per-day failures.
 - `state.json` is for collector resume only (live-feed cursor), distinct from pipeline-stage resume.
+- ALWAYS write an unfinished period as `<file>.part` and rename it to its final name when complete; readers open final names only.
+- ALWAYS write a period without data as an empty final file, so a resume skips it instead of fetching it again.
+- ALWAYS walk a backfill newest to oldest and stop after N empty periods in a row, each confirmed by a second read: that is the earliest history the vendor serves, not proof of where the market began.
+- NEVER write a downloaded dataset under a recorded dataset's name or path — ALWAYS give it its own name beside the recorded one.
+- ALWAYS finalize a period from a vendor history API only after a later second read returns the same rows: a read can return only what the vendor has loaded so far.
