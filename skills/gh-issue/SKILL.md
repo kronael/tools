@@ -45,9 +45,9 @@ If unsure which repo, ASK — do not guess a slug.
 ## 3. Sign-off gate (MANDATORY)
 
 ALWAYS present the exact title + body to the user before posting. In Claude Code
-use `AskUserQuestion`; elsewhere paste it in chat. NEVER run `gh issue create`
-until the user explicitly approves the content and the target repo. Editing the
-draft is expected — re-show after edits.
+use `AskUserQuestion` per WISDOM § Git; elsewhere paste it in chat. NEVER run
+`gh issue create` until the user explicitly approves the content and the target
+repo. Editing the draft is expected — re-show after edits.
 
 ## 4. Post (only after approval)
 

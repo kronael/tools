@@ -127,6 +127,11 @@ PR body with the robot. These win.
   gate, bypass a refusal or change permission settings to proceed. NEVER claim
   an agent-written review is human-authored. Hook limits:
   `~/.claude/hooks/ARCHITECTURE.md` § pretool_nudge.py.
+- ALWAYS show the exact payload inside any dialog that asks the user to approve
+  a git or GitHub operation (`AskUserQuestion`; in Codex, the asking message):
+  the full text and title to post, the target (repo, PR or issue, head, base),
+  the refspec with its full SHA, the command. NEVER a summary or a pointer to
+  earlier chat: the user may see only the dialog.
 - ALWAYS apply `software/code.md` § Review sign-off to shared-library and
   runtime changes. A permission prompt does not replace that review.
 - ALWAYS post PR comments with `/gh-comment` and write a PR body with
