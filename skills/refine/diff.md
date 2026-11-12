@@ -43,7 +43,8 @@ python3 ~/.claude/skills/refine/assertions.py <base> <head>
 changed, it compares each function's checks before and after — `assert`,
 `pytest.raises`/`warns`, `assert*` calls and `parametrize` — pairing functions
 through file renames and moves. It prints each function that lost or changed a
-check (`-` before, `+` after), each removed function, and each function that
+check (`-` before, `+` after), each removed function — a test left in a file
+named neither `test_*.py` nor `*_test.py` included — and each function that
 gained a `skip` or `xfail`, its own or its class's or module's (`+ disabled
 by`). Exit 0: none; 1: lines to classify; 2: failed check. Its last line counts
 the functions compared; `0 of 0` compared nothing.

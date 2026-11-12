@@ -4,19 +4,24 @@ import ast
 import subprocess
 import sys
 from collections import Counter
+from collections.abc import Iterable
 from collections.abc import Iterator
 
 FUNCTION = (ast.FunctionDef, ast.AsyncFunctionDef)
+SIMPLE_STATEMENT = (ast.Assign, ast.AnnAssign, ast.Expr)
 CHECKS = ('raises', 'warns', 'parametrize')
 DISABLERS = (
-    'skip',
-    'skipif',
-    'xfail',
-    'importorskip',
-    'skipTest',
-    'skipIf',
-    'skipUnless',
-    'expectedFailure',
+    'pytest.skip',
+    'pytest.xfail',
+    'pytest.importorskip',
+    'pytest.mark.skip',
+    'pytest.mark.skipif',
+    'pytest.mark.xfail',
+    'unittest.skip',
+    'unittest.skipIf',
+    'unittest.skipUnless',
+    'unittest.expectedFailure',
+    'self.skipTest',
 )
 DISABLED = 'disabled by '
 
@@ -25,15 +30,15 @@ def run_git(*args: str) -> str:
     return subprocess.run(['git', *args], stdout=subprocess.PIPE, text=True, check=True).stdout
 
 
+def is_collected(path: str) -> bool:
+    name = path.rpartition('/')[2]
+    return name.endswith('.py') and (name.startswith('test_') or name.endswith('_test.py'))
+
+
 def is_test_path(path: str) -> bool:
     parts = path.split('/')
-    name = parts[-1]
-    return name.endswith('.py') and (
-        name.startswith('test_')
-        or name.endswith('_test.py')
-        or name == 'conftest.py'
-        or 'tests' in parts
-        or 'test' in parts
+    return path.endswith('.py') and (
+        is_collected(path) or parts[-1] == 'conftest.py' or 'tests' in parts or 'test' in parts
     )
 
 
@@ -52,11 +57,12 @@ def is_check_call(call: ast.Call) -> bool:
     return name in CHECKS or name.startswith('assert')
 
 
-def iter_disablers(roots: list[ast.expr] | list[ast.stmt]) -> Iterator[str]:
+def iter_disablers(roots: Iterable[ast.AST]) -> Iterator[str]:
     for root in roots:
+        calls = {id(node.func): node for node in ast.walk(root) if isinstance(node, ast.Call)}
         for node in ast.walk(root):
-            if isinstance(node, ast.Attribute) and node.attr in DISABLERS:
-                yield f'{DISABLED}{ast.unparse(node)}'
+            if isinstance(node, ast.Attribute) and ast.unparse(node) in DISABLERS:
+                yield f'{DISABLED}{ast.unparse(calls.get(id(node), node))}'
 
 
 def iter_checks(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[str]:
@@ -70,12 +76,8 @@ def iter_checks(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[st
 
 def scope_disablers(scope: ast.Module | ast.ClassDef) -> list[str]:
     decorators = scope.decorator_list if isinstance(scope, ast.ClassDef) else []
-    pytestmarks = [
-        statement.value
-        for statement in scope.body
-        if isinstance(statement, ast.Assign) and ast.unparse(statement.targets[0]) == 'pytestmark'
-    ]
-    return list(iter_disablers(decorators + pytestmarks))
+    statements = [node for node in scope.body if isinstance(node, SIMPLE_STATEMENT)]
+    return list(iter_disablers(decorators + statements))
 
 
 def iter_functions(
@@ -93,7 +95,10 @@ def iter_functions(
 
 def read_checks(rev: str, path: str) -> dict[str, Counter[str]]:
     tree = ast.parse(run_git('show', f'{rev}:{path}'), filename=f'{rev}:{path}')
-    return dict(iter_functions(tree, '', scope_disablers(tree)))
+    checks: dict[str, Counter[str]] = {}
+    for name, found in iter_functions(tree, '', scope_disablers(tree)):
+        checks[name] = checks.get(name, Counter()) + found
+    return checks
 
 
 def main() -> int:
@@ -114,11 +119,12 @@ def main() -> int:
             break
         old_path = next(fields)
         new_path = next(fields) if status[0] == 'R' else old_path
+        is_kept = is_test_path(new_path) and (is_collected(new_path) or not is_collected(old_path))
         if status[0] != 'A' and is_test_path(old_path):
-            path = new_path if is_test_path(new_path) else old_path
+            path = new_path if is_kept else old_path
             for name, checks in read_checks(base, old_path).items():
                 old[path, name] = checks
-        if status[0] != 'D' and is_test_path(new_path):
+        if status[0] != 'D' and is_kept:
             for name, checks in read_checks(args.head, new_path).items():
                 new[new_path, name] = checks
 
@@ -127,7 +133,14 @@ def main() -> int:
     for (path, name), before in old.items():
         target = (path, name)
         if target not in new:
-            moved = [key for key in new if key not in old and key not in claimed and key[1] == name]
+            moved = [
+                key
+                for key in new
+                if key[1] == name
+                and key not in old
+                and key not in claimed
+                and (is_collected(key[0]) or not is_test_function(name))
+            ]
             if len(moved) == 1:
                 target = moved[0]
                 claimed.add(target)

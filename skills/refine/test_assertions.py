@@ -92,9 +92,19 @@ def test_inline():
     assert total([2]) == 2
 
 
+@pytest.mark.skipif(False, reason='slow')
+def test_conditional():
+    assert total([5]) == 5
+
+
 if hasattr(sum, '__call__'):
     def test_guarded():
         assert total([3]) == 3
+
+
+if not total:
+    def test_guarded():
+        assert False
 """
 
 NEW_MARKS = """\
@@ -108,6 +118,7 @@ class TestSums:
 
 
 def test_enabled():
+    reader.skip(1)
     assert total([1]) == 1
 
 
@@ -116,9 +127,19 @@ def test_inline():
     assert total([2]) == 2
 
 
+@pytest.mark.skipif(True, reason='slow')
+def test_conditional():
+    assert total([5]) == 5
+
+
 if hasattr(sum, '__call__'):
     def test_guarded():
         assert total([3])
+
+
+if not total:
+    def test_guarded():
+        assert False
 """
 
 OLD_MODULE = """\
@@ -130,6 +151,16 @@ NEW_MODULE = """\
 import pytest
 
 pytestmark = pytest.mark.xfail
+
+
+def test_whole():
+    assert total([4]) == 4
+"""
+
+NEW_TYPED_MODULE = """\
+import pytest
+
+pytestmark: object = pytest.mark.skip
 
 
 def test_whole():
@@ -195,25 +226,38 @@ def test_weakened_checks_and_a_removed_test_are_listed(pytestconfig, repo):
 
 
 def test_a_skip_added_at_any_level_is_listed_and_a_removed_one_is_not(pytestconfig, repo):
-    # A skip lands on a class, inside a body and as a module pytestmark, another
-    # test loses its skip, a test under a module-level `if` loosens its assert
-    # -> exit 1 naming the three skipped tests and the loosened one, never the
-    # test that was enabled.
-    base = commit(repo, {'tests/test_marks.py': OLD_MARKS, 'tests/test_module.py': OLD_MODULE})
-    head = commit(repo, {'tests/test_marks.py': NEW_MARKS, 'tests/test_module.py': NEW_MODULE})
-    result = run_assertions(pytestconfig, repo, base, head)
+    # A skip lands on a class, inside a body, in a skipif condition and as a
+    # plain and an annotated module pytestmark; a test under a module-level `if`
+    # loosens its assert while a same-named twin stays; another test loses its
+    # skip and calls an unrelated `skip` method -> exit 1 naming the five
+    # disabled tests and the loosened one, never the test that was enabled.
+    old = {
+        'tests/test_marks.py': OLD_MARKS,
+        'tests/test_module.py': OLD_MODULE,
+        'tests/test_typed.py': OLD_MODULE,
+    }
+    new = {
+        'tests/test_marks.py': NEW_MARKS,
+        'tests/test_module.py': NEW_MODULE,
+        'tests/test_typed.py': NEW_TYPED_MODULE,
+    }
+    result = run_assertions(pytestconfig, repo, commit(repo, old), commit(repo, new))
     assert result.returncode == 1, result.stderr
     assert result.stdout.splitlines() == [
         'tests/test_marks.py::TestSums.test_pair',
-        '  + disabled by pytest.mark.skip',
+        "  + disabled by pytest.mark.skip(reason='later')",
         'tests/test_marks.py::test_inline',
-        '  + disabled by pytest.skip',
+        "  + disabled by pytest.skip('later')",
+        'tests/test_marks.py::test_conditional',
+        "  + disabled by pytest.mark.skipif(True, reason='slow')",
         'tests/test_marks.py::test_guarded',
         '  - assert total([3]) == 3',
         '  + assert total([3])',
         'tests/test_module.py::test_whole',
         '  + disabled by pytest.mark.xfail',
-        f'4 of 5 {SUMMARY}',
+        'tests/test_typed.py::test_whole',
+        '  + disabled by pytest.mark.skip',
+        f'6 of 7 {SUMMARY}',
     ]
 
 
@@ -257,16 +301,32 @@ def test_two_removed_tests_do_not_share_one_new_test(pytestconfig, repo):
     ]
 
 
-def test_a_test_file_renamed_out_of_the_tests_is_removed(pytestconfig, repo):
-    # A test file renamed to a path pytest never reads -> exit 1, its test removed.
+@pytest.mark.parametrize('renamed', ['notes/single.txt', 'tests/single.py'])
+def test_a_test_file_renamed_out_of_collection_is_removed(pytestconfig, repo, renamed):
+    # A test file renamed to a name pytest does not collect, outside the tests
+    # or inside them -> exit 1, its test removed.
     base = commit(repo, {'tests/test_single.py': MOVED_TEST})
-    head = commit(repo, {'tests/test_single.py': None, 'notes/single.txt': MOVED_TEST})
+    head = commit(repo, {'tests/test_single.py': None, renamed: MOVED_TEST})
     result = run_assertions(pytestconfig, repo, base, head)
     assert result.returncode == 1, result.stderr
     assert result.stdout.splitlines() == [
         'tests/test_single.py::test_gone: removed',
         '  - assert total([1]) == 1',
         f'1 of 1 {SUMMARY}',
+    ]
+
+
+def test_a_test_moved_into_an_uncollected_file_is_removed(pytestconfig, repo):
+    # A test leaves its file for a helper module pytest does not collect -> exit 1,
+    # the test removed: the copy in the helper is no test.
+    base = commit(repo, {'tests/test_sums.py': OLD_TOTALS})
+    head = commit(repo, {'tests/test_sums.py': REFORMATTED_TOTALS, 'tests/support.py': MOVED_TEST})
+    result = run_assertions(pytestconfig, repo, base, head)
+    assert result.returncode == 1, result.stderr
+    assert result.stdout.splitlines() == [
+        'tests/test_sums.py::test_gone: removed',
+        '  - assert total([1]) == 1',
+        f'1 of 3 {SUMMARY}',
     ]
 
 
