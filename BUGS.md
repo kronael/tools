@@ -49,6 +49,22 @@
   (b) keep the chat word. **Default if nothing is decided:** (b). No test —
   design.
 
+- **REVIEW-GIVE-PROMISES-A-SUBMIT-DIALOG** (LOW, docs) — CONFIRMED at HEAD
+  2026-11-12. `skills/review/give.md:115` says the hook "raises the permission
+  dialog on the exact submit command". `hooks/pretool_nudge.py:258` asks only
+  for an approving review and a PR merge; a findings submit after
+  `SUBMIT REVIEW` gets no prompt. An agent that leaves the payload to that
+  dialog shows it nowhere. **Fix:** state the gate as `gh-comment` § Submit
+  has it; goes away under REVIEW-SUBMIT-CHAT-GATE option (a). Measured:
+  `hooks/test_pretool_nudge.py::test_process_refuses_a_review_submit_the_user_did_not_ask_for`.
+
+- **CONFIRMED-SET-POINTERS-DANGLE** (LOW, docs) — CONFIRMED at HEAD
+  2026-11-12. `skills/gh-comment/SKILL.md:173`, `skills/review/take.md:80`,
+  `skills/refine/SKILL.md:176` and `skills/ship/SKILL.md:175` send a push to
+  "the confirmed set (WISDOM § Git)"; `skills/global/SKILL.md` § Git has no
+  such term, its rule is "Push only the authorized refspec". **Fix:** name
+  the authorized refspec in the four files. No test — docs.
+
 - **FORM-SIZE-GUIDANCE-DIVERGES** (LOW, design) — needs sign-off.
   `skills/writing/page.md` asks reviewers for five font sizes at most;
   `skills/create/form.md` evaluates distinct rendered sizes against a limit
@@ -445,6 +461,15 @@
   `CLAUDE.local.md` and a shell command run from inside a skill directory
   (`sed -i ... notes.md`) get no nudge; WISDOM § Environment states the rule
   for every instruction file. No test — design.
+
+- **PERMISSION-PROMPT-HIDES-A-FILE-BODY** (LOW, design) — needs sign-off.
+  The prompt `hooks/pretool_nudge.py:270` raises for an approving review or a
+  PR merge shows the command and a fixed reason. A body passed by file
+  (`--body-file`, `--input`) is not in it, so the user approves text the
+  prompt never showed; WISDOM § Git requires the payload only in a request
+  the agent writes. **Options:** (a) the hook reads the body file into the
+  prompt reason; (b) keep. **Default if nothing is decided:** (b). No test —
+  design.
 
 - **STOP-COMMIT-NUDGE-BLAMES-OTHER-WRITERS** (MED, design) — needs sign-off.
   `hooks/stop.py` `nudges()` blocks on every dirty tracked file under the
