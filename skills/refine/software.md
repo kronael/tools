@@ -258,10 +258,9 @@ reads to pick the agent type.
 
 - ALWAYS measure, never eyeball: `awk 'length > 80'` over the changed code
   lines, a multi-line expression inside an `if` condition, two imports on one
-  line, a file log handler or log-file path in application code, and over the
-  added lines `rg -n '__file__|__dirname|basename \$0'` — a path derived from
-  the module's or binary's location where configuration or the test runner's
-  root should hold it (§ Layout and formatting).
+  line, a file log handler or log-file path in application code (§ Layout and
+  formatting). A path derived from the module's or binary's location is
+  `diff.md` § Module-relative paths, run in main context at step 3.
 - ALWAYS inspect changed component trees for same-name nesting, redundant `api/` wrappers and nested utility modules.
   ALWAYS flag wrappers violating `readme/topology.md` § Files.
 
