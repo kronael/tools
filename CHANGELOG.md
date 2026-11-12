@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.83] — 20261112
+
+> kronael v0.4.83 — Fable plans, Sonnet implements
+>
+> When the owner names Fable for implementation, Fable plans the work and delegates each step to Sonnet Coding.
+>
+> • dispatch — Fable never edits and delegates each step to a Sonnet Coding worker.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.82] — 20261111
 
 > kronael v0.4.82 — tests/, never test/
