@@ -11,3 +11,5 @@ TEMPLATES = Path(templates.__file__).parent
 data = (Path(__file__).parent / 'orders.json').read_text()
 
 source = Path(Path(__file__).parent / 'worker.py').read_text()
+
+source = Path(load_module(Path(__file__).with_name('worker.py')).__file__).read_text()

@@ -1,10 +1,12 @@
 import hashlib
 import os
+import pathlib
 from pathlib import Path
 
 MIGRATIONS = Path('migrations')
 PARENT = os.path.dirname(os.getcwd())
 SOURCE_SHA = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+SOURCE_TEXT = pathlib.Path(__file__).read_text(encoding='utf-8')
 WORKER_SOURCE = Path(worker.__file__).read_text()
 
 

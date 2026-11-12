@@ -338,11 +338,12 @@ rule:
     not:
         inside:
             stopBy: end
-            any:
-                - pattern: Path(__file__).read_bytes()
-                - pattern: Path(__file__).read_text()
-                - pattern: Path($MODULE.__file__).read_bytes()
-                - pattern: Path($MODULE.__file__).read_text()
+            kind: call
+            field: function
+            has:
+                field: function
+                kind: attribute
+                regex: ^(pathlib\.)?Path\((\w+\.)*__file__\)\.read_(bytes|text)$
 message: 'NEVER derive a path from where the module sits (__file__, .parent, .parents[N], dirname) — take it from configuration or the working directory,
     and in a test from pytestconfig.rootpath. Reading the module itself is allowed. An installed tool locating its own shipped read-only files takes # ast-grep-ignore:
     py-no-module-path on that line, after a comment giving the reason. See skill:software code.md.'

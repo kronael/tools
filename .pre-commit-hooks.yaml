@@ -1,11 +1,11 @@
 ---
 # Rules from the bundled ast-grep packs, published for other repositories.
-# Each hook runs one rule; pre-commit installs ast-grep and clones this repository,
-# whose root is $VIRTUAL_ENV/.. inside the hook environment.
+# Each hook runs one rule. pre-commit installs ast-grep into <clone>/py_env-<version>,
+# so the clone root is $VIRTUAL_ENV up to /py_env-; pyproject.toml makes it installable.
     - id: py-no-module-path
       name: 'py-no-module-path: no path derived from __file__'
       description: Rejects a Python path built from the module's own location.
       language: python
       additional_dependencies: [ast-grep-cli==0.51.0]
-      entry: bash -c 'exec ast-grep scan --rule "$VIRTUAL_ENV/../skills/py/lints/rules.yml" --off --error=py-no-module-path "$@"' --
+      entry: bash -c 'exec ast-grep scan --rule "${VIRTUAL_ENV%%/py_env-*}/skills/py/lints/rules.yml" --off --error=py-no-module-path "$@"' --
       types: [python]
