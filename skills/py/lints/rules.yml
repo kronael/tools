@@ -344,7 +344,8 @@ rule:
                 field: function
                 kind: attribute
                 regex: ^(pathlib\.)?Path\((\w+\.)*__file__\)\.read_(bytes|text)$
-message: 'NEVER derive a path from where the module sits (__file__, .parent, .parents[N], dirname) — take it from configuration or the working directory,
-    and in a test from pytestconfig.rootpath. Reading the module itself is allowed. An installed tool locating its own shipped read-only files takes # ast-grep-ignore:
-    py-no-module-path on that line, after a comment giving the reason. See skill:software code.md.'
+message: "NEVER derive a path from where the module sits (__file__, .parent, .parents[N], dirname). The deployment fixes the working directory (systemd\
+    \ WorkingDirectory, Docker WORKDIR, the Makefile or CI step that cd's into the component): write a path relative to it, or read it from configuration\
+    \ (flag, env var, config file); in a test use pytestconfig.rootpath. Reading the module itself is allowed. An installed tool locating its own shipped\
+    \ read-only files takes # ast-grep-ignore: py-no-module-path on that line, after a comment giving the reason. See skill:software code.md."
 note: 'source: skills/software/code.md — Layout and formatting'
