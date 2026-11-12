@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.88] — 20261112
+
+> kronael v0.4.88 — the module-path lint says how to fix a hit
+>
+> The py-no-module-path message now names where the working directory comes from.
+>
+> • Message — the deployment fixes the working directory (systemd, Docker WORKDIR, the Makefile or CI step); paths are relative to it or come from configuration.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `py-no-module-path` names the deployment's working directory as the base for a relative path.
+
 ## [v0.4.87] — 20261112
 
 > kronael v0.4.87 — a lint for paths built from __file__
