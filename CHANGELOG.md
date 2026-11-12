@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.86] — 20261112
+
+> kronael v0.4.86 — refine gates paths and weakened tests
+>
+> refine now checks every change for paths built from a module's location and for test checks that were loosened or removed.
+>
+> • Paths — added lines that locate a file from the module, script or binary are listed and fixed.
+> • Tests — a changed Python test's asserts, raises and parametrize cases are compared across it.
+> • Lost checks — a loosened or removed one, or an added skip, is restored or named in the PR body.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `refine` runs both gates at step 3 and again after its fixes; `diff.md` holds them.
+- `refine/assertions.py <base> <head>` exits 0 clean, 1 with lines to classify, 2 on a failed check.
+- `refine` step 11 reads `close.md`.
+
 ## [v0.4.85] — 20261112
 
 > kronael v0.4.85 — Approval requests show the payload
