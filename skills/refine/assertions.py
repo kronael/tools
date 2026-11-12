@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 
 FUNCTION = (ast.FunctionDef, ast.AsyncFunctionDef)
-SIMPLE_STATEMENT = (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.Expr)
+SCOPE_STATEMENT = (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.Expr, ast.Assert, ast.Raise)
 CHECKS = ('raises', 'warns', 'parametrize')
 DISABLERS = (
     'pytest.skip',
@@ -72,7 +72,7 @@ def iter_checks(roots: Iterable[ast.AST]) -> Iterator[str]:
 
 def scope_checks(scope: ast.Module | ast.ClassDef) -> list[str]:
     decorators = scope.decorator_list if isinstance(scope, ast.ClassDef) else []
-    statements = [node for node in scope.body if isinstance(node, SIMPLE_STATEMENT)]
+    statements = [node for node in scope.body if isinstance(node, SCOPE_STATEMENT)]
     return list(iter_checks(decorators + statements))
 
 

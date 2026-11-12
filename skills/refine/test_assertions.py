@@ -161,10 +161,13 @@ OLD_SCOPED = """\
 import pytest
 
 pytestmark = [pytest.mark.usefixtures('store')]
+assert total([]) == 0
 
 
 @pytest.mark.parametrize('n', [1, 2])
 class TestScoped:
+    assert total([0]) == 0
+
     def test_n(self, n):
         assert total([n]) == n
 """
@@ -289,15 +292,18 @@ def test_a_skip_added_at_any_level_is_listed_and_a_removed_one_is_not(pytestconf
 def test_a_case_dropped_on_the_class_and_a_skip_appended_to_the_module_are_listed(
     pytestconfig, repo
 ):
-    # A class-level parametrize loses a case and the module's pytestmark list
-    # gains a skip through `+=` -> exit 1, both shown on the test they reach.
+    # A class-level parametrize loses a case, the module's pytestmark list
+    # gains a skip through `+=`, and an assert in the module body and one in the
+    # class body are deleted -> exit 1, all shown on the test they reach.
     base = commit(repo, {'tests/test_scoped.py': OLD_SCOPED})
     head = commit(repo, {'tests/test_scoped.py': NEW_SCOPED})
     result = run_assertions(pytestconfig, repo, base, head)
     assert result.returncode == 1, result.stderr
     assert result.stdout.splitlines() == [
         'tests/test_scoped.py::TestScoped.test_n',
+        '  - assert total([]) == 0',
         "  - pytest.mark.parametrize('n', [1, 2])",
+        '  - assert total([0]) == 0',
         "  + disabled by pytest.mark.skip(reason='later')",
         "  + pytest.mark.parametrize('n', [1])",
         f'1 of 1 {SUMMARY}',
