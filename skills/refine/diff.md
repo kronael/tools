@@ -12,8 +12,8 @@ the binary:
 ```sh
 git diff -U0 <base>...<head> | awk '
   BEGIN {
-    shape = "__file__|[.]parents[[]|__dirname|__filename|import[.]meta[.](url|dirname|filename)"
-    shape = shape "|(basename|dirname|realpath|readlink) [^|;]*[$]0|BASH_SOURCE"
+    shape = "__file__|[.]parents *[[]|__dirname|__filename|import[.]meta[.](url|dirname|filename)"
+    shape = shape "|(basename|dirname|realpath|readlink)[^|;]*[$][{]?0|BASH_SOURCE"
     shape = shape "|current_exe|os[.]Executable"
   }
   /^\+\+\+ / { file = substr($0, 7); next }
@@ -21,12 +21,13 @@ git diff -U0 <base>...<head> | awk '
   /^\+/ { if ($0 ~ shape) print file ":" line ": " substr($0, 2); line++ }'
 ```
 
-- Every printed line that builds a path breaks `software/code.md` § Layout and
-  formatting. ALWAYS fix it the way that section states; NEVER keep one with a
-  reason beside it. A line that only names the shape — prose, a lint pattern —
-  builds no path.
-- ALWAYS trace a `parents[N]` hit to its anchor: a name bound from `__file__`
-  on an unchanged line makes it the same defect.
+- Every printed line that builds a path from where the module, the script or
+  the binary sits breaks `software/code.md` § Layout and formatting. ALWAYS fix
+  it the way that section states; NEVER keep one with a reason beside it. A
+  line that only names the shape — prose, a lint pattern — builds no path.
+- ALWAYS trace a `parents[N]` hit to its anchor: bound from `__file__`, on an
+  unchanged line included, it is the same defect; bound from configuration, it
+  is none.
 - The one exception is the one that section allows: an installed tool reading
   its own shipped read-only resources. ALWAYS name each kept line in the
   closing report with the resource it reads. A test fixture, a repo root, an
@@ -40,11 +41,12 @@ python3 ~/.claude/skills/refine/assertions.py <base> <head>
 
 `assertions.py` sits beside this file. For every Python test file the range
 changed, it compares each function's checks before and after — `assert`,
-`pytest.raises`/`warns`, `assert*` calls and decorators — pairing functions
+`pytest.raises`/`warns`, `assert*` calls and `parametrize` — pairing functions
 through file renames and moves. It prints each function that lost or changed a
-check (`-` before, `+` after), each removed function, and each added `skip` or
-`xfail`. Exit 0: no check lost; 1: lines to classify; 2: failed check. Its last
-line counts the functions compared; `0 of 0` compared nothing.
+check (`-` before, `+` after), each removed function, and each function that
+gained a `skip` or `xfail`, its own or its class's or module's (`+ disabled
+by`). Exit 0: none; 1: lines to classify; 2: failed check. Its last line counts
+the functions compared; `0 of 0` compared nothing.
 
 - ALWAYS classify every `-` line as exactly one of three: the same check
   through an updated call or argument, its `+` line asserting the same fact; a
@@ -52,8 +54,8 @@ line counts the functions compared; `0 of 0` compared nothing.
   change that the change's description names. Anything else is a weakened
   test: ALWAYS restore it.
 - ALWAYS list every removed test function by name in the description — the PR
-  body, or the commit body when no PR exists — with its reason. An added `skip`
-  or `xfail` is a removed test.
+  body, or the commit body when no PR exists — with its reason. A `+ disabled
+  by` line is a removed test.
 - ALWAYS quote the script's last line in the closing report. Exit 2 is NEVER a
   clean result: a `SyntaxError` means `python3` is older than the tests'
   syntax, so rerun under the project's interpreter (`uv run python …`).

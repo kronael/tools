@@ -12,6 +12,7 @@ GIT_ENV = {
     'GIT_COMMITTER_NAME': 'tester',
     'GIT_COMMITTER_EMAIL': 'tester@example.com',
 }
+SUMMARY = 'functions in the changed tests lost a check, gained a skip or were removed'
 
 OLD_TOTALS = """\
 import pytest
@@ -23,8 +24,9 @@ def test_total():
         total([])
 
 
-def test_rounding():
-    assert total([0.5, 0.5]) == 1
+@pytest.mark.parametrize('xs', [[0.5, 0.5], [0.25, 0.75]])
+def test_rounding(xs):
+    assert total(xs) == 1
 
 
 def test_gone():
@@ -41,9 +43,9 @@ def test_total():
         total([])
 
 
-@pytest.mark.skip
-def test_rounding():
-    assert total([0.5, 0.5]) == 1
+@pytest.mark.parametrize('xs', [[0.5, 0.5]])
+def test_rounding(xs):
+    assert total(xs) == 1
 """
 
 REFORMATTED_TOTALS = """\
@@ -57,8 +59,9 @@ def test_total():
     assert total([2]) == 2
 
 
-def test_rounding():
-    assert total([0.5, 0.5]) == 1
+@pytest.mark.parametrize('xs', [[0.5, 0.5], [0.25, 0.75]])
+def test_rounding(xs):
+    assert total(xs) == 1
 """
 
 MOVED_TEST = """\
@@ -69,6 +72,68 @@ def test_gone():
 SAME_NAME_TEST = """\
 def test_total():
     assert product([2, 3]) == 6
+"""
+
+OLD_MARKS = """\
+import pytest
+
+
+class TestSums:
+    def test_pair(self):
+        assert total([1, 2]) == 3
+
+
+@pytest.mark.skip
+def test_enabled():
+    assert total([1]) == 1
+
+
+def test_inline():
+    assert total([2]) == 2
+
+
+if hasattr(sum, '__call__'):
+    def test_guarded():
+        assert total([3]) == 3
+"""
+
+NEW_MARKS = """\
+import pytest
+
+
+@pytest.mark.skip(reason='later')
+class TestSums:
+    def test_pair(self):
+        assert total([1, 2]) == 3
+
+
+def test_enabled():
+    assert total([1]) == 1
+
+
+def test_inline():
+    pytest.skip('later')
+    assert total([2]) == 2
+
+
+if hasattr(sum, '__call__'):
+    def test_guarded():
+        assert total([3])
+"""
+
+OLD_MODULE = """\
+def test_whole():
+    assert total([4]) == 4
+"""
+
+NEW_MODULE = """\
+import pytest
+
+pytestmark = pytest.mark.xfail
+
+
+def test_whole():
+    assert total([4]) == 4
 """
 
 
@@ -108,7 +173,8 @@ def run_assertions(pytestconfig, repo, base, head):
 
 
 def test_weakened_checks_and_a_removed_test_are_listed(pytestconfig, repo):
-    # A loosened assert, a widened raises, an added skip and a deleted test -> exit 1, each named.
+    # A loosened assert, a widened raises, a dropped parametrize case and a
+    # deleted test -> exit 1, each named.
     base = commit(repo, {'tests/test_totals.py': OLD_TOTALS})
     head = commit(repo, {'tests/test_totals.py': WEAKENED_TOTALS})
     result = run_assertions(pytestconfig, repo, base, head)
@@ -120,16 +186,41 @@ def test_weakened_checks_and_a_removed_test_are_listed(pytestconfig, repo):
         '  + assert total([1, 2])',
         '  + pytest.raises(Exception)',
         'tests/test_totals.py::test_rounding',
-        '  + @pytest.mark.skip',
+        "  - pytest.mark.parametrize('xs', [[0.5, 0.5], [0.25, 0.75]])",
+        "  + pytest.mark.parametrize('xs', [[0.5, 0.5]])",
         'tests/test_totals.py::test_gone: removed',
         '  - assert total([1]) == 1',
-        '3 of 3 functions in the changed tests lost or changed a check',
+        f'3 of 3 {SUMMARY}',
+    ]
+
+
+def test_a_skip_added_at_any_level_is_listed_and_a_removed_one_is_not(pytestconfig, repo):
+    # A skip lands on a class, inside a body and as a module pytestmark, another
+    # test loses its skip, a test under a module-level `if` loosens its assert
+    # -> exit 1 naming the three skipped tests and the loosened one, never the
+    # test that was enabled.
+    base = commit(repo, {'tests/test_marks.py': OLD_MARKS, 'tests/test_module.py': OLD_MODULE})
+    head = commit(repo, {'tests/test_marks.py': NEW_MARKS, 'tests/test_module.py': NEW_MODULE})
+    result = run_assertions(pytestconfig, repo, base, head)
+    assert result.returncode == 1, result.stderr
+    assert result.stdout.splitlines() == [
+        'tests/test_marks.py::TestSums.test_pair',
+        '  + disabled by pytest.mark.skip',
+        'tests/test_marks.py::test_inline',
+        '  + disabled by pytest.skip',
+        'tests/test_marks.py::test_guarded',
+        '  - assert total([3]) == 3',
+        '  + assert total([3])',
+        'tests/test_module.py::test_whole',
+        '  + disabled by pytest.mark.xfail',
+        f'4 of 5 {SUMMARY}',
     ]
 
 
 def test_reformat_rename_move_and_an_added_check_are_clean(pytestconfig, repo):
-    # The file is renamed and reformatted, one test moves to a new file, one assert is added and
-    # another new file reuses a test name -> exit 0: paired by the rename, then by the name.
+    # The file is renamed and reformatted, one test moves to a new file, one
+    # assert is added and another new file reuses a test name -> exit 0: paired
+    # by the rename, then by the name.
     base = commit(repo, {'tests/test_totals.py': OLD_TOTALS})
     head = commit(
         repo,
@@ -142,7 +233,41 @@ def test_reformat_rename_move_and_an_added_check_are_clean(pytestconfig, repo):
     )
     result = run_assertions(pytestconfig, repo, base, head)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout == '0 of 3 functions in the changed tests lost or changed a check\n'
+    assert result.stdout == f'0 of 3 {SUMMARY}\n'
+
+
+def test_two_removed_tests_do_not_share_one_new_test(pytestconfig, repo):
+    # Two files each lose a test of one name and one new file gains it -> exit 1:
+    # the new test pairs with one, the other is removed.
+    base = commit(repo, {'tests/test_a.py': MOVED_TEST, 'tests/test_b.py': MOVED_TEST})
+    head = commit(
+        repo,
+        {
+            'tests/test_a.py': 'VALUE = 1\n',
+            'tests/test_b.py': 'VALUE = 2\n',
+            'tests/test_c.py': MOVED_TEST,
+        },
+    )
+    result = run_assertions(pytestconfig, repo, base, head)
+    assert result.returncode == 1, result.stderr
+    assert result.stdout.splitlines() == [
+        'tests/test_b.py::test_gone: removed',
+        '  - assert total([1]) == 1',
+        f'1 of 2 {SUMMARY}',
+    ]
+
+
+def test_a_test_file_renamed_out_of_the_tests_is_removed(pytestconfig, repo):
+    # A test file renamed to a path pytest never reads -> exit 1, its test removed.
+    base = commit(repo, {'tests/test_single.py': MOVED_TEST})
+    head = commit(repo, {'tests/test_single.py': None, 'notes/single.txt': MOVED_TEST})
+    result = run_assertions(pytestconfig, repo, base, head)
+    assert result.returncode == 1, result.stderr
+    assert result.stdout.splitlines() == [
+        'tests/test_single.py::test_gone: removed',
+        '  - assert total([1]) == 1',
+        f'1 of 1 {SUMMARY}',
+    ]
 
 
 def test_a_file_outside_the_tests_is_not_read(pytestconfig, repo):
@@ -151,7 +276,7 @@ def test_a_file_outside_the_tests_is_not_read(pytestconfig, repo):
     head = commit(repo, {'src/totals.py': 'def total(xs):\n    return sum(xs)\n'})
     result = run_assertions(pytestconfig, repo, base, head)
     assert result.returncode == 0, result.stderr
-    assert result.stdout == '0 of 0 functions in the changed tests lost or changed a check\n'
+    assert result.stdout == f'0 of 0 {SUMMARY}\n'
 
 
 def test_an_unknown_revision_fails_the_check(pytestconfig, repo):

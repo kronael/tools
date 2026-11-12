@@ -6,6 +6,20 @@ import sys
 from collections import Counter
 from collections.abc import Iterator
 
+FUNCTION = (ast.FunctionDef, ast.AsyncFunctionDef)
+CHECKS = ('raises', 'warns', 'parametrize')
+DISABLERS = (
+    'skip',
+    'skipif',
+    'xfail',
+    'importorskip',
+    'skipTest',
+    'skipIf',
+    'skipUnless',
+    'expectedFailure',
+)
+DISABLED = 'disabled by '
+
 
 def run_git(*args: str) -> str:
     return subprocess.run(['git', *args], stdout=subprocess.PIPE, text=True, check=True).stdout
@@ -14,13 +28,17 @@ def run_git(*args: str) -> str:
 def is_test_path(path: str) -> bool:
     parts = path.split('/')
     name = parts[-1]
-    return (
+    return name.endswith('.py') and (
         name.startswith('test_')
         or name.endswith('_test.py')
         or name == 'conftest.py'
         or 'tests' in parts
         or 'test' in parts
     )
+
+
+def is_test_function(name: str) -> bool:
+    return name.rpartition('.')[2].startswith('test')
 
 
 def is_check_call(call: ast.Call) -> bool:
@@ -31,12 +49,18 @@ def is_check_call(call: ast.Call) -> bool:
         name = func.id
     else:
         return False
-    return name in ('raises', 'warns') or name.startswith('assert')
+    return name in CHECKS or name.startswith('assert')
+
+
+def iter_disablers(roots: list[ast.expr] | list[ast.stmt]) -> Iterator[str]:
+    for root in roots:
+        for node in ast.walk(root):
+            if isinstance(node, ast.Attribute) and node.attr in DISABLERS:
+                yield f'{DISABLED}{ast.unparse(node)}'
 
 
 def iter_checks(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[str]:
-    for decorator in function.decorator_list:
-        yield f'@{ast.unparse(decorator)}'
+    yield from iter_disablers([function])
     for node in ast.walk(function):
         if isinstance(node, ast.Assert):
             yield f'assert {ast.unparse(node.test)}'
@@ -44,33 +68,38 @@ def iter_checks(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[st
             yield ast.unparse(node)
 
 
+def scope_disablers(scope: ast.Module | ast.ClassDef) -> list[str]:
+    decorators = scope.decorator_list if isinstance(scope, ast.ClassDef) else []
+    pytestmarks = [
+        statement.value
+        for statement in scope.body
+        if isinstance(statement, ast.Assign) and ast.unparse(statement.targets[0]) == 'pytestmark'
+    ]
+    return list(iter_disablers(decorators + pytestmarks))
+
+
 def iter_functions(
-    body: list[ast.stmt], prefix: str = ''
-) -> Iterator[tuple[str, ast.FunctionDef | ast.AsyncFunctionDef]]:
-    for node in body:
-        if isinstance(node, ast.ClassDef):
-            yield from iter_functions(node.body, f'{prefix}{node.name}.')
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            yield f'{prefix}{node.name}', node
+    node: ast.AST, prefix: str, inherited: list[str]
+) -> Iterator[tuple[str, Counter[str]]]:
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, FUNCTION):
+            yield f'{prefix}{child.name}', Counter(inherited + list(iter_checks(child)))
+        elif isinstance(child, ast.ClassDef):
+            disablers = inherited + scope_disablers(child)
+            yield from iter_functions(child, f'{prefix}{child.name}.', disablers)
+        else:
+            yield from iter_functions(child, prefix, inherited)
 
 
 def read_checks(rev: str, path: str) -> dict[str, Counter[str]]:
     tree = ast.parse(run_git('show', f'{rev}:{path}'), filename=f'{rev}:{path}')
-    return {name: Counter(iter_checks(function)) for name, function in iter_functions(tree.body)}
-
-
-def is_test_function(name: str) -> bool:
-    return name.rpartition('.')[2].startswith('test')
-
-
-def has_disabling_mark(checks: Counter[str]) -> bool:
-    return any(line.startswith('@') and ('skip' in line or 'xfail' in line) for line in checks)
+    return dict(iter_functions(tree, '', scope_disablers(tree)))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description='List the checks a range removed from or changed in its Python tests: '
-        'assert, raises/warns, assert* calls and decorators, per function.'
+        description='List the Python test functions that lost or changed a check in a range '
+        '(assert, raises/warns, assert* calls, parametrize) or gained a skip or xfail.'
     )
     parser.add_argument('base')
     parser.add_argument('head')
@@ -85,42 +114,41 @@ def main() -> int:
             break
         old_path = next(fields)
         new_path = next(fields) if status[0] == 'R' else old_path
-        if not (old_path.endswith('.py') and new_path.endswith('.py')):
-            continue
-        if not (is_test_path(old_path) or is_test_path(new_path)):
-            continue
-        if status[0] != 'A':
+        if status[0] != 'A' and is_test_path(old_path):
+            path = new_path if is_test_path(new_path) else old_path
             for name, checks in read_checks(base, old_path).items():
-                old[new_path, name] = checks
-        if status[0] != 'D':
+                old[path, name] = checks
+        if status[0] != 'D' and is_test_path(new_path):
             for name, checks in read_checks(args.head, new_path).items():
                 new[new_path, name] = checks
 
     findings = 0
+    claimed: set[tuple[str, str]] = set()
     for (path, name), before in old.items():
         target = (path, name)
-        moved = [key for key in new if key not in old and key[1] == name]
-        if target not in new and len(moved) == 1:
-            target = moved[0]
         if target not in new:
-            if is_test_function(name) or before:
-                findings += 1
-                print(f'{path}::{name}: removed')
-                for line in before.elements():
-                    print(f'  - {line}')
-            continue
-        after = new[target]
-        removed = before - after
-        added = after - before
-        if not removed and not has_disabling_mark(added):
+            moved = [key for key in new if key not in old and key not in claimed and key[1] == name]
+            if len(moved) == 1:
+                target = moved[0]
+                claimed.add(target)
+        is_removed = target not in new
+        after = Counter[str]() if is_removed else new[target]
+        lost = [line for line in (before - after).elements() if not line.startswith(DISABLED)]
+        gained = list((after - before).elements())
+        is_disabled = any(line.startswith(DISABLED) for line in gained)
+        if not (lost or is_disabled or (is_removed and is_test_function(name))):
             continue
         findings += 1
-        print(f'{target[0]}::{name}')
-        for line in removed.elements():
+        suffix = ': removed' if is_removed else ''
+        print(f'{target[0]}::{name}{suffix}')
+        for line in lost:
             print(f'  - {line}')
-        for line in added.elements():
+        for line in gained:
             print(f'  + {line}')
-    print(f'{findings} of {len(old)} functions in the changed tests lost or changed a check')
+    print(
+        f'{findings} of {len(old)} functions in the changed tests '
+        'lost a check, gained a skip or were removed'
+    )
     return 1 if findings else 0
 
 
