@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from collections.abc import Iterator
 
 FUNCTION = (ast.FunctionDef, ast.AsyncFunctionDef)
-SIMPLE_STATEMENT = (ast.Assign, ast.AnnAssign, ast.Expr)
+SIMPLE_STATEMENT = (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.Expr)
 CHECKS = ('raises', 'warns', 'parametrize')
 DISABLERS = (
     'pytest.skip',
@@ -21,6 +21,7 @@ DISABLERS = (
     'unittest.skipIf',
     'unittest.skipUnless',
     'unittest.expectedFailure',
+    'unittest.SkipTest',
     'self.skipTest',
 )
 DISABLED = 'disabled by '
@@ -57,27 +58,22 @@ def is_check_call(call: ast.Call) -> bool:
     return name in CHECKS or name.startswith('assert')
 
 
-def iter_disablers(roots: Iterable[ast.AST]) -> Iterator[str]:
+def iter_checks(roots: Iterable[ast.AST]) -> Iterator[str]:
     for root in roots:
         calls = {id(node.func): node for node in ast.walk(root) if isinstance(node, ast.Call)}
         for node in ast.walk(root):
             if isinstance(node, ast.Attribute) and ast.unparse(node) in DISABLERS:
                 yield f'{DISABLED}{ast.unparse(calls.get(id(node), node))}'
+            elif isinstance(node, ast.Assert):
+                yield f'assert {ast.unparse(node.test)}'
+            elif isinstance(node, ast.Call) and is_check_call(node):
+                yield ast.unparse(node)
 
 
-def iter_checks(function: ast.FunctionDef | ast.AsyncFunctionDef) -> Iterator[str]:
-    yield from iter_disablers([function])
-    for node in ast.walk(function):
-        if isinstance(node, ast.Assert):
-            yield f'assert {ast.unparse(node.test)}'
-        elif isinstance(node, ast.Call) and is_check_call(node):
-            yield ast.unparse(node)
-
-
-def scope_disablers(scope: ast.Module | ast.ClassDef) -> list[str]:
+def scope_checks(scope: ast.Module | ast.ClassDef) -> list[str]:
     decorators = scope.decorator_list if isinstance(scope, ast.ClassDef) else []
     statements = [node for node in scope.body if isinstance(node, SIMPLE_STATEMENT)]
-    return list(iter_disablers(decorators + statements))
+    return list(iter_checks(decorators + statements))
 
 
 def iter_functions(
@@ -85,10 +81,10 @@ def iter_functions(
 ) -> Iterator[tuple[str, Counter[str]]]:
     for child in ast.iter_child_nodes(node):
         if isinstance(child, FUNCTION):
-            yield f'{prefix}{child.name}', Counter(inherited + list(iter_checks(child)))
+            yield f'{prefix}{child.name}', Counter(inherited + list(iter_checks([child])))
         elif isinstance(child, ast.ClassDef):
-            disablers = inherited + scope_disablers(child)
-            yield from iter_functions(child, f'{prefix}{child.name}.', disablers)
+            checks = inherited + scope_checks(child)
+            yield from iter_functions(child, f'{prefix}{child.name}.', checks)
         else:
             yield from iter_functions(child, prefix, inherited)
 
@@ -97,7 +93,7 @@ def read_checks(rev: str, path: str) -> dict[str, Counter[str]]:
     tree = ast.parse(run_git('show', f'{rev}:{path}'), filename=f'{rev}:{path}')
     seen: Counter[str] = Counter()
     checks: dict[str, Counter[str]] = {}
-    for name, found in iter_functions(tree, '', scope_disablers(tree)):
+    for name, found in iter_functions(tree, '', scope_checks(tree)):
         seen[name] += 1
         checks[name if seen[name] == 1 else f'{name}#{seen[name]}'] = found
     return checks
@@ -171,6 +167,6 @@ def main() -> int:
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except (subprocess.CalledProcessError, SyntaxError, ValueError) as err:
-        print(f'Failed: {err}', file=sys.stderr)
+    except Exception as err:
+        print(f'Failed: {type(err).__name__}: {err}', file=sys.stderr)
         sys.exit(2)
