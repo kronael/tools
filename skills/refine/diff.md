@@ -39,15 +39,21 @@ git diff -U0 <base>...<head> | awk '
 python3 ~/.claude/skills/refine/assertions.py <base> <head>
 ```
 
-`assertions.py` sits beside this file. For every Python test file the range
-changed, it compares each function's checks before and after — `assert`,
-`pytest.raises`/`warns`, `assert*` calls and `parametrize` — pairing functions
-through file renames and moves. It prints each function that lost or changed a
-check (`-` before, `+` after), each removed function — a test left in a file
-named neither `test_*.py` nor `*_test.py` included — and each function that
-gained a `skip` or `xfail`, its own or its class's or module's (`+ disabled
-by`). Exit 0: none; 1: lines to classify; 2: failed check. Its last line counts
-the functions compared; `0 of 0` compared nothing.
+`assertions.py` sits beside this file. It reads the changed Python files named
+`test_*.py`, `*_test.py` or `conftest.py`, or under a `tests/` or `test/`
+directory, and compares each function's checks before and after: `assert`,
+`raises`/`warns`, `assert*` calls and `parametrize`. Functions pair through git
+renames, then by name across files. It prints candidates to classify:
+
+- a function that lost or changed a check: `-` before, `+` after;
+- a removed test, and a removed helper that held a check; a test left in a file
+  named neither `test_*.py` nor `*_test.py` counts as removed;
+- a `pytest` or `unittest` skip or xfail the range added or changed on a
+  function that existed before, on its class or on its module: `+ disabled by`.
+
+Exit 0: none; 1: lines to classify; 2: failed check. Its last line counts the
+functions compared; `0 of 0` compared nothing. It compares source text: it
+resolves no alias, follows no control flow and reads no pytest configuration.
 
 - ALWAYS classify every `-` line as exactly one of three: the same check
   through an updated call or argument, its `+` line asserting the same fact; a
@@ -55,13 +61,14 @@ the functions compared; `0 of 0` compared nothing.
   change that the change's description names. Anything else is a weakened
   test: ALWAYS restore it.
 - ALWAYS list every removed test function by name in the description — the PR
-  body, or the commit body when no PR exists — with its reason. A `+ disabled
-  by` line is a removed test.
+  body, or the commit body when no PR exists — with its reason. A test that a
+  `+ disabled by` line newly skips is a removed test.
 - ALWAYS quote the script's last line in the closing report. Exit 2 is NEVER a
-  clean result: a `SyntaxError` means `python3` is older than the tests'
-  syntax, so rerun under the project's interpreter (`uv run python …`).
-- For tests in another language, ALWAYS make the same comparison by hand over
-  `git diff -M <base>...<head> -- <test paths>`: every removed line holding an
-  assertion or an expected error is classified the same way.
-- This gate compares the checks tests state before and after. Whether a test
-  proves anything at all is `software.md` § Tests that prove nothing.
+  clean result; on a `SyntaxError`, ALWAYS rerun under the project's
+  interpreter (`uv run python …`) before reading the source as broken.
+- For tests the script does not read — another language, a file outside those
+  names — ALWAYS make the same comparison by hand over `git diff -M
+  <base>...<head> -- <test paths>`: every removed line holding an assertion or
+  an expected error is classified the same way.
+- The script compares what tests state. Whether a check runs, or exercises
+  production code, is `software.md` § Tests that prove nothing.

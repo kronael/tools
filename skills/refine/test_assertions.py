@@ -183,7 +183,7 @@ def commit(repo, files):
             path.unlink()
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(text)
+            path.write_text(text, encoding='latin-1')
     subprocess.run(['git', 'add', '--', *files], cwd=repo, check=True)
     subprocess.run(['git', 'commit', '-q', '-m', 'change'], cwd=repo, check=True)
     head = subprocess.run(
@@ -230,7 +230,7 @@ def test_a_skip_added_at_any_level_is_listed_and_a_removed_one_is_not(pytestconf
     # plain and an annotated module pytestmark; a test under a module-level `if`
     # loosens its assert while a same-named twin stays; another test loses its
     # skip and calls an unrelated `skip` method -> exit 1 naming the five
-    # disabled tests and the loosened one, never the test that was enabled.
+    # disabled tests and the loosened one, never the twin or the enabled test.
     old = {
         'tests/test_marks.py': OLD_MARKS,
         'tests/test_module.py': OLD_MODULE,
@@ -257,7 +257,7 @@ def test_a_skip_added_at_any_level_is_listed_and_a_removed_one_is_not(pytestconf
         '  + disabled by pytest.mark.xfail',
         'tests/test_typed.py::test_whole',
         '  + disabled by pytest.mark.skip',
-        f'6 of 7 {SUMMARY}',
+        f'6 of 8 {SUMMARY}',
     ]
 
 
@@ -337,6 +337,23 @@ def test_a_file_outside_the_tests_is_not_read(pytestconfig, repo):
     result = run_assertions(pytestconfig, repo, base, head)
     assert result.returncode == 0, result.stderr
     assert result.stdout == f'0 of 0 {SUMMARY}\n'
+
+
+def test_a_file_in_a_declared_encoding_is_read(pytestconfig, repo):
+    # A Latin-1 test file with a non-ASCII comment loosens an assert -> exit 1,
+    # the assert listed: the source is decoded by its own declaration.
+    old = "# -*- coding: latin-1 -*-\n# caf\xe9\ndef test_name():\n    assert name() == 'a'\n"
+    new = '# -*- coding: latin-1 -*-\n# caf\xe9\ndef test_name():\n    assert name()\n'
+    base = commit(repo, {'tests/test_names.py': old})
+    head = commit(repo, {'tests/test_names.py': new})
+    result = run_assertions(pytestconfig, repo, base, head)
+    assert result.returncode == 1, result.stderr
+    assert result.stdout.splitlines() == [
+        'tests/test_names.py::test_name',
+        "  - assert name() == 'a'",
+        '  + assert name()',
+        f'1 of 1 {SUMMARY}',
+    ]
 
 
 def test_an_unknown_revision_fails_the_check(pytestconfig, repo):

@@ -26,8 +26,8 @@ DISABLERS = (
 DISABLED = 'disabled by '
 
 
-def run_git(*args: str) -> str:
-    return subprocess.run(['git', *args], stdout=subprocess.PIPE, text=True, check=True).stdout
+def run_git(*args: str) -> bytes:
+    return subprocess.run(['git', *args], stdout=subprocess.PIPE, check=True).stdout
 
 
 def is_collected(path: str) -> bool:
@@ -95,9 +95,11 @@ def iter_functions(
 
 def read_checks(rev: str, path: str) -> dict[str, Counter[str]]:
     tree = ast.parse(run_git('show', f'{rev}:{path}'), filename=f'{rev}:{path}')
+    seen: Counter[str] = Counter()
     checks: dict[str, Counter[str]] = {}
     for name, found in iter_functions(tree, '', scope_disablers(tree)):
-        checks[name] = checks.get(name, Counter()) + found
+        seen[name] += 1
+        checks[name if seen[name] == 1 else f'{name}#{seen[name]}'] = found
     return checks
 
 
@@ -109,11 +111,12 @@ def main() -> int:
     parser.add_argument('base')
     parser.add_argument('head')
     args = parser.parse_args()
-    base = run_git('merge-base', args.base, args.head).strip()
+    base = run_git('merge-base', args.base, args.head).decode().strip()
 
     old: dict[tuple[str, str], Counter[str]] = {}
     new: dict[tuple[str, str], Counter[str]] = {}
-    fields = iter(run_git('diff', '--name-status', '-M', '-z', base, args.head).split('\0'))
+    changes = run_git('diff', '--name-status', '-M', '-z', base, args.head).decode()
+    fields = iter(changes.split('\0'))
     for status in fields:
         if not status:
             break
@@ -168,6 +171,6 @@ def main() -> int:
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except (subprocess.CalledProcessError, SyntaxError) as err:
+    except (subprocess.CalledProcessError, SyntaxError, ValueError) as err:
         print(f'Failed: {err}', file=sys.stderr)
         sys.exit(2)
