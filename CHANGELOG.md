@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.90] — 20261112
+
+> kronael v0.4.90 — mutation testing on the changed lines
+>
+> One script mutation-tests a change and lists only the survivors on lines it touched; a project needs no make target and no uv group.
+>
+> • mut_changed.py — mutates only the changed source files, under a memory cap, and restores pyproject.toml byte for byte.
+> • Survivors — each listed with its mutmut diff; settle it with a test that kills it, or as equivalent with the reason.
+> • refine — runs it as a diff gate on every change to core logic.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `software/mut_changed.py <base> [<dir>]`: mutmut through `uv run --no-sync --with`, `only_mutate` set per run, exit 0/1/2.
+- `software` § Python mutmut: no make target, no uv group; `[tool.mutmut]` only for test arguments and files the script cannot guess.
+- `refine/diff.md` § Mutation run on changed core logic.
+
 ## [v0.4.89] — 20261112
 
 > kronael v0.4.89 — run records and resumable downloads
