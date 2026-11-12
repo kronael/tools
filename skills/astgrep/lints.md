@@ -42,6 +42,22 @@ repos:
 ```
 
 Each machine running this hook needs the bundle and ast-grep installed.
+
+A rule published in the bundle source's `.pre-commit-hooks.yaml` needs neither:
+pre-commit clones the repository at the pinned release tag and installs ast-grep
+itself, so CI runs it too. Add each published id it lists:
+
+```yaml
+repos:
+  - repo: https://github.com/kronael/tools
+    rev: vX.Y.Z
+    hooks:
+      - id: py-no-module-path
+```
+
+A CI step running `pre-commit run --all-files` fails on every existing finding:
+ALWAYS fix each one, or mark a permitted exception, before adding the hook.
+
 An existing ast-grep project can instead add selected pack directories to
 `ruleDirs` and run `ast-grep scan --error <files>`. Use expanded absolute paths;
 YAML does not expand `~` or `$HOME`. An unrelated `sgconfig.yml` is not adoption.
@@ -62,6 +78,9 @@ ALWAYS add good and bad fixtures under the owning pack's `fixtures/` directory.
 Each `<id>.bad.<ext>` blank-line-separated block must match its rule;
 `<id>.good.<ext>` must remain clean. `<id>.good.d/` holds path-exemption cases.
 ALWAYS bind a new pack in the tools repository's `sgconfig.yml` and name each
-rule in its owning skill. `make lints` checks fixture coverage, duplicate IDs,
-orphan fixtures and config bindings. ALWAYS inspect real-code matches before
-promoting prose; a passing fixture suite alone cannot prove the rule's scope.
+rule in its owning skill. To publish a rule for other repositories, ALWAYS add
+one hook per rule to `.pre-commit-hooks.yaml`, shaped like `py-no-module-path`,
+and the same rule to the repository's own `.pre-commit-config.yaml`.
+`make lints` checks fixture coverage, duplicate IDs, orphan fixtures and config
+bindings. ALWAYS inspect real-code matches before promoting prose; a passing
+fixture suite alone cannot prove the rule's scope.

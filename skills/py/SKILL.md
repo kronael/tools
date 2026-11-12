@@ -160,7 +160,8 @@ Python-specific additions and deltas.
   keeps comments and whitespace; `ruff format` after.
 
 ## Lints
-- `lints/rules.yml` also enforces `py-bool-fn-prefix` (`software/code.md` § Naming).
+- `lints/rules.yml` also enforces `py-bool-fn-prefix` (`software/code.md` § Naming) and
+  `py-no-module-path` (`software/code.md` § Layout and formatting).
   Adoption and verification: `astgrep` → `lints.md`. NEVER duplicate Ruff:
   `py-no-dict-call` preserves call arguments that `C408` flags; the record rules
   flag declarations, while `TID251` bans imports/access, including use of upstream types.

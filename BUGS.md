@@ -455,6 +455,18 @@
 
 ## Hooks
 
+- **HOOKS-MODULE-RELATIVE-PATHS** (LOW, config) — CONFIRMED 2026-11-12.
+  `py-no-module-path` reports ten paths built from a module's location:
+  `hooks/skill_frontmatter_lint.py:75` reads `CHANGELOG.md` from
+  `Path(__file__).parent.parent` although pre-commit runs it from the repo root,
+  and nine test paths in `hooks/test_skill_frontmatter_lint.py:205,280`,
+  `test_statusline.py:47,52`, `test_stop.py:17`, `test_hooks.py:20`,
+  `test_codex_hook.py:114`, `test_prompt_nudge.py:129` and
+  `test_pretool_nudge.py:19`. **Fix:** read `Path('CHANGELOG.md')`, and take
+  test paths from `pytestconfig.rootpath` as `skills/astgrep/test_check.py`
+  does; the pre-commit hook flags each file when it next changes. Reproduce with
+  `python3 skills/astgrep/check.py --scan hooks/`; no test — the lint is the check.
+
 - **WISDOM-NUDGE-FOLLOWS-NAMES** (LOW, design) — deliberate limit. The
   `/wisdom` nudge in `hooks/pretool_nudge.py` keys on a file name (`SKILL.md`,
   `CLAUDE.md`, `AGENTS.md`) or a `skills` path component. `.claude/rules/*.md`,

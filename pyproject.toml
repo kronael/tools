@@ -1,0 +1,13 @@
+# pre-commit installs a `language: python` hook repository with `pip install .`;
+# this file makes the root installable for .pre-commit-hooks.yaml. It packages nothing.
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kronael-hooks"
+version = "0"
+requires-python = ">=3.9"
+
+[tool.setuptools]
+packages = []

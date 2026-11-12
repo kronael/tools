@@ -13,7 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-SKILLS = Path(__file__).resolve().parents[1]
+# Projects run this installed copy from their own root; the rule packs ship beside it.
+SKILLS = Path(__file__).resolve().parents[1]  # ast-grep-ignore: py-no-module-path
 
 
 def case_name(path: Path) -> str:

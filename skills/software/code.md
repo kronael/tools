@@ -301,8 +301,10 @@ your diff against every `##` heading here before calling an edit done.
   flag, an env var, the config file. NEVER `basename $0`, `__dirname`,
   `Path(__file__)` or any path derived from where the binary or module sits;
   a test reads its fixtures through the runner's configured root (`py`
-  § Testing).
-- An installed tool may locate its own shipped read-only resources relative to its module.
+  § Testing). Lint `py-no-module-path`.
+- An installed tool may locate its own shipped read-only resources relative to its module;
+  ALWAYS mark that line `# ast-grep-ignore: py-no-module-path` under a comment giving the reason.
+  Reading the module's own file is not a derived path.
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
   `"checking..."`, `"Failed: ..."`. Where the language's linter requires
   lowercase errors (Go: staticcheck ST1005), the linter wins — NEVER suppress it.
