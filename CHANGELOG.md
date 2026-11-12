@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.4.87] — 20261112
+
+> kronael v0.4.87 — a lint for paths built from __file__
+>
+> A new Python lint rejects a path built from where a module sits, and other repositories can run it from pre-commit.
+>
+> • py-no-module-path — flags Path(__file__).parent and its kin; reading the module itself is allowed.
+> • Pre-commit — a project adds the hook by id from this repository, pinned to a release tag.
+> • Exceptions — an installed tool's own shipped files take one inline ignore with a reason.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `py-no-module-path` joins the Python ast-grep pack; `code.md` § Layout names it.
+- `.pre-commit-hooks.yaml` publishes it; adoption steps are in `astgrep/lints.md`.
+- This repository's own pre-commit runs the rule on changed Python files.
+
 ## [v0.4.86] — 20261112
 
 > kronael v0.4.86 — refine gates paths and weakened tests
