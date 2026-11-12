@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.84] — 20261112
+
+> kronael v0.4.84 — recall skips unreadable transcripts
+>
+> recall no longer crashes on a transcript it cannot open; it names the file on stderr and goes on.
+>
+> • recall — a root-owned transcript or a broken link is skipped with a note, in every command.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.83] — 20261112
 
 > kronael v0.4.83 — Fable plans, Sonnet implements
