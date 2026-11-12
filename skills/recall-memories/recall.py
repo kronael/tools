@@ -6,6 +6,7 @@ import re
 import sqlite3
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
@@ -581,12 +582,22 @@ def parse_codex(path: Path) -> Transcript:
     return t
 
 
+def readable(paths: Iterable[Path]) -> list[Path]:
+    found = []
+    for p in paths:
+        if os.access(p, os.R_OK):
+            found.append(p)
+        else:
+            print(f'skipped unreadable transcript {p}', file=sys.stderr)
+    return found
+
+
 def claude_files(homes: Homes) -> list[tuple[Path, str, str]]:
     base = homes.claude / 'projects'
-    mains = [(p, p.stem, '') for p in base.glob('*/*.jsonl')]
+    mains = [(p, p.stem, '') for p in readable(base.glob('*/*.jsonl'))]
     agents = [
         (p, p.parent.parent.name, p.stem.removeprefix('agent-'))
-        for p in base.glob('*/*/subagents/agent-*.jsonl')
+        for p in readable(base.glob('*/*/subagents/agent-*.jsonl'))
     ]
     return mains + agents
 
@@ -594,7 +605,7 @@ def claude_files(homes: Homes) -> list[tuple[Path, str, str]]:
 def codex_files(homes: Homes) -> list[Path]:
     found = []
     for sub in 'sessions', 'archived_sessions':
-        found.extend((homes.codex / sub).rglob('rollout-*.jsonl'))
+        found.extend(readable((homes.codex / sub).rglob('rollout-*.jsonl')))
     return found
 
 

@@ -612,6 +612,30 @@ def test_sessions_lists_project_sessions_with_hits(run):
     assert CHILD_ID not in codex
 
 
+@pytest.mark.parametrize('kind', ['root-owned', 'link to another home'])
+def test_commands_skip_an_unreadable_transcript(tmp_path, run, kind):
+    # A sandbox can leave root-owned transcripts, or links into a home it alone mounts.
+    paths = [
+        tmp_path / 'claude' / 'projects' / '-' / 'unreadable.jsonl',
+        tmp_path / 'codex' / 'sessions' / '2026' / 'rollout-unreadable.jsonl',
+    ]
+    for path in paths:
+        if kind == 'root-owned':
+            write_jl(path, [user(TS, 'gate')])
+            path.chmod(0)
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.symlink_to(tmp_path / 'elsewhere' / path.name)
+    code, out, err = run('sessions', '-p', PROJECT, 'gate')
+    assert code == 0
+    assert f'claude {SID}  hits' in out
+    assert f'skipped unreadable transcript {paths[0]}' in err
+    assert f'skipped unreadable transcript {paths[1]}' in err
+    assert '2179 passed, 72 deselected' in run('show', 'toolu_gate')[1]
+    assert f'codex  {CODEX_ID}  {PROJECT}\n' in run('prompts', '-p', PROJECT, 'audit')[1]
+    assert 'title: Release audit' in run('digest', CODEX_ID[:8])[1]
+
+
 def test_prompts_mark_a_missing_transcript(run):
     _, out, _ = run('prompts', '-p', PROJECT, 'gate')
     assert '2 prompts matched' in out
