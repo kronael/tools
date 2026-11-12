@@ -28,13 +28,19 @@ warmed up.
 ## The run record
 
 A run takes one config file and writes one record holding the setup AND the
-metrics, so the record alone repeats the run. An unknown key in the config
+metrics, so the record alone repeats the run. ALWAYS write that record as
+`summary.yml` in the report directory and print the same YAML to stdout at
+the end of the run; the HTML page and the PNG plots are views of it, never the
+record. An unknown key in the config
 raises — a typo'd knob otherwise runs with the default and reports under the
 knob's name. NEVER write to a bare relative path and NEVER hardcode a tag: two
-runs then overwrite each other. A tag directory that already exists is
-refused, not reused; a dated record is immutable, and new state gets a new
-tag however small the change. The one tag that IS re-run is the smoke target,
-and it writes under scratch.
+runs then overwrite each other. In an experiment or calibration run, NEVER
+reuse a tag directory that exists — refuse it; a dated record is immutable,
+and new state ALWAYS gets a new tag however small the change. The one tag
+that IS re-run is the smoke target, and it writes under scratch. A report
+component that a person reruns to refresh it (a periodic report) is the
+exception: a rerun ALWAYS replaces its tag's files atomically and updates
+that tag's run-log row; a frozen report ALWAYS gets a new tag.
 
 Beside the metrics the record carries what is needed to repeat and to doubt
 it: the exact config (verbatim or hashed), the window actually covered beside
@@ -73,6 +79,13 @@ silently. ALWAYS ship one artifact per experiment — one image or one file —
 of two or three panels at most; chart mechanics belong to `dataviz`. Every
 sentence derives from the summary frame or is scoped to what it measured; a
 number is never hand-copied into prose.
+
+A report component's page (a periodic or selection report) is the exception:
+ALWAYS show only what the run computed — the result table, then a few lines of
+method at the bottom. NEVER put lineage, history or repeated caveats on the
+page; lineage stays in `summary.yml`. At phone width (`writing` →
+`page.md`) ALWAYS move columns to `summary.yml` before the table needs to
+scroll.
 
 ## Durable and scratch
 
