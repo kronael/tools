@@ -34,7 +34,9 @@ artifacts.
 A Judgment task ALWAYS runs one effort level above Coding: high while Coding
 is medium. ALWAYS move every Judgment row with a change to Coding's effort.
 On Claude, Fable runs ONLY Audit, the task whose judgment rests on a whole
-change's context; every other Judgment task runs on Opus. ONLY a Sonnet sweep
+change's context; every other Judgment task runs on Opus. When the owner
+names Fable for implementation, Fable ALWAYS plans and hands each step to a
+Sonnet Coding worker; NEVER let Fable make the edits. ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 
@@ -110,4 +112,5 @@ background or that elapsed time proves completion.
   ALWAYS inspect the diff or evidence before accepting the worker's report.
 - ALWAYS obey WISDOM's shared-tree rule and use `worktree` when isolation is
   required. A worker assigned one bounded step performs it itself; NEVER
-  recursively delegate that same assignment.
+  recursively delegate that same assignment. A Fable implementation lead
+  delegates its steps (Task routing).
