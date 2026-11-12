@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.89] — 20261112
+
+> kronael v0.4.89 — run records and resumable downloads
+>
+> A run now records itself in summary.yml, a refreshed report replaces its own files, and downloaders resume and verify each period.
+>
+> • Run record — summary.yml beside the page, printed at the end of the run.
+> • Reports — a rerun replaces its tag's files; the page shows only the run's output and fits a phone.
+> • Downloads — unfinished periods stay .part, empty periods become empty files, so a resume skips them.
+> • History — a period is final only when a second read matches; the backfill stops at the vendor's start.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `research` § The run record: the record is `summary.yml`, also printed; a report component reruns its tag.
+- `research` § The report page: a report component shows only the run's output and a short method.
+- `data` § Paths and resume: `.part` periods, empty-period files, a verified history start, own dataset names.
+- `data`: a vendor history period is final only when a second read returns the same rows.
+
 ## [v0.4.88] — 20261112
 
 > kronael v0.4.88 — the module-path lint says how to fix a hit
