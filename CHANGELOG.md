@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.4.85] — 20261112
+
+> kronael v0.4.85 — Approval requests show the payload
+>
+> When the agent asks you to approve a git or GitHub operation, the request now shows the exact text, target and command.
+>
+> • global — an approval request carries the full text, target, refspec and command, never a summary.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
 ## [v0.4.84] — 20261112
 
 > kronael v0.4.84 — recall skips unreadable transcripts
