@@ -34,7 +34,7 @@ PENDING=$(gh api repos/$REPO/pulls/<PR>/reviews --jq '.[] | select(.state=="PEND
 
 ## Sign-off questionnaire
 
-ALWAYS present each finding, thread reply, or re-review request to the user before posting. In Claude Code use `AskUserQuestion` (`multiSelect: true`, each finding as a short option label, full body in description per WISDOM § Git, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
+ALWAYS present each finding, thread reply, or re-review request to the user before posting. In Claude Code use `AskUserQuestion` per WISDOM § Git (`multiSelect: true`, each finding as a short option label, full body in description, unselected findings dropped silently, max 4 per question). In Codex `AskUserQuestion` is unavailable — ALWAYS list findings in chat and NEVER post before receiving explicit confirmation.
 
 ## Comment body — distilled
 
