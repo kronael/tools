@@ -33,6 +33,9 @@ ALWAYS move columns to `summary.yml` before the table needs to scroll.
   that runs it. Its pyright level is `py` § Build's.
 - ALWAYS generate a run's page in its own script, from the in-memory summary
   it writes to `summary.yml`. NEVER hand-edit a generated page.
+- ALWAYS keep a report's math — every formula, threshold and verdict rule — in
+  one module of plain functions over plain values, apart from reading, writing
+  and page code; NEVER compute a number inside the reader or the page.
 - ALWAYS inline every figure in its page; a run with many items links one
   index page to one page per item. NEVER a figure as a loose file beside the
   page, except where the image itself is the product.
