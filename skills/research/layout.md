@@ -30,7 +30,7 @@ warmed up.
 A run takes one config file and writes one record holding the setup AND the
 metrics, so the record alone repeats the run. ALWAYS write that record as
 `summary.yml` in the report directory and print the same YAML to stdout at
-the end of the run; the HTML page and the PNG plots are views of it, never the
+the end of the run; the HTML page (`report.md`) is a view of it, never the
 record. An unknown key in the config
 raises — a typo'd knob otherwise runs with the default and reports under the
 knob's name. NEVER write to a bare relative path and NEVER hardcode a tag: two
@@ -65,27 +65,6 @@ it from the code's own docstring and the log row, never from memory, so
 nothing in it is invented. An index README is one row per experiment plus a
 section for what is NOT a research line — recoveries and archaeology, marked
 "do not tune".
-
-## The report page
-
-One page, fixed order, verdict first, caveats last: Verdict (winner, its
-score, runner-up, baseline — the reader gets the answer without scrolling) →
-Lineage (prior tag and its conclusion, a null included, and why this run
-follows; written BEFORE the run) → what is modelled → what is predicted → how
-it is fitted → run configuration → results table → caveats. A first run writes
-"no prior" and NEVER drops the Lineage section. A run that leaves the prior
-conclusion standing says so in its verdict — NEVER re-run a comparison
-silently. ALWAYS ship one artifact per experiment — one image or one file —
-of two or three panels at most; chart mechanics belong to `dataviz`. Every
-sentence derives from the summary frame or is scoped to what it measured; a
-number is never hand-copied into prose.
-
-A report component's page (a periodic or selection report) is the exception:
-ALWAYS show only what the run computed — the result table, then a few lines of
-method at the bottom. NEVER put lineage, history or repeated caveats on the
-page; lineage stays in `summary.yml`. At phone width (`writing` →
-`page.md`) ALWAYS move columns to `summary.yml` before the table needs to
-scroll.
 
 ## Durable and scratch
 

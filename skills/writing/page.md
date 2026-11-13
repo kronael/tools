@@ -3,7 +3,8 @@
 Applies to anything with layout: an HTML explainer under `docs/`
 (`readme/page.md` says what one holds, in what order), a public onepager
 (`readme/onepager.md`), a README with tables and boxes, the text blocks of a
-designed page (`create/web.md`). Prose follows `SKILL.md` in this directory;
+designed page (`create/web.md`), a run's report page
+(`research/report.md`). Prose follows `SKILL.md` in this directory;
 the finishing pass is `humanize`. The owner rejects every pattern below on
 sight as "AI slop", and a page is finished only when § Before handing over
 passes — every item there is one the owner otherwise prompts for.
@@ -169,7 +170,7 @@ passes — every item there is one the owner otherwise prompts for.
   and size inside. NEVER a table or a row of equal boxes for a byte layout.
 - A wide and a narrow variant of one diagram carry the same edge labels.
 - ALWAYS give a chart one stated comparison, only the series that comparison
-  uses, and its reading beside it.
+  uses, and its reading beside it. On a report page, its library and colours: `research/report.md`.
 
 ## Small explanatory graphics
 
