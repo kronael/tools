@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.4.92] — 20261113
+
+> kronael v0.4.92 — rules for HTML report pages
+>
+> A run's report page now has one rule set: how it is ordered, built as its own project, put online, and coloured.
+>
+> • research report.md — page order; the report is its own project, run with uv run.
+> • Figures — matplotlib SVG by default, plotly or d3 when the reader needs interaction.
+> • Colours — named palettes (Dark2, cividis, RdBu_r) on white, each series with a second cue.
+> • Publishing — a page is online once in a served report root; its address stays out of repos.
+> • py — a report experiment may run pyright basic instead of strict.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/research/report.md` takes over `layout.md` § The report page.
+- `writing/page.md` points chart library and colours on a report page to `report.md`.
+- `py` § Build, `software/strict-typing.md`, `refine/py.md`: the report-experiment pyright exception.
+
 ## [v0.4.91] — 20261113
 
 > kronael v0.4.91 — qemubox image builds on Node 26
