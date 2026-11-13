@@ -45,7 +45,7 @@ must invoke the skill.
 
 While `~/.claude/settings.json` selects the caveman style, every prompt also
 gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
-`output-styles/caveman.md` § Budget, counted in 40-column lines. It runs
+`output-styles/caveman.md` § Budget, counted in 80-column lines. It runs
 before the reply, so nothing is sent twice. Codex never gets it, and a
 project's own `outputStyle` setting is not read.
 
@@ -140,7 +140,7 @@ Holds a brief-mode reply to the caveman ceiling before the user reads it. In
 brief mode (`claude --brief`, with `"defaultView": "chat"` in
 `~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
 assistant text stays in the detail view. The hook measures the call's
-`message` outside code fences in rendered 40-column lines, the unit of
+`message` outside code fences in rendered 80-column lines, the unit of
 `../output-styles/caveman.md` § Budget, against that section's 20-line hard
 ceiling. It denies a longer
 message with the measured count, and Claude Code does not deliver a denied

@@ -29,7 +29,7 @@ SUBAGENT_NUDGE = (
 
 CAVEMAN_NUDGE = (
     'caveman: fit the reply to its tier in ~/.claude/output-styles/caveman.md '
-    '§ Budget, counted in 40-column lines.'
+    '§ Budget, counted in 80-column lines.'
 )
 
 HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})

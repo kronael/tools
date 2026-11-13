@@ -100,7 +100,7 @@ model; `systemMessage` reaches only the user.
 6. Emit the first exact route as `info: Invoke /<skill>.`.
 7. Append `CAVEMAN_NUDGE` to every prompt while `~/.claude/settings.json`
    selects the caveman style, never under Codex. It names the § Budget tiers
-   and the 40-column unit; the rules stay in the style file. A prompt with no
+   and the 80-column unit; the rules stay in the style file. A prompt with no
    nudge, no route and another style gets no output.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
@@ -235,7 +235,7 @@ so a block there adds a second copy. A `MessageDisplay` hook can replace the
 lines on screen, but the model does not learn which lines the user read.
 
 `CAP_LINES` is the 20-line hard ceiling of `../output-styles/caveman.md`
-§ Budget and `COLUMNS` its 40-column unit; `test_reply_gate.py` asserts the
+§ Budget and `COLUMNS` its 80-column unit; `test_reply_gate.py` asserts the
 style file still states both.
 
 **Flow:**
@@ -247,7 +247,7 @@ style file still states both.
    answer `updatedInput`, the call's input with that line and the blank lines
    after it removed from `message`, and no permission decision.
 3. Drop fenced code and link targets, then count rendered lines
-   (`ceil(len/40)` per source line, a blank line counts one). At or under the
+   (`ceil(len/80)` per source line, a blank line counts one). At or under the
    ceiling: pass.
 4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
    deny. The reason gives the count, says the user has not seen the message,

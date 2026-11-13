@@ -46,13 +46,13 @@ def test_cap_and_unit_match_the_style_file(pytestconfig) -> None:
     style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
 
     assert f'→ ≤{CAP_LINES}, hard ceiling' in style
-    assert f'Unit: the rendered {COLUMNS}-column line' in style
+    assert f'Unit: the rendered {COLUMNS}-column terminal line' in style
 
 
-def test_rendered_lines_wrap_at_40_columns() -> None:
-    assert rendered_lines('x' * 40) == 1
-    assert rendered_lines('x' * 41) == 2
-    assert rendered_lines('x' * 81) == 3
+def test_rendered_lines_wrap_at_80_columns() -> None:
+    assert rendered_lines('x' * 80) == 1
+    assert rendered_lines('x' * 81) == 2
+    assert rendered_lines('x' * 161) == 3
     assert rendered_lines('a\n\nb') == 3
 
 
@@ -66,9 +66,9 @@ def test_rendered_lines_skip_code_fences() -> None:
 
 
 def test_rendered_lines_count_a_link_by_its_text() -> None:
-    assert rendered_lines('[' + 'x' * 40 + '](https://example.com/' + 'x' * 200 + ')') == 1
-    assert rendered_lines('[' + 'x' * 41 + '](https://example.com)') == 2
-    assert rendered_lines('[' + 'x' * 40 + ']()') == 1
+    assert rendered_lines('[' + 'x' * 80 + '](https://example.com/' + 'x' * 200 + ')') == 1
+    assert rendered_lines('[' + 'x' * 81 + '](https://example.com)') == 2
+    assert rendered_lines('[' + 'x' * 80 + ']()') == 1
 
 
 def test_a_message_within_the_ceiling_passes(home) -> None:
@@ -82,7 +82,7 @@ def test_a_message_over_the_ceiling_is_denied_with_the_measured_count(home) -> N
     assert decision(out) == 'deny'
     assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
     text = out['hookSpecificOutput']['permissionDecisionReason']
-    assert f'{CAP_LINES + 1} rendered 40-column lines' in text
+    assert f'{CAP_LINES + 1} rendered 80-column lines' in text
     assert f'ceiling is {CAP_LINES}' in text
 
 

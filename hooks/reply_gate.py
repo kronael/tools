@@ -11,7 +11,7 @@ from lib.state import session_state
 
 TOOL = 'SendUserMessage'
 CAP_LINES = 20
-COLUMNS = 40
+COLUMNS = 80
 OVERRIDE = 'override'
 FENCE = re.compile(r'^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')

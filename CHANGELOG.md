@@ -33,17 +33,17 @@
 
 ## [v0.4.94] — 20261113
 
-> kronael v0.4.94 — caveman budget fits a phone
+> kronael v0.4.94 — caveman budget reminder on prompts
 >
-> Chat replies are now budgeted in 40-column lines, so twenty lines fit a phone screen, and each prompt points at the budget.
+> Each prompt points at the caveman reply budget.
 >
-> • Budget — the caveman style counts 40-column lines instead of 80-column terminal lines.
+> • Budget — the caveman style defines how rendered lines count.
 > • Prompt hook — adds one line naming the caveman budget to every prompt while the style is selected.
 > • No double replies — the reminder comes before the reply; nothing blocks a reply after it is shown.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- `output-styles/caveman.md`: the budget unit is a 40-column line, about 6 words.
+- `output-styles/caveman.md`: defines the rendered-line budget unit.
 - `prompt_nudge.py`: `CAVEMAN_NUDGE` on every prompt, meta prompts included, while `outputStyle` is `caveman`; never in Codex.
 
 ## [v0.4.93] — 20261113

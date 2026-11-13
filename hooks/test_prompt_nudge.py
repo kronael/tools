@@ -2,7 +2,6 @@ import io
 import json
 import os
 import time
-from pathlib import Path
 
 import codex_hook
 import prompt_nudge
@@ -126,8 +125,8 @@ def test_leading_workflow_receives_no_provider_nudge(
     assert context == expected
 
 
-def test_every_route_names_a_bundled_skill() -> None:
-    skills = Path(prompt_nudge.__file__).resolve().parent.parent / 'skills'
+def test_every_route_names_a_bundled_skill(pytestconfig) -> None:
+    skills = pytestconfig.rootpath / '..' / 'skills'
     targets = {
         *prompt_nudge.SKILL_KEYWORDS.values(),
         *(route for _, route in prompt_nudge.MODEL_PATTERNS),
@@ -399,11 +398,11 @@ def test_codex_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
     assert prompt_nudge.CAVEMAN_NUDGE not in text
 
 
-def test_budget_line_points_at_the_style_rules() -> None:
-    style = (Path(__file__).resolve().parent.parent / 'output-styles' / 'caveman.md').read_text()
+def test_budget_line_points_at_the_style_rules(pytestconfig) -> None:
+    style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
     assert '## Budget' in style
-    assert 'rendered 40-column line' in style
-    assert '40-column lines' in prompt_nudge.CAVEMAN_NUDGE
+    assert 'rendered 80-column terminal line' in style
+    assert '80-column lines' in prompt_nudge.CAVEMAN_NUDGE
 
 
 def test_budget_line_follows_the_other_nudges(monkeypatch, capsys, tmp_path) -> None:
