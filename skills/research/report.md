@@ -38,8 +38,9 @@ page; lineage stays in `summary.yml`. At phone width ALWAYS move columns to
 - NEVER put a secret under the report root: a served root is readable by
   anyone who has its address.
 - Where the host's web server serves the report root (the host's facts,
-  `server-init`), a page is online once written. NEVER publish
-  it a second way, and NEVER write its public address into a repo or a commit.
+  `server-init`), a page is online once written. NEVER publish it a second
+  way. Its public address lives in the web server's deployment config and the
+  host's facts (`server-init`); NEVER repeat it in a repo's docs, code or commits.
 - ALWAYS pick the figure library by what the reader does with the figure:
   - reads it (the default): matplotlib, as SVG with `svg.fonttype: 'none'`
     and `font.family` set to the page's font, which matplotlib otherwise
