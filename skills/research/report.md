@@ -35,9 +35,14 @@ needs to scroll.
   it writes to `summary.yml`. NEVER hand-edit a generated page.
 - ALWAYS keep a report's math — formulas, thresholds, verdicts — in one module
   of plain functions, apart from reading and page code.
-- ALWAYS inline every figure in its page; a run with many items links one
-  index page to one page per item. NEVER a figure as a loose file beside the
-  page, except where the image itself is the product.
+- ALWAYS inline every figure in its page. NEVER a figure as a loose file
+  beside the page, except where the image itself is the product.
+- ALWAYS write `index.html` at a report's tag root, one line per page the
+  report holds (what it is, its window); a run with many items links one page
+  per item from it. ALWAYS open every page with one muted text line of
+  relative links: the report name to `index.html`, then the sibling pages,
+  the current page as plain text. NEVER buttons, boxes, icons, sidebars or
+  colour blocks for it.
 - NEVER put a secret under the report root: a served root is readable by
   anyone who has its address.
 - Where the host's web server serves the report root, a page is online once
