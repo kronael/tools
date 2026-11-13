@@ -4,7 +4,8 @@
 
 ```
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent;
-                                                      /solve on a new task)
+                                                      /solve on a new task;
+                                                      caveman budget line)
                                  ──> local.py        (LOCAL.md on first prompt)
 
 Subagent ──> SubagentStart ──> prompt_nudge.py (/solve for the brief)
@@ -90,9 +91,11 @@ model; `systemMessage` reaches only the user.
 5. Tokenise prompt and exact-match words against `SKILL_KEYWORDS` — skill
    names and words that mean one skill only, never a plain verb. A trailing
    `s` singular/plural alias is allowed; edit-distance matching is not.
-6. Emit the first exact route as `info: Invoke /<skill>.`. A prompt with no
-   nudge and no route gets no output: the output style and the wisdom file
-   are in the system prompt already.
+6. Emit the first exact route as `info: Invoke /<skill>.`.
+7. Append `CAVEMAN_NUDGE` to every prompt while `~/.claude/settings.json`
+   selects the caveman style, never under Codex. It names the § Budget tiers
+   and the 40-column unit; the rules stay in the style file. A prompt with no
+   nudge, no route and another style gets no output.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
 `~/.claude/state` (`lib/state.py`): its presence marks that a session's first

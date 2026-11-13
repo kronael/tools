@@ -42,6 +42,11 @@ retains model and effort overrides for the selected skill. The word `learn`
 has no keyword route. `memory_nudge.py` requests its memory pass; the model
 must invoke the skill.
 
+While `~/.claude/settings.json` selects the caveman style, every prompt also
+gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
+`output-styles/caveman.md` § Budget, counted in 40-column lines. It runs
+before the reply, so nothing is sent twice; Codex never gets it.
+
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
 load before acting); a prompt that already invokes `/solve` suppresses it. A

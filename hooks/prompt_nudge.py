@@ -26,6 +26,11 @@ SUBAGENT_NUDGE = (
     'brief to the skill that owns it.'
 )
 
+CAVEMAN_NUDGE = (
+    'caveman: fit the reply to its tier in ~/.claude/output-styles/caveman.md '
+    '§ Budget, counted in 40-column lines.'
+)
+
 HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})
 
 RESUMED_SESSION = re.compile(r'\s*This session is being continued from a previous conversation')
@@ -167,6 +172,14 @@ def minutes_since_prompt(session_id):
     return (time.time() - previous) / 60
 
 
+def caveman_selected(home):
+    try:
+        with open(os.path.join(home, '.claude', 'settings.json')) as f:
+            return json.load(f).get('outputStyle') == 'caveman'
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def is_routed(prompt, matched):
     return bool(matched or prompt.lstrip().startswith('/') or RESUMED_SESSION.match(prompt))
 
@@ -220,6 +233,9 @@ def main():
 
     if matched:
         parts.append(f'info: Invoke {matched} (the prompt says "{trigger}").')
+
+    if data.get('harness') != 'codex' and caveman_selected(os.path.expanduser('~')):
+        parts.append(CAVEMAN_NUDGE)
 
     if parts:
         emit('UserPromptSubmit', '\n\n'.join(parts))

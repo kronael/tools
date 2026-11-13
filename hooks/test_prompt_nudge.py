@@ -15,6 +15,7 @@ from prompt_nudge import route_with_trigger
 @pytest.fixture(autouse=True)
 def state_root(tmp_path, monkeypatch):
     monkeypatch.setenv('KRONAEL_HOOK_STATE', str(tmp_path / 'state'))
+    monkeypatch.setenv('HOME', str(tmp_path))
 
 
 def run(monkeypatch, capsys, prompt, session_id='sess'):
@@ -367,3 +368,35 @@ def test_harness_agent_start_is_silent(monkeypatch, capsys) -> None:
 def test_route_names_the_text_that_triggered_it() -> None:
     assert route_with_trigger('do this with terra') == ('/dispatch', 'terra')
     assert route_with_trigger('cd /astra') == (None, None)
+
+
+def select_caveman(tmp_path):
+    (tmp_path / '.claude').mkdir()
+    (tmp_path / '.claude' / 'settings.json').write_text('{"outputStyle": "caveman"}')
+
+
+def test_caveman_style_adds_the_budget_line_to_every_prompt(monkeypatch, capsys, tmp_path) -> None:
+    select_caveman(tmp_path)
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert run(monkeypatch, capsys, 'now wire it into main') == prompt_nudge.CAVEMAN_NUDGE
+
+
+def test_other_style_gets_no_budget_line(monkeypatch, capsys) -> None:
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert prompt_nudge.CAVEMAN_NUDGE not in run(monkeypatch, capsys, 'now wire it into main')
+
+
+def test_codex_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
+    select_caveman(tmp_path)
+    data = {'prompt': 'now wire it into main', 'session_id': 's', 'harness': 'codex'}
+    monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
+    with pytest.raises(SystemExit):
+        main()
+    assert prompt_nudge.CAVEMAN_NUDGE not in capsys.readouterr().out
+
+
+def test_budget_line_points_at_the_style_rules() -> None:
+    style = (Path(__file__).resolve().parent.parent / 'output-styles' / 'caveman.md').read_text()
+    assert '## Budget' in style
+    assert 'rendered 40-column line' in style
+    assert '40-column lines' in prompt_nudge.CAVEMAN_NUDGE
