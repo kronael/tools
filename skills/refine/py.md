@@ -71,7 +71,7 @@ reads to pick the agent type.
 ## Config `correctness`
 
 - ALWAYS one project-wide pyright `strict`, NEVER `basic` plus a per-file
-  `strict` list; a test file opts down with `# pyright: basic`.
+  `strict` list; the opt-downs to `basic` are `py` § Build's.
 - NEVER a formatter workaround (`# fmt: skip`) the pinned formatter config
   already makes redundant.
 - ALWAYS check each `pyproject.toml` and other build config the range touches

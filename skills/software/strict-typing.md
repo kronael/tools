@@ -73,7 +73,7 @@ reportIgnoreCommentWithoutRule = "error"  # `# pyright: ignore` must name a rule
   pyright), covering every source; NEVER a `basic` default with a per-file
   `strict = [...]` list — a file missing from the list is silently unchecked. A
   test file that cannot meet it opts down with `# pyright: basic` on its first
-  line.
+  line; the one project-wide exception is `py` § Build's.
 
 ### ruff — `pyproject.toml`
 

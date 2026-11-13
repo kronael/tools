@@ -173,9 +173,9 @@ Python-specific additions and deltas.
 - NEVER a binary wheel of a native dependency (`psycopg2-binary`, `psycopg[binary]`): its
   bundled libssl segfaults beside `ssl` — ALWAYS the source build, the builder given the
   dev headers (`libpq-dev`).
-- ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a
-  `basic` default with a per-file `strict` list. Every test file opts down with
-  `# pyright: basic` on its first line.
+- ALWAYS one project-wide `typeCheckingMode: "strict"` over every source; NEVER a `basic`
+  default with a per-file `strict` list. A test file opts down with a first-line `# pyright: basic`; a
+  report experiment (`research` → `report.md`) MAY be `basic` project-wide.
 - pre-commit: ruff format + lint, end-of-file-fixer, trailing-whitespace
 - `make check`: ruff lint + format check (canonical CQ target)
 - `make right`: pyright only (not in pre-commit)
