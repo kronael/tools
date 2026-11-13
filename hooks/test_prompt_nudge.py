@@ -387,15 +387,26 @@ def test_other_style_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
     assert prompt_nudge.CAVEMAN_NUDGE not in run(monkeypatch, capsys, 'now wire it into main')
 
 
-def test_codex_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
-    select_caveman(tmp_path)
-    data = {'prompt': 'now wire it into main', 'session_id': 's', 'harness': 'codex'}
+@pytest.mark.parametrize('prompt', ['now wire it into main', 'fix the stop hook'])
+@pytest.mark.parametrize('installed', [True, False])
+def test_codex_budget_follows_the_bridged_style(
+    monkeypatch, capsys, tmp_path, prompt, installed
+) -> None:
+    styles = tmp_path / '.claude' / 'output-styles'
+    styles.mkdir(parents=True)
+    (tmp_path / '.claude' / 'settings.json').write_text('{"outputStyle": "default"}')
+    if installed:
+        (styles / 'caveman.md').write_text('Shared style')
+    data = codex_hook.normalize({'prompt': prompt, 'session_id': 's'}, 'UserPromptSubmit')
     monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
     with pytest.raises(SystemExit):
         main()
     out = capsys.readouterr().out.strip()
-    text = json.loads(out)['hookSpecificOutput']['additionalContext'] if out else ''
-    assert prompt_nudge.CAVEMAN_NUDGE not in text
+    translated = codex_hook.translate_output(out, 'UserPromptSubmit', 'prompt_nudge')
+    text = json.loads(translated)['hookSpecificOutput']['additionalContext'] if out else ''
+    assert (prompt_nudge.CAVEMAN_NUDGE in text) is installed
+    if installed and prompt == 'fix the stop hook':
+        assert text == prompt_nudge.CAVEMAN_NUDGE
 
 
 def test_budget_line_points_at_the_style_rules(pytestconfig) -> None:

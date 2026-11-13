@@ -208,7 +208,10 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
-    caveman = data.get('harness') != 'codex' and caveman_selected(os.path.expanduser('~'))
+    if data.get('harness') == 'codex':
+        caveman = os.path.isfile(os.path.expanduser('~/.claude/output-styles/caveman.md'))
+    else:
+        caveman = caveman_selected(os.path.expanduser('~'))
 
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
         if caveman:

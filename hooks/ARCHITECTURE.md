@@ -99,7 +99,8 @@ model; `systemMessage` reaches only the user.
    `s` singular/plural alias is allowed; edit-distance matching is not.
 6. Emit the first exact route as `info: Invoke /<skill>.`.
 7. Append `CAVEMAN_NUDGE` to every prompt while `~/.claude/settings.json`
-   selects the caveman style, never under Codex. It names the § Budget tiers
+   selects the caveman style, or under Codex while the bridged style exists.
+   It names the § Budget tiers
    and the 80-column unit; the rules stay in the style file. A prompt with no
    nudge, no route and another style gets no output.
 
@@ -259,6 +260,9 @@ The hook cannot tell the fact, action and explanation tiers apart, so it holds
 only the ceiling; the 1-3 and ≤12 tiers stay with the style file. It measures
 one call: it cannot see that several calls belong to one reply. Codex does
 not wire it: `SendUserMessage` and `outputStyle` belong to Claude Code.
+Codex's [hook events](https://learn.chatgpt.com/docs/hooks) offer no
+pre-display reply gate; `Stop` requests continuation after a reply.
+The shared style and prompt reminder supply Codex's reply budget.
 
 ### post_tool_nudge.sh (PostToolUse)
 

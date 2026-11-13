@@ -46,8 +46,9 @@ must invoke the skill.
 While `~/.claude/settings.json` selects the caveman style, every prompt also
 gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
 `output-styles/caveman.md` § Budget, counted in 80-column lines. It runs
-before the reply, so nothing is sent twice. Codex never gets it, and a
-project's own `outputStyle` setting is not read.
+before the reply, so nothing is sent twice. Codex gets the same reminder
+while the bridged style file exists, independent of Claude's selected style.
+A project's own `outputStyle` setting is not read.
 
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
