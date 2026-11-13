@@ -1,10 +1,10 @@
 import json
+import re
 import subprocess
 import sys
 
 import pytest
 from reply_gate import CAP_LINES
-from reply_gate import MAX_DENIALS
 from reply_gate import check
 from reply_gate import rendered_lines
 
@@ -12,6 +12,7 @@ WIDE = 'This sentence fills more than one rendered line of the terminal because 
 OVER = '\n'.join(f'Line {n}.' for n in range(CAP_LINES + 1))
 AT_CAP = '\n'.join(f'Line {n}.' for n in range(CAP_LINES))
 SHORT = 'Done. Run `make test`.'
+KEY = re.compile(r'`override ([0-9a-f]{8})`')
 
 
 @pytest.fixture
@@ -37,6 +38,10 @@ def decision(out):
     return out['hookSpecificOutput']['permissionDecision']
 
 
+def denied_key(out):
+    return KEY.search(out['hookSpecificOutput']['permissionDecisionReason']).group(1)
+
+
 def test_cap_matches_the_style_file(pytestconfig) -> None:
     style = pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md'
 
@@ -45,9 +50,12 @@ def test_cap_matches_the_style_file(pytestconfig) -> None:
 
 def test_rendered_lines_wrap_at_80_columns_and_skip_fences() -> None:
     assert rendered_lines(WIDE * 2) == 3
+    assert rendered_lines('x' * 80) == 1
+    assert rendered_lines('x' * 81) == 2
     assert rendered_lines('a\n\nb') == 3
     assert rendered_lines('Run it.\n```sh\n' + OVER + '\n```\nDone.') == 3
-    assert rendered_lines('[the report](https://example.com/' + 'x' * 200 + ')') == 1
+    assert rendered_lines('Run it.\n```sh\n' + OVER + '\n```') == 1
+    assert rendered_lines('[' + 'x' * 80 + '](https://example.com/' + 'x' * 200 + ')') == 1
 
 
 def test_a_message_within_the_ceiling_passes(home) -> None:
@@ -65,27 +73,70 @@ def test_a_message_over_the_ceiling_is_denied_with_the_measured_count(home) -> N
     assert f'ceiling is {CAP_LINES}' in text
 
 
-def test_the_gate_lets_a_message_through_after_the_denial_limit(home) -> None:
-    for _ in range(MAX_DENIALS):
-        assert decision(check(payload(OVER), home)) == 'deny'
+def test_the_denial_names_a_key_that_passes_the_next_message_once(home) -> None:
+    key = denied_key(check(payload(OVER), home))
 
-    assert check(payload(OVER), home) is None
-    assert decision(check(payload(OVER), home)) == 'deny'
+    out = check(payload(f'override {key}\n\n{OVER}'), home)
+
+    assert out == {
+        'hookSpecificOutput': {
+            'hookEventName': 'PreToolUse',
+            'updatedInput': {'message': OVER, 'status': 'normal'},
+        }
+    }
+    assert decision(check(payload(f'override {key}\n\n{OVER}'), home)) == 'deny'
 
 
-def test_a_delivered_message_resets_the_denial_count(home) -> None:
-    assert decision(check(payload(OVER), home)) == 'deny'
+def test_a_wrong_key_is_denied_and_spends_the_issued_key(home) -> None:
+    key = denied_key(check(payload(OVER), home))
+
+    assert decision(check(payload(f'override not-the-key\n{OVER}'), home)) == 'deny'
+    assert decision(check(payload(f'override {key}\n{OVER}'), home)) == 'deny'
+
+
+@pytest.mark.parametrize('body', [SHORT, '  Indented.', 'X marks it.'])
+def test_a_valid_key_line_is_removed_and_the_message_kept_as_written(home, body) -> None:
+    key = denied_key(check(payload(OVER), home))
+
+    out = check(payload(f'override {key}\n\n{body}'), home)
+
+    assert out['hookSpecificOutput']['updatedInput']['message'] == body
+
+
+def test_each_denial_issues_another_key(home) -> None:
+    first = denied_key(check(payload(OVER), home))
+    second = denied_key(check(payload(OVER), home))
+
+    assert first != second
+    assert decision(check(payload(f'override {first}\n{OVER}'), home)) == 'deny'
+
+
+def test_a_delivered_message_spends_the_issued_key(home) -> None:
+    key = denied_key(check(payload(OVER), home))
     assert check(payload(SHORT), home) is None
 
-    for _ in range(MAX_DENIALS):
-        assert decision(check(payload(OVER), home)) == 'deny'
+    assert decision(check(payload(f'override {key}\n{OVER}'), home)) == 'deny'
 
 
-def test_sessions_count_denials_apart(home) -> None:
-    for _ in range(MAX_DENIALS):
-        check(payload(OVER), home)
+def test_an_override_line_with_no_key_issued_is_denied(home) -> None:
+    assert decision(check(payload(f'override None\n{OVER}'), home)) == 'deny'
+    assert check(payload(f'override None\n{SHORT}'), home) is None
 
-    assert decision(check(payload(OVER, session_id='s2'), home)) == 'deny'
+
+def test_the_key_must_be_the_whole_first_line(home) -> None:
+    key = denied_key(check(payload(OVER), home))
+    assert decision(check(payload(f'{OVER}\noverride {key}'), home)) == 'deny'
+
+    key = denied_key(check(payload(OVER), home))
+    assert decision(check(payload(f'override {key} now\n{OVER}'), home)) == 'deny'
+
+
+def test_sessions_hold_their_keys_apart(home) -> None:
+    key = denied_key(check(payload(OVER), home))
+
+    assert decision(check(payload(f'override {key}\n{OVER}', session_id='s2'), home)) == 'deny'
+    out = check(payload(f'override {key}\n{OVER}'), home)
+    assert out['hookSpecificOutput']['updatedInput']['message'] == OVER
 
 
 @pytest.mark.parametrize(
@@ -118,6 +169,12 @@ def test_no_state_directory_means_no_denial(home, monkeypatch) -> None:
     assert check(payload(OVER), home) is None
 
 
+def test_a_key_that_cannot_be_stored_means_no_denial(home) -> None:
+    (home / 'state' / 'reply-gate-s1').mkdir(parents=True)
+
+    assert check(payload(OVER), home) is None
+
+
 def run_hook(hook, home, stdin):
     r = subprocess.run(
         [sys.executable, str(hook)],
@@ -139,7 +196,11 @@ def run_hook(hook, home, stdin):
 def test_the_script_denies_on_stdin_and_stays_silent_on_bad_input(home, pytestconfig) -> None:
     hook = pytestconfig.rootpath / 'reply_gate.py'
 
-    assert decision(json.loads(run_hook(hook, home, json.dumps(payload(OVER))))) == 'deny'
+    denied = json.loads(run_hook(hook, home, json.dumps(payload(OVER))))
+    assert decision(denied) == 'deny'
+    resent = json.dumps(payload(f'override {denied_key(denied)}\n{OVER}'))
+    passed = json.loads(run_hook(hook, home, resent))
+    assert passed['hookSpecificOutput']['updatedInput']['message'] == OVER
     assert run_hook(hook, home, json.dumps(payload(SHORT))) == ''
     assert run_hook(hook, home, 'not json') == ''
     assert run_hook(hook, home, '[]') == ''

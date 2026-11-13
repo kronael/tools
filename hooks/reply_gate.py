@@ -3,6 +3,7 @@ import json
 import math
 import os
 import re
+import secrets
 import sys
 
 from lib.state import session_state
@@ -10,7 +11,7 @@ from lib.state import session_state
 TOOL = 'SendUserMessage'
 STYLE = 'caveman'
 CAP_LINES = 20
-MAX_DENIALS = 2
+OVERRIDE = 'override'
 FENCE = re.compile(r'^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
 
@@ -28,33 +29,36 @@ def selected_style(home):
         return None
 
 
-def denials(stamp):
+def take_key(stamp):
     try:
         with open(stamp) as f:
-            return int(f.read())
-    except (OSError, ValueError):
-        return 0
-
-
-def record(stamp, count):
-    try:
-        if count:
-            with open(stamp, 'w') as f:
-                f.write(str(count))
-        else:
-            os.remove(stamp)
+            key = f.read()
+        os.remove(stamp)
     except OSError:
-        return False
-    return True
+        return None
+    return key
 
 
-def reason(lines):
+def issue_key(stamp):
+    key = secrets.token_hex(4)
+    try:
+        with open(stamp, 'w') as f:
+            f.write(key)
+    except OSError:
+        return None
+    return key
+
+
+def reason(lines, key):
     return (
         f'Not delivered: the message is {lines} rendered lines and the caveman '
         f'ceiling is {CAP_LINES}. The user has not seen it. Send only the answer '
         f'to what the user asked, in {CAP_LINES} lines or fewer. Leave the status '
         'of other work, the evidence and the next steps in plain text, and name '
-        'what you left out in one closing line. Code fences do not count.'
+        'what you left out in one closing line. Code fences do not count. If the '
+        f'answer needs the length, resend the message with `{OVERRIDE} {key}` as '
+        'its first line: the gate removes that line, and the key works once, on '
+        'the next message only.'
     )
 
 
@@ -68,19 +72,26 @@ def check(data, home):
     stamp = session_state('reply-gate', data.get('session_id'))
     if stamp is None:
         return None
+    pending = take_key(stamp)
+    head, _, body = message.partition('\n')
+    if pending and head == f'{OVERRIDE} {pending}':
+        return {
+            'hookSpecificOutput': {
+                'hookEventName': 'PreToolUse',
+                'updatedInput': {**tool_input, 'message': body.lstrip('\n')},
+            }
+        }
     lines = rendered_lines(message)
-    refused = denials(stamp)
-    if lines <= CAP_LINES or refused >= MAX_DENIALS:
-        if refused:
-            record(stamp, 0)
+    if lines <= CAP_LINES:
         return None
-    if not record(stamp, refused + 1):
+    key = issue_key(stamp)
+    if not key:
         return None
     return {
         'hookSpecificOutput': {
             'hookEventName': 'PreToolUse',
             'permissionDecision': 'deny',
-            'permissionDecisionReason': reason(lines),
+            'permissionDecisionReason': reason(lines, key),
         }
     }
 

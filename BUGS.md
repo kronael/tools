@@ -458,17 +458,22 @@
 - **REPLY-GATE-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
   trial. `hooks/reply_gate.py` denies a brief-mode `SendUserMessage` over the
   20-line caveman ceiling, and `test_reply_gate.py` covers the script. No
-  brief-mode session has run it. Four facts are read from Claude Code 2.1.323
+  brief-mode session has run it. Six facts are read from Claude Code 2.1.323
   and not observed: the account is entitled to brief mode, without which
   `--brief` does nothing; PreToolUse hooks run for `SendUserMessage`; the chat
-  view hides a denied message; the model's next message fits. The measurements
+  view hides a denied message; the model's next message fits; an
+  `updatedInput` answer replaces the delivered message, so the user does not
+  read the `override <key>` line; the model sends that line only when the
+  answer needs the length. The measurements
   behind the gate come from plain replies: across 8484 final replies under the
   style, a per-prompt reminder and a Stop block, 34% to 53% passed 20 lines;
   a rewrite after a measured Stop block kept 88% of the words; a relay of a
   subagent message ran 1.2 times its length. **Check:** set `"defaultView":
   "chat"`, start `claude --brief`, ask for a long explanation, and read the
-  transcript: the over-long `SendUserMessage` call carries the denial and the
-  next call fits. **Options:** (a) keep the wiring after a passed trial; (b)
+  transcript: the over-long `SendUserMessage` call carries the denial and its
+  key, and the next call fits. Then ask for a reply that needs the length: the
+  resend opens with `override <key>` and the chat view shows the message
+  without that line. **Options:** (a) keep the wiring after a passed trial; (b)
   remove `reply_gate.py`, its test and its `settings-recommended.json` entry.
   **Default if nothing is decided:** the wiring stays; it never runs outside
   brief mode.

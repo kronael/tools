@@ -143,8 +143,13 @@ assistant text stays in the detail view. The hook measures the call's
 `message` in rendered 80-column lines outside code fences against the 20-line
 hard ceiling of `../output-styles/caveman.md` § Budget. It denies a longer
 message with the measured count, and Claude Code does not deliver a denied
-message, so the user reads one copy. After two denials in a row the next
-message passes, so a turn always ends.
+message, so the user reads one copy.
+
+Each denial names a random one-time key. A resend whose first line is
+`override <key>` passes at any length, and the hook removes that line from the
+delivered message. The key covers the next `SendUserMessage` call only: that
+call spends it, whatever it carries. An `override` line with any other key is
+plain text, measured with the rest of the message.
 
 Silent unless `~/.claude/settings.json` selects `caveman`. Outside brief mode
 the tool does not exist and the hook never runs. `test_reply_gate.py` pins the

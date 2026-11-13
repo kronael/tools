@@ -220,7 +220,8 @@ run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 **Input:** JSON with `tool_name`, `tool_input.message` and `session_id`;
 `~/.claude/settings.json` `outputStyle`.
 **Output:** `hookSpecificOutput.permissionDecision` `deny` with the measured
-line count, or silent.
+line count and a one-time key, `hookSpecificOutput.updatedInput` with the key
+line removed from `message`, or silent.
 
 `SendUserMessage` is the brief-mode reply tool: with `claude --brief` and
 `defaultView` `chat`, its `message` is the only text the user reads. A
@@ -235,14 +236,19 @@ lines on screen, but the model does not learn which lines the user read.
 **Flow:**
 1. Silent for any other tool, a missing `message`, an `outputStyle` other
    than `caveman`, or an unusable state directory.
-2. Drop fenced code and link targets, then count rendered lines
-   (`ceil(len/80)` per source line, a blank line counts one).
-3. Over the ceiling: add one to the per-session stamp `reply-gate-{session_id}`
-   in `~/.claude/state` (`lib/state.py`) and deny. The reason gives the count,
-   says the user has not seen the message, and asks for the answer to the
-   question alone, with the rest left in plain text.
-4. At or under the ceiling, or after `MAX_DENIALS` (2) denials in a row: pass
-   and remove the stamp.
+2. Read the key in the per-session stamp `reply-gate-{session_id}` in
+   `~/.claude/state` (`lib/state.py`) and remove the stamp, so a key covers one
+   call. When the first line of `message` is `override <key>` with that key:
+   answer `updatedInput`, the call's input with that line and the blank lines
+   after it removed from `message`, and no permission decision.
+3. Drop fenced code and link targets, then count rendered lines
+   (`ceil(len/80)` per source line, a blank line counts one). At or under the
+   ceiling: pass.
+4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
+   deny. The reason gives the count, says the user has not seen the message,
+   asks for the answer to the question alone, with the rest left in plain
+   text, and names the key and its `override <key>` first line. A key that
+   cannot be stored means no denial.
 
 The hook cannot tell the fact, action and explanation tiers apart, so it holds
 only the ceiling; the 1-3 and ≤12 tiers stay with the style file. Codex does
