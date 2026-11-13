@@ -49,6 +49,7 @@ WORKDIR /workspace
 RUN curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.7/install.sh | bash && \
     unset NPM_CONFIG_PREFIX && . "$NVM_DIR/nvm.sh" && \
     nvm install --lts && nvm alias default 'lts/*' && \
+    npm install -g corepack && \
     NODE_BIN="$NVM_DIR/versions/node/$(nvm version default)/bin" && \
     for b in node npm npx corepack; do ln -sf "$NODE_BIN/$b" "/usr/local/bin/$b"; done
 
