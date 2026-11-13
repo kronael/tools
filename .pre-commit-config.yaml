@@ -17,7 +17,7 @@ repos:
             name: 'py-no-module-path: no path derived from __file__'
             language: python
             additional_dependencies: [ast-grep-cli==0.51.0]
-            entry: ast-grep scan --rule skills/py/lints/rules.yml --off --error=py-no-module-path
+            entry: ast-grep scan --rule skills/py/lints/rules.yml --off --error=py-no-module-path --error=py-no-module-path-ignore
             types: [python]
             exclude: ^skills/py/lints/fixtures/
 

@@ -13,8 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Projects run this installed copy from their own root; the rule packs ship beside it.
-SKILLS = Path(__file__).resolve().parents[1]  # ast-grep-ignore: py-no-module-path
+# Projects run the installed copy from their own root; the rule packs live in --skills.
+DEFAULT_SKILLS = Path('~/.claude/skills')
 
 
 def case_name(path: Path) -> str:
@@ -30,11 +30,11 @@ def is_bad(path: Path) -> bool:
     return '.bad.' in case_name(path)
 
 
-def declared_rules() -> dict[str, Path]:
+def declared_rules(skills: Path) -> dict[str, Path]:
     import yaml  # noqa: PLC0415 - fixture-only dependency; scans use the standard library
 
     rules: dict[str, Path] = {}
-    for rule_file in sorted(SKILLS.glob('*/lints/rules.yml')):
+    for rule_file in sorted(skills.glob('*/lints/rules.yml')):
         for doc in yaml.safe_load_all(rule_file.read_text()):
             if isinstance(doc, dict) and 'id' in doc:
                 if doc['id'] in rules:
@@ -43,13 +43,13 @@ def declared_rules() -> dict[str, Path]:
     return rules
 
 
-def missing_fixtures(fixtures: list[Path]) -> list[str]:
+def missing_fixtures(fixtures: list[Path], skills: Path) -> list[str]:
     import yaml  # noqa: PLC0415 - fixture-only dependency; scans use the standard library
 
     have_bad = {rule_id(p) for p in fixtures if is_bad(p)}
     have_good = {rule_id(p) for p in fixtures if not is_bad(p)}
     failures = []
-    rules = declared_rules()
+    rules = declared_rules(skills)
     for rule, source in rules.items():
         for kind, have in (('bad', have_bad), ('good', have_good)):
             if rule not in have:
@@ -59,7 +59,7 @@ def missing_fixtures(fixtures: list[Path]) -> list[str]:
         for path in fixtures
         if rule_id(path) not in rules
     )
-    config = SKILLS.parent / 'sgconfig.yml'
+    config = skills.parent / 'sgconfig.yml'
     configured = {
         (config.parent / path).resolve() for path in yaml.safe_load(config.read_text())['ruleDirs']
     }
@@ -69,10 +69,10 @@ def missing_fixtures(fixtures: list[Path]) -> list[str]:
     return failures
 
 
-def matches(paths: list[Path]) -> list[dict]:
-    rule_files = sorted(SKILLS.glob('*/lints/rules.yml'))
+def matches(paths: list[Path], skills: Path) -> list[dict]:
+    rule_files = sorted(skills.glob('*/lints/rules.yml'))
     if not rule_files:
-        raise ValueError(f'no lint rules found under {SKILLS}')
+        raise ValueError(f'no lint rules found under {skills}')
     for path in paths:
         if not path.exists():
             raise FileNotFoundError(path)
@@ -112,8 +112,8 @@ def blocks(path: Path) -> list[tuple[int, int]]:
     return spans
 
 
-def check(path: Path) -> str | None:
-    found = matches([path])
+def check(path: Path, skills: Path) -> str | None:
+    found = matches([path], skills)
     rule = rule_id(path)
     if not is_bad(path):
         if found:
@@ -143,9 +143,16 @@ def main() -> int:
         metavar='PATH',
         help='scan these files/directories; exit 1 on findings, 2 on failure',
     )
+    parser.add_argument(
+        '--skills',
+        type=Path,
+        default=DEFAULT_SKILLS,
+        help='skills directory holding */lints/rules.yml (default %(default)s)',
+    )
     args = parser.parse_args()
+    skills = args.skills.expanduser().resolve()
     if args.scan is not None:
-        found = matches(args.scan)
+        found = matches(args.scan, skills)
         for match in found:
             start = match['range']['start']
             print(
@@ -155,12 +162,12 @@ def main() -> int:
         print(f'{len(found)} lint findings')
         return int(bool(found))
 
-    fixtures = sorted(p for p in SKILLS.glob('*/lints/fixtures/**/*') if p.is_file())
+    fixtures = sorted(p for p in skills.glob('*/lints/fixtures/**/*') if p.is_file())
     if not fixtures:
         raise ValueError('no lint fixtures found')
 
-    binding = missing_fixtures(fixtures)
-    behavior = [msg for path in fixtures if (msg := check(path))]
+    binding = missing_fixtures(fixtures, skills)
+    behavior = [msg for path in fixtures if (msg := check(path, skills))]
     for msg in binding + behavior:
         print(msg, file=sys.stderr)
     print(

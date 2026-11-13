@@ -302,9 +302,11 @@ your diff against every `##` heading here before calling an edit done.
   `Path(__file__)` or any path derived from where the binary or module sits;
   a test reads its fixtures through the runner's configured root (`py`
   § Testing). Lint `py-no-module-path`.
-- An installed tool may locate its own shipped read-only resources relative to its module;
-  ALWAYS mark that line `# ast-grep-ignore: py-no-module-path` under a comment giving the reason.
-  Reading the module's own file is not a derived path.
+- Package data is read with `importlib.resources.files('<package>')`; anything else comes from
+  configuration or the working directory. There is no exception: `py-no-module-path` also
+  flags `__spec__.origin`, `inspect.getfile`, `inspect.getsourcefile`, `getattr(x, '__file__')`
+  and any `# ast-grep-ignore: py-no-module-path` comment. Reading the module's own file,
+  `Path(__file__).read_text()` or `read_bytes()`, is not a derived path.
 - ALWAYS lowercase informational user-facing messages and Capitalize errors:
   `"checking..."`, `"Failed: ..."`. Where the language's linter requires
   lowercase errors (Go: staticcheck ST1005), the linter wins — NEVER suppress it.

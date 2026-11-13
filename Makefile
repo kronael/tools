@@ -95,4 +95,4 @@ skills-frontmatter-fix:
 	python3 hooks/skill_frontmatter_lint.py --write .
 
 lints:
-	python3 skills/astgrep/check.py
+	python3 skills/astgrep/check.py --skills skills

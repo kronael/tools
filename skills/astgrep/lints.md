@@ -20,6 +20,8 @@ From a project root, scan explicit files or directories:
 python3 ~/.claude/skills/astgrep/check.py --scan src/
 ```
 
+`--skills DIR` names another skills directory; the default is `~/.claude/skills`.
+
 The runner uses its bundled packs regardless of the project's `sgconfig.yml`.
 It reads files without editing them and respects ast-grep's normal ignores.
 Packs cover Python, Rust, TypeScript and `.sh`/`.bash`; TSX needs project checks.
@@ -56,7 +58,7 @@ repos:
 ```
 
 A CI step running `pre-commit run --all-files` fails on every existing finding:
-ALWAYS fix each one, or mark a permitted exception, before adding the hook.
+ALWAYS fix each one before adding the hook. A published rule that has no exception, such as `py-no-module-path`, also fails on a `# ast-grep-ignore` comment naming it.
 
 An existing ast-grep project can instead add selected pack directories to
 `ruleDirs` and run `ast-grep scan --error <files>`. Use expanded absolute paths;
