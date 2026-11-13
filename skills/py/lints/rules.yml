@@ -333,19 +333,47 @@ id: py-no-module-path
 language: python
 severity: warning
 rule:
-    kind: identifier
-    regex: ^__file__$
-    not:
-        inside:
-            stopBy: end
-            kind: call
-            field: function
-            has:
-                field: function
-                kind: attribute
-                regex: ^(pathlib\.)?Path\((\w+\.)*__file__\)\.read_(bytes|text)$
-message: "NEVER derive a path from where the module sits (__file__, .parent, .parents[N], dirname). The deployment fixes the working directory (systemd\
-    \ WorkingDirectory, Docker WORKDIR, the Makefile or CI step that cd's into the component): write a path relative to it, or read it from configuration\
-    \ (flag, env var, config file); in a test use pytestconfig.rootpath. Reading the module itself is allowed. An installed tool locating its own shipped\
-    \ read-only files takes # ast-grep-ignore: py-no-module-path on that line, after a comment giving the reason. See skill:software code.md."
+    any:
+        - kind: identifier
+          regex: ^__file__$
+          not:
+              inside:
+                  stopBy: end
+                  kind: call
+                  field: function
+                  has:
+                      field: function
+                      kind: attribute
+                      regex: ^(pathlib\.)?Path\((\w+\.)*__file__\)\.read_(bytes|text)$
+        - kind: attribute
+          regex: (^|\.)__spec__\.origin$
+        - kind: call
+          has:
+              field: function
+              regex: ^(inspect\.)?(getfile|getsourcefile)$
+        - kind: call
+          has:
+              field: function
+              regex: ^getattr$
+          all:
+              - has:
+                    field: arguments
+                    has:
+                        kind: string
+                        regex: ^[rRbBuU]?['"]__file__['"]$
+message: "NEVER derive a path from where the module sits (__file__, __spec__.origin, inspect.getfile, inspect.getsourcefile, .parent, .parents[N], dirname).\
+    \ There is no exception and no ignore comment. The deployment fixes the working directory (systemd WorkingDirectory, Docker WORKDIR, the Makefile or\
+    \ CI step that cd's into the component): write a path relative to it, or read it from configuration (flag, env var, config file); read a package's data\
+    \ files with importlib.resources.files('<package>'); in a test use pytestconfig.rootpath. Reading the module itself, Path(__file__).read_text() or read_bytes(),\
+    \ is allowed. See skill:software code.md."
+note: 'source: skills/software/code.md — Layout and formatting'
+---
+id: py-no-module-path-ignore
+language: python
+severity: warning
+rule:
+    kind: comment
+    regex: ast-grep-ignore.*py-no-module-path
+message: "NEVER ignore py-no-module-path: the rule has no exception. Delete this comment and take the path from the working directory, configuration or\
+    \ importlib.resources.files('<package>'). See skill:software code.md."
 note: 'source: skills/software/code.md — Layout and formatting'

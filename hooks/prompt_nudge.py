@@ -5,6 +5,7 @@ import re
 import sys
 import time
 
+from lib.caveman import caveman_selected
 from lib.state import hook_event
 from lib.state import session_state
 
@@ -24,6 +25,11 @@ IDLE_NUDGE = (
 SUBAGENT_NUDGE = (
     'New task (subagent brief): run /solve before acting — it routes the '
     'brief to the skill that owns it.'
+)
+
+CAVEMAN_NUDGE = (
+    'caveman: fit the reply to its tier in ~/.claude/output-styles/caveman.md '
+    '§ Budget, counted in 80-column lines.'
 )
 
 HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})
@@ -202,7 +208,14 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
+    if data.get('harness') == 'codex':
+        caveman = os.path.isfile(os.path.expanduser('~/.claude/output-styles/caveman.md'))
+    else:
+        caveman = caveman_selected(os.path.expanduser('~'))
+
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        if caveman:
+            emit('UserPromptSubmit', CAVEMAN_NUDGE)
         sys.exit(0)
 
     parts = []
@@ -220,6 +233,9 @@ def main():
 
     if matched:
         parts.append(f'info: Invoke {matched} (the prompt says "{trigger}").')
+
+    if caveman:
+        parts.append(CAVEMAN_NUDGE)
 
     if parts:
         emit('UserPromptSubmit', '\n\n'.join(parts))

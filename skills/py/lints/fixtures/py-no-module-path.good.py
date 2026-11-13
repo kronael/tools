@@ -1,4 +1,5 @@
 import hashlib
+import importlib.resources
 import os
 import pathlib
 from pathlib import Path
@@ -18,5 +19,13 @@ def stub_location(monkeypatch, module):
     monkeypatch.setattr(module, '__file__', 'stub.py')
 
 
-# An installed tool runs from any working directory; its templates ship beside it.
-TEMPLATES = Path(__file__).resolve().parent / 'templates'  # ast-grep-ignore: py-no-module-path
+
+def packaged_templates():
+    return importlib.resources.files('pkg') / 'templates'
+
+
+DIST = Path('dist')
+
+
+def probe(module):
+    return getattr(module, '__name__')

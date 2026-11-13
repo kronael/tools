@@ -17,7 +17,7 @@ def test_scan_uses_bundled_rules_from_another_cwd(runner, tmp_path):
     source.write_text('logger = logging.getLogger(__name__)\n')
     (tmp_path / 'sgconfig.yml').write_text('ruleDirs: []\n')
     result = subprocess.run(
-        [sys.executable, str(runner), '--scan', source.name],
+        [sys.executable, str(runner), '--skills', str(runner.parents[1]), '--scan', source.name],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -40,7 +40,15 @@ def test_scan_from_installed_skill_without_pyyaml(runner, tmp_path):
     source = tmp_path / 'source.py'
     source.write_text('log = logging.getLogger(__name__)\n')
     result = subprocess.run(
-        [sys.executable, '-S', str(installed / 'astgrep' / 'check.py'), '--scan', str(source)],
+        [
+            sys.executable,
+            '-S',
+            str(installed / 'astgrep' / 'check.py'),
+            '--skills',
+            str(installed),
+            '--scan',
+            str(source),
+        ],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -54,7 +62,7 @@ def test_scan_from_installed_skill_without_pyyaml(runner, tmp_path):
 def test_scan_invalid_paths_fail(runner, tmp_path, args):
     # Empty selections and missing files must not become whole-tree or clean scans.
     result = subprocess.run(
-        [sys.executable, str(runner), *args],
+        [sys.executable, str(runner), '--skills', str(runner.parents[1]), *args],
         cwd=tmp_path,
         capture_output=True,
         text=True,
@@ -70,7 +78,7 @@ def test_missing_ast_grep_fails(runner, tmp_path):
     source = tmp_path / 'source.py'
     source.write_text('value = 1\n')
     result = subprocess.run(
-        [sys.executable, str(runner), '--scan', str(source)],
+        [sys.executable, str(runner), '--skills', str(runner.parents[1]), '--scan', str(source)],
         env={**os.environ, 'PATH': str(tmp_path)},
         cwd=tmp_path,
         capture_output=True,
@@ -96,7 +104,7 @@ def test_scan_preserves_judgment_exceptions(runner, tmp_path):
         'DECODERS: dict[str, Callable] = {"row/1": decode}\n',
     )
     result = subprocess.run(
-        [sys.executable, str(runner), '--scan', str(source)],
+        [sys.executable, str(runner), '--skills', str(runner.parents[1]), '--scan', str(source)],
         cwd=tmp_path,
         capture_output=True,
         text=True,

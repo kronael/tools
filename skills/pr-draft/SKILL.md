@@ -68,8 +68,12 @@ TL;DR, then only the context a reviewer needs to assess the change.
    is already pushed (WISDOM § Git gates the push), open it with that title and
    body once steps 3 and 4 passed, as WISDOM § Git allows:
    ```
-   gh pr create --head <pushed head> --title '<title>' --body-file tmp/pr-body.md
+   gh pr create --head <pushed head> --title '<title>' --body-file tmp/pr-body.md [--label <name>]...
    ```
+   ALWAYS pass `--label` for each label in `gh label list` whose description
+   covers a top-level directory the diff touches or the kind of change (a
+   spec). NEVER create a label, and NEVER pass one that records review state
+   — a human sets it.
    A user who asked only for the text gets the block and no `gh pr create`.
 
 ## Setting the description on an EXISTING PR

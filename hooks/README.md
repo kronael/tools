@@ -1,8 +1,9 @@
 # Kronael Hooks
 
 Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
-unsafe-command blocks, a GitHub text gate, Markdown formatting, commit/diary
-stop checks and a session memory nudge. Scripts install to `~/.claude/hooks/`.
+unsafe-command blocks, a GitHub text gate, a reply length gate for brief mode,
+Markdown formatting, commit/diary stop checks and a session memory nudge.
+Scripts install to `~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
 its `hooks` block is merged into `~/.claude/settings.json` by the install
@@ -42,6 +43,13 @@ retains model and effort overrides for the selected skill. The word `learn`
 has no keyword route. `memory_nudge.py` requests its memory pass; the model
 must invoke the skill.
 
+While `~/.claude/settings.json` selects the caveman style, every prompt also
+gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
+`output-styles/caveman.md` § Budget, counted in 80-column lines. It runs
+before the reply, so nothing is sent twice. Codex gets the same reminder
+while the bridged style file exists, independent of Claude's selected style.
+A project's own `outputStyle` setting is not read.
+
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
 load before acting); a prompt that already invokes `/solve` suppresses it. A
@@ -56,10 +64,10 @@ one. And `SubagentStart`, where the brief is a new task by construction: the
 nudge lands before the subagent's first prompt, except for the harness's own
 agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
-A prompt with no nudge and no route gets no output: the output style and the
-wisdom file sit in the system prompt already, and `SKILL_KEYWORDS` holds skill
+Apart from the caveman line, a prompt with no nudge and no route gets no
+output: the output style and the wisdom file sit in the system prompt, and `SKILL_KEYWORDS` holds skill
 names and words that mean one skill only, never a plain verb such as `fix` or
-`test`. Meta prompts (hook/agent debugging) are skipped so the hook does not
+`test`. Meta prompts (hook/agent debugging) get only the caveman line, so the hook does not
 interfere with its own maintenance.
 
 ### pretool_nudge.py (PreToolUse)
@@ -126,6 +134,30 @@ repository without `.rumdl.toml`, a file outside any repository and a clone
 nested in an opted-in tree are never touched; Codex's `apply_patch` is not a
 write it formats. `software/code.md` § Layout and formatting owns the rule a
 repository adopts.
+
+### reply_gate.py (PreToolUse)
+
+Holds a brief-mode reply to the caveman ceiling before the user reads it. In
+brief mode (`claude --brief`, with `"defaultView": "chat"` in
+`~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
+assistant text stays in the detail view. The hook measures the call's
+`message` outside code fences in rendered 80-column lines, the unit of
+`../output-styles/caveman.md` § Budget, against that section's 20-line hard
+ceiling. It denies a longer
+message with the measured count, and Claude Code does not deliver a denied
+message, so the user reads one copy.
+
+Each denial names a random one-time key. A resend whose first line is
+`override <key>` passes at any length, and the hook removes that line from the
+delivered message. The key covers the next `SendUserMessage` call only: that
+call spends it, whatever it carries. An `override` line with any other key is
+plain text, measured with the rest of the message.
+
+Silent unless `~/.claude/settings.json` selects `caveman`; a project's own
+`outputStyle` setting and `/caveman off` are not read. Each call is measured
+alone, so several calls in one turn each get the ceiling. A session without
+the `SendUserMessage` tool never runs the hook. `test_reply_gate.py` pins the
+cap and the unit to the style file. Codex does not wire it.
 
 ### post_tool_nudge.sh (PostToolUse)
 

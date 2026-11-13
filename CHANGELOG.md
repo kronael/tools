@@ -1,5 +1,70 @@
 # Changelog
 
+## [v0.4.97] — 20261113
+
+> kronael v0.4.97 — shared reply budgets and PR labels
+>
+> Codex receives caveman reminders, Claude brief replies gain a length gate, and new PRs receive matching labels.
+>
+> • Caveman — uses 80-column terminal lines; Codex receives normal and meta prompt reminders.
+> • Brief replies — SendUserMessage supports a one-use length override; the live trial remains open.
+> • PR labels — the shared pr-draft skill applies labels from repository descriptions.
+> • Privacy — private session measurements leave BUGS.md; pushed history retains them.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Both agents share the 80-column caveman style and its answer-first, no-narration rules.
+- Claude's brief reply gate excludes fenced code, including longer matching fences.
+- Codex uses prompt reminders; its hooks offer no pre-display reply gate.
+- New PRs receive matching labels, excluding human-managed review states.
+- Private measurements are removed from BUGS.md; the original pushed message remains public.
+
+## [v0.4.96] — 20261113
+
+> kronael v0.4.96 — py-no-module-path has no exception
+>
+> The module-path lint now catches more ways to locate a module and no longer accepts an ignore comment.
+>
+> • More forms — `__spec__.origin`, `inspect.getfile`, `inspect.getsourcefile` and `getattr(x, '__file__')` are flagged.
+> • No ignore — the published hook also fails on any `# ast-grep-ignore: py-no-module-path` comment.
+> • Package data — read it with `importlib.resources.files('<package>')`.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/py/lints/rules.yml`: `py-no-module-path` covers the new forms and its message names no exception; new rule `py-no-module-path-ignore` matches the ignore comment. `Path(__file__).read_text()` and `read_bytes()` stay allowed.
+- `.pre-commit-hooks.yaml`: the `py-no-module-path` hook enforces both rule ids.
+- `skills/astgrep/check.py`: `--skills DIR` (default `~/.claude/skills`) replaces locating the rule packs from the script's own path; `make lints` passes `--skills skills`.
+- `skills/software/code.md`, `skills/astgrep/lints.md`: the installed-tool exception is removed.
+
+## [v0.4.95] — 20261113
+
+> kronael v0.4.95 — mutation runs on large changes
+>
+> mut_changed.py now handles a 35-file change: it mutates in batches, checks the syntax first and names a missing import path.
+>
+> • Batches — `--batch N` (default 8) bounds mutmut's memory per run; survivors and exit codes are unchanged.
+> • Syntax first — a file the running Python cannot parse fails in seconds, before any mutation.
+> • Import path — a collection failure shows mutmut's last lines and says to set the project's PYTHONPATH.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/software/mut_changed.py`: batching, up-front parse, import-error message; usage names PYTHONPATH.
+
+## [v0.4.94] — 20261113
+
+> kronael v0.4.94 — caveman budget reminder on prompts
+>
+> Each prompt points at the caveman reply budget.
+>
+> • Budget — the caveman style defines how rendered lines count.
+> • Prompt hook — adds one line naming the caveman budget to every prompt while the style is selected.
+> • No double replies — the reminder comes before the reply; nothing blocks a reply after it is shown.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `output-styles/caveman.md`: defines the rendered-line budget unit.
+- `prompt_nudge.py`: `CAVEMAN_NUDGE` on every prompt, meta prompts included, while `outputStyle` is `caveman`; never in Codex.
+
 ## [v0.4.93] — 20261113
 
 > kronael v0.4.93 — where a report's address may live
