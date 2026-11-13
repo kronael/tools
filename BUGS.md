@@ -422,9 +422,9 @@
 
 - **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
   `skills/writing/SKILL.md` § Language (upstream) and
-  `output-styles/caveman.md` § Language both carry the ASD-STE100 rule list;
+  `skills/caveman/SKILL.md` § Language both carry the ASD-STE100 rule list;
   v0.4.41's `writing` pointed at caveman instead. Two copies drift. The owner
-  keeps the rules in `caveman.md`. **Options:** (a) `writing` points at
+  keeps the rules in the `caveman` skill. **Options:** (a) `writing` points at
   caveman again; (b) caveman points at `writing`. **Default if nothing is
   decided:** both stand. No test — docs.
 
@@ -1211,13 +1211,14 @@
 ## Ruled not a defect
 
 - **CAVEMAN-BUDGET-HAS-NO-HOOK** (LOW, design) — not a defect. No hook
-  measures a plain reply against `output-styles/caveman.md` § Budget. A Stop
+  measures a plain reply against `skills/caveman/SKILL.md` § Budget. A Stop
   hook runs after the reply is on screen: a block cannot retract the reply, and
   the rewrite it requests is a second copy for the user to read. A
   `MessageDisplay` hook can replace the lines the terminal shows, but the model
   does not learn which lines the user read. `hooks/reply_gate.py` holds the
   ceiling on a brief-mode `SendUserMessage` call, where a denial reaches the
-  model before the user reads anything.
+  model before the user reads anything, and `skills/caveman/check.py` measures
+  a finished session.
 
 - **QEMUBOX-DOCKER-VM-BOUNDARY** (LOW, design) — not a defect. Guest Docker
   uses the VM's process and network boundaries. It needs no extra isolation

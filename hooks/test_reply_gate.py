@@ -42,11 +42,11 @@ def denied_key(out):
     return KEY.search(out['hookSpecificOutput']['permissionDecisionReason']).group(1)
 
 
-def test_cap_and_unit_match_the_style_file(pytestconfig) -> None:
-    style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
+def test_cap_and_unit_match_the_skill(pytestconfig) -> None:
+    skill = (pytestconfig.rootpath / '..' / 'skills' / 'caveman' / 'SKILL.md').read_text()
 
-    assert f'→ ≤{CAP_LINES}, hard ceiling' in style
-    assert f'Unit: the rendered {COLUMNS}-column terminal line' in style
+    assert re.search(rf'→ ≤{CAP_LINES} lines,[^→]*hard ceiling', skill)
+    assert f'Unit: the rendered {COLUMNS}-column terminal line' in skill
 
 
 def test_rendered_lines_wrap_at_80_columns() -> None:

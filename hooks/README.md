@@ -44,11 +44,11 @@ has no keyword route. `memory_nudge.py` requests its memory pass; the model
 must invoke the skill.
 
 While `~/.claude/settings.json` selects the caveman style, every prompt also
-gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
-`output-styles/caveman.md` § Budget, counted in 80-column lines. It runs
-before the reply, so nothing is sent twice. Codex gets the same reminder
-while the bridged style file exists, independent of Claude's selected style.
-A project's own `outputStyle` setting is not read.
+gets one line, `CAVEMAN_NUDGE`: reply by the `caveman` skill, and load the
+skill when its rules are not in context. The line holds no rule; the skill
+does. It runs before the reply, so nothing is sent twice. Codex gets the same
+line while the bridged style file exists, independent of Claude's selected
+style. A project's own `outputStyle` setting is not read.
 
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
@@ -65,7 +65,8 @@ nudge lands before the subagent's first prompt, except for the harness's own
 agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
 Apart from the caveman line, a prompt with no nudge and no route gets no
-output: the output style and the wisdom file sit in the system prompt, and `SKILL_KEYWORDS` holds skill
+output: the wisdom file and the output style reach the model without this
+hook, and `SKILL_KEYWORDS` holds skill
 names and words that mean one skill only, never a plain verb such as `fix` or
 `test`. Meta prompts (hook/agent debugging) get only the caveman line, so the hook does not
 interfere with its own maintenance.
@@ -141,9 +142,9 @@ Holds a brief-mode reply to the caveman ceiling before the user reads it. In
 brief mode (`claude --brief`, with `"defaultView": "chat"` in
 `~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
 assistant text stays in the detail view. The hook measures the call's
-`message` outside code fences in rendered 80-column lines, the unit of
-`../output-styles/caveman.md` § Budget, against that section's 20-line hard
-ceiling. It denies a longer
+`message` outside code fences in rendered lines, the unit of
+`../skills/caveman/SKILL.md` § Budget, against that section's hard ceiling.
+It denies a longer
 message with the measured count, and Claude Code does not deliver a denied
 message, so the user reads one copy.
 
@@ -157,7 +158,7 @@ Silent unless `~/.claude/settings.json` selects `caveman`; a project's own
 `outputStyle` setting and `/caveman off` are not read. Each call is measured
 alone, so several calls in one turn each get the ceiling. A session without
 the `SendUserMessage` tool never runs the hook. `test_reply_gate.py` pins the
-cap and the unit to the style file. Codex does not wire it.
+cap and the unit to the skill. Codex does not wire it.
 
 ### post_tool_nudge.sh (PostToolUse)
 

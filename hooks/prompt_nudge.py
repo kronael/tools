@@ -28,8 +28,7 @@ SUBAGENT_NUDGE = (
 )
 
 CAVEMAN_NUDGE = (
-    'caveman: fit the reply to its tier in ~/.claude/output-styles/caveman.md '
-    '§ Budget, counted in 80-column lines.'
+    'caveman: reply by the caveman skill; load the skill when its rules are not in context.'
 )
 
 HARNESS_AGENTS = frozenset({'Explore', 'Plan', 'claude-code-guide', 'statusline-setup'})

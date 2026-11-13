@@ -21,7 +21,8 @@ reuse the active change's record where it is.
 
 ## Response style
 
-ALWAYS apply the Response Style section in `~/.claude/CLAUDE.md` and read
-`~/.claude/output-styles/caveman.md` when it exists. The installed output
-style is the source of the caveman response rules for both agents.
+ALWAYS apply the Response Style section in `~/.claude/CLAUDE.md`. While
+`~/.claude/output-styles/caveman.md` exists, ALWAYS load the `caveman` skill
+before the first chat reply. The skill is the source of the caveman response
+rules for both agents.
 <!-- kronael:end -->

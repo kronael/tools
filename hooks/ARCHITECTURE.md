@@ -5,7 +5,7 @@
 ```
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent;
                                                       /solve on a new task;
-                                                      caveman budget line)
+                                                      caveman skill line)
                                  ──> local.py        (LOCAL.md on first prompt)
                                  ──> memory_nudge.py (session memory, once/session)
 
@@ -100,9 +100,9 @@ model; `systemMessage` reaches only the user.
 6. Emit the first exact route as `info: Invoke /<skill>.`.
 7. Append `CAVEMAN_NUDGE` to every prompt while `~/.claude/settings.json`
    selects the caveman style, or under Codex while the bridged style exists.
-   It names the § Budget tiers
-   and the 80-column unit; the rules stay in the style file. A prompt with no
-   nudge, no route and another style gets no output.
+   It names the `caveman` skill and tells the model to load it when its rules
+   are not in context; the rules stay in the skill. A prompt with no nudge, no
+   route and another style gets no output.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
 `~/.claude/state` (`lib/state.py`): its presence marks that a session's first
@@ -235,9 +235,8 @@ shorter message itself. A Stop hook sees a reply after the terminal shows it,
 so a block there adds a second copy. A `MessageDisplay` hook can replace the
 lines on screen, but the model does not learn which lines the user read.
 
-`CAP_LINES` is the 20-line hard ceiling of `../output-styles/caveman.md`
-§ Budget and `COLUMNS` its 80-column unit; `test_reply_gate.py` asserts the
-style file still states both.
+`CAP_LINES` is the hard ceiling of `../skills/caveman/SKILL.md` § Budget and
+`COLUMNS` its unit; `test_reply_gate.py` asserts the skill still states both.
 
 **Flow:**
 1. Silent for any other tool, a missing `message`, an `outputStyle` other
@@ -248,7 +247,7 @@ style file still states both.
    answer `updatedInput`, the call's input with that line and the blank lines
    after it removed from `message`, and no permission decision.
 3. Drop fenced code and link targets, then count rendered lines
-   (`ceil(len/80)` per source line, a blank line counts one). At or under the
+   (`ceil(len/COLUMNS)` per source line, a blank line counts one). At or under the
    ceiling: pass.
 4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
    deny. The reason gives the count, says the user has not seen the message,
@@ -257,12 +256,13 @@ style file still states both.
    cannot be stored means no denial.
 
 The hook cannot tell the fact, action and explanation tiers apart, so it holds
-only the ceiling; the 1-3 and ≤12 tiers stay with the style file. It measures
+only the ceiling; the other tiers stay with the skill. It measures
 one call: it cannot see that several calls belong to one reply. Codex does
 not wire it: `SendUserMessage` and `outputStyle` belong to Claude Code.
 Codex's [hook events](https://learn.chatgpt.com/docs/hooks) offer no
 pre-display reply gate; `Stop` requests continuation after a reply.
-The shared style and prompt reminder supply Codex's reply budget.
+The `caveman` skill, named by the prompt reminder, supplies Codex's reply
+budget.
 
 ### post_tool_nudge.sh (PostToolUse)
 
