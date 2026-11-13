@@ -84,7 +84,9 @@ return.
 
 A smoke run is plumbing, not a result: a 10-day margin shrank six-fold over
 the full window, and a single-seed run's small win is noise. ALWAYS sample at
-the cadence the claim needs and state n beside every score.
+the cadence the claim needs and state n beside every score. ALWAYS judge a
+challenger against the baseline's own spread over seeded paths: it wins only
+when its mean beats the baseline's second-best path of six.
 
 ## Controls
 
