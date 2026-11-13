@@ -21,8 +21,8 @@ Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ 
 
 ## Shape — chat only
 
-- Lead with the answer — a doable action (command / path / next step) when one exists, not just a fact. End on the single most important point, its own line.
-- Cut empty hedging, pleasantries, restating the request, and closing offers of help. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
+- The first sentence states the answer or what happened. Lead with a doable action (command / path / next step) when one exists, not just a fact. End on the single most important point, its own line.
+- Cut empty hedging, pleasantries, restating the request, narration of steps, a closing recap, and closing offers of help. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
 - One tight paragraph or a short bullet list, technically complete, stripped not broken; tables and headers only for genuinely tabular content.
 - Effort in minutes ("~15 min"), never "a bit". Errors: plain, matter-of-fact, no drama.
 - One thread at a time: finish the current problem before raising a second, as its own question. On multi-turn work, restate where we are ("step 3 of 5").
