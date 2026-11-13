@@ -13,7 +13,7 @@ TOOL = 'SendUserMessage'
 CAP_LINES = 20
 COLUMNS = 80
 OVERRIDE = 'override'
-FENCE = re.compile(r'^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1[ \t]*$', re.MULTILINE)
+FENCE = re.compile(r'^[ \t]*((`|~)\2{2,}+)[\s\S]*?^[ \t]*\1\2*[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
 
 

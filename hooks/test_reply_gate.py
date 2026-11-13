@@ -65,6 +65,17 @@ def test_rendered_lines_skip_code_fences() -> None:
     assert rendered_lines('a\n```\nx\n```\nb\n```\ny\n```\nc') == 5
 
 
+@pytest.mark.parametrize('marker', ['`', '~'])
+def test_long_fences_require_a_matching_closer(marker) -> None:
+    opening = marker * 4
+    other = '~' if marker == '`' else '`'
+    for closing in opening, marker * 5:
+        assert rendered_lines(f'{opening}\n{OVER}\n{closing}') == 1
+    for closing in marker * 3, other * 4:
+        assert rendered_lines(f'{opening}\n{OVER}\n{closing}') == CAP_LINES + 3
+        assert rendered_lines(f'{opening}\n{closing}\n{OVER}\n{opening}\nDone.') == 1
+
+
 def test_rendered_lines_count_a_link_by_its_text() -> None:
     assert rendered_lines('[' + 'x' * 80 + '](https://example.com/' + 'x' * 200 + ')') == 1
     assert rendered_lines('[' + 'x' * 81 + '](https://example.com)') == 2
