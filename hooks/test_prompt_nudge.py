@@ -381,7 +381,9 @@ def test_caveman_style_adds_the_budget_line_to_every_prompt(monkeypatch, capsys,
     assert run(monkeypatch, capsys, 'now wire it into main') == prompt_nudge.CAVEMAN_NUDGE
 
 
-def test_other_style_gets_no_budget_line(monkeypatch, capsys) -> None:
+def test_other_style_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
+    (tmp_path / '.claude').mkdir()
+    (tmp_path / '.claude' / 'settings.json').write_text('{"outputStyle": "default"}')
     run(monkeypatch, capsys, 'add a health endpoint')
     assert prompt_nudge.CAVEMAN_NUDGE not in run(monkeypatch, capsys, 'now wire it into main')
 
@@ -392,7 +394,9 @@ def test_codex_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
     monkeypatch.setattr('sys.stdin', io.StringIO(json.dumps(data)))
     with pytest.raises(SystemExit):
         main()
-    assert prompt_nudge.CAVEMAN_NUDGE not in capsys.readouterr().out
+    out = capsys.readouterr().out.strip()
+    text = json.loads(out)['hookSpecificOutput']['additionalContext'] if out else ''
+    assert prompt_nudge.CAVEMAN_NUDGE not in text
 
 
 def test_budget_line_points_at_the_style_rules() -> None:
@@ -400,3 +404,28 @@ def test_budget_line_points_at_the_style_rules() -> None:
     assert '## Budget' in style
     assert 'rendered 40-column line' in style
     assert '40-column lines' in prompt_nudge.CAVEMAN_NUDGE
+
+
+def test_budget_line_follows_the_other_nudges(monkeypatch, capsys, tmp_path) -> None:
+    select_caveman(tmp_path)
+    text = run(monkeypatch, capsys, 'ship this feature')
+    assert text.startswith(prompt_nudge.SOLVE_NUDGE)
+    assert '/ship' in text
+    assert text.endswith(prompt_nudge.CAVEMAN_NUDGE)
+
+
+def test_meta_prompt_gets_only_the_budget_line(monkeypatch, capsys, tmp_path) -> None:
+    select_caveman(tmp_path)
+    assert run(monkeypatch, capsys, 'fix the stop hook') == prompt_nudge.CAVEMAN_NUDGE
+
+
+def test_malformed_settings_give_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
+    (tmp_path / '.claude').mkdir()
+    (tmp_path / '.claude' / 'settings.json').write_text('[')
+    run(monkeypatch, capsys, 'add a health endpoint')
+    assert prompt_nudge.CAVEMAN_NUDGE not in run(monkeypatch, capsys, 'now wire it into main')
+
+
+def test_budget_line_is_one_short_pointer() -> None:
+    assert '\n' not in prompt_nudge.CAVEMAN_NUDGE
+    assert len(prompt_nudge.CAVEMAN_NUDGE) <= 120

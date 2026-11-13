@@ -215,7 +215,11 @@ def main():
     if not isinstance(prompt, str):
         sys.exit(0)
 
+    caveman = data.get('harness') != 'codex' and caveman_selected(os.path.expanduser('~'))
+
     if any(re.search(p, prompt, re.IGNORECASE) for p in META_PATTERNS):
+        if caveman:
+            emit('UserPromptSubmit', CAVEMAN_NUDGE)
         sys.exit(0)
 
     parts = []
@@ -234,7 +238,7 @@ def main():
     if matched:
         parts.append(f'info: Invoke {matched} (the prompt says "{trigger}").')
 
-    if data.get('harness') != 'codex' and caveman_selected(os.path.expanduser('~')):
+    if caveman:
         parts.append(CAVEMAN_NUDGE)
 
     if parts:

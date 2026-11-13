@@ -45,7 +45,8 @@ must invoke the skill.
 While `~/.claude/settings.json` selects the caveman style, every prompt also
 gets one line, `CAVEMAN_NUDGE`: fit the reply to its tier in
 `output-styles/caveman.md` § Budget, counted in 40-column lines. It runs
-before the reply, so nothing is sent twice; Codex never gets it.
+before the reply, so nothing is sent twice. Codex never gets it, and a
+project's own `outputStyle` setting is not read.
 
 It also nudges `/solve` at the three points where a new task starts that a
 hook can see. The first non-empty prompt of a session (triage + diary/memory
@@ -61,10 +62,10 @@ one. And `SubagentStart`, where the brief is a new task by construction: the
 nudge lands before the subagent's first prompt, except for the harness's own
 agents (`HARNESS_AGENTS`: `Explore`, `Plan`, …), which follow no skill.
 
-A prompt with no nudge and no route gets no output: the output style and the
-wisdom file sit in the system prompt already, and `SKILL_KEYWORDS` holds skill
+Apart from the caveman line, a prompt with no nudge and no route gets no
+output: the output style and the wisdom file sit in the system prompt, and `SKILL_KEYWORDS` holds skill
 names and words that mean one skill only, never a plain verb such as `fix` or
-`test`. Meta prompts (hook/agent debugging) are skipped so the hook does not
+`test`. Meta prompts (hook/agent debugging) get only the caveman line, so the hook does not
 interfere with its own maintenance.
 
 ### pretool_nudge.py (PreToolUse)

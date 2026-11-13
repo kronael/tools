@@ -75,7 +75,8 @@ model; `systemMessage` reaches only the user.
 0. On `SubagentStart`, emit `SUBAGENT_NUDGE` (run `/solve` on the brief) and
    stop; silent for `HARNESS_AGENTS`. The parent's first-prompt stamp is not
    touched.
-1. Skip meta prompts (hook/agent debugging) to avoid self-interference.
+1. Skip meta prompts (hook/agent debugging) to avoid self-interference;
+   they get only `CAVEMAN_NUDGE`.
 2. On the first non-empty prompt of a session, prepend `SOLVE_NUDGE` (run
    `/solve` to triage before acting), unless the prompt already invokes
    `/solve`. On a later prompt, prepend `IDLE_NUDGE` when `IDLE_MINUTES` have

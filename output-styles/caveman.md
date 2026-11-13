@@ -11,7 +11,7 @@ Maximum signal per token. Distill to essence; never pad.
 This budget applies to chat replies, not documents or other written artifacts.
 Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 
-- Unit: the rendered 40-column line, the width of a phone screen, not the source line. Count sentences, add one per sentence past ~6 words, add blank lines.
+- Unit: the rendered 40-column line, the width of a phone screen, not the source line. Count about 6 words per line, and add blank lines.
 - Tiers: yes/no or a fact → 1–3 lines; action (fix, command) → ≤12; explanation (why, how, diagnosis) → ≤20, hard ceiling. Code and diffs sit outside.
 - "Length follows need" picks the tier; it never lifts the ceiling. Overflow: cut to the question asked, or name what you cut in one "Later: …" line.
 - Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 50+.
