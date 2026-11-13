@@ -10,8 +10,7 @@ kronael/sync/               the only plugin-exposed skill — sync procedure
 skills/                     bundle — skills (languages, workflow, domain)
 agents/                     bundle — specialized task agents
 hooks/                      bundle — lifecycle hook scripts
-output-styles/              bundle — response output style (caveman)
-commands/                   bundle — slash commands (caveman)
+output-styles/              bundle — response output style (caveman), a pointer at the caveman skill
 settings-recommended.json   user-side settings to merge into ~/.claude/settings.json
 codex-hooks.json            Codex hook wiring, copied to ~/.codex/hooks.json
 arizuko.yml                 arizuko package manifest (kronael-tools)
@@ -30,9 +29,10 @@ udfix/, kvs/, rig/, ...   standalone CLI tools (each independent; inventory in R
 
 ## Sync paths, one source
 
-The `skills/`, `agents/`, `hooks/`, `output-styles/` and `commands/`
-directories at repo root are the bundle.
-Every sync path puts them into `~/.claude/`.
+The `skills/`, `agents/`, `hooks/` and `output-styles/` directories at repo
+root are the bundle. Every sync path puts them into `~/.claude/`. The bundle
+ships no slash command; sync owns `~/.claude/commands/` and rebuilds it from
+the keep-list.
 
 **Claude plugin path** — Claude Code's marketplace clones this repo into its
 plugin cache. `/kronael:sync` syncs the bundle into `~/.claude/` from CWD

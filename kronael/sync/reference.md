@@ -126,7 +126,7 @@ WISDOM = 'skills/global/SKILL.md'
 RETIRED = {  # names the bundle shipped and dropped
     *(f'skills/{n}' for n in (
         'astra', 'fable', 'haiku', 'luna', 'opus', 'sonnet', 'terra',
-        '13yo-eval', 'agent-browser', 'assess', 'bash', 'caveman', 'ceo-eval', 'con',
+        '13yo-eval', 'agent-browser', 'assess', 'bash', 'ceo-eval', 'con',
         'cont', 'create-architecture-diagram', 'create-ascii-art', 'credits',
         'create-ascii-video', 'create-claude-design', 'create-code-presentation',
         'create-design-md', 'create-eval', 'create-excalidraw', 'create-humanizer',
@@ -142,8 +142,8 @@ RETIRED = {  # names the bundle shipped and dropped
     )),
     'agents/distill.md', 'agents/improve.md', 'agents/learn.md', 'agents/readme.md',
     'agents/refine.md', 'agents/visual.md',
-    'commands/improve.md', 'commands/learn.md', 'commands/readme.md', 'commands/refine.md',
-    'commands/visual.md',
+    'commands/caveman.md', 'commands/improve.md', 'commands/learn.md', 'commands/readme.md',
+    'commands/refine.md', 'commands/visual.md',
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'hooks/spec_lint.py', 'hooks/test_spec_lint.py',
     'hooks/style_lint.py', 'hooks/test_style_lint.py',
@@ -336,7 +336,7 @@ die() { echo "Swap refused: $*" >&2; exit 1; }
   die "a .kronael-sync-* dir is left in $L: step 0"
 python3 "$RUN/keep.py" || die "the keep-list check failed (the lines above)"
 mkdir -p "$L"
-mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-old"
+mkdir "$L/.kronael-sync-new" "$L/.kronael-sync-new/commands" "$L/.kronael-sync-old"
 aside() {
   mv "$L/.kronael-sync-new" "$RUN/failed-$$"
   rmdir "$L/.kronael-sync-old"
@@ -345,7 +345,7 @@ aside() {
 trap aside EXIT
 tar -C "$SRC" --exclude=__pycache__ --exclude=.pytest_cache --exclude=.ruff_cache \
   --exclude=.claude --exclude=skills/global \
-  -cf - skills agents hooks output-styles commands RECLAUDE.md \
+  -cf - skills agents hooks output-styles RECLAUDE.md \
   | tar -C "$L/.kronael-sync-new" -xf -
 awk 'n>=2 && (p || NF) {p=1; print} /^---$/{n++}' "$SRC/skills/global/SKILL.md" \
   > "$L/.kronael-sync-new/CLAUDE.md"

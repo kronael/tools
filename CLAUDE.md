@@ -17,7 +17,7 @@ The **kronael toolkit** — three things in one repo:
    them. The tool inventory lives in `README.md` — when adding a tool, add
    its row there.
 2. **A Claude Code bundle** (`skills/`, `agents/`, `hooks/`, `output-styles/`,
-   `commands/`, `settings-recommended.json`, `RECLAUDE.md`) distributed as a
+   `settings-recommended.json`, `RECLAUDE.md`) distributed as a
    plugin and deployed into a user's `~/.claude/` by a sync step.
 3. **A thin Codex sync bridge** (`plugins/kronael/` plus
    `.agents/plugins/`) exposing one Codex skill that runs the same sync

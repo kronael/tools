@@ -61,7 +61,7 @@ set. Other settings still confirm before applying.
 ## Steps
 
 0. **Preflight.** Verify at `SRC`: `skills/ agents/ hooks/ hooks/lib/
-   output-styles/ commands/ codex-hooks.json settings-recommended.json
+   output-styles/ codex-hooks.json settings-recommended.json
    RECLAUDE.md codex/AGENTS.md` — missing means the wrong directory: stop and
    ask. No `kronael@*` in `~/.claude/plugins/installed_plugins.json` → note
    `/kronael:sync` won't resolve; the user says "sync" in this repo. A leftover

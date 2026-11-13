@@ -428,6 +428,17 @@
   caveman again; (b) caveman points at `writing`. **Default if nothing is
   decided:** both stand. No test — docs.
 
+- **SYNC-COMMANDS-DIR-SHIPS-EMPTY** (LOW, design) — owner decision. The bundle
+  ships no slash command, and `kronael/sync` owns `~/.claude/commands/` all the
+  same: § Swap builds an empty `commands/` and copies the keep-list entries
+  into it, and `RETIRED` lists six `commands/*.md` names. **Options:** (a) drop
+  `commands` from `keep.DIRS` and the swap `PATHS`, and the six `RETIRED`
+  lines with it. `~/.claude/commands/` is then the user's own and sync never
+  reads it. Cost: a `.keep` line under `commands/` turns into `BADKEEP`, and an
+  install that still has `commands/caveman.md` keeps that file (the `caveman`
+  skill wins the `/caveman` name). (b) stay. **Default if nothing is
+  decided:** (b). No test — design.
+
 ## Codex bridge
 
 - **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
