@@ -16,10 +16,11 @@ conclusion standing says so in its verdict — NEVER re-run a comparison
 silently. Prose numbers follow `traps.md`.
 
 A report component's page (a periodic or selection report) is the exception:
-ALWAYS show only what the run computed — the result table, then a few lines of
-method at the bottom. NEVER put lineage, history or repeated caveats on the
-page; lineage stays in `summary.yml`. At phone width ALWAYS move columns to
-`summary.yml` before the table needs to scroll.
+ALWAYS show only what the run computed — one sentence of what was measured,
+one chart, one table, then one plain line at the bottom for each measure the
+page shows ("p99: 99 of 100 values are below it"). NEVER put lineage, history
+or repeated caveats on the page; lineage stays in `summary.yml`. At phone width
+ALWAYS move columns to `summary.yml` before the table needs to scroll.
 
 ## Build
 
