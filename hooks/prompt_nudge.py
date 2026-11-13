@@ -5,6 +5,7 @@ import re
 import sys
 import time
 
+from lib.caveman import caveman_selected
 from lib.state import hook_event
 from lib.state import session_state
 
@@ -170,14 +171,6 @@ def minutes_since_prompt(session_id):
     except OSError:
         return None
     return (time.time() - previous) / 60
-
-
-def caveman_selected(home):
-    try:
-        with open(os.path.join(home, '.claude', 'settings.json')) as f:
-            return json.load(f).get('outputStyle') == 'caveman'
-    except (OSError, ValueError, AttributeError):
-        return False
 
 
 def is_routed(prompt, matched):

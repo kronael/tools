@@ -414,7 +414,8 @@
   v0.4.41 hooks, wiring, gate and skills on the owner's word that the caveman
   style and its hooks stay as refined here; the merge commit names every path.
   The redesign lives at `origin/master` 3f4c9be77383943d79eaea51c3bff4858a431807.
-  This line has no reply-budget hook (CAVEMAN-BUDGET-HAS-NO-HOOK).
+  This line has no reply-budget hook for a plain reply
+  (CAVEMAN-BUDGET-HAS-NO-HOOK).
   **Options:** (a) adopt the rest of the redesign (`kvs`,
   `lib/reminder.py`, the escalation levels); (b) stay on the v0.4.41 hooks.
   **Default if nothing is decided:** (b). No test — design.
@@ -458,14 +459,15 @@
 - **REPLY-GATE-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
   trial. `hooks/reply_gate.py` denies a brief-mode `SendUserMessage` over the
   20-line caveman ceiling, and `test_reply_gate.py` covers the script. No
-  brief-mode session has run it. Six facts are read from Claude Code 2.1.323
+  brief-mode session has run it. Four facts are read from Claude Code 2.1.323
   and not observed: the account is entitled to brief mode, without which
   `--brief` does nothing; PreToolUse hooks run for `SendUserMessage`; the chat
-  view hides a denied message; the model's next message fits; an
-  `updatedInput` answer replaces the delivered message, so the user does not
-  read the `override <key>` line; the model sends that line only when the
-  answer needs the length. The measurements
-  behind the gate come from plain replies: across 8484 final replies under the
+  view hides a denied message; an `updatedInput` answer replaces the delivered
+  message, so the user does not read the `override <key>` line. Two more are
+  the model's to show: its next message fits, and it copies the `override
+  <key>` line exactly and only when the answer needs the length. The
+  measurements behind the gate come from plain replies counted in 80-column
+  lines: across 8484 final replies under the
   style, a per-prompt reminder and a Stop block, 34% to 53% passed 20 lines;
   a rewrite after a measured Stop block kept 88% of the words; a relay of a
   subagent message ran 1.2 times its length. **Check:** set `"defaultView":
@@ -475,8 +477,8 @@
   resend opens with `override <key>` and the chat view shows the message
   without that line. **Options:** (a) keep the wiring after a passed trial; (b)
   remove `reply_gate.py`, its test and its `settings-recommended.json` entry.
-  **Default if nothing is decided:** the wiring stays; it never runs outside
-  brief mode.
+  **Default if nothing is decided:** the wiring stays; a session without the
+  `SendUserMessage` tool never runs it.
 
 - **HOOKS-MUTATION-RUN-HAS-NO-PYPROJECT** (LOW, config) — CONFIRMED 2026-11-13.
   `skills/software/mut_changed.py` exits 2 with `no pyproject.toml` when run

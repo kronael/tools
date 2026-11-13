@@ -140,8 +140,9 @@ Holds a brief-mode reply to the caveman ceiling before the user reads it. In
 brief mode (`claude --brief`, with `"defaultView": "chat"` in
 `~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
 assistant text stays in the detail view. The hook measures the call's
-`message` in rendered 80-column lines outside code fences against the 20-line
-hard ceiling of `../output-styles/caveman.md` § Budget. It denies a longer
+`message` outside code fences in rendered 40-column lines, the unit of
+`../output-styles/caveman.md` § Budget, against that section's 20-line hard
+ceiling. It denies a longer
 message with the measured count, and Claude Code does not deliver a denied
 message, so the user reads one copy.
 
@@ -151,9 +152,11 @@ delivered message. The key covers the next `SendUserMessage` call only: that
 call spends it, whatever it carries. An `override` line with any other key is
 plain text, measured with the rest of the message.
 
-Silent unless `~/.claude/settings.json` selects `caveman`. Outside brief mode
-the tool does not exist and the hook never runs. `test_reply_gate.py` pins the
-cap to the style file. Codex does not wire it.
+Silent unless `~/.claude/settings.json` selects `caveman`; a project's own
+`outputStyle` setting and `/caveman off` are not read. Each call is measured
+alone, so several calls in one turn each get the ceiling. A session without
+the `SendUserMessage` tool never runs the hook. `test_reply_gate.py` pins the
+cap and the unit to the style file. Codex does not wire it.
 
 ### post_tool_nudge.sh (PostToolUse)
 

@@ -5,14 +5,14 @@ import sys
 
 import pytest
 from reply_gate import CAP_LINES
+from reply_gate import COLUMNS
 from reply_gate import check
 from reply_gate import rendered_lines
 
-WIDE = 'This sentence fills more than one rendered line of the terminal because it runs on and on. '
 OVER = '\n'.join(f'Line {n}.' for n in range(CAP_LINES + 1))
 AT_CAP = '\n'.join(f'Line {n}.' for n in range(CAP_LINES))
 SHORT = 'Done. Run `make test`.'
-KEY = re.compile(r'`override ([0-9a-f]{8})`')
+KEY = re.compile(r'That line is: override ([0-9a-f]{8})$')
 
 
 @pytest.fixture
@@ -42,20 +42,33 @@ def denied_key(out):
     return KEY.search(out['hookSpecificOutput']['permissionDecisionReason']).group(1)
 
 
-def test_cap_matches_the_style_file(pytestconfig) -> None:
-    style = pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md'
+def test_cap_and_unit_match_the_style_file(pytestconfig) -> None:
+    style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
 
-    assert f'→ ≤{CAP_LINES}, hard ceiling' in style.read_text()
+    assert f'→ ≤{CAP_LINES}, hard ceiling' in style
+    assert f'Unit: the rendered {COLUMNS}-column line' in style
 
 
-def test_rendered_lines_wrap_at_80_columns_and_skip_fences() -> None:
-    assert rendered_lines(WIDE * 2) == 3
-    assert rendered_lines('x' * 80) == 1
-    assert rendered_lines('x' * 81) == 2
+def test_rendered_lines_wrap_at_40_columns() -> None:
+    assert rendered_lines('x' * 40) == 1
+    assert rendered_lines('x' * 41) == 2
+    assert rendered_lines('x' * 81) == 3
     assert rendered_lines('a\n\nb') == 3
+
+
+def test_rendered_lines_skip_code_fences() -> None:
     assert rendered_lines('Run it.\n```sh\n' + OVER + '\n```\nDone.') == 3
     assert rendered_lines('Run it.\n```sh\n' + OVER + '\n```') == 1
-    assert rendered_lines('[' + 'x' * 80 + '](https://example.com/' + 'x' * 200 + ')') == 1
+    assert rendered_lines('Run it.\n~~~\n' + OVER + '\n~~~') == 1
+    assert rendered_lines('Run it.\n  ```\n' + OVER + '\n  ```') == 1
+    assert rendered_lines('Run it.\n```\n' + OVER + '\n```  \nDone.') == 3
+    assert rendered_lines('a\n```\nx\n```\nb\n```\ny\n```\nc') == 5
+
+
+def test_rendered_lines_count_a_link_by_its_text() -> None:
+    assert rendered_lines('[' + 'x' * 40 + '](https://example.com/' + 'x' * 200 + ')') == 1
+    assert rendered_lines('[' + 'x' * 41 + '](https://example.com)') == 2
+    assert rendered_lines('[' + 'x' * 40 + ']()') == 1
 
 
 def test_a_message_within_the_ceiling_passes(home) -> None:
@@ -69,7 +82,7 @@ def test_a_message_over_the_ceiling_is_denied_with_the_measured_count(home) -> N
     assert decision(out) == 'deny'
     assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
     text = out['hookSpecificOutput']['permissionDecisionReason']
-    assert f'{CAP_LINES + 1} rendered lines' in text
+    assert f'{CAP_LINES + 1} rendered 40-column lines' in text
     assert f'ceiling is {CAP_LINES}' in text
 
 
@@ -154,10 +167,12 @@ def test_other_tools_and_malformed_input_pass(home, data) -> None:
 
 
 def test_the_gate_is_silent_under_another_output_style(home) -> None:
-    (home / '.claude' / 'settings.json').write_text(json.dumps({'outputStyle': 'default'}))
-    assert check(payload(OVER), home) is None
+    settings = home / '.claude' / 'settings.json'
+    for text in json.dumps({'outputStyle': 'default'}), 'not json', '[]':
+        settings.write_text(text)
+        assert check(payload(OVER), home) is None
 
-    (home / '.claude' / 'settings.json').unlink()
+    settings.unlink()
     assert check(payload(OVER), home) is None
 
 

@@ -6,11 +6,12 @@ import re
 import secrets
 import sys
 
+from lib.caveman import caveman_selected
 from lib.state import session_state
 
 TOOL = 'SendUserMessage'
-STYLE = 'caveman'
 CAP_LINES = 20
+COLUMNS = 40
 OVERRIDE = 'override'
 FENCE = re.compile(r'^[ \t]*(```|~~~)[\s\S]*?^[ \t]*\1[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
@@ -18,15 +19,9 @@ LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
 
 def rendered_lines(message):
     text = LINK.sub(r'\1', FENCE.sub('', message)).strip()
-    return sum(1 if not line.strip() else math.ceil(len(line) / 80) for line in text.split('\n'))
-
-
-def selected_style(home):
-    try:
-        with open(os.path.join(home, '.claude', 'settings.json')) as f:
-            return json.load(f).get('outputStyle')
-    except (OSError, ValueError, AttributeError):
-        return None
+    return sum(
+        1 if not line.strip() else math.ceil(len(line) / COLUMNS) for line in text.split('\n')
+    )
 
 
 def take_key(stamp):
@@ -51,19 +46,19 @@ def issue_key(stamp):
 
 def reason(lines, key):
     return (
-        f'Not delivered: the message is {lines} rendered lines and the caveman '
-        f'ceiling is {CAP_LINES}. The user has not seen it. Send only the answer '
-        f'to what the user asked, in {CAP_LINES} lines or fewer. Leave the status '
-        'of other work, the evidence and the next steps in plain text, and name '
-        'what you left out in one closing line. Code fences do not count. If the '
-        f'answer needs the length, resend the message with `{OVERRIDE} {key}` as '
-        'its first line: the gate removes that line, and the key works once, on '
-        'the next message only.'
+        f'Not delivered: the message is {lines} rendered {COLUMNS}-column lines '
+        f'and the caveman ceiling is {CAP_LINES}. The user has not seen it. Send '
+        f'only the answer to what the user asked, in {CAP_LINES} lines or fewer. '
+        'Leave the status of other work, the evidence and the next steps in '
+        'plain text, and name what you left out in one closing line. Code fences '
+        'do not count. If the answer needs the length, resend the message with '
+        'one more line at its top. The gate removes that line, and its key works '
+        f'once, on the next message only. That line is: {OVERRIDE} {key}'
     )
 
 
 def check(data, home):
-    if data.get('tool_name') != TOOL or selected_style(home) != STYLE:
+    if data.get('tool_name') != TOOL or not caveman_selected(home):
         return None
     tool_input = data.get('tool_input')
     message = tool_input.get('message') if isinstance(tool_input, dict) else None

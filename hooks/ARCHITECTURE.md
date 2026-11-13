@@ -36,12 +36,16 @@ first runs through `codex_hook.py`.
 `state.py` — per-session throttle stamp paths, the state root, and
 `hook_event(data)`, which reads the event key across all three spellings.
 
-`local.py`, `memory_nudge.py`, `prompt_nudge.py`, `pretool_nudge.py` and
-`reclaude.py` import it as `lib.state`, resolved from the hook script's own
-directory (`sys.path[0]`), so an install that omits the directory tracebacks
-on every prompt and every tool call. `stop.py`
+`local.py`, `memory_nudge.py`, `prompt_nudge.py`, `pretool_nudge.py`,
+`reclaude.py` and `reply_gate.py` import it as `lib.state`, resolved from the
+hook script's own directory (`sys.path[0]`), so an install that omits the
+directory tracebacks on every prompt and every tool call. `stop.py`
 imports nothing from it: it carries its own `hook_event`, which checks
 `KRONAEL_HOOK_EVENT` before the three payload keys.
+
+`caveman.py` — `caveman_selected(home)`: whether `~/.claude/settings.json`
+selects the caveman output style. `prompt_nudge.py` and `reply_gate.py` import
+it as `lib.caveman`.
 
 ### codex_hook.py (Codex adapter)
 
@@ -231,7 +235,8 @@ so a block there adds a second copy. A `MessageDisplay` hook can replace the
 lines on screen, but the model does not learn which lines the user read.
 
 `CAP_LINES` is the 20-line hard ceiling of `../output-styles/caveman.md`
-§ Budget; `test_reply_gate.py` asserts the style file still states it.
+§ Budget and `COLUMNS` its 40-column unit; `test_reply_gate.py` asserts the
+style file still states both.
 
 **Flow:**
 1. Silent for any other tool, a missing `message`, an `outputStyle` other
@@ -242,7 +247,7 @@ lines on screen, but the model does not learn which lines the user read.
    answer `updatedInput`, the call's input with that line and the blank lines
    after it removed from `message`, and no permission decision.
 3. Drop fenced code and link targets, then count rendered lines
-   (`ceil(len/80)` per source line, a blank line counts one). At or under the
+   (`ceil(len/40)` per source line, a blank line counts one). At or under the
    ceiling: pass.
 4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
    deny. The reason gives the count, says the user has not seen the message,
@@ -251,7 +256,8 @@ lines on screen, but the model does not learn which lines the user read.
    cannot be stored means no denial.
 
 The hook cannot tell the fact, action and explanation tiers apart, so it holds
-only the ceiling; the 1-3 and ≤12 tiers stay with the style file. Codex does
+only the ceiling; the 1-3 and ≤12 tiers stay with the style file. It measures
+one call: it cannot see that several calls belong to one reply. Codex does
 not wire it: `SendUserMessage` and `outputStyle` belong to Claude Code.
 
 ### post_tool_nudge.sh (PostToolUse)
