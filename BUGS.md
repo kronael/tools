@@ -478,6 +478,18 @@
   **Default if nothing is decided:** the wiring stays; it never runs outside
   brief mode.
 
+- **HOOKS-MUTATION-RUN-HAS-NO-PYPROJECT** (LOW, config) — CONFIRMED 2026-11-13.
+  `skills/software/mut_changed.py` exits 2 with `no pyproject.toml` when run
+  from `hooks/`: the hooks tests take their root from `hooks/pytest.ini`, and
+  no `[tool.mutmut]` names the hook scripts as `source_paths`. `refine` →
+  `diff.md` § Mutation run on changed core logic requires that run for a
+  changed hook, so it cannot pass there. **Fix:** add `hooks/pyproject.toml`
+  with `[tool.mutmut]` `source_paths` and `also_copy` (`lib`, `pytest.ini`),
+  and take the tests that read `pytestconfig.rootpath` out of the mutation
+  run, because `mutants/` moves that root. Reproduce with
+  `cd hooks && python3 ../skills/software/mut_changed.py origin/master`; no
+  test — config.
+
 - **HOOKS-MODULE-RELATIVE-PATHS** (LOW, config) — CONFIRMED 2026-11-12.
   `py-no-module-path` reports ten paths built from a module's location:
   `hooks/skill_frontmatter_lint.py:75` reads `CHANGELOG.md` from
