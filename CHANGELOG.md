@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.91] — 20261113
+
+> kronael v0.4.91 — qemubox image builds on Node 26
+>
+> The qemubox image build failed at the pnpm step, because Node 26 ships without corepack; the build now installs it.
+>
+> • qemubox image — installs corepack with npm, so corepack enable and pnpm work again.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- qemubox `Dockerfile`: `npm install -g corepack` after the Node LTS install.
+
 ## [v0.4.90] — 20261112
 
 > kronael v0.4.90 — mutation testing on the changed lines
