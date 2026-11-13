@@ -465,12 +465,8 @@
   view hides a denied message; an `updatedInput` answer replaces the delivered
   message, so the user does not read the `override <key>` line. Two more are
   the model's to show: its next message fits, and it copies the `override
-  <key>` line exactly and only when the answer needs the length. The
-  measurements behind the gate come from plain replies counted in 80-column
-  lines: across 8484 final replies under the
-  style, a per-prompt reminder and a Stop block, 34% to 53% passed 20 lines;
-  a rewrite after a measured Stop block kept 88% of the words; a relay of a
-  subagent message ran 1.2 times its length. **Check:** set `"defaultView":
+  <key>` line exactly and only when the answer needs the length.
+  **Check:** set `"defaultView":
   "chat"`, start `claude --brief`, ask for a long explanation, and read the
   transcript: the over-long `SendUserMessage` call carries the denial and its
   key, and the next call fits. Then ask for a reply that needs the length: the
