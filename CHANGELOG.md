@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.4.93] — 20261113
+
+> kronael v0.4.93 — where a report's address may live
+>
+> A report's public address may sit in the web server's config and the host's facts, and nowhere else.
+>
+> • research report.md — never repeat a report's address in a repo's docs, code or commits.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/research/report.md`: the address lives in the deployment config and the host's facts.
+
 ## [v0.4.92] — 20261113
 
 > kronael v0.4.92 — rules for HTML report pages
