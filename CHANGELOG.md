@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.4.95] — 20261113
+
+> kronael v0.4.95 — mutation runs on large changes
+>
+> mut_changed.py now handles a 35-file change: it mutates in batches, checks the syntax first and names a missing import path.
+>
+> • Batches — `--batch N` (default 8) bounds mutmut's memory per run; survivors and exit codes are unchanged.
+> • Syntax first — a file the running Python cannot parse fails in seconds, before any mutation.
+> • Import path — a collection failure shows mutmut's last lines and says to set the project's PYTHONPATH.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/software/mut_changed.py`: batching, up-front parse, import-error message; usage names PYTHONPATH.
+
 ## [v0.4.94] — 20261113
 
 > kronael v0.4.94 — caveman budget fits a phone
