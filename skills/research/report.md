@@ -24,27 +24,23 @@ ALWAYS move columns to `summary.yml` before the table needs to scroll.
 
 ## Build
 
-- ALWAYS make a report its own project — NEVER put its packages into another
-  component's `pyproject.toml` or run it on another component's environment.
-  It is a package or one PEP 723 script as `software` → `uvx-tools.md`
-  decides, where the repo allows a script. A package has its own
-  `pyproject.toml` and the repo's standard component make targets (setup, type
-  checks, tests), runs as its CLI with `uv run`, and NEVER has a make target
-  that runs it. Its pyright level is `py` § Build's.
+- ALWAYS make a report its own project: a package with the repo's standard
+  component make targets, run as its CLI with `uv run`, or one PEP 723 script
+  where `software` → `uvx-tools.md` and the repo allow it. NEVER another
+  component's environment, NEVER a make target that runs it. Pyright: `py`
+  § Build.
 - ALWAYS generate a run's page in its own script, from the in-memory summary
   it writes to `summary.yml`. NEVER hand-edit a generated page.
-- ALWAYS keep a report's math — every formula, threshold and verdict rule — in
-  one module of plain functions over plain values, apart from reading, writing
-  and page code; NEVER compute a number inside the reader or the page.
+- ALWAYS keep a report's math — formulas, thresholds, verdicts — in one module
+  of plain functions, apart from reading and page code.
 - ALWAYS inline every figure in its page; a run with many items links one
   index page to one page per item. NEVER a figure as a loose file beside the
   page, except where the image itself is the product.
 - NEVER put a secret under the report root: a served root is readable by
   anyone who has its address.
-- Where the host's web server serves the report root (the host's facts,
-  `server-init`), a page is online once written. NEVER publish it a second
-  way. Its public address lives in the web server's deployment config and the
-  host's facts (`server-init`); NEVER repeat it in a repo's docs, code or commits.
+- Where the host's web server serves the report root, a page is online once
+  written; NEVER publish it a second way. Its address lives in the deployment
+  config and the host's facts (`server-init`), NEVER in a repo.
 - ALWAYS pick the figure library by what the reader does with the figure:
   - reads it (the default): matplotlib, as SVG with `svg.fonttype: 'none'`
     and `font.family` set to the page's font, which matplotlib otherwise
