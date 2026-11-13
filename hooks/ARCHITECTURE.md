@@ -11,6 +11,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
 Subagent ──> SubagentStart ──> prompt_nudge.py (/solve for the brief)
 
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
+                          ──> reply_gate.py      (SendUserMessage: caveman line ceiling)
           ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
                                                   pretool_nudge.py; periodic
                                                   commit/diary nudge)
@@ -213,6 +214,39 @@ returns the first `type: user` record that is not `isMeta`, not `isSidechain`
 and whose `origin.kind` is `human` or absent. Imported by `pretool_nudge.py`;
 run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 `gh-comment`.
+
+### reply_gate.py (PreToolUse on SendUserMessage)
+
+**Input:** JSON with `tool_name`, `tool_input.message` and `session_id`;
+`~/.claude/settings.json` `outputStyle`.
+**Output:** `hookSpecificOutput.permissionDecision` `deny` with the measured
+line count, or silent.
+
+`SendUserMessage` is the brief-mode reply tool: with `claude --brief` and
+`defaultView` `chat`, its `message` is the only text the user reads. A
+PreToolUse denial stops the call before delivery, and the model writes the
+shorter message itself. A Stop hook sees a reply after the terminal shows it,
+so a block there adds a second copy. A `MessageDisplay` hook can replace the
+lines on screen, but the model does not learn which lines the user read.
+
+`CAP_LINES` is the 20-line hard ceiling of `../output-styles/caveman.md`
+§ Budget; `test_reply_gate.py` asserts the style file still states it.
+
+**Flow:**
+1. Silent for any other tool, a missing `message`, an `outputStyle` other
+   than `caveman`, or an unusable state directory.
+2. Drop fenced code and link targets, then count rendered lines
+   (`ceil(len/80)` per source line, a blank line counts one).
+3. Over the ceiling: add one to the per-session stamp `reply-gate-{session_id}`
+   in `~/.claude/state` (`lib/state.py`) and deny. The reason gives the count,
+   says the user has not seen the message, and asks for the answer to the
+   question alone, with the rest left in plain text.
+4. At or under the ceiling, or after `MAX_DENIALS` (2) denials in a row: pass
+   and remove the stamp.
+
+The hook cannot tell the fact, action and explanation tiers apart, so it holds
+only the ceiling; the 1-3 and ≤12 tiers stay with the style file. Codex does
+not wire it: `SendUserMessage` and `outputStyle` belong to Claude Code.
 
 ### post_tool_nudge.sh (PostToolUse)
 

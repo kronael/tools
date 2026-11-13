@@ -78,6 +78,16 @@
             "timeout": 500
           }
         ]
+      },
+      {
+        "matcher": "SendUserMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/reply_gate.py",
+            "timeout": 500
+          }
+        ]
       }
     ],
     "PostToolUse": [

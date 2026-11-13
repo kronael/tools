@@ -1,8 +1,9 @@
 # Kronael Hooks
 
 Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
-unsafe-command blocks, a GitHub text gate, Markdown formatting, commit/diary
-stop checks and a session memory nudge. Scripts install to `~/.claude/hooks/`.
+unsafe-command blocks, a GitHub text gate, a reply length gate for brief mode,
+Markdown formatting, commit/diary stop checks and a session memory nudge.
+Scripts install to `~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
 its `hooks` block is merged into `~/.claude/settings.json` by the install
@@ -132,6 +133,22 @@ repository without `.rumdl.toml`, a file outside any repository and a clone
 nested in an opted-in tree are never touched; Codex's `apply_patch` is not a
 write it formats. `software/code.md` § Layout and formatting owns the rule a
 repository adopts.
+
+### reply_gate.py (PreToolUse)
+
+Holds a brief-mode reply to the caveman ceiling before the user reads it. In
+brief mode (`claude --brief`, with `"defaultView": "chat"` in
+`~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
+assistant text stays in the detail view. The hook measures the call's
+`message` in rendered 80-column lines outside code fences against the 20-line
+hard ceiling of `../output-styles/caveman.md` § Budget. It denies a longer
+message with the measured count, and Claude Code does not deliver a denied
+message, so the user reads one copy. After two denials in a row the next
+message passes, so a turn always ends.
+
+Silent unless `~/.claude/settings.json` selects `caveman`. Outside brief mode
+the tool does not exist and the hook never runs. `test_reply_gate.py` pins the
+cap to the style file. Codex does not wire it.
 
 ### post_tool_nudge.sh (PostToolUse)
 
