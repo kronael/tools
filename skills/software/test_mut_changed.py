@@ -78,10 +78,10 @@ def site_packages(project):
     )
 
 
-def run_mut_changed(pytestconfig, project, base='HEAD'):
+def run_mut_changed(pytestconfig, project, base='HEAD', *extra):
     script = pytestconfig.rootpath / 'skills' / 'software' / 'mut_changed.py'
     return subprocess.run(
-        [sys.executable, str(script), base, str(project), '--max-children', '2'],
+        [sys.executable, str(script), base, str(project), '--max-children', '2', *extra],
         capture_output=True,
         text=True,
         check=False,
@@ -153,3 +153,59 @@ def test_an_unknown_base_fails_the_check(pytestconfig, project):
     result = run_mut_changed(pytestconfig, project, base='no-such-revision')
     assert result.returncode == 2
     assert result.stderr.startswith('Failed: CheckError: git rev-parse')
+
+
+def add_rates(project):
+    (project / 'src' / 'rates.py').write_text('def rate(x):\n    return x + 1\n')
+    (project / 'tests' / 'test_rates.py').write_text(
+        'from rates import rate\n\n\ndef test_weak():\n    assert rate(1) > 0\n'
+    )
+
+
+def survivor_lines(stdout):
+    return sorted(
+        line for line in stdout.splitlines() if ': fees.x_fee__' in line or ': rates.' in line
+    )
+
+
+@pytest.mark.parametrize('project', [SECTION], indirect=True, ids=['section'])
+def test_batches_of_one_file_report_the_survivors_of_one_run(pytestconfig, project):
+    change_fee(project)
+    add_rates(project)
+    whole = run_mut_changed(pytestconfig, project, 'HEAD', '--batch', '8')
+    split = run_mut_changed(pytestconfig, project, 'HEAD', '--batch', '1')
+    assert whole.returncode == split.returncode == 1, split.stdout + split.stderr
+    assert whole.stdout.count('mutating ') == 1
+    assert split.stdout.count('mutating ') == 2
+    assert survivor_lines(split.stdout) == survivor_lines(whole.stdout)
+    assert 'src/rates.py:' in split.stdout
+    summary = [line for line in split.stdout.splitlines() if 'survivors on changed lines' in line]
+    assert summary == [line for line in whole.stdout.splitlines() if 'survivors on changed' in line]
+    assert 'of 2 files' in summary[0]
+
+
+@pytest.mark.parametrize('project', [''], indirect=True, ids=['no_section'])
+def test_a_file_the_running_interpreter_cannot_parse_fails_before_mutating(pytestconfig, project):
+    # The script parses with its own interpreter; a project file written for a
+    # newer one fails the same way, so a broken file stands in for it.
+    (project / 'src' / 'newer.py').write_text('def f(:\n    pass\n')
+    pyproject = (project / 'pyproject.toml').read_bytes()
+    result = run_mut_changed(pytestconfig, project)
+    assert result.returncode == 2
+    assert 'src/newer.py:1:' in result.stderr
+    assert 'cannot parse it, run it with the project interpreter' in result.stderr
+    assert 'mutating' not in result.stdout
+    assert (project / 'pyproject.toml').read_bytes() == pyproject
+    assert not (project / 'mutants').exists()
+
+
+@pytest.mark.parametrize('project', [''], indirect=True, ids=['no_section'])
+def test_a_missing_import_path_fails_with_the_import_error_and_the_hint(pytestconfig, project):
+    path = project / 'src' / 'fees.py'
+    path.write_text('import no_such_dependency\n\n' + path.read_text().replace('* 2', '* 3'))
+    pyproject = (project / 'pyproject.toml').read_bytes()
+    result = run_mut_changed(pytestconfig, project)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "ModuleNotFoundError: No module named 'no_such_dependency'" in result.stderr
+    assert 'set the PYTHONPATH the project needs' in result.stderr
+    assert (project / 'pyproject.toml').read_bytes() == pyproject

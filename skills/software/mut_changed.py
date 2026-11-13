@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import ast
+import collections
 import difflib
 import fnmatch
 import json
@@ -59,9 +60,36 @@ def run_uv(*args: str) -> str:
 
 def run_mutmut(cap: list[str], max_children: int) -> None:
     command = [*cap, 'nice', '-n', '19', *UV, 'mutmut', 'run', '--max-children', str(max_children)]
-    result = subprocess.run(command, stdout=sys.stderr, check=False)
-    if result.returncode:
-        raise CheckError(f'mutmut run exited {result.returncode}')
+    tail: collections.deque[str] = collections.deque(maxlen=30)
+    with subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    ) as process:
+        assert process.stdout is not None
+        for line in process.stdout:
+            sys.stderr.write(line)
+            tail.append(line)
+    if process.returncode:
+        detail = ''.join(tail).strip()
+        hint = ''
+        if 'ModuleNotFoundError' in detail or 'ImportError' in detail:
+            hint = (
+                '\nthe tests cannot import a module: set the PYTHONPATH the project'
+                ' needs for its own test run before calling this script'
+            )
+        raise CheckError(f'mutmut run exited {process.returncode}:\n{detail}{hint}')
+
+
+def check_parse(scope: list[Path]) -> None:
+    version = '.'.join(str(n) for n in sys.version_info[:3])
+    for path in scope:
+        try:
+            ast.parse(path.read_text())
+        except SyntaxError as err:
+            raise CheckError(
+                f'{path}:{err.lineno}: {err.msg}; this script runs on Python {version} and cannot'
+                ' parse it, run it with the project interpreter:'
+                f' uv run --no-sync python {sys.argv[0]} <base> [<dir>]'
+            ) from err
 
 
 def is_test_path(path: Path) -> bool:
@@ -239,7 +267,7 @@ def move_aside(path: Path) -> Path | None:
     return target
 
 
-def check(base: str, memory: str, max_children: int) -> int:
+def check(base: str, memory: str, max_children: int, batch: int) -> int:
     run_git('rev-parse', '--verify', '--quiet', f'{base}^{{commit}}')
     pyproject = Path('pyproject.toml')
     if not pyproject.is_file():
@@ -252,35 +280,49 @@ def check(base: str, memory: str, max_children: int) -> int:
         print(f'scope empty: no changed source file under {roots} since {base}, nothing mutated')
         return 0
     changed = {path: read_changed_lines(base, path) for path in scope}
+    check_parse(scope)
     original = pyproject.read_bytes()
     stat = pyproject.stat()
-    scoped = scope_pyproject(original.decode(), [str(path) for path in scope])
     previous = move_aside(Path('mutants'))
     if previous:
         print(f'moved the previous mutants/ to {previous}')
     cap = memory_cap(memory)
     if not cap:
         print('no systemd user scope: running without a memory cap', file=sys.stderr)
-    print('mutating ' + ', '.join(str(path) for path in scope), flush=True)
+    batches = [scope[i : i + batch] for i in range(0, len(scope), batch)]
+    mutants: list[Mutant] = []
+    hits: list[Mutant] = []
+    survivors: list[Mutant] = []
+    unchecked: list[Mutant] = []
+    kept: list[Path | None] = []
     try:
-        pyproject.write_text(scoped)
-        run_mutmut(cap, max_children)
-        mutants = map_mutants(read_statuses(), scope)
-        hits = [m for m in mutants if set(m.lines) & changed[m.path]]
-        unchecked = [m for m in hits if m.status == 'not checked']
-        survivors = [m for m in hits if m.status in SURVIVED]
-        for mutant in survivors:
-            lines = ','.join(str(n) for n in sorted(set(mutant.lines) & changed[mutant.path]))
-            print(f'\n{mutant.path}:{lines}: {mutant.name} {mutant.status}')
-            print(run_uv('mutmut', 'show', mutant.name).rstrip())
+        for files in batches:
+            print('mutating ' + ', '.join(str(path) for path in files), flush=True)
+            pyproject.write_text(scope_pyproject(original.decode(), [str(p) for p in files]))
+            try:
+                run_mutmut(cap, max_children)
+                found = map_mutants(read_statuses(), files)
+                hit = [m for m in found if set(m.lines) & changed[m.path]]
+                dead = [m for m in hit if m.status in SURVIVED]
+                for mutant in dead:
+                    lines = ','.join(
+                        str(n) for n in sorted(set(mutant.lines) & changed[mutant.path])
+                    )
+                    print(f'\n{mutant.path}:{lines}: {mutant.name} {mutant.status}')
+                    print(run_uv('mutmut', 'show', mutant.name).rstrip())
+            finally:
+                kept.append(move_aside(Path('mutants')))
+            mutants += found
+            hits += hit
+            survivors += dead
+            unchecked += [m for m in hit if m.status == 'not checked']
     finally:
         pyproject.write_bytes(original)
         os.utime(pyproject, ns=(stat.st_atime_ns, stat.st_mtime_ns))
-        kept = move_aside(Path('mutants'))
     if pyproject.read_bytes() != original:
         raise CheckError('pyproject.toml was not restored')
     elsewhere = sum(m.status in SURVIVED for m in mutants) - len(survivors)
-    print(f'\nthis run kept its mutants/ in {kept}')
+    print('\nthis run kept its mutants/ in ' + ', '.join(str(k) for k in kept if k))
     print(
         f'{len(survivors)} survivors on changed lines of {len(scope)} files: '
         f'{len(hits)} of {len(mutants)} mutants fall on changed lines, '
@@ -298,6 +340,8 @@ def stop(signum: int, _frame: object) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description='Mutation-test the lines a change touched; exit 0 clean, 1 survivors, 2 failed.'
+        ' Set the PYTHONPATH the project needs for its tests before calling.',
+        usage='[PYTHONPATH=...] %(prog)s [-h] [--memory M] [--max-children N] [--batch N] base [dir]',
     )
     parser.add_argument('base', help='git revision the change is compared against')
     parser.add_argument(
@@ -305,10 +349,13 @@ def main() -> int:
     )
     parser.add_argument('--memory', default='4G', help='MemoryMax of the run scope')
     parser.add_argument('--max-children', type=int, default=4)
+    parser.add_argument(
+        '--batch', type=int, default=8, help='changed files per mutmut run, bounds its memory'
+    )
     args = parser.parse_args()
     signal.signal(signal.SIGTERM, stop)
     os.chdir(args.dir)
-    return check(args.base, args.memory, args.max_children)
+    return check(args.base, args.memory, args.max_children, max(args.batch, 1))
 
 
 if __name__ == '__main__':

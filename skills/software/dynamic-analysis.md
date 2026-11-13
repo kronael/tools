@@ -79,13 +79,22 @@ Targets: `miri`, `test-san`, `fuzz`, `mutants`.
   beside this file, and before calling a refactor's suite enough:
 
   ```sh
-  python3 ~/.claude/skills/software/mut_changed.py <base> [<component dir>]
+  PYTHONPATH=<what the tests need> \
+    uv run --no-sync python ~/.claude/skills/software/mut_changed.py <base> [<component dir>]
   ```
+
+  Run it on the project's interpreter (`uv run --no-sync python`): the script
+  parses every changed file with the Python that runs it and fails in seconds,
+  naming the file, when that Python is older than the project's syntax.
+  Set the `PYTHONPATH` the project's own test run needs; a missing entry fails
+  the first batch's collection with the `ModuleNotFoundError` and a hint.
 
   It mutates only the changed `*.py` under mutmut's `source_paths`, tests
   excluded, by writing `only_mutate` into `[tool.mutmut]` for the run. It runs
   `uv run --no-sync --with 'mutmut>=3.8'` under a `MemoryMax` scope
-  (`--memory`, default 4G), `--max-children 4` and `nice -n 19`, then restores
+  (`--memory`, default 4G), `--max-children 4` and `nice -n 19`, in batches of
+  `--batch` files (default 8, one mutmut run each, the survivors merged into
+  one report), then restores
   `pyproject.toml` byte for byte and moves `mutants/` to a temp directory it
   names. It lists the survivors on changed lines only — added lines and the
   neighbours of a deletion — each with `mutmut show`. Exit 0: none; 1:
