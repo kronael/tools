@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.96] — 20261113
+
+> kronael v0.4.96 — py-no-module-path has no exception
+>
+> The module-path lint now catches more ways to locate a module and no longer accepts an ignore comment.
+>
+> • More forms — `__spec__.origin`, `inspect.getfile`, `inspect.getsourcefile` and `getattr(x, '__file__')` are flagged.
+> • No ignore — the published hook also fails on any `# ast-grep-ignore: py-no-module-path` comment.
+> • Package data — read it with `importlib.resources.files('<package>')`.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/py/lints/rules.yml`: `py-no-module-path` covers the new forms and its message names no exception; new rule `py-no-module-path-ignore` matches the ignore comment. `Path(__file__).read_text()` and `read_bytes()` stay allowed.
+- `.pre-commit-hooks.yaml`: the `py-no-module-path` hook enforces both rule ids.
+- `skills/astgrep/check.py`: `--skills DIR` (default `~/.claude/skills`) replaces locating the rule packs from the script's own path; `make lints` passes `--skills skills`.
+- `skills/software/code.md`, `skills/astgrep/lints.md`: the installed-tool exception is removed.
+
 ## [v0.4.95] — 20261113
 
 > kronael v0.4.95 — mutation runs on large changes
