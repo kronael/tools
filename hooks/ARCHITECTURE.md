@@ -7,6 +7,7 @@ User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → comman
                                                       /solve on a new task;
                                                       caveman budget line)
                                  ──> local.py        (LOCAL.md on first prompt)
+                                 ──> memory_nudge.py (session memory, once/session)
 
 Subagent ──> SubagentStart ──> prompt_nudge.py (/solve for the brief)
 
@@ -17,7 +18,6 @@ Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe blo
                                                   commit/diary nudge)
 
 Claude stops ──> Stop ──> stop.py       (commit + diary block)
-                      ──> memory_nudge.py (session memory, once/session fallback)
 
 Compaction ──> PreCompact ──> local.py        (LOCAL.md)
                           ──> reclaude.py     (RECLAUDE.md + preservation note)
@@ -362,20 +362,24 @@ checkout, for a submodule or a `--separate-git-dir` repo; the slug follows
 that path, and `../skills/diary/SKILL.md` § Where it lives names the same
 tree. Change both together. Outside a repo the hook checks nothing.
 
-### memory_nudge.py (SessionStart compact + Stop)
+### memory_nudge.py (SessionStart compact + UserPromptSubmit)
 
-**Input:** JSON with `session_id`, `stop_hook_active`, `source`, and hook
-event identity (`hook_event`/`hook_event_name`/`hookEventName`, read via
-`lib/state.py`). The recommended `SessionStart` matcher is `compact`.
+**Input:** JSON with `session_id`, `source`, and hook event identity
+(`hook_event`/`hook_event_name`/`hookEventName`, read via `lib/state.py`).
+The recommended `SessionStart` matcher is `compact`.
 **Output:** `hookSpecificOutput.additionalContext`, with `hookEventName`
-set to `SessionStart` or `Stop`. Silent on other events or on `SessionStart`
-with another source.
+set to `SessionStart` or `UserPromptSubmit`. Silent, with no state written,
+on any other event or on `SessionStart` with another source.
 
 The prompt requests `/learn`'s memory pass against the recorded session
-transcript. It requests the shared evidence check, qualifying durable memory,
-and a report of what qualified or that nothing qualified. It does not invoke
-the skill or lint pass. Emitting the request does not prove that the model
-runs learn or saves memory.
+transcript, run first, before the work the turn asks for. It requests the
+shared evidence check, qualifying durable memory, and a report of what
+qualified or that nothing qualified, then the requested work, and that the
+turn end on the answer to the user. It does not invoke the skill or lint
+pass. Emitting the request does not prove that the model runs learn or saves
+memory. The request arrives with a prompt, so it cannot follow a session's
+last turn: a session that ends before its fourth prompt and before a prompt
+30 minutes in, and never compacts, gets no request.
 
 `SessionStart` supplies context after compaction. Claude discards
 `PreCompact.systemMessage`, so the memory nudge uses the supported
@@ -384,15 +388,16 @@ runs learn or saves memory.
 [PreCompact](https://code.claude.com/docs/en/hooks#precompact).
 
 **Flow:**
-1. Exit silently if `stop_hook_active` is set, to prevent recursion.
-2. On `SessionStart` with `source: compact`, emit after each manual or auto
-   compaction. Write the session's `done` marker to suppress later Stop nudges.
-   An existing marker does not suppress another compact event.
-3. On `Stop`: silent if the `done` marker exists. Otherwise read the `start`
-   file (`started_ts count`); the first Stop just records `now 1` and waits.
-   Each later Stop increments the count. Emit when either 30 minutes pass
-   since the first Stop (`SESSION_THRESHOLD`) or the count reaches 3
-   (`STOP_COUNT_THRESHOLD`). Mark `done` to keep this fallback once per session.
+1. On `SessionStart` with `source: compact`, emit after each manual or auto
+   compaction. Write the session's `done` marker to suppress later prompt
+   nudges. An existing marker does not suppress another compact event.
+2. On `UserPromptSubmit`: silent if the `done` marker exists. Otherwise read
+   the `start` file (`started_ts count`); the first prompt just records
+   `now 1` and stays silent. Each later prompt increments the count. Emit when
+   either 30 minutes pass since the first prompt (`SESSION_THRESHOLD`) or the
+   count reaches 4 (`PROMPT_COUNT_THRESHOLD`): the fourth prompt, which
+   arrives after three completed turns. Mark `done` to keep this path once per
+   session.
 
 **State:** `memory-nudge-{start,done}-{session_id}` in `~/.claude/state`
 (`lib/state.py`), keyed by session rather than `cwd`. The marker records

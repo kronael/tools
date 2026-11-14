@@ -224,13 +224,15 @@ The hook reports a missing or stale diary entry and never writes a header —
 run `/diary` deliberately when a session is worth recording. Pure script, no
 LLM call, NEVER pushes.
 
-### memory_nudge.py (SessionStart compact + Stop)
+### memory_nudge.py (SessionStart compact + UserPromptSubmit)
 
 Requests `/learn`'s memory pass against the recorded session transcript after
-compaction, with a once-per-session Stop fallback. The request covers qualifying
-durable memory only. It does not authorize skill or lint edits or prove that
-learn ran. Codex does not wire this hook.
-Delivery, timing and state: [memory nudge flow](ARCHITECTURE.md#memory_nudgepy-sessionstart-compact--stop).
+compaction, and once per session at a prompt: the fourth, or an earlier one at
+least 30 minutes after the session's first. The request asks for the pass
+before that turn's work and for the turn to end on the answer to the user. The
+request covers qualifying durable memory only. It does not authorize skill or
+lint edits or prove that learn ran. Codex does not wire this hook.
+Delivery, timing and state: [memory nudge flow](ARCHITECTURE.md#memory_nudgepy-sessionstart-compact--userpromptsubmit).
 
 ## Tests
 

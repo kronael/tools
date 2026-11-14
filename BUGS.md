@@ -538,15 +538,6 @@
   diary reason asks for a one-line close in place of the answer; (b) keep.
   **Default if nothing is decided:** (b). No test — design.
 
-- **MEMORY-NUDGE-STOP-CONTEXT-CONTINUES-THE-TURN** (LOW, design) — needs
-  sign-off. `hooks/memory_nudge.py`'s docstring says "Never blocks", but
-  Claude Code answers Stop `additionalContext` with a new assistant turn, the
-  same as a block. With `STOP_COUNT_THRESHOLD = 3`, a session that drives
-  workers reaches the nudge minutes in, while they still run, so the memory
-  pass lands mid-task. Most of these nudges did end in a memory write.
-  **Options:** (a) fire on the time threshold alone; (b) keep, and correct
-  the docstring. **Default if nothing is decided:** (b). No test — design.
-
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51

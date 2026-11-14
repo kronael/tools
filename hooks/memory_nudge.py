@@ -1,23 +1,4 @@
 #!/usr/bin/env python3
-"""Memory nudge: prompt a session memory review, far less often than diary.
-
-Fires on:
-- SessionStart with source "compact" — after each compaction.
-- Stop — at most ONCE per session, as a fallback for sessions that end
-  without ever compacting. Fires on the first Stop where EITHER the session
-  has run past SESSION_THRESHOLD wall-clock OR at least STOP_COUNT_THRESHOLD
-  Stops have occurred — the count path is what covers *short* sessions that
-  never approach the 30-min mark yet still did real work. Ultra-trivial
-  one/two-turn sessions stay under the count and never nudge. Not recurring
-  like stop.py's diary/commit nudges.
-
-Once-per-session state lives in ~/.claude/state, keyed by session_id alone
-(see lib/state.py), so the Stop nudge stays once per session even when the
-session changes directory.
-
-No LLM call. Never blocks. Emits additionalContext for SessionStart or Stop.
-"""
-
 import contextlib
 import json
 import os
@@ -28,35 +9,24 @@ from lib.state import hook_event
 from lib.state import session_state
 
 SESSION_THRESHOLD = 1800
-STOP_COUNT_THRESHOLD = 3
+PROMPT_COUNT_THRESHOLD = 4
 
 NUDGE_TEXT = (
-    "Session memory check: invoke /learn's memory pass to review the recorded "
-    'session transcript. Follow its evidence check and save only '
-    'qualifying durable memory. This nudge does not invoke the skill or '
-    'lint pass. Report what qualified, or that nothing qualified.'
+    "Session memory check: invoke /learn's memory pass first, before the work "
+    'this turn asks for, to review the recorded session transcript. Follow its '
+    'evidence check and save only qualifying durable memory. This nudge does '
+    'not invoke the skill or lint pass. Report what qualified, or that '
+    'nothing qualified, then do the work the user asked for. ALWAYS end the '
+    'turn on the answer to the user, NEVER on the memory report.'
 )
 
 
-def emit_compact():
+def emit(event):
     print(
         json.dumps(
             {
                 'hookSpecificOutput': {
-                    'hookEventName': 'SessionStart',
-                    'additionalContext': NUDGE_TEXT,
-                },
-            }
-        )
-    )
-
-
-def emit_stop():
-    print(
-        json.dumps(
-            {
-                'hookSpecificOutput': {
-                    'hookEventName': 'Stop',
+                    'hookEventName': event,
                     'additionalContext': NUDGE_TEXT,
                 },
             }
@@ -65,7 +35,6 @@ def emit_stop():
 
 
 def read_start(path):
-    """Return (started_ts, stop_count) from the start file, or (None, 0)."""
     try:
         with open(path) as f:
             parts = f.read().split()
@@ -94,18 +63,18 @@ def main():
     except (json.JSONDecodeError, EOFError, ValueError):
         sys.exit(0)
 
-    if not isinstance(data, dict) or data.get('stop_hook_active'):
+    if not isinstance(data, dict):
         sys.exit(0)
 
     event = hook_event(data)
     session_id = data.get('session_id') or 'default'
 
     if event == 'SessionStart' and data.get('source') == 'compact':
-        emit_compact()
+        emit('SessionStart')
         touch_done(session_state('memory-nudge-done', session_id))
         sys.exit(0)
 
-    if event == 'Stop':
+    if event == 'UserPromptSubmit':
         done_file = session_state('memory-nudge-done', session_id)
         if done_file and os.path.exists(done_file):
             sys.exit(0)
@@ -123,8 +92,8 @@ def main():
         count += 1
         write_start(start_file, started, count)
 
-        if now - started >= SESSION_THRESHOLD or count >= STOP_COUNT_THRESHOLD:
-            emit_stop()
+        if now - started >= SESSION_THRESHOLD or count >= PROMPT_COUNT_THRESHOLD:
+            emit(event)
             touch_done(done_file)
 
     sys.exit(0)
