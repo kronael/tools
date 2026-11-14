@@ -87,7 +87,7 @@ def test_short_session_fires_on_count_threshold(tmp_path, monkeypatch, capsys):
 
 
 def test_fires_once_then_silent(tmp_path, monkeypatch, capsys):
-    prompts_until_nudge(tmp_path, monkeypatch, capsys)
+    assert prompts_until_nudge(tmp_path, monkeypatch, capsys) is not None
     # Next prompt after the done marker stays silent.
     out = run(monkeypatch, capsys, base(tmp_path, 'UserPromptSubmit'))
 
@@ -117,7 +117,7 @@ def test_stop_payload_does_nothing(tmp_path, monkeypatch, capsys, state_root):
 
 def test_cwd_change_does_not_reset_once_per_session(tmp_path, monkeypatch, capsys):
     # The guard is session-keyed: cd'ing between repos must not re-nudge.
-    prompts_until_nudge(tmp_path, monkeypatch, capsys)
+    assert prompts_until_nudge(tmp_path, monkeypatch, capsys) is not None
     elsewhere = tmp_path / 'other-repo'
     elsewhere.mkdir()
     out = run(monkeypatch, capsys, base(elsewhere, 'UserPromptSubmit'))
