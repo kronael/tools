@@ -163,7 +163,7 @@ PR body with the robot. These win.
 
 - ALWAYS read `readme` → `topology.md` before adding, moving, splitting or
   repeating a doc section, file or top-level dir. NEVER `todos/` or `plans/`:
-  plans and work records live under `~/.claude/` (`ship` § Work record).
+  plans, work records and dev-run output stay in Claude's own dirs (`ship` § Work record).
 - NEVER write an unrequested summary, report or analysis `.md` — the report belongs in the reply.
 - NEVER narrate history in a comment, doc, skill or agent definition: no "used
   to be", "previously", "renamed from", "as before", "instead of X", "no longer",

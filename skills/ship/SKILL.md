@@ -49,6 +49,10 @@ stay in Claude Code's default
 `plansDirectory` setting, no `.claude/plans/`, `.ship/` or `plans/`
 directory, no ignore line for one — what an agent writes for itself lives
 under `~/.claude/`.
+A development run (sim, test, profile, mutation) keeps its output in the
+session's job or scratchpad dir, and its findings become facts in this
+record, the diary or memory. NEVER write either to a shared report or spool
+root such as `/srv/report`: it holds only a report the owner asks for.
 ALWAYS keep one work record for the change. NEVER add a second progress
 tree, saved review plans or a workflow-specific backlog.
 
