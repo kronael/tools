@@ -538,6 +538,17 @@
   diary reason asks for a one-line close in place of the answer; (b) keep.
   **Default if nothing is decided:** (b). No test — design.
 
+- **MEMORY-NUDGE-COUNTS-BACKGROUND-REPORTS** (LOW, design) — needs sign-off.
+  `hooks/memory_nudge.py` counts every `UserPromptSubmit` event, and Claude
+  Code fires that event for a background subagent's report, a scheduled task,
+  a message queued mid-turn and a message from another session as well as a
+  typed prompt. With `PROMPT_COUNT_THRESHOLD = 4`, a session that drives
+  workers reaches the nudge minutes in, while they still run, so the memory
+  pass lands mid-task. **Options:** (a) skip a payload whose `prompt` opens
+  with `<task-notification>`, a text shape the hooks reference does not
+  document; (b) fire on the time threshold alone; (c) keep. **Default if
+  nothing is decided:** (c). No test — design.
+
 - **PROMPT-NUDGE-FIRST-KEYWORD-WINS** (MED, correctness) — needs sign-off.
   `explicit_route` returns the route of the first `SKILL_KEYWORDS` word in
   prompt order. Measured over every session transcript (2026-09-05): of 51

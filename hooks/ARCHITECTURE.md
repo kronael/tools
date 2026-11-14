@@ -377,9 +377,13 @@ shared evidence check, qualifying durable memory, and a report of what
 qualified or that nothing qualified, then the requested work, and that the
 turn end on the answer to the user. It does not invoke the skill or lint
 pass. Emitting the request does not prove that the model runs learn or saves
-memory. The request arrives with a prompt, so it cannot follow a session's
-last turn: a session that ends before its fourth prompt and before a prompt
-30 minutes in, and never compacts, gets no request.
+memory. The count covers every `UserPromptSubmit` event: Claude Code also
+fires it for a message queued mid-turn, a background subagent's report, a
+session-scoped scheduled task and a message from another session, so the count
+can reach 4 before the user has typed four prompts, and the request can land
+while workers still run. The request arrives with a prompt, so it cannot
+follow a session's last turn: a session that ends before its fourth prompt
+and before a prompt 30 minutes in, and never compacts, gets no request.
 
 `SessionStart` supplies context after compaction. Claude discards
 `PreCompact.systemMessage`, so the memory nudge uses the supported
@@ -395,13 +399,14 @@ last turn: a session that ends before its fourth prompt and before a prompt
    the `start` file (`started_ts count`); the first prompt just records
    `now 1` and stays silent. Each later prompt increments the count. Emit when
    either 30 minutes pass since the first prompt (`SESSION_THRESHOLD`) or the
-   count reaches 4 (`PROMPT_COUNT_THRESHOLD`): the fourth prompt, which
-   arrives after three completed turns. Mark `done` to keep this path once per
-   session.
+   count reaches 4 (`PROMPT_COUNT_THRESHOLD`), the session's fourth
+   `UserPromptSubmit` event. Mark `done` to keep this path once per session.
 
 **State:** `memory-nudge-{start,done}-{session_id}` in `~/.claude/state`
 (`lib/state.py`), keyed by session rather than `cwd`. The marker records
-emission, not completion of learn. Pure script, no LLM call. Never blocks or pushes.
+emission, not delivery or completion of learn: a prompt that another hook
+blocks, or that the user interrupts during the check, takes the request with
+it. Pure script, no LLM call. Never blocks or pushes.
 
 The Codex adapter has no `memory_nudge` target, and `codex-hooks.json` does
 not wire this hook. The shared skills do not imply automatic Codex delivery.
