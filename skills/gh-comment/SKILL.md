@@ -1,7 +1,7 @@
 ---
 name: gh-comment
 description: Post inline review comments to a GitHub PR, reply to and resolve review threads. NOT for a PR description (use pr-draft) or filing an issue (use gh-issue).
-when_to_use: "post review findings to a GitHub PR as inline comments, reply to a PR review thread, resolve a PR review thread, pending review conflict, comment on a line outside the diff, re-review request"
+when_to_use: "post review findings to a GitHub PR as inline comments, reply to a PR review thread, resolve a PR review thread, pending review conflict, comment on a line outside the diff, re-review request, handoff recall on a PR, attach a file to a PR comment, secret gist"
 user-invocable: false
 ---
 
@@ -189,6 +189,7 @@ gh pr comment <PR> --body "🤖 @<reviewer> <verb + object>. Please re-review."
 ## Rules
 
 - ALWAYS prefix comment body with `"🤖 "`
+- ALWAYS hand off a PR with its session recall as [share.md](share.md) says
 - ALWAYS follow the robot prefix with 🔴 or 🟡 on a blocker or an important
   finding, and with `nit:` on a nit — NEVER mix the two
 - ALWAYS run the draft-then-distill pass in § Comment body, `humanize` included

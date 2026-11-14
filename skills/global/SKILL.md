@@ -138,8 +138,8 @@ PR body with the robot. These win.
   earlier chat: the user may see only that request.
 - ALWAYS apply `software/code.md` § Review sign-off to shared-library and
   runtime changes. A permission prompt does not replace that review.
-- ALWAYS post PR comments with `/gh-comment` and write a PR body with
-  `/pr-draft` — NEVER freehand; they hold the shape, cap, REST path and `🤖`.
+- ALWAYS post PR comments and handoff recalls with `/gh-comment` and write a PR
+  body with `/pr-draft` — NEVER freehand; they hold the shape, cap, REST path and `🤖`.
 - ALWAYS run two phases over any text bound for GitHub — PR title and body,
   review comment, thread reply, issue, release notes — before posting it or
   showing it for approval. DISTILL: the shortest text that still carries the
