@@ -34,6 +34,10 @@ or cuts them before promotion. NEVER infer implementation completion from lint.
   max + 1), or `specs/<phase>/<N>-<topic>.md` ONLY when specs cluster into
   distinct workstreams. NEVER an unnumbered name, and two files NEVER share
   one number; lint: spec-naming (hard fail; an unpadded flat number warns).
+- ALWAYS treat numbered phase directories as landing phases: phase N ships
+  before phase N+1. ALWAYS let a spec depend only on specs in its own or a
+  lower phase. NEVER let it depend on a higher one — ALWAYS move the needed
+  spec down a phase instead.
 - ALWAYS keep `specs/index.md` in step: one row per file
   (`| [01-auth.md](01-auth.md) | partial | JWT auth flow |`), Status equal to
   the frontmatter, the row removed with the file; lint: spec-index-row,
@@ -273,6 +277,6 @@ mechanical part of each. Everything else is a judgement — ALWAYS review:
 - a defect goes to `BUGS.md`, never into a spec
 - `status` moves in the commit that approves or lands the work
 - phase directories only when specs cluster into workstreams, and the next
-  number is max + 1
+  number is max + 1; every prerequisite sits in the same or a lower phase
 - no doc or code links a spec; verified implementation and durable documentation
   precede retirement; remaining active specs and indexes agree
