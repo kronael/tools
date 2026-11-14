@@ -129,7 +129,8 @@ PR body with the robot. These win.
   `~/.claude/hooks/ARCHITECTURE.md` § pretool_nudge.py.
 - ALWAYS squash-merge a PR into the default head: `gh api -X PUT
   repos/<owner>/<repo>/pulls/<n>/merge -f merge_method=squash -f sha=<head sha>`
-  (`gh pr merge` needs `read:org`). Other bases are out of scope.
+  (`gh pr merge` needs `read:org`). A stack member lands per `software` →
+  `refactor-stack.md` § Landing on GitHub. Other bases are out of scope.
 - ALWAYS show the exact payload inside any request you write for approval of a
   git or GitHub operation (an `AskUserQuestion` dialog, a chat message): the
   full text and title to post, the target (repo, PR or issue, head, base), the

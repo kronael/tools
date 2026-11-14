@@ -169,6 +169,7 @@
   "spinnerTipsEnabled": false,
   "bashEditDiffEnabled": false,
   "idleCompaction": true,
+  "autoCompactEnabled": true,
   "crossSessionInbound": "refuse",
   "isolatePeerMachines": true,
   "attribution": {

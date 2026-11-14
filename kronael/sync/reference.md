@@ -470,6 +470,7 @@ loosen-only rule and the diff-and-ask of `SKILL.md` step 5.
 | `attribution.pr` | `"🤖"` | unset, the reminder asks for the `Generated with [Claude Code]` footer, which WISDOM § Git bans |
 | `attribution.sessionUrl` | `false` | unset, a web or Remote Control session adds a session link, which WISDOM § Git bans |
 | `idleCompaction` | `true` | compacts an idle session before its prompt cache expires, so the next turn reads a short summary instead of the full uncached context |
+| `autoCompactEnabled` | `true` | compacts when the context fills; a `false` here wins over `~/.claude.json` |
 | `bashEditDiffEnabled` | `false` | unset, `auto` and `bypassPermissions` modes diff the tree around every Bash command; `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it |
 | `crossSessionInbound`, `isolatePeerMachines` | `"refuse"`, `true` | v2.1.224+; unset, delivery between sessions follows their permission class — `SendMessage` stays allowed, it is also the subagent channel |
 | `permissions.deny` | `Bash(rm -r*)`, `Bash(rm -R*)`, `Bash(rm -fr*)`, `Bash(rm --recursive*)` added | the recursive-removal guard; NEVER put the glob outside the parens — `Bash(rm -rf /)*` matches nothing |
@@ -490,6 +491,7 @@ jq -s '(.[0].permissions.deny // []) as $d
   | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
   | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
   | .[0].idleCompaction = .[1].idleCompaction
+  | .[0].autoCompactEnabled = .[1].autoCompactEnabled
   | .[0].crossSessionInbound = .[1].crossSessionInbound
   | .[0].isolatePeerMachines = .[1].isolatePeerMachines
   | .[0].permissions.deny = $d + ([.[1].permissions.deny[] | select(startswith("Bash(rm "))] - $d)
@@ -504,12 +506,12 @@ jq -rn --slurpfile r "$SRC/settings-recommended.json" --slurpfile l ~/.claude/se
   '$r[0] | keys[] as $k | select($r[0][$k] != $l[0][$k]) | $k'
 ```
 
-`diffSidebarOpen`, `diffTool` and `autoCompactEnabled` are global config, not settings keys, so
-`settings-recommended.json` cannot carry them. Pin all three in `~/.claude.json`,
+`diffSidebarOpen` and `diffTool` are global config, not settings keys, so
+`settings-recommended.json` cannot carry them. Pin both in `~/.claude.json`,
 keeping every other key; they apply on the next Claude Code start:
 
 ```sh
-jq '.diffSidebarOpen = false | .diffTool = "terminal" | .autoCompactEnabled = true' ~/.claude.json > ~/.claude.json.new \
+jq '.diffSidebarOpen = false | .diffTool = "terminal"' ~/.claude.json > ~/.claude.json.new \
   && mv ~/.claude.json.new ~/.claude.json
 ```
 

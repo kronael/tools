@@ -52,7 +52,8 @@ under `~/.claude/`.
 ALWAYS keep a development run's output (sim, test, profile, mutation) in the
 session's job or scratchpad dir and its findings in this record, the diary or
 memory. NEVER write either to a shared report or spool root such as
-`/srv/report` — it holds only a report the owner asks for.
+`/srv/report` — it holds only a report the owner asks for. Research
+experiment evidence follows `research` → `layout.md`.
 ALWAYS keep one work record for the change. NEVER add a second progress
 tree, saved review plans or a workflow-specific backlog.
 
