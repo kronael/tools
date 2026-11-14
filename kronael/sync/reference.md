@@ -469,6 +469,7 @@ loosen-only rule and the diff-and-ask of `SKILL.md` step 5.
 | `attribution.commit` | `""` | unset, Claude Code asks for a `Co-Authored-By` trailer; NEVER `attribution: false` — versions before v2.1.281 reject it and skip the whole file |
 | `attribution.pr` | `"🤖"` | unset, the reminder asks for the `Generated with [Claude Code]` footer, which WISDOM § Git bans |
 | `attribution.sessionUrl` | `false` | unset, a web or Remote Control session adds a session link, which WISDOM § Git bans |
+| `effortLevel` | `"high"`, set only when unset | the effort a session starts with; a value already there stays |
 | `idleCompaction` | `true` | compacts an idle session before its prompt cache expires, so the next turn reads a short summary instead of the full uncached context |
 | `autoCompactEnabled` | `true` | compacts when the context fills; a `false` here wins over `~/.claude.json` |
 | `bashEditDiffEnabled` | `false` | unset, `auto` and `bypassPermissions` modes diff the tree around every Bash command; `CLAUDE_CODE_BASH_EDIT_DIFF` overrides it |
@@ -490,6 +491,7 @@ jq -s '(.[0].permissions.deny // []) as $d
   | .[0].attribution.pr = .[1].attribution.pr
   | .[0].attribution.sessionUrl = .[1].attribution.sessionUrl
   | .[0].bashEditDiffEnabled = .[1].bashEditDiffEnabled
+  | .[0].effortLevel //= .[1].effortLevel
   | .[0].idleCompaction = .[1].idleCompaction
   | .[0].autoCompactEnabled = .[1].autoCompactEnabled
   | .[0].crossSessionInbound = .[1].crossSessionInbound

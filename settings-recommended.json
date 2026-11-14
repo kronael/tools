@@ -182,6 +182,7 @@
     "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
   },
   "outputStyle": "caveman",
+  "effortLevel": "high",
   "cleanupPeriodDays": 3650000,
   "pluginConfigs": {
     "cc-plugin-agents-md@builtin": {
