@@ -228,9 +228,9 @@ LLM call, NEVER pushes.
 
 Requests `/learn`'s memory pass against the recorded session transcript after
 compaction, and once per session at a prompt: the fourth, or an earlier one at
-least 30 minutes after the session's first. A message queued mid-turn, a
-background subagent's report, a scheduled task and a message from another
-session count as prompts. The request asks for the pass before that turn's
+least 30 minutes after the session's first. Every `UserPromptSubmit`
+event counts as a prompt, a message queued mid-turn and a background
+subagent's report included. The request asks for the pass before that turn's
 work and for the turn to end on the answer to the user. The request covers
 qualifying durable memory only. It does not authorize skill or lint edits or
 prove that learn ran. Codex does not wire this hook.

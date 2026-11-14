@@ -378,12 +378,15 @@ qualified or that nothing qualified, then the requested work, and that the
 turn end on the answer to the user. It does not invoke the skill or lint
 pass. Emitting the request does not prove that the model runs learn or saves
 memory. The count covers every `UserPromptSubmit` event: Claude Code also
-fires it for a message queued mid-turn, a background subagent's report, a
-session-scoped scheduled task and a message from another session, so the count
-can reach 4 before the user has typed four prompts, and the request can land
-while workers still run. The request arrives with a prompt, so it cannot
-follow a session's last turn: a session that ends before its fourth prompt
-and before a prompt 30 minutes in, and never compacts, gets no request.
+fires it for a message queued mid-turn and for events nobody typed, such as a
+background subagent's report, a session-scoped scheduled task or a message from
+another session
+([UserPromptSubmit](https://code.claude.com/docs/en/hooks#userpromptsubmit)
+lists them), so the count can reach 4 before the user has typed four prompts,
+and the request can land while workers still run. The request arrives with a
+prompt, so it cannot follow a session's last turn: a session that ends before
+its fourth prompt and before a prompt 30 minutes in, and never compacts, gets
+no request.
 
 `SessionStart` supplies context after compaction. Claude discards
 `PreCompact.systemMessage`, so the memory nudge uses the supported
