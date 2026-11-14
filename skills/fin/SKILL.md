@@ -66,8 +66,8 @@ Before declaring done, run an **open-items pass**:
    received completion for. They are pending work.
 4. **Reap stale watches.** List the background watches you
    started: Monitor tasks, background Bash and `until` loops.
-   ALWAYS stop each one whose work ended, whose file is gone,
-   or whose condition can never become true. Stop it with
+   ALWAYS stop each one whose work ended or whose condition
+   can never become true. Stop it with
    TaskStop or by its recorded PID. NEVER leave a watch running
    past /fin — ALWAYS reap it or name it as pending.
 
