@@ -9,7 +9,6 @@
 > • Caveman — uses 80-column terminal lines; Codex receives normal and meta prompt reminders.
 > • Brief replies — SendUserMessage supports a one-use length override; the live trial remains open.
 > • PR labels — the shared pr-draft skill applies labels from repository descriptions.
-> • Privacy — private session measurements leave BUGS.md; pushed history retains them.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
@@ -17,7 +16,6 @@
 - Claude's brief reply gate excludes fenced code, including longer matching fences.
 - Codex uses prompt reminders; its hooks offer no pre-display reply gate.
 - New PRs receive matching labels, excluding human-managed review states.
-- Private measurements are removed from BUGS.md; the original pushed message remains public.
 
 ## [v0.4.96] — 20261113
 
