@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.4.99] — 20261114
+
+> kronael v0.4.99 — memory check before the answer
+>
+> The session memory check now arrives with a prompt, so a turn ends on the answer and not on the memory report.
+>
+> • Memory nudge — fires on UserPromptSubmit: the memory pass runs first and the answer stays last.
+> • Cadence — once per session at the fourth prompt or 30 minutes in, and after each compaction.
+> • Settings — sync moves the nudge to UserPromptSubmit; Stop keeps the commit and diary check.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `memory_nudge.py` runs on `UserPromptSubmit` and compact `SessionStart`; `Stop` runs `stop.py` alone.
+- The request asks for the memory pass before the turn's work and for the answer last.
+- Subagent reports and queued messages count toward the fourth prompt.
+- A session that ends before its fourth prompt and never compacts gets no memory request.
+
 ## [v0.4.98] — 20261114
 
 > kronael v0.4.98 — idle compaction and report pages
