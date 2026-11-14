@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.4.100] — 20261114
+
+> kronael v0.4.100 — handoff recall on a PR
+>
+> A PR that passes to another person can carry its session recall as a secret gist linked from one comment.
+>
+> • Handoff recall — gh-comment shares the recall as a secret gist, scanned for secrets and shown first.
+> • Cleanup — the comment names who deletes the gist, because a gist never expires.
+> • Specs — a prerequisite sits in the same or a lower phase.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- gh-comment shares a handoff recall as a secret gist; never on the PR branch.
+- A spec's prerequisites sit in the same or a lower phase.
+
 ## [v0.4.99] — 20261114
 
 > kronael v0.4.99 — memory check before the answer
