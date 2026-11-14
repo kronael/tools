@@ -77,7 +77,10 @@ def test_first_prompt_is_silent_and_records(tmp_path, monkeypatch, capsys, state
 
 def test_short_session_fires_on_count_threshold(tmp_path, monkeypatch, capsys):
     # Four rapid prompts (never near 30 min) still yield exactly one nudge.
-    out = prompts_until_nudge(tmp_path, monkeypatch, capsys)
+    assert run(monkeypatch, capsys, base(tmp_path, 'UserPromptSubmit')) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'UserPromptSubmit')) is None
+    assert run(monkeypatch, capsys, base(tmp_path, 'UserPromptSubmit')) is None
+    out = run(monkeypatch, capsys, base(tmp_path, 'UserPromptSubmit'))
 
     assert out['hookSpecificOutput']['hookEventName'] == 'UserPromptSubmit'
     assert out['hookSpecificOutput']['additionalContext'] == memory_nudge.NUDGE_TEXT
