@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.4.98] — 20261114
+
+> kronael v0.4.98 — idle compaction and report pages
+>
+> Claude compacts an idle session before its prompt cache expires, and report pages follow one short shape.
+>
+> • Compaction — sync turns on idle compaction and auto-compaction for Claude Code.
+> • Report pages — one rule line, an action table, the full table, a CSV, an index and a muted nav line.
+> • Research — a challenger wins only when its mean beats the baseline's second-best of six seeded paths.
+> • Finish mode — /fin stops stale background watches before it ends.
+> • Git — a PR into the default head merges as a squash, except a stack member.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- Sync sets `idleCompaction` and `autoCompactEnabled` in settings.
+- A report keeps its math in one module and opens every page with a minimal navigation line.
+- Development-run output stays in the session's own dirs, never in a shared report root.
+- /fin reaps background watches whose work ended or whose condition cannot become true.
+- PRs into the default head merge with `merge_method=squash`; a stack member keeps its own landing.
+
 ## [v0.4.97] — 20261113
 
 > kronael v0.4.97 — shared reply budgets and PR labels
