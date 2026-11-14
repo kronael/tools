@@ -168,6 +168,7 @@
   "promptSuggestionEnabled": false,
   "spinnerTipsEnabled": false,
   "bashEditDiffEnabled": false,
+  "idleCompaction": true,
   "crossSessionInbound": "refuse",
   "isolatePeerMachines": true,
   "attribution": {
