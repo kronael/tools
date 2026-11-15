@@ -125,9 +125,11 @@ several. NEVER switch it off by a weight that drops it or defaults it: a
 dropped row came back at weight 1.0 and a row at 0.15 shifted the baseline by
 +1,859 to +16,149 USD against a spread of 17,000. ALWAYS search an element's
 parameters by a small space-filling design, not a grid: 6 points by Latin
-hypercube with maximin distance and a fixed seed, each a screen; ALWAYS add the
-two nearest neighbours of a pass, because a robust parameter is a plateau, not
-one good cell. A symbol with no plateau is "no candidate", which is a result.
+hypercube with maximin distance and a fixed seed, each a screen. ALWAYS find
+the points that work first and check their stability second (new paths, more
+seeds, a later window, the nearest parameter points): NEVER make a plateau a
+condition for finding a point. Report "works" and "stable" separately; a symbol
+with no working point is "no candidate", which is a result.
 
 ## Runs
 
