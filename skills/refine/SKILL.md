@@ -45,6 +45,15 @@ code, deployment, specs or data; documents also carry claims to verify.
    — and repeat them after fixes at step 10.
    → every gate hit is fixed, or kept under the exception or reason `diff.md` names.
 
+3.2. **Governing rules** — ALWAYS read the root `CLAUDE.md` and each one on the
+   path to a changed file for the gates, acceptance and closing steps they give
+   refine. Map each file to them and the skills governing what it is, NEVER its
+   extension alone (a migration: `sql` § Migrations and § Functions;
+   `programs/**`: `solana`), and `Skill()` each plus those it requires. Rebuild
+   the plan: each gate runs now and at step 10, each acceptance at step 9, each
+   closing step at step 10; the map goes into the work record and every brief.
+   → every changed path has its skills; every stated refine duty sits in a step.
+
 3.5. **Whole-change audit** — ALWAYS dispatch one fresh read-only audit of the
    complete scope: the bug and fix, the plan and its implementation, or the
    release range. Select the audit task through `dispatch`; provider runbooks
@@ -61,15 +70,12 @@ code, deployment, specs or data; documents also carry claims to verify.
 4. **Contexts** — use the audit's depth to select ≤4 contexts, one per command family —
    what resolves references, what counts occurrences, what deploys, what the
    type checker reads — NEVER one per directory. Every changed path and every
-   claim lands in exactly one. A code context also carries language lenses: map
-   its files to their skills (`.rs`→`rs`, `.tsx`→`tsx`, `programs/**`→`solana`,
-   plus every skill those require), `Skill(<matched>)` each so its cold rules
-   are in context, and read the `<skill>.md` lens in this directory — list the
+   claim lands in exactly one. A code context also carries language lenses: the
+   `<skill>.md` lens in this directory of each skill step 3.2 loaded — list the
    directory, NEVER assume which exist. A document context (`docs/**`,
    `README.md`, `ARCHITECTURE.md`) reads the `readme.md` lens here beside the
-   `claims.md` sections that apply. ALWAYS hand each context the chunks of the
-   live WISDOM that govern it — NEVER a frozen checklist — and the `CLAUDE.md`
-   files on the path to each of its files, whose broken rules are findings that
+   `claims.md` sections that apply. ALWAYS hand each context its step-3.2 rows
+   — NEVER a frozen checklist — whose broken rules are findings that
    quote the rule (`software.md` § Rules the instruction files state). A validation gate a
    lens names that the test target misses (a typecheck) runs once the lens is
    read, and again at step 10. ALWAYS seed the correctness lenses from
@@ -196,6 +202,6 @@ code, deployment, specs or data; documents also carry claims to verify.
   NEVER do the improvement work in main context. Provider runbooks own
   native and cross-provider CLI launches.
 - A language lens lives at `<skill>.md` in this directory, named for the skill
-  step 4 matched — adding the file is the whole registration. One lens per `##`
+  step 3.2 matched — adding the file is the whole registration. One lens per `##`
   heading, each ending in its tag so step 6 can assign the relevant hunts.
   NEVER copy write-time rules into a lens; it carries only the refine hunts.

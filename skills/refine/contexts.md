@@ -56,7 +56,7 @@ a subsystem the tree does not have is the loudest finding this context returns.
 
 **Data and schema.** Migrations, db modules, listeners, the runner that applies
 them. Settled by enumerating what the runner reads, not what the directory
-holds.
+holds. Its lens is `sql.md` § Migrations break their contract.
 
 **The tool or plugin surface.** Registries, allowlists, dispatch chains,
 receipt ledgers. Settled by counting the places one addition has to touch —

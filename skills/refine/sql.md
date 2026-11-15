@@ -22,3 +22,9 @@ it. Each lens carries the tag refine step 6 reads to pick the agent type.
 - ALWAYS check that each added statement sits directly above the one
   function that runs it, not in a block at the top of the module (`sql`
   § Database Modules).
+
+## Migrations break their contract `correctness`
+
+- ALWAYS list the migration files the range modified, renamed or deleted
+  (`git diff --diff-filter=MRD --name-only <range> -- <migrations dir>`): a
+  versioned one is a finding; a function file is edited in place by rule.

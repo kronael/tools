@@ -17,6 +17,7 @@ Owns: <the aspect this sub owns>. Its command family is <command>.
 Primary: <files to modify — none for a read-only sub>.
 Context: <read-only reference: the files carrying the idiom to match>.
 Documents asserting things about it: <paths>. Re-measure; do not build on them.
+Rules: <its step-3.2 rows: skills and sections to load, `CLAUDE.md` files to read first>.
 Out of bounds: <paths not to touch>.
 
 <the request, stated as a goal>
