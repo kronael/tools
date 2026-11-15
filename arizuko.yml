@@ -17,7 +17,9 @@ install: |
     for name in skip:
         shutil.rmtree(prefix / 'skills' / name)
     hooks = {'prompt_nudge', 'pretool_nudge'}
-    keep = {'lib', 'gh_text_lint.py', 'codex_hook.py'} | {h + '.py' for h in hooks}
+    # caveman.py stays unwired: prompt_nudge imports caveman_selected from it,
+    # and arizuko holds replies to its own Response Style, not the caveman style.
+    keep = {'lib', 'gh_text_lint.py', 'codex_hook.py', 'caveman.py'} | {h + '.py' for h in hooks}
     for path in (prefix / 'hooks').iterdir():
         if path.name not in keep:
             shutil.rmtree(path) if path.is_dir() else path.unlink()
