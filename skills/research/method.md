@@ -88,8 +88,15 @@ return.
 A smoke run is plumbing, not a result: a 10-day margin shrank six-fold over
 the full window, and a single-seed run's small win is noise. ALWAYS sample at
 the cadence the claim needs and state n beside every score. ALWAYS judge a
-challenger against the baseline's own spread over seeded paths: it wins only
-when its mean beats the baseline's second-best path of six.
+challenger against a large reference sample of the baseline, not a few paired
+runs: 32 seeded paths of the baseline once, a challenger run of one path passes
+the screen when it beats at least 30 of them (a null challenger passes 3 of 33,
+9 percent), and a k-path challenger compares its mean with k-path means drawn
+from the same 32 (bootstrap, fixed seed). Pairing paths helps only when the
+paired difference has a smaller spread than the baseline's own: measure both
+before choosing it. The screen is a filter: ALWAYS confirm a pass with new
+path ids, two more seeds (each with its own baseline sample) and a later
+window, and NEVER report a screened pass as a result.
 
 ## Controls
 
@@ -107,6 +114,20 @@ backtest's round-trip count against the study's trade count, the strategy
 against its observe-only sibling. Agreement is the cheapest evidence there is.
 A surprise is first a question about the instrument: confirm it on a
 known-good baseline before believing the system moved.
+
+## Adding an element to a baseline
+
+An element added to a baseline changes more than its own output when the
+baseline normalizes over its members (a mean weight, a rank, a budget). ALWAYS
+prove the control: add the element switched off and require the baseline's
+output byte for byte (a hash of the trade file), with one element and with
+several. NEVER switch it off by a weight that drops it or defaults it: a
+dropped row came back at weight 1.0 and a row at 0.15 shifted the baseline by
++1,859 to +16,149 USD against a spread of 17,000. ALWAYS search an element's
+parameters by a small space-filling design, not a grid: 6 points by Latin
+hypercube with maximin distance and a fixed seed, each a screen; ALWAYS add the
+two nearest neighbours of a pass, because a robust parameter is a plateau, not
+one good cell. A symbol with no plateau is "no candidate", which is a result.
 
 ## Runs
 
