@@ -155,7 +155,7 @@ call spends it, whatever it carries. An `override` line with any other key is
 plain text, measured with the rest of the message.
 
 Silent unless `~/.claude/settings.json` selects `caveman`; a project's own
-`outputStyle` setting and `/caveman off` are not read. Each call is measured
+`outputStyle` setting is not read. Each call is measured
 alone, so several calls in one turn each get the ceiling. A session without
 the `SendUserMessage` tool never runs the hook. `test_reply_gate.py` pins the
 cap and the unit to the skill. Codex does not wire it.
