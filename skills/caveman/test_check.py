@@ -3,6 +3,8 @@ import subprocess
 import sys
 
 import pytest
+from check import CEILING
+from check import COLUMNS
 
 LOAD = {'type': 'tool_use', 'name': 'Skill', 'input': {'skill': 'caveman'}}
 HOOK_LINE = {
@@ -133,5 +135,5 @@ def test_a_subagent_and_a_tool_result_are_not_the_owner(check):
 
 def test_the_check_counts_in_the_unit_and_ceiling_the_skill_states(pytestconfig):
     skill = (pytestconfig.rootpath / 'skills' / 'caveman' / 'SKILL.md').read_text()
-    assert 'the rendered 80-column terminal line' in skill
-    assert '≤20 lines, ≤200 words, hard ceiling' in skill
+    assert f'the rendered {COLUMNS}-column terminal line' in skill
+    assert f'≤{CEILING} lines, ≤200 words, hard ceiling' in skill

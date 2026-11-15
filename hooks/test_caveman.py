@@ -93,8 +93,10 @@ def test_a_message_over_the_ceiling_is_denied_with_the_measured_count(home) -> N
     assert decision(out) == 'deny'
     assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
     text = out['hookSpecificOutput']['permissionDecisionReason']
-    assert f'{CAP_LINES + 1} rendered 80-column lines' in text
+    assert f'{CAP_LINES + 1} rendered {COLUMNS}-column lines' in text
     assert f'ceiling is {CAP_LINES}' in text
+    assert 'caveman skill' in text
+    assert 'only the answer' not in text
 
 
 def test_the_denial_names_a_key_that_passes_the_next_message_once(home) -> None:

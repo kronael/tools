@@ -54,12 +54,9 @@ def issue_key(stamp):
 def reason(lines, key):
     return (
         f'Not delivered: the message is {lines} rendered {COLUMNS}-column lines '
-        f'and the caveman ceiling is {CAP_LINES}. The user has not seen it. Send '
-        f'only the answer to what the user asked, in {CAP_LINES} lines or fewer. '
-        'Leave the status of other work, the evidence and the next steps in '
-        'plain text, and name what you left out in one closing line. Code fences '
-        'do not count. If the answer needs the length, resend the message with '
-        'one more line at its top. The hook removes that line, and its key works '
+        f'and the caveman ceiling is {CAP_LINES}. The user has not seen it. '
+        'Cut it per the caveman skill. Code fences do not count. '
+        'If the answer needs the length, resend the message with one more line at its top. The hook removes that line, and its key works '
         f'once, on the next message only. That line is: {OVERRIDE} {key}'
     )
 
