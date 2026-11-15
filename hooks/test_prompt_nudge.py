@@ -409,6 +409,27 @@ def test_codex_caveman_line_follows_the_bridged_style(
         assert text == prompt_nudge.CAVEMAN_NUDGE
 
 
+def test_codex_reaches_the_skill_without_an_output_style(pytestconfig) -> None:
+    root = pytestconfig.rootpath / '..'
+    agents = (root / 'codex' / 'AGENTS.md').read_text()
+    skill = (root / 'skills' / 'caveman' / 'SKILL.md').read_text()
+    hook_output = {
+        'hookSpecificOutput': {
+            'hookEventName': 'UserPromptSubmit',
+            'additionalContext': prompt_nudge.CAVEMAN_NUDGE,
+        }
+    }
+    translated = codex_hook.translate_output(
+        json.dumps(hook_output), 'UserPromptSubmit', 'prompt_nudge'
+    )
+    context = json.loads(translated)['hookSpecificOutput']['additionalContext']
+    assert context == prompt_nudge.CAVEMAN_NUDGE
+    assert 'Skill tool' not in context
+    assert '`caveman` skill' in agents
+    assert '`~/.claude/output-styles/caveman.md` exists' in agents
+    assert skill.startswith('---\nname: caveman\ndescription: ')
+
+
 def test_caveman_line_and_style_point_at_the_skill_that_holds_the_rules(pytestconfig) -> None:
     root = pytestconfig.rootpath / '..'
     skill = (root / 'skills' / 'caveman' / 'SKILL.md').read_text()
