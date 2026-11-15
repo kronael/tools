@@ -467,9 +467,9 @@
 
 ## Hooks
 
-- **REPLY-GATE-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
-  trial. `hooks/reply_gate.py` denies a brief-mode `SendUserMessage` over the
-  20-line caveman ceiling, and `test_reply_gate.py` covers the script. No
+- **CAVEMAN-HOOK-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
+  trial. `hooks/caveman.py` denies a brief-mode `SendUserMessage` over
+  the caveman hard ceiling, and `test_caveman.py` covers the script. No
   brief-mode session has run it. Four facts are read from Claude Code 2.1.323
   and not observed: the account is entitled to brief mode, without which
   `--brief` does nothing; PreToolUse hooks run for `SendUserMessage`; the chat
@@ -483,7 +483,8 @@
   key, and the next call fits. Then ask for a reply that needs the length: the
   resend opens with `override <key>` and the chat view shows the message
   without that line. **Options:** (a) keep the wiring after a passed trial; (b)
-  remove `reply_gate.py`, its test and its `settings-recommended.json` entry.
+  remove `caveman.py`, its test and its `settings-recommended.json`
+  entry.
   **Default if nothing is decided:** the wiring stays; a session without the
   `SendUserMessage` tool never runs it.
 
@@ -1226,7 +1227,7 @@
   hook runs after the reply is on screen: a block cannot retract the reply, and
   the rewrite it requests is a second copy for the user to read. A
   `MessageDisplay` hook can replace the lines the terminal shows, but the model
-  does not learn which lines the user read. `hooks/reply_gate.py` holds the
+  does not learn which lines the user read. `hooks/caveman.py` holds the
   ceiling on a brief-mode `SendUserMessage` call, where a denial reaches the
   model before the user reads anything, and `skills/caveman/check.py` measures
   a finished session.

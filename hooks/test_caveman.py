@@ -4,10 +4,10 @@ import subprocess
 import sys
 
 import pytest
-from reply_gate import CAP_LINES
-from reply_gate import COLUMNS
-from reply_gate import check
-from reply_gate import rendered_lines
+from caveman import CAP_LINES
+from caveman import COLUMNS
+from caveman import check
+from caveman import rendered_lines
 
 OVER = '\n'.join(f'Line {n}.' for n in range(CAP_LINES + 1))
 AT_CAP = '\n'.join(f'Line {n}.' for n in range(CAP_LINES))
@@ -177,7 +177,7 @@ def test_other_tools_and_malformed_input_pass(home, data) -> None:
     assert check(data, home) is None
 
 
-def test_the_gate_is_silent_under_another_output_style(home) -> None:
+def test_the_hook_is_silent_under_another_output_style(home) -> None:
     settings = home / '.claude' / 'settings.json'
     for text in json.dumps({'outputStyle': 'default'}), 'not json', '[]':
         settings.write_text(text)
@@ -196,7 +196,7 @@ def test_no_state_directory_means_no_denial(home, monkeypatch) -> None:
 
 
 def test_a_key_that_cannot_be_stored_means_no_denial(home) -> None:
-    (home / 'state' / 'reply-gate-s1').mkdir(parents=True)
+    (home / 'state' / 'caveman-key-s1').mkdir(parents=True)
 
     assert check(payload(OVER), home) is None
 
@@ -220,7 +220,7 @@ def run_hook(hook, home, stdin):
 
 
 def test_the_script_denies_on_stdin_and_stays_silent_on_bad_input(home, pytestconfig) -> None:
-    hook = pytestconfig.rootpath / 'reply_gate.py'
+    hook = pytestconfig.rootpath / 'caveman.py'
 
     denied = json.loads(run_hook(hook, home, json.dumps(payload(OVER))))
     assert decision(denied) == 'deny'

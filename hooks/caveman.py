@@ -6,7 +6,6 @@ import re
 import secrets
 import sys
 
-from lib.caveman import caveman_selected
 from lib.state import session_state
 
 TOOL = 'SendUserMessage'
@@ -15,6 +14,14 @@ COLUMNS = 80
 OVERRIDE = 'override'
 FENCE = re.compile(r'^[ \t]*((`|~)\2{2,}+)[\s\S]*?^[ \t]*\1\2*[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
+
+
+def caveman_selected(home):
+    try:
+        with open(os.path.join(home, '.claude', 'settings.json')) as f:
+            return json.load(f).get('outputStyle') == 'caveman'
+    except (OSError, ValueError, AttributeError):
+        return False
 
 
 def rendered_lines(message):
@@ -52,7 +59,7 @@ def reason(lines, key):
         'Leave the status of other work, the evidence and the next steps in '
         'plain text, and name what you left out in one closing line. Code fences '
         'do not count. If the answer needs the length, resend the message with '
-        'one more line at its top. The gate removes that line, and its key works '
+        'one more line at its top. The hook removes that line, and its key works '
         f'once, on the next message only. That line is: {OVERRIDE} {key}'
     )
 
@@ -64,7 +71,7 @@ def check(data, home):
     message = tool_input.get('message') if isinstance(tool_input, dict) else None
     if not isinstance(message, str):
         return None
-    stamp = session_state('reply-gate', data.get('session_id'))
+    stamp = session_state('caveman-key', data.get('session_id'))
     if stamp is None:
         return None
     pending = take_key(stamp)

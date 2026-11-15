@@ -1,8 +1,8 @@
 # Kronael Hooks
 
 Lifecycle hooks: keyword routing, language-skill nudges, LOCAL.md injection,
-unsafe-command blocks, a GitHub text gate, a reply length gate for brief mode,
-Markdown formatting, commit/diary stop checks and a session memory nudge.
+unsafe-command blocks, a GitHub text gate, a message length check for brief
+mode, Markdown formatting, commit/diary stop checks and a session memory nudge.
 Scripts install to `~/.claude/hooks/`.
 
 Claude wiring (events, matchers, timeouts) is `../settings-recommended.json`;
@@ -136,7 +136,7 @@ nested in an opted-in tree are never touched; Codex's `apply_patch` is not a
 write it formats. `software/code.md` § Layout and formatting owns the rule a
 repository adopts.
 
-### reply_gate.py (PreToolUse)
+### caveman.py (PreToolUse)
 
 Holds a brief-mode reply to the caveman ceiling before the user reads it. In
 brief mode (`claude --brief`, with `"defaultView": "chat"` in
@@ -155,10 +155,12 @@ call spends it, whatever it carries. An `override` line with any other key is
 plain text, measured with the rest of the message.
 
 Silent unless `~/.claude/settings.json` selects `caveman`; a project's own
-`outputStyle` setting is not read. Each call is measured
-alone, so several calls in one turn each get the ceiling. A session without
-the `SendUserMessage` tool never runs the hook. `test_reply_gate.py` pins the
-cap and the unit to the skill. Codex does not wire it.
+`outputStyle` setting is not read. Each call is measured alone, so several
+calls in one turn each get the ceiling. A session without the
+`SendUserMessage` tool never runs the hook; outside brief mode the output
+style and `CAVEMAN_NUDGE` are the only pointers at the skill.
+`test_caveman.py` pins the cap and the unit to the skill. Codex does
+not wire it.
 
 ### post_tool_nudge.sh (PostToolUse)
 

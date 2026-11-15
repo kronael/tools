@@ -5,7 +5,7 @@ import re
 import sys
 import time
 
-from lib.caveman import caveman_selected
+from caveman import caveman_selected
 from lib.state import hook_event
 from lib.state import session_state
 

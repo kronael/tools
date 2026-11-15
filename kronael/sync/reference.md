@@ -147,6 +147,7 @@ RETIRED = {  # names the bundle shipped and dropped
     'hooks/context.py', 'hooks/extnudge.py', 'hooks/lib/toolchain.py', 'hooks/nudge.py',
     'hooks/redirect.py', 'hooks/spec_lint.py', 'hooks/test_spec_lint.py',
     'hooks/style_lint.py', 'hooks/test_style_lint.py',
+    'hooks/lib/caveman.py', 'hooks/reply_gate.py', 'hooks/test_reply_gate.py',
     'output-styles/80-caveman.md',
 }
 
