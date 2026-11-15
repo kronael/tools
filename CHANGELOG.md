@@ -1,5 +1,24 @@
 # Changelog
 
+## [v0.5.1] — 20261115
+
+> kronael v0.5.1 — caveman rules in one skill
+>
+> The caveman reply rules now live in one skill that Claude and Codex both load; the output style and the prompt line only point at it.
+>
+> • Caveman skill — holds the budget, shape and language rules, with word counts beside the 80-column lines.
+> • Output style — selects caveman and tells the model to load the skill, with no rules of its own.
+> • Codex — loads the same skill through AGENTS.md and the prompt line.
+> • Brief mode — the length hook is renamed caveman.py and points at the skill when it refuses a message.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- `skills/caveman/SKILL.md` holds every caveman rule; `check.py` measures a session transcript.
+- `/caveman` command retired; sync moves it aside.
+- `hooks/reply_gate.py` is `hooks/caveman.py`; `hooks/lib/caveman.py` is removed.
+- Upgrade: remove the `reply_gate.py` hook entry from `~/.claude/settings.json` before the sync, or Classify stops with UNRESOLVED.
+- arizuko ships `hooks/caveman.py` unwired, for the `prompt_nudge.py` import.
+
 ## [v0.4.99] — 20261114
 
 > kronael v0.4.99 — memory check before the answer
