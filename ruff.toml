@@ -12,7 +12,7 @@ exclude = [".venv", "tmp", "tweetfeed_cookies", "skills/create", "skills/*/lints
 "skills/recall-memories/*.py" = "py310"
 "skills/refine/*.py" = "py310"
 "skills/software/*.py" = "py311"
-"skills/caveman/*.py" = "py311"
+"skills/caveman/*.py" = "py310"
 
 [lint.per-file-ignores]
 "hooks/*.py"   = ["T20", "S603", "S607"]   # hooks print to stdout, run subprocess

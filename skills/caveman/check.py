@@ -10,7 +10,7 @@ from dataclasses import field
 SKILL = 'caveman'
 COLUMNS = 80
 CEILING = 20
-FENCE = re.compile(r'^[ \t]*((`|~)\2{2,}+)[\s\S]*?^[ \t]*\1\2*[ \t]*$', re.MULTILINE)
+FENCE = re.compile(r'^[ \t]*((`|~)\2{2,})(?!\2)[\s\S]*?^[ \t]*\1\2*[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
 
 
