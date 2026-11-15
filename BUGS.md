@@ -488,6 +488,16 @@
   **Default if nothing is decided:** the wiring stays; a session without the
   `SendUserMessage` tool never runs it.
 
+- **HOOKS-CI-COVERAGE-GAPS** (MED, ops) — `.github/workflows/test-hooks.yml`
+  runs the hooks tests on Python 3.12 only, while the hooks claim 3.9 support;
+  a 3.11+ regex reached master before deca986 unseen. Its push triggers omit
+  `skills/caveman/**`, `output-styles/**` and `codex/AGENTS.md`, which the hooks
+  tests read, so a change there runs nothing. No workflow runs
+  `skills/caveman/test_check.py`. The token lacks `workflow` scope, so the
+  workflow file cannot be pushed; no test — ops. **Fix:** add a 3.9 matrix
+  entry, the three trigger paths, and a `uvx pytest -q
+  skills/caveman/test_check.py` step. Status: open (record only).
+
 - **HOOKS-MUTATION-RUN-HAS-NO-PYPROJECT** (LOW, config) — CONFIRMED 2026-11-13.
   `skills/software/mut_changed.py` exits 2 with `no pyproject.toml` when run
   from `hooks/`: the hooks tests take their root from `hooks/pytest.ini`, and
