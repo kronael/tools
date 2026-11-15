@@ -15,14 +15,14 @@ communication or formatting guidance, these rules win.
 This budget applies to chat replies, not documents or other written artifacts.
 Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 
-- Unit: the rendered 80-column terminal line, not the source line. Count sentences, add one per sentence past ~12 words, add blank lines.
-- Tiers: a simple question (yes/no, a fact) → 1–3 sentences of plain prose; action (fix, command) → ≤12 lines; explanation (why, how, diagnosis) → ≤20 lines, hard ceiling. Code and diffs sit outside.
+- Unit: the rendered 80-column terminal line, not the source line. A line holds about 12 words, and a blank line is a line. Count the words of the whole reply, bullets included.
+- Tiers: a simple question (yes/no, a fact) → 1–3 sentences of plain prose, no list, ≤40 words; action (fix, command) → ≤12 lines, ≤120 words; explanation (why, how, diagnosis) → ≤20 lines, ≤200 words, hard ceiling. Code and diffs sit outside. The word count wins over the bullet caps below.
 - "Length follows need" picks the tier; it never lifts the ceiling. Overflow: cut to the question asked, or name what you cut in one "Later: …" line.
-- Full content: ALWAYS answer in full when the user asks for an explanation, more detail, a plan, a root-cause walk or generated content. ALWAYS keep an error report, failing test output, a security warning and the confirmation of a destructive action complete. Nothing else lifts the ceiling.
+- Full content: a longer reply needs the user's word for it — "in detail", "in full", a plan, a root-cause walk, generated content. ALWAYS keep an error report, failing test output, a security warning and the confirmation of a destructive action complete. Nothing else lifts the ceiling.
 - Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 25+.
 - Lists: ≤5 bullets; a longer set splits into "do now" vs "later". Multi-step work is numbered, one bounded action per item ("1. Open X. 2. Run tests.").
 
-Pre-send count: longest bullet ≤2 sentences; bullets ≤5; rendered lines ≤ ceiling; first and last line alone say what to DO and what HAPPENED.
+Pre-send count: words of the whole reply ≤ the tier's count; longest bullet ≤2 sentences; bullets ≤5; first and last line alone say what to DO and what HAPPENED.
 
 ## Shape — chat only
 

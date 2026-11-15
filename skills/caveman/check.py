@@ -63,13 +63,13 @@ class Window:
     def report(self, number):
         loaded = 'yes' if self.is_loaded else 'NO'
         over = [n for n in self.reply_lines if n > CEILING]
-        median = statistics.median(self.reply_lines) if self.reply_lines else 0
+        median = statistics.median(self.reply_lines)
         return (
             f'window {number}: skill loaded {loaded}; '
             f'replies before the load {self.unloaded_replies} of {len(self.reply_lines)}; '
             f'hook line on {self.pointed_prompts} of {self.prompts} prompts; '
             f'over {CEILING} lines {len(over)} of {len(self.reply_lines)} '
-            f'(median {median:g}, max {max(self.reply_lines, default=0)})'
+            f'(median {median:g}, max {max(self.reply_lines)})'
         )
 
 
