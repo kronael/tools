@@ -58,6 +58,25 @@ needs to scroll.
   plotly.js and d3 load as one pinned version from a CDN — on a report page
   the one exception to the no-CDN rule in `writing` → `page.md` § Layout.
 
+## Figures inside a table
+
+- ALWAYS draw a delta with its interval as a dot and bar on one axis per table:
+  one zero line, tick labels in the header, the interval stated once in the lead
+  line. Drop tick labels near an edge and thin crowded ones on a phone, keeping
+  zero. A filled dot with bold numbers marks a run that meets the rule, a ring
+  the others: the second cue beside colour.
+- ALWAYS draw a measure against a threshold as a bar on a track with a tick at the
+  threshold: full ink at or above it, 70% muted below it, 3:1 contrast for the
+  fill against the track and the track against the page.
+- ALWAYS put the answer (the verdict) in the second column, after the row label.
+- ALWAYS state a page's heading as a counted result computed from the summaries
+  ("3 of 17 runs beat their control, the best at t 1.3"), NEVER a question or a
+  typed number. ALWAYS carry the evidence strength (t or spread) beside every
+  winner a heading names.
+- ALWAYS hold only current results under a report root: a retired run moves to the
+  spool, and a round that reads an input another run rewrites pins its own copy and
+  shows the hash.
+
 ## Page tokens
 
 The page's colours, as CSS tokens on `:root`; the dark column applies under

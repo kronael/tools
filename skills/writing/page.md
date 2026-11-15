@@ -81,7 +81,21 @@ passes — every item there is one the owner otherwise prompts for.
   sibling has (a new box kind, badge or colour) without asking, and a change
   to a shared element lands on every page in one pass.
 - At phone width ALWAYS reflow a figure or show its narrow variant and wrap a
-  full address; NEVER sideways scrolling.
+  full address; NEVER sideways scrolling. A long unbreakable string (hash,
+  address, URL) overflows without any box being wide: ALWAYS
+  `overflow-wrap:anywhere`, and test the page as
+  `document.documentElement.scrollWidth` against `clientWidth`.
+- ALWAYS make a table fit the phone width without a scroll container: the sum of
+  its column widths decides, so cut columns to the CSV until it fits, and keep a
+  long list under the row label, not in a wide column of its own. NEVER an inner
+  horizontal scroller: a header sticks to the viewport only on a table with no
+  `overflow-x` wrapper. ALWAYS `white-space:nowrap` on a numeric value header;
+  a category-count header on a table with many columns may wrap. The column
+  budget is the sum of the nowrap header widths: at 358 px four columns fit only
+  at 13px text and 12px headers. ALWAYS set the breakpoint at the widest
+  viewport where the full table still overflows, measured, NEVER a guess: a
+  760px breakpoint left 768 to 1000px overflowing. ALWAYS test which columns a
+  phone variant hides: CSS-only hiding is invisible to table-parsing tests.
 
 ## Density
 
@@ -99,6 +113,11 @@ passes — every item there is one the owner otherwise prompts for.
   NEVER state the obvious: status words for what exists ("built", "works"),
   a role restated in every flow, a refusal followed by "the run fails". The
   test: would the page's reader be surprised or need it? If not, cut it.
+- ALWAYS show counts by category as one column per category with a dim dot
+  for zero, NEVER a sentence of counts. ALWAYS one number per cell: a cell
+  holding a delta, its wins and a t-value is three columns or one plot. A
+  description column is text: NEVER on a page the owner asked to be free of
+  text.
 - NEVER mechanics that decide nothing — rent and who pays it, call depth, byte
   layouts, how a tool works inside. A wire format the page is about is no
   mechanic: draw it as § Diagrams says. The page shows who signs, what moves,

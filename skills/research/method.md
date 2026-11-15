@@ -61,7 +61,10 @@ fit converges to, the separation has failed.
 
 ## Holdout
 
-A holdout is consumed once, by a future session. ALWAYS lock the window
+A holdout is consumed once, by a future session. ALWAYS run it only on the
+owner's explicit sign-off, given in a message that names the frozen candidates;
+NEVER chain it behind a development or out-of-sample round, a schedule or any
+config that runs unattended. ALWAYS lock the window
 before tuning and refuse it in code behind an explicit flag, and NEVER look at
 numbers outside the locked test window while choosing knobs — seeing them is
 enough to contaminate the choice. NEVER spend it on a "decisive test"; when a

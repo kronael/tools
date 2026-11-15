@@ -20,6 +20,17 @@ agent-browser hover @e1                          # exercise states before the sh
 agent-browser screenshot /tmp/ui.png [--full]
 ```
 
+Traps that cost a render loop:
+- Dark mode is `agent-browser set media dark`; there is no top-level `media` command.
+- `close` followed at once by `open` or `set viewport` fails with "Failed to connect",
+  and a shot taken right after `open` or `set viewport` comes back blank or at the
+  old width: ALWAYS `sleep 2` after each, and check the reported `clientWidth`.
+- Opening the same file with only a new `#anchor` does not reload it: ALWAYS open
+  `about:blank` first, or the shot shows the old page.
+- ALWAYS measure overflow as `document.documentElement.scrollWidth` against
+  `clientWidth`. An inline `eval` is blocked in an isolated worktree: put the probe
+  in a script file.
+
 ## Non-browser renders
 
 ```bash
