@@ -5,14 +5,14 @@
 ```
 User Prompt ──> UserPromptSubmit ──> prompt_nudge.py (keyword → command/agent;
                                                       /solve on a new task;
-                                                      caveman budget line)
+                                                      caveman skill line)
                                  ──> local.py        (LOCAL.md on first prompt)
                                  ──> memory_nudge.py (session memory, once/session)
 
 Subagent ──> SubagentStart ──> prompt_nudge.py (/solve for the brief)
 
 Tool call ──> PreToolUse  ──> pretool_nudge.py   (file info / unsafe block / GitHub text gate)
-                          ──> reply_gate.py      (SendUserMessage: caveman line ceiling)
+                          ──> caveman.py         (SendUserMessage: caveman line ceiling)
           ──> PostToolUse ──> post_tool_nudge.sh (rumdl fmt on a written .md via
                                                   pretool_nudge.py; periodic
                                                   commit/diary nudge)
@@ -37,15 +37,11 @@ first runs through `codex_hook.py`.
 `hook_event(data)`, which reads the event key across all three spellings.
 
 `local.py`, `memory_nudge.py`, `prompt_nudge.py`, `pretool_nudge.py`,
-`reclaude.py` and `reply_gate.py` import it as `lib.state`, resolved from the
+`reclaude.py` and `caveman.py` import it as `lib.state`, resolved from the
 hook script's own directory (`sys.path[0]`), so an install that omits the
 directory tracebacks on every prompt and every tool call. `stop.py`
 imports nothing from it: it carries its own `hook_event`, which checks
 `KRONAEL_HOOK_EVENT` before the three payload keys.
-
-`caveman.py` — `caveman_selected(home)`: whether `~/.claude/settings.json`
-selects the caveman output style. `prompt_nudge.py` and `reply_gate.py` import
-it as `lib.caveman`.
 
 ### codex_hook.py (Codex adapter)
 
@@ -100,9 +96,9 @@ model; `systemMessage` reaches only the user.
 6. Emit the first exact route as `info: Invoke /<skill>.`.
 7. Append `CAVEMAN_NUDGE` to every prompt while `~/.claude/settings.json`
    selects the caveman style, or under Codex while the bridged style exists.
-   It names the § Budget tiers
-   and the 80-column unit; the rules stay in the style file. A prompt with no
-   nudge, no route and another style gets no output.
+   It names the `caveman` skill and tells the model to load it when its rules
+   are not in context; the rules stay in the skill. A prompt with no nudge, no
+   route and another style gets no output.
 
 **State:** the session-keyed stamp `solve-nudge-{session_id}` in
 `~/.claude/state` (`lib/state.py`): its presence marks that a session's first
@@ -220,7 +216,7 @@ and whose `origin.kind` is `human` or absent. Imported by `pretool_nudge.py`;
 run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 `gh-comment`.
 
-### reply_gate.py (PreToolUse on SendUserMessage)
+### caveman.py (PreToolUse on SendUserMessage)
 
 **Input:** JSON with `tool_name`, `tool_input.message` and `session_id`;
 `~/.claude/settings.json` `outputStyle`.
@@ -235,21 +231,22 @@ shorter message itself. A Stop hook sees a reply after the terminal shows it,
 so a block there adds a second copy. A `MessageDisplay` hook can replace the
 lines on screen, but the model does not learn which lines the user read.
 
-`CAP_LINES` is the 20-line hard ceiling of `../output-styles/caveman.md`
-§ Budget and `COLUMNS` its 80-column unit; `test_reply_gate.py` asserts the
-style file still states both.
+`CAP_LINES` is the hard ceiling of `../skills/caveman/SKILL.md` § Budget and
+`COLUMNS` its unit; `test_caveman.py` asserts the skill still states
+both. `caveman_selected(home)`, whether `~/.claude/settings.json` selects the
+caveman output style, lives here too; `prompt_nudge.py` imports it.
 
 **Flow:**
 1. Silent for any other tool, a missing `message`, an `outputStyle` other
    than `caveman`, or an unusable state directory.
-2. Read the key in the per-session stamp `reply-gate-{session_id}` in
+2. Read the key in the per-session stamp `caveman-key-{session_id}` in
    `~/.claude/state` (`lib/state.py`) and remove the stamp, so a key covers one
    call. When the first line of `message` is `override <key>` with that key:
    answer `updatedInput`, the call's input with that line and the blank lines
    after it removed from `message`, and no permission decision.
 3. Drop fenced code and link targets, then count rendered lines
-   (`ceil(len/80)` per source line, a blank line counts one). At or under the
-   ceiling: pass.
+   (`ceil(len/COLUMNS)` per source line, a blank line counts one). At or under
+   the ceiling: pass.
 4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
    deny. The reason gives the count, says the user has not seen the message,
    asks for the answer to the question alone, with the rest left in plain
@@ -257,12 +254,15 @@ style file still states both.
    cannot be stored means no denial.
 
 The hook cannot tell the fact, action and explanation tiers apart, so it holds
-only the ceiling; the 1-3 and ≤12 tiers stay with the style file. It measures
-one call: it cannot see that several calls belong to one reply. Codex does
-not wire it: `SendUserMessage` and `outputStyle` belong to Claude Code.
-Codex's [hook events](https://learn.chatgpt.com/docs/hooks) offer no
-pre-display reply gate; `Stop` requests continuation after a reply.
-The shared style and prompt reminder supply Codex's reply budget.
+only the ceiling; the other tiers stay with the skill. It measures one call:
+it cannot see that several calls belong to one reply. Outside brief mode no
+hook measures a reply: the output style and `CAVEMAN_NUDGE` point at the
+skill, and that is the whole mechanism. Codex does not wire it:
+`SendUserMessage` and `outputStyle` belong to Claude Code. Codex's
+[hook events](https://learn.chatgpt.com/docs/hooks) offer no hook that runs
+before a reply is shown; `Stop` requests continuation after a reply. The
+`caveman` skill, named by `codex/AGENTS.md` and the prompt reminder, supplies
+Codex's reply budget.
 
 ### post_tool_nudge.sh (PostToolUse)
 

@@ -373,13 +373,13 @@ def select_caveman(tmp_path):
     (tmp_path / '.claude' / 'settings.json').write_text('{"outputStyle": "caveman"}')
 
 
-def test_caveman_style_adds_the_budget_line_to_every_prompt(monkeypatch, capsys, tmp_path) -> None:
+def test_caveman_style_adds_the_caveman_line_to_every_prompt(monkeypatch, capsys, tmp_path) -> None:
     select_caveman(tmp_path)
     run(monkeypatch, capsys, 'add a health endpoint')
     assert run(monkeypatch, capsys, 'now wire it into main') == prompt_nudge.CAVEMAN_NUDGE
 
 
-def test_other_style_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
+def test_other_style_gets_no_caveman_line(monkeypatch, capsys, tmp_path) -> None:
     (tmp_path / '.claude').mkdir()
     (tmp_path / '.claude' / 'settings.json').write_text('{"outputStyle": "default"}')
     run(monkeypatch, capsys, 'add a health endpoint')
@@ -388,7 +388,7 @@ def test_other_style_gets_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
 
 @pytest.mark.parametrize('prompt', ['now wire it into main', 'fix the stop hook'])
 @pytest.mark.parametrize('installed', [True, False])
-def test_codex_budget_follows_the_bridged_style(
+def test_codex_caveman_line_follows_the_bridged_style(
     monkeypatch, capsys, tmp_path, prompt, installed
 ) -> None:
     styles = tmp_path / '.claude' / 'output-styles'
@@ -408,14 +408,39 @@ def test_codex_budget_follows_the_bridged_style(
         assert text == prompt_nudge.CAVEMAN_NUDGE
 
 
-def test_budget_line_points_at_the_style_rules(pytestconfig) -> None:
-    style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
-    assert '## Budget' in style
-    assert 'rendered 80-column terminal line' in style
-    assert '80-column lines' in prompt_nudge.CAVEMAN_NUDGE
+def test_codex_reaches_the_skill_without_an_output_style(pytestconfig) -> None:
+    root = pytestconfig.rootpath / '..'
+    agents = (root / 'codex' / 'AGENTS.md').read_text()
+    skill = (root / 'skills' / 'caveman' / 'SKILL.md').read_text()
+    hook_output = {
+        'hookSpecificOutput': {
+            'hookEventName': 'UserPromptSubmit',
+            'additionalContext': prompt_nudge.CAVEMAN_NUDGE,
+        }
+    }
+    translated = codex_hook.translate_output(
+        json.dumps(hook_output), 'UserPromptSubmit', 'prompt_nudge'
+    )
+    context = json.loads(translated)['hookSpecificOutput']['additionalContext']
+    assert context == prompt_nudge.CAVEMAN_NUDGE
+    assert 'Skill tool' not in context
+    assert '`caveman` skill' in agents
+    assert '`~/.claude/output-styles/caveman.md` exists' in agents
+    assert skill.startswith('---\nname: caveman\ndescription: ')
 
 
-def test_budget_line_follows_the_other_nudges(monkeypatch, capsys, tmp_path) -> None:
+def test_caveman_line_and_style_point_at_the_skill_that_holds_the_rules(pytestconfig) -> None:
+    root = pytestconfig.rootpath / '..'
+    skill = (root / 'skills' / 'caveman' / 'SKILL.md').read_text()
+    style = (root / 'output-styles' / 'caveman.md').read_text()
+    assert 'name: caveman\n' in skill
+    assert '## Budget' in skill
+    assert 'caveman skill' in prompt_nudge.CAVEMAN_NUDGE
+    assert '`caveman` skill' in style
+    assert '## ' not in style
+
+
+def test_caveman_line_follows_the_other_nudges(monkeypatch, capsys, tmp_path) -> None:
     select_caveman(tmp_path)
     text = run(monkeypatch, capsys, 'ship this feature')
     assert text.startswith(prompt_nudge.SOLVE_NUDGE)
@@ -423,18 +448,18 @@ def test_budget_line_follows_the_other_nudges(monkeypatch, capsys, tmp_path) -> 
     assert text.endswith(prompt_nudge.CAVEMAN_NUDGE)
 
 
-def test_meta_prompt_gets_only_the_budget_line(monkeypatch, capsys, tmp_path) -> None:
+def test_meta_prompt_gets_only_the_caveman_line(monkeypatch, capsys, tmp_path) -> None:
     select_caveman(tmp_path)
     assert run(monkeypatch, capsys, 'fix the stop hook') == prompt_nudge.CAVEMAN_NUDGE
 
 
-def test_malformed_settings_give_no_budget_line(monkeypatch, capsys, tmp_path) -> None:
+def test_malformed_settings_give_no_caveman_line(monkeypatch, capsys, tmp_path) -> None:
     (tmp_path / '.claude').mkdir()
     (tmp_path / '.claude' / 'settings.json').write_text('[')
     run(monkeypatch, capsys, 'add a health endpoint')
     assert prompt_nudge.CAVEMAN_NUDGE not in run(monkeypatch, capsys, 'now wire it into main')
 
 
-def test_budget_line_is_one_short_pointer() -> None:
+def test_caveman_line_is_one_short_pointer() -> None:
     assert '\n' not in prompt_nudge.CAVEMAN_NUDGE
     assert len(prompt_nudge.CAVEMAN_NUDGE) <= 120

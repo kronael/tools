@@ -89,7 +89,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/hooks/reply_gate.py",
+            "command": "python3 ~/.claude/hooks/caveman.py",
             "timeout": 500
           }
         ]

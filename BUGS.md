@@ -422,11 +422,22 @@
 
 - **WRITING-STE-RULES-DUPLICATE-CAVEMAN** (LOW, docs) — owner decision.
   `skills/writing/SKILL.md` § Language (upstream) and
-  `output-styles/caveman.md` § Language both carry the ASD-STE100 rule list;
+  `skills/caveman/SKILL.md` § Language both carry the ASD-STE100 rule list;
   v0.4.41's `writing` pointed at caveman instead. Two copies drift. The owner
-  keeps the rules in `caveman.md`. **Options:** (a) `writing` points at
+  keeps the rules in the `caveman` skill. **Options:** (a) `writing` points at
   caveman again; (b) caveman points at `writing`. **Default if nothing is
   decided:** both stand. No test — docs.
+
+- **SYNC-COMMANDS-DIR-SHIPS-EMPTY** (LOW, design) — owner decision. The bundle
+  ships no slash command, and `kronael/sync` owns `~/.claude/commands/` all the
+  same: § Swap builds an empty `commands/` and copies the keep-list entries
+  into it, and `RETIRED` lists six `commands/*.md` names. **Options:** (a) drop
+  `commands` from `keep.DIRS` and the swap `PATHS`, and the six `RETIRED`
+  lines with it. `~/.claude/commands/` is then the user's own and sync never
+  reads it. Cost: a `.keep` line under `commands/` turns into `BADKEEP`, and an
+  install that still has `commands/caveman.md` keeps that file (the `caveman`
+  skill wins the `/caveman` name). (b) stay. **Default if nothing is
+  decided:** (b). No test — design.
 
 ## Codex bridge
 
@@ -456,9 +467,9 @@
 
 ## Hooks
 
-- **REPLY-GATE-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
-  trial. `hooks/reply_gate.py` denies a brief-mode `SendUserMessage` over the
-  20-line caveman ceiling, and `test_reply_gate.py` covers the script. No
+- **CAVEMAN-HOOK-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
+  trial. `hooks/caveman.py` denies a brief-mode `SendUserMessage` over
+  the caveman hard ceiling, and `test_caveman.py` covers the script. No
   brief-mode session has run it. Four facts are read from Claude Code 2.1.323
   and not observed: the account is entitled to brief mode, without which
   `--brief` does nothing; PreToolUse hooks run for `SendUserMessage`; the chat
@@ -472,9 +483,20 @@
   key, and the next call fits. Then ask for a reply that needs the length: the
   resend opens with `override <key>` and the chat view shows the message
   without that line. **Options:** (a) keep the wiring after a passed trial; (b)
-  remove `reply_gate.py`, its test and its `settings-recommended.json` entry.
+  remove `caveman.py`, its test and its `settings-recommended.json`
+  entry.
   **Default if nothing is decided:** the wiring stays; a session without the
   `SendUserMessage` tool never runs it.
+
+- **HOOKS-CI-COVERAGE-GAPS** (MED, ops) — `.github/workflows/test-hooks.yml`
+  runs the hooks tests on Python 3.12 only, while the hooks claim 3.9 support;
+  a 3.11+ regex reached master before deca986 unseen. Its push triggers omit
+  `skills/caveman/**`, `output-styles/**` and `codex/AGENTS.md`, which the hooks
+  tests read, so a change there runs nothing. No workflow runs
+  `skills/caveman/test_check.py`. The token lacks `workflow` scope, so the
+  workflow file cannot be pushed; no test — ops. **Fix:** add a 3.9 matrix
+  entry, the three trigger paths, and a `uvx pytest -q
+  skills/caveman/test_check.py` step. Status: open (record only).
 
 - **HOOKS-MUTATION-RUN-HAS-NO-PYPROJECT** (LOW, config) — CONFIRMED 2026-11-13.
   `skills/software/mut_changed.py` exits 2 with `no pyproject.toml` when run
@@ -1211,13 +1233,14 @@
 ## Ruled not a defect
 
 - **CAVEMAN-BUDGET-HAS-NO-HOOK** (LOW, design) — not a defect. No hook
-  measures a plain reply against `output-styles/caveman.md` § Budget. A Stop
+  measures a plain reply against `skills/caveman/SKILL.md` § Budget. A Stop
   hook runs after the reply is on screen: a block cannot retract the reply, and
   the rewrite it requests is a second copy for the user to read. A
   `MessageDisplay` hook can replace the lines the terminal shows, but the model
-  does not learn which lines the user read. `hooks/reply_gate.py` holds the
+  does not learn which lines the user read. `hooks/caveman.py` holds the
   ceiling on a brief-mode `SendUserMessage` call, where a denial reaches the
-  model before the user reads anything.
+  model before the user reads anything, and `skills/caveman/check.py` measures
+  a finished session.
 
 - **QEMUBOX-DOCKER-VM-BOUNDARY** (LOW, design) — not a defect. Guest Docker
   uses the VM's process and network boundaries. It needs no extra isolation

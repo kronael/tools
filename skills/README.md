@@ -127,8 +127,8 @@ the authoritative entry. The categories:
   page is laid out; `humanize` is the AI-tells catalogue it finishes with.
   `writing` is cited by `create`, `diary`, `gh-issue`, `pr-draft`, `readme`,
   `tweet` and `visual`; `humanize` by `create`, `gh-comment`, `tweet` and
-  `writing`. The response style itself is `../output-styles/caveman.md`,
-  applied or reverted per session by `../commands/caveman.md`.
+  `writing`. `caveman` holds the chat reply rules; the selected output style
+  `../output-styles/caveman.md` and the prompt hook line only point at it.
 - **`global`** — special case, not installed as a skill: its body
   becomes the wisdom file `~/.claude/CLAUDE.md` at install.
 

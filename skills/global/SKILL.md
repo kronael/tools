@@ -25,7 +25,6 @@ memory index `.../<slug>/memory/MEMORY.md`, diary at `diary` § Where it lives; 
 
 ## Response style
 
-- The output style sets the line cap; it lifts for generated content, planning or a root-cause walk.
 - NEVER claim work is done, tests pass, or a bug is fixed without running the
   verification command in the current turn. Confidence is not evidence. Same for
   a factual claim — check it (grep, read, docs) before asserting, or say it is

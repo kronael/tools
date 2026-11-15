@@ -1,19 +1,29 @@
 # Changelog
 
-## [v0.4.100] — 20261114
+## [Unreleased]
 
-> kronael v0.4.100 — handoff recall on a PR
+- gh-comment shares a handoff recall as a secret gist; never on the PR branch.
+- The handoff comment names who deletes the gist.
+- A spec's prerequisites sit in the same or a lower phase.
+
+## [v0.5.1] — 20261115
+
+> kronael v0.5.1 — caveman rules in one skill
 >
-> A PR that passes to another person can carry its session recall as a secret gist linked from one comment.
+> The caveman reply rules now live in one skill that Claude and Codex both load; the output style and the prompt line only point at it.
 >
-> • Handoff recall — gh-comment shares the recall as a secret gist, scanned for secrets and shown first.
-> • Cleanup — the comment names who deletes the gist, because a gist never expires.
-> • Specs — a prerequisite sits in the same or a lower phase.
+> • Caveman skill — holds the budget, shape and language rules, with word counts beside the 80-column lines.
+> • Output style — selects caveman and tells the model to load the skill, with no rules of its own.
+> • Codex — loads the same skill through AGENTS.md and the prompt line.
+> • Brief mode — the length hook is renamed caveman.py and points at the skill when it refuses a message.
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
-- gh-comment shares a handoff recall as a secret gist; never on the PR branch.
-- A spec's prerequisites sit in the same or a lower phase.
+- `skills/caveman/SKILL.md` holds every caveman rule; `check.py` measures a session transcript.
+- `/caveman` command retired; sync moves it aside.
+- `hooks/reply_gate.py` is `hooks/caveman.py`; `hooks/lib/caveman.py` is removed.
+- Upgrade: remove the `reply_gate.py` hook entry from `~/.claude/settings.json` before the sync, or Classify stops with UNRESOLVED.
+- arizuko ships `hooks/caveman.py` unwired, for the `prompt_nudge.py` import.
 
 ## [v0.4.99] — 20261114
 

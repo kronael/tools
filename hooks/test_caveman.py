@@ -4,10 +4,10 @@ import subprocess
 import sys
 
 import pytest
-from reply_gate import CAP_LINES
-from reply_gate import COLUMNS
-from reply_gate import check
-from reply_gate import rendered_lines
+from caveman import CAP_LINES
+from caveman import COLUMNS
+from caveman import check
+from caveman import rendered_lines
 
 OVER = '\n'.join(f'Line {n}.' for n in range(CAP_LINES + 1))
 AT_CAP = '\n'.join(f'Line {n}.' for n in range(CAP_LINES))
@@ -42,11 +42,11 @@ def denied_key(out):
     return KEY.search(out['hookSpecificOutput']['permissionDecisionReason']).group(1)
 
 
-def test_cap_and_unit_match_the_style_file(pytestconfig) -> None:
-    style = (pytestconfig.rootpath / '..' / 'output-styles' / 'caveman.md').read_text()
+def test_cap_and_unit_match_the_skill(pytestconfig) -> None:
+    skill = (pytestconfig.rootpath / '..' / 'skills' / 'caveman' / 'SKILL.md').read_text()
 
-    assert f'→ ≤{CAP_LINES}, hard ceiling' in style
-    assert f'Unit: the rendered {COLUMNS}-column terminal line' in style
+    assert re.search(rf'→ ≤{CAP_LINES} lines,[^→]*hard ceiling', skill)
+    assert f'Unit: the rendered {COLUMNS}-column terminal line' in skill
 
 
 def test_rendered_lines_wrap_at_80_columns() -> None:
@@ -93,8 +93,10 @@ def test_a_message_over_the_ceiling_is_denied_with_the_measured_count(home) -> N
     assert decision(out) == 'deny'
     assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
     text = out['hookSpecificOutput']['permissionDecisionReason']
-    assert f'{CAP_LINES + 1} rendered 80-column lines' in text
+    assert f'{CAP_LINES + 1} rendered {COLUMNS}-column lines' in text
     assert f'ceiling is {CAP_LINES}' in text
+    assert 'caveman skill' in text
+    assert 'only the answer' not in text
 
 
 def test_the_denial_names_a_key_that_passes_the_next_message_once(home) -> None:
@@ -177,7 +179,7 @@ def test_other_tools_and_malformed_input_pass(home, data) -> None:
     assert check(data, home) is None
 
 
-def test_the_gate_is_silent_under_another_output_style(home) -> None:
+def test_the_hook_is_silent_under_another_output_style(home) -> None:
     settings = home / '.claude' / 'settings.json'
     for text in json.dumps({'outputStyle': 'default'}), 'not json', '[]':
         settings.write_text(text)
@@ -196,7 +198,7 @@ def test_no_state_directory_means_no_denial(home, monkeypatch) -> None:
 
 
 def test_a_key_that_cannot_be_stored_means_no_denial(home) -> None:
-    (home / 'state' / 'reply-gate-s1').mkdir(parents=True)
+    (home / 'state' / 'caveman-key-s1').mkdir(parents=True)
 
     assert check(payload(OVER), home) is None
 
@@ -220,7 +222,7 @@ def run_hook(hook, home, stdin):
 
 
 def test_the_script_denies_on_stdin_and_stays_silent_on_bad_input(home, pytestconfig) -> None:
-    hook = pytestconfig.rootpath / 'reply_gate.py'
+    hook = pytestconfig.rootpath / 'caveman.py'
 
     denied = json.loads(run_hook(hook, home, json.dumps(payload(OVER))))
     assert decision(denied) == 'deny'

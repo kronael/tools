@@ -5,18 +5,21 @@ from datetime import datetime
 from datetime import timezone
 
 
+EFFORT = {'low': 'l', 'medium': 'm', 'high': 'h', 'xhigh': 'x', 'max': 'M'}
+
+
 def model(data):
-    """'Opus 5.5' prints as 'O5.5': the family's initial, then the version."""
+    """'Opus 5.5' at high effort prints as 'O5.5h': family initial, version, effort letter."""
     name = (data.get('model') or {}).get('display_name') or ''
     family, _, version = name.partition(' ')
-    return family[:1] + version
+    return family[:1] + version + EFFORT.get((data.get('effort') or {}).get('level'), '')
 
 
 def window(limits, key, label, when):
     pct = (limits.get(key) or {}).get('used_percentage')
     if pct is None:
         return None
-    text = f'{label} {int(pct)}%'
+    text = f'{label}{int(pct)}%'
     resets = limits[key].get('resets_at')
     if resets:
         text += datetime.fromtimestamp(resets, tz=timezone.utc).astimezone().strftime(when)
@@ -27,7 +30,7 @@ def render(data):
     parts = [model(data)]
     ctx = (data.get('context_window') or {}).get('used_percentage')
     if ctx is not None:
-        parts.append(f'c {int(ctx)}%')
+        parts.append(f'c{int(ctx)}%')
     limits = data.get('rate_limits') or {}
     for key, label, when in ('five_hour', '5h', ' → %H:%M'), ('seven_day', 'w', ' → %a %-d. %H:%M'):
         text = window(limits, key, label, when)

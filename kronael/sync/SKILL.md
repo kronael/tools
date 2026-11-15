@@ -61,7 +61,7 @@ set. Other settings still confirm before applying.
 ## Steps
 
 0. **Preflight.** Verify at `SRC`: `skills/ agents/ hooks/ hooks/lib/
-   output-styles/ commands/ codex-hooks.json settings-recommended.json
+   output-styles/ codex-hooks.json settings-recommended.json
    RECLAUDE.md codex/AGENTS.md` — missing means the wrong directory: stop and
    ask. No `kronael@*` in `~/.claude/plugins/installed_plugins.json` → note
    `/kronael:sync` won't resolve; the user says "sync" in this repo. A leftover
@@ -137,13 +137,15 @@ set. Other settings still confirm before applying.
    first. Apply `reference.md` § Settings — the always-apply keys, the
    recursive-removal deny guard and the `~/.claude.json` diff keys, never
    asked. Then merge the rest of `settings-recommended.json`:
-   - **Loosen-only** — NEVER tighten the owner's posture: never flip
-     `sandbox.enabled` to true, narrow `sandbox.excludedCommands`, move
+   - **Sandbox** — NEVER alter, ask about or diff the installed `sandbox`
+     block — ALWAYS leave it as the host set it. Each host chooses its own
+     sandbox posture; qemubox isolates where isolation matters.
+   - **Loosen-only** — NEVER tighten the owner's posture: never move
      `permissions.defaultMode` off `bypassPermissions`, or drop an `allow` or
      `enabledPlugins` entry (add the recommended ones). Only the deny guard,
      `crossSessionInbound` and `isolatePeerMachines` override. A source `ask`
      replaces an installed `deny` of the same rule (deny evaluates first).
-   - Rest of permissions, sandbox, env: show the diff, ask.
+   - Rest of permissions, env: show the diff, ask.
    Declining the asked keys NEVER skips the always-apply set.
    Completion criterion: reading `settings.json` back shows every
    always-apply key at its value and the four deny entries paren-closed, and
