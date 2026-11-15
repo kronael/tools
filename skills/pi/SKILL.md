@@ -12,8 +12,8 @@ coding agent (badlogic/earendil, `pi.dev`) — same shape as codex: one binary,
 agent loop, its own tools (read/bash/edit/write). Methodology + citations:
 `docs/pi/research-pi.md` in the bundle source repo.
 
-ALWAYS use this engine only for an explicit Pi request. `oracle` owns opinion
-framing and verification; `dispatch` owns task classification and capacity.
+ALWAYS use this engine only for an explicit Pi request. `dispatch` owns opinion
+framing and verification, task classification and capacity.
 Pi's configured model is independent of the Claude/Codex routing matrix.
 ALWAYS report the selected provider, model and effort; NEVER assume Pi uses a
 different model merely because it is a different CLI.
@@ -73,8 +73,8 @@ once and `/login`. ALWAYS report "pi isn't configured" and continue. NEVER crash
 
 ## Rules
 
-pi is a peer agent with tools and repo access. `oracle` owns opinion framing
-and `dispatch` owns briefing — goal and entry points, adversarial framing, no
+pi is a peer agent with tools and repo access. `dispatch` owns opinion framing
+and briefing — goal and entry points, adversarial framing, no
 reasoning chain pasted in, every claim verified before acting — and they
 apply to pi unchanged.
 

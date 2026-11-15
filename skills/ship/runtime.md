@@ -36,7 +36,7 @@ Repair the change's defects. Record adjacent defects with `bugs`, and use
 
 ALWAYS spend a repair attempt on a changed hypothesis or implementation,
 not rerunning the same deterministic failure. Return an unresolved design to
-planning through `dispatch`, or consult `oracle`, when the approach stalls.
+planning through `dispatch`, or take its second opinion, when the approach stalls.
 Retry only a transient failure under the owning skill's rules. Count all attempts in the
 work record.
 

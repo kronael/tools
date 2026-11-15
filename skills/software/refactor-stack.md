@@ -331,7 +331,7 @@ an older head is a gate on something else.
   the reason). A reviewer then accounts for every file without the diff, and
   a file with no row is a file the port lost.
 - The adversarial review (§ Four passes) and a second-opinion sign-off
-  (`oracle`) ending in an explicit YES or NO.
+  (`dispatch` § Second opinion) ending in an explicit YES or NO.
 - A hosted-CI failure dismissed as pre-existing is first reproduced on the
   unchanged tip of the PR's base — NEVER on the claim alone.
 - One verdict comment per PR — merged, ready, ready after its parent, or hold

@@ -122,7 +122,7 @@ def route_with_trigger(prompt):
             return None, None
     for pattern, route in [
         (r'\bdispatch\b', '/dispatch'),
-        (r'\boracle\b|\bsecond\s+opinion\b', '/oracle'),
+        (r'\boracle\b|\bsecond\s+opinion\b', '/dispatch'),
         *MODEL_PATTERNS,
     ]:
         found = re.search(pattern, lower)

@@ -93,8 +93,8 @@ the authoritative entry. The categories:
   is ported from [humanlayer/skills](https://github.com/humanlayer/skills).
 - **Workflow** (e.g. `solve`, `commit`, `diary`, `refine`, `review`, `ship`,
   `release`, `specs`, `merge`, `squash`, `bugs`, `recall-memories`, `wisdom`,
-  `scavenge`, `oracle`, `pi`) — triage, multi-pass refinement, git flow,
-  memory, scaffolding, second opinions, codifying public best practice.
+  `scavenge`, `pi`) — triage, multi-pass refinement, git flow,
+  memory, scaffolding, codifying public best practice.
 - **Delegation** (`dispatch`, `claude`, `codex`) — `dispatch` owns task
   definitions, model/effort choices and capacity. Provider skills own native
   and CLI launches. See [dispatch](dispatch/SKILL.md) for the single routing

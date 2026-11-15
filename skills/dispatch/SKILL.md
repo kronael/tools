@@ -1,7 +1,7 @@
 ---
 name: dispatch
-description: Delegate work by task, with an explicit model and effort. NOT for a second-opinion workflow (use oracle) or end-to-end delivery (use ship).
-when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker, documentation worker, docs worker, algorithm worker, sweep, find every call site, effort"
+description: Delegate work by task, with an explicit model and effort, and take a second opinion. NOT for end-to-end delivery (use ship).
+when_to_use: "dispatch, do this in a sub, background agent, delegate a task, pick a model, model override, coding worker, planning worker, review worker, audit worker, spec worker, documentation worker, docs worker, algorithm worker, sweep, find every call site, effort, second opinion, oracle, sanity check, plan critique, code critique, red team critique"
 user-invocable: true
 ---
 
@@ -58,8 +58,7 @@ conflict before launching. If any requested choice is unsupported or unavailable
 ALWAYS report the exact limitation; NEVER silently substitute a model or effort.
 An owner-approved alternative applies only within its stated scope.
 
-ALWAYS use `oracle` for a second opinion's framing and verification. An
-isolated worker remains isolated even when it uses the parent's model.
+An isolated worker remains isolated even when it uses the parent's model.
 For a request spanning several tasks, ALWAYS use the execution flow below;
 NEVER run a spec, implementation and review on one inherited model setting.
 
@@ -94,6 +93,23 @@ For a single bounded task, ALWAYS launch in the background when the runtime
 supports it and continue independent work. When the result is needed next,
 ALWAYS wait on the same handle. NEVER imply a synchronous call runs in the
 background or that elapsed time proves completion.
+
+## Second opinion
+
+Use it when an independent check can change a decision: a plan before it is
+built, a change before it merges, a claim before it is reported, or an approach
+that stalls. NEVER use it for a lookup or a fact the parent can verify itself.
+
+- ALWAYS run it as an Audit on the other provider than the author's: from
+  Claude, `gpt-6-astra` / high through `codex`; from Codex, Fable / high. An
+  owner-named model or effort overrides this. NEVER use the author's own model:
+  it is not independent.
+- ALWAYS ask what breaks or what is missing, NEVER "is this correct?". Give the
+  artifacts and the goal, NEVER your suspected flaw or reasoning.
+- ALWAYS require findings with `file:line` or a command and its output. Verify
+  each against the source before acting; cite the evidence when applying one,
+  give a one-line reason when discarding it.
+- `pi` runs only on an explicit Pi request.
 
 ## Brief
 

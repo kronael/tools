@@ -1,6 +1,6 @@
 ---
 name: codex
-description: Run a selected model through native Codex workers or the Codex CLI. NOT for task selection (use dispatch) or second-opinion framing (use oracle).
+description: Run a selected model through native Codex workers or the Codex CLI. NOT for task selection or second-opinion framing (use dispatch).
 when_to_use: "Codex provider, ask codex, use codex, run codex, ask Astra, ask Sol, ask Terra, Codex CLI auth, Codex model catalog, Codex worker launch"
 user-invocable: true
 ---
@@ -144,7 +144,7 @@ exit status and output before accepting a result. A catalog check or auth
 status is not evidence that the selected model actually ran.
 
 ALWAYS give a peer agent the goal and entry points, not a reasoning chain.
-`oracle` owns adversarial framing for a second opinion. ALWAYS verify claims
+`dispatch` § Second opinion owns adversarial framing. ALWAYS verify claims
 against the source before acting, and state the reason for rejecting a claim.
 
 NEVER use `pkill -f codex`; it can match the calling shell. ALWAYS stop only a

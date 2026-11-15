@@ -140,7 +140,7 @@ pi --model <newest-from-list-models>:high -p "<prompt>" </dev/null
 - **Model/effort:** default to the top-ranked model from `--list-models` at
   `--thinking high` for an explicit Pi opinion. Use `xhigh` only on an explicit owner request.
 - **Prompt framing:** same adversarial "find the flaw / second opinion" framing
-  as the `oracle` skill; pass via arg or stdin.
+  as `dispatch` § Second opinion; pass via arg or stdin.
 - **Output:** plain text by default (`-p`); add `--mode json` only if the skill
   needs to parse structured events.
 - **Isolation:** already YOLO — safe to run inside the tool container; document
