@@ -1,10 +1,36 @@
 # Changelog
 
-## [Unreleased]
+## [v0.5.2] — 20261118
 
+> kronael v0.5.2 — Fable runs under an Opus lead
+>
+> Fable now runs as the subagent of an Opus lead, and second opinions live in dispatch instead of a separate skill.
+>
+> • Fable — an Opus lead launches it and checks its result; the pair uses one judgment slot.
+> • Second opinion — the oracle skill is folded into dispatch; /oracle now routes to /dispatch.
+> • Refine — reads the governing CLAUDE.md files and skills before it plans a review.
+> • Research — a holdout runs only on the owner's sign-off; report tables fit a phone width.
+> • gh-comment — hands off a PR with its session recall as a secret gist.
+> • Sync — recommends effortLevel high and sets it only when unset.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Added
+
+- Every Fable launch goes through an Opus lead; the pair counts as one Judgment worker.
+- refine step 3.2 loads the governing `CLAUDE.md` files and skills; `sql.md` gains a migrations lens.
+- A holdout runs only on the owner's sign-off that names the frozen candidates.
+- Report pages: tables fit a phone, deltas show as dot and interval, a heading states a counted result.
 - gh-comment shares a handoff recall as a secret gist; never on the PR branch.
 - The handoff comment names who deletes the gist.
 - A spec's prerequisites sit in the same or a lower phase.
+- sync recommends `effortLevel` `"high"`, set only when unset.
+- visual records the agent-browser render traps for dark mode, reloads and overflow checks.
+
+### Removed
+
+- The `oracle` skill is retired; `dispatch` § Second opinion replaces it and sync moves the old copy aside.
+- `/oracle`, `@oracle` and "second opinion" prompts route to `/dispatch`.
 
 ## [v0.5.1] — 20261115
 
