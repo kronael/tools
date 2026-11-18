@@ -102,7 +102,8 @@ plans and specs are inputs to verify, not authority about code. Read
 The main agent reads the plan and checks every requested acceptance item
 has a step and an observable check. Hammer focus gets concrete failure
 cases and a matching verification or review skill. Implementation details
-stay with workers. Use `oracle` for a consequential unresolved plan flaw.
+stay with workers. Use `dispatch` § Second opinion for a consequential
+unresolved plan flaw.
 
 ALWAYS show the plan's scope, gates and finish line briefly. An approved
 brief authorizes its implementation, so NEVER add a routine plan-approval
@@ -155,7 +156,7 @@ Run the owner-selected checks through the matching existing skills:
 failure cases, CTO for operational risks, design for UI craft and novice for
 first use. Load only lenses justified by the brief or a concrete
 unresolved concern. `dispatch` preserves explicit independent model choices;
-`oracle` owns second-opinion framing.
+`dispatch` § Second opinion owns second-opinion framing.
 
 ALWAYS re-verify findings against the code before acting. The brief covers
 fixes to defects this change causes, scoped simplification and docs. A

@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Finalize a change before it is called done — the code good and every claim it makes true. NOT for a targeted fix (use improve) or a second opinion (use oracle).
+description: Finalize a change before it is called done — the code good and every claim it makes true. NOT for a targeted fix (use improve) or a second opinion (use dispatch).
 when_to_use: "refine this, polish this, final pass before shipping, finalize the PR, settle the claims, is that actually true, verify the numbers, the subagent says it is done, run the acceptance criteria, clean up the diff"
 user-invocable: true
 ---

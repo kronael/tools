@@ -662,7 +662,7 @@ ALWAYS skip a working, recent external tool; the CLI tools below refresh every s
 |------|---------|--------|
 | `ship` | `uv tool install git+https://github.com/kronael/ship` | /ship |
 | `agent-browser` | `bun install -g agent-browser` | /browse |
-| `codex` | `bun install -g @openai/codex` | /codex /dispatch /oracle |
+| `codex` | `bun install -g @openai/codex` | /codex /dispatch |
 | `pi` | `bun install -g @mariozechner/pi-coding-agent` — then verify `pi --version` runs; see the note below | /pi |
 | `pyright` | `bun install -g pyright` | /py /ts /tsx |
 | `typescript-language-server` | `bun install -g typescript typescript-language-server` | /ts /tsx |

@@ -1,6 +1,6 @@
 ---
 name: claude
-description: Run a selected Claude model through native agents or the Claude CLI. NOT for task selection (use dispatch) or second-opinion framing (use oracle).
+description: Run a selected Claude model through native agents or the Claude CLI. NOT for task selection or second-opinion framing (use dispatch).
 when_to_use: "Claude provider, ask Claude, use Claude from Codex, Claude CLI auth, Claude worker launch, native Claude agent effort"
 user-invocable: true
 ---
@@ -116,7 +116,8 @@ failure, report the exact limitation and continue independent work. NEVER
 retry with a fallback model or lower effort without an owner-approved choice.
 
 ALWAYS verify returned claims and changes against the source before accepting
-them. `oracle` owns second-opinion framing and verification; dispatch owns the
+them. `dispatch` § Second opinion owns second-opinion framing and
+verification; dispatch owns the
 required evidence report. NEVER claim a model ran from a CLI help or auth check.
 
 ALWAYS stop only this run's process by its recorded PID or native worker

@@ -85,8 +85,8 @@ model; `systemMessage` reaches only the user.
    route, no `commit`, no slash command, not a resumed session's summary.
    Every later prompt restamps the gap, routed or not. Other continuations
    stay silent.
-3. Preserve a leading workflow command. Route explicit dispatch to `/dispatch`
-   and opinion requests to `/oracle`, retaining the original override text.
+3. Preserve a leading workflow command. Route explicit dispatch and opinion
+   requests to `/dispatch`, retaining the original override text.
 4. Route explicit model requests to `/dispatch`, and provider requests to
    `/codex` or `/claude`. Both harnesses use these routes. Bare model-like
    words and paths do not select a model; the hook never chooses effort.

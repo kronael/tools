@@ -35,8 +35,8 @@ telling Claude to invoke the matching skill. That field is the one
 UserPromptSubmit output the model reads; `systemMessage` renders in the
 transcript for the user and never reaches the model. Routes are `SKILL_KEYWORDS` in
 the source. A leading workflow command keeps its workflow. Explicit dispatch
-and model requests reach `/dispatch`; `oracle` and `second opinion` reach
-`/oracle`. Provider requests reach `/codex` or `/claude`. Both harnesses use
+and model requests, `oracle` and `second opinion` reach `/dispatch`. Provider
+requests reach `/codex` or `/claude`. Both harnesses use
 the same routes. Codex translates installed skill names to `@name`; it never
 replaces a requested fresh worker with the current session. The original prompt
 retains model and effort overrides for the selected skill. The word `learn`
