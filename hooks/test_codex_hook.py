@@ -84,7 +84,7 @@ def test_translate_output_rewrites_prompt_nudge_refs_for_codex(
     assert parsed['hookSpecificOutput']['additionalContext'] == 'Invoke @refine, not /nope.'
 
 
-@pytest.mark.parametrize('skill', ['dispatch', 'oracle', 'codex', 'claude'])
+@pytest.mark.parametrize('skill', ['dispatch', 'codex', 'claude'])
 def test_translate_output_preserves_selected_workflow(monkeypatch, tmp_path, skill) -> None:
     install_skills(monkeypatch, tmp_path, skill)
     output = translate_output(
@@ -109,9 +109,9 @@ def test_unknown_model_reference_is_not_replaced_with_current_session(monkeypatc
 
 
 def test_subagent_start_is_wired_to_prompt_nudge_and_keeps_its_event(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, pytestconfig: pytest.Config
 ) -> None:
-    wiring = json.loads((Path(__file__).parent.parent / 'codex-hooks.json').read_text())
+    wiring = json.loads((pytestconfig.rootpath / '..' / 'codex-hooks.json').read_text())
     command = wiring['hooks']['SubagentStart'][0]['hooks'][0]['command']
     assert command.endswith('codex_hook.py SubagentStart prompt_nudge')
     install_skills(monkeypatch, tmp_path, 'solve')

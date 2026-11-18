@@ -135,7 +135,7 @@ RETIRED = {  # names the bundle shipped and dropped
         'data-reports', 'design-eval', 'doc-topology', 'docs-audit', 'eval-all', 'explore', 'eye-13yo',
         'finalize-crate',
         'gh-fix', 'gh-review', 'go-gl', 'hacker-eval', 'hiring-eval', 'later', 'markdown-converter',
-        'media-ingest', 'merge-trivial', 'onepager', 'red-eval',
+        'media-ingest', 'merge-trivial', 'onepager', 'oracle', 'red-eval',
         'python', 'research-analysis', 'resolve', 'rust', 'settle', 'sol',
         'software-engineering', 'speed-demo', 'sub', 'sync-tools-skills', 'testing',
         'trader', 'typescript', 'useless',

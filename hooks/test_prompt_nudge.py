@@ -37,6 +37,8 @@ def test_code_does_not_route_to_codex() -> None:
         ('review this with dispatch', '/dispatch'),
         ('dispatch this to Astra for a second opinion', '/dispatch'),
         ('oracle this', '/dispatch'),
+        ('/oracle review this plan', '/dispatch'),
+        ('@oracle review this plan', '/dispatch'),
         ('ask codex for a second opinion', '/dispatch'),
         ('use opus for a second opinion', '/dispatch'),
         ('ask Sol for a second opinion', '/dispatch'),
@@ -132,6 +134,7 @@ def test_every_route_names_a_bundled_skill(pytestconfig) -> None:
         explicit_route('ask codex about this design'),
         explicit_route('ask claude about this design'),
         explicit_route('oracle this'),
+        explicit_route('/oracle review this plan'),
     }
     missing = [
         target

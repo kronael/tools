@@ -56,6 +56,7 @@ SKILL_KEYWORDS = {
     'merge': '/merge',
     'microcopy': '/writing',
     'novice': '/eval',
+    'oracle': '/dispatch',
     'pentest': '/eval',
     'readme': '/readme',
     'recall': '/recall-memories',
@@ -113,7 +114,7 @@ def route_with_trigger(prompt):
     if command:
         name = command.group(1)
         said = command.group(0).strip()
-        if name in {'codex', 'claude', 'oracle'}:
+        if name in {'codex', 'claude'}:
             return f'/{name}', said
         if name in SKILL_KEYWORDS:
             return SKILL_KEYWORDS[name], said
