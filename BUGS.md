@@ -439,6 +439,14 @@
   skill wins the `/caveman` name). (b) stay. **Default if nothing is
   decided:** (b). No test — design.
 
+- **GH-COMMENT-GIST-DELETER-CANNOT-DELETE** (LOW, docs) — owner decision.
+  `skills/gh-comment/share.md:10-11` suggests "whoever merges #499 deletes this
+  gist" as the deletion owner, but only the account that created a gist can
+  delete it, so a merger who is not that account cannot run the
+  `gh gist delete <id>` the same line requires. **Options:** (a) name the gist's
+  creator as the one who deletes it once the PR merges; (b) keep. The owner
+  decides the wording. **Default if nothing is decided:** (b). No test — docs.
+
 ## Codex bridge
 
 - **CODEX-STATUSLINE-PARITY-LIMITS** (LOW, config) — deliberate limit,
