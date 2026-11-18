@@ -36,7 +36,8 @@ is medium. ALWAYS move every Judgment row with a change to Coding's effort.
 On Claude, Fable runs ONLY Audit, the task whose judgment rests on a whole
 change's context; every other Judgment task runs on Opus. When the owner
 names Fable for implementation, Fable ALWAYS plans and hands each step to a
-Sonnet Coding worker; NEVER let Fable make the edits. ONLY a Sonnet sweep
+Sonnet Coding worker; NEVER let Fable make the edits. Every Fable launch
+goes through an Opus lead (`claude` § 1). ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 
@@ -68,7 +69,8 @@ ALWAYS count active workers by task group across providers and launch methods:
 at most 2 Lightweight, 2 Implementation and 1 Judgment worker. Algorithm,
 planning, review, audit, spec and documentation share the Judgment slot. Native workers,
 CLI processes and built-in agents all count; a stricter runtime limit also
-applies.
+applies. An Opus lead and the Fable subagent it launches count as one
+Judgment worker.
 
 Only the owner lifts a cap, explicitly for a named task after seeing the
 proposed launches. ALWAYS end that lift with its task. NEVER change the task

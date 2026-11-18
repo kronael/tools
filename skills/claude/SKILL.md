@@ -25,6 +25,12 @@ Opus/xhigh, ALWAYS use the `spec` agent binding when the native tool cannot
 explicitly override effort. NEVER select the high-effort `opus` binding and
 claim prompt text raises it to xhigh.
 
+ALWAYS launch Fable through and from Opus: launch an Opus lead and brief it to
+launch Fable as its own subagent, check Fable's result against the source and
+return it. NEVER launch Fable directly from the parent session. The Opus lead
+NEVER does Fable's task itself: when it cannot launch a subagent, it stops and
+reports.
+
 For an owner override, ALWAYS use a supported launch effort control or a
 binding that matches the exact selection. If native controls cannot express
 it, ALWAYS use the CLI route when available. NEVER silently keep a binding's
@@ -123,5 +129,6 @@ selection is reported without a silent substitution.
 
 - ALWAYS preserve dispatch's task, model, effort and capacity accounting.
 - ALWAYS inspect native pins or verify the subprocess CLI and auth separately.
+- ALWAYS launch Fable as the subagent of an Opus lead, NEVER directly.
 - ALWAYS use fresh contexts, explicit effort and the assigned detached cwd.
 - ALWAYS verify the result and retain limitations in the final report.
