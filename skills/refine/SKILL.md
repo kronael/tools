@@ -111,7 +111,7 @@ code, deployment, specs or data; documents also carry claims to verify.
    For a small change, the whole-change audit can cover every context without
    separate review workers; ALWAYS record that coverage explicitly.
    A context worker reviews its assigned context itself; NEVER delegate that
-   same review again. A context without a tag runs as `correctness`.
+   same review again. Instruction-file checks may use one Rules review. A context without a tag runs as `correctness`.
    The subs report findings with commands and outputs and NEVER edit.
    ALWAYS leave a context's files alone in main context until its sub returns.
    → every context has evidenced findings or explicit coverage by the audit.

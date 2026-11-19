@@ -28,11 +28,14 @@ artifacts.
 | Documentation | Write, restructure or sync docs — README, ARCHITECTURE, CHANGELOG, CLAUDE.md, skill text, docs pages, diagrams, a shipped spec folded into docs | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Planning | Inspect current code; name files, symbols, code excerpts, edits, dependencies and verification gates; write or complete the spec's module map (`plan.md` § Module map) | Opus / high | `gpt-6.1-sol` / high | Judgment |
 | Review | Judge code, specs or detailed plans for correctness and consistency; verify claims against the implementation; systemic risks use Audit | Opus / high | `gpt-6.1-sol` / high | Judgment |
+| Rules review | Check changed paths against the instruction files that govern them (`CLAUDE.md`, skills), quoting each broken rule; compliance only, no judgment of behavior | Sonnet / high | `gpt-6.1-terra` / high | Implementation |
 | Audit | Challenge a whole change, release or plan; assess systemic assumptions, CEO/CTO concerns, security or red-team risks | Fable / high | `gpt-6-astra` / high | Judgment |
 | Spec | Define high-level product purpose, users, behavior, contracts, scope and acceptance; leave code edits to planning | Opus / high | `gpt-6.1-sol` / high | Judgment |
 
 A Judgment task ALWAYS runs one effort level above Coding: high while Coding
 is medium. ALWAYS move every Judgment row with a change to Coding's effort.
+A Rules review is the one Implementation row at high: it quotes rules against
+paths and judges no behavior, so Sonnet or Terra suffice.
 On Claude, Fable runs ONLY Audit, the task whose judgment rests on a whole
 change's context; every other Judgment task runs on Opus. When the owner
 names Fable for implementation, Fable ALWAYS plans and hands each step to a
