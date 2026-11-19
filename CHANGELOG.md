@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.5.3] — 20261119
+
+> kronael v0.5.3 — a Rules review task in dispatch
+>
+> Dispatch gains a Rules review task that checks changed files against their instruction files, and refine may use it.
+>
+> • Rules review — quotes every CLAUDE.md or skill rule the changed paths break.
+> • Model choice — runs on Sonnet or Terra at high effort, not on a judgment model.
+> • Refine — may hand its instruction-file checks to one Rules review.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- dispatch adds a Rules review task: Sonnet or `gpt-6.1-terra` at high, compliance checks only.
+- refine may use one Rules review for its instruction-file checks.
+
 ## [v0.5.2] — 20261118
 
 > kronael v0.5.2 — Fable runs under an Opus lead
