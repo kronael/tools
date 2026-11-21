@@ -22,7 +22,10 @@ link to that full table as CSV, then one plain line for each measure the page
 shows ("p99: 99 of 100 values are below it"); one chart at most. NEVER put
 lineage, history or repeated caveats on the page; lineage stays in
 `summary.yml`. At phone width ALWAYS move columns to the CSV before a table
-needs to scroll.
+needs to scroll. A selection page ALWAYS splits its rows into what is already
+traded, what newly passes and every other scanned candidate, each row with its
+measured numbers whatever its verdict, and states the scan counts per source:
+listed, scanned, and skipped by reason.
 
 ## Build
 
@@ -73,6 +76,8 @@ needs to scroll.
   (`RdBu_r` for a signed column). One scale per column, the number printed on
   top and readable — NEVER one scale across columns of different units.
 - ALWAYS put the answer (the verdict) in the second column, after the row label.
+  A verdict of several kinds is one letter in a coloured box, the letters
+  explained once below the table — NEVER a sentence per cell.
 - ALWAYS state a page's heading as a counted result computed from the summaries
   ("3 of 17 runs beat their control, the best at t 1.3"), NEVER a question or a
   typed number. ALWAYS carry the evidence strength (t or spread) beside every
