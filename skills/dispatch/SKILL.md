@@ -40,9 +40,9 @@ On Claude, Fable runs ONLY Audit, the task whose judgment rests on a whole
 change's context; every other Judgment task runs on Opus. When the owner
 names Fable for implementation, Fable ALWAYS plans and hands each step to a
 Sonnet Coding worker; NEVER let Fable make the edits. Every Fable launch
-goes through an Opus lead (`claude` § 1). On a Fable safety refusal, ALWAYS
-retry on Fable with a task-only brief; after the third, ALWAYS stop and report
-the request ids. ONLY a Sonnet sweep
+goes through an Opus lead (`claude` § 1). On a Fable safety refusal, the Opus
+lead ALWAYS relaunches Fable with a task-only brief; after the third, it
+ALWAYS stops and reports the request ids. ONLY a Sonnet sweep
 runs at low, because its list is input that the next agent checks; a sweep
 errs toward including more.
 
