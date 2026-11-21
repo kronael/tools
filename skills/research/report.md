@@ -22,10 +22,8 @@ link to that full table as CSV, then one plain line for each measure the page
 shows ("p99: 99 of 100 values are below it"); one chart at most. NEVER put
 lineage, history or repeated caveats on the page; lineage stays in
 `summary.yml`. At phone width ALWAYS move columns to the CSV before a table
-needs to scroll. A selection page ALWAYS splits its rows into what is already
-traded, what newly passes and every other scanned candidate, each row with its
-measured numbers whatever its verdict, and states the scan counts per source:
-listed, scanned, and skipped by reason.
+needs to scroll. A selection page ALWAYS keeps the current members, the new
+passes and the rest apart, gives every row its numbers and states the scan counts.
 
 ## Build
 
@@ -71,13 +69,11 @@ listed, scanned, and skipped by reason.
 - ALWAYS draw a measure against a threshold as a bar on a track with a tick at the
   threshold: full ink at or above it, 70% muted below it, 3:1 contrast for the
   fill against the track and the track against the page.
-- ALWAYS give a column the reader compares down the table a visual scale: a bar
-  behind each number, scaled to the column's range, or a cell tint on `cividis`
-  (`RdBu_r` for a signed column). One scale per column, the number printed on
-  top and readable — NEVER one scale across columns of different units.
+- ALWAYS give a column the reader compares down the table a bar or a tint
+  (`cividis`, `RdBu_r` if signed) scaled to that column alone, the number on top.
 - ALWAYS put the answer (the verdict) in the second column, after the row label.
-  A verdict of several kinds is one letter in a coloured box, the letters
-  explained once below the table — NEVER a sentence per cell.
+  A verdict of several kinds is one coloured letter with a one-line legend —
+  NEVER a sentence per cell.
 - ALWAYS state a page's heading as a counted result computed from the summaries
   ("3 of 17 runs beat their control, the best at t 1.3"), NEVER a question or a
   typed number. ALWAYS carry the evidence strength (t or spread) beside every
@@ -88,12 +84,8 @@ listed, scanned, and skipped by reason.
 
 ## Binned plot
 
-- ALWAYS show how y depends on x over many points with a binned plot — NEVER a
-  dense raw scatter. Cut x
-  into quantile bins (equal counts) or fixed ranges and plot the mean of y per
-  bin, with a band between chosen quantiles of y when the spread matters.
-- ALWAYS draw groups the data is cut into beforehand (firm, session, regime) as
-  one line each over the same bins, and state the bin rule and the count per bin.
+- ALWAYS plot y over many x as the mean of y per quantile or range bin of x, one
+  line per pre-cut group, the bin rule and counts stated — NEVER a dense scatter.
 
 ## Page tokens
 
