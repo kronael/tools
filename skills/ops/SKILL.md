@@ -47,13 +47,9 @@ ALWAYS apply `../software/code.md` § System changes to runtime/deployment edits
 
 ## Ansible
 
-- ALWAYS restart a service through `notify` on the task that
-  changes its config. NEVER restart it from a templated `state:`.
-- ALWAYS write the config before the task that first starts the
-  service, so the first start reads the final config.
-- NEVER `meta: flush_handlers` unless a later task needs the restarted
-  service: a flush runs every pending handler, and a later notify runs
-  the handler again.
+- ALWAYS write a service's config before the task that first starts it, and
+  restart it through `notify`. NEVER `meta: flush_handlers` unless a later
+  task needs the restarted service.
 
 ## CI/CD
 
