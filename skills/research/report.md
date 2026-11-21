@@ -68,6 +68,10 @@ needs to scroll.
 - ALWAYS draw a measure against a threshold as a bar on a track with a tick at the
   threshold: full ink at or above it, 70% muted below it, 3:1 contrast for the
   fill against the track and the track against the page.
+- ALWAYS give a column the reader compares down the table a visual scale: a bar
+  behind each number, scaled to the column's range, or a cell tint on `cividis`
+  (`RdBu_r` for a signed column). One scale per column, the number printed on
+  top and readable — NEVER one scale across columns of different units.
 - ALWAYS put the answer (the verdict) in the second column, after the row label.
 - ALWAYS state a page's heading as a counted result computed from the summaries
   ("3 of 17 runs beat their control, the best at t 1.3"), NEVER a question or a
@@ -76,6 +80,15 @@ needs to scroll.
 - ALWAYS hold only current results under a report root: a retired run moves to the
   spool, and a round that reads an input another run rewrites pins its own copy and
   shows the hash.
+
+## Binned plot
+
+- ALWAYS show how y depends on x over many points with a binned plot — NEVER a
+  dense raw scatter. Cut x
+  into quantile bins (equal counts) or fixed ranges and plot the mean of y per
+  bin, with a band between chosen quantiles of y when the spread matters.
+- ALWAYS draw groups the data is cut into beforehand (firm, session, regime) as
+  one line each over the same bins, and state the bin rule and the count per bin.
 
 ## Page tokens
 
