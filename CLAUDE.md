@@ -122,6 +122,8 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   `~/.claude/projects/<slug>/` (`ship` § Work record, `diary`).
 - **Testing bundle changes**: re-run `/kronael:sync` (or say "sync") and
   use the result in a real project. There's no unit test for skill behavior.
+- **Changes land on master**: ALWAYS push a finished change straight to
+  `master` — NEVER park it on a dated branch or a PR.
 
 ## Conformance — mandatory, and checked
 
