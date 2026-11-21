@@ -1,5 +1,18 @@
 # Changelog
 
+## [v0.5.4] — 20261122
+
+> kronael v0.5.4 — an Ansible rule in ops
+>
+> The ops skill now tells agents to write a service's config before its first start and to restart it through notify.
+>
+> • Ansible — config before the first start, restart through `notify`.
+> • Handlers — `meta: flush_handlers` only when a later task needs the restarted service.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- ops adds an Ansible rule: config before the first start, restart through `notify`, flush only when needed.
+
 ## [v0.5.3] — 20261119
 
 > kronael v0.5.3 — a Rules review task in dispatch
