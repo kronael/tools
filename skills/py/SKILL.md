@@ -1,7 +1,7 @@
 ---
 name: py
 description: Python development. NOT for shell scripting (use sh) or non-Python code.
-when_to_use: "editing .py files, writing Python; test directory name, No module named test, dataclasses, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, pyproject.toml, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
+when_to_use: "editing .py files, writing Python; test directory name, No module named test, dataclasses, numpy array fields, NDArray, TypedDict, pydantic, TypeAdapter, dacite, heterogeneous records, hashable keys, type hints, enums, asyncio/asyncpg, pytest, ruff, pyright, uv, pyproject.toml, FastAPI; psycopg, pg_config not found, binary wheel; rename, codemod, LibCST, move a module"
 ---
 
 # Python
@@ -103,8 +103,8 @@ Python-specific additions and deltas.
 - ALWAYS copy a dataclass with changes through its own method, `obj.replace(qty=2)` — the project's one `WithReplace` mixin (`def replace(self, **kwargs) -> Self`), added where none exists — NEVER `dataclasses.replace(obj, ...)`: a method is the class's own to override; lint `py-replace-method`.
 - ALWAYS `@dataclass(frozen=True)` by default for value/data types — freezing prevents field reassignment, not mutation inside a field. Drop `frozen` only for types deliberately mutated in place (accumulators, stateful objects like `World`/`Client`), whose updates are its methods (`../software/code.md` § Design).
 - PREFER `frozen=True, slots=True` together — slots adds faster attribute access + lower memory; the cost is only modest construction/hash overhead (reads are free)
-- ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability.
-- A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
+- ALWAYS hold the bulk numeric data of a vectorised engine in a `@dataclass(frozen=True, slots=True)` whose fields are named, typed numpy arrays, with plain types for scalars (`Prices`: `symbol: str`, `mid: NDArray[np.float64]`, `spread: NDArray[np.float64]`), one record per stage of the data path — NEVER a dict of arrays, loose arrays passed between functions or an intermediate record nothing reads: the dataclass names and types each column, the array fields keep whole-array speed.
+- ALWAYS use frozen dataclasses for heterogeneous dict/set keys, with hashable fields and stable equality/hash behavior; `frozen=True` alone does not guarantee hashability. A wider frozen key projects to a narrower one via a named accessor (`order_key`), NEVER by slicing `key[:4]`
 - NEVER `kw_only=True` / `InitVar` to dodge dataclass field-ordering — if every caller passes a value the default is dead, so make the field required
 - NEVER use tuple as a generic collection just because the values are not mutated — ALWAYS use `list` for ordinary sequences; reserve tuple for dict/set keys, deliberate immutability boundaries, varargs/returns where positional shape is the point, or small fixed heterogeneous records when a dataclass would be overkill.
 
