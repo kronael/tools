@@ -117,13 +117,11 @@ Critical sync rules (full table: `ARCHITECTURE.md#sync-strategies`):
   feature or metric. ALWAYS invent the example and state provenance
   generically. Private names and local paths live in `~/.claude/LOCAL.md`
   (auto-injected by the `local` hook), which is never committed.
-- **NEVER commit specs, plans, ship records or diary entries**: no `specs/`,
-  `plans/`, `todos/`, `.ship/` or `.diary/`. They live under
-  `~/.claude/projects/<slug>/` (`ship` § Work record, `diary`).
+- **NEVER commit specs, plans, ship records or diary entries** (`specs/`, `plans/`,
+  `todos/`, `.ship/`, `.diary/`): they live under `~/.claude/projects/<slug>/`.
 - **Testing bundle changes**: re-run `/kronael:sync` (or say "sync") and
   use the result in a real project. There's no unit test for skill behavior.
-- **Changes land on master**: ALWAYS push a finished change straight to
-  `master` — NEVER park it on a dated branch or a PR.
+- **Master**: the owner's standing order — ALWAYS push finished work to `master`, NEVER a PR.
 
 ## Conformance — mandatory, and checked
 

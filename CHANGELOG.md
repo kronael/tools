@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.5.5] — 20261122
+
+> kronael v0.5.5 — report tables that read at a glance
+>
+> Report pages now colour the columns readers compare and show a verdict as one letter, and a refused Fable run is retried by its lead.
+>
+> • Tables — a bar or tint per compared column, scaled to that column alone.
+> • Binned plot — the mean of y per bin of x, one line per group, instead of a dense scatter.
+> • Selection pages — current members, new passes and the rest apart, each verdict one letter.
+> • Fable — the Opus lead relaunches a refused run, stopping after three tries.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- research: column scales in tables, the binned mean plot, the selection page and one-letter verdicts.
+- dispatch: the Opus lead relaunches a Fable refused for safety, at most three times.
+- This repo pushes finished changes straight to master.
+
 ## [v0.5.4] — 20261122
 
 > kronael v0.5.4 — an Ansible rule in ops

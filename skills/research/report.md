@@ -84,8 +84,9 @@ passes and the rest apart, gives every row its numbers and states the scan count
 
 ## Binned plot
 
-- ALWAYS plot y over many x as the mean of y per quantile or range bin of x, one
-  line per pre-cut group, the bin rule and counts stated — NEVER a dense scatter.
+- ALWAYS plot y over many x as the mean (and chosen quantiles, when spread matters)
+  of y per quantile or range bin of x, one line per pre-cut group, the bin rule
+  and counts stated — NEVER a dense scatter.
 
 ## Page tokens
 
