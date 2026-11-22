@@ -246,8 +246,7 @@ yourself (`visual` skill).
 1. Facts first, on every later pass (`refine` lens `readme.md`): a style pass
    alone polishes a page that is wrong.
 2. Rendered at 1440 and 375, light and dark, read as viewport screenshots —
-   a full-page capture is too tall to judge. ALWAYS check overflow and contrast,
-   and overflow at 600 and 768 too: a table can fit both and overflow between.
+   a full-page capture is too tall to judge. ALWAYS check overflow and contrast.
 3. Text fills its box: no clipped line, no empty bottom beside a full
    neighbour, no card wider than its measure.
 4. One font family, five sizes at most, body ≥16px.

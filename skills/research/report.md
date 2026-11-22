@@ -33,9 +33,8 @@ passes and the rest apart, gives every row its numbers and states the scan count
   component's environment, NEVER a make target that runs it. Pyright: `py`
   § Build.
 - ALWAYS generate a run's page in its own script, from the in-memory summary
-  it writes to `summary.yml`, and let it rebuild the page from the run's saved
-  outputs alone. NEVER hand-edit a generated page: a style-only change is a
-  rebuild, proven by equal cell text before and after.
+  it writes to `summary.yml`, rebuildable from the run's saved outputs alone.
+  NEVER hand-edit a generated page.
 - ALWAYS keep a report's math — formulas, thresholds, verdicts — in one module
   of plain functions, apart from reading and page code.
 - ALWAYS preprocess a report's input as one task per key (a symbol; a day is
@@ -49,10 +48,7 @@ passes and the rest apart, gives every row its numbers and states the scan count
   one-off research run MAY keep it. A report takes one data dir and one spool
   dir, both located by the shared library's standard paths.
 - ALWAYS inline every figure in its page. NEVER a figure as a loose file
-  beside the page, except where the image itself is the product. ALWAYS draw
-  each panel of a chart as its own SVG on a shared y range and place the
-  panels with a CSS grid, NEVER one figure of subplots: it shrinks at phone
-  width where a grid reflows.
+  beside the page, except where the image itself is the product.
 - ALWAYS write `index.html` at a report's tag root, one line per page the
   report holds (what it is, its window); a run with many items links one page
   per item from it. ALWAYS open every page with one muted text line of
@@ -85,21 +81,15 @@ passes and the rest apart, gives every row its numbers and states the scan count
   threshold: full ink at or above it, 70% muted below it, 3:1 contrast for the
   fill against the track and the track against the page.
 - ALWAYS give a column the reader compares down the table a bar or a tint scaled
-  to that column alone, the number on top. A tint is ONE hue of a named colormap
-  (`Blues` at 0.75; `RdBu_r` at 0.15 or 0.85 by sign) mixed into the page colour
-  of each theme, its share set by the value up to 60%: the text keeps the page
-  ink, above 4.5:1. NEVER a whole colormap as cell fills: `cividis` leaves that
-  ink under 2:1 at one end in either theme and competes with the category
-  colours. ALWAYS part tinted cells with `box-shadow: inset 0 0 0 1px var(--bg)`,
-  NEVER a border.
-- ALWAYS keep table cells compact, 12 to 13px text and `padding: 3px 4px`, and
-  give every column of every table a width in a rule scoped to that table: an
-  unscoped column rule sizes every other table too.
+  to that column alone, the number on top. A tint is ONE hue of a matplotlib
+  colormap (`Blues`; `RdBu_r` by sign) mixed into each theme's page colour, so
+  the text keeps its contrast — NEVER a whole colormap as cell fills. ALWAYS part
+  tinted cells with an inset 1px page-colour shadow, NEVER a border.
+- ALWAYS keep table cells compact (12–13px text, `padding: 3px 4px`) and give
+  each table's columns widths in rules scoped to that table.
 - ALWAYS put the answer (the verdict) in the second column, after the row label.
-  A verdict or other category of several kinds is one coloured letter with a
-  one-line legend at its table — NEVER a sentence per cell, NEVER a paragraph
-  before the table for what the letters say. ALWAYS keep a letter and the first
-  word of its label in one `white-space: nowrap` span.
+  A category of several kinds is one coloured letter with a one-line legend at
+  its table — NEVER a sentence per cell or a paragraph before the table.
 - ALWAYS state a page's heading as a counted result computed from the summaries
   ("3 of 17 runs beat their control, the best at t 1.3"), NEVER a question or a
   typed number. ALWAYS carry the evidence strength (t or spread) beside every
