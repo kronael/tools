@@ -188,19 +188,19 @@ PR body with the robot. These win.
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
 - ALWAYS track multi-step work with the exposed native checklist tool:
   `TaskCreate`/`TaskUpdate` in Claude Code, `update_plan` in Codex. ALWAYS follow
-  its schema, authorization and mode restrictions. ALWAYS add an item when work is
-  requested, even mid-work, and before each step, subagent or background run; at
-  each result and harness task reminder, an order here, correct statuses and delete
-  completed items but the newest two. When absent or prohibited, ALWAYS report the
-  gap and maintain the existing plan or work record. NEVER invent tool calls or
-  substitute goals or threads for a checklist. While work spans several turns,
-  ALWAYS close each step with one line in chat — the step done, the next one, how
-  many stay open — and restate the whole numbered plan, every open workstream with
-  its status, only when the user asks where things stand (`dispatch` → `plan.md`).
-- ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file implementation:
-  source-grounded planning, bounded coding steps and the parent's diff review before
-  each dependent step. Its small-change gate applies; `ship` owns spec-sized
-  delivery. NEVER let a model override bypass this review boundary.
+  its schema, authorization and mode restrictions. ALWAYS add an item before each
+  step, subagent or background run. A request that arrives mid-work ALWAYS becomes
+  an item and a plan step; it interrupts the current step only when the user asks
+  for it now. At each result and each harness task reminder, which is an order,
+  ALWAYS correct statuses and delete completed items except the newest two. When
+  absent or prohibited, ALWAYS report the gap and keep the plan or work record.
+  NEVER invent tool calls or substitute goals or threads for a checklist. Across
+  turns, ALWAYS close each step with one chat line — done, next, how many open —
+  and restate the whole plan only when the user asks (`dispatch` → `plan.md`).
+- ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
+  implementation: source-grounded planning, bounded coding steps and the parent's
+  diff review before each dependent step. Its small-change gate applies; `ship`
+  owns spec-sized delivery. NEVER let a model override bypass this review boundary.
 - ALWAYS read the diff or output a subagent produced before repeating its
   report or pushing it — they overclaim, report work they did not do, and add
   the comments `code.md` § Comments bans: read every added comment.
