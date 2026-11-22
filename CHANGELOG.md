@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.5.6] — 20261122
+
+> kronael v0.5.6 — a checklist that stays current
+>
+> Agents now add a checklist item when work is requested and before each run, and tidy the list at every result.
+>
+> • Requests — a mid-work request becomes an item and a plan step, and interrupts only on demand.
+> • Runs — an item before each step, subagent or background run starts.
+> • Results — statuses corrected at each result and at the harness's task reminder.
+> • Done items — only the two newest stay listed.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- global: an item before each step and run; a mid-work request is queued unless asked for now.
+- global: statuses are fixed at each result and at each harness task reminder.
+- global: completed checklist items beyond the newest two are deleted.
+
 ## [v0.5.5] — 20261122
 
 > kronael v0.5.5 — report tables that read at a glance
