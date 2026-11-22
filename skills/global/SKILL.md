@@ -187,16 +187,16 @@ PR body with the robot. These win.
 - Brief a subagent by GOAL — the goal, its context, what is out of bounds, what
   "done" looks like — NEVER numbered steps: models degrade on over-prescription.
 - ALWAYS track multi-step work with the exposed native checklist tool:
-  `TaskCreate`/`TaskUpdate` in Claude Code, `update_plan` in Codex. ALWAYS follow
-  its schema, authorization and mode restrictions. ALWAYS add an item before each
-  step, subagent or background run. A request that arrives mid-work ALWAYS becomes
-  an item and a plan step; it interrupts the current step only when the user asks
-  for it now. At each result and each harness task reminder, which is an order,
-  ALWAYS correct statuses and delete completed items except the newest two. When
-  absent or prohibited, ALWAYS report the gap and keep the plan or work record.
-  NEVER invent tool calls or substitute goals or threads for a checklist. Across
-  turns, ALWAYS close each step with one chat line — done, next, how many open —
-  and restate the whole plan only when the user asks (`dispatch` → `plan.md`).
+  `TaskCreate`/`TaskUpdate` in Claude Code, `update_plan` in Codex. ALWAYS give
+  each step, subagent and background run an item, and update its status the moment
+  it changes. A request mid-work ALWAYS becomes an item and a plan step,
+  interrupting only when asked for now; a correction or cancellation applies at
+  once. At each result and harness task reminder, an order, ALWAYS reconcile
+  statuses and delete completed items except the newest two. Without the tool,
+  ALWAYS report the gap and keep the plan or work record. NEVER invent tool calls
+  or let goals or threads stand in for the list. Across turns, ALWAYS close each
+  step with one chat line — done, next, how many open — and restate the numbered
+  plan with each workstream's status only on request (`dispatch` → `plan.md`).
 - ALWAYS use `dispatch` → `plan.md` for comprehensive or multi-file
   implementation: source-grounded planning, bounded coding steps and the parent's
   diff review before each dependent step. Its small-change gate applies; `ship`
