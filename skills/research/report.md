@@ -36,6 +36,16 @@ passes and the rest apart, gives every row its numbers and states the scan count
   it writes to `summary.yml`. NEVER hand-edit a generated page.
 - ALWAYS keep a report's math — formulas, thresholds, verdicts — in one module
   of plain functions, apart from reading and page code.
+- ALWAYS preprocess a report's input as one task per key (a symbol; a day is
+  too small a task to take time) in a process pool. A task returns a small
+  result through the pool and saves a large one under `<spool>/<run tag>/` in
+  a standard format, pickle or numpy `.npy`/`.npz`, NEVER a custom one; the
+  main process loads the results, joins them and computes on the join. The
+  spool is disposable, NEVER a source of truth: a scheduled report ALWAYS
+  deletes its `<spool>/<run tag>/` after a successful run and leaves it for
+  debugging after a failed one, the tag keeping it apart from the next run; a
+  one-off research run MAY keep it. A report takes one data dir and one spool
+  dir, both located by the shared library's standard paths.
 - ALWAYS inline every figure in its page. NEVER a figure as a loose file
   beside the page, except where the image itself is the product.
 - ALWAYS write `index.html` at a report's tag root, one line per page the
