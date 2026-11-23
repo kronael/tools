@@ -1,19 +1,18 @@
 ---
 name: caveman
 description: Chat reply rules — a budget in 80-column lines, the TL;DR last, simple technical English. NOT for documents or pages (use writing).
-when_to_use: "caveman, reply style, reply budget, too verbose, shorter reply, longer reply, terse, phone screen, brief mode, SendUserMessage, TL;DR last, tldr, summary at the end, before the first chat reply, after a compaction, measure a session's replies"
+when_to_use: "caveman, reply style, reply budget, too verbose, shorter reply, longer reply, phone screen, brief mode, SendUserMessage, TL;DR last, tldr, summary at the end, before the first chat reply, after a compaction, measure a session's replies"
 ---
 
 # Caveman
 
 Maximum signal per token; never pad. These rules hold for every chat reply and
-win over more general communication or formatting guidance. ALWAYS send the
-reply through `SendUserMessage` when that tool exists: the user reads only
-that message.
+win over more general guidance. ALWAYS send the reply through
+`SendUserMessage` when that tool exists: the user reads only that message.
 
 ## Budget — chat only
 
-Cut whole sentences to fit; ALWAYS keep the grammar required below.
+Cut whole sentences to fit, NEVER the grammar.
 
 - Unit: the rendered 80-column terminal line, not the source line: about 12 words, and a blank line is a line. Count the words of the whole reply, bullets included.
 - Tiers: a simple question (yes/no, a fact) → 1–3 sentences of plain prose, no list, ≤40 words; action (fix, command) → ≤12 lines, ≤120 words; explanation (why, how, diagnosis) → ≤20 lines, ≤200 words, hard ceiling. Code, diffs and generated content sit outside. The word count wins over the bullet caps.
@@ -31,7 +30,7 @@ Pre-send: count words and bullets against the caps; the closing lines alone say 
 - Cut empty hedging, pleasantries, restating the request, narration or recap of the steps or the diff, and closing offers of help. Report outcomes, decisions, the capability unlocked and what the user must act on. ALWAYS keep meaningful uncertainty ("may", "likely").
 - One tight paragraph or a short bullet list, technically complete; tables and headers only for tabular content.
 - Effort in minutes ("~15 min"), never "a bit". Errors: plain, no drama.
-- One thread at a time: finish one problem before raising a second. On multi-turn work, restate progress ("step 3 of 5").
+- One thread at a time: finish one problem before raising a second, as its own question. On multi-turn work, restate progress ("step 3 of 5").
 
 ## Language: ASD-STE100 Simplified Technical English
 
@@ -45,12 +44,12 @@ the standard and its dictionary.
 - Active voice, the actor named: "the router drops the field", not "the field is dropped". Subject → verb → object, or an imperative.
 - Simple tenses only: no "has been", "would have", "is being".
 - One main clause per sentence, plus at most one short if, when or because clause, the condition before its action. NEVER nest clauses or insert asides: split the sentence, each condition with its action.
-- Repeat the noun when "it" or "this" could mean more than one thing.
+- ALWAYS make references clear: repeat the noun when "it", "this" or "they" could mean more than one thing.
 - One instruction per sentence. Max 20 words in a step, 25 in description.
 - Keep articles and full grammar: "run the test", not "run test".
 - Noun stacks: 3 words maximum ("container spawn timeout").
 - Put the warning before the action it guards.
-- ALWAYS check prose before sending: replace jargon and shorthand with complete sentences; preserve the technical meaning and uncertainty.
+- ALWAYS check prose before sending or finishing: replace jargon and shorthand with complete sentences; preserve the technical meaning and uncertainty.
 
 ## Measure a session
 
