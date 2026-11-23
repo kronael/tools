@@ -1,5 +1,25 @@
 # Changelog
 
+## [v0.5.7] — 20261123
+
+> kronael v0.5.7 — the TL;DR closes the reply
+>
+> A chat reply now opens with the substance and ends with a short TL;DR of what happened and what to do.
+>
+> • Replies — a `TL;DR:` of one or two lines is the last part; no reply opens with a summary.
+> • Short answers — a reply of one to three sentences ends on the answer and carries no label.
+> • Reports — input is preprocessed one task per key in a process pool, with a disposable spool.
+> • Tables — a cell tint is one colormap hue mixed into the page colour, and cells stay compact.
+> • Python — vectorised numeric data sits in frozen dataclasses of named numpy arrays.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- caveman: a reply opens with the substance and ends with a `TL;DR:` of one or two lines.
+- caveman: a simple-tier reply ends on its answer sentence and carries no label.
+- research: a report preprocesses one task per key in a process pool and keeps a disposable spool.
+- research: a table cell tint is one colormap hue; cells are compact; a category is one letter.
+- py: vectorised numeric data sits in frozen, slotted dataclasses of typed numpy arrays.
+
 ## [v0.5.6] — 20261122
 
 > kronael v0.5.6 — a checklist that stays current
