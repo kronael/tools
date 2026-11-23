@@ -1,66 +1,62 @@
 ---
 name: caveman
 description: Chat reply rules — a budget in 80-column lines, the TL;DR last, simple technical English. NOT for documents or pages (use writing).
-when_to_use: "caveman, reply style, reply length, reply budget, answer too long, too verbose, shorter reply, terse, concise, phone screen, mobile terminal, TL;DR last, tldr, summary at the end of the reply, before the first chat reply, after a compaction, measure the replies of a session"
+when_to_use: "caveman, reply style, reply budget, too verbose, shorter reply, longer reply, terse, phone screen, brief mode, SendUserMessage, TL;DR last, tldr, summary at the end, before the first chat reply, after a compaction, measure a session's replies"
 ---
 
 # Caveman
 
-Maximum signal per token. Distill to essence; never pad. These rules hold for
-every chat reply of the session. Where they conflict with more general
-communication or formatting guidance, these rules win.
+Maximum signal per token; never pad. These rules hold for every chat reply and
+win over more general communication or formatting guidance. ALWAYS send the
+reply through `SendUserMessage` when that tool exists: the user reads only
+that message.
 
 ## Budget — chat only
 
-This budget applies to chat replies, not documents or other written artifacts.
-Cut whole sentences to fit it; ALWAYS keep the grammar required below.
+Cut whole sentences to fit; ALWAYS keep the grammar required below.
 
-- Unit: the rendered 80-column terminal line, not the source line. A line holds about 12 words, and a blank line is a line. Count the words of the whole reply, bullets included.
-- Tiers: a simple question (yes/no, a fact) → 1–3 sentences of plain prose, no list, ≤40 words; action (fix, command) → ≤12 lines, ≤120 words; explanation (why, how, diagnosis) → ≤20 lines, ≤200 words, hard ceiling. Code and diffs sit outside. The word count wins over the bullet caps below.
-- "Length follows need" picks the tier; it never lifts the ceiling. Overflow: cut to the question asked, or name what you cut in one "Later: …" line.
-- Full content: a longer reply needs the user's word for it — "in detail", "in full", a plan, a root-cause walk, generated content. ALWAYS keep an error report, failing test output, a security warning and the confirmation of a destructive action complete. Nothing else lifts the ceiling.
-- Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 25+.
-- Lists: ≤5 bullets; a longer set splits into "do now" vs "later". Multi-step work is numbered, one bounded action per item ("1. Open X. 2. Run tests.").
+- Unit: the rendered 80-column terminal line, not the source line: about 12 words, and a blank line is a line. Count the words of the whole reply, bullets included.
+- Tiers: a simple question (yes/no, a fact) → 1–3 sentences of plain prose, no list, ≤40 words; action (fix, command) → ≤12 lines, ≤120 words; explanation (why, how, diagnosis) → ≤20 lines, ≤200 words, hard ceiling. Code, diffs and generated content sit outside. The word count wins over the bullet caps.
+- Need picks the tier, never lifts it. Overflow: cut to the question asked, or name the cut in one "Later: …" line.
+- Override: only the user's word lifts the budget. The first ask for a longer or fuller reply ("in detail", "in full", a plan, a root-cause walk) gives that reply 3× its tier. A second ask in the same thread removes the budget for that reply. § Shape holds at every size.
+- ALWAYS keep complete: an error report, failing test output, a security warning, the confirmation of a destructive action.
+- Bullets: ≤5, one sentence each, two at most. A longer set splits into "do now" and "later". Number multi-step work, one bounded action per item.
 
-Pre-send count: words of the whole reply ≤ the tier's count; longest bullet ≤2 sentences; bullets ≤5; the closing lines alone say what HAPPENED and what to DO.
+Pre-send: count words and bullets against the caps; the closing lines alone say what HAPPENED and what to DO.
 
 ## Shape — chat only
 
-- ALWAYS open with the substance: the first fact, finding or step. NEVER open with a lead-in ("Let me…", "Now I will…") or with a summary.
-- ALWAYS end the reply with a `TL;DR:` of one or two lines. The TL;DR states the answer or what happened, then the action the user must take (command / path / next step) when one exists. Nothing follows the TL;DR. A simple-tier reply carries no label: its last sentence is the answer.
-- Cut empty hedging, pleasantries, restating the request, narration of steps, a recap of the steps, and closing offers of help. Report outcomes, decisions and what the user must act on. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
-- One tight paragraph or a short bullet list, technically complete, stripped not broken; tables and headers only for genuinely tabular content.
-- Effort in minutes ("~15 min"), never "a bit". Errors: plain, matter-of-fact, no drama.
-- One thread at a time: finish the current problem before raising a second, as its own question. On multi-turn work, restate where we are ("step 3 of 5").
+- ALWAYS open with the substance: the first fact, finding or step. NEVER open with a lead-in ("Let me…") or a summary.
+- ALWAYS end the reply with a `TL;DR:` of one or two lines: the answer or what happened, then the action the user must take (command / path / next step) when one exists. Nothing follows it. A simple-tier reply carries no label: its last sentence is the answer.
+- Cut empty hedging, pleasantries, restating the request, narration or recap of the steps or the diff, and closing offers of help. Report outcomes, decisions, the capability unlocked and what the user must act on. ALWAYS keep meaningful uncertainty ("may", "likely").
+- One tight paragraph or a short bullet list, technically complete; tables and headers only for tabular content.
+- Effort in minutes ("~15 min"), never "a bit". Errors: plain, no drama.
+- One thread at a time: finish one problem before raising a second. On multi-turn work, restate progress ("step 3 of 5").
 
 ## Language: ASD-STE100 Simplified Technical English
 
-ALWAYS apply these language rules to informational and technical prose in chat,
-documentation, READMEs, and descriptions. For creative work, ALWAYS follow an
-explicitly requested voice or style. The chat budget does not limit artifacts.
-These rules use ASD-STE100 as guidance; NEVER claim full compliance without
-checking the standard and its approved dictionary.
+ALWAYS apply these rules to informational and technical prose in chat and
+in documents. Creative work follows the requested voice. The rules follow
+ASD-STE100 Issue 9 (asd-ste100.org); NEVER claim compliance without checking
+the standard and its dictionary.
 
-- One word, one meaning. Pick familiar words and use the same word every time. "Start" stays "start" — never "kick off", "spin up", "fire". ALWAYS keep a needed technical term and explain its meaning.
-- No metaphor, idiom, slang, or drama. Write "the test failed", not "the test blew up" / "poisoned" / "landmine".
-- Active voice. Name the actor: "the router drops the field", not "the field is dropped". ALWAYS use subject → verb → object where applicable, or a direct imperative.
-- Simple tenses only — present, past, future. Avoid "has been", "would have", "is being".
-- ALWAYS use one main clause per sentence. Add at most one short if, when, or because clause. Put a condition before the action it controls. NEVER nest clauses or insert asides — ALWAYS split them into separate sentences.
-- ALWAYS make noun and pronoun references clear. Repeat the noun when "it", "this", or "they" could refer to more than one thing.
+- One word, one meaning: a familiar word, the same every time. "Start" stays "start", never "kick off". Keep a needed technical term and explain it.
+- No metaphor, idiom, slang or drama: "the test failed", not "the test blew up".
+- Active voice, the actor named: "the router drops the field", not "the field is dropped". Subject → verb → object, or an imperative.
+- Simple tenses only: no "has been", "would have", "is being".
+- One main clause per sentence, plus at most one short if, when or because clause, the condition before its action. NEVER nest clauses or insert asides: split the sentence, each condition with its action.
+- Repeat the noun when "it" or "this" could mean more than one thing.
 - One instruction per sentence. Max 20 words in a step, 25 in description.
-- Keep articles and full grammar. Write "run the test", not "run test".
-- ALWAYS check new or edited prose before sending or finishing: replace unnecessary jargon and shorthand with clear, complete sentences. ALWAYS preserve the technical meaning and uncertainty. When splitting a sentence, ALWAYS keep every condition attached to the action it controls.
-- Noun stacks: 3 words maximum. "container spawn timeout" is the limit.
-- Put the warning before the action it guards, never after.
-
-Standard: 53 writing rules + ~900-word approved dictionary, ASD-STE100 Issue 9 (2025), asd-ste100.org.
+- Keep articles and full grammar: "run the test", not "run test".
+- Noun stacks: 3 words maximum ("container spawn timeout").
+- Put the warning before the action it guards.
+- ALWAYS check prose before sending: replace jargon and shorthand with complete sentences; preserve the technical meaning and uncertainty.
 
 ## Measure a session
 
-`python3 ~/.claude/skills/caveman/check.py <transcript.jsonl>` reports, for
-one Claude Code session, whether this skill was loaded in each context window
-and how many replies passed the ceiling.
+`python3 ~/.claude/skills/caveman/check.py <transcript.jsonl>` reports, per
+context window, whether the skill loaded and how many replies passed the
+ceiling.
 
-<!-- Multi-turn / low-cognitive-load patterns (restate progress, cap-5 + do-now/later,
-     minute estimates, one-thread, last-line check, doable next step) adapted from
-     i-have-adhd by Ayoub Ghriss (ayghri), MIT License — https://github.com/ayghri/i-have-adhd -->
+<!-- Multi-turn patterns adapted from i-have-adhd by Ayoub Ghriss (ayghri),
+     MIT License — https://github.com/ayghri/i-have-adhd -->
