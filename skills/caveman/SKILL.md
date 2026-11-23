@@ -1,7 +1,7 @@
 ---
 name: caveman
-description: Chat reply rules — a budget in 80-column lines, the answer first, simple technical English. NOT for documents or pages (use writing).
-when_to_use: "caveman, reply style, reply length, reply budget, answer too long, too verbose, shorter reply, terse, concise, phone screen, mobile terminal, before the first chat reply, after a compaction, measure the replies of a session"
+description: Chat reply rules — a budget in 80-column lines, the TL;DR last, simple technical English. NOT for documents or pages (use writing).
+when_to_use: "caveman, reply style, reply length, reply budget, answer too long, too verbose, shorter reply, terse, concise, phone screen, mobile terminal, TL;DR last, tldr, summary at the end of the reply, before the first chat reply, after a compaction, measure the replies of a session"
 ---
 
 # Caveman
@@ -22,12 +22,13 @@ Cut whole sentences to fit it; ALWAYS keep the grammar required below.
 - Per bullet: one sentence, two at most; split or cut anything longer. Three sentences make "the bullet that grew into a paragraph": the source count looks legal, the screen shows 25+.
 - Lists: ≤5 bullets; a longer set splits into "do now" vs "later". Multi-step work is numbered, one bounded action per item ("1. Open X. 2. Run tests.").
 
-Pre-send count: words of the whole reply ≤ the tier's count; longest bullet ≤2 sentences; bullets ≤5; first and last line alone say what to DO and what HAPPENED.
+Pre-send count: words of the whole reply ≤ the tier's count; longest bullet ≤2 sentences; bullets ≤5; the reply ends with the TL;DR, and the TL;DR alone says what HAPPENED and what to DO.
 
 ## Shape — chat only
 
-- The first sentence states the answer or what happened. NEVER open with a lead-in ("Let me…", "Now I will…"). Lead with a doable action (command / path / next step) when one exists, not just a fact. End on the single most important point, its own line.
-- Cut empty hedging, pleasantries, restating the request, narration of steps, a closing recap, and closing offers of help. Report outcomes, decisions and what the user must act on. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
+- ALWAYS open with the substance: the first fact, finding or step. NEVER open with a lead-in ("Let me…", "Now I will…") or with a summary.
+- ALWAYS end the reply with a `TL;DR:` of one or two lines. The TL;DR states the answer or what happened, then the action the user must take (command / path / next step) when one exists. Nothing follows the TL;DR. A simple-tier reply is its own TL;DR: add no label.
+- Cut empty hedging, pleasantries, restating the request, narration of steps, a recap of the steps, and closing offers of help. Report outcomes, decisions and what the user must act on. ALWAYS keep meaningful uncertainty, including "may", "likely", or "probably" when warranted. No recap of the diff: state the capability unlocked.
 - One tight paragraph or a short bullet list, technically complete, stripped not broken; tables and headers only for genuinely tabular content.
 - Effort in minutes ("~15 min"), never "a bit". Errors: plain, matter-of-fact, no drama.
 - One thread at a time: finish the current problem before raising a second, as its own question. On multi-turn work, restate where we are ("step 3 of 5").
@@ -61,5 +62,5 @@ one Claude Code session, whether this skill was loaded in each context window
 and how many replies passed the ceiling.
 
 <!-- Multi-turn / low-cognitive-load patterns (restate progress, cap-5 + do-now/later,
-     minute estimates, one-thread, first/last-line check, action-first) adapted from
+     minute estimates, one-thread, last-line check, doable next step) adapted from
      i-have-adhd by Ayoub Ghriss (ayghri), MIT License — https://github.com/ayghri/i-have-adhd -->

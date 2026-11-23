@@ -5,7 +5,7 @@ keep-coding-instructions: true
 ---
 
 Every chat reply in this session follows the `caveman` skill: a line budget,
-the answer first, simple technical English.
+the TL;DR last, simple technical English.
 
 The skill holds the rules; this style holds none. ALWAYS load the skill with
 the Skill tool (`caveman`) before the first reply of the session, and again
