@@ -15,6 +15,7 @@ COLUMNS = 80
 OVERRIDE = 'override'
 FENCE = re.compile(r'^[ \t]*((`|~)\2{2,})(?!\2)[\s\S]*?^[ \t]*\1\2*[ \t]*$', re.MULTILINE)
 LINK = re.compile(r'\[([^\]]*)\]\([^)]*\)')
+KEY_LINES = re.compile(rf'(?:{OVERRIDE} [0-9a-f]{{8}}(?:\n+|$))*')
 
 
 def caveman_selected(home):
@@ -63,7 +64,8 @@ def reason(lines, ceiling, lifted, key):
         f'Not delivered: the message is {lines} rendered {COLUMNS}-column lines '
         f'and the caveman ceiling is {ceiling}. The user has not seen it. '
         'Cut it per the caveman skill. Code fences do not count. '
-        f'If the user {ask}, resend the message with one more line at its top. '
+        f'If the user {ask}, or the caveman skill keeps this message complete, '
+        'resend the message with one more line at its top. '
         'The hook removes that line, and its key works once, on the next message only, '
         f'{reach}. That line is: {OVERRIDE} {key}'
     )
@@ -84,6 +86,7 @@ def check(data, home):
     passed = None
     if pending and head == f'{OVERRIDE} {pending}':
         message = body.lstrip('\n')
+        message = message[KEY_LINES.match(message).end() :]
         passed = {
             'hookSpecificOutput': {
                 'hookEventName': 'PreToolUse',

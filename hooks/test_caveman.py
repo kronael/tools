@@ -152,6 +152,34 @@ def test_the_second_key_passes_any_length_once(home) -> None:
     assert decision(check(payload(f'override {second}\n{long}'), home)) == 'deny'
 
 
+def test_a_second_key_line_set_above_the_first_delivers_neither(home) -> None:
+    long = lines(61)
+    first = denied_key(check(payload(long), home))
+    resent = f'override {first}\n{long}'
+    second = denied_key(check(payload(resent), home))
+
+    out = check(payload(f'override {second}\n{resent}'), home)
+
+    assert out['hookSpecificOutput']['updatedInput']['message'] == long
+
+
+@pytest.mark.parametrize('body', ['override the default in settings.', 'override deadbeef now'])
+def test_a_line_that_is_not_a_key_line_stays_in_the_message(home, body) -> None:
+    key = denied_key(check(payload(OVER), home))
+
+    out = check(payload(f'override {key}\n{body}'), home)
+
+    assert out['hookSpecificOutput']['updatedInput']['message'] == body
+
+
+def test_each_denial_names_the_messages_the_skill_keeps_complete(home) -> None:
+    first = check(payload(lines(61)), home)
+    second = check(payload(f'override {denied_key(first)}\n{lines(61)}'), home)
+
+    for out in first, second:
+        assert 'or the caveman skill keeps this message complete' in reason_text(out)
+
+
 def test_a_denial_after_the_second_key_starts_from_the_first_ceiling(home) -> None:
     long = lines(400)
     first = denied_key(check(payload(long), home))

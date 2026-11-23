@@ -528,6 +528,13 @@
   delivered `SendUserMessage` message as a reply when a turn holds one. No
   test yet.
 
+- **CAVEMAN-KEY-SPENT-TWICE-BY-PARALLEL-CALLS** (LOW, hooks) — CONFIRMED
+  2026-11-23. `hooks/caveman.py` reads and removes the key stamp without a
+  lock. Two `SendUserMessage` calls of one session that run at once can both
+  read one key: the first passes, the second removes a stamp a later denial
+  wrote and passes too. **Fix:** take the stamp with an atomic rename before
+  reading it. No test yet.
+
 - **HOOKS-CI-COVERAGE-GAPS** (MED, ops) — `.github/workflows/test-hooks.yml`
   runs the hooks tests on Python 3.12 only, while the hooks claim 3.9 support;
   a 3.11+ regex reached master before deca986 unseen. Its push triggers omit
