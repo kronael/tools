@@ -231,27 +231,30 @@ shorter message itself. A Stop hook sees a reply after the terminal shows it,
 so a block there adds a second copy. A `MessageDisplay` hook can replace the
 lines on screen, but the model does not learn which lines the user read.
 
-`CAP_LINES` is the hard ceiling of `../skills/caveman/SKILL.md` § Budget and
-`COLUMNS` its unit; `test_caveman.py` asserts the skill still states
-both. `caveman_selected(home)`, whether `~/.claude/settings.json` selects the
+`CAP_LINES` is the hard ceiling of `../skills/caveman/SKILL.md` § Budget,
+`COLUMNS` its unit and `LIFT` the factor of its Override rule;
+`test_caveman.py` asserts the skill still states all three. `caveman_selected(home)`, whether `~/.claude/settings.json` selects the
 caveman output style, lives here too; `prompt_nudge.py` imports it.
 
 **Flow:**
 1. Silent for any other tool, a missing `message`, an `outputStyle` other
    than `caveman`, or an unusable state directory.
-2. Read the key in the per-session stamp `caveman-key-{session_id}` in
-   `~/.claude/state` (`lib/state.py`) and remove the stamp, so a key covers one
-   call. When the first line of `message` is `override <key>` with that key:
-   answer `updatedInput`, the call's input with that line and the blank lines
-   after it removed from `message`, and no permission decision.
+2. Read the key and its ceiling in the per-session stamp
+   `caveman-key-{session_id}` in `~/.claude/state` (`lib/state.py`) and remove
+   the stamp, so a key covers one call. When the first line of `message` is
+   `override <key>` with that key, the call's answer is `updatedInput`, its
+   input with that line and the blank lines after it removed from `message`,
+   and the key's ceiling replaces `CAP_LINES`.
 3. Drop fenced code and link targets, then count rendered lines
    (`ceil(len/COLUMNS)` per source line, a blank line counts one). At or under
-   the ceiling: pass.
-4. Over the ceiling: write a new key (`secrets.token_hex(4)`) to the stamp and
-   deny. The reason gives the count, says the user has not seen the message,
-   asks for the answer to the question alone, with the rest left in plain
-   text, and names the key and its `override <key>` first line. A key that
-   cannot be stored means no denial.
+   the ceiling, or under a key with no ceiling: pass.
+4. Over the ceiling: write a new key (`secrets.token_hex(4)`) and its ceiling
+   to the stamp and deny. The first key lifts the ceiling to `LIFT` times
+   `CAP_LINES`; a message over that under the first key gets a second key with
+   no ceiling. The reason gives the count and the ceiling, says the user has
+   not seen the message, names the user's ask that each key needs, and names
+   the key and its `override <key>` first line. A key that cannot be stored
+   means no denial.
 
 The hook cannot tell the fact, action and explanation tiers apart, so it holds
 only the ceiling; the other tiers stay with the skill. It measures one call:

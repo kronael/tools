@@ -151,9 +151,11 @@ message with the measured count, and Claude Code does not deliver a denied
 message, so the user reads one copy.
 
 Each denial names a random one-time key. A resend whose first line is
-`override <key>` passes at any length, and the hook removes that line from the
-delivered message. The key covers the next `SendUserMessage` call only: that
-call spends it, whatever it carries. An `override` line with any other key is
+`override <key>` passes up to three times the ceiling, and the hook removes
+that line from the delivered message. A resend over that is denied with a
+second key, which passes at any length: the two steps of
+`../skills/caveman/SKILL.md` § Budget, Override. A key covers the next
+`SendUserMessage` call only: that call spends it, whatever it carries. An `override` line with any other key is
 plain text, measured with the rest of the message.
 
 Silent unless `~/.claude/settings.json` selects `caveman`; a project's own

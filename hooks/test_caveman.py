@@ -6,6 +6,7 @@ import sys
 import pytest
 from caveman import CAP_LINES
 from caveman import COLUMNS
+from caveman import LIFT
 from caveman import check
 from caveman import rendered_lines
 
@@ -22,6 +23,14 @@ def home(tmp_path, monkeypatch):
     settings.parent.mkdir()
     settings.write_text(json.dumps({'outputStyle': 'caveman'}))
     return tmp_path
+
+
+def lines(count):
+    return '\n'.join(f'Line {n}.' for n in range(count))
+
+
+def reason_text(out):
+    return out['hookSpecificOutput']['permissionDecisionReason']
 
 
 def payload(message, **extra):
@@ -47,6 +56,8 @@ def test_cap_and_unit_match_the_skill(pytestconfig) -> None:
 
     assert re.search(rf'→ ≤{CAP_LINES} lines,[^→]*hard ceiling', skill)
     assert f'Unit: the rendered {COLUMNS}-column terminal line' in skill
+    assert f'gives that reply {LIFT}\u00d7 its tier' in skill
+    assert 'A second ask in the same thread removes the budget' in skill
 
 
 def test_rendered_lines_wrap_at_80_columns() -> None:
@@ -111,6 +122,54 @@ def test_the_denial_names_a_key_that_passes_the_next_message_once(home) -> None:
         }
     }
     assert decision(check(payload(f'override {key}\n\n{OVER}'), home)) == 'deny'
+
+
+def test_the_first_key_lifts_the_ceiling_to_three_times_and_no_further(home) -> None:
+    denied = check(payload(OVER), home)
+    assert 'asked for a longer reply' in reason_text(denied)
+    assert 'up to 60 lines' in reason_text(denied)
+
+    out = check(payload(f'override {denied_key(denied)}\n{lines(60)}'), home)
+    assert out['hookSpecificOutput']['updatedInput']['message'] == lines(60)
+
+    key = denied_key(check(payload(OVER), home))
+    out = check(payload(f'override {key}\n{lines(61)}'), home)
+    assert decision(out) == 'deny'
+    assert f'61 rendered {COLUMNS}-column lines' in reason_text(out)
+    assert 'ceiling is 60' in reason_text(out)
+    assert 'asked for it a second time' in reason_text(out)
+    assert 'at any length' in reason_text(out)
+
+
+def test_the_second_key_passes_any_length_once(home) -> None:
+    long = lines(400)
+    first = denied_key(check(payload(long), home))
+    second = denied_key(check(payload(f'override {first}\n{long}'), home))
+
+    out = check(payload(f'override {second}\n\n{long}'), home)
+
+    assert out['hookSpecificOutput']['updatedInput'] == {'message': long, 'status': 'normal'}
+    assert decision(check(payload(f'override {second}\n{long}'), home)) == 'deny'
+
+
+def test_a_denial_after_the_second_key_starts_from_the_first_ceiling(home) -> None:
+    long = lines(400)
+    first = denied_key(check(payload(long), home))
+    second = denied_key(check(payload(f'override {first}\n{long}'), home))
+    check(payload(f'override {second}\n{long}'), home)
+
+    denied = check(payload(long), home)
+
+    assert f'ceiling is {CAP_LINES}' in reason_text(denied)
+    assert 'up to 60 lines' in reason_text(denied)
+
+
+def test_a_stamp_that_holds_no_ceiling_is_no_key(home) -> None:
+    stamp = home / 'state' / 'caveman-key-s1'
+    stamp.parent.mkdir(parents=True, exist_ok=True)
+    stamp.write_text('deadbeef')
+
+    assert decision(check(payload(f'override deadbeef\n{OVER}'), home)) == 'deny'
 
 
 def test_a_wrong_key_is_denied_and_spends_the_issued_key(home) -> None:
