@@ -1,5 +1,35 @@
 # Changelog
 
+## [v0.5.8] — 20261123
+
+> kronael v0.5.8 — shorter caveman, brief mode on
+>
+> The reply rules are a fifth shorter, replies go through brief mode, and a user's ask lifts the limit in two steps.
+>
+> • Caveman — the skill is 19% shorter in words and keeps every rule.
+> • Override — a first ask for a longer reply gives 3× the tier; a second ask removes the limit.
+> • Brief mode — `CLAUDE_CODE_BRIEF` in the settings turns SendUserMessage on for replies.
+> • Hook — the first override key passes up to 60 lines; a second key passes any length.
+> • Workers — a `claude --print` worker starts with brief mode off.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- caveman: the skill is 783 words, down from 965, with every rule kept.
+- caveman: the user's first ask for a longer reply gives 3× the tier; a second ask removes the budget.
+- caveman: the reply goes through `SendUserMessage` when that tool exists.
+- settings: `CLAUDE_CODE_BRIEF` is `1` in `env`, which turns brief mode on.
+- hooks: the first `override` key passes up to 60 lines; a second key passes any length.
+- hooks: a denial names the messages the skill keeps complete, and stale key lines are removed.
+- claude: a `--print` worker passes `--settings` to turn brief mode off.
+
+### Operator note
+
+- `claude --brief` alone adds no `SendUserMessage` on an account without Claude Code's gate.
+- A headless `claude -p` run reads the same setting. Pass
+  `--settings '{"env":{"CLAUDE_CODE_BRIEF":"0"}}'` to a run whose `result` a script reads.
+
 ## [v0.5.7] — 20261123
 
 > kronael v0.5.7 — the TL;DR closes the reply
