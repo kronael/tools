@@ -263,7 +263,8 @@ your diff against every `##` heading here before calling an edit done.
   show changed runtime settings, including vars and config, with old and new
   values; NEVER expose credentials.
 - Before merging or deploying, ALWAYS obtain an owner-designated human's
-  explicit sign-off on the presented review and scope. ALWAYS record the
+  explicit sign-off on the presented review and scope. The user's own
+  instruction to merge or deploy that PR is that sign-off. ALWAYS record the
   acknowledgement and its source with the PR, review and revision evidence.
   NEVER treat a plan approval, CI, automated review, agent summary or command
   permission as review sign-off.

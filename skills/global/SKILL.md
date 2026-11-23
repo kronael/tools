@@ -72,8 +72,9 @@ read it before a design answer, a plan, a review or a sub brief.
   prioritise; `/bugs` owns placement, entry format and pruning. The drift is
   fixing as you find during an audit: it destroys the queue and produces a
   large unrequested diff.
-- A redesign (new contract, changed control flow, cross-cutting) goes into
-  `BUGS.md` as a proposal FIRST and ships only after sign-off.
+- A redesign (new contract, changed control flow, cross-cutting) that nobody
+  asked for goes into `BUGS.md` as a proposal FIRST and ships only after
+  sign-off. A change the user asked for is signed off: build it.
 
 ## Git
 

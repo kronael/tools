@@ -162,8 +162,8 @@ code, deployment, specs or data; documents also carry claims to verify.
     commit range, the PR body, the threads, the worktrees, the verdict. ALWAYS
     check the commit range before any push — a pushed violation is permanent.
     NEVER push by any command (`git push`, `rip -g`) outside the confirmed set
-    (WISDOM § Git), and NEVER `gh pr merge` or `gh pr review`. The closing
-    report follows `report.md`.
+    (WISDOM § Git), and NEVER `gh pr merge` or `gh pr review`, unless the
+    user's own instruction names it: that is the sign-off. Report: `report.md`.
     → the verdict carries all four, every unfixed triaged thread is replied to
     and every fixed one listed, and every worktree left is named with its
     reason.

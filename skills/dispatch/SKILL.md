@@ -62,7 +62,10 @@ When a model override belongs to the other provider, ALWAYS use that provider's
 runbook. If explicit provider and model choices conflict, ALWAYS report the
 conflict before launching. If any requested choice is unsupported or unavailable,
 ALWAYS report the exact limitation; NEVER silently substitute a model or effort.
-An owner-approved alternative applies only within its stated scope.
+An owner-approved alternative applies only within its stated scope. One is
+standing: when a model is over its usage limit, ALWAYS run the task on the other
+provider's model of the same row at the same effort, name both in one line and
+continue.
 
 An isolated worker remains isolated even when it uses the parent's model.
 For a request spanning several tasks, ALWAYS use the execution flow below;

@@ -1,5 +1,23 @@
 # Changelog
 
+## [v0.5.9] — 20261123
+
+> kronael v0.5.9 — agents act on orders
+>
+> Agents no longer ask for approval of a push, merge, redesign or model fallback that the user already ordered.
+>
+> • Dispatch — a model over its limit falls back to the other provider's model at the same effort.
+> • Redesign — a change the user asked for is built, not parked in BUGS.md.
+> • Refine, review — the user's own instruction to push or merge is the sign-off.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Changed
+
+- dispatch: a standing fallback to the other provider's model of the same row and effort.
+- global: only an unasked redesign goes to BUGS.md first.
+- refine, software: the user's own push, merge or deploy instruction is the sign-off.
+
 ## [v0.5.8] — 20261123
 
 > kronael v0.5.8 — shorter caveman, brief mode on
