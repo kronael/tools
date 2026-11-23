@@ -87,9 +87,15 @@ as separately quoted arguments. For an authorized full-access worker, use:
 
 ```bash
 cd '<worker directory>' && claude --print --no-session-persistence \
+  --settings '{"env":{"CLAUDE_CODE_BRIEF":"0"}}' \
   --dangerously-skip-permissions --model '<selected model ID or alias>' \
   --effort '<selected effort>' '<brief per dispatch>' </dev/null
 ```
+
+ALWAYS keep the `--settings` line: it turns brief mode off for the worker.
+`settings-recommended.json` turns brief mode on, and a brief-mode reply goes
+to `SendUserMessage`, not to the text `--print` returns (read from the Claude
+Code 2.1.330 bundle, not measured).
 
 ALWAYS respect the outer task's permission policy and boundaries. When it
 requires a different supported permission mode, use that mode explicitly.
