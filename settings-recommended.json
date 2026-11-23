@@ -178,6 +178,7 @@
     "sessionUrl": false
   },
   "env": {
+    "CLAUDE_CODE_BRIEF": "1",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0",
     "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
   },

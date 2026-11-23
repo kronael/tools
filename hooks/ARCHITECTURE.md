@@ -224,8 +224,8 @@ run by hand from `pr-draft` (with `--draft` and `--title`), `gh-issue` and
 line count and a one-time key, `hookSpecificOutput.updatedInput` with the key
 line removed from `message`, or silent.
 
-`SendUserMessage` is the brief-mode reply tool: with `claude --brief` and
-`defaultView` `chat`, its `message` is the only text the user reads. A
+`SendUserMessage` is the brief-mode reply tool: with `CLAUDE_CODE_BRIEF` `1`
+in the settings `env`, its `message` is the only text the user reads. A
 PreToolUse denial stops the call before delivery, and the model writes the
 shorter message itself. A Stop hook sees a reply after the terminal shows it,
 so a block there adds a second copy. A `MessageDisplay` hook can replace the

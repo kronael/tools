@@ -139,9 +139,11 @@ repository adopts.
 ### caveman.py (PreToolUse)
 
 Holds a brief-mode reply to the caveman ceiling before the user reads it. In
-brief mode (`claude --brief`, with `"defaultView": "chat"` in
-`~/.claude/settings.json`) the user reads only `SendUserMessage` calls; plain
-assistant text stays in the detail view. The hook measures the call's
+brief mode the user reads only `SendUserMessage` calls; plain assistant text
+stays in the detail view. `"CLAUDE_CODE_BRIEF": "1"` in the `env` of
+`~/.claude/settings.json` turns brief mode on, and `settings-recommended.json`
+sets it. `claude --brief` and `"defaultView": "chat"` work only on an account
+that has Claude Code's `tengu_kairos_brief` gate. The hook measures the call's
 `message` outside code fences in rendered lines, the unit of
 `../skills/caveman/SKILL.md` § Budget, against that section's hard ceiling.
 It denies a longer

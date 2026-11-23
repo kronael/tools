@@ -478,16 +478,26 @@
 - **CAVEMAN-HOOK-NOT-RUN-IN-A-LIVE-SESSION** (MED, hooks) — needs the owner's
   trial. `hooks/caveman.py` denies a brief-mode `SendUserMessage` over
   the caveman hard ceiling, and `test_caveman.py` covers the script. No
-  brief-mode session has run it. Four facts are read from Claude Code 2.1.323
-  and not observed: the account is entitled to brief mode, without which
-  `--brief` does nothing; PreToolUse hooks run for `SendUserMessage`; the chat
+  brief-mode session has run it. Measured on Claude Code 2.1.330 from the
+  `init` tool list of `claude -p --output-format stream-json`: 33 tools and no
+  `SendUserMessage` with nothing set and with `--brief`; 34 tools with
+  `SendUserMessage` under `CLAUDE_CODE_BRIEF=1`, in the process environment
+  or in the settings `env`. The bundle reads the entitlement, for `--brief`
+  and for `"defaultView": "chat"` alike, as that variable or the
+  `tengu_kairos_brief` gate, so this account has no gate and the variable is
+  the switch; `settings-recommended.json` sets it. The run was headless: an
+  interactive start is read from the bundle, where the same variable sets the
+  chat view. Three facts are read from the bundle
+  and not observed: PreToolUse hooks run for `SendUserMessage`; the chat
   view hides a denied message; an `updatedInput` answer replaces the delivered
   message, so the user does not read the `override <key>` line. Two more are
   the model's to show: its next message fits, and it copies the `override
-  <key>` line exactly and only when the answer needs the length.
-  **Check:** set `"defaultView":
-  "chat"`, start `claude --brief`, ask for a long explanation, and read the
-  transcript: the over-long `SendUserMessage` call carries the denial and its
+  <key>` line exactly and only when the answer needs the length. One effect is
+  not measured: what a headless `claude -p` run returns as `result` when the
+  model answers through `SendUserMessage`; a script that reads that result
+  runs under the same setting.
+  **Check:** start a session with the variable set, ask for a long
+  explanation, and read the transcript: the over-long `SendUserMessage` call carries the denial and its
   key, and the next call fits. Then ask for a reply that needs the length: the
   resend opens with `override <key>` and the chat view shows the message
   without that line. **Options:** (a) keep the wiring after a passed trial; (b)
