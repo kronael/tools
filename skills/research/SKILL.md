@@ -11,7 +11,8 @@ Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
-| what a score must be reported against and when it may be believed: baselines on the same window, climatology as the floor, the scoring rule per target (Brier, QLIKE, RMSE), unforecastable targets, fit vs score target, holdout, overlap, beta, costs, controls, one knob, ablations, nulls, the scope of a number, tuning a knob (quantile first points, refinement grids, Brent, Newton step, coordinate descent and its joint run, bracket edge and hard limits, the search plot) | `method.md` |
+| what a score must be reported against and when it may be believed: baselines on the same window, climatology as the floor, the scoring rule per target (Brier, QLIKE, RMSE), unforecastable targets, fit vs score target, holdout, overlap, beta, costs, controls, one knob, ablations, nulls, the scope of a number | `method.md` |
+| tuning a knob: the rules every search method shares (bracket, hard limits, paired interval, edge extension, the search plot) and the methods, one section each (coordinate Newton from a 3-point grid start) | `search.md` |
 | how research is organised: strategy vs report naming, the model/strategy seam, the run record, the run log, the leaflet, durable vs scratch, rounds, the graveyard, the two simulators | `layout.md` |
 | the HTML report page: section order, the report as its own project run with `uv run`, its per-key preprocessing pool and spool dir, how it gets online, matplotlib, plotly or d3 figures, page colour tokens, figure palettes (Dark2, cividis, RdBu_r), the second cue beside colour, bars or tints in table columns, a binned mean plot | `report.md` |
 | silent plausible wrong numbers: reader row-eating, bar labels, unit powers, aliased checks, cache keys and effective windows, degenerate models, selectors, code defaults, constant curves, benchmark code, rounded winners, marked PnL, generated text, replay fixtures, stale records | `traps.md` |
