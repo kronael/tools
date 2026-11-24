@@ -110,29 +110,26 @@ known-good baseline before believing the system moved.
 
 ## Search
 
-NEVER pick a knob's value from one flat grid — ALWAYS refine around its best
-point. A knob that cuts a quantity gets its first points at that quantity's
-quantiles. Refine with successive grids, each inside the best point's two
-neighbours, with Brent's method on the bracket, or with a Newton step to the
-vertex of a quadratic fitted around the best point, taken only while the
-vertex is inside the bracket and the fit curves the right way.
+NEVER pick a knob's value from one flat grid — ALWAYS use the grid only to
+find where to start. First run a coarse grid per knob, each knob alone from
+the pinned row (§ Runs); a knob that cuts a quantity gets its points at that
+quantity's quantiles. Each knob's best grid point is its start.
 
-Several knobs are searched by coordinate descent. A round is one line search
-per knob, each from the round's pinned row (§ Runs), then ONE joint run with
-every knob at its pick. The joint run attributes nothing; it tests that the
-picks add up: its gain, NEVER the sum of the single-knob gains, is the
-round's result, and its point is the next round's pinned row. When it scores
-below the round's best single move, ALWAYS take that move alone and re-pin
-after every knob from then on.
+Then ALWAYS take Newton steps one coordinate at a time, from the current
+point with every knob at its current value: fit a quadratic through the
+knob's best point and its two neighbours, move the knob to the vertex,
+clamped to its hard limits, and run that point. The next knob steps from the
+point that results. When the fit does not curve the right way, take a Brent
+or successive-grid step inside the bracket instead. Pass over the knobs until
+a full pass keeps no step: that is convergence.
 
-ALWAYS pin each knob's bracket and hard limits and the round cap in the
+ALWAYS pin each knob's bracket, its hard limits and the pass cap in the
 loop-state file (`layout.md` § Rounds) before the first run. Score every
-point as its paired gain over the pinned row, the same paths and dates under
-both settings, with its interval. A point replaces the pick only when the
-interval of its gain over the pick clears zero; a round that replaces no pick
-ends the search. When a pick sits on the bracket's edge, ALWAYS extend the
-bracket past that edge and search on, up to the hard limit — NEVER report an
-edge pick as the optimum. A pick on a hard limit is reported as
+point as its paired gain over the current point, the same paths and dates
+under both settings, with its interval. A step is kept only when the interval
+of its gain clears zero. When a pick sits on the bracket's edge, ALWAYS
+extend the bracket past that edge and search on, up to the hard limit —
+NEVER report an edge pick as the optimum. A pick on a hard limit is reported as
 "constrained", the limit named.
 
 ALWAYS plot the search on its page (`report.md`), one plot per knob: every
