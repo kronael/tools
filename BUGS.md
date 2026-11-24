@@ -545,16 +545,6 @@
   entry, the three trigger paths, and a `uvx pytest -q
   skills/caveman/test_check.py` step. Status: open (record only).
 
-- **MUT-CHANGED-RESTORE-TRUNCATES-PYPROJECT** (MED, correctness) — CONFIRMED
-  2026-11-24 at cbd4d55. `skills/software/mut_changed.py:301` and `:320`
-  write `pyproject.toml` in place (`write_text`, `write_bytes`): the open
-  truncates the file first, so a write that fails (`ENOSPC`) leaves it empty
-  or partial, and the restore in the `finally` fails the same way. The
-  project's own `pyproject.toml` is then lost. Reported from morha.
-  **Measured:** `skills/software/test_mut_changed.py::test_a_failed_write_leaves_pyproject_intact`
-  — the file reads empty after a failed write. **Fix:** write a `.part` file
-  beside it and `os.replace` it over the original.
-
 - **HOOKS-MUTATION-RUN-HAS-NO-PYPROJECT** (LOW, config) — CONFIRMED 2026-11-13.
   `skills/software/mut_changed.py` exits 2 with `no pyproject.toml` when run
   from `hooks/`: the hooks tests take their root from `hooks/pytest.ini`, and
