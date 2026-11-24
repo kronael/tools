@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.5.10] — 20261124
+
+> kronael v0.5.10 — a mutation run cannot empty pyproject.toml
+>
+> mut_changed.py replaces pyproject.toml atomically, so a failed write leaves the file whole.
+>
+> • Software — mut_changed.py writes pyproject.toml through a temporary file and os.replace.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+### Fixed
+
+- software: mut_changed.py writes the scoped and the restored pyproject.toml atomically.
+
 ## [v0.5.9] — 20261123
 
 > kronael v0.5.9 — agents act on orders
