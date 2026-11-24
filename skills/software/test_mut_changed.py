@@ -1,7 +1,10 @@
+import errno
+import io
 import os
 import subprocess
 import sys
 
+import mut_changed
 import pytest
 
 GIT_ENV = {
@@ -209,3 +212,22 @@ def test_a_missing_import_path_fails_with_the_import_error_and_the_hint(pytestco
     assert "ModuleNotFoundError: No module named 'no_such_dependency'" in result.stderr
     assert 'set the PYTHONPATH the project needs' in result.stderr
     assert (project / 'pyproject.toml').read_bytes() == pyproject
+
+
+def test_a_failed_write_leaves_pyproject_intact(tmp_path, monkeypatch):
+    pyproject = tmp_path / 'pyproject.toml'
+    pyproject.write_text(PROJECT)
+    real_open = io.open
+
+    def full_disk(file, mode='r', *args, **kwargs):
+        handle = real_open(file, mode, *args, **kwargs)
+        if 'w' in mode:
+            handle.close()
+            raise OSError(errno.ENOSPC, os.strerror(errno.ENOSPC))
+        return handle
+
+    monkeypatch.setattr(io, 'open', full_disk)
+    with pytest.raises(OSError, match='No space left'):
+        mut_changed.write_pyproject(pyproject, b'[project]\n')
+    monkeypatch.undo()
+    assert pyproject.read_text() == PROJECT

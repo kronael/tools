@@ -267,6 +267,13 @@ def move_aside(path: Path) -> Path | None:
     return target
 
 
+def write_pyproject(path: Path, data: bytes) -> None:
+    part = path.with_name(path.name + '.part')
+    part.write_bytes(data)
+    part.chmod(path.stat().st_mode)
+    os.replace(part, path)
+
+
 def check(base: str, memory: str, max_children: int, batch: int) -> int:
     run_git('rev-parse', '--verify', '--quiet', f'{base}^{{commit}}')
     pyproject = Path('pyproject.toml')
@@ -298,7 +305,8 @@ def check(base: str, memory: str, max_children: int, batch: int) -> int:
     try:
         for files in batches:
             print('mutating ' + ', '.join(str(path) for path in files), flush=True)
-            pyproject.write_text(scope_pyproject(original.decode(), [str(p) for p in files]))
+            scoped = scope_pyproject(original.decode(), [str(p) for p in files])
+            write_pyproject(pyproject, scoped.encode())
             try:
                 run_mutmut(cap, max_children)
                 found = map_mutants(read_statuses(), files)
@@ -317,7 +325,7 @@ def check(base: str, memory: str, max_children: int, batch: int) -> int:
             survivors += dead
             unchecked += [m for m in hit if m.status == 'not checked']
     finally:
-        pyproject.write_bytes(original)
+        write_pyproject(pyproject, original)
         os.utime(pyproject, ns=(stat.st_atime_ns, stat.st_mtime_ns))
     if pyproject.read_bytes() != original:
         raise CheckError('pyproject.toml was not restored')
