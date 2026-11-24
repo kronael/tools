@@ -113,7 +113,9 @@ known-good baseline before believing the system moved.
 NEVER pick a knob's value from one flat grid — ALWAYS use the grid only to
 find where to start. First run a coarse grid per knob, each knob alone from
 the pinned row (§ Runs); a knob that cuts a quantity gets its points at that
-quantity's quantiles. Each knob's best grid point is its start.
+quantity's quantiles. ALWAYS start with 3 points and widen to 5, then 7, only
+when the Newton steps do not converge from them. Each knob's best grid point
+is its start.
 
 Then ALWAYS take Newton steps one coordinate at a time, from the current
 point with every knob at its current value: fit a quadratic through the
