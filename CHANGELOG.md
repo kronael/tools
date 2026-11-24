@@ -10,6 +10,10 @@
 >
 > Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
 
+### Changed
+
+- research: a knob search rule, started from a 3-point grid with coordinate Newton steps (search.md).
+
 ### Fixed
 
 - software: mut_changed.py writes the scoped and the restored pyproject.toml atomically.
