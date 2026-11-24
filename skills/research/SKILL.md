@@ -1,7 +1,7 @@
 ---
 name: research
 description: Router for quantitative-research discipline — experiment layout and records, believable backtest and forecast scores, the silent wrong-number traps. NOT for engineering (use software) or bot code (use data).
-when_to_use: "backtest, walk-forward, holdout, out-of-sample, overfitting, t-stat, Sharpe, proper scoring rule, Brier, QLIKE, baseline, benchmark, HODL, ex-market, round-trip cost, slippage, edge in bp, null result, ablation, results log, run tag, experiment directory, report verdict, HTML report, report page, report project, report online, design system for reports, binned mean plot, quantile bins, bars in a table column, lookahead, unit bug, mark-to-market PnL"
+when_to_use: "backtest, walk-forward, holdout, out-of-sample, overfitting, t-stat, Sharpe, proper scoring rule, Brier, QLIKE, baseline, benchmark, HODL, ex-market, round-trip cost, slippage, edge in bp, null result, ablation, results log, run tag, experiment directory, report verdict, HTML report, report page, report project, report online, design system for reports, binned mean plot, quantile bins, bars in a table column, lookahead, unit bug, mark-to-market PnL, tune a parameter, parameter search, grid search, optimize a cutoff, Brent's method, coordinate descent"
 ---
 
 # Research — runbook router
@@ -11,7 +11,7 @@ Paths are relative to this directory.
 
 | If you need | Read |
 |---|---|
-| what a score must be reported against and when it may be believed: baselines on the same window, climatology as the floor, the scoring rule per target (Brier, QLIKE, RMSE), unforecastable targets, fit vs score target, holdout, overlap, beta, costs, controls, one knob, ablations, nulls, the scope of a number | `method.md` |
+| what a score must be reported against and when it may be believed: baselines on the same window, climatology as the floor, the scoring rule per target (Brier, QLIKE, RMSE), unforecastable targets, fit vs score target, holdout, overlap, beta, costs, controls, one knob, ablations, nulls, the scope of a number, tuning a knob (quantile first points, refinement grids, Brent, Newton step, coordinate descent and its joint run, bracket edge and hard limits, the search plot) | `method.md` |
 | how research is organised: strategy vs report naming, the model/strategy seam, the run record, the run log, the leaflet, durable vs scratch, rounds, the graveyard, the two simulators | `layout.md` |
 | the HTML report page: section order, the report as its own project run with `uv run`, its per-key preprocessing pool and spool dir, how it gets online, matplotlib, plotly or d3 figures, page colour tokens, figure palettes (Dark2, cividis, RdBu_r), the second cue beside colour, bars or tints in table columns, a binned mean plot | `report.md` |
 | silent plausible wrong numbers: reader row-eating, bar labels, unit powers, aliased checks, cache keys and effective windows, degenerate models, selectors, code defaults, constant curves, benchmark code, rounded winners, marked PnL, generated text, replay fixtures, stale records | `traps.md` |
