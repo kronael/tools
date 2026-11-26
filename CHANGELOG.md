@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.5.11] — 20261126
+
+> kronael v0.5.11 — research findings carry their proof
+>
+> Knob searches step on mean gain, findings register only with a report and code, and pages say how to rerun.
+>
+> • Search — a step is kept on its mean gain; noise is judged once, on the final point.
+> • Registered results — a finding needs a report page, a run-tag branch and a cross-check.
+> • Report pages — an About section closes the page: branch, commit, command, data and window.
+>
+> Full notes: https://github.com/kronael/tools/blob/master/CHANGELOG.md
+
+- research: a search step is kept on mean gain; one noise check on the final point (search.md).
+- research: a finding registers only with a report page, run-tag branch and cross-check (layout.md).
+- research: report pages end with an About section on how to rerun them (report.md).
+
 ## [v0.5.10] — 20261124
 
 > kronael v0.5.10 — a mutation run cannot empty pyproject.toml
