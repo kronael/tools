@@ -66,6 +66,18 @@ nothing in it is invented. An index README is one row per experiment plus a
 section for what is NOT a research line — recoveries and archaeology, marked
 "do not tune".
 
+## Registered results
+
+A project's registered-results file holds findings, NEVER studies. ALWAYS
+register a finding only on the owner's request and only when its study has a
+report page under the report root and its experiment code committed on a
+branch named like the run tag, pushed without a PR — code that lives only in a
+worktree, a spool or `tmp/` cannot be reviewed. ALWAYS have an independent
+adversarial reviewer cross-check each finding against its report and code
+before it is added. Each finding is ONE minimal row: the claim, one number
+with its interval, the run tag. NEVER copy tables or caveats into the row —
+they stay in the report.
+
 ## Durable and scratch
 
 Durable evidence — summaries, filtered extracts, plots, the write-up — goes
