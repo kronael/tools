@@ -6,11 +6,13 @@ adds: its order, its build and its colours.
 
 ## Order
 
-One page, fixed order, verdict first, caveats last: Verdict (winner, its
+One page, fixed order, verdict first, About last: Verdict (winner, its
 score, runner-up, baseline — the reader gets the answer without scrolling) →
 Lineage (prior tag and its conclusion, a null included, and why this run
 follows; written BEFORE the run) → what is modelled → what is predicted → how
-it is fitted → run configuration → results table → caveats. A first run writes
+it is fitted → run configuration → results table → caveats → About. About
+ALWAYS states how to rerun the page: the branch named like the run tag and its
+commit SHA, the exact command, the data and its window. A first run writes
 "no prior" and NEVER drops the Lineage section. A run that leaves the prior
 conclusion standing says so in its verdict — NEVER re-run a comparison
 silently. Prose numbers follow `traps.md`.
@@ -19,11 +21,12 @@ A report component's page (a periodic or selection report) is the exception:
 ALWAYS show only what the run computed, in this order: one sentence with the
 rule and its numbers, the short table of what to act on, the full table, a
 link to that full table as CSV, then one plain line for each measure the page
-shows ("p99: 99 of 100 values are below it"); one chart at most. NEVER put
-lineage, history or repeated caveats on the page; lineage stays in
-`summary.yml`. At phone width ALWAYS move columns to the CSV before a table
-needs to scroll. A selection page ALWAYS keeps the current members, the new
-passes and the rest apart, gives every row its numbers and states the scan counts.
+shows ("p99: 99 of 100 values are below it"), then the About line; one
+chart at most. NEVER put lineage, history or repeated caveats on the page;
+lineage stays in `summary.yml`. At phone width ALWAYS move columns to the
+CSV before a table needs to scroll. A selection page ALWAYS keeps the current
+members, the new passes and the rest apart, gives every row its numbers and
+states the scan counts.
 
 ## Build
 
